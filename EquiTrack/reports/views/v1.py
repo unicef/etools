@@ -72,7 +72,6 @@ class ResultViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminUser,)
 
 
-
 class IndicatorViewSet(viewsets.ModelViewSet):
     """
     CRUD api for Indicators

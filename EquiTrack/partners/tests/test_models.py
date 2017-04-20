@@ -1,30 +1,23 @@
 import datetime
 import json
 from unittest import skip
-from actstream import action
 from actstream.models import model_stream
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory, InterventionFactory, InterventionBudgetFactory
+from EquiTrack.factories import PartnershipFactory, AgreementFactory, InterventionFactory, InterventionBudgetFactory
 
 from funds.models import Donor, Grant
 
 from reports.models import (
-    ResultStructure,
     CountryProgramme,
     ResultType,
-    Result,
-    ResultStructure,
-    Sector
 )
 from partners.models import (
     PCA,
-    PCASector,
     Agreement,
     AmendmentLog,
     FundingCommitment,
-    PartnershipBudget,
     AgreementAmendmentLog,
     PartnerOrganization,
     Assessment,
@@ -62,11 +55,11 @@ class TestRefNumberGeneration(TenantTestCase):
             amended_at=self.date,
             status=PCA.ACTIVE
         )
-        self.assertEqual(agreement1.reference_number, text+'-01')
+        self.assertEqual(agreement1.reference_number, text + '-01')
 
         # add another agreement
         agreement2 = AgreementFactory()
-        self.assertEqual(agreement2.reference_number, text[:-1]+'2')
+        self.assertEqual(agreement2.reference_number, text[:-1] + '2')
 
         # now sign the agreement and commit the number to the database
         agreement2.signed_by_unicef_date = self.date
@@ -124,6 +117,7 @@ class TestRefNumberGeneration(TenantTestCase):
 
 class TestHACTCalculations(TenantTestCase):
     fixtures = ['initial_data.json']
+
     def setUp(self):
         year = datetime.date.today().year
         self.intervention = InterventionFactory(
@@ -132,7 +126,7 @@ class TestHACTCalculations(TenantTestCase):
         current_cp = ResultStructure.objects.create(
             name='Current Country Programme',
             from_date=datetime.date(year, 1, 1),
-            to_date=datetime.date(year+1, 12, 31)
+            to_date=datetime.date(year + 1, 12, 31)
         )
         grant = Grant.objects.create(
             donor=Donor.objects.create(name='Test Donor'),
@@ -150,11 +144,11 @@ class TestHACTCalculations(TenantTestCase):
             partner_contribution=10000,
             unicef_cash=40000,
             in_kind_amount=5000,
-            year=str(year+1)
+            year=str(year + 1)
         )
         FundingCommitment.objects.create(
             start=current_cp.from_date,
-            end=current_cp.from_date+datetime.timedelta(days=200),
+            end=current_cp.from_date + datetime.timedelta(days=200),
             grant=grant,
             fr_number='0123456789',
             wbs='Test',
@@ -162,7 +156,7 @@ class TestHACTCalculations(TenantTestCase):
             expenditure_amount=40000.00
         )
         FundingCommitment.objects.create(
-            start=current_cp.from_date+datetime.timedelta(days=200),
+            start=current_cp.from_date + datetime.timedelta(days=200),
             end=current_cp.to_date,
             grant=grant,
             fr_number='0123456789',
@@ -182,27 +176,28 @@ class TestHACTCalculations(TenantTestCase):
 
 class TestPartnerOrganizationModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']
+
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
         year = datetime.date.today().year
         self.pca_signed1 = Agreement.objects.create(
-                        agreement_type=Agreement.PCA,
-                        partner=self.partner_organization,
-                        signed_by_unicef_date = datetime.date(year-1, 1, 1),
-                        signed_by_partner_date = datetime.date(year-1, 1, 1),
-                    )
-        pca_signed2 = Agreement.objects.create(
-                        agreement_type=Agreement.PCA,
-                        partner=self.partner_organization,
-                        signed_by_unicef_date = datetime.date(year-2, 1, 1),
-                        signed_by_partner_date = datetime.date(year-2, 1, 1),
-                    )
-        pca_unsigned = Agreement.objects.create(
-                        agreement_type=Agreement.PCA,
-                        partner=self.partner_organization,
-                    )
+            agreement_type=Agreement.PCA,
+            partner=self.partner_organization,
+            signed_by_unicef_date=datetime.date(year - 1, 1, 1),
+            signed_by_partner_date=datetime.date(year - 1, 1, 1),
+        )
+        Agreement.objects.create(
+            agreement_type=Agreement.PCA,
+            partner=self.partner_organization,
+            signed_by_unicef_date=datetime.date(year - 2, 1, 1),
+            signed_by_partner_date=datetime.date(year - 2, 1, 1),
+        )
+        Agreement.objects.create(
+            agreement_type=Agreement.PCA,
+            partner=self.partner_organization,
+        )
 
     def test_get_last_pca(self):
         pca = self.partner_organization.get_last_pca
@@ -212,11 +207,11 @@ class TestPartnerOrganizationModel(TenantTestCase):
         year = datetime.date.today().year
         self.partner_organization.type_of_assessment = "High Risk Assumed"
         self.partner_organization.save()
-        assessment = Assessment.objects.create(
-                        partner=self.partner_organization,
-                        type="Micro Assessment",
-                        completed_date=datetime.date(year, 1, 1)
-                    )
+        Assessment.objects.create(
+            partner=self.partner_organization,
+            type="Micro Assessment",
+            completed_date=datetime.date(year, 1, 1)
+        )
         PartnerOrganization.micro_assessment_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
 
@@ -225,25 +220,24 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.partner_organization.type_of_assessment = "Simplified Checklist"
         self.partner_organization.hact_values["planned_cash_transfer"] = 100001.00
         self.partner_organization.save()
-        assessment = Assessment.objects.create(
-                        partner=self.partner_organization,
-                        type="Micro Assessment",
-                        completed_date=datetime.date(year, 1, 1)
-                    )
+        Assessment.objects.create(
+            partner=self.partner_organization,
+            type="Micro Assessment",
+            completed_date=datetime.date(year, 1, 1)
+        )
         PartnerOrganization.micro_assessment_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
 
     def test_micro_assessment_needed_older_than_54m(self):
-        year = datetime.date.today().year
         self.partner_organization.type_of_assessment = "Micro Assessment"
         self.partner_organization.rating = "low"
         self.partner_organization.hact_values["planned_cash_transfer"] = 10000.00
         self.partner_organization.save()
-        assessment = Assessment.objects.create(
-                        partner=self.partner_organization,
-                        type="Micro Assessment",
-                        completed_date=datetime.date.today() - datetime.timedelta(days=1643)
-                    )
+        Assessment.objects.create(
+            partner=self.partner_organization,
+            type="Micro Assessment",
+            completed_date=datetime.date.today() - datetime.timedelta(days=1643)
+        )
         PartnerOrganization.micro_assessment_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
 
@@ -258,11 +252,11 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.partner_organization.type_of_assessment = "Other"
         self.partner_organization.hact_values["planned_cash_transfer"] = 100000.00
         self.partner_organization.save()
-        assessment = Assessment.objects.create(
-                        partner=self.partner_organization,
-                        type="Micro Assessment",
-                        completed_date=datetime.date(year, 1, 1)
-                    )
+        Assessment.objects.create(
+            partner=self.partner_organization,
+            type="Micro Assessment",
+            completed_date=datetime.date(year, 1, 1)
+        )
         PartnerOrganization.micro_assessment_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "No")
 
@@ -282,14 +276,14 @@ class TestPartnerOrganizationModel(TenantTestCase):
         CountryProgramme.objects.create(
             name="CP 1",
             wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year-1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year+1, 1, 1),
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        assessment = Assessment.objects.create(
-                        partner=self.partner_organization,
-                        type="Scheduled Audit report",
-                        completed_date=datetime.date(datetime.date.today().year, 1, 1)
-                    )
+        Assessment.objects.create(
+            partner=self.partner_organization,
+            type="Scheduled Audit report",
+            completed_date=datetime.date(datetime.date.today().year, 1, 1)
+        )
         self.partner_organization.total_ct_cp = 500001.00
         self.partner_organization.save()
         PartnerOrganization.audit_needed(self.partner_organization)
@@ -299,14 +293,14 @@ class TestPartnerOrganizationModel(TenantTestCase):
         CountryProgramme.objects.create(
             name="CP 1",
             wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year-1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year+1, 1, 1),
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        assessment = Assessment.objects.create(
-                        partner=self.partner_organization,
-                        type="Scheduled Audit report",
-                        completed_date=datetime.date(datetime.date.today().year-2, 1, 1)
-                    )
+        Assessment.objects.create(
+            partner=self.partner_organization,
+            type="Scheduled Audit report",
+            completed_date=datetime.date(datetime.date.today().year - 2, 1, 1)
+        )
         self.partner_organization.total_ct_cp = 500001.00
         self.partner_organization.save()
         PartnerOrganization.audit_needed(self.partner_organization)
@@ -316,19 +310,19 @@ class TestPartnerOrganizationModel(TenantTestCase):
         CountryProgramme.objects.create(
             name="CP 1",
             wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year-1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year+1, 1, 1),
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        assessment1 = Assessment.objects.create(
-                        partner=self.partner_organization,
-                        type="Scheduled Audit report",
-                        completed_date=datetime.date(datetime.date.today().year, 1, 1)
-                    )
+        Assessment.objects.create(
+            partner=self.partner_organization,
+            type="Scheduled Audit report",
+            completed_date=datetime.date(datetime.date.today().year, 1, 1)
+        )
         assessment2 = Assessment.objects.create(
-                        partner=self.partner_organization,
-                        type="Scheduled Audit report",
-                        completed_date=datetime.date(datetime.date.today().year, 2, 1)
-                    )
+            partner=self.partner_organization,
+            type="Scheduled Audit report",
+            completed_date=datetime.date(datetime.date.today().year, 2, 1)
+        )
         self.partner_organization.total_ct_cp = 500001.00
         self.partner_organization.save()
         PartnerOrganization.audit_needed(self.partner_organization, assessment2)
@@ -338,14 +332,14 @@ class TestPartnerOrganizationModel(TenantTestCase):
         CountryProgramme.objects.create(
             name="CP 1",
             wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year-1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year+1, 1, 1),
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
         assessment = Assessment.objects.create(
-                        partner=self.partner_organization,
-                        type="Scheduled Audit report",
-                        completed_date=datetime.date(datetime.date.today().year, 2, 1)
-                    )
+            partner=self.partner_organization,
+            type="Scheduled Audit report",
+            completed_date=datetime.date(datetime.date.today().year, 2, 1)
+        )
         self.partner_organization.total_ct_cp = 500001.00
         self.partner_organization.save()
         PartnerOrganization.audit_needed(self.partner_organization, assessment)
@@ -355,14 +349,14 @@ class TestPartnerOrganizationModel(TenantTestCase):
         CountryProgramme.objects.create(
             name="CP 1",
             wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year-1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year+1, 1, 1),
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        assessment = Assessment.objects.create(
-                        partner=self.partner_organization,
-                        type="Scheduled Audit report",
-                        completed_date=datetime.date(datetime.date.today().year, 1, 1)
-                    )
+        Assessment.objects.create(
+            partner=self.partner_organization,
+            type="Scheduled Audit report",
+            completed_date=datetime.date(datetime.date.today().year, 1, 1)
+        )
         self.partner_organization.total_ct_cp = 500001.00
         self.partner_organization.save()
         PartnerOrganization.audit_done(self.partner_organization)
@@ -452,14 +446,14 @@ class TestPartnerOrganizationModel(TenantTestCase):
         cp = CountryProgramme.objects.create(
             name="CP 1",
             wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year-1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year+1, 1, 1),
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
         rs = ResultStructure.objects.create(
             name="RS 1",
             country_programme=cp,
-            from_date=datetime.date(datetime.date.today().year-1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year+1, 1, 1),
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
         gi = GovernmentIntervention.objects.create(
             partner=self.partner_organization,
@@ -491,14 +485,14 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.partner_organization.partner_type = "UN Agency"
         self.partner_organization.save()
         agreement = Agreement.objects.create(
-                        agreement_type=Agreement.PCA,
-                        partner=self.partner_organization,
-                    )
+            agreement_type=Agreement.PCA,
+            partner=self.partner_organization,
+        )
 
         intervention = InterventionFactory(
             status=u'active', agreement=agreement
         )
-        ib = InterventionBudgetFactory(intervention=intervention)
+        InterventionBudgetFactory(intervention=intervention)
         hact = json.loads(self.partner_organization.hact_values) \
             if isinstance(self.partner_organization.hact_values, str) \
             else self.partner_organization.hact_values
@@ -510,14 +504,14 @@ class TestPartnerOrganizationModel(TenantTestCase):
         cp = CountryProgramme.objects.create(
             name="CP 1",
             wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year-1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year+1, 1, 1),
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
         rs = ResultStructure.objects.create(
             name="RS 1",
             country_programme=cp,
-            from_date=datetime.date(datetime.date.today().year-1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year+1, 1, 1),
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
         gi = GovernmentIntervention.objects.create(
             partner=self.partner_organization,
@@ -548,15 +542,15 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.partner_organization.status = PCA.ACTIVE
         self.partner_organization.save()
         agreement = Agreement.objects.create(
-                        agreement_type=Agreement.PCA,
-                        partner=self.partner_organization,
-                    )
+            agreement_type=Agreement.PCA,
+            partner=self.partner_organization,
+        )
         Intervention.objects.create(
             title="Int 1",
             status=PCA.ACTIVE,
             agreement=agreement,
             submission_date=datetime.date(datetime.date.today().year, 1, 1),
-            end=datetime.date(datetime.date.today().year+1, 1, 1),
+            end=datetime.date(datetime.date.today().year + 1, 1, 1),
             planned_visits=3,
         )
         Intervention.objects.create(
@@ -564,7 +558,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             status=PCA.ACTIVE,
             agreement=agreement,
             submission_date=datetime.date(datetime.date.today().year, 1, 1),
-            end=datetime.date(datetime.date.today().year+1, 1, 1),
+            end=datetime.date(datetime.date.today().year + 1, 1, 1),
             planned_visits=2,
         )
         self.assertEqual(self.partner_organization.hact_values['planned_visits'], 5)
@@ -587,7 +581,6 @@ class TestAgreementModel(TenantTestCase):
 
     @skip('no temp ref')
     def test_reference_number(self):
-        year = datetime.datetime.today().year
         self.assertIn("PCA", self.agreement.reference_number)
 
     def test_snapshot_activity_stream(self):
@@ -617,16 +610,18 @@ class TestAgreementModel(TenantTestCase):
         self.assertEquals(changes['start'], str(self.agreement.start))
         self.assertEquals(changes['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
 
+
 class TestInterventionModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']
+
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
         agreement = Agreement.objects.create(
-                        agreement_type=Agreement.PCA,
-                        partner=self.partner_organization,
-                    )
+            agreement_type=Agreement.PCA,
+            partner=self.partner_organization,
+        )
         self.intervention = Intervention.objects.create(
             title="Intervention 1",
             agreement=agreement,
@@ -635,23 +630,23 @@ class TestInterventionModel(TenantTestCase):
 
     # TODO relativedelta() returns 0, may be a bug in the model code
     def test_days_from_submission_signed(self):
-        self.intervention.submission_date = datetime.date(datetime.date.today().year-1, 1, 1)
-        self.intervention.signed_by_partner_date = datetime.date(datetime.date.today().year-1, 5, 1)
-        days = (self.intervention.signed_by_partner_date - self.intervention.submission_date).days
+        self.intervention.submission_date = datetime.date(datetime.date.today().year - 1, 1, 1)
+        self.intervention.signed_by_partner_date = datetime.date(datetime.date.today().year - 1, 5, 1)
+        # days = (self.intervention.signed_by_partner_date - self.intervention.submission_date).days
         # self.assertEqual(self.intervention.days_from_submission_to_signed, days)
 
     # TODO relativedelta() returns 0, may be a bug in the model code
     def test_days_from_review_to_signed(self):
-        self.intervention.submission_date = datetime.date(datetime.date.today().year-1, 1, 1)
-        self.intervention.review_date = datetime.date(datetime.date.today().year-1, 2, 1)
-        self.intervention.signed_by_partner_date = datetime.date(datetime.date.today().year-1, 5, 1)
-        days = (self.intervention.signed_by_partner_date - self.intervention.review_date).days
+        self.intervention.submission_date = datetime.date(datetime.date.today().year - 1, 1, 1)
+        self.intervention.review_date = datetime.date(datetime.date.today().year - 1, 2, 1)
+        self.intervention.signed_by_partner_date = datetime.date(datetime.date.today().year - 1, 5, 1)
+        # days = (self.intervention.signed_by_partner_date - self.intervention.review_date).days
         # self.assertEqual(self.intervention.days_from_review_to_signed, days)
 
     # TODO relativedelta() returns 0, may be a bug in the model code
     def test_duration(self):
-        self.intervention.start_date = datetime.date(datetime.date.today().year-1, 1, 1)
-        self.intervention.end_date = datetime.date(datetime.date.today().year+1, 1, 1)
+        self.intervention.start_date = datetime.date(datetime.date.today().year - 1, 1, 1)
+        self.intervention.end_date = datetime.date(datetime.date.today().year + 1, 1, 1)
         # self.assertEqual(self.intervention.duration, 24)
 
     def test_total_unicef_cash(self):

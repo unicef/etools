@@ -8,25 +8,20 @@ from django.utils.datastructures import OrderedDict as SortedDict
 
 from partners.models import (
     PCA,
-    PartnerOrganization,
     FundingCommitment,
-    DirectCashTransfer,
     GovernmentIntervention,
     Intervention,
 )
 from trips.models import Trip
 
-from django.shortcuts import render
-
 register = template.Library()
+
 
 @register.simple_tag
 def get_interventions(partner_id):
     interventions = Intervention.objects.filter(agreement__partner__pk=partner_id)
 
-    return render_to_string('admin/partners/interventions_table.html', {'interventions':interventions} )
-
-
+    return render_to_string('admin/partners/interventions_table.html', {'interventions': interventions})
 
 
 @register.simple_tag
@@ -43,7 +38,7 @@ def show_work_plan(value):
     if results:
         try:
             tf_cols = next(x.disaggregation for x in results if x.result_type.name == 'Activity').keys()
-        except:
+        except BaseException:
             tf_cols = []
 
     for num, result in enumerate(results):
@@ -56,7 +51,6 @@ def show_work_plan(value):
             row.update(result.disaggregation)
         else:
             row.update(dict.fromkeys(tf_cols, ''))
-
 
         row['Total'] = result.total if result.total else ''
         row['CSO'] = result.partner_contribution if result.partner_contribution else ''
@@ -160,12 +154,11 @@ def show_government_funding(value):
 
     commitments = FundingCommitment.objects.filter(wbs__in=outputs_wbs).all()
 
-    #map all commitments (c.wbs) to int_outputs(io.wbs)
+    # map all commitments (c.wbs) to int_outputs(io.wbs)
 
     for out in outputs:
         commits = [c for c in commitments if out.wbs == c.wbs]
         setattr(out, 'commitments', commits)
-
 
     data = tablib.Dataset()
     fc_summary = []
@@ -196,7 +189,7 @@ def show_dct(value):
     if not value:
         return ''
 
-    intervention = Intervention.objects.get(id=int(value))
+    # intervention = Intervention.objects.get(id=int(value))
     # fr_number = intervention.fr_number
     data = tablib.Dataset()
     dct_summary = []

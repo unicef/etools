@@ -17,7 +17,6 @@ from rest_framework.generics import (
     DestroyAPIView,
 )
 
-from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import (
@@ -169,6 +168,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
 
         return response
 
+
 class InterventionListDashView(ValidatorViewMixin, ListCreateAPIView):
     """
     Create new Interventions.
@@ -185,6 +185,7 @@ class InterventionListDashView(ValidatorViewMixin, ListCreateAPIView):
 
         return Intervention.objects.filter(unicef_focal_points__in=[self.request.user])
 
+
 class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
@@ -194,7 +195,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     permission_classes = (IsAdminUser,)
 
     SERIALIZER_MAP = {
-        'planned_budget' : InterventionBudgetCUSerializer,
+        'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'amendments': InterventionAmendmentCUSerializer,
@@ -209,7 +210,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         if self.request.method in ["PATCH", "PUT"]:
             return InterventionCreateUpdateSerializer
         return super(InterventionDetailAPIView, self).get_serializer_class()
-
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -232,7 +232,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
             instance = self.get_object()
-            serializer = self.get_serializer(instance)
 
         return Response(InterventionDetailSerializer(instance).data)
 
@@ -246,9 +245,9 @@ class InterventionBudgetDeleteView(DestroyAPIView):
         except InterventionBudget.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if intervention_budget.intervention.status in [Intervention.DRAFT] or \
-                        request.user in intervention_budget.intervention.unicef_focal_points.all() or \
-                        request.user.groups.filter(name__in=['Partnership Manager',
-                                                             'Senior Management Team']).exists():
+            request.user in intervention_budget.intervention.unicef_focal_points.all() or \
+            request.user.groups.filter(name__in=['Partnership Manager',
+                                                 'Senior Management Team']).exists():
             intervention_budget.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
@@ -265,9 +264,9 @@ class InterventionPlannedVisitsDeleteView(DestroyAPIView):
         except InterventionPlannedVisits.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if intervention_planned_visit.intervention.status in [Intervention.DRAFT] or \
-                        request.user in intervention_planned_visit.intervention.unicef_focal_points.all() or \
-                        request.user.groups.filter(name__in=['Partnership Manager',
-                                                             'Senior Management Team']).exists():
+            request.user in intervention_planned_visit.intervention.unicef_focal_points.all() or \
+            request.user.groups.filter(name__in=['Partnership Manager',
+                                                 'Senior Management Team']).exists():
             intervention_planned_visit.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
@@ -284,9 +283,9 @@ class InterventionAttachmentDeleteView(DestroyAPIView):
         except InterventionAttachment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if intervention_attachment.intervention.status in [Intervention.DRAFT] or \
-                        request.user in intervention_attachment.intervention.unicef_focal_points.all() or \
-                        request.user.groups.filter(name__in=['Partnership Manager',
-                                                             'Senior Management Team']).exists():
+            request.user in intervention_attachment.intervention.unicef_focal_points.all() or \
+            request.user.groups.filter(name__in=['Partnership Manager',
+                                                 'Senior Management Team']).exists():
             intervention_attachment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
@@ -303,9 +302,9 @@ class InterventionResultLinkDeleteView(DestroyAPIView):
         except InterventionResultLink.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if intervention_result.intervention.status in [Intervention.DRAFT] or \
-                        request.user in intervention_result.intervention.unicef_focal_points.all() or \
-                        request.user.groups.filter(name__in=['Partnership Manager',
-                                                             'Senior Management Team']).exists():
+            request.user in intervention_result.intervention.unicef_focal_points.all() or \
+            request.user.groups.filter(name__in=['Partnership Manager',
+                                                 'Senior Management Team']).exists():
             intervention_result.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
@@ -322,9 +321,9 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
         except InterventionAmendment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if intervention_amendment.intervention.status in [Intervention.DRAFT] or \
-                        request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
-                        request.user.groups.filter(name__in=['Partnership Manager',
-                                                             'Senior Management Team']).exists():
+            request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
+            request.user.groups.filter(name__in=['Partnership Manager',
+                                                 'Senior Management Team']).exists():
             intervention_amendment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
@@ -341,9 +340,9 @@ class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
         except InterventionSectorLocationLink.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if intervention_sector_location.intervention.status in [Intervention.DRAFT] or \
-                        request.user in intervention_sector_location.intervention.unicef_focal_points.all() or \
-                        request.user.groups.filter(name__in=['Partnership Manager',
-                                                             'Senior Management Team']).exists():
+            request.user in intervention_sector_location.intervention.unicef_focal_points.all() or \
+            request.user.groups.filter(name__in=['Partnership Manager',
+                                                 'Senior Management Team']).exists():
             intervention_sector_location.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:

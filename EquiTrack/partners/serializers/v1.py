@@ -1,11 +1,8 @@
 
 import json
-from django.db import transaction
 from rest_framework import serializers
 
-from reports.serializers.v1 import IndicatorSerializer, OutputSerializer
 from locations.models import Location
-
 from reports.models import LowerResult
 from partners.models import (
     FileType,
@@ -115,8 +112,6 @@ class AmendmentLogSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
-
 class LocationSerializer(serializers.Serializer):
 
     latitude = serializers.CharField(source='geo_point.y')
@@ -139,9 +134,6 @@ class LocationSerializer(serializers.Serializer):
         fields = '__all__'
 
 
-
-
-
 class DistributionPlanSerializer(serializers.ModelSerializer):
     item = serializers.CharField(source='item.name')
     site = serializers.CharField(source='site.name')
@@ -151,8 +143,6 @@ class DistributionPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = DistributionPlan
         fields = ('item', 'site', 'quantity', 'delivered')
-
-
 
 
 class LowerOutputStructuredSerializer(serializers.ModelSerializer):
@@ -310,7 +300,7 @@ class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
 
 class RapidProRequest(serializers.Serializer):
 
-    relayer	= serializers.CharField()
+    relayer = serializers.CharField()
     phone = serializers.CharField(required=True)
     text = serializers.CharField(required=True)
     flow = serializers.CharField()

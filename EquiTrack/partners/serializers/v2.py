@@ -1,37 +1,14 @@
-import json
-from operator import xor
 
 from django.core.exceptions import ValidationError
-from django.db.models import Q
-from django.contrib.auth.models import User
-from django.db import transaction
 from rest_framework import serializers
-
-from reports.serializers import IndicatorSerializer, OutputSerializer
-from partners.serializers.v1 import (
-    PartnerOrganizationSerializer,
-    PartnerStaffMemberEmbedSerializer,
-    InterventionSerializer,
-)
-from locations.models import Location
 
 from partners.models import (
     PCA,
     InterventionBudget,
     SupplyPlan,
     DistributionPlan,
-    InterventionPlannedVisits,
-    Intervention,
     InterventionAmendment,
-    PartnerOrganization,
-    PartnerType,
-    Agreement,
-    PartnerStaffMember,
-
 )
-from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
-
-
 
 
 class InterventionBudgetNestedSerializer(serializers.ModelSerializer):

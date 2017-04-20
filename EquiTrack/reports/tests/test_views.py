@@ -21,9 +21,10 @@ from EquiTrack.tests.mixins import APITenantTestCase
 
 class TestReportViews(APITenantTestCase):
     fixtures = ['initial_data.json']
+
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
+        self.result_type = ResultType.objects.get(id=random.choice([1, 2, 3]))
         self.result1 = ResultFactory(
             result_type=self.result_type,
             result_structure=ResultStructureFactory(),
@@ -121,6 +122,8 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff,
             data=param,
         )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
 
     def test_apiv2_results_list_filter_cp(self):
         param = {

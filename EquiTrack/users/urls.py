@@ -1,5 +1,5 @@
 
-from django.conf.urls import patterns, include, url
+from django.conf.urls import patterns, url
 from django.views.generic import TemplateView
 
 from .views import (
@@ -15,7 +15,7 @@ from .views import (
 urlpatterns = patterns(
     '',
 
-    #api
+    # api
     url(r'^api/profile/$', UserAuthAPIView.as_view()),
     url(r'^api/changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post'])),
     url(r'^api/', UsersView.as_view()),  # TODO: staff required , partners should not be able to hit this
@@ -25,7 +25,7 @@ urlpatterns = patterns(
     # url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view()),
 
 
-    #user profile
+    # user profile
     url(r'^profile_view/$', ProfileEdit.as_view(), name='user_profile'),
 
     url(r'^profile_view/complete/$',

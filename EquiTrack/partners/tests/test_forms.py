@@ -1,19 +1,14 @@
 import datetime
 from datetime import timedelta
 
-#from tenant_schemas.test.cases import TenantTestCase
+# from tenant_schemas.test.cases import TenantTestCase
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from django.db.models.fields.related import ManyToManyField
 
-from EquiTrack.factories import PartnershipFactory, AgreementFactory, ResultStructureFactory, CountryProgrammeFactory
+from EquiTrack.factories import AgreementFactory, ResultStructureFactory, CountryProgrammeFactory
 from partners.models import (
     PartnerOrganization,
-    PCA,
     Agreement,
-    AmendmentLog,
-    FundingCommitment,
-    PartnershipBudget,
-    AgreementAmendmentLog,
 )
 from partners.forms import AgreementForm
 
@@ -34,6 +29,7 @@ def to_dict(instance):
 
 class TestAgreementForm(TenantTestCase):
     fixtures = ['initial_data.json']
+
     def setUp(self):
         self.date = datetime.date.today()
         self.tenant.country_short_code = 'LEBA'
@@ -119,5 +115,3 @@ class TestAgreementForm(TenantTestCase):
         #     form.errors['start'][0],
         #     AgreementForm.ERROR_MESSAGES['start_date_val']
         # )
-
-

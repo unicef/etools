@@ -18,6 +18,7 @@ from partners.models import (
     InterventionAmendment,
 )
 
+
 class TestInterventionsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
 
@@ -55,14 +56,14 @@ class TestInterventionsAPI(APITenantTestCase):
         data = {
             "result_links": [
                 {"cp_output": self.result.id,
-                 #"ram_indicators": [152],
+                 # "ram_indicators": [152],
                  "ll_results": [
                      {"id": None, "name": None, "applied_indicators": []}
                  ]}]
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/interventions/'+str(self.intervention.id)+'/',
+            '/api/v2/interventions/' + str(self.intervention.id) + '/',
             user=self.unicef_staff,
             data=data
         )

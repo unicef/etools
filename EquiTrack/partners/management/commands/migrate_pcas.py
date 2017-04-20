@@ -3,10 +3,7 @@ __author__ = 'jcranwellward'
 import datetime
 
 from django.db import transaction
-from django.core.management.base import (
-    BaseCommand,
-    CommandError
-)
+from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group
 import reversion
 
@@ -104,14 +101,14 @@ class Command(BaseCommand):
                         print(u'5. New amendment log entry for {}: {}'.format(partnership, amendment_log))
 
                     if not partnership.budget_log.filter(amendment=amendment_log).exists():
-                            budget = PartnershipBudget.objects.create(
-                                partnership=partnership,
-                                partner_contribution=amendment.partner_contribution_budget or 0,
-                                unicef_cash=amendment.unicef_cash_budget or 0,
-                                in_kind_amount=amendment.in_kind_amount_budget or 0,
-                                amendment=amendment_log
-                            )
-                            print(u'6. Amended budget: {}'.format(budget))
+                        budget = PartnershipBudget.objects.create(
+                            partnership=partnership,
+                            partner_contribution=amendment.partner_contribution_budget or 0,
+                            unicef_cash=amendment.unicef_cash_budget or 0,
+                            in_kind_amount=amendment.in_kind_amount_budget or 0,
+                            amendment=amendment_log
+                        )
+                        print(u'6. Amended budget: {}'.format(budget))
 
                     # migrate grants
                     for grant in amendment.grants.all():

@@ -9,9 +9,6 @@ from django.contrib.auth.models import Group
 from partners.models import PCASector, PartnerOrganization
 
 
-
-
-
 class ReadOnlyMixin(object):
     """
     Mixin class to force all fields to readonly
@@ -26,7 +23,7 @@ class ReadOnlyMixin(object):
                 if field in fieldset[1]['fields']:
                     new_fields = []
                     for new_field in fieldset[1]['fields']:
-                        if not new_field in fields:
+                        if new_field not in fields:
                             new_fields.append(new_field)
 
                     fieldset[1]['fields'] = tuple(new_fields)
