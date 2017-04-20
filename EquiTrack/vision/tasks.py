@@ -16,7 +16,6 @@ from vision.adapters.funding import (
     FundingSynchronizer,
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
-    DCTSynchronizer,
 )
 from .models import VisionSyncLog
 
@@ -33,7 +32,7 @@ SYNC_HANDLERS = [
     TravelAgenciesSyncronizer,
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
-    #DCTSynchronizer
+    # DCTSynchronizer
 ]
 
 
@@ -85,7 +84,7 @@ def cost_assignment_sync(country_name=None):
         except VisionException as e:
             logger.error("{} sync failed, Reason: {}".format(
                 CostAssignmentSynch.__name__, e.message
-                ))
+            ))
         processed.append(country)
 
 

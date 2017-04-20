@@ -102,4 +102,3 @@ class VisionDataSynchronizer:
             raise VisionException(message=e.message), None, sys.exc_info()[2]
         finally:
             log.save()
-
