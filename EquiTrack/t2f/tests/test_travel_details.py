@@ -660,7 +660,8 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
 
         self.assertEqual(response_json,
-                         {'non_field_errors': ['Travel is older than 15 days. Please complete it first.']})
+                         {'non_field_errors': ['Another of your trips ended more than 15 days ago, but was not '
+                                               'completed yet. Please complete that before creating a new trip.']})
 
     def test_missing_clearances(self):
         data = {'itinerary': [],
