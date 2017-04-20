@@ -30,7 +30,7 @@ class TestLocationViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/locations/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertNotEquals(response.data[0].keys(), ["id", "name", "p_code"])
+        self.assertNotEquals(response.data[0].keys(), ["id", "name", "p_code", "geo_point"])
         self.assertIn("Location", response.data[0]["name"])
 
     def test_api_location_heavy_detail(self):

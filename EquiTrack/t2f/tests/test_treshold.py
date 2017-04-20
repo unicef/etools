@@ -194,3 +194,80 @@ class ThresholdTest(APITenantTestCase):
         travel = Travel.objects.get(id=travel_id)
         self.assertEqual(travel.approved_cost_traveler, 0)
         self.assertEqual(travel.approved_cost_travel_agencies, 120)
+
+    @override_settings(DISABLE_INVOICING=True)
+    def test_threshold_check_on_complete_without_invoices(self):
+        travel_id, data = self._prepare_test()
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'approve'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'send_for_payment'}),
+                                        data=response_json, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        data = response_json
+        data['expenses'][0]['amount'] = '1000'
+        data['report'] = 'Something'
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'mark_as_certified'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.CERTIFIED)
+
+    @override_settings(DISABLE_INVOICING=False)
+    def test_threshold_check_on_complete(self):
+        travel_id, data = self._prepare_test()
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'approve'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'send_for_payment'}),
+                                        data=response_json, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        data = response_json
+        data['expenses'][0]['amount'] = '1000'
+        data['report'] = 'Something'
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'mark_as_certified'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.CERTIFICATION_SUBMITTED)
+
+        # Threshold not reached
+        travel_id, data = self._prepare_test()
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'approve'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'send_for_payment'}),
+                                        data=response_json, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        data = response_json
+        data['expenses'][0]['amount'] = '140'
+        data['report'] = 'Something'
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'mark_as_certified'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.CERTIFIED)

@@ -496,7 +496,7 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(response_json['itinerary'], itinerary_origin_destination_expectation)
 
     def test_ta_not_required(self):
-        data = {'itinerary': [{}],
+        data = {'itinerary': [],
                 'activities': [{'is_primary_traveler': True,
                                 'locations': []}],
                 'cost_assignments': [],
@@ -515,7 +515,7 @@ class TravelDetails(APITenantTestCase):
     def test_not_primary_traveler(self):
         primary_traveler = UserFactory()
 
-        data = {'itinerary': [{}],
+        data = {'itinerary': [],
                 'activities': [{'is_primary_traveler': False,
                                 'locations': []}],
                 'cost_assignments': [],
@@ -531,7 +531,7 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
 
-        data = {'itinerary': [{}],
+        data = {'itinerary': [],
                 'activities': [{'is_primary_traveler': False,
                                 'primary_traveler': primary_traveler.id,
                                 'locations': []}],
@@ -660,7 +660,8 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
 
         self.assertEqual(response_json,
-                         {'non_field_errors': ['Travel is older than 15 days. Please complete it first.']})
+                         {'non_field_errors': ['Another of your trips ended more than 15 days ago, but was not '
+                                               'completed yet. Please complete that before creating a new trip.']})
 
     def test_missing_clearances(self):
         data = {'itinerary': [],
@@ -730,6 +731,66 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(new_response.status_code, 200)
 
         new_response_json = json.loads(new_response.rendered_content)
-        new_activity = response_json['activities'][0]
+        new_activity = new_response_json['activities'][0]
 
         self.assertEqual(new_activity['government_partnership'], government_partnership.id)
+
+    def test_ghost_data_existence(self):
+        dsa_region = DSARegion.objects.first()
+        airline = AirlineCompanyFactory()
+
+        data = {'cost_assignments': [],
+                'deductions': [],
+                'expenses': [],
+                'itinerary': [{'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2016-11-16T12:06:55.821490',
+                               'arrival_date': '2016-11-17T12:06:55.821490',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.PLANE,
+                               'airlines': [airline.id]}],
+                'traveler': self.traveler.id,
+                'ta_required': True,
+                'supervisor': self.unicef_staff.id}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        travel_id = response_json['id']
+
+        airline.delete()
+
+        response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': travel_id}),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['itinerary'][0]['airlines'], [airline.id])
+
+    def test_save_with_ghost_data(self):
+        dsa_region = DSARegion.objects.first()
+        airline = AirlineCompanyFactory()
+
+        data = {'cost_assignments': [],
+                'deductions': [],
+                'expenses': [],
+                'itinerary': [{'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2016-11-16T12:06:55.821490',
+                               'arrival_date': '2016-11-17T12:06:55.821490',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.PLANE,
+                               'airlines': [airline.id]}],
+                'traveler': self.traveler.id,
+                'ta_required': True,
+                'supervisor': self.unicef_staff.id}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        travel_id = response_json['id']
+
+        airline.delete()
+
+        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': travel_id}),
+                                        data=response_json,
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)

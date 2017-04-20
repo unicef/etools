@@ -144,7 +144,7 @@ urlpatterns = patterns(
     # url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
     # url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
 
-    url(r'^api/static_data/$', StaticDataView.as_view(), name='public_static'),
+    url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
