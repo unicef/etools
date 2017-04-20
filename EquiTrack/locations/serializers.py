@@ -1,4 +1,4 @@
-
+from __future__ import unicode_literals
 from rest_framework import serializers
 
 from .models import CartoDBTable, GatewayType, Location
@@ -40,7 +40,7 @@ class LocationSerializer(serializers.ModelSerializer):
         return "{}".format(obj.geo_point)
 
     def get_name(self, obj):
-        return "{} ({})".format(obj.name, obj.gateway.name)
+        return "{} [{}]".format(obj.name, obj.gateway.name)
 
     class Meta:
         model = Location
