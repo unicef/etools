@@ -13,7 +13,7 @@ from django.conf import settings
 from django.db import models, connection
 from django.template.context import Context
 from django.template.loader import render_to_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, ugettext_lazy as _
 from django_fsm import FSMField, transition
 
 from publics.models import TravelExpenseType
@@ -287,7 +287,8 @@ class Travel(models.Model):
 
         end_date_limit = datetime.utcnow() - timedelta(days=15)
         if travels.filter(end_date__lte=end_date_limit).exists():
-            raise TransitionError('Travel is older than 15 days. Please complete it first.')
+            raise TransitionError(ugettext('Another of your trips ended more than 15 days ago, but was not completed '
+                                           'yet. Please complete that before creating a new trip.'))
 
         return True
 
