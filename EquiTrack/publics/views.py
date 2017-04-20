@@ -207,3 +207,14 @@ class WBSGrantFundView(GhostDataMixin,
     def funds_queryset(self):
         grant_qs = self.grants_queryset
         return Fund.objects.filter(grants__in=grant_qs)
+
+
+class AirlinesView(GhostDataMixin,
+                   viewsets.GenericViewSet):
+    queryset = AirlineCompany.objects.all()
+    serializer_class = AirlineSerializer
+
+    def list(self, request):
+        expense_types = self.get_queryset()
+        serializer = self.get_serializer(expense_types, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)

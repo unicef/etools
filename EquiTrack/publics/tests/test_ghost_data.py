@@ -32,6 +32,9 @@ class GhostData(APITenantTestCase):
         expense_types_url = reverse('public:missing_expense_types')
         self.assertEqual(expense_types_url, '/api/expense_types/missing/')
 
+        airlines_url = reverse('public:missing_airlines')
+        self.assertEqual(airlines_url, '/api/airlines/missing/')
+
     def test_on_instance_delete(self):
         expense_type = ExpenseTypeFactory()
 

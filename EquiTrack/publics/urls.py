@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.conf.urls import patterns, url
 
 from publics.views import StaticDataView, WBSGrantFundView, CurrenciesView, DSARegionsView, BusinessAreasView,\
-    ExpenseTypesView
+    ExpenseTypesView, AirlinesView
 
 urlpatterns = patterns(
     '',
@@ -24,4 +24,7 @@ urlpatterns = patterns(
 
     url(r'^expense_types/$', ExpenseTypesView.as_view({'get': 'list'}), name='expense_types'),
     url(r'^expense_types/missing/$', ExpenseTypesView.as_view({'get': 'missing'}), name='missing_expense_types'),
+
+    url(r'^airlines/$', AirlinesView.as_view({'get': 'list'}), name='airlines'),
+    url(r'^airlines/missing/$', AirlinesView.as_view({'get': 'missing'}), name='missing_airlines'),
 )
