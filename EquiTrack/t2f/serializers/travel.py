@@ -311,7 +311,10 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
                 travel_q = Q(traveler=traveler)
                 travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
                 travel_q &= Q(start_date__range=(start_date, end_date)) | Q(end_date__range=(start_date, end_date))
-                travel_q &= ~Q(id=self.instance.id)
+
+                # In case of first save, no id present
+                if self.instance:
+                    travel_q &= ~Q(id=self.instance.id)
 
                 if Travel.objects.filter(travel_q).exists():
                     raise ValidationError(ugettext('You have an existing trip with overlapping dates. '
