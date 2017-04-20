@@ -14,6 +14,7 @@ from partners.models import Intervention
 from rest_framework.exceptions import ValidationError
 from partners.permissions import PartneshipManagerRepPermission
 
+
 class ResultListAPIView(ListAPIView):
     serializer_class = ResultListSerializer
     permission_classes = (IsAdminUser,)
@@ -55,7 +56,6 @@ class ResultListAPIView(ListAPIView):
             current_cp = CountryProgramme.current()
             return q.filter(country_programme=current_cp)
 
-
     def list(self, request):
         dropdown = self.request.query_params.get("dropdown", None)
         if dropdown in ['true', 'True', '1', 'yes']:
@@ -92,6 +92,7 @@ class ResultIndicatorListAPIView(ListAPIView):
             status=status.HTTP_200_OK
         )
 
+
 class LowerResultsDeleteView(DestroyAPIView):
     permission_classes = (PartneshipManagerRepPermission,)
 
@@ -101,9 +102,9 @@ class LowerResultsDeleteView(DestroyAPIView):
         except LowerResult.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if lower_result.result_link.intervention.status in [Intervention.DRAFT] or \
-                        request.user in lower_result.result_link.intervention.unicef_focal_points.all() or \
-                        request.user.groups.filter(name__in=['Partnership Manager',
-                                                             'Senior Management Team']).exists():
+            request.user in lower_result.result_link.intervention.unicef_focal_points.all() or \
+            request.user.groups.filter(name__in=['Partnership Manager',
+                                                 'Senior Management Team']).exists():
             lower_result.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
