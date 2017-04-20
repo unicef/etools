@@ -133,6 +133,14 @@ class DSACalculator(object):
         return d
 
     def calculate_dsa(self):
+        # If TA not required, dsa amounts should be zero
+        if not self.travel.ta_required:
+            self.total_dsa = Decimal(0)
+            self.total_deductions = Decimal(0)
+            self.paid_to_traveler = Decimal(0)
+            self.detailed_dsa = []
+            return
+
         dsa_dto_list = self.get_by_day_grouping()
         dsa_dto_list = self.check_one_day_long_trip(dsa_dto_list)
         dsa_dto_list = self.calculate_daily_dsa_rate(dsa_dto_list)

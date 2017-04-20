@@ -4,6 +4,8 @@ import functools
 
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import models
+from django.db.models.functions import Concat, Value
+from django.db.models import F
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -204,11 +206,12 @@ class PMPDropdownsListApiView(APIView):
         """
         Return All dropdown values used for Agreements form
         """
-        signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team'],
-                                                           profile__country=request.tenant).values('id',
-                                                                                                   'first_name',
-                                                                                                   'last_name',
-                                                                                                   'email'))
+        signed_by_unicef = list(models.User.objects.filter(
+            groups__name__in=['Senior Management Team'],
+            profile__country=request.tenant).annotate(
+                full_name=Concat('first_name', Value(' '), 'last_name'), user_id=F('id')
+            ).values('user_id', 'full_name', 'username', 'email'))
+
         hrps = list(ResultStructure.objects.values())
         current_country_programme = CountryProgramme.current()
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False,

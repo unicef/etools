@@ -19,25 +19,56 @@ class ResultListAPIView(ListAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        current_cp = CountryProgramme.current()
-        q = Result.objects.filter(country_programme=current_cp)
-
+        q = Result.objects.all()
         query_params = self.request.query_params
+        queries = []
+        result_ids = []
         if query_params:
-            queries = []
-
-            if "country_programme" in query_params.keys():
-                cp_year = query_params.get("country_programme", None)
+            if "year" in query_params.keys():
+                cp_year = query_params.get("year", None)
                 queries.append(Q(country_programme__wbs__contains='/A0/'))
                 queries.append(Q(country_programme__from_date__year__lte=cp_year))
                 queries.append(Q(country_programme__to_date__year__gte=cp_year))
             if "result_type" in query_params.keys():
-                queries.append(Q(result_type__name=query_params.get("result_type")))
+                queries.append(Q(result_type__name=query_params.get("result_type").title()))
+            if "country_programme" in query_params.keys():
+                cp = query_params.get("country_programme", None)
+                queries.append(Q(country_programme=cp))
+            if "values" in query_params.keys():
+                result_ids = query_params.get("values", None)
+                try:
+                    result_ids = [int(x) for x in result_ids.split(",")]
+                except ValueError:
+                    raise ValidationError("Query parameter values are not integers")
+                else:
+                    queries.append(Q(id__in=result_ids))
+        if queries:
+            expression = functools.reduce(operator.and_, queries)
+            q = q.filter(expression)
+            # check if all value IDs passed in are returned by the query
+            if result_ids and len(result_ids) != q.count():
+                raise ValidationError("One of the value IDs was not found")
 
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-        return q
+        if any(x in ['year', 'country_programme', 'values'] for x in query_params.keys()):
+            return q
+        else:
+            current_cp = CountryProgramme.current()
+            return q.filter(country_programme=current_cp)
+
+
+    def list(self, request):
+        dropdown = self.request.query_params.get("dropdown", None)
+        if dropdown in ['true', 'True', '1', 'yes']:
+            cp_outputs = list(self.get_queryset().values('id', 'name', 'wbs'))
+            return Response(
+                cp_outputs,
+                status=status.HTTP_200_OK
+            )
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
 
 class ResultDetailAPIView(RetrieveAPIView):
