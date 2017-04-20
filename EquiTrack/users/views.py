@@ -1,4 +1,3 @@
-import string
 
 from django.db import connection
 from django.views.generic import FormView
@@ -15,11 +14,9 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
 from users.serializers import MinimalUserSerializer
-from rest_framework.permissions import IsAdminUser
 from users.models import Office, Section
-from reports.models import Sector
 from .forms import ProfileForm
-from .models import User, UserProfile, Country, Group
+from .models import User, UserProfile, Country
 from .serializers import (
     UserSerializer,
     GroupSerializer,
@@ -114,7 +111,7 @@ class MyProfileAPIView(RetrieveUpdateAPIView):
         """
         try:
             obj = self.request.user.profile
-        except AttributeError as e:
+        except AttributeError:
             self.request.user.save()
             obj = self.request.user.profile
 
@@ -135,13 +132,15 @@ class UsersDetailAPIView(RetrieveAPIView):
         """
         Returns a UserProfile object for this PK
         """
+        data = None
         try:
             queryset = self.queryset.get(user__id=pk)
             serializer = self.serializer_class(queryset)
+            data = serializer.data
         except UserProfile.DoesNotExist:
             data = {}
         return Response(
-            serializer.data,
+            data,
             status=status.HTTP_200_OK
         )
 
@@ -188,9 +187,9 @@ class ProfileEdit(FormView):
 
 
 class GroupViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           viewsets.GenericViewSet):
+                   mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   viewsets.GenericViewSet):
     """
     Returns a list of all User Groups
     """
@@ -295,9 +294,9 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
 
 class OfficeViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           viewsets.GenericViewSet):
+                    mixins.ListModelMixin,
+                    mixins.CreateModelMixin,
+                    viewsets.GenericViewSet):
     """
     Returns a list of all Offices
     """
@@ -309,9 +308,9 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
 
 
 class SectionViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           viewsets.GenericViewSet):
+                     mixins.ListModelMixin,
+                     mixins.CreateModelMixin,
+                     viewsets.GenericViewSet):
     """
     Returns a list of all Sections
     """

@@ -7,7 +7,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.contrib.postgres.fields import ArrayField
 
 from djangosaml2.signals import pre_user_save
 
@@ -113,8 +112,9 @@ class CountryOfficeManager(models.Manager):
         if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
             return super(CountryOfficeManager, self).get_queryset().filter(offices=connection.tenant)
         else:
-            #this only gets called on initialization because FakeTenant does not have the model attrs
-            # see: https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
+            # this only gets called on initialization because FakeTenant does not have the model attrs
+            # see:
+            # https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
             return super(CountryOfficeManager, self).get_queryset()
 
 
@@ -144,8 +144,9 @@ class CountrySectionManager(models.Manager):
         if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
             return super(CountrySectionManager, self).get_queryset().filter(sections=connection.tenant)
         else:
-            #this only gets called on initialization because FakeTenant does not have the model attrs
-            # see: https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
+            # this only gets called on initialization because FakeTenant does not have the model attrs
+            # see:
+            # https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
             return super(CountrySectionManager, self).get_queryset()
 
 
@@ -188,7 +189,7 @@ class UserProfile(models.Model):
     )
     country = models.ForeignKey(Country, null=True, blank=True)
     country_override = models.ForeignKey(Country, null=True, blank=True, related_name="country_override")
-    countries_available = models.ManyToManyField(Country, blank=True,  related_name="accessible_by")
+    countries_available = models.ManyToManyField(Country, blank=True, related_name="accessible_by")
     section = models.ForeignKey(Section, null=True, blank=True)
     office = models.ForeignKey(Office, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
@@ -209,9 +210,8 @@ class UserProfile(models.Model):
     # TODO: refactor when sections are properly set
     section_code = models.CharField(max_length=32, null=True, blank=True)
 
-
     # TODO: figure this out when we need to autmatically map to groups
-    #vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES), blank=True, null=True)
+    # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES), blank=True, null=True)
 
     def username(self):
         return self.user.username
@@ -291,7 +291,7 @@ class UserProfile(models.Model):
 
 
 post_save.connect(UserProfile.create_user_profile, sender=User)
-pre_user_save.connect(UserProfile.custom_update_user)  #TODO: The sender should be set
+pre_user_save.connect(UserProfile.custom_update_user)  # TODO: The sender should be set
 
 
 def create_partner_user(sender, instance, created, **kwargs):
@@ -347,6 +347,7 @@ def delete_partner_relationship(sender, instance, **kwargs):
             profile.user.save()
     except Exception as exp:
         logger.exception('Exception occurred whilst de-linking partner user: {}'.format(exp.message))
+
 
 pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')
 post_save.connect(create_partner_user, sender='partners.PartnerStaffMember')
