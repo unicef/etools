@@ -13,7 +13,7 @@ from django.conf import settings
 from django.db import models, connection
 from django.template.context import Context
 from django.template.loader import render_to_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, ugettext_lazy
 from django_fsm import FSMField, transition
 
 from publics.models import TravelExpenseType
@@ -46,13 +46,13 @@ class UserTypes(object):
 
     CHOICES = (
         (GOD, 'God'),
-        (ANYONE, _('Anyone')),
-        (TRAVELER, _('Traveler')),
-        (TRAVEL_ADMINISTRATOR, _('Travel Administrator')),
-        (SUPERVISOR, _('Supervisor')),
-        (TRAVEL_FOCAL_POINT, _('Travel Focal Point')),
-        (FINANCE_FOCAL_POINT, _('Finance Focal Point')),
-        (REPRESENTATIVE, _('Representative')),
+        (ANYONE, ugettext_lazy('Anyone')),
+        (TRAVELER, ugettext_lazy('Traveler')),
+        (TRAVEL_ADMINISTRATOR, ugettext_lazy('Travel Administrator')),
+        (SUPERVISOR, ugettext_lazy('Supervisor')),
+        (TRAVEL_FOCAL_POINT, ugettext_lazy('Travel Focal Point')),
+        (FINANCE_FOCAL_POINT, ugettext_lazy('Finance Focal Point')),
+        (REPRESENTATIVE, ugettext_lazy('Representative')),
     )
 
 
@@ -151,18 +151,18 @@ class Travel(models.Model):
     COMPLETED = 'completed'
 
     CHOICES = (
-        (PLANNED, _('Planned')),
-        (SUBMITTED, _('Submitted')),
-        (REJECTED, _('Rejected')),
-        (APPROVED, _('Approved')),
-        (COMPLETED, _('Completed')),
-        (CANCELLED, _('Cancelled')),
-        (SENT_FOR_PAYMENT, _('Sent for payment')),
-        (CERTIFICATION_SUBMITTED, _('Certification submitted')),
-        (CERTIFICATION_APPROVED, _('Certification approved')),
-        (CERTIFICATION_REJECTED, _('Certification rejected')),
-        (CERTIFIED, _('Certified')),
-        (COMPLETED, _('Completed')),
+        (PLANNED, ugettext_lazy('Planned')),
+        (SUBMITTED, ugettext_lazy('Submitted')),
+        (REJECTED, ugettext_lazy('Rejected')),
+        (APPROVED, ugettext_lazy('Approved')),
+        (COMPLETED, ugettext_lazy('Completed')),
+        (CANCELLED, ugettext_lazy('Cancelled')),
+        (SENT_FOR_PAYMENT, ugettext_lazy('Sent for payment')),
+        (CERTIFICATION_SUBMITTED, ugettext_lazy('Certification submitted')),
+        (CERTIFICATION_APPROVED, ugettext_lazy('Certification approved')),
+        (CERTIFICATION_REJECTED, ugettext_lazy('Certification rejected')),
+        (CERTIFIED, ugettext_lazy('Certified')),
+        (COMPLETED, ugettext_lazy('Completed')),
     )
 
     created = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -287,7 +287,8 @@ class Travel(models.Model):
 
         end_date_limit = datetime.utcnow() - timedelta(days=15)
         if travels.filter(end_date__lte=end_date_limit).exists():
-            raise TransitionError('Travel is older than 15 days. Please complete it first.')
+            raise TransitionError(ugettext('Another of your trips ended more than 15 days ago, but was not completed '
+                                           'yet. Please complete that before creating a new trip.'))
 
         return True
 
