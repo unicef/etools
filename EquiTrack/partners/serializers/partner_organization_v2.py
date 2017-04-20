@@ -1,6 +1,8 @@
 import json
+import datetime
 from operator import xor
 
+from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -194,6 +196,12 @@ class AssessmentDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assessment
         fields = "__all__"
+
+    def validate(self, data):
+        today = timezone.now().date()
+        if data["completed_date"] > today:
+            raise serializers.ValidationError({'completed_date': ['The Date of Report cannot be in the future']})
+        return data
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
