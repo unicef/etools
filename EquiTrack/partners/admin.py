@@ -781,20 +781,6 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
         return request.user.is_superuser
 
 
-# class AssessmentAdminInline(admin.TabularInline):
-#     model = Assessment
-#     form = AssessmentAdminForm
-#     formset = ParentInlineAdminFormSet
-#     extra = 0
-#     fields = (
-#         u'type',
-#         u'completed_date',
-#         u'current',
-#         u'report',
-#     )
-#     verbose_name = u'Assessments and Audits record'
-#     verbose_name_plural = u'Assessments and Audits records'
-
 class AssessmentAdmin(admin.ModelAdmin):
     model = Assessment
     fields = (
@@ -910,10 +896,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  )
         }),
     )
-    inlines = [
-        # PartnerStaffMemberInlineAdmin,
-    ]
-
     actions = (
         'hide_partners',
         'show_partners'
@@ -941,37 +923,32 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         return request.user.is_superuser
 
 
-class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
-    verbose_name = u'Revision'
-    model = AgreementAmendmentLog
-    extra = 0
-    fields = (
-        'status',
-        'amended_at',
-        'amendment_number',
+class AgreementAmendmentTypeAdmin(admin.ModelAdmin):
+    model = AgreementAmendmentType
+    list_filter = (
+        u'agreement_amendment',
+        u'agreement_amendment__agreement',
+        u'agreement_amendment__agreement__partner',
     )
-    readonly_fields = [
-        'amendment_number',
-    ]
-
-    def get_max_num(self, request, obj=None, **kwargs):
-        """
-        Overriding here to disable adding amendments to non-active partnerships
-        """
-        if obj and obj.agreement_type == Agreement.PCA:
-            return self.max_num
-
-        return 0
 
 
-class AgreementAmendmentInlineAdmin(admin.TabularInline):
+class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = u'Amendment'
     model = AgreementAmendment
-    extra = 0
     fields = (
         'signed_amendment',
         'signed_date',
         'number',
+    )
+    list_display = (
+        u'agreement',
+        u'number',
+        u'signed_amendment',
+        u'signed_date',
+    )
+    list_filter = (
+        u'agreement',
+        u'agreement__partner'
     )
     readonly_fields = [
         'number',
@@ -1026,10 +1003,6 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
     filter_horizontal = (
         u'authorized_officers',
     )
-    inlines = [
-        # AgreementAmendmentLogInlineAdmin,
-        AgreementAmendmentInlineAdmin,
-    ]
 
     def download_url(self, obj):
         if obj and obj.agreement_type == Agreement.PCA:
@@ -1106,15 +1079,22 @@ class SupplyItemAdmin(admin.ModelAdmin):
 
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
-admin.site.register(BankDetails)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
+
+
+admin.site.register(Agreement, AgreementAdmin)
+admin.site.register(AgreementAmendment, AgreementAmendmentAdmin)
+admin.site.register(AgreementAmendmentType, AgreementAmendmentTypeAdmin)
+
+
+admin.site.register(Intervention, InterventionAdmin)
 
 
 admin.site.register(SupplyItem, SupplyItemAdmin)
 admin.site.register(PCA, PartnershipAdmin)
-admin.site.register(Intervention, InterventionAdmin)
-admin.site.register(Agreement, AgreementAdmin)
-admin.site.register(AgreementAmendmentType)
+
+
+
 
 admin.site.register(FileType, FileTypeAdmin)
 # admin.site.register(Assessment, AssessmentAdmin)
