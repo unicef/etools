@@ -2,7 +2,8 @@
 from base import *  # noqa
 import os
 import datetime
-from os import environ, join
+from os import environ
+from os.path import join
 import saml2
 from saml2 import saml
 from cryptography.x509 import load_pem_x509_certificate
