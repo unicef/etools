@@ -29,6 +29,7 @@ class ParentInlineAdminFormSet(BaseInlineFormSet):
     Passes the parent instance to the form constructor for easy
     access by child inline forms to use for conditional filtering
     """
+
     def _construct_form(self, i, **kwargs):
         kwargs['parent_object'] = self.instance
         return super(ParentInlineAdminFormSet, self)._construct_form(i, **kwargs)
@@ -54,7 +55,7 @@ class RequireOneFormSet(ParentInlineAdminFormSet):
 
         if completed < 1 and self.required:
             raise forms.ValidationError("At least one %s is required." %
-                self.model._meta.object_name.lower())
+                                        self.model._meta.object_name.lower())
 
 
 class UserGroupForm(forms.ModelForm):

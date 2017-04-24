@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 
-from django.db.models.manager import Manager
 from pytz import UTC
 
 from django.db.models import QuerySet

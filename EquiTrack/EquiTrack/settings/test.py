@@ -1,8 +1,8 @@
-from base import *
+from base import *  # noqa
 
 ALLOWED_HOSTS = ['127.0.0.1']
 # This has to be set to this particular backend in order for django to grab email and expose in tests
-POST_OFFICE['BACKENDS']['default'] = 'django.core.mail.backends.locmem.EmailBackend'
+POST_OFFICE['BACKENDS']['default'] = 'django.core.mail.backends.locmem.EmailBackend'  # noqa
 
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',

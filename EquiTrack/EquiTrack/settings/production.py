@@ -1,23 +1,28 @@
 """Production settings and globals."""
+from base import *  # noqa
+import os
+import datetime
+from os import environ, join
+import saml2
+from saml2 import saml
+from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.backends import default_backend
 
-from os import environ
-from base import *
-
-########## HOST CONFIGURATION
+# HOST CONFIGURATION
 # See: https://docs.djangoproject.com/en/1.5/releases/1.5/#allowed-hosts-required-in-production
 ALLOWED_HOSTS = [
     os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
 ]
-########## END HOST CONFIGURATION
+# END HOST CONFIGURATION
 
 ETRIPS_VERSION = environ.get('ETRIPS_VERSION', None)
 
-#Sentry config
+# Sentry config
 RAVEN_CONFIG = {
     'dsn': environ.get('SENTRY_DSN', None),
 }
 
-INSTALLED_APPS = INSTALLED_APPS + (
+INSTALLED_APPS = INSTALLED_APPS + (  # noqa
     'raven.contrib.django.raven_compat',
 )
 
@@ -26,9 +31,9 @@ INSTALLED_APPS = INSTALLED_APPS + (
 # )
 
 SOCIALACCOUNT_PROVIDERS = \
-    { 'google':
-        { 'SCOPE': ['profile', 'email'],
-          'AUTH_PARAMS': { 'access_type': 'online' } }}
+    {'google':
+        {'SCOPE': ['profile', 'email'],
+         'AUTH_PARAMS': {'access_type': 'online'}}}
 
 SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
@@ -64,7 +69,7 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
             new_meta.write(meta.read())
 
 
-SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
+SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)  # noqa
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
@@ -92,10 +97,10 @@ SAML_CONFIG = {
     'xmlsec_binary': '/usr/bin/xmlsec1',
 
     # your entity id, usually your subdomain plus the url to the metadata view
-    'entityid': 'https://{}/saml2/metadata/'.format(HOST),
+    'entityid': 'https://{}/saml2/metadata/'.format(HOST),  # noqa
 
     # directory with attribute mapping
-    'attribute_map_dir': join(DJANGO_ROOT, 'saml/attribute-maps'),
+    'attribute_map_dir': join(DJANGO_ROOT, 'saml/attribute-maps'),  # noqa
 
     # this block states what services we provide
     'service': {
@@ -107,15 +112,15 @@ SAML_CONFIG = {
                 # url and binding to the assetion consumer service view
                 # do not change the binding or service name
                 'assertion_consumer_service': [
-                    ('https://{}/saml2/acs/'.format(HOST),
+                    ('https://{}/saml2/acs/'.format(HOST),  # noqa
                      saml2.BINDING_HTTP_POST),
                 ],
                 # url and binding to the single logout service view
                 # do not change the binding or service name
                 'single_logout_service': [
-                    ('https://{}/saml2/ls/'.format(HOST),
+                    ('https://{}/saml2/ls/'.format(HOST),  # noqa
                      saml2.BINDING_HTTP_REDIRECT),
-                    ('https://{}/saml2/ls/post'.format(HOST),
+                    ('https://{}/saml2/ls/post'.format(HOST),  # noqa
                      saml2.BINDING_HTTP_POST),
                 ],
 
@@ -127,7 +132,7 @@ SAML_CONFIG = {
     },
     # where the remote metadata is stored
     'metadata': {
-        "local": [join(DJANGO_ROOT, 'saml/federationmetadata.xml')],
+        "local": [join(DJANGO_ROOT, 'saml/federationmetadata.xml')],  # noqa
         # "remote": [
         #     {
         #         "url": "http://sts.unicef.org/federationmetadata/2007-06/federationmetadata.xml",
@@ -143,8 +148,8 @@ SAML_CONFIG = {
     'accepted_time_diff': 300,  # in seconds
 
     # certificate
-    'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
-    'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),  # public part
+    'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # noqa # private part
+    'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),  # noqa # public part
 
     # own metadata settings
     'contact_person': [
@@ -164,8 +169,8 @@ SAML_CONFIG = {
 }
 SAML_SIGNED_LOGOUT = True
 
-########## JWT AUTH CONFIGURATION
-certificate_text = open(join(DJANGO_ROOT, 'saml/etripspub.cer'), 'r').read()
+# JWT AUTH CONFIGURATION
+certificate_text = open(join(DJANGO_ROOT, 'saml/etripspub.cer'), 'r').read()  # noqa
 certificate = load_pem_x509_certificate(certificate_text, default_backend())
 JWT_SECRET_KEY = certificate.public_key()
 JWT_AUTH = {
@@ -193,7 +198,7 @@ JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_LEEWAY': 60,
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
-    #'JWT_AUDIENCE': 'https://{}/API'.format(HOST),
+    # 'JWT_AUDIENCE': 'https://{}/API'.format(HOST),
     # TODO: FIX THIS, NEEDS SETUP WITH ADFS
     'JWT_AUDIENCE': 'https://etools.unicef.org/API',
     'JWT_ISSUER': None,
@@ -203,13 +208,13 @@ JWT_AUTH = {
 
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
-######## END JWT AUTH CONFIGURATION
+# END JWT AUTH CONFIGURATION
 
-########## CACHE CONFIGURATION
+# CACHE CONFIGURATION
 CACHES = {
     'default': {
         'BACKEND': 'redis_cache.RedisCache',
         'LOCATION': environ.get('REDIS_URL', 'redis://localhost:6379/0')
     }
 }
-########## END CACHE CONFIGURATION
+# END CACHE CONFIGURATION

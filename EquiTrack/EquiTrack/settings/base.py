@@ -4,17 +4,12 @@ from __future__ import absolute_import
 import os
 from os.path import abspath, basename, dirname, join, normpath
 from sys import path
-import datetime
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.backends import default_backend
 
 import dj_database_url
-import saml2
-from saml2 import saml
-from kombu import Exchange, Queue
+import djcelery
 
 
-########## PATH CONFIGURATION
+# PATH CONFIGURATION
 # Absolute filesystem path to the Django project directory:
 DJANGO_ROOT = dirname(dirname(abspath(__file__)))
 
@@ -62,7 +57,7 @@ SUIT_CONFIG = {
             {'model': 'reports.goal'},
         ]},
 
-        #{'app': 'activityinfo', 'label': 'ActivityInfo'},
+        # {'app': 'activityinfo', 'label': 'ActivityInfo'},
 
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
@@ -75,7 +70,7 @@ LOGIN_REDIRECT_URL = '/dash/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
-########## EMAIL CONFIGURATION
+# EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 POST_OFFICE = {
@@ -91,8 +86,8 @@ EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_PORT = os.environ.get('EMAIL_HOST_PORT', 587)
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', False) #set True if using TLS
-########## END EMAIL CONFIGURATION
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', False)  # set True if using TLS
+# END EMAIL CONFIGURATION
 
 REST_FRAMEWORK = {
     # this setting fixes the bug where user can be logged in as AnonymousUser
@@ -126,9 +121,9 @@ SWAGGER_SETTINGS = {
 # Add our project to our pythonpath, this way we don't need to type our project
 # name in our dotted import paths:
 path.append(DJANGO_ROOT)
-########## END PATH CONFIGURATION
+# END PATH CONFIGURATION
 
-########## DEBUG CONFIGURATION
+# DEBUG CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#debug
 DEBUG = os.environ.get('DJANGO_DEBUG', False)
 
@@ -138,9 +133,9 @@ if isinstance(DEBUG, str):
     else:
         DEBUG = False
 
-########## END DEBUG CONFIGURATION
+# END DEBUG CONFIGURATION
 
-########## DATABASE CONFIGURATION #########
+# ######### DATABASE CONFIGURATION #########
 POSTGIS_VERSION = (2, 1)
 db_config = dj_database_url.config(
     env="DATABASE_URL",
@@ -156,7 +151,6 @@ DATABASE_ROUTERS = (
     'tenant_schemas.routers.TenantSyncRouter',
 )
 
-import djcelery
 djcelery.setup_loader()
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)
@@ -200,7 +194,7 @@ MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
 # SESSION_ENGINE = 'redis_sessions_fork.session'
 # SESSION_REDIS_URL = BROKER_URL
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
-########## END DATABASE CONFIGURATION
+# END DATABASE CONFIGURATION
 
 VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
@@ -208,7 +202,7 @@ VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
 
 USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 
-########## GENERAL CONFIGURATION
+# GENERAL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#time-zone
 TIME_ZONE = 'UTC'
 
@@ -228,14 +222,14 @@ USE_L10N = True
 USE_TZ = True
 
 DISABLE_INVOICING = True if os.getenv('DISABLE_INVOICING', False) in ['1', 'True', 'true'] else False
-########## END GENERAL CONFIGURATION
+# END GENERAL CONFIGURATION
 
 
-########## ALLAUTH CONFIGURATION
+# ALLAUTH CONFIGURATION
 SOCIALACCOUNT_PROVIDERS = \
-    { 'google':
-        { 'SCOPE': ['profile', 'email'],
-          'AUTH_PARAMS': { 'access_type': 'online' } }}
+    {'google':
+        {'SCOPE': ['profile', 'email'],
+         'AUTH_PARAMS': {'access_type': 'online'}}}
 
 SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
 ACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomAccountAdapter'
@@ -251,18 +245,18 @@ ACCOUNT_LOGOUT_REDIRECT_URL = "/login"
 ACCOUNT_LOGOUT_ON_GET = True
 
 ACCOUNT_EMAIL_VERIFICATION = "none"  # "optional", "mandatory" or "none"
-########## END ALLAUTH CONFIGURATION
+# END ALLAUTH CONFIGURATION
 
-########## MEDIA CONFIGURATION
+# MEDIA CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
 MEDIA_ROOT = normpath(join(SITE_ROOT, 'media'))
 
 MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
 
-########## END MEDIA CONFIGURATION
+# END MEDIA CONFIGURATION
 
-########## STATIC FILE CONFIGURATION
+# STATIC FILE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
 STATIC_ROOT = normpath(join(SITE_ROOT, 'static'))
 
@@ -276,26 +270,26 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
-########## END STATIC FILE CONFIGURATION
+# END STATIC FILE CONFIGURATION
 
 
-########## SECRET CONFIGURATION
+# SECRET CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 # Note: This key should only be used for development and testing.
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"
-########## END SECRET CONFIGURATION
+# END SECRET CONFIGURATION
 
 RAPIDPRO_TOKEN = os.environ.get('RAPIDPRO_TOKEN')
 
-########## FIXTURE CONFIGURATION
+# FIXTURE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-FIXTURE_DIRS
 FIXTURE_DIRS = (
     normpath(join(SITE_ROOT, 'EquiTrack/data')),
 )
-########## END FIXTURE CONFIGURATION
+# END FIXTURE CONFIGURATION
 
 
-########## TEMPLATE CONFIGURATION
+# TEMPLATE CONFIGURATION
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -322,10 +316,10 @@ TEMPLATES = [
         },
     },
 ]
-########## END TEMPLATE CONFIGURATION
+# END TEMPLATE CONFIGURATION
 
 
-########## MIDDLEWARE CONFIGURATION
+# MIDDLEWARE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#middleware-classes
 MIDDLEWARE_CLASSES = (
     # Default Django middleware.
@@ -339,16 +333,16 @@ MIDDLEWARE_CLASSES = (
     'EquiTrack.mixins.EToolsTenantMiddleware',
     'EquiTrack.mixins.CSRFExemptMiddleware',
 )
-########## END MIDDLEWARE CONFIGURATION
+# END MIDDLEWARE CONFIGURATION
 
 
-########## URL CONFIGURATION
+# URL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#root-urlconf
 ROOT_URLCONF = '%s.urls' % SITE_NAME
-########## END URL CONFIGURATION
+# END URL CONFIGURATION
 
 
-########## APP CONFIGURATION
+# APP CONFIGURATION
 SHARED_APPS = (
     # Default Django apps:
     'django.contrib.auth',
@@ -389,14 +383,14 @@ SHARED_APPS = (
     'paintstore',
     'corsheaders',
     'djangosaml2',
-    #allauth
+    # allauth
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     # allauth providers you want to enable:
-    #'allauth.socialaccount.providers.facebook',
+    # 'allauth.socialaccount.providers.facebook',
     'allauth.socialaccount.providers.google',
-    #'allauth.socialaccount.providers.twitter',
+    # 'allauth.socialaccount.providers.twitter',
     'analytical',
     'mptt',
     'easy_pdf',
@@ -432,7 +426,7 @@ TENANT_APPS = (
 
 
 LEAFLET_CONFIG = {
-    'TILES':  'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    'TILES': 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
     'ATTRIBUTION_PREFIX': 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
     'MIN_ZOOM': 3,
     'MAX_ZOOM': 18,
@@ -448,23 +442,23 @@ ACTSTREAM_SETTINGS = {
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
 TENANT_MODEL = "users.Country"  # app.Model
-########## END APP CONFIGURATION
+# END APP CONFIGURATION
 
 
-########## CACHE CONFIGURATION
+# CACHE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#caches
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
-########## END CACHE CONFIGURATION
+# END CACHE CONFIGURATION
 
 
-########## WSGI CONFIGURATION
+# WSGI CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
-########## END WSGI CONFIGURATION
+# END WSGI CONFIGURATION
 
 LOGGING = {
     'version': 1,

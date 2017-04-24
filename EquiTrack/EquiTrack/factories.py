@@ -3,11 +3,8 @@ Model factories used for generating models dynamically for tests
 """
 import json
 
-from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
-import decimal
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
 
@@ -16,7 +13,6 @@ from factory import fuzzy
 
 from users import models as user_models
 from trips import models as trip_models
-from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
@@ -56,11 +52,13 @@ class GroupFactory(factory.django.DjangoModelFactory):
 
     name = "Partnership Manager"
 
+
 class UnicefUserGroupFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Group
 
     name = "UNICEF User"
+
 
 class ProfileFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -84,7 +82,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Sequence(lambda n: "user{}@notanemail.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
-    #group = factory.SubFactory(UnicefUserGroupFactory)
+    # group = factory.SubFactory(UnicefUserGroupFactory)
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
     profile = factory.RelatedFactory(ProfileFactory, 'user')
@@ -103,6 +101,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     def groups(self, create, extracted, **kwargs):
         group, created = Group.objects.get_or_create(name='UNICEF User')
         self.groups.add(group)
+
 
 class TripFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -170,7 +169,6 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
-
 class PartnershipFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PCA
@@ -203,6 +201,7 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
     year = '2017'
+
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -338,6 +337,7 @@ class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
             for label in extracted:
                 self.labels.add(label)
 
+
 class MilestoneFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = workplan_models.Milestone
@@ -345,6 +345,7 @@ class MilestoneFactory(factory.django.DjangoModelFactory):
     result_wp_property = factory.SubFactory(ResultWorkplanPropertyFactory)
     description = factory.Sequence(lambda n: 'Description {}'.format(n))
     assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
+
 
 class CoverPageBudgetFactory(factory.DjangoModelFactory):
     class Meta:
@@ -426,4 +427,5 @@ class NotificationFactory(factory.django.DjangoModelFactory):
     sender = factory.SubFactory(AgreementFactory)
     template_name = 'trips/trip/TA_request'
     recipients = ['test@test.com', 'test1@test.com', 'test2@test.com']
-    template_data = factory.Dict({'url': 'www.unicef.org', 'pa_assistant': 'Test revised', 'owner_name': 'Tester revised'}, dict_factory=JSONFieldFactory)
+    template_data = factory.Dict({'url': 'www.unicef.org', 'pa_assistant': 'Test revised',
+                                  'owner_name': 'Tester revised'}, dict_factory=JSONFieldFactory)

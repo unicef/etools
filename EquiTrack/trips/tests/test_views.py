@@ -62,4 +62,3 @@ class TestTripViews(APITenantTestCase):
         self.assertEquals(response.status_code, 200)
 
 # TODO: Test all the rest of the views
-

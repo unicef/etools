@@ -4,23 +4,21 @@ import random
 
 import logging
 
-from django.db import IntegrityError, connection
+from django.db import connection
 from django.db.models.signals import post_delete, post_save
 from django.dispatch.dispatcher import receiver
 from django.core.cache import cache
 from django.contrib.gis.db import models
-from django.contrib.contenttypes.models import ContentType
 
 from mptt.models import MPTTModel, TreeForeignKey
-from cartodb import CartoDBAPIKey, CartoDBException
-from smart_selects.db_fields import ChainedForeignKey
 from paintstore.fields import ColorPickerField
 
 logger = logging.getLogger('locations.models')
 
 
 def get_random_color():
-    r = lambda: random.randint(0,255)
+    def r():
+        return random.randint(0, 255)
     return '#%02X%02X%02X' % (r(), r(), r())
 
 
@@ -29,7 +27,7 @@ class GatewayType(models.Model):
     Represents an Admin Type in location-related models.
     """
 
-    name = models.CharField(max_length=64L, unique=True)
+    name = models.CharField(max_length=64, unique=True)
 
     class Meta:
         ordering = ['name']
@@ -53,11 +51,11 @@ class Location(MPTTModel):
     Relates to :model:`locations.GatewayType`
     """
 
-    name = models.CharField(max_length=254L)
+    name = models.CharField(max_length=254)
     gateway = models.ForeignKey(GatewayType, verbose_name='Location Type')
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-    p_code = models.CharField(max_length=32L, blank=True, null=True)
+    p_code = models.CharField(max_length=32, blank=True, null=True)
 
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     geom = models.MultiPolygonField(null=True, blank=True)
@@ -67,7 +65,7 @@ class Location(MPTTModel):
     objects = LocationManager()
 
     def __unicode__(self):
-        #TODO: Make generic
+        # TODO: Make generic
         return u'{} ({} {})'.format(
             self.name,
             self.gateway.name,
@@ -80,7 +78,6 @@ class Location(MPTTModel):
     @property
     def geo_point(self):
         return self.point if self.point else self.geom.point_on_surface if self.geom else ""
-
 
     @property
     def point_lat_long(self):

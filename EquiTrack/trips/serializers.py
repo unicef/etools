@@ -1,7 +1,5 @@
 __author__ = 'jcranwellward'
 
-#import logging
-
 from django.contrib.sites.models import Site
 
 from rest_framework import serializers
@@ -222,7 +220,7 @@ class TripSerializer(serializers.ModelSerializer):
                     ActionPoint.objects.filter(pk=ap_id).update(**ap_data)
 
                 else:
-                    #create a new action_point
+                    # create a new action_point
                     ActionPoint.objects.create(trip=instance, **ap_data)
 
         return instance

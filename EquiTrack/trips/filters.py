@@ -55,6 +55,7 @@ class UserStaffFliterMixin(object):
             (user.id, user)
             for user in User.objects.filter(is_staff=True).all()
         ]
+
     def queryset(self, request, queryset):
 
         if self.value():

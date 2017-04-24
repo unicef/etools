@@ -3,7 +3,7 @@ import datetime
 from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.admin.models import LogEntry
-from partners.models import PCA, PartnerOrganization, GwPCALocation
+from partners.models import PCA, PartnerOrganization
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType
 from funds.models import Donor
@@ -29,7 +29,7 @@ class DashboardView(TemplateView):
             structure_id = ResultStructure.objects.filter(
                 from_date__lte=now,
                 to_date__gte=now
-            ).values_list('id',  flat=True).first()
+            ).values_list('id', flat=True).first()
         try:
             current_structure = ResultStructure.objects.get(id=structure_id)
         except ResultStructure.DoesNotExist:
@@ -103,7 +103,7 @@ class PartnershipsView(DashboardView):
         active_this_year = active_partnerships.filter(
             start_date__year=today.year
         )
-        last_years = datetime.date(today.year-1, 12, 31)
+        last_years = datetime.date(today.year - 1, 12, 31)
 
         active_last_year = active_partnerships.filter(
             start_date__lte=last_years
@@ -126,25 +126,25 @@ class PartnershipsView(DashboardView):
         # (1) Number and value of Active Partnerships for this year
         data['active_count'] = active_partnerships.count()
         data['active_value'] = sum([pd.planned_cash_transfers for pd in active_partnerships.all()])
-        data['active_percentage'] = "{0:.0f}%".format(active_partnerships.count()/active_partnerships.count() * 100) \
+        data['active_percentage'] = "{0:.0f}%".format(active_partnerships.count() / active_partnerships.count() * 100) \
                                     if active_partnerships.count() else 0
 
         # (2a) Number and value of Approved Partnerships this year
         data['active_this_year_count'] = active_this_year.count()
         data['active_this_year_value'] = sum([pd.planned_cash_transfers for pd in active_this_year.all()])
-        data['active_this_year_percentage'] = "{0:.0f}%".format(active_this_year.count()/active_partnerships.count() * 100) \
+        data['active_this_year_percentage'] = "{0:.0f}%".format(active_this_year.count() / active_partnerships.count() * 100) \
                                               if active_this_year.count() else 0
 
         # (2b) Number and value of Approved Partnerships last year
         data['active_last_year_count'] = active_last_year.count()
         data['active_last_year_value'] = sum([pd.planned_cash_transfers for pd in active_last_year.all()])
-        data['active_last_year_percentage'] = "{0:.0f}%".format(active_last_year.count()/active_partnerships.count() * 100) \
+        data['active_last_year_percentage'] = "{0:.0f}%".format(active_last_year.count() / active_partnerships.count() * 100) \
                                               if active_last_year.count() else 0
 
         # (3) Number and Value of Expiring Partnerships in next two months
         data['expire_in_two_months_count'] = expire_in_two_months.count()
         data['expire_in_two_months_value'] = sum([pd.planned_cash_transfers for pd in expire_in_two_months.all()])
-        data['expire_in_two_months_percentage'] = "{0:.0f}%".format(expire_in_two_months.count()/active_partnerships.count() * 100) \
+        data['expire_in_two_months_percentage'] = "{0:.0f}%".format(expire_in_two_months.count() / active_partnerships.count() * 100) \
                                                   if expire_in_two_months.count() else 0
 
         return data
@@ -213,6 +213,7 @@ class HACTDashboardView(TemplateView):
                 ]) | (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
             ).distinct()
         }
+
 
 class OutdatedBrowserView(TemplateView):
     template_name = 'outdated_browser.html'

@@ -2,7 +2,6 @@ import random
 
 from django.core import mail
 from rest_framework import status
-from rest_framework.fields import DateTimeField
 
 from EquiTrack.factories import UserFactory, CommentFactory, WorkplanFactory, \
     ResultWorkplanPropertyFactory, WorkplanProjectFactory, LabelFactory, ResultFactory, \
@@ -14,6 +13,7 @@ from workplan.tasks import notify_comment_tagged_users
 
 class TestWorkplanViews(APITenantTestCase):
     maxDiff = None
+
     def setUp(self):
         self.user = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -23,14 +23,14 @@ class TestWorkplanViews(APITenantTestCase):
         self.workplan_project = WorkplanProjectFactory(workplan=self.workplan)
         self.labels = [LabelFactory() for x in xrange(3)]
 
-        self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
+        self.result_type = ResultType.objects.get(id=random.choice([1, 2, 3]))
         self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
 
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(
-                                            workplan=self.workplan,
-                                            result=self.result,
-                                            labels=self.labels
-                                        )
+            workplan=self.workplan,
+            result=self.result,
+            labels=self.labels
+        )
         self.extra_label = LabelFactory()
         self.user2 = UserFactory()
 

@@ -5,14 +5,14 @@ def int_or_str(c):
     except ValueError:
         return c
 
+
 def list_or_dict(a):
     return '[]' if isinstance(a, int) else '{}'
 
 
 def l_o_k(myd):
     r = []
-    myl = list(myd.keys())
-    myl.sort()
+    myl = sorted(myd.keys())
     for k in myl:
         split_c = k.replace('[', ' ').replace(']', '').split(' ')
         split_c = map(int_or_str, split_c)
@@ -27,7 +27,7 @@ def form_path_from_list(p_l, list=False, end=False):
     for i in range(0, len(p_l)):
         k = p_l[i]
         if isinstance(k, int):
-            if list and i == len(p_l)-1:
+            if list and i == len(p_l) - 1:
                 r += '.append({})'
             else:
                 r += '[' + str(k) + ']'
@@ -51,6 +51,7 @@ def set_current_path_in_dict(r, path, next_value, end=False):
         exec exec_str in globals(), locals()
     return r
 
+
 def path_in_dict_exists(r, pth):
 
     try:
@@ -59,6 +60,7 @@ def path_in_dict_exists(r, pth):
     except Exception as e:
         return False
     return True
+
 
 def form_myd_path(path):
     mys = ''
@@ -69,6 +71,7 @@ def form_myd_path(path):
             mys += '[' + str(path[i]) + ']'
     return mys
 
+
 def parse_multipart_data(myd):
     r = {}
     lok = l_o_k(myd)
@@ -76,7 +79,6 @@ def parse_multipart_data(myd):
     def set_in_path(r, path, next_value, original_list):
         # 'strip the _obj elements before set'
         pth = form_path_from_list(path)
-
 
         if path_in_dict_exists(r, pth):
             # move to the next bit
@@ -89,14 +91,14 @@ def parse_multipart_data(myd):
     for k in lok:
         i = 0
         parcurs = []
-        if i >= len(k)-1:
+        if i >= len(k) - 1:
             r[k[i]] = myd[k[i]]
-        while i < len(k)-1:
+        while i < len(k) - 1:
             parcurs.append(k[i])
             e = k[i]
-            r = set_in_path(r, parcurs, k[i+1], k)
+            r = set_in_path(r, parcurs, k[i + 1], k)
             if i == len(k) - 2:
-                if not isinstance(k[i+1], int):
+                if not isinstance(k[i + 1], int):
                     parcurs.append(k[i + 1])
                     pth = form_path_from_list(parcurs)
                     exec_str = 'r' + pth + ' = ' + 'myd[form_myd_path(parcurs)]'
@@ -106,6 +108,6 @@ def parse_multipart_data(myd):
                     parcurs.append(k[i + 1])
                     exec_str = 'r' + pth + '.append(myd[form_myd_path(parcurs)])'
                     exec exec_str in globals(), locals()
-            i+=1
+            i += 1
 
     return r

@@ -62,7 +62,7 @@ class AppsIOSPlistView(View):
         with open(settings.SITE_ROOT + '/templates/trips/apps/etrips.plist', 'r') as my_f:
             result = my_f.read()
         etrips_version = settings.ETRIPS_VERSION or "2.9.7"
-        
+
         result = result.format(request.get_host(), etrips_version)
 
         return HttpResponse(result, content_type="application/octet-stream")
@@ -268,7 +268,8 @@ class TripsViewSet(mixins.RetrieveModelMixin,
             partnerships = []
 
         serializer.instance = serializer.save()
-        serializer.instance.created_date = datetime.datetime.strptime(request.data['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.created_date = datetime.datetime.strptime(
+            request.data['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
         serializer.instance.save()
         data = serializer.data
 
@@ -308,7 +309,8 @@ class TripsViewSet(mixins.RetrieveModelMixin,
 
         # some more hard-coded validation:
         if current_user.id not in [trip.owner.id, trip.supervisor.id]:
-            raise PermissionDenied(detail="You must be the traveller or the supervisor to change the status of the trip")
+            raise PermissionDenied(
+                detail="You must be the traveller or the supervisor to change the status of the trip")
 
         if action == 'approved':
             # make sure the current user is the supervisor:
@@ -460,9 +462,9 @@ class TripsDashboard(FormView):
         trips = Trip.objects.all()
         if month is not None:
             trips = trips.filter(
-                    from_date__year=month.year,
-                    from_date__month=month.month
-                )
+                from_date__year=month.year,
+                from_date__month=month.month
+            )
 
         kwargs.update({
             'months': months,
@@ -490,10 +492,10 @@ class TripsDashboard(FormView):
 
 
 class TripActionPointViewSet(mixins.RetrieveModelMixin,
-                            mixins.ListModelMixin,
-                            mixins.CreateModelMixin,
-                            mixins.UpdateModelMixin,
-                            viewsets.GenericViewSet):
+                             mixins.ListModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.UpdateModelMixin,
+                             viewsets.GenericViewSet):
     """
     Returns a list of Action point for a Trip
     """

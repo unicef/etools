@@ -72,7 +72,7 @@ class TestLocationViews(APITenantTestCase):
         self.assertEquals(len(response.data), 5)
         etag = response["ETag"]
 
-        location = LocationFactory()
+        LocationFactory()
 
         response = self.forced_auth_req('get', '/api/locations/', user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -80,7 +80,7 @@ class TestLocationViews(APITenantTestCase):
 
     def test_location_delete_etag(self):
         # Activate cache-aside with a request.
-        response = self.forced_auth_req('get', '/api/locations/', user=self.unicef_staff)
+        self.forced_auth_req('get', '/api/locations/', user=self.unicef_staff)
         schema_name = connection.schema_name
         etag_before = cache.get("{}-locations-etag".format(schema_name))
         Location.objects.all().delete()

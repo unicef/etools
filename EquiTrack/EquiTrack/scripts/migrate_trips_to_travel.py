@@ -9,7 +9,6 @@ from operator import attrgetter
 
 from django.db import transaction
 from django.db import IntegrityError
-from django.db.transaction import TransactionManagementError
 from django.core.exceptions import ObjectDoesNotExist
 
 from users.models import Country
@@ -43,20 +42,18 @@ TRIPTRAVEL_FIELDS_MAP = OrderedDict({
 })
 
 TRAVEL_TYPE_MAP = {
-        'programme_monitoring': 'Programmatic Visit',
-        'spot_check':'Spot Check',
-        'advocacy': 'Advocacy',
-        'technical_support': 'Technical Support',
-        'meeting': 'Meeting',
-        'duty_travel': 'Technical Support',
-        'home_leave':'Staff Entitlement',
-        'family_visit':'Staff Entitlement',
-        'education_grant': 'Staff Entitlement',
-        'staff_development': 'Staff Development',
-        'staff_entitlement': 'Staff Entitlement',
+    'programme_monitoring': 'Programmatic Visit',
+    'spot_check': 'Spot Check',
+    'advocacy': 'Advocacy',
+    'technical_support': 'Technical Support',
+    'meeting': 'Meeting',
+    'duty_travel': 'Technical Support',
+    'home_leave': 'Staff Entitlement',
+    'family_visit': 'Staff Entitlement',
+    'education_grant': 'Staff Entitlement',
+    'staff_development': 'Staff Development',
+    'staff_entitlement': 'Staff Entitlement',
 }
-
-
 
 
 def migrate_trips(country):
@@ -87,7 +84,7 @@ def migrate_trips(country):
                 continue
             travel_payload.update({"reference_number": ref_number})
 
-            #print 'payload', travel_payload
+            # print 'payload', travel_payload
             with transaction.atomic():
                 try:
                     travel = Travel(**travel_payload)
@@ -241,11 +238,10 @@ def migrate_trips(country):
                     try:
                         travelattachment.save()
                     except Exception as e:
-                        #SOme weird data error remember this problem
+                        # SOme weird data error remember this problem
                         failed_travel_attachments.append(travel.id)
                         print 'EXception saving travel attachment {}'.format(travelattachment_payload)
                         continue
-
 
             # create TravelActivity objects
             linkedpartners_gov = trip.linkedgovernmentpartner_set.all()
@@ -290,7 +286,6 @@ def migrate_trips(country):
                         except (AttributeError, Intervention.DoesNotExist):
                             intervention = None
 
-
                         activity_payload = {
                             "travel_type": travel_type,
                             "primary_traveler": trip.owner,
@@ -329,7 +324,7 @@ def migrate_trips(country):
                         travel_activity.locations.add(triplocation.location)
                     travel_activity.save()
 
-    except IntegrityError, e:
+    except IntegrityError as e:
         print "BAM!: %s" % e
     print('#############################################################')
     print('failed reference', failed_reference)

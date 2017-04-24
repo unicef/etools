@@ -1,14 +1,12 @@
 __author__ = 'jcranwellward'
 
 from django.contrib import admin
-from django.contrib.contenttypes.admin import GenericTabularInline
 
 from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin
 
-from trips.models import FileAttachment
 from reports.models import Sector
-from partners.models import PCA, PartnerOrganization, GwPCALocation
+from partners.models import PartnerOrganization
 from .models import TPMVisit
 from .exports import TPMResource
 
@@ -101,6 +99,7 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
     def has_module_permission(self, request):
         return request.user.is_superuser
 
+
 class TPMLocationsAdmin(admin.ModelAdmin):
     list_display = (
         u'pca',
@@ -129,10 +128,11 @@ class TPMLocationsAdmin(admin.ModelAdmin):
     def sectors(self, obj):
         return obj.pca.sector_names
 
-    def get_queryset(self, request):
-        return PCALocation.objects.filter(
-            pca__status=PCA.ACTIVE
-        )
+    # TODO PCALocation is undefined
+    # def get_queryset(self, request):
+    #     return PCALocation.objects.filter(
+    #         pca__status=PCA.ACTIVE
+    #     )
 
     def create_tpm_visits(self, request, queryset):
         for pca_location in queryset:
@@ -152,4 +152,3 @@ class TPMLocationsAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TPMVisit, TPMVisitAdmin)
-#admin.site.register(PCALocation, TPMLocationsAdmin)
