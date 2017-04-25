@@ -119,10 +119,10 @@ class VisionXML(APITenantTestCase):
 
         # Update invoices like vision would do it
         response = self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
-                             data=updater_xml_structure,
-                             user=self.unicef_staff,
-                             request_format=None,
-                             content_type='text/xml')
+                                        data=updater_xml_structure,
+                                        user=self.unicef_staff,
+                                        request_format=None,
+                                        content_type='text/xml')
         self.assertEqual(response.status_code, 200)
 
     def test_personal_number_usage(self):

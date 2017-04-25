@@ -11,7 +11,6 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, GovernmentInterventionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from partners.models import GovernmentIntervention
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, WBSFactory
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
@@ -472,27 +471,27 @@ class TravelDetails(APITenantTestCase):
                                'arrival_date': '2017-01-27T23:00:01.905Z',
                                'mode_of_travel': 'car'},
                               {
-                               'origin': 'a',
-                               'destination': 'b',
-                               'dsa_region': dsa_2.id,
-                               'departure_date': '2017-01-18T23:00:01.224Z',
-                               'arrival_date': '2017-01-19T23:00:01.237Z',
-                               'mode_of_travel': 'car'}],
-                'activities': [{'is_primary_traveler': True,
-                                'locations': []}],
-                'cost_assignments': [],
-                'expenses': [],
-                'action_points': [],
-                'ta_required': True,
-                'international_travel': False,
-                'traveler': self.traveler.id,
-                'mode_of_travel': []}
+            'origin': 'a',
+            'destination': 'b',
+            'dsa_region': dsa_2.id,
+            'departure_date': '2017-01-18T23:00:01.224Z',
+            'arrival_date': '2017-01-19T23:00:01.237Z',
+            'mode_of_travel': 'car'}],
+            'activities': [{'is_primary_traveler': True,
+                            'locations': []}],
+            'cost_assignments': [],
+            'expenses': [],
+            'action_points': [],
+            'ta_required': True,
+            'international_travel': False,
+            'traveler': self.traveler.id,
+            'mode_of_travel': []}
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         itinerary_origin_destination_expectation = [u'Origin should match with'
-                                                     ' the previous destination',]
+                                                    ' the previous destination', ]
         self.assertEqual(response_json['itinerary'], itinerary_origin_destination_expectation)
 
     def test_ta_not_required(self):
@@ -725,8 +724,8 @@ class TravelDetails(APITenantTestCase):
         del new_data['activities'][0]['partnership']
 
         new_response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
-                                                       kwargs={'travel_pk': response_json['id']}),
-                                        data=new_data, user=self.unicef_staff)
+                                                             kwargs={'travel_pk': response_json['id']}),
+                                            data=new_data, user=self.unicef_staff)
 
         self.assertEqual(new_response.status_code, 200)
 

@@ -16,9 +16,9 @@ class TravelRelatedModelFilter(BaseFilterBackend):
 class TravelActivityPartnerFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         return queryset \
-                .filter(partner__pk=view.kwargs['partner_organization_pk']) \
-                .prefetch_related('travels') \
-                .filter(travels__traveler=F("primary_traveler"))
+            .filter(partner__pk=view.kwargs['partner_organization_pk']) \
+            .prefetch_related('travels') \
+            .filter(travels__traveler=F("primary_traveler"))
 
 
 class BaseSearchFilter(BaseFilterBackend):

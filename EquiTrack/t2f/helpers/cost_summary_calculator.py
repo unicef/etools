@@ -102,7 +102,7 @@ class DSACalculator(object):
         def deduction(self):
             multiplier = self.deduction_multiplier
             if self.last_day:
-                multiplier = min(multiplier, Decimal(1)-DSACalculator.LAST_DAY_DEDUCTION)
+                multiplier = min(multiplier, Decimal(1) - DSACalculator.LAST_DAY_DEDUCTION)
             return self.dsa_amount * multiplier
 
         @property
@@ -216,7 +216,7 @@ class DSACalculator(object):
         for i, sdt in enumerate(same_day_travels[:-1]):
             # If it was less than 8 hours long, skip it
             arrival = sdt.arrival_date
-            departure = same_day_travels[i+1].departure_date
+            departure = same_day_travels[i + 1].departure_date
             if (departure - arrival) >= timedelta(hours=8):
                 break
         else:
@@ -257,7 +257,7 @@ class DSACalculator(object):
         for i, sdt in enumerate(same_day_travels[:-1]):
             # If it was less than 8 hours long, skip it
             arrival = sdt.arrival_date
-            departure = same_day_travels[i+1].departure_date
+            departure = same_day_travels[i + 1].departure_date
             if (departure - arrival) < timedelta(hours=8):
                 continue
 
@@ -284,7 +284,6 @@ class DSACalculator(object):
         last_day_departure_count = self.travel.itinerary.filter(departure_date__year=last_dto.date.year,
                                                                 departure_date__month=last_dto.date.month,
                                                                 departure_date__day=last_dto.date.day).count()
-
 
         itinerary = self.travel.itinerary.order_by('-departure_date')
         if last_day_departure_count and itinerary.count() > last_day_departure_count:
@@ -315,7 +314,7 @@ class DSACalculator(object):
                                 'end_date': dto.date,
                                 'dsa_region': dto.region.id,
                                 'dsa_region_name': dto.region.label,
-                                'night_count': -1, # -1 because nights are always days-1
+                                'night_count': -1,  # -1 because nights are always days-1
                                 'daily_rate': self.get_dsa_amount(dto.region, over_60),
                                 'paid_to_traveler': Decimal(0),
                                 'total_amount': Decimal(0),

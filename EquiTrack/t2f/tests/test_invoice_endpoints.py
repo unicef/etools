@@ -148,6 +148,6 @@ class InvoiceEndpoints(APITenantTestCase):
         invoice_data = response_json['data'][0]
 
         really_precise_number = '123.4567000000000000000000000'
-        self.assertEqual(len(really_precise_number), getcontext().prec + 1) # +1 because of the decimal separator
+        self.assertEqual(len(really_precise_number), getcontext().prec + 1)  # +1 because of the decimal separator
         self.assertEqual(invoice_data['amount'], really_precise_number)
         self.assertEqual(invoice_data['items'][0]['amount'], really_precise_number)
