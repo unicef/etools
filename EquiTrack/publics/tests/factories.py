@@ -131,15 +131,14 @@ class DSARegionFactory(factory.DjangoModelFactory):
 
 class DSARateFactory(factory.DjangoModelFactory):
     region = factory.SubFactory(DSARegionFactory)
-    valid_from = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=TZ.localize(datetime.now()))
-    valid_to = DSARate.DEFAULT_VALID_TO
+    effective_from_date = fuzzy.FuzzyDate(start_date=_FUZZY_START_DATE.date(), end_date=TZ.localize(datetime.now()).date())
+    effective_till_date = DSARate.DEFAULT_VALID_TO
 
     dsa_amount_usd = 100
     dsa_amount_60plus_usd = 80
     dsa_amount_local = 200
     dsa_amount_60plus_local = 160
     room_rate = 150
-    eff_date = datetime.now().date()
     finalization_date = datetime.now().date()
 
     class Meta:

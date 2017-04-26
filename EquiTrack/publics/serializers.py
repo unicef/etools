@@ -18,14 +18,14 @@ class CountrySerializer(serializers.ModelSerializer):
 
 
 class DSARegionsParameterSerializer(serializers.Serializer):
-    values_at = serializers.DateTimeField(format=ISO_8601, required=False, default=now)
+    values_at = serializers.DateField(format=ISO_8601, required=False, default=now)
 
 
 class DSARateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DSARate
         fields = ('dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local', 'dsa_amount_60plus_local', 'room_rate',
-                  'finalization_date', 'eff_date',)
+                  'finalization_date', 'effective_from_date')
 
         
 class DSARegionSerializer(serializers.ModelSerializer):
@@ -40,7 +40,7 @@ class DSARegionSerializer(serializers.ModelSerializer):
         ret = super(DSARegionSerializer, self).to_representation(instance)
 
         values_at = self.context.get('values_at', now())
-        rate = instance.rates.get(valid_from__lte=values_at, valid_to__gte=values_at)
+        rate = instance.rates.get(effective_from_date__lte=values_at, effective_till_date__gte=values_at)
 
         rate_serializer = DSARateSerializer(rate, context=self.context)
         rate_data = rate_serializer.data

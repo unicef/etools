@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from pytz import UTC
 
@@ -186,8 +186,8 @@ class DSARegionQuerySet(ValidityQuerySet):
         return self.active_at(now())
 
     def active_at(self, dt):
-        return self.filter(rates__valid_from__lte=dt,
-                           rates__valid_to__gte=dt)
+        return self.filter(rates__effective_from_date__lte=dt,
+                           rates__effective_till_date__gte=dt)
 
 
 class DSARegion(SoftDeleteMixin, models.Model):
@@ -219,21 +219,21 @@ class DSARegion(SoftDeleteMixin, models.Model):
         if not rate_date:
             rate_date = now()
 
-        return self.rates.filter(valid_from__lte=rate_date, valid_to__gte=rate_date).first()
+        return self.rates.filter(effective_from_date__lte=rate_date, effective_till_date__gte=rate_date).first()
 
     def __getattr__(self, item):
         if item in ['dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local', 'dsa_amount_60plus_local',
-                    'room_rate', 'finalization_date', 'eff_date']:
+                    'room_rate', 'finalization_date', 'effective_from_date']:
             return getattr(self.get_rate_at(), item)
         return super(DSARegion, self).__getattr__(item)
 
 
 class DSARate(models.Model):
-    DEFAULT_VALID_TO = datetime(2999, 12, 31, 23, 59, 59, tzinfo=UTC)
+    DEFAULT_VALID_TO = date(2999, 12, 31)
 
     region = models.ForeignKey('DSARegion', related_name='rates')
-    valid_from = models.DateTimeField(auto_now_add=True)
-    valid_to = models.DateTimeField(default=DEFAULT_VALID_TO)
+    effective_from_date = models.DateField(auto_now_add=True)
+    effective_till_date = models.DateTimeField(default=DEFAULT_VALID_TO)
 
     dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
     dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
@@ -242,22 +242,23 @@ class DSARate(models.Model):
 
     room_rate = models.DecimalField(max_digits=20, decimal_places=4)
     finalization_date = models.DateField()
-    eff_date = models.DateField()
 
     class Meta:
-        unique_together = ('region', 'valid_to')
+        unique_together = ('region', 'effective_till_date')
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            is_overlapping = DSARate.objects.filter(region=self.region, valid_to__gte=self.valid_from)\
-                .exclude(valid_to=self.DEFAULT_VALID_TO).exists()
+            is_overlapping = DSARate.objects.filter(region=self.region,
+                                                    effective_from_date__gte=self.effective_from_date)\
+                .exclude(effective_till_date=self.DEFAULT_VALID_TO).exists()
             if is_overlapping:
                 raise IntegrityError('DSA rates cannot overlap')
 
             # Close old entry
-            new_valid_to_date = self.valid_from - timedelta(microseconds=1)
+            new_valid_to_date = self.effective_from_date - timedelta(days=1)
             DSARate.objects.filter(region=self.region,
-                                   valid_to=self.DEFAULT_VALID_TO).update(valid_to=new_valid_to_date)
+                                   effective_till_date=self.DEFAULT_VALID_TO)\
+                .update(effective_till_date=new_valid_to_date)
 
         super(DSARate, self).save(*args, **kwargs)
 

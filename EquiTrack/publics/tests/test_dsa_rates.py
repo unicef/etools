@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from freezegun import freeze_time
 import json
@@ -35,7 +35,7 @@ class DSARateTest(APITenantTestCase):
         self.assertEqual(region.dsa_amount_60plus_local, rate.dsa_amount_60plus_local)
         self.assertEqual(region.room_rate, rate.room_rate)
         self.assertEqual(region.finalization_date, rate.finalization_date)
-        self.assertEqual(region.eff_date, rate.eff_date)
+        self.assertEqual(region.effective_from_date, rate.effective_from_date)
 
         with self.assertRaises(AttributeError):
             region.not_a_fallback_attribute
@@ -47,15 +47,15 @@ class DSARateTest(APITenantTestCase):
         region = DSARegionFactory()
 
         rate_1 = DSARateFactory(region=region,
-                                valid_from=datetime(2017, 4, 17, tzinfo=UTC))
-        self.assertEqual(rate_1.valid_to, DSARate.DEFAULT_VALID_TO)
+                                effective_from_date=date(2017, 4, 17))
+        self.assertEqual(rate_1.effective_till_date, DSARate.DEFAULT_VALID_TO)
 
         rate_2 = DSARateFactory(region=region,
-                                valid_from=datetime(2017, 4, 18, tzinfo=UTC))
+                                effective_from_date=date(2017, 4, 18))
         rate_1.refresh_from_db()
 
-        self.assertNotEqual(rate_1.valid_to, DSARate.DEFAULT_VALID_TO)
-        self.assertLess(rate_1.valid_to, rate_2.valid_from)
+        self.assertNotEqual(rate_1.effective_till_date, DSARate.DEFAULT_VALID_TO)
+        self.assertLess(rate_1.effective_till_date, rate_2.effective_from_date)
 
     def test_dsa_regions_view(self):
         workspace = self.unicef_staff.profile.country
@@ -82,7 +82,7 @@ class DSARateTest(APITenantTestCase):
         self.assertEqual(response_json[0]['id'], region.id)
 
         # Expire rate - region should be excluded
-        rate.valid_to = UTC.localize(datetime.utcnow())
+        rate.effective_till_date = UTC.localize(datetime.utcnow()).date()
         rate.save()
 
         response = self.forced_auth_req('get', reverse('public:dsa_regions'),
@@ -115,7 +115,7 @@ class DSARateTest(APITenantTestCase):
         self.assertEqual(response_json['dsa_regions'][0]['id'], region.id)
 
         # Expire rate - region should be excluded
-        rate.valid_to = UTC.localize(datetime.utcnow())
+        rate.effective_till_date = UTC.localize(datetime.utcnow()).date()
         rate.save()
 
         response = self.forced_auth_req('get', reverse('public:static'),
@@ -135,32 +135,32 @@ class DSARateTest(APITenantTestCase):
 
         with freeze_time('2017-04-01'):
             rate_1 = DSARateFactory(region=region,
-                                    valid_from=datetime(2017, 4, 1, tzinfo=UTC),
+                                    effective_from_date=date(2017, 4, 1),
                                     dsa_amount_usd=50)
         with freeze_time('2017-04-10'):
             rate_2 = DSARateFactory(region=region,
-                                    valid_from=datetime(2017, 4, 10, tzinfo=UTC),
+                                    effective_from_date=date(2017, 4, 10),
                                     dsa_amount_usd=80)
 
-        date_str = datetime(2017, 4, 12, tzinfo=UTC).isoformat()
+        date_str = date(2017, 4, 12).isoformat()
         response = self.forced_auth_req('get', reverse('public:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(Decimal(response_json[0]['dsa_amount_usd']), rate_2.dsa_amount_usd)
 
-        date_str = datetime(2017, 4, 6, tzinfo=UTC).isoformat()
+        date_str = date(2017, 4, 6).isoformat()
         response = self.forced_auth_req('get', reverse('public:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(Decimal(response_json[0]['dsa_amount_usd']), rate_1.dsa_amount_usd)
 
-        date_str = datetime(2017, 3, 31, tzinfo=UTC).isoformat()
+        date_str = date(2017, 3, 31).isoformat()
         response = self.forced_auth_req('get', reverse('public:dsa_regions'),
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
 
-        rate_2.valid_to = datetime(2017, 4, 15, tzinfo=UTC)
+        rate_2.effective_till_date = date(2017, 4, 15)
         rate_2.save()
 
         date_str = datetime(2017, 4, 16, tzinfo=UTC).isoformat()

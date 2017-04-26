@@ -147,8 +147,8 @@ class StaticDataEndpoints(APITenantTestCase):
         self.assertEqual(len(response_json), 3)
 
         expected_keys = ['unique_name', 'dsa_amount_usd', 'country', 'area_name', 'room_rate', 'area_code', 'label',
-                         'dsa_amount_60plus_usd', 'long_name', 'eff_date', 'dsa_amount_60plus_local', 'id', 'unique_id',
-                         'dsa_amount_local', 'finalization_date']
+                         'dsa_amount_60plus_usd', 'long_name', 'effective_from_date', 'dsa_amount_60plus_local', 'id',
+                         'unique_id', 'dsa_amount_local', 'finalization_date']
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_business_areas_view(self):
