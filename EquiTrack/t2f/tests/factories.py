@@ -37,8 +37,8 @@ class TravelActivityFactory(factory.DjangoModelFactory):
 
 
 class IteneraryItemFactory(factory.DjangoModelFactory):
-    origin = fuzzy.FuzzyText(length=32)
-    destination = fuzzy.FuzzyText(length=32)
+    origin = factory.SubFactory(LocationFactory)
+    destination = factory.SubFactory(LocationFactory)
     departure_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=TZ.localize(datetime.now()))
     arrival_date = fuzzy.FuzzyDateTime(start_dt=TZ.localize(datetime.now()), end_dt=_FUZZY_END_DATE)
     dsa_region = factory.SubFactory(DSARegionFactory)

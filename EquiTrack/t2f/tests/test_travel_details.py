@@ -144,8 +144,8 @@ class TravelDetails(APITenantTestCase):
         data = {'cost_assignments': [],
                 'deductions': [],
                 'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
-                               'destination': 'Berlin',
+                'itinerary': [{'origin': LocationFactory().id,
+                               'destination': LocationFactory().id,
                                'departure_date': '2016-11-16T12:06:55.821490',
                                'arrival_date': '2016-11-17T12:06:55.821490',
                                'dsa_region': dsaregion.id,
@@ -312,20 +312,23 @@ class TravelDetails(APITenantTestCase):
     def test_itinerary_dates(self):
         dsaregion = DSARegion.objects.first()
         airlines = AirlineCompanyFactory()
+        origin1 = LocationFactory()
+        destination1 = LocationFactory()
+        destination2 = LocationFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [],
                 'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
-                               'destination': 'Berlin',
+                'itinerary': [{'origin': origin1.id,
+                               'destination': destination1.id,
                                'departure_date': '2016-11-16T12:06:55.821490',
                                'arrival_date': '2016-11-17T12:06:55.821490',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]},
-                              {'origin': 'Berlin',
-                               'destination': 'Budapest',
+                              {'origin': destination1.id,
+                               'destination': destination2.id,
                                'departure_date': '2016-11-15T12:06:55.821490',
                                'arrival_date': '2016-11-16T12:06:55.821490',
                                'dsa_region': dsaregion.id,
@@ -363,16 +366,16 @@ class TravelDetails(APITenantTestCase):
         data = {'cost_assignments': [],
                 'deductions': [],
                 'expenses': [],
-                'itinerary': [{'origin': 'Berlin',
-                               'destination': 'Budapest',
+                'itinerary': [{'origin': LocationFactory().id,
+                               'destination': LocationFactory().id,
                                'departure_date': '2016-11-15T12:06:55.821490',
                                'arrival_date': '2016-11-16T12:06:55.821490',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]},
-                              {'origin': 'Something else',
-                               'destination': 'Berlin',
+                              {'origin': LocationFactory().id,  # different than prior destination
+                               'destination': LocationFactory().id,
                                'departure_date': '2016-11-16T12:06:55.821490',
                                'arrival_date': '2016-11-17T12:06:55.821490',
                                'dsa_region': dsaregion.id,
@@ -429,16 +432,19 @@ class TravelDetails(APITenantTestCase):
     def test_reversed_itinerary_order(self):
         dsa_1 = DSARegion.objects.first()
         dsa_2 = DSARegionFactory()
+        origin1 = LocationFactory()
+        destination1 = LocationFactory()
+        destination2 = LocationFactory()
 
         data = {'itinerary': [{'airlines': [],
-                               'origin': 'a',
-                               'destination': 'b',
+                               'origin': origin1.id,
+                               'destination': destination1.id,
                                'dsa_region': dsa_1.id,
                                'departure_date': '2017-01-18T23:00:01.224Z',
                                'arrival_date': '2017-01-19T23:00:01.237Z',
                                'mode_of_travel': 'car'},
-                              {'origin': 'b',
-                               'destination': 'c',
+                              {'origin': destination1.id,
+                               'destination': destination2.id,
                                'dsa_region': dsa_2.id,
                                'departure_date': '2017-01-20T23:00:01.892Z',
                                'arrival_date': '2017-01-27T23:00:01.905Z',
@@ -456,7 +462,7 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        itinerary_origin_destination_expectation = [('a', 'b'), ('b', 'c')]
+        itinerary_origin_destination_expectation = [(origin1.id, destination1.id), (destination1.id, destination2.id)]
         extracted_origin_destination = [(i['origin'], i['destination']) for i in response_json['itinerary']]
         self.assertEqual(extracted_origin_destination, itinerary_origin_destination_expectation)
 
@@ -465,15 +471,15 @@ class TravelDetails(APITenantTestCase):
         dsa_2 = DSARegionFactory()
 
         data = {'itinerary': [{'airlines': [],
-                               'origin': 'b',
-                               'destination': 'c',
+                               'origin': LocationFactory().id,
+                               'destination': LocationFactory().id,
                                'dsa_region': dsa_1.id,
                                'departure_date': '2017-01-20T23:00:01.892Z',
                                'arrival_date': '2017-01-27T23:00:01.905Z',
                                'mode_of_travel': 'car'},
                               {
-                               'origin': 'a',
-                               'destination': 'b',
+                               'origin': LocationFactory().id,
+                               'destination': LocationFactory().id,
                                'dsa_region': dsa_2.id,
                                'departure_date': '2017-01-18T23:00:01.224Z',
                                'arrival_date': '2017-01-19T23:00:01.237Z',
@@ -551,6 +557,9 @@ class TravelDetails(APITenantTestCase):
     def test_action_point_500(self):
         dsa = DSARegionFactory()
         currency = CurrencyFactory()
+        origin1 = LocationFactory()
+        destination1 = LocationFactory()
+        destination2 = LocationFactory()
 
         data = {'deductions': [{'date': '2017-02-20',
                                 'breakfast': False,
@@ -577,14 +586,14 @@ class TravelDetails(APITenantTestCase):
                                 'accomodation': False,
                                 'no_dsa': False}],
                 'itinerary': [{'airlines': [],
-                               'origin': 'A',
-                               'destination': 'B',
+                               'origin': origin1.id,
+                               'destination': destination1.id,
                                'dsa_region': dsa.id,
                                'departure_date': '2017-02-19T23:00:00.355Z',
                                'arrival_date': '2017-02-20T23:00:00.362Z',
                                'mode_of_travel': 'car'},
-                              {'origin': 'B',
-                               'destination': 'A',
+                              {'origin': destination1.id,
+                               'destination': destination2.id,
                                'dsa_region': dsa.id,
                                'departure_date': '2017-02-22T23:00:00.376Z',
                                'arrival_date': '2017-02-23T23:00:00.402Z',
@@ -742,8 +751,8 @@ class TravelDetails(APITenantTestCase):
         data = {'cost_assignments': [],
                 'deductions': [],
                 'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
-                               'destination': 'Berlin',
+                'itinerary': [{'origin': LocationFactory().id,
+                               'destination': LocationFactory().id,
                                'departure_date': '2016-11-16T12:06:55.821490',
                                'arrival_date': '2016-11-17T12:06:55.821490',
                                'dsa_region': dsa_region.id,
@@ -772,8 +781,8 @@ class TravelDetails(APITenantTestCase):
         data = {'cost_assignments': [],
                 'deductions': [],
                 'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
-                               'destination': 'Berlin',
+                'itinerary': [{'origin': LocationFactory().id,
+                               'destination': LocationFactory().id,
                                'departure_date': '2016-11-16T12:06:55.821490',
                                'arrival_date': '2016-11-17T12:06:55.821490',
                                'dsa_region': dsa_region.id,

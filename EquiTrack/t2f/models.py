@@ -472,8 +472,10 @@ class TravelActivity(models.Model):
 
 class IteneraryItem(models.Model):
     travel = models.ForeignKey('Travel', related_name='itinerary')
-    origin = models.CharField(max_length=255)
-    destination = models.CharField(max_length=255)
+    origin = models.ForeignKey('locations.Location', related_name='+', null=True)
+    destination = models.ForeignKey('locations.Location', related_name='+', null=True)
+    origin_old = models.CharField(max_length=255, blank=True, null=True)
+    destination_old = models.CharField(max_length=255, blank=True, null=True)
     departure_date = models.DateTimeField()
     arrival_date = models.DateTimeField()
     dsa_region = models.ForeignKey('publics.DSARegion', related_name='+', null=True)

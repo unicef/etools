@@ -9,7 +9,7 @@ from pytz import UTC
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
+from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory
 from t2f.models import ModeOfTravel, make_travel_reference_number, Travel
@@ -45,17 +45,20 @@ class OverlappingTravelsTest(APITenantTestCase):
         currency = CurrencyFactory()
         dsa_region = DSARegionFactory()
 
+        origin1 = LocationFactory()
+        destination1 = LocationFactory()
+        destination2 = LocationFactory()
         data = {'deductions': [],
-                'itinerary': [{'origin': 'Berlin',
-                               'destination': 'Budapest',
+                'itinerary': [{'origin': origin1.id,
+                               'destination': destination1.id,
                                'departure_date': '2017-04-07T17:06:55.821490',
                                'arrival_date': '2017-04-08T17:06:55.821490',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
-                              {'origin': 'Budapest',
-                               'destination': 'Berlin',
+                              {'origin': destination1.id,
+                               'destination': destination2.id,
                                'departure_date': '2017-05-20T12:06:55.821490',
                                'arrival_date': '2017-05-21T12:06:55.821490',
                                'dsa_region': dsa_region.id,
@@ -96,18 +99,20 @@ class OverlappingTravelsTest(APITenantTestCase):
     def test_almost_overlapping_trips(self):
         currency = CurrencyFactory()
         dsa_region = DSARegionFactory()
-
+        origin1 = LocationFactory()
+        destination1 = LocationFactory()
+        destination2 = LocationFactory()
         data = {'deductions': [],
-                'itinerary': [{'origin': 'Berlin',
-                               'destination': 'Budapest',
+                'itinerary': [{'origin': origin1.id,
+                               'destination': destination1.id,
                                'departure_date': '2017-04-14T17:06:55.821490',
                                'arrival_date': '2017-04-15T17:06:55.821490',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
-                              {'origin': 'Budapest',
-                               'destination': 'Berlin',
+                              {'origin': destination1.id,
+                               'destination': destination2.id,
                                'departure_date': '2017-05-20T12:06:55.821490',
                                'arrival_date': '2017-05-21T12:06:55.821490',
                                'dsa_region': dsa_region.id,
@@ -157,17 +162,20 @@ class OverlappingTravelsTest(APITenantTestCase):
         currency = CurrencyFactory()
         dsa_region = DSARegionFactory()
 
+        origin1 = LocationFactory()
+        destination1 = LocationFactory()
+        destination2 = LocationFactory()
         data = {'deductions': [],
-                'itinerary': [{'origin': 'Berlin',
-                               'destination': 'Budapest',
+                'itinerary': [{'origin': origin1.id,
+                               'destination': destination1.id,
                                'departure_date': '2017-04-14T17:06:55.821490',
                                'arrival_date': '2017-04-15T17:06:55.821490',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
-                              {'origin': 'Budapest',
-                               'destination': 'Berlin',
+                              {'origin': destination1.id,
+                               'destination': destination2.id,
                                'departure_date': '2017-05-20T12:06:55.821490',
                                'arrival_date': '2017-05-21T12:06:55.821490',
                                'dsa_region': dsa_region.id,
@@ -227,18 +235,21 @@ class OverlappingTravelsTest(APITenantTestCase):
 
         currency = CurrencyFactory()
         dsa_region = DSARegionFactory()
+        origin1 = LocationFactory()
+        destination1 = LocationFactory()
+        destination2 = LocationFactory()
 
         data = {'deductions': [],
-                'itinerary': [{'origin': 'Berlin',
-                               'destination': 'Budapest',
+                'itinerary': [{'origin': origin1.id,
+                               'destination': destination1.id,
                                'departure_date': '2017-04-14T17:06:55.821490',
                                'arrival_date': '2017-04-15T17:06:55.821490',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
-                              {'origin': 'Budapest',
-                               'destination': 'Berlin',
+                              {'origin': destination1.id,
+                               'destination': destination2.id,
                                'departure_date': '2017-05-20T12:06:55.821490',
                                'arrival_date': '2017-05-21T12:06:55.821490',
                                'dsa_region': dsa_region.id,
