@@ -47,7 +47,7 @@ class ETagMixin(object):
         cache_etag = cache.get("{}-locations-etag".format(schema_name))
         request_etag = self.request.META.get("HTTP_IF_NONE_MATCH", None)
 
-        local_etag = cache_etag if cache_etag else '"'+uuid.uuid4().hex+'"'
+        local_etag = cache_etag if cache_etag else '"' + uuid.uuid4().hex + '"'
 
         if cache_etag and request_etag and cache_etag == request_etag:
             response = Response(status=status.HTTP_304_NOT_MODIFIED)

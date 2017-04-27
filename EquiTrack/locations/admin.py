@@ -67,6 +67,7 @@ class CartoDBTableAdmin(admin.ModelAdmin):
         for table in queryset:
             update_sites_from_cartodb.delay(table)
 
+
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.GatewayType)
 admin.site.register(models.CartoDBTable, CartoDBTableAdmin)

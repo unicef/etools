@@ -3,7 +3,7 @@ from django.db.models.fields.related import ManyToManyField
 
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
-from EquiTrack.factories import TripFactory, UserFactory, PartnershipFactory
+from EquiTrack.factories import TripFactory
 from trips.forms import TripForm, TravelRoutesForm
 from trips.models import Trip
 

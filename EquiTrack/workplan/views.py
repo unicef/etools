@@ -55,10 +55,10 @@ class WorkplanViewSet(viewsets.ModelViewSet):
 
 
 class LabelViewSet(mixins.RetrieveModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.CreateModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+                   mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   mixins.DestroyModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Label.objects.all()
     serializer_class = LabelSerializer
     permission_classes = (IsAdminUser,)

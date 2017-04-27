@@ -1,8 +1,8 @@
-from local_base import *
+from local_base import *  # noqa
 
-########## TOOLBAR CONFIGURATION
+# TOOLBAR CONFIGURATION
 # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
-INSTALLED_APPS += (
+INSTALLED_APPS += (  # noqa
     'debug_toolbar',
     'django_extensions',
 )
@@ -11,7 +11,7 @@ INSTALLED_APPS += (
 INTERNAL_IPS = ('127.0.0.1',)
 
 # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
-MIDDLEWARE_CLASSES += (
+MIDDLEWARE_CLASSES += (  # noqa
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
@@ -20,7 +20,7 @@ DEBUG_TOOLBAR_CONFIG = {
     'INTERCEPT_REDIRECTS': False,
     'SHOW_TEMPLATE_CONTEXT': True,
 }
-########## END TOOLBAR CONFIGURATION
+# END TOOLBAR CONFIGURATION
 
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now',

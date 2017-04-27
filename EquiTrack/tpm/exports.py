@@ -27,5 +27,3 @@ class TPMResource(BaseExportResource):
     def fill_row(self, tpm, row):
 
         self.fill_tpm_row(row, tpm)
-
-

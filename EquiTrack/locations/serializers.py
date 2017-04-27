@@ -29,6 +29,7 @@ class GatewayTypeSerializer(serializers.ModelSerializer):
         model = GatewayType
         fields = '__all__'
 
+
 class LocationSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)

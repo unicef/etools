@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import json
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
@@ -15,7 +14,7 @@ class GhostData(APITenantTestCase):
     def setUp(self):
         super(GhostData, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
-        
+
     def test_urls(self):
         static_data_url = reverse('public:missing_static')
         self.assertEqual(static_data_url, '/api/static_data/missing/')

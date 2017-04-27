@@ -7,7 +7,6 @@ import logging
 
 from django.conf import settings
 from django.db import connection
-from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
@@ -86,6 +85,7 @@ class EToolsTenantMiddleware(TenantMiddleware):
     """
     Routes user to their correct schema based on country
     """
+
     def process_request(self, request):
         # Connection needs first to be at the public schema, as this is where
         # the tenant metadata is stored.
@@ -120,9 +120,9 @@ class EToolsTenantMiddleware(TenantMiddleware):
         try:
             set_country(request.user, request)
 
-        except Exception as exp:
+        except Exception:
             logger.info('No country found for user {}'.format(request.user))
-            return SimpleTemplateResponse('no_country_found.html', {'user': request.user});
+            return SimpleTemplateResponse('no_country_found.html', {'user': request.user})
 
         # Content type can no longer be cached as public and tenant schemas
         # have different models. If someone wants to change this, the cache
@@ -154,6 +154,7 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
     """
     Handles setting the tenant after a JWT successful authentication
     """
+
     def authenticate(self, request):
 
         jwt_value = self.get_jwt_value(request)
@@ -163,7 +164,7 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
 
         try:
             user, jwt_value = super(EToolsTenantJWTAuthentication, self).authenticate(request)
-        except TypeError as exp:
+        except TypeError:
             raise PermissionDenied(detail='No valid authentication provided')
 
         if not user.profile.country:

@@ -13,8 +13,3 @@ class Command(BaseCommand):
     def handle(self, **options):
 
         import_docs()
-
-
-
-
-

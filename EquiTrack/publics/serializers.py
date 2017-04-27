@@ -14,8 +14,8 @@ class CountrySerializer(serializers.ModelSerializer):
         model = Country
         fields = ('id', 'name', 'long_name', 'business_area', 'vision_code', 'iso_2', 'iso_3', 'currency', 'valid_from',
                   'valid_to')
-        
-        
+
+
 class DSARegionSerializer(serializers.ModelSerializer):
     long_name = serializers.CharField(source='label')
 

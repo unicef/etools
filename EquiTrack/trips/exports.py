@@ -63,7 +63,8 @@ class TripResource(BaseExportResource):
         self.insert_column(
             row,
             'Locations',
-            ', '.join([' - '.join((tl.location.name, tl.location.p_code)) for tl in trip.triplocation_set.all() if tl.location and tl.location.name and tl.location.p_code])
+            ', '.join([' - '.join((tl.location.name, tl.location.p_code))
+                       for tl in trip.triplocation_set.all() if tl.location and tl.location.name and tl.location.p_code])
         )
 
     def fill_trip_row(self, row, trip):
@@ -110,7 +111,7 @@ class ActionPointResource(BaseExportResource):
         if UserProfile.objects.filter(user_id=action.person_responsible.id).exists():
             self.insert_column(row, 'Responsible Section', action.person_responsible.profile.section)
             self.insert_column(row, 'Responsible Office', action.person_responsible.profile.office)
-        
+
         self.insert_column(row, 'Actions Taken', action.actions_taken)
         self.insert_column(
             row,

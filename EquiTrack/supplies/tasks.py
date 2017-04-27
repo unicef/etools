@@ -15,6 +15,7 @@ from celery.utils.log import get_task_logger
 
 logger = get_task_logger(__name__)
 
+
 def set_docs(docs):
 
     payload_json = json.dumps(
@@ -92,15 +93,15 @@ def set_unisupply_distribution(distribution_plan_id):
 
     response = set_docs([doc])
     if response.status_code in [requests.codes.ok, requests.codes.created]:
-        #TODO: Check if it was actually saved by couchbase
+        # TODO: Check if it was actually saved by couchbase
         distribution_plan.send = False
         distribution_plan.sent = True
         distribution_plan.save()
 
     logger.info('Unisupply task completed'
                 'Status:{}, Sent:{}, Id:{}'.format(response.status_code,
-                                                distribution_plan.sent,
-                                                distribution_plan.id))
+                                                   distribution_plan.sent,
+                                                   distribution_plan.id))
     return response.text
 
 

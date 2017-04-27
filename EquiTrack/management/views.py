@@ -1,7 +1,7 @@
 __author__ = 'RobertAvram'
 
 
-from datetime import date, timedelta
+from datetime import date
 from django.db import connection
 from django.http import HttpResponse
 from django.conf import settings
@@ -192,4 +192,3 @@ class InterventionsStatisticsView(APIView):
                 "totalActiveInterventions": country_interventions_count
             })
         return Response(results)
-

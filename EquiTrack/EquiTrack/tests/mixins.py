@@ -1,6 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import resolve
-from django.http.response import HttpResponse
 
 from rest_framework.test import APIClient, force_authenticate, APIRequestFactory
 
@@ -24,7 +23,7 @@ class FastTenantTestCase(TenantTestCase):
         TenantModel = get_tenant_model()
         try:
             cls.tenant = TenantModel.objects.get(domain_url=tenant_domain, schema_name='test')
-        except:
+        except BaseException:
             cls.tenant = TenantModel(domain_url=tenant_domain, schema_name='test')
             cls.tenant.save(verbosity=0)
 
@@ -37,15 +36,15 @@ class FastTenantTestCase(TenantTestCase):
 
         if cls.fixtures:
             for db_name in cls._databases_names(include_mirrors=False):
-                    try:
-                        call_command('loaddata', *cls.fixtures, **{
-                            'verbosity': 0,
-                            'commit': False,
-                            'database': db_name,
-                        })
-                    except Exception:
-                        cls._rollback_atomics(cls.cls_atomics)
-                        raise
+                try:
+                    call_command('loaddata', *cls.fixtures, **{
+                        'verbosity': 0,
+                        'commit': False,
+                        'database': db_name,
+                    })
+                except Exception:
+                    cls._rollback_atomics(cls.cls_atomics)
+                    raise
         try:
             cls.setUpTestData()
         except Exception:

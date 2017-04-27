@@ -102,7 +102,7 @@ def update_sites_from_cartodb(carto_table):
                 carto_table.table_name)
 
         sites = client.sql(qry)
-    except CartoDBException as e:
+    except CartoDBException:
         logging.exception("CartoDB exception occured", exc_info=True)
     else:
 
@@ -142,11 +142,11 @@ def update_sites_from_cartodb(carto_table):
 
             # create the actual location or retrieve existing based on type and code
             succ, sites_not_added, sites_created, sites_updated = create_location(pcode, carto_table,
-                                          parent, parent_instance,
-                                          site_name, row,
-                                          sites_not_added, sites_created,
-                                          sites_updated)
+                                                                                  parent, parent_instance,
+                                                                                  site_name, row,
+                                                                                  sites_not_added, sites_created,
+                                                                                  sites_updated)
 
     return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
-                carto_table.table_name, sites_created, sites_updated, sites_not_added
-            )
+        carto_table.table_name, sites_created, sites_updated, sites_not_added
+    )

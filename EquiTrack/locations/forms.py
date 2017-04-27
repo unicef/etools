@@ -31,9 +31,9 @@ class CartoDBTableForm(forms.ModelForm):
             sites = client.sql(
                 'select * from {} limit 1'.format(table_name)
             )
-        except CartoDBException as e:
+        except CartoDBException:
             logging.exception("CartoDB exception occured", exc_info=True)
-            raise ValidationError("Couldn't connect to CartoDB table: "+table_name)
+            raise ValidationError("Couldn't connect to CartoDB table: " + table_name)
         else:
             row = sites['rows'][0]
             if name_col not in row:

@@ -39,7 +39,8 @@ def create_snapshot_activity_stream(actor, target, created=False, delta_dict={})
 
             else:
                 previous = current_obj_dict
-                changes = {k: v for k, v in delta_dict.items() if k in current_obj_dict and delta_dict[k] != current_obj_dict[k]}
+                changes = {k: v for k, v in delta_dict.items(
+                ) if k in current_obj_dict and delta_dict[k] != current_obj_dict[k]}
 
             # Stringify any non-JSON Serializeable data types for previous
             for key, value in previous.items():

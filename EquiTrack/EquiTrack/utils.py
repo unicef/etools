@@ -12,13 +12,13 @@ from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import connection
 
 import tablib
-import traceback
 
 from import_export.resources import ModelResource
 
 
 def get_environment():
     return settings.ENVIRONMENT
+
 
 def get_current_site():
     return Site.objects.get_current()
@@ -96,16 +96,13 @@ class BaseExportResource(ModelResource):
         Exports a resource.
         """
 
-        #TODO quickly patched.. this whole code needs to be rewritten to for performance (streaming)
-
-
+        # TODO quickly patched.. this whole code needs to be rewritten to for performance (streaming)
 
         if queryset is None:
             queryset = self.get_queryset()
 
         if getattr(self, 'up_queryset', None):
             queryset = self.up_queryset(queryset)
-
 
         fields = SortedDict()
         data = tablib.Dataset(headers=fields.keys())
@@ -164,6 +161,6 @@ def get_data_from_insight(endpoint, data={}):
         return False, 'Loading data from Vision Failed, status {}'.format(response.status_code)
     try:
         result = json.loads(response.json())
-    except ValueError as e:
+    except ValueError:
         return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
     return True, result

@@ -152,7 +152,7 @@ class StateValidError(Exception):
 def error_string(function):
     def wrapper(*args, **kwargs):
         valid = function(*args, **kwargs)
-        if valid and type(valid) is bool:
+        if valid and isinstance(valid, bool):
             return (True, [])
         else:
             return (False, [function.__name__])
@@ -166,11 +166,12 @@ def transition_error_string(function):
         except TransitionError as e:
             return (False, e.message)
 
-        if valid and type(valid) is bool:
+        if valid and isinstance(valid, bool):
             return (True, [])
         else:
             return (False, ['generic_transition_fail'])
     return wrapper
+
 
 def state_error_string(function):
     def wrapper(*args, **kwargs):
@@ -179,15 +180,17 @@ def state_error_string(function):
         except StateValidError as e:
             return (False, e.message)
 
-        if valid and type(valid) is bool:
+        if valid and isinstance(valid, bool):
             return (True, [])
         else:
             return (False, ['generic_state_validation_fail'])
     return wrapper
 
+
 def update_object(obj, kwdict):
     for k, v in kwdict.iteritems():
         setattr(obj, k, v)
+
 
 class CompleteValidation(object):
     def __init__(self, new, user=None, old=None, instance_class=None, stateless=False):
@@ -377,7 +380,8 @@ class CompleteValidation(object):
         while self._make_auto_transition():
             any_transition_made = True
 
-        logging.debug("*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}".format(any_transition_made))
+        logging.debug(
+            "*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}".format(any_transition_made))
         return any_transition_made
 
     @cached_property

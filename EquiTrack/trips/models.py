@@ -9,26 +9,22 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 
 from django.db.models.signals import post_save
-from django.contrib.sites.models import Site
 
 from reversion.revisions import get_for_object
 from smart_selects.db_fields import ChainedForeignKey
 
 from EquiTrack.mixins import AdminURLMixin
 from EquiTrack.utils import get_current_site, get_environment
-from reports.models import Result, Sector
+from reports.models import Result
 from funds.models import Grant
 from users.models import Office, Section
 from locations.models import Location
 from partners.models import (
     PartnerOrganization,
     PCA,
-    #ResultChain,
-    RAMIndicator,
     GovernmentIntervention,
     GovernmentInterventionResult
 )
-from notification.templates import trips as emails
 from notification.models import Notification
 
 User = settings.AUTH_USER_MODEL
@@ -86,7 +82,7 @@ class Trip(AdminURLMixin, models.Model):
     )
 
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         choices=TRIP_STATUS,
         default=PLANNED,
     )
@@ -99,7 +95,7 @@ class Trip(AdminURLMixin, models.Model):
         max_length=254
     )
     travel_type = models.CharField(
-        max_length=32L,
+        max_length=32,
         choices=TRAVEL_TYPE,
         default=PROGRAMME_MONITORING
     )
@@ -228,6 +224,7 @@ class Trip(AdminURLMixin, models.Model):
     pending_ta_amendment = models.BooleanField(
         default=False,
     )
+
     class Meta:
         ordering = ['-created_date']
 
@@ -302,9 +299,9 @@ class Trip(AdminURLMixin, models.Model):
             self.status = Trip.CANCELLED
 
         if self.status == Trip.APPROVED and \
-        self.driver is not None and \
-        self.driver_supervisor is not None and \
-        self.driver_trip is None:
+                self.driver is not None and \
+                self.driver_supervisor is not None and \
+                self.driver_trip is None:
             self.create_driver_trip()
 
         if self.status == Trip.COMPLETED and self.driver_trip:
@@ -389,7 +386,7 @@ class Trip(AdminURLMixin, models.Model):
             instance.owner.email,
             instance.supervisor.email]
 
-        #TODO: Make this work now that offices are moved into the global schema
+        # TODO: Make this work now that offices are moved into the global schema
         # get zonal chiefs emails if travelling in their respective zones
         # locations = instance.locations.all().values_list('governorate__id', flat=True)
         # offices = Office.objects.filter(location_id__in=locations)
@@ -441,7 +438,7 @@ class Trip(AdminURLMixin, models.Model):
             if instance.travel_assistant:
                 recipients.append(instance.travel_assistant.email)
 
-            #recipients.extend(zonal_chiefs)
+            # recipients.extend(zonal_chiefs)
 
             notification = Notification.objects.create(
                 sender=instance.owner,
@@ -457,7 +454,8 @@ class Trip(AdminURLMixin, models.Model):
 
                 notification = Notification.objects.create(
                     sender=instance.owner,
-                    recipients=[instance.travel_assistant.email, ], template_name='travel/trip/travel_or_admin_assistant',
+                    recipients=[instance.travel_assistant.email,
+                                ], template_name='travel/trip/travel_or_admin_assistant',
                     template_data=email_context
                 )
 
@@ -490,7 +488,7 @@ class Trip(AdminURLMixin, models.Model):
                 if instance.international_travel:
                     recipients.append(instance.representative.email)
 
-                #recipients.extend(zonal_chiefs)
+                # recipients.extend(zonal_chiefs)
                 notification = Notification.objects.create(
                     sender=instance.owner,
                     recipients=recipients, template_name='trips/trip/approved',
@@ -510,6 +508,7 @@ class Trip(AdminURLMixin, models.Model):
             )
 
             notification.send_notification()
+
 
 post_save.connect(Trip.send_trip_request, sender=Trip)
 
@@ -760,6 +759,7 @@ class ActionPoint(models.Model):
                 for link_partner in self.trip.linkedpartner_set.all():
                     PartnerOrganization.follow_up_flags(link_partner.partner, self)
         return super(ActionPoint, self).save(**kwargs)
+
 
 post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 

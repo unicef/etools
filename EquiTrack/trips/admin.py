@@ -14,7 +14,7 @@ from users.models import UserProfile
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import CountryUsersAdminMixin
-from EquiTrack.forms import AutoSizeTextForm, RequireOneFormSet
+from EquiTrack.forms import AutoSizeTextForm
 from users.models import Office, Section
 from .models import (
     Trip,
@@ -36,11 +36,9 @@ from .forms import (
 from .filters import (
     TripReportFilter,
     PartnerFilter,
-    SupervisorFilter,
-    OwnerFilter
 )
 from reports.models import Result
-from partners.models import PartnerOrganization, GovernmentIntervention
+from partners.models import PartnerOrganization
 from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
@@ -69,10 +67,10 @@ class LinkedGovernmentPartnerInlineAdmin(admin.TabularInline):
         if db_field.name == u'partner':
             kwargs['queryset'] = PartnerOrganization.objects.filter(partner_type=u'Government', hidden=False)
 
-
         return super(LinkedGovernmentPartnerInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
+
 
 class TravelRoutesInlineAdmin(admin.TabularInline):
     model = TravelRoutes
@@ -245,13 +243,13 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 (
-                 (u'driver', u'driver_supervisor'),
-                 u'transport_booked',
-                 u'security_granted',
-                 u'ta_drafted',
-                 u'ta_reference',
-                 u'ta_drafted_date',
-                 u'vision_approver'),
+                (u'driver', u'driver_supervisor'),
+                u'transport_booked',
+                u'security_granted',
+                u'ta_drafted',
+                u'ta_reference',
+                u'ta_drafted_date',
+                u'vision_approver'),
         }),
 
         (u'Report', {
@@ -301,8 +299,8 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         Override here to check if the itinerary has changed
         """
         for form in formset.forms:
-            if form.has_changed():  #TODO: Test this
-                if type(form.instance) is TravelRoutes and form.instance.trip.status == Trip.APPROVED:
+            if form.has_changed():  # TODO: Test this
+                if isinstance(form.instance, TravelRoutes) and form.instance.trip.status == Trip.APPROVED:
                     trip = Trip.objects.get(pk=form.instance.trip.pk)
                     trip.status = Trip.SUBMITTED
                     trip.approved_by_supervisor = False
@@ -432,7 +430,6 @@ class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
         u'status'
     )
     list_filter = (
-        #(u'trip__owner', admin.RelatedOnlyFieldListFilter),
         (u'person_responsible', admin.RelatedOnlyFieldListFilter),
         u'status',
     )
@@ -473,6 +470,7 @@ class TripLocationAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
         return request.user.is_superuser
+
 
 admin.site.register(Trip, TripReportAdmin)
 admin.site.register(ActionPoint, ActionPointsAdmin)

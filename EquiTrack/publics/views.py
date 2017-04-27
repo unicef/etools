@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.query_utils import Q
 from django.utils.functional import cached_property
 from rest_framework import viewsets, mixins, status
@@ -53,10 +52,10 @@ class StaticDataView(GhostDataMixin,
         expense_type_q |= Q(travel_agent__country__business_area__code=country.business_area_code)
         expense_types = TravelExpenseType.objects.select_related('travel_agent').filter(expense_type_q)
 
-        data = {'currencies': currencies, # Moved
-                'dsa_regions': dsa_regions, # Moved
-                'business_areas': business_areas, # Moved
-                'expense_types': expense_types, # Moved
+        data = {'currencies': currencies,  # Moved
+                'dsa_regions': dsa_regions,  # Moved
+                'business_areas': business_areas,  # Moved
+                'expense_types': expense_types,  # Moved
 
                 # These should stay here since all of them are 'static'
                 'airlines': self.get_airlines_queryset(),
