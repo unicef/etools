@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-from .models import UserProfile, Country, Office, Section
+from .models import UserProfile, Country, Office, Section, WorkspaceCounter
 
 
 class ProfileInline(admin.StackedInline):
@@ -229,3 +229,4 @@ admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Office)
 admin.site.register(Section)
+admin.site.register(WorkspaceCounter)

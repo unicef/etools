@@ -205,22 +205,38 @@ class ResultAdmin(MPTTModelAdmin):
             results += 1
         self.message_user(request, '{} results were shown'.format(results))
 
-#
-# class LowerResultAdmin(MPTTModelAdmin):
-#     form = AutoSizeTextForm
-#     mptt_indent_field = 'result_name'
-#     search_fields = (
-#         'name',
-#     )
-#     list_filter = (
-#         'country_programme',
-#         'sector',
-#         'result_type',
-#     )
-#     list_display = (
-#         'result_name',
-#         'result_structure'
-#     )
+
+class LowerResultAdmin(admin.ModelAdmin):
+    model = LowerResult
+    search_fields = (
+        'name',
+    )
+    list_filter = (
+        'result_link__cp_output',
+        'result_link__intervention',
+    )
+    list_display = (
+        'name',
+        'code',
+    )
+
+
+class AppliedIndicatorAdmin(admin.ModelAdmin):
+    model = AppliedIndicator
+    search_fields = (
+        'indicator',
+        'lower_result',
+        'context_code',
+    )
+    list_filter = (
+        'indicator',
+        'lower_result',
+    )
+    list_display = (
+        'indicator',
+        'lower_result',
+        'context_code'
+    )
 
 
 admin.site.register(Result, ResultAdmin)
@@ -231,7 +247,7 @@ admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
 # admin.site.register(ResultChain)
-admin.site.register(LowerResult)
+admin.site.register(LowerResult, LowerResultAdmin)
 # admin.site.register(ResultType)
 admin.site.register(IndicatorBlueprint)
-admin.site.register(AppliedIndicator)
+admin.site.register(AppliedIndicator, AppliedIndicatorAdmin)

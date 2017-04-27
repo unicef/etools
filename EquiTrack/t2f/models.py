@@ -487,6 +487,9 @@ class IteneraryItem(models.Model):
         # https://groups.google.com/d/msg/django-users/NQO8OjCHhnA/r9qKklm5y0EJ
         order_with_respect_to = 'travel'
 
+    def __unicode__(self):
+        return '{} {} - {}'.format(self.travel.reference_number, self.origin, self.destination)
+
 
 class Expense(models.Model):
     travel = models.ForeignKey('Travel', related_name='expenses')

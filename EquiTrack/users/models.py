@@ -103,6 +103,8 @@ class WorkspaceCounter(models.Model):
         if created:
             cls.objects.create(workspace=instance)
 
+    def __unicode__(self):
+        return self.workspace.name
 
 post_save.connect(WorkspaceCounter.create_counter_model, sender=Country)
 

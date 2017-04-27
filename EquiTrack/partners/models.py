@@ -1671,6 +1671,11 @@ class InterventionResultLink(models.Model):
 
     tracker = FieldTracker()
 
+    def __unicode__(self):
+        return u'{} {}'.format(
+            self.intervention, self.cp_output
+        )
+
 
 class InterventionBudget(TimeStampedModel):
     """
@@ -2264,8 +2269,8 @@ class PCA(AdminURLMixin, models.Model):
     tracker = FieldTracker()
 
     class Meta:
-        verbose_name = 'Intervention'
-        verbose_name_plural = 'Interventions'
+        verbose_name = 'Old Intervention'
+        verbose_name_plural = 'Old Interventions'
         ordering = ['-created_at']
 
     def __unicode__(self):
