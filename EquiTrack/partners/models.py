@@ -467,9 +467,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                         last_audit = assesment
                 else:
                     last_audit = assesment
-            # TODO: this logic is not needed if done is correct.. this reflects "needed" not MR like shown in the dash
-            if last_audit and current_cycle.from_date < last_audit.completed_date < current_cycle.to_date:
-                audits = 0
         hact['audits_mr'] = audits
         partner.hact_values = hact
         partner.save()
