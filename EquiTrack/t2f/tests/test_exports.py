@@ -123,7 +123,7 @@ class TravelExports(APITenantTestCase):
                           'No',
                           'Yes',
                           '0.00',
-                          '500.00',
+                          '500 USD',
                           '0.00'])
 
         self.assertEqual(rows[2],
@@ -140,7 +140,7 @@ class TravelExports(APITenantTestCase):
                           'No',
                           'Yes',
                           '0.00',
-                          '200.00',
+                          '200 USD',
                           '0.00'])
 
     def test_travel_admin_export(self):

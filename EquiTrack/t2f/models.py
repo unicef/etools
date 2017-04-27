@@ -200,7 +200,8 @@ class Travel(models.Model):
     is_driver = models.BooleanField(default=False)
 
     # When the travel is sent for payment, the expenses should be saved for later use
-    preserved_expenses = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
+    preserved_expenses_local = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
+    preserved_expenses_usd = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
     approved_cost_traveler = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
     approved_cost_travel_agencies = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
 
@@ -352,7 +353,10 @@ class Travel(models.Model):
     @send_for_payment_threshold_decorator
     @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
-        self.preserved_expenses = self.cost_summary['expenses_total']
+        # Expenses total should have at least one element
+        assert len(self.cost_summary['expenses_total']) >= 1, 'Expenses total is empty. Please investigate'
+
+        self.preserved_expenses_local = self.cost_summary['expenses_total'][0]['amount']
         self.generate_invoices()
 
         # If invoicing is turned off, don't send a mail
@@ -500,9 +504,15 @@ class IteneraryItem(models.Model):
 class Expense(models.Model):
     travel = models.ForeignKey('Travel', related_name='expenses')
     type = models.ForeignKey('publics.TravelExpenseType', related_name='+', null=True)
-    document_currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
-    account_currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
+    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+
+    @property
+    def usd_amount(self):
+        if self.currency is None or self.amount is None:
+            return None
+        xchange_rate = self.currency.exchange_rates.last()
+        return self.amount * xchange_rate.x_rate
 
 
 class Deduction(models.Model):

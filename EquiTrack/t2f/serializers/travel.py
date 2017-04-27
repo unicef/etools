@@ -135,7 +135,7 @@ class ExpenseSerializer(PermissionBasedModelSerializer):
 
     class Meta:
         model = Expense
-        fields = ('id', 'type', 'document_currency', 'account_currency', 'amount')
+        fields = ('id', 'type', 'currency', 'amount')
 
 
 class DeductionSerializer(PermissionBasedModelSerializer):
