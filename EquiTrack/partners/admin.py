@@ -334,6 +334,7 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
     }
 
 
+
 class InterventionSectorLocationAdmin(admin.ModelAdmin):
     form = SectorLocationForm
     model = InterventionSectorLocationLink

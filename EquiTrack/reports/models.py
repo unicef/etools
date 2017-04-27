@@ -326,6 +326,9 @@ class IndicatorBlueprint(models.Model):
             self.code = None
         super(IndicatorBlueprint, self).save(*args, **kwargs)
 
+    def __unicode__(self):
+        return self.name
+
 
 class AppliedIndicator(models.Model):
 

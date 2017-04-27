@@ -1674,6 +1674,11 @@ class InterventionResultLink(models.Model):
 
     tracker = FieldTracker()
 
+    def __unicode__(self):
+        return u'{} {}'.format(
+            self.intervention, self.cp_output
+        )
+
 
 class InterventionBudget(TimeStampedModel):
     """
