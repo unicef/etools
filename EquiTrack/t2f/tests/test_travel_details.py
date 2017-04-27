@@ -45,7 +45,7 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(duplicate_travel_url, '/api/t2f/travels/1/duplicate_travel/')
 
     def test_details_view(self):
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(19):
             response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                            kwargs={'travel_pk': self.travel.id}),
                                             user=self.unicef_staff)
@@ -108,7 +108,7 @@ class TravelDetails(APITenantTestCase):
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -119,7 +119,7 @@ class TravelDetails(APITenantTestCase):
         data = {'expenses': response_json['expenses']}
         data['expenses'].append({'amount': '200',
                                  'type': expense_type.id,
-                                 'account_currency': currency.id,
+                                 'currency': currency.id,
                                  'document_currency': currency.id})
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                          kwargs={'travel_pk': travel_id}),
@@ -194,7 +194,7 @@ class TravelDetails(APITenantTestCase):
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -237,23 +237,23 @@ class TravelDetails(APITenantTestCase):
                 'ta_required': True,
                 'expenses': [{'amount': '120',
                               'type': user_et.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id},
                              {'amount': '80',
                               'type': user_et.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id},
                              {'amount': '100',
                               'type': travel_agent_1_et.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id},
                              {'amount': '500',
                               'type': travel_agent_2_et.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id},
                              {'amount': '1000',
                               'type': parking_money_et.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)

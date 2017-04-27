@@ -55,8 +55,7 @@ class IteneraryItemFactory(factory.DjangoModelFactory):
 
 
 class ExpenseFactory(factory.DjangoModelFactory):
-    document_currency = factory.SubFactory(CurrencyFactory)
-    account_currency = factory.SubFactory(CurrencyFactory)
+    currency = factory.SubFactory(CurrencyFactory)
     amount = fuzzy.FuzzyDecimal(1, 10000)
     type = factory.SubFactory(ExpenseTypeFactory)
 

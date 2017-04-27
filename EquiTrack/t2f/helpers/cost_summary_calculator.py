@@ -11,7 +11,7 @@ class CostSummaryCalculator(object):
         def __init__(self, vendor_number, expense):
             self.vendor_number = vendor_number
             self.label = expense.type.title
-            self.currency = expense.document_currency
+            self.currency = expense.currency
             self.amount = expense.amount
 
     def __init__(self, travel):
@@ -21,12 +21,12 @@ class CostSummaryCalculator(object):
         expense_mapping = self.get_expenses()
 
         local_expenses = [e.amount for e in chain.from_iterable(expense_mapping.values())
-                          if e.document_currency == self.travel.currency]
+                          if e.currency == self.travel.currency]
         total_expense_local = sum(local_expenses, Decimal(0))
         total_expense_local = total_expense_local.quantize(Decimal('1.0000'))
 
         usd_expenses = [e.amount for e in chain.from_iterable(expense_mapping.values())
-                        if e.document_currency != self.travel.currency]
+                        if e.currency != self.travel.currency]
         total_expense_usd = sum(usd_expenses, Decimal(0))
         total_expense_usd = total_expense_usd.quantize(Decimal('1.0000'))
 
