@@ -507,6 +507,13 @@ class Expense(models.Model):
     currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=4, null=True)
 
+    @property
+    def usd_amount(self):
+        if self.currency is None or self.amount is None:
+            return None
+        xchange_rate = self.currency.exchange_rates.last()
+        return self.amount * xchange_rate.x_rate
+
 
 class Deduction(models.Model):
     travel = models.ForeignKey('Travel', related_name='deductions')
