@@ -4,7 +4,6 @@ from datetime import date, datetime, timedelta
 
 from pytz import UTC
 
-from celery.utils.functional import memoize
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import QuerySet
@@ -219,7 +218,6 @@ class DSARegion(SoftDeleteMixin, models.Model):
     def delete(self, *args, **kwargs):
         self.rates.expire()
 
-    # @memoize(maxsize=50)
     def get_rate_at(self, rate_date=None):
         """Returns a dsa rate model for a specific time or None if no rate was applicable that time"""
         if not rate_date:
