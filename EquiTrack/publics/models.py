@@ -1,15 +1,14 @@
 from __future__ import unicode_literals
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
-from django.db.models.manager import Manager
 from pytz import UTC
-
-from django.db.models import QuerySet
-from django.db.models.query_utils import Q
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import QuerySet
+from django.db.models.query_utils import Q
+from django.db.utils import IntegrityError
 from django.utils.timezone import now
 
 # UTC have to be here to be able to directly compare with the values from the db (orm always returns tz aware values)
@@ -181,19 +180,25 @@ class Country(SoftDeleteMixin, models.Model):
         return self.name
 
 
+class DSARegionQuerySet(ValidityQuerySet):
+    def active(self):
+        return self.active_at(now())
+
+    def active_at(self, dt):
+        return self.filter(rates__effective_from_date__lte=dt,
+                           rates__effective_to_date__gte=dt)
+
+    def delete(self):
+        DSARate.objects.filter(region__in=self).expire()
+
+
 class DSARegion(SoftDeleteMixin, models.Model):
     country = models.ForeignKey('Country', related_name='dsa_regions')
     area_name = models.CharField(max_length=120)
     area_code = models.CharField(max_length=3)
+    user_defined = models.BooleanField(default=False)
 
-    dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_local = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_60plus_local = models.DecimalField(max_digits=20, decimal_places=4)
-
-    room_rate = models.DecimalField(max_digits=20, decimal_places=4)
-    finalization_date = models.DateField()
-    eff_date = models.DateField()
+    objects = DSARegionQuerySet.as_manager()
 
     @property
     def label(self):
@@ -209,3 +214,76 @@ class DSARegion(SoftDeleteMixin, models.Model):
 
     def __unicode__(self):
         return self.label
+
+    def delete(self, *args, **kwargs):
+        self.rates.expire()
+
+    def get_rate_at(self, rate_date=None):
+        """Returns a dsa rate model for a specific time or None if no rate was applicable that time"""
+        if not rate_date:
+            rate_date = now()
+
+        return self.rates.filter(effective_from_date__lte=rate_date, effective_to_date__gte=rate_date).first()
+
+    def __getattr__(self, item):
+        if item in ['dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local', 'dsa_amount_60plus_local',
+                    'room_rate', 'finalization_date', 'effective_from_date']:
+            return getattr(self.get_rate_at(), item)
+        return super(DSARegion, self).__getattr__(item)
+
+
+class DSARateQuerySet(QuerySet):
+    def delete(self):
+        self.expire()
+
+    def expire(self):
+        rates_to_expire = self.filter(effective_to_date=DSARate.DEFAULT_EFFECTIVE_TILL)
+        rates_to_expire.update(effective_to_date=now().date() - timedelta(days=1))
+
+
+class DSARate(models.Model):
+    DEFAULT_EFFECTIVE_TILL = date(2999, 12, 31)
+
+    region = models.ForeignKey('DSARegion', related_name='rates')
+    effective_from_date = models.DateField()
+    effective_to_date = models.DateField(default=DEFAULT_EFFECTIVE_TILL)
+
+    dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
+    dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
+    dsa_amount_local = models.DecimalField(max_digits=20, decimal_places=4)
+    dsa_amount_60plus_local = models.DecimalField(max_digits=20, decimal_places=4)
+
+    room_rate = models.DecimalField(max_digits=20, decimal_places=4)
+    finalization_date = models.DateField()
+
+    objects = DSARateQuerySet.as_manager()
+
+    class Meta:
+        unique_together = ('region', 'effective_to_date')
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            if not self.effective_from_date:
+                self.effective_from_date = now().date()
+
+            is_overlapping = DSARate.objects.filter(region=self.region,
+                                                    effective_from_date__gte=self.effective_from_date)\
+                .exclude(effective_to_date=self.DEFAULT_EFFECTIVE_TILL).exists()
+            if is_overlapping:
+                raise IntegrityError('DSA rates cannot overlap')
+
+            # Close old entry
+            new_valid_to_date = self.effective_from_date - timedelta(days=1)
+            DSARate.objects.filter(region=self.region,
+                                   effective_to_date=self.DEFAULT_EFFECTIVE_TILL)\
+                .update(effective_to_date=new_valid_to_date)
+
+        super(DSARate, self).save(*args, **kwargs)
+
+    def __getattr__(self, item):
+        return getattr(self.region, item)
+
+    def __unicode__(self):
+        return '{} ({} - {})'.format(self.region.label,
+                                     self.effective_from_date.isoformat(),
+                                     self.effective_to_date.isoformat())

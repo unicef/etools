@@ -99,6 +99,10 @@ class StateMachineTest(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 
+        travel = Travel.objects.get(id=travel_id)
+        self.assertIsNotNone(travel.submitted_at)
+        self.assertIsNotNone(travel.first_submission_date)
+
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),

@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.query_utils import Q
 from django.utils.functional import cached_property
 from rest_framework import viewsets, mixins, status
@@ -12,7 +11,7 @@ from publics.models import Country, DSARegion, Currency, AirlineCompany, WBS, Gr
 from publics.serializers import CountrySerializer, DSARegionSerializer, PublicStaticDataSerializer, \
     WBSGrantFundSerializer, WBSGrantFundParameterSerializer, CurrencySerializer, ExpenseTypeSerializer, \
     BusinessAreaSerializer, GhostDataPKSerializer, MultiGhostDataSerializer, AirlineSerializer, FundSerializer, \
-    WBSSerializer, GrantSerializer
+    WBSSerializer, GrantSerializer, DSARegionsParameterSerializer
 from t2f.models import TravelType, ModeOfTravel
 
 
@@ -43,7 +42,7 @@ class StaticDataView(GhostDataMixin,
 
     def list(self, request):
         country = request.user.profile.country
-        dsa_regions = DSARegion.objects.filter(country__business_area__code=country.business_area_code)
+        dsa_regions = DSARegion.objects.filter(country__business_area__code=country.business_area_code).active()
         dsa_regions = dsa_regions.select_related('country')
 
         currencies = Currency.objects.all().prefetch_related('exchange_rates')
@@ -100,11 +99,26 @@ class DSARegionsView(GhostDataMixin,
                      viewsets.GenericViewSet):
     serializer_class = DSARegionSerializer
 
+    def get_serializer_context(self):
+        context = super(DSARegionsView, self).get_serializer_context()
+
+        parameter_serializer = DSARegionsParameterSerializer(data=self.request.GET)
+        if parameter_serializer.is_valid():
+            context['values_at'] = parameter_serializer.validated_data['values_at']
+
+        return context
+
     def get_queryset(self):
         workspace = self.request.user.profile.country
         dsa_regions = DSARegion.objects.filter(country__business_area__code=workspace.business_area_code)
-        dsa_regions = dsa_regions.select_related('country')
-        return dsa_regions
+
+        parameter_serializer = DSARegionsParameterSerializer(data=self.request.GET)
+        if parameter_serializer.is_valid():
+            dsa_regions = dsa_regions.active_at(parameter_serializer.validated_data['values_at'])
+        else:
+            dsa_regions = dsa_regions.active()
+
+        return dsa_regions.select_related('country')
 
     def list(self, request):
         dsa_regions = self.get_queryset()

@@ -8,7 +8,7 @@ from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import AirlineCompanyFactory, DSARegionFactory, CountryFactory, BusinessAreaFactory, \
-    WBSFactory, GrantFactory, FundFactory, ExpenseTypeFactory, TravelAgentFactory
+    WBSFactory, GrantFactory, FundFactory, ExpenseTypeFactory, TravelAgentFactory, DSARateFactory
 from t2f.tests.factories import CurrencyFactory
 
 
@@ -130,11 +130,15 @@ class StaticDataEndpoints(APITenantTestCase):
         business_area = BusinessAreaFactory(code=workspace.business_area_code)
         country = CountryFactory(business_area=business_area)
 
-        DSARegionFactory(country=country)
-        DSARegionFactory(country=country)
-        DSARegionFactory(country=country)
+        region_1 = DSARegionFactory(country=country)
+        region_2 = DSARegionFactory(country=country)
+        region_3 = DSARegionFactory(country=country)
 
-        with self.assertNumQueries(1):
+        DSARateFactory(region=region_1)
+        DSARateFactory(region=region_2)
+        DSARateFactory(region=region_3)
+
+        with self.assertNumQueries(4):
             response = self.forced_auth_req('get', reverse('public:dsa_regions'),
                                             user=self.unicef_staff)
 
@@ -142,9 +146,9 @@ class StaticDataEndpoints(APITenantTestCase):
 
         self.assertEqual(len(response_json), 3)
 
-        expected_keys = ['unique_name', 'dsa_amount_usd', 'country', 'area_name', 'room_rate', 'area_code', 'label',
-                         'dsa_amount_60plus_usd', 'long_name', 'eff_date', 'dsa_amount_60plus_local', 'id', 'unique_id',
-                         'dsa_amount_local', 'finalization_date']
+        expected_keys = ['unique_name', 'dsa_amount_usd', 'country', 'area_name', 'area_code', 'label',
+                         'dsa_amount_60plus_usd', 'long_name', 'effective_from_date', 'dsa_amount_60plus_local', 'id',
+                         'unique_id', 'dsa_amount_local']
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_business_areas_view(self):

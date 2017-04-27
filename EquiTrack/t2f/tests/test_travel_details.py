@@ -11,11 +11,10 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, GovernmentInterventionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from partners.models import GovernmentIntervention
 from publics.models import DSARegion
-from publics.tests.factories import BusinessAreaFactory, WBSFactory
+from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory, DSARegionFactory
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory
 
 from .factories import TravelFactory
 
@@ -47,9 +46,21 @@ class TravelDetails(APITenantTestCase):
 
     def test_details_view(self):
         with self.assertNumQueries(17):
-            self.forced_auth_req('get', reverse('t2f:travels:details:index',
-                                                kwargs={'travel_pk': self.travel.id}),
-                                 user=self.unicef_staff)
+            response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
+                                                           kwargs={'travel_pk': self.travel.id}),
+                                            user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertKeysIn(['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
+                           'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
+                           'section', 'clearances', 'cost_assignments', 'start_date', 'status', 'activities',
+                           'rejection_note', 'end_date', 'mode_of_travel', 'international_travel',
+                           'first_submission_date', 'deductions', 'purpose', 'report', 'action_points',
+                           'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost',
+                           'itinerary'],
+                          response_json,
+                          exact=True)
+
 
     @skip('Fix this')
     def test_file_attachments(self):

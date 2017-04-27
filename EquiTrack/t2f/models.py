@@ -13,6 +13,7 @@ from django.conf import settings
 from django.db import models, connection
 from django.template.context import Context
 from django.template.loader import render_to_string
+from django.utils.timezone import now
 from django.utils.translation import ugettext, ugettext_lazy
 from django_fsm import FSMField, transition
 
@@ -169,6 +170,8 @@ class Travel(models.Model):
     completed_at = models.DateTimeField(null=True)
     canceled_at = models.DateTimeField(null=True)
     submitted_at = models.DateTimeField(null=True)
+    # Required to calculate with proper dsa values
+    first_submission_date = models.DateTimeField(null=True)
     rejected_at = models.DateTimeField(null=True)
     approved_at = models.DateTimeField(null=True)
 
@@ -295,6 +298,9 @@ class Travel(models.Model):
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
                 conditions=[has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
+        self.submitted_at = now()
+        if not self.first_submission_date:
+            self.first_submission_date = now()
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')

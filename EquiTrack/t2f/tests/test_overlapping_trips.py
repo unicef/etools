@@ -11,7 +11,7 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import BusinessAreaFactory, DSARegionFactory
+from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, DSARateFactory
 from t2f.models import ModeOfTravel, make_travel_reference_number, Travel
 from t2f.tests.factories import CurrencyFactory
 
@@ -96,6 +96,7 @@ class OverlappingTravelsTest(APITenantTestCase):
     def test_almost_overlapping_trips(self):
         currency = CurrencyFactory()
         dsa_region = DSARegionFactory()
+        DSARateFactory(region=dsa_region)
 
         data = {'deductions': [],
                 'itinerary': [{'origin': 'Berlin',
@@ -150,7 +151,6 @@ class OverlappingTravelsTest(APITenantTestCase):
                                                         kwargs={'travel_pk': response_json['id'],
                                                                 'transition_name': 'send_for_payment'}),
                                         data=response_json, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
         self.assertEqual(response.status_code, 200)
 
     def test_edit_to_overlap(self):
