@@ -2269,8 +2269,8 @@ class PCA(AdminURLMixin, models.Model):
     tracker = FieldTracker()
 
     class Meta:
-        verbose_name = 'PCA'
-        verbose_name_plural = 'PCAs'
+        verbose_name = 'Old Intervention'
+        verbose_name_plural = 'Old Interventions'
         ordering = ['-created_at']
 
     def __unicode__(self):
