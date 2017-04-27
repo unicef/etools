@@ -237,7 +237,8 @@ class DSARateQuerySet(QuerySet):
         self.expire()
 
     def expire(self):
-        self.filter(effective_till_date=DSARate.DEFAULT_EFFECTIVE_TILL).update(effective_till_date=now().date())
+        rates_to_expire = self.filter(effective_till_date=DSARate.DEFAULT_EFFECTIVE_TILL)
+        rates_to_expire.update(effective_till_date=now().date() - timedelta(days=1))
 
 
 class DSARate(models.Model):
@@ -245,7 +246,7 @@ class DSARate(models.Model):
 
     region = models.ForeignKey('DSARegion', related_name='rates')
     effective_from_date = models.DateField()
-    effective_till_date = models.DateTimeField(default=DEFAULT_EFFECTIVE_TILL)
+    effective_till_date = models.DateField(default=DEFAULT_EFFECTIVE_TILL)
 
     dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
     dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)

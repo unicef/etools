@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from freezegun import freeze_time
 import json
@@ -84,8 +84,7 @@ class DSARateTest(APITenantTestCase):
         self.assertEqual(response_json[0]['id'], region.id)
 
         # Expire rate - region should be excluded
-        rate.effective_till_date = UTC.localize(datetime.utcnow()).date()
-        rate.save()
+        rate.delete()
 
         response = self.forced_auth_req('get', reverse('public:dsa_regions'),
                                         user=self.unicef_staff)
@@ -117,8 +116,7 @@ class DSARateTest(APITenantTestCase):
         self.assertEqual(response_json['dsa_regions'][0]['id'], region.id)
 
         # Expire rate - region should be excluded
-        rate.effective_till_date = UTC.localize(datetime.utcnow()).date()
-        rate.save()
+        rate.delete()
 
         response = self.forced_auth_req('get', reverse('public:static'),
                                         user=self.unicef_staff)
