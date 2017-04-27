@@ -49,13 +49,14 @@ class DSARateTest(APITenantTestCase):
 
         rate_1 = DSARateFactory(region=region,
                                 effective_from_date=date(2017, 4, 17))
-        self.assertEqual(rate_1.effective_till_date, DSARate.DEFAULT_VALID_TO)
+        self.assertEqual(rate_1.effective_till_date, DSARate.DEFAULT_EFFECTIVE_TILL)
 
         rate_2 = DSARateFactory(region=region,
                                 effective_from_date=date(2017, 4, 18))
         rate_1.refresh_from_db()
 
-        self.assertNotEqual(rate_1.effective_till_date, DSARate.DEFAULT_VALID_TO)
+        self.assertNotEqual(rate_1.effective_till_date, DSARate.DEFAULT_EFFECTIVE_TILL)
+        self.assertNotEqual(rate_1.effective_till_date, DSARate.DEFAULT_EFFECTIVE_TILL)
         self.assertLess(rate_1.effective_till_date, rate_2.effective_from_date)
 
     def test_dsa_regions_view(self):

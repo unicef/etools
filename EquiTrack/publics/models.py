@@ -189,6 +189,9 @@ class DSARegionQuerySet(ValidityQuerySet):
         return self.filter(rates__effective_from_date__lte=dt,
                            rates__effective_till_date__gte=dt)
 
+    def delete(self):
+        DSARate.objects.filter(region__in=self).expire()
+
 
 class DSARegion(SoftDeleteMixin, models.Model):
     country = models.ForeignKey('Country', related_name='dsa_regions')
@@ -213,7 +216,10 @@ class DSARegion(SoftDeleteMixin, models.Model):
     def __unicode__(self):
         return self.label
 
-    @memoize(maxsize=50)
+    def delete(self, *args, **kwargs):
+        self.rates.expire()
+
+    # @memoize(maxsize=50)
     def get_rate_at(self, rate_date=None):
         """Returns a dsa rate model for a specific time or None if no rate was applicable that time"""
         if not rate_date:
@@ -228,12 +234,20 @@ class DSARegion(SoftDeleteMixin, models.Model):
         return super(DSARegion, self).__getattr__(item)
 
 
+class DSARateQuerySet(QuerySet):
+    def delete(self):
+        self.expire()
+
+    def expire(self):
+        self.filter(effective_till_date=DSARate.DEFAULT_EFFECTIVE_TILL).update(effective_till_date=now().date())
+
+
 class DSARate(models.Model):
-    DEFAULT_VALID_TO = date(2999, 12, 31)
+    DEFAULT_EFFECTIVE_TILL = date(2999, 12, 31)
 
     region = models.ForeignKey('DSARegion', related_name='rates')
     effective_from_date = models.DateField()
-    effective_till_date = models.DateTimeField(default=DEFAULT_VALID_TO)
+    effective_till_date = models.DateTimeField(default=DEFAULT_EFFECTIVE_TILL)
 
     dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
     dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
@@ -242,6 +256,8 @@ class DSARate(models.Model):
 
     room_rate = models.DecimalField(max_digits=20, decimal_places=4)
     finalization_date = models.DateField()
+
+    objects = DSARateQuerySet.as_manager()
 
     class Meta:
         unique_together = ('region', 'effective_till_date')
@@ -253,14 +269,14 @@ class DSARate(models.Model):
 
             is_overlapping = DSARate.objects.filter(region=self.region,
                                                     effective_from_date__gte=self.effective_from_date)\
-                .exclude(effective_till_date=self.DEFAULT_VALID_TO).exists()
+                .exclude(effective_till_date=self.DEFAULT_EFFECTIVE_TILL).exists()
             if is_overlapping:
                 raise IntegrityError('DSA rates cannot overlap')
 
             # Close old entry
             new_valid_to_date = self.effective_from_date - timedelta(days=1)
             DSARate.objects.filter(region=self.region,
-                                   effective_till_date=self.DEFAULT_VALID_TO)\
+                                   effective_till_date=self.DEFAULT_EFFECTIVE_TILL)\
                 .update(effective_till_date=new_valid_to_date)
 
         super(DSARate, self).save(*args, **kwargs)

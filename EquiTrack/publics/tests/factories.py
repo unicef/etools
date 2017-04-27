@@ -132,7 +132,7 @@ class DSARegionFactory(factory.DjangoModelFactory):
 class DSARateFactory(factory.DjangoModelFactory):
     region = factory.SubFactory(DSARegionFactory)
     effective_from_date = fuzzy.FuzzyDate(start_date=_FUZZY_START_DATE.date(), end_date=TZ.localize(datetime.now()).date())
-    effective_till_date = DSARate.DEFAULT_VALID_TO
+    effective_till_date = DSARate.DEFAULT_EFFECTIVE_TILL
 
     dsa_amount_usd = 100
     dsa_amount_60plus_usd = 80
