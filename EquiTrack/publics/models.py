@@ -232,7 +232,7 @@ class DSARate(models.Model):
     DEFAULT_VALID_TO = date(2999, 12, 31)
 
     region = models.ForeignKey('DSARegion', related_name='rates')
-    effective_from_date = models.DateField(auto_now_add=True)
+    effective_from_date = models.DateField()
     effective_till_date = models.DateTimeField(default=DEFAULT_VALID_TO)
 
     dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
@@ -248,6 +248,9 @@ class DSARate(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk:
+            if not self.effective_from_date:
+                self.effective_from_date = now().date()
+
             is_overlapping = DSARate.objects.filter(region=self.region,
                                                     effective_from_date__gte=self.effective_from_date)\
                 .exclude(effective_till_date=self.DEFAULT_VALID_TO).exists()
@@ -264,3 +267,8 @@ class DSARate(models.Model):
 
     def __getattr__(self, item):
         return getattr(self.region, item)
+
+    def __unicode__(self):
+        return '{} ({} - {})'.format(self.region.label,
+                                     self.effective_from_date.isoformat(),
+                                     self.effective_till_date.isoformat())

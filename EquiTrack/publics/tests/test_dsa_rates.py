@@ -7,6 +7,7 @@ import json
 from pytz import UTC
 
 from django.core.urlresolvers import reverse
+from django.utils.timezone import now
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -168,3 +169,18 @@ class DSARateTest(APITenantTestCase):
                                         data={'values_at': date_str}, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
+
+    def test_effective_from_date(self):
+        region = DSARegionFactory()
+
+        now_date = now().date()
+        rate_1 = DSARateFactory(region=region,
+                                effective_from_date=None)
+
+        self.assertEqual(rate_1.effective_from_date, now_date)
+
+        effective_from_date = date(2017, 4, 1)
+        rate_2 = DSARateFactory(region=region,
+                                effective_from_date=effective_from_date)
+
+        self.assertEqual(rate_2.effective_from_date, effective_from_date)

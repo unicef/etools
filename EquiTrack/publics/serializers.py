@@ -24,8 +24,8 @@ class DSARegionsParameterSerializer(serializers.Serializer):
 class DSARateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DSARate
-        fields = ('dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local', 'dsa_amount_60plus_local', 'room_rate',
-                  'finalization_date', 'effective_from_date')
+        fields = ('dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local', 'dsa_amount_60plus_local',
+                  'effective_from_date')
 
         
 class DSARegionSerializer(serializers.ModelSerializer):
