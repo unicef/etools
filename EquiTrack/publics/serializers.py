@@ -40,7 +40,7 @@ class DSARegionSerializer(serializers.ModelSerializer):
         ret = super(DSARegionSerializer, self).to_representation(instance)
 
         values_at = self.context.get('values_at', now())
-        rate = instance.rates.get(effective_from_date__lte=values_at, effective_till_date__gte=values_at)
+        rate = instance.rates.get(effective_from_date__lte=values_at, effective_to_date__gte=values_at)
 
         rate_serializer = DSARateSerializer(rate, context=self.context)
         rate_data = rate_serializer.data

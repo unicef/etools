@@ -49,15 +49,15 @@ class DSARateTest(APITenantTestCase):
 
         rate_1 = DSARateFactory(region=region,
                                 effective_from_date=date(2017, 4, 17))
-        self.assertEqual(rate_1.effective_till_date, DSARate.DEFAULT_EFFECTIVE_TILL)
+        self.assertEqual(rate_1.effective_to_date, DSARate.DEFAULT_EFFECTIVE_TILL)
 
         rate_2 = DSARateFactory(region=region,
                                 effective_from_date=date(2017, 4, 18))
         rate_1.refresh_from_db()
 
-        self.assertNotEqual(rate_1.effective_till_date, DSARate.DEFAULT_EFFECTIVE_TILL)
-        self.assertNotEqual(rate_1.effective_till_date, DSARate.DEFAULT_EFFECTIVE_TILL)
-        self.assertLess(rate_1.effective_till_date, rate_2.effective_from_date)
+        self.assertNotEqual(rate_1.effective_to_date, DSARate.DEFAULT_EFFECTIVE_TILL)
+        self.assertNotEqual(rate_1.effective_to_date, DSARate.DEFAULT_EFFECTIVE_TILL)
+        self.assertLess(rate_1.effective_to_date, rate_2.effective_from_date)
 
     def test_dsa_regions_view(self):
         workspace = self.unicef_staff.profile.country
@@ -160,7 +160,7 @@ class DSARateTest(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
 
-        rate_2.effective_till_date = date(2017, 4, 15)
+        rate_2.effective_to_date = date(2017, 4, 15)
         rate_2.save()
 
         date_str = datetime(2017, 4, 16, tzinfo=UTC).isoformat()
