@@ -9,7 +9,7 @@ from pytz import UTC
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
+from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory, WBSFactory, GrantFactory, FundFactory, DSARegionFactory, \
     AirlineCompanyFactory
@@ -154,9 +154,11 @@ class TravelExports(APITenantTestCase):
         travel_1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
         travel_1.itinerary.all().delete()
 
+        origin1 = LocationFactory()
+        destination1 = LocationFactory()
         itinerary_item_1 = IteneraryItemFactory(travel=travel_1,
-                                                origin='Origin1',
-                                                destination='Origin2',
+                                                origin=origin1,
+                                                destination=destination1,
                                                 departure_date=datetime(2016, 12, 3, 11, tzinfo=UTC),
                                                 arrival_date=datetime(2016, 12, 3, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.CAR,
@@ -164,8 +166,8 @@ class TravelExports(APITenantTestCase):
         itinerary_item_1.airlines.all().delete()
 
         itinerary_item_2 = IteneraryItemFactory(travel=travel_1,
-                                                origin='Origin2',
-                                                destination='Origin3',
+                                                origin=origin1,
+                                                destination=destination1,
                                                 departure_date=datetime(2016, 12, 5, 11, tzinfo=UTC),
                                                 arrival_date=datetime(2016, 12, 5, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
@@ -174,8 +176,8 @@ class TravelExports(APITenantTestCase):
         itinerary_item_2.airlines.add(airline_jetstar)
 
         itinerary_item_3 = IteneraryItemFactory(travel=travel_1,
-                                                origin='Origin3',
-                                                destination='Origin1',
+                                                origin=origin1,
+                                                destination=destination1,
                                                 departure_date=datetime(2016, 12, 6, 11, tzinfo=UTC),
                                                 arrival_date=datetime(2016, 12, 6, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
@@ -189,8 +191,8 @@ class TravelExports(APITenantTestCase):
         travel_2.itinerary.all().delete()
 
         itinerary_item_4 = IteneraryItemFactory(travel=travel_2,
-                                                origin='Origin2',
-                                                destination='Origin1',
+                                                origin=origin1,
+                                                destination=destination1,
                                                 departure_date=datetime(2016, 12, 5, 11, tzinfo=UTC),
                                                 arrival_date=datetime(2016, 12, 5, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.PLANE,
@@ -199,8 +201,8 @@ class TravelExports(APITenantTestCase):
         itinerary_item_4.airlines.add(airline_jetstar)
 
         itinerary_item_5 = IteneraryItemFactory(travel=travel_2,
-                                                origin='Origin3',
-                                                destination='Origin1',
+                                                origin=origin1,
+                                                destination=destination1,
                                                 departure_date=datetime(2016, 12, 6, 11, tzinfo=UTC),
                                                 arrival_date=datetime(2016, 12, 6, 12, tzinfo=UTC),
                                                 mode_of_travel=ModeOfTravel.CAR,
@@ -237,8 +239,8 @@ class TravelExports(APITenantTestCase):
                           'An Office',
                           travel_1.section.name,
                           'planned',
-                          'Origin1',
-                          'Origin2',
+                          origin1.name,
+                          destination1.name,
                           '03-Dec-2016 11:00 AM',
                           '03-Dec-2016 12:00 PM',
                           'BRD',
@@ -252,8 +254,8 @@ class TravelExports(APITenantTestCase):
                           'An Office',
                           travel_1.section.name,
                           'planned',
-                          'Origin2',
-                          'Origin3',
+                          origin1.name,
+                          destination1.name,
                           '05-Dec-2016 11:00 AM',
                           '05-Dec-2016 12:00 PM',
                           'LAN',
@@ -267,8 +269,8 @@ class TravelExports(APITenantTestCase):
                           'An Office',
                           travel_1.section.name,
                           'planned',
-                          'Origin3',
-                          'Origin1',
+                          origin1.name,
+                          destination1.name,
                           '06-Dec-2016 11:00 AM',
                           '06-Dec-2016 12:00 PM',
                           'NODSA',
@@ -282,8 +284,8 @@ class TravelExports(APITenantTestCase):
                           'An Office',
                           travel_2.section.name,
                           'planned',
-                          'Origin2',
-                          'Origin1',
+                          origin1.name,
+                          destination1.name,
                           '05-Dec-2016 11:00 AM',
                           '05-Dec-2016 12:00 PM',
                           'LAN',
@@ -297,8 +299,8 @@ class TravelExports(APITenantTestCase):
                           'An Office',
                           travel_2.section.name,
                           'planned',
-                          'Origin3',
-                          'Origin1',
+                          origin1.name,
+                          destination1.name,
                           '06-Dec-2016 11:00 AM',
                           '06-Dec-2016 12:00 PM',
                           'NODSA',
