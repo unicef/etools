@@ -21,29 +21,6 @@ class DSARateTest(APITenantTestCase):
         super(DSARateTest, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
 
-    def test_attribute_fallback(self):
-        region = DSARegionFactory()
-        rate = DSARateFactory(region=region)
-
-        self.assertEqual(region.area_code, rate.area_code)
-        self.assertEqual(region.area_name, rate.area_name)
-        self.assertEqual(region.country, rate.country)
-        self.assertEqual(region.unique_name, rate.unique_name)
-        self.assertEqual(region.unique_id, rate.unique_id)
-        self.assertEqual(region.dsa_amount_usd, rate.dsa_amount_usd)
-        self.assertEqual(region.dsa_amount_60plus_usd, rate.dsa_amount_60plus_usd)
-        self.assertEqual(region.dsa_amount_local, rate.dsa_amount_local)
-        self.assertEqual(region.dsa_amount_60plus_local, rate.dsa_amount_60plus_local)
-        self.assertEqual(region.room_rate, rate.room_rate)
-        self.assertEqual(region.finalization_date, rate.finalization_date)
-        self.assertEqual(region.effective_from_date, rate.effective_from_date)
-
-        with self.assertRaises(AttributeError):
-            region.not_a_fallback_attribute
-            
-        with self.assertRaises(AttributeError):
-            rate.nonexisting_attribute
-
     def test_new_rate_addition(self):
         region = DSARegionFactory()
 

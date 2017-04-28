@@ -280,9 +280,6 @@ class DSARate(models.Model):
 
         super(DSARate, self).save(*args, **kwargs)
 
-    def __getattr__(self, item):
-        return getattr(self.region, item)
-
     def __unicode__(self):
         return '{} ({} - {})'.format(self.region.label,
                                      self.effective_from_date.isoformat(),
