@@ -25,6 +25,27 @@ class TestUserViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 3)
 
+    def test_api_users_list_values(self):
+        response = self.forced_auth_req(
+            'get',
+            '/users/api/',
+            user=self.unicef_staff,
+            data={"values": "{},{}".format(self.partnership_manager_user.id, self.unicef_superuser.id)}
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+
+    def test_api_users_list_values_bad(self):
+        response = self.forced_auth_req(
+            'get',
+            '/users/api/',
+            user=self.unicef_staff,
+            data={"values": '1],2fg'}
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, [u'Query parameter values are not integers'])
+
     def test_api_users_list_managers(self):
         response = self.forced_auth_req(
             'get',

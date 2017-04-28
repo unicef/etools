@@ -119,8 +119,8 @@ class ActionPointSerializer(serializers.ModelSerializer):
 
 class IteneraryItemSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
-    airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.objects.all(), required=False,
-                                                  allow_null=True)
+    airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.admin_objects.all(),
+                                                  required=False, allow_null=True)
     mode_of_travel = LowerTitleField(required=False)
 
     class Meta:
@@ -248,7 +248,6 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
             ta_required |= self.instance.ta_required
 
         if not ta_required:
-            data.pop('itinerary', None)
             data.pop('deductions', None)
             data.pop('expenses', None)
             data.pop('cost_assignments', None)
@@ -266,7 +265,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
     def validate_itinerary(self, value):
         if self.transition_name == 'submit_for_approval' and len(value) < 2:
-            raise ValidationError('Travel must have at least two itinerary item')
+            if self.instance and self.instance.ta_required:
+                raise ValidationError('Travel must have at least two itinerary item')
 
         if not value:
             return value
@@ -311,6 +311,10 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
                 travel_q = Q(traveler=traveler)
                 travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
                 travel_q &= Q(start_date__range=(start_date, end_date)) | Q(end_date__range=(start_date, end_date))
+
+                # In case of first save, no id present
+                if self.instance:
+                    travel_q &= ~Q(id=self.instance.id)
 
                 if Travel.objects.filter(travel_q).exists():
                     raise ValidationError(ugettext('You have an existing trip with overlapping dates. '

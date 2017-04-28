@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import json
 
 from django.core.urlresolvers import reverse
-from django.db import connection
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -33,6 +32,9 @@ class StaticDataEndpoints(APITenantTestCase):
 
         expense_types_url = reverse('public:expense_types')
         self.assertEqual(expense_types_url, '/api/expense_types/')
+
+        airlines_url = reverse('public:airlines')
+        self.assertEqual(airlines_url, '/api/airlines/')
 
     def test_endpoint(self):
         # This line is duplicated on purpose. Currency will have always 1+N number of queries
@@ -175,4 +177,19 @@ class StaticDataEndpoints(APITenantTestCase):
         self.assertEqual(len(response_json), 3)
 
         expected_keys = ['vendor_number', 'unique', 'id', 'name']
+        self.assertKeysIn(expected_keys, response_json[0], exact=True)
+
+    def test_airlines_view(self):
+        AirlineCompanyFactory()
+        AirlineCompanyFactory()
+        AirlineCompanyFactory()
+
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req('get', reverse('public:airlines'),
+                                            user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(len(response_json), 3)
+
+        expected_keys = ['id', 'name', 'code']
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
