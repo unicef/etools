@@ -40,7 +40,7 @@ class ThresholdTest(APITenantTestCase):
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -181,7 +181,7 @@ class ThresholdTest(APITenantTestCase):
         data = response_json
         data['expenses'].append({'amount': '41',
                                  'type': expense_type.id,
-                                 'account_currency': currency.id,
+                                 'currency': currency.id,
                                  'document_currency': currency.id})
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,

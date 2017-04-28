@@ -11,11 +11,10 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, GovernmentInterventionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from partners.models import GovernmentIntervention
 from publics.models import DSARegion
-from publics.tests.factories import BusinessAreaFactory, WBSFactory
+from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory, DSARegionFactory
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory
 
 from .factories import TravelFactory
 
@@ -46,10 +45,21 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(duplicate_travel_url, '/api/t2f/travels/1/duplicate_travel/')
 
     def test_details_view(self):
-        with self.assertNumQueries(17):
-            self.forced_auth_req('get', reverse('t2f:travels:details:index',
-                                                kwargs={'travel_pk': self.travel.id}),
-                                 user=self.unicef_staff)
+        with self.assertNumQueries(20):
+            response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
+                                                           kwargs={'travel_pk': self.travel.id}),
+                                            user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertKeysIn(['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
+                           'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
+                           'section', 'clearances', 'cost_assignments', 'start_date', 'status', 'activities',
+                           'rejection_note', 'end_date', 'mode_of_travel', 'international_travel',
+                           'first_submission_date', 'deductions', 'purpose', 'report', 'action_points',
+                           'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost',
+                           'itinerary'],
+                          response_json,
+                          exact=True)
 
     @skip('Fix this')
     def test_file_attachments(self):
@@ -98,7 +108,7 @@ class TravelDetails(APITenantTestCase):
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -109,7 +119,7 @@ class TravelDetails(APITenantTestCase):
         data = {'expenses': response_json['expenses']}
         data['expenses'].append({'amount': '200',
                                  'type': expense_type.id,
-                                 'account_currency': currency.id,
+                                 'currency': currency.id,
                                  'document_currency': currency.id})
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                          kwargs={'travel_pk': travel_id}),
@@ -184,7 +194,7 @@ class TravelDetails(APITenantTestCase):
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -227,31 +237,47 @@ class TravelDetails(APITenantTestCase):
                 'ta_required': True,
                 'expenses': [{'amount': '120',
                               'type': user_et.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id},
                              {'amount': '80',
                               'type': user_et.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id},
                              {'amount': '100',
                               'type': travel_agent_1_et.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id},
                              {'amount': '500',
                               'type': travel_agent_2_et.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id},
                              {'amount': '1000',
                               'type': parking_money_et.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['expenses'],
-                         [{'amount': '200.00', 'vendor_number': 'Traveler'},
-                          {'amount': '100.00', 'vendor_number': 'ta1'},
-                          {'amount': '500.00', 'vendor_number': 'ta2'},
-                          {'amount': '1000.00', 'vendor_number': ''}])
+                         [{'amount': '80.00',
+                           'currency': currency.id,
+                           'label': user_et.title,
+                           'vendor_number': 'Traveler'},
+                          {'amount': '120.00',
+                           'currency': currency.id,
+                           'label': user_et.title,
+                           'vendor_number': 'Traveler'},
+                          {'amount': '100.00',
+                           'currency': currency.id,
+                           'label': travel_agent_1_et.title,
+                           'vendor_number': 'ta1'},
+                          {'amount': '500.00',
+                           'currency': currency.id,
+                           'label': travel_agent_2_et.title,
+                           'vendor_number': 'ta2'},
+                          {'amount': '1000.00',
+                           'currency': currency.id,
+                           'label': parking_money_et.title,
+                           'vendor_number': ''}])
 
     def test_cost_assignments(self):
         wbs = WBSFactory()
