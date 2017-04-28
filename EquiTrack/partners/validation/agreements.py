@@ -1,8 +1,9 @@
 import logging
-from datetime import date, datetime
+from datetime import date
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError
 from reports.models import CountryProgramme
+
 
 def agreement_transition_to_active_valid(agreement):
 
@@ -13,14 +14,12 @@ def agreement_transition_to_active_valid(agreement):
         raise TransitionError(['agreement_transition_to_active_invalid'])
     if agreement.agreement_type == agreement.PCA and \
             agreement.__class__.objects.filter(partner=agreement.partner,
-                                     status=agreement.ACTIVE,
-                                     agreement_type=agreement.PCA,
-                                     country_programme=agreement.country_programme).count():
+                                               status=agreement.ACTIVE,
+                                               agreement_type=agreement.PCA,
+                                               country_programme=agreement.country_programme).count():
 
         raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
     return True
-
-
 
 
 def agreement_transition_to_ended_valid(agreement):
@@ -30,11 +29,13 @@ def agreement_transition_to_ended_valid(agreement):
         return True
     raise TransitionError(['agreement_transition_to_ended_invalid'])
 
+
 def agreements_illegal_transition(agreement):
     # logging.debug(agreement.old_instance)
     # if True:
     #     raise TransitionError(['transitional_two'])
     return False
+
 
 def agreements_illegal_transition_permissions(agreement, user):
     logging.debug(agreement.old_instance)
@@ -43,6 +44,7 @@ def agreements_illegal_transition_permissions(agreement, user):
     # if user.first_name != 'Rob':
     #     raise TransitionError(['user is not Rob'])
     return True
+
 
 def amendments_ok(agreement):
     old_instance = agreement.old_instance
@@ -58,8 +60,10 @@ def amendments_ok(agreement):
     # To be Continued
     return True
 
+
 def amendments_signed_amendment_valid(agreement):
     return all(agreement.amendments.values_list('signed_amendment', flat=True))
+
 
 def amendments_signed_date_valid(agreement):
     today = date.today()
@@ -68,10 +72,12 @@ def amendments_signed_date_valid(agreement):
             return False
     return True
 
+
 def start_end_dates_valid(agreement):
     if agreement.start and agreement.end and agreement.start > agreement.end:
         return False
     return True
+
 
 def end_date_country_programme_valid(agreement):
     if agreement.agreement_type == agreement.PCA and agreement.start and agreement.end:
@@ -82,6 +88,7 @@ def end_date_country_programme_valid(agreement):
         if agreement.end > cp.to_date:
             return False
     return True
+
 
 def start_date_equals_max_signoff(agreement):
     # if not all dates are present no validation necessary
@@ -108,15 +115,18 @@ def signed_date_valid(agreement):
         return False
     return True
 
+
 def signed_by_valid(agreement):
     if not agreement.signed_by or not agreement.partner_manager:
         return False
     return True
 
+
 def signed_by_everyone_valid(agreement):
     if not agreement.signed_by_partner_date and agreement.signed_by_unicef_date:
         return False
     return True
+
 
 def signed_agreement_present(agreement):
 
@@ -124,11 +134,13 @@ def signed_agreement_present(agreement):
     #     return False
     return True
 
+
 def partner_type_valid_cso(agreement):
     if agreement.agreement_type in ["PCA", "SSFA"] and agreement.partner \
-        and not agreement.partner.partner_type == "Civil Society Organization":
-            return False
+            and not agreement.partner.partner_type == "Civil Society Organization":
+        return False
     return True
+
 
 class AgreementValid(CompleteValidation):
 

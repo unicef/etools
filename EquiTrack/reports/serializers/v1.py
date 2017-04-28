@@ -2,7 +2,6 @@
 
 from rest_framework import serializers
 
-from users.serializers import UserProfileSerializer
 from workplan.serializers import ResultWorkplanPropertySerializer
 from workplan.models import ResultWorkplanProperty
 from reports.models import (
@@ -19,7 +18,8 @@ from reports.models import (
 
 class GoalSerializer(serializers.ModelSerializer):
 
-    # TODO: ids are already readonly https://github.com/tomchristie/django-rest-framework/issues/2114#issuecomment-64095219
+    # TODO: ids are already readonly
+    # https://github.com/tomchristie/django-rest-framework/issues/2114#issuecomment-64095219
     goal_id = serializers.CharField(source='id', read_only=True)
     sector_id = serializers.CharField(source='sector.id', read_only=True)
 
@@ -36,6 +36,7 @@ class SectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sector
         fields = ('sector_id', 'name', 'description', 'goals')
+
 
 class SectorLightSerializer(serializers.ModelSerializer):
 
@@ -65,8 +66,6 @@ class SectorCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sector
         fields = '__all__'
-
-
 
 
 class RAMIndicatorLightSerializer(serializers.ModelSerializer):
@@ -101,11 +100,13 @@ class ResultSerializer(serializers.ModelSerializer):
             ResultWorkplanProperty.objects.create(result=result, **workplan_property)
         return result
 
+
 class ResultLightSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Result
         fields = ('id', 'result_name')
+
 
 class ResultStructureSerializer(serializers.ModelSerializer):
 

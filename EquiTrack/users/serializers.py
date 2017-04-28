@@ -71,6 +71,7 @@ class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name')
     t2f = T2FUserDataSerializer(source='*')
     groups = GroupSerializer(many=True)
+
     class Meta:
         model = User
         exclude = ('password', 'groups', 'user_permissions')
@@ -140,6 +141,7 @@ class SimpleNestedProfileSerializer(serializers.ModelSerializer):
 
 class SimpleUserSerializer(serializers.ModelSerializer):
     profile = SimpleNestedProfileSerializer()
+
     class Meta:
         model = User
         fields = (

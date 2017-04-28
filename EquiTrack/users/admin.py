@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-from .models import UserProfile, Country, Office, Section
+from .models import UserProfile, Country, Office, Section, WorkspaceCounter
 
 
 class ProfileInline(admin.StackedInline):
@@ -173,7 +173,7 @@ class UserAdminPlus(UserAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
-    
+
     def get_queryset(self, request):
         """
         You should only be able to manage users in your country
@@ -221,6 +221,7 @@ class CountryAdmin(admin.ModelAdmin):
         'sections',
     )
 
+
 # Re-register UserAdmin
 admin.site.unregister(User)
 admin.site.register(User, UserAdminPlus)
@@ -228,4 +229,4 @@ admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Office)
 admin.site.register(Section)
-
+admin.site.register(WorkspaceCounter)

@@ -1,12 +1,11 @@
 from __future__ import absolute_import
 
-from django.conf.urls import patterns, url, include
+from django.conf.urls import patterns, url
 
 from rest_framework_nested import routers
 
 from .views.v1 import (
     InterventionLocationView,
-    PortalDashView,
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
     InterventionsViewSet,
@@ -17,7 +16,6 @@ from .views.v1 import (
     PCAGrantViewSet,
     AmendmentLogViewSet,
     GwPCALocationViewSet,
-    # ResultChainViewSet,
     IndicatorReportViewSet,
     PcaPDFView,
     PartnerOrganizationsViewSet,

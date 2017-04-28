@@ -6,10 +6,9 @@ import json
 import os
 import argparse
 from urlparse import urljoin
-from ConfigParser import SafeConfigParser
 
 import requests
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from requests.auth import HTTPDigestAuth
 
 
 class VisionAPIClient(object):

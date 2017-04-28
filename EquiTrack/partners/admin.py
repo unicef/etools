@@ -71,7 +71,6 @@ from .forms import (
     AssessmentAdminForm,
     AmendmentForm,
     AgreementForm,
-    AgreementAmendmentForm,
     DistributionPlanForm,
     DistributionPlanFormSet,
     PartnershipBudgetAdminForm,
@@ -135,20 +134,22 @@ class PCAFileInline(admin.TabularInline):
     )
 
 
-class InterventionAmendmentsInlineAdmin(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-info'
+class InterventionAmendmentsAdmin(admin.ModelAdmin):
     verbose_name = u'Amendment'
     model = InterventionAmendment
-    extra = 0
-    fields = (
-        'type',
-        'signed_date',
-        'signed_amendment',
-        'amendment_number',
-    )
     readonly_fields = [
         'amendment_number',
     ]
+    list_display = (
+        'intervention',
+        'type',
+        'signed_date'
+    )
+    search_fields = ('intervention', )
+    list_filter = (
+        'intervention',
+        'type'
+    )
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -247,10 +248,11 @@ class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         )
 
 
-class BudgetInlineAdmin(admin.TabularInline):
+class InterventionBudgetAdmin(admin.ModelAdmin):
     suit_classes = u'suit-tab suit-tab-info'
     model = InterventionBudget
     fields = (
+        'intervention',
         'year',
         'currency',
         'partner_contribution',
@@ -261,24 +263,44 @@ class BudgetInlineAdmin(admin.TabularInline):
         'in_kind_amount_local',
         'total',
     )
+    list_display = (
+        'intervention',
+        'year',
+        'total'
+    )
+    list_filter = (
+        'intervention',
+        'year',
+    )
+    search_fields = (
+        'intervention__number',
+    )
     readonly_fields = ('total', )
     extra = 0
 
 
-class PlannedVisitsInline(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-info'
+class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     model = InterventionPlannedVisits
     fields = (
+        'intervention',
         'year',
         'programmatic',
         'spot_checks',
         'audit'
     )
-    extra = 0
+    search_fields = (
+        'intervention__number',
+    )
+    list_display = (
+        'intervention',
+        'year',
+        'programmatic',
+        'spot_checks',
+        'audit'
+    )
 
 
 class InterventionAttachmentsInline(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-attachments'
     model = InterventionAttachment
     fields = (
         'type',
@@ -287,35 +309,68 @@ class InterventionAttachmentsInline(admin.TabularInline):
     extra = 0
 
 
-class ResultsLinkInline(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-results'
+class InterventionResultsLinkAdmin(admin.ModelAdmin):
+
     # form = ResultLinkForm
     model = InterventionResultLink
     fields = (
+        'intervention',
         'cp_output',
         'ram_indicators'
     )
-    extra = 0
+    list_display = (
+        'intervention',
+        'cp_output',
+    )
+    list_filter = (
+        'intervention',
+        'cp_output',
+    )
+    search_fields = (
+        'intervention__name',
+    )
     formfield_overrides = {
         models.ManyToManyField: {'widget': SelectMultiple(attrs={'size': '5', 'style': 'width:100%'})},
     }
 
 
-class SectorLocationInline(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-locations'
+
+class InterventionSectorLocationAdmin(admin.ModelAdmin):
     form = SectorLocationForm
     model = InterventionSectorLocationLink
-    extra = 1
+    fields = (
+        'intervention',
+        'sector',
+        'locations'
+    )
+    list_display = (
+        'intervention',
+        'sector'
+    )
+    search_fields = (
+        'intervention__name',
+    )
+    list_filter = (
+        'sector',
+    )
 
 
-class SupplyPlanInlineAdmin(admin.TabularInline):
+class SupplyPlanAdmin(admin.ModelAdmin):
     suit_classes = u'suit-tab suit-tab-supplies'
     model = SupplyPlan
     fields = (
+        'intervention',
         'item',
         'quantity'
     )
-    extra = 1
+    search_fields = (
+        'intervention__name',
+    )
+    list_display = (
+        'intervention',
+        'item',
+        'quantity'
+    )
 
 
 class IndicatorDueDatesAdmin(admin.TabularInline):
@@ -465,7 +520,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         PCAFileInline,
         LinksInlineAdmin,
         # ResultsInlineAdmin,
-        SupplyPlanInlineAdmin,
+        # SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
         IndicatorDueDatesAdmin,
     )
@@ -481,7 +536,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
 
     suit_form_includes = (
         ('admin/partners/funding_summary.html', 'middle', 'info'),
-        #('admin/partners/work_plan.html', 'bottom', 'results'),
+        # ('admin/partners/work_plan.html', 'bottom', 'results'),
         ('admin/partners/trip_summary.html', 'top', 'trips'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
@@ -544,6 +599,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     def has_module_permission(self, request):
         return request.user.is_superuser
 
+
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
 
     date_hierarchy = 'start'
@@ -562,14 +618,10 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         'total_budget',
     )
     list_filter = (
+        'number',
+        'agreement__partner',
         'document_type',
-        'hrp',
-        # PCASectorFilter,
         'status',
-        #'partner',
-        # PCADonorFilter,
-        # PCAGatewayTypeFilter,
-        # PCAGrantFilter,
     )
     search_fields = (
         'number',
@@ -578,10 +630,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     readonly_fields = (
         'number',
         'total_budget',
-        #'days_from_submission_to_signed',
-        #'days_from_review_to_signed',
-        #'duration',
-        #'work_plan_template',
     )
     filter_horizontal = (
         'unicef_focal_points',
@@ -589,7 +637,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     )
     fieldsets = (
         (_('Intervention Details'), {
-            u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 (
                 'agreement',
@@ -601,7 +648,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                 'submission_date',)
         }),
         (_('Dates and Signatures'), {
-            u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 (('submission_date_prc',),
                  'review_date_prc',
@@ -610,7 +656,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
-                 #('days_from_submission_to_signed', 'days_from_review_to_signed',),
+                 # ('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start', 'end'),
                  'population_focus',
                  'fr_numbers',),
@@ -622,39 +668,14 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     )
 
     inlines = (
-        # AmendmentLogInlineAdmin,
-        InterventionAmendmentsInlineAdmin,
-        BudgetInlineAdmin,
-        # PcaSectorInlineAdmin,
-        # PartnershipBudgetInlineAdmin,
-        # PcaGrantInlineAdmin,
-        # IndicatorsInlineAdmin,
-        # PcaLocationInlineAdmin,
-        # PCAFileInline,
-        # LinksInlineAdmin,
-        # ResultsInlineAdmin,
-        SupplyPlanInlineAdmin,
-        DistributionPlanInlineAdmin,
-        PlannedVisitsInline,
-        ResultsLinkInline,
-        SectorLocationInline,
+        # InterventionAmendmentsInlineAdmin,
+        # BudgetInlineAdmin,
+        # SupplyPlanInlineAdmin,
+        # DistributionPlanInlineAdmin,
+        # PlannedVisitsInline,
+        # ResultsLinkInline,
+        # SectorLocationInline,
         InterventionAttachmentsInline,
-    )
-
-    suit_form_tabs = (
-        (u'info', u'Info'),
-        (u'results', u'Results'),
-        (u'locations', u'Locations'),
-        (u'trips', u'Trips'),
-        (u'supplies', u'Supplies'),
-        (u'attachments', u'Attachments')
-    )
-
-    suit_form_includes = (
-        ('admin/partners/funding_summary.html', 'middle', 'info'),
-        #('admin/partners/work_plan.html', 'bottom', 'results'),
-        #('admin/partners/trip_summary.html', 'top', 'trips'),
-        #('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
 
     def created_date(self, obj):
@@ -707,6 +728,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     def has_module_permission(self, request):
         return request.user.is_superuser
 
+
 class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.StackedInline):
     model = GovernmentInterventionResult
     form = GovernmentInterventionAdminForm
@@ -754,6 +776,14 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
         u'result_structure',
         u'country_programme'
     )
+    list_filter = (
+        'partner',
+        'country_programme'
+    )
+    search_fields = (
+        'number',
+        'partner__name'
+    )
     inlines = [GovernmentInterventionResultAdminInline]
 
     # government funding disabled temporarily. awaiting Vision API updates
@@ -779,27 +809,22 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
     def has_module_permission(self, request):
         return request.user.is_superuser
 
-class AssessmentAdminInline(admin.TabularInline):
+
+class AssessmentAdmin(admin.ModelAdmin):
     model = Assessment
-    form = AssessmentAdminForm
-    formset = ParentInlineAdminFormSet
-    extra = 0
     fields = (
-        u'type',
-        u'completed_date',
-        u'current',
-        u'report',
+         u'partner',
+         u'type',
+         u'completed_date',
+         u'current',
+         u'report',
     )
-    verbose_name = u'Assessments and Audits record'
-    verbose_name_plural = u'Assessments and Audits records'
-
-
-class PartnerStaffMemberInlineAdmin(admin.TabularInline):
-    model = PartnerStaffMember
-    form = PartnerStaffMemberForm
-
-    def has_delete_permission(self, request, obj=None):
-        return False
+    list_filter = (
+        u'partner',
+        u'type'
+    )
+    verbose_name = u'Assessment'
+    verbose_name_plural = u'Assessments'
 
 
 class PartnerStaffMemberAdmin(admin.ModelAdmin):
@@ -810,6 +835,11 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
         'title',
         'email',
     )
+    search_fields = (
+        u'first_name',
+        u'last_name',
+        u'email'
+    )
 
     def save_model(self, request, obj, form, change):
         created = False if change else True
@@ -819,6 +849,7 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
         return request.user.is_superuser
+
 
 class HiddenPartnerFilter(admin.SimpleListFilter):
 
@@ -838,12 +869,6 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
         if value == 'True':
             return queryset.filter(hidden=True)
         return queryset.filter(hidden=False)
-
-
-class BankDetailsInlineAdmin(admin.StackedInline):
-    model = BankDetails
-    verbose_name_plural = "Bank Details"
-    extra = 1
 
 
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
@@ -887,9 +912,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'rating',
                  u'type_of_assessment',
                  u'last_assessment_date',
-                 # TODO remove field
                  u'address',
-                 # u'street_address',
                  u'city',
                  u'postal_code',
                  u'country',
@@ -901,25 +924,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'blocked',
                  )
         }),
-        (_('Alternate Name'), {
-            u'classes': (u'collapse', u'open'),
-            'fields':
-                ((u'alternate_id', u'alternate_name',),)
-        }),
     )
-    inlines = [
-        AssessmentAdminInline,
-        BankDetailsInlineAdmin,
-        PartnerStaffMemberInlineAdmin,
-        # TODO: create an html table
-        # InterventionInlineAdmin,
-    ]
-    suit_form_includes = (
-        ('admin/partners/interventions_inline.html', '', ''),
-        # TODO: Nik get this working
-        ('admin/partners/assurance_table.html', '', ''),
-    )
-
     actions = (
         'hide_partners',
         'show_partners'
@@ -947,37 +952,32 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         return request.user.is_superuser
 
 
-class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
-    verbose_name = u'Revision'
-    model = AgreementAmendmentLog
-    extra = 0
-    fields = (
-        'status',
-        'amended_at',
-        'amendment_number',
+class AgreementAmendmentTypeAdmin(admin.ModelAdmin):
+    model = AgreementAmendmentType
+    list_filter = (
+        u'agreement_amendment',
+        u'agreement_amendment__agreement',
+        u'agreement_amendment__agreement__partner',
     )
-    readonly_fields = [
-        'amendment_number',
-    ]
-
-    def get_max_num(self, request, obj=None, **kwargs):
-        """
-        Overriding here to disable adding amendments to non-active partnerships
-        """
-        if obj and obj.agreement_type == Agreement.PCA:
-            return self.max_num
-
-        return 0
 
 
-class AgreementAmendmentInlineAdmin(admin.TabularInline):
+class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = u'Amendment'
     model = AgreementAmendment
-    extra = 0
     fields = (
         'signed_amendment',
         'signed_date',
         'number',
+    )
+    list_display = (
+        u'agreement',
+        u'number',
+        u'signed_amendment',
+        u'signed_date',
+    )
+    list_filter = (
+        u'agreement',
+        u'agreement__partner'
     )
     readonly_fields = [
         'number',
@@ -1032,10 +1032,6 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
     filter_horizontal = (
         u'authorized_officers',
     )
-    inlines = [
-        # AgreementAmendmentLogInlineAdmin,
-        AgreementAmendmentInlineAdmin,
-    ]
 
     def download_url(self, obj):
         if obj and obj.agreement_type == Agreement.PCA:
@@ -1109,23 +1105,30 @@ class SupplyItemAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
         return request.user.is_superuser
 
+
+admin.site.register(PartnerOrganization, PartnerAdmin)
+admin.site.register(Assessment, AssessmentAdmin)
+admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
+
+
+admin.site.register(Agreement, AgreementAdmin)
+admin.site.register(AgreementAmendment, AgreementAmendmentAdmin)
+admin.site.register(AgreementAmendmentType, AgreementAmendmentTypeAdmin)
+
+
+admin.site.register(Intervention, InterventionAdmin)
+admin.site.register(InterventionAmendment, InterventionAmendmentsAdmin)
+admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
+admin.site.register(InterventionBudget, InterventionBudgetAdmin)
+admin.site.register(SupplyPlan, SupplyPlanAdmin)
+admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
+admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
+
+
 admin.site.register(SupplyItem, SupplyItemAdmin)
 admin.site.register(PCA, PartnershipAdmin)
-admin.site.register(Intervention, InterventionAdmin)
-admin.site.register(Agreement, AgreementAdmin)
-admin.site.register(AgreementAmendmentType)
-admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType, FileTypeAdmin)
-# admin.site.register(Assessment, AssessmentAdmin)
-admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
-admin.site.register(GovernmentInterventionResultActivity)
-admin.site.register(IndicatorReport)
-admin.site.register(BankDetails)
-admin.site.register(InterventionPlannedVisits)
-# admin.site.register(Intervention)
-admin.site.register(InterventionAmendment)
-admin.site.register(InterventionSectorLocationLink)
-admin.site.register(InterventionResultLink)
+
 

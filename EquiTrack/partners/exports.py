@@ -2,11 +2,6 @@ from partners.models import GovernmentIntervention
 
 __author__ = 'jcranwellward'
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
-
 from collections import OrderedDict
 
 from import_export import resources
@@ -20,6 +15,7 @@ from .models import (
     PartnerType,
     Agreement
 )
+
 
 class PartnerResource(resources.ModelResource):
 
@@ -42,7 +38,7 @@ class PCAResource(BaseExportResource):
             self.insert_column(values, 'Grant {}'.format(num), grant.grant.name)
             self.insert_column(values, 'Amount {}'.format(num), grant.funds)
 
-            insert_after = 'Amount {}'.format(num-1)
+            insert_after = 'Amount {}'.format(num - 1)
             insert_after = insert_after if insert_after in row else 'Total budget'
 
             self.insert_columns_inplace(row, values, insert_after)
@@ -56,7 +52,7 @@ class PCAResource(BaseExportResource):
 
             self.insert_column(values, '{} RRP output {}'.format(sector_name, num), output.output.name)
 
-            last_field = '{} RRP output {}'.format(sector_name, num-1)
+            last_field = '{} RRP output {}'.format(sector_name, num - 1)
             insert_after = last_field if last_field in row else 'NULL'
 
             self.insert_columns_inplace(row, values, insert_after)
@@ -71,7 +67,7 @@ class PCAResource(BaseExportResource):
 
             self.insert_column(values, '{} CCC {}'.format(sector_name, num), goal.goal.name)
 
-            last_field = '{} CCC {}'.format(sector_name, num-1)
+            last_field = '{} CCC {}'.format(sector_name, num - 1)
             insert_after = last_field if last_field in row else 'NULL'
 
             self.insert_columns_inplace(row, values, insert_after)
@@ -88,9 +84,11 @@ class PCAResource(BaseExportResource):
             self.insert_column(values, '{} Unit {}'.format(sector_name, num), indicator.unit())
             self.insert_column(values, '{} Total Beneficiaries {}'.format(sector_name, num), indicator.programmed)
             self.insert_column(values, '{} Current Beneficiaries {}'.format(sector_name, num), indicator.current)
-            self.insert_column(values, '{} Shortfall of Beneficiaries {}'.format(sector_name, num), indicator.shortfall())
+            self.insert_column(
+                values, '{} Shortfall of Beneficiaries {}'.format(
+                    sector_name, num), indicator.shortfall())
 
-            last_field = '{} Shortfall of Beneficiaries {}'.format(sector_name, num-1)
+            last_field = '{} Shortfall of Beneficiaries {}'.format(sector_name, num - 1)
             insert_after = last_field if last_field in row else 'NULL'
 
             self.insert_columns_inplace(row, values, insert_after)
@@ -110,7 +108,7 @@ class PCAResource(BaseExportResource):
 
             self.insert_column(values, '{} WBS/Activity {}'.format(sector_name, num), wbs)
 
-            last_field = '{} WBS/Activity {}'.format(sector_name, num-1)
+            last_field = '{} WBS/Activity {}'.format(sector_name, num - 1)
             insert_after = last_field if last_field in row else 'NULL'
 
             self.insert_columns_inplace(row, values, insert_after)
@@ -125,7 +123,7 @@ class PCAResource(BaseExportResource):
 
             self.insert_column(values, '{} Activity {}'.format(sector_name, num), activity.activity.name)
 
-            last_field = '{} Activity {}'.format(sector_name, num-1)
+            last_field = '{} Activity {}'.format(sector_name, num - 1)
             insert_after = last_field if last_field in row else 'NULL'
 
             self.insert_columns_inplace(row, values, insert_after)
@@ -179,11 +177,14 @@ class PCAResource(BaseExportResource):
         self.insert_column(row, 'Sectors', pca.sector_names)
         self.insert_column(row, 'Status', pca.status)
         self.insert_column(row, 'Created date', pca.created_at)
-        self.insert_column(row, 'Initiation Date', pca.initiation_date.strftime("%d-%m-%Y") if pca.initiation_date else '')
+        self.insert_column(row, 'Initiation Date', pca.initiation_date.strftime(
+            "%d-%m-%Y") if pca.initiation_date else '')
         self.insert_column(row, 'Submission Date to PRC', pca.submission_date)
         self.insert_column(row, 'Review date by PRC', pca.review_date)
-        self.insert_column(row, 'Signed by unicef date', pca.signed_by_unicef_date.strftime("%d-%m-%Y") if pca.signed_by_unicef_date else '')
-        self.insert_column(row, 'Signed by partner date', pca.signed_by_partner_date.strftime("%d-%m-%Y") if pca.signed_by_partner_date else '')
+        self.insert_column(row, 'Signed by unicef date', pca.signed_by_unicef_date.strftime(
+            "%d-%m-%Y") if pca.signed_by_unicef_date else '')
+        self.insert_column(row, 'Signed by partner date', pca.signed_by_partner_date.strftime(
+            "%d-%m-%Y") if pca.signed_by_partner_date else '')
         self.insert_column(row, 'Start Date', pca.start_date.strftime("%d-%m-%Y") if pca.start_date else '')
         self.insert_column(row, 'End Date', pca.end_date.strftime("%d-%m-%Y") if pca.end_date else '')
         self.insert_column(row, 'Amendment number', amendment.amendment_number if amendment else 0)
@@ -204,7 +205,7 @@ class PCAResource(BaseExportResource):
         """
 
         self.fill_pca_row(row, pca)
-        self.fill_budget(row,pca)
+        self.fill_budget(row, pca)
         # self.fill_pca_grants(row, pca)
 
         # for sector in sorted(pca.pcasector_set.all()):

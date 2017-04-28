@@ -13,6 +13,7 @@ from django.conf import settings
 from django.db import models, connection
 from django.template.context import Context
 from django.template.loader import render_to_string
+from django.utils.timezone import now
 from django.utils.translation import ugettext, ugettext_lazy
 from django_fsm import FSMField, transition
 
@@ -169,6 +170,8 @@ class Travel(models.Model):
     completed_at = models.DateTimeField(null=True)
     canceled_at = models.DateTimeField(null=True)
     submitted_at = models.DateTimeField(null=True)
+    # Required to calculate with proper dsa values
+    first_submission_date = models.DateTimeField(null=True)
     rejected_at = models.DateTimeField(null=True)
     approved_at = models.DateTimeField(null=True)
 
@@ -197,7 +200,8 @@ class Travel(models.Model):
     is_driver = models.BooleanField(default=False)
 
     # When the travel is sent for payment, the expenses should be saved for later use
-    preserved_expenses = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
+    preserved_expenses_local = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
+    preserved_expenses_usd = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
     approved_cost_traveler = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
     approved_cost_travel_agencies = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
 
@@ -295,6 +299,9 @@ class Travel(models.Model):
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
                 conditions=[has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
+        self.submitted_at = now()
+        if not self.first_submission_date:
+            self.first_submission_date = now()
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')
@@ -346,7 +353,10 @@ class Travel(models.Model):
     @send_for_payment_threshold_decorator
     @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
-        self.preserved_expenses = self.cost_summary['expenses_total']
+        # Expenses total should have at least one element
+        assert len(self.cost_summary['expenses_total']) >= 1, 'Expenses total is empty. Please investigate'
+
+        self.preserved_expenses_local = self.cost_summary['expenses_total'][0]['amount']
         self.generate_invoices()
 
         # If invoicing is turned off, don't send a mail
@@ -487,13 +497,22 @@ class IteneraryItem(models.Model):
         # https://groups.google.com/d/msg/django-users/NQO8OjCHhnA/r9qKklm5y0EJ
         order_with_respect_to = 'travel'
 
+    def __unicode__(self):
+        return '{} {} - {}'.format(self.travel.reference_number, self.origin, self.destination)
+
 
 class Expense(models.Model):
     travel = models.ForeignKey('Travel', related_name='expenses')
     type = models.ForeignKey('publics.TravelExpenseType', related_name='+', null=True)
-    document_currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
-    account_currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
+    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+
+    @property
+    def usd_amount(self):
+        if self.currency is None or self.amount is None:
+            return None
+        xchange_rate = self.currency.exchange_rates.last()
+        return self.amount * xchange_rate.x_rate
 
 
 class Deduction(models.Model):

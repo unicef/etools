@@ -3,12 +3,16 @@ from __future__ import unicode_literals
 from datetime import datetime, timedelta
 import factory
 from factory import fuzzy
+from pytz import timezone
+
+from django.conf import settings
 
 from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, TravelExpenseType, Country,\
-    BusinessArea, BusinessRegion, ExchangeRate, TravelAgent
+    BusinessArea, BusinessRegion, ExchangeRate, TravelAgent, DSARate
 
-_FUZZY_START_DATE = datetime.now() - timedelta(days=5)
-_FUZZY_END_DATE = datetime.now() + timedelta(days=5)
+TZ = timezone(settings.TIME_ZONE)
+_FUZZY_START_DATE = TZ.localize(datetime.now() - timedelta(days=5))
+_FUZZY_END_DATE = TZ.localize(datetime.now() + timedelta(days=5))
 
 
 class BusinessRegionFactory(factory.DjangoModelFactory):
@@ -120,13 +124,22 @@ class DSARegionFactory(factory.DjangoModelFactory):
     country = factory.SubFactory(CountryFactory)
     area_name = fuzzy.FuzzyText(length=32)
     area_code = fuzzy.FuzzyText(length=3)
+
+    class Meta:
+        model = DSARegion
+
+
+class DSARateFactory(factory.DjangoModelFactory):
+    region = factory.SubFactory(DSARegionFactory)
+    effective_from_date = fuzzy.FuzzyDate(start_date=_FUZZY_START_DATE.date(), end_date=TZ.localize(datetime.now()).date())
+    effective_to_date = DSARate.DEFAULT_EFFECTIVE_TILL
+
     dsa_amount_usd = 100
     dsa_amount_60plus_usd = 80
     dsa_amount_local = 200
     dsa_amount_60plus_local = 160
     room_rate = 150
-    eff_date = datetime.now().date()
     finalization_date = datetime.now().date()
 
     class Meta:
-        model = DSARegion
+        model = DSARate

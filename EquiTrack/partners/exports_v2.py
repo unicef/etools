@@ -6,7 +6,7 @@ class PartnerOrganizationCsvRenderer(r.CSVRenderer):
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
               'phone_number', 'email_address', 'risk_rating', 'date_last_assessment_against_core_values',
               'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'marked_for_deletion', 'blocked',
-              'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url',]
+              'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url', ]
 
     labels = {
         'vendor_number': 'Vendor Number',
@@ -65,16 +65,17 @@ class AgreementCvsRenderer(r.CSVRenderer):
         "url": "URL",
     }
 
+
 class InterventionCvsRenderer(r.CSVRenderer):
     header = [
-            "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
-            "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
-            "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
-            "planned_budget_local", "unicef_budget", "cso_contribution",
-            "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
-            "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
-            "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
-            "url",
+        "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
+        "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
+        "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
+        "planned_budget_local", "unicef_budget", "cso_contribution",
+        "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
+        "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
+        "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
+        "url",
     ]
 
     labels = {

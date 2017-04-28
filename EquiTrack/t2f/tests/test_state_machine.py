@@ -85,7 +85,7 @@ class StateMachineTest(APITenantTestCase):
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
-                              'account_currency': currency.id,
+                              'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -98,6 +98,10 @@ class StateMachineTest(APITenantTestCase):
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
+
+        travel = Travel.objects.get(id=travel_id)
+        self.assertIsNotNone(travel.submitted_at)
+        self.assertIsNotNone(travel.first_submission_date)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,

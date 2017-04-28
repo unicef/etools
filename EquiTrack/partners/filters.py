@@ -1,7 +1,6 @@
 __author__ = 'jcranwellward'
 
 
-
 from django.contrib import admin
 from django.db.models.query_utils import Q
 
@@ -10,15 +9,14 @@ from rest_framework.filters import BaseFilterBackend
 from funds.models import Donor, Grant
 from locations.models import GatewayType
 from partners.models import (
-    PCA,
     PCAGrant,
     GwPCALocation,
-    #IndicatorProgress,
+    # IndicatorProgress,
 )
 from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
     InterventionExportFilterSerializer, GovernmentInterventionExportFilterSerializer
 from reports.admin import SectorListFilter
-from reports.models import Sector, Indicator
+from reports.models import Indicator
 
 
 class PCASectorFilter(SectorListFilter):
@@ -100,15 +98,14 @@ class PCAIndicatorFilter(admin.SimpleListFilter):
         return [
             (indicator.id, indicator.name) for indicator in Indicator.objects.all()
         ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            pca_ids = []
-            for ip in IndicatorProgress.objects.filter(indicator=self.value()):
-                pca_ids.append(ip.pca.id)
-            return queryset.filter(id__in=pca_ids)
-        return queryset
+    # TODO invaid code: IndicatorProgress is not defined (import commented out)
+    # def queryset(self, request, queryset):
+    #     if self.value():
+    #         pca_ids = []
+    #         for ip in IndicatorProgress.objects.filter(indicator=self.value()):
+    #             pca_ids.append(ip.pca.id)
+    #         return queryset.filter(id__in=pca_ids)
+    #     return queryset
 
 
 class PCAOutputFilter(admin.SimpleListFilter):
@@ -116,20 +113,21 @@ class PCAOutputFilter(admin.SimpleListFilter):
     title = 'Output'
     parameter_name = 'output'
 
-    def lookups(self, request, model_admin):
-
-        return [
-            (output.id, output.name) for output in Rrp5Output.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            pca_ids = []
-            for ip in PCASectorOutput.objects.filter(output=self.value()):
-                pca_ids.append(ip.pca.id)
-            return queryset.filter(id__in=pca_ids)
-        return queryset
+    # TODO invalid code: Rrp5Output and PCASectorOutput is not defined
+    # def lookups(self, request, model_admin):
+    #
+    #     return [
+    #         (output.id, output.name) for output in Rrp5Output.objects.all()
+    #     ]
+    #
+    # def queryset(self, request, queryset):
+    #
+    #     if self.value():
+    #         pca_ids = []
+    #         for ip in PCASectorOutput.objects.filter(output=self.value()):
+    #             pca_ids.append(ip.pca.id)
+    #         return queryset.filter(id__in=pca_ids)
+    #     return queryset
 
 
 class PartnerScopeFilter(BaseFilterBackend):
@@ -149,9 +147,11 @@ class PartnerOrganizationExportFilter(BaseFilterBackend):
         q = Q()
         search_str = parameters.get('search')
         if search_str:
-            search_q = Q(Q(name__istartswith=search_str)
-                         | Q(short_name__istartswith=search_str)
-                         | Q(vendor_number__istartswith=search_str))
+            search_q = Q(
+                Q(name__istartswith=search_str) |
+                Q(short_name__istartswith=search_str) |
+                Q(vendor_number__istartswith=search_str)
+            )
             q &= search_q
 
         partner_type = parameters.get('partner_type')
@@ -177,7 +177,6 @@ class PartnerOrganizationExportFilter(BaseFilterBackend):
         return queryset.filter(q)
 
 
-
 class AgreementExportFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         parameter_serializer = AgreementExportFilterSerializer(data=request.GET)
@@ -188,9 +187,11 @@ class AgreementExportFilter(BaseFilterBackend):
         q = Q()
         search_str = parameters.get('search')
         if search_str:
-            search_q = Q(Q(partner__name__istartswith=search_str)
-                         | Q(short_name__istartswith=search_str)
-                         | Q(partner__vendor_number__istartswith=search_str))
+            search_q = Q(
+                Q(partner__name__istartswith=search_str) |
+                Q(short_name__istartswith=search_str) |
+                Q(partner__vendor_number__istartswith=search_str)
+            )
             q &= search_q
 
         agreement_type = parameters.get('agreement_type')
@@ -218,9 +219,11 @@ class InterventionExportFilter(BaseFilterBackend):
         q = Q()
         search_str = parameters.get('search')
         if search_str:
-            search_q = Q(Q(partner__name__istartswith=search_str)
-                         | Q(short_name__istartswith=search_str)
-                         | Q(title__istartswith=search_str))
+            search_q = Q(
+                Q(partner__name__istartswith=search_str) |
+                Q(short_name__istartswith=search_str) |
+                Q(title__istartswith=search_str)
+            )
             q &= search_q
 
         document_type = parameters.get('document_type')

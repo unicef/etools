@@ -5,7 +5,7 @@ import json
 from dateutil.relativedelta import relativedelta
 
 from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
 from django.db.models import Q, Sum, F
@@ -31,26 +31,19 @@ from reports.models import (
     Indicator,
     Sector,
     Goal,
-    ResultType,
     Result,
     CountryProgramme,
-    LowerResult,
     AppliedIndicator
 )
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
 from supplies.models import SupplyItem
-from supplies.tasks import (
-    set_unisupply_distribution,
-    set_unisupply_user
-)
+from supplies.tasks import set_unisupply_distribution
 from users.models import Section, Office
 from notification.models import Notification
-
 from partners.validation.agreements import (
     agreement_transition_to_active_valid,
     agreement_transition_to_ended_valid,
-    agreements_illegal_transition_permissions,
     agreements_illegal_transition
 )
 from partners.validation import interventions as intervention_validation
@@ -169,6 +162,7 @@ class WorkspaceFileType(models.Model):
 
     def __unicode__(self):
         return self.name
+
 
 # TODO: move this on the models
 HIGH = u'high'
@@ -323,8 +317,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=32L,
         blank=True, null=True
     )
-
-
     vendor_number = models.CharField(
         blank=True,
         null=True,
@@ -448,11 +440,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         if partner.type_of_assessment == 'High Risk Assumed':
             hact['micro_assessment_needed'] = 'Yes'
         elif 'planned_cash_transfer' in hact and hact['planned_cash_transfer'] > 100000.00 \
-            and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
+                and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
             hact['micro_assessment_needed'] = 'Yes'
         elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
-            and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
-            and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
+                and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
+                and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
             hact['micro_assessment_needed'] = 'Yes'
         elif micro_assessment is None:
             hact['micro_assessment_needed'] = 'Missing'
@@ -475,9 +467,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                         last_audit = assesment
                 else:
                     last_audit = assesment
-            # TODO: this logic is not needed if done is correct.. this reflects "needed" not MR like shown in the dash
-            if last_audit and current_cycle.from_date < last_audit.completed_date < current_cycle.to_date:
-                audits = 0
         hact['audits_mr'] = audits
         partner.hact_values = hact
         partner.save()
@@ -495,7 +484,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @property
     def hact_min_requirements(self):
-        programme_visits = spot_checks = audits = 0
+        programme_visits = spot_checks = 0
         cash_transferred = self.total_ct_cy
         if cash_transferred == 0:
             programme_visits = 0
@@ -533,9 +522,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         total = 0
         if partner.partner_type == u'Government':
             if budget_record:
-                qs = GovernmentInterventionResult.objects.filter(
-                    intervention__partner=partner,
-                    year=year).exclude(id=budget_record.id)
                 total = GovernmentInterventionResult.objects.filter(
                     intervention__partner=partner,
                     year=year).exclude(id=budget_record.id).aggregate(
@@ -1023,10 +1009,8 @@ class Agreement(TimeStampedModel):
             # status__in=[self.ACTIVE, self.SUSPENDED,
             #             self.TERMINATED, self.ENDED],
             created__year=self.created.year,
-            #agreement_type=self.agreement_type #removing type: in case agreement saved and agreement_type changed after
+            # agreement_type=self.agreement_type #removing type: in case agreement saved and agreement_type changed after
         ).count()
-
-
         sequence = '{0:02d}'.format(agreements_count + 1)
         number = u'{code}/{type}{year}{seq}'.format(
             code=connection.tenant.country_short_code or '',
@@ -1107,7 +1091,7 @@ class Agreement(TimeStampedModel):
                 source=[DRAFT],
                 target=[TERMINATED, SUSPENDED],
                 conditions=[agreements_illegal_transition])
-    def transition_to_cancelled(self):
+    def transition_to_terminated(self):
         pass
 
     def check_auto_updates(self):
@@ -1225,6 +1209,7 @@ class AgreementAmendmentType(models.Model):
             self.type or ''
         )
 
+
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
@@ -1235,6 +1220,7 @@ class InterventionManager(models.Manager):
                                                                                 'offices',
                                                                                 'agreement__partner',
                                                                                 'planned_budget')
+
 
 class Intervention(TimeStampedModel):
     """
@@ -1685,6 +1671,11 @@ class InterventionResultLink(models.Model):
 
     tracker = FieldTracker()
 
+    def __unicode__(self):
+        return u'{} {}'.format(
+            self.intervention, self.cp_output
+        )
+
 
 class InterventionBudget(TimeStampedModel):
     """
@@ -1786,6 +1777,7 @@ class InterventionSectorLocationLink(models.Model):
 
     tracker = FieldTracker()
 
+
 class GovernmentInterventionManager(models.Manager):
     def get_queryset(self):
         return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results', 'results__sectors', 'results__unicef_managers')
@@ -1827,7 +1819,7 @@ class GovernmentIntervention(models.Model):
             u'{}: {}'.format(self.pk,
                              self.reference_number)
 
-    #country/partner/year/#
+    # country/partner/year/#
     @property
     def reference_number(self):
         if self.number:
@@ -2060,6 +2052,8 @@ class DistributionPlan(models.Model):
         elif instance.send and instance.sent:
             instance.sent = False
             instance.save()
+
+
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 
@@ -2275,8 +2269,8 @@ class PCA(AdminURLMixin, models.Model):
     tracker = FieldTracker()
 
     class Meta:
-        verbose_name = 'Intervention'
-        verbose_name_plural = 'Interventions'
+        verbose_name = 'Old Intervention'
+        verbose_name_plural = 'Old Interventions'
         ordering = ['-created_at']
 
     def __unicode__(self):
@@ -2951,6 +2945,8 @@ class AuthorizedOfficer(models.Model):
 
             cls.objects.create(agreement=instance,
                                officer=instance.partner_manager)
+
+
 # post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 post_save.connect(PCA.send_changes, sender=PCA)

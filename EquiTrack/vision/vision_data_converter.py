@@ -5,7 +5,7 @@ from operator import itemgetter
 
 
 def convert_vision_value(key, value):
-    if type(value) == unicode:
+    if isinstance(value, unicode):
         try:
             encoded_value = value.encode('ascii', 'ignore')
             return int(encoded_value)

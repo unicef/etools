@@ -135,7 +135,7 @@ class ExpenseSerializer(PermissionBasedModelSerializer):
 
     class Meta:
         model = Expense
-        fields = ('id', 'type', 'document_currency', 'account_currency', 'amount')
+        fields = ('id', 'type', 'currency', 'amount')
 
 
 class DeductionSerializer(PermissionBasedModelSerializer):
@@ -234,7 +234,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
                   'traveler', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
                   'cost_assignments', 'clearances', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
                   'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
-                  'cost_summary', 'certification_note', 'report', 'additional_note', 'misc_expenses', 'action_points')
+                  'cost_summary', 'certification_note', 'report', 'additional_note', 'misc_expenses', 'action_points',
+                  'first_submission_date')
         # Review this, as a developer could be confusing why the status field is not saved during an update
         read_only_fields = ('status', 'reference_number')
 

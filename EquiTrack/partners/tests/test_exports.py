@@ -1,18 +1,16 @@
 from __future__ import unicode_literals
-import xlrd
 import datetime
 import tempfile
 from rest_framework import status
 from tablib.core import Dataset
-from django.core.files.uploadedfile import SimpleUploadedFile
 
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, PartnershipFactory, \
+from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, \
     GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory, \
-    ResultStructureFactory, InterventionBudgetFactory, PartnerStaffFactory, LocationFactory
+    ResultStructureFactory, InterventionBudgetFactory, PartnerStaffFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory
-from partners.models import GovernmentInterventionResult, ResultType, SupplyPlan, DistributionPlan
+from partners.models import GovernmentInterventionResult, SupplyPlan, DistributionPlan
+from reports.models import ResultType
 from supplies.models import SupplyItem
 
 
@@ -109,13 +107,13 @@ class TestModelExport(APITenantTestCase):
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(),
-                        [
-                            'Government Partner',
-                            'Country Programme',
-                            'Reference Number',
-                            'CP Output',
-                            'URL',
-                        ])
+                         [
+            'Government Partner',
+            'Country Programme',
+            'Reference Number',
+            'CP Output',
+            'URL',
+        ])
 
         cp_outputs = ', '.join([
             'Output: {} ({}/{}/{})'.format(
@@ -126,13 +124,13 @@ class TestModelExport(APITenantTestCase):
             for gr in self.government_intervention.results.all()
         ])
         self.assertEqual(dataset[0],
-                        (
-                            self.partner.name,
-                            self.government_intervention.country_programme.name,
-                            self.government_intervention.number,
-                            cp_outputs,
-                            dataset[0][4],
-                        ))
+                         (
+            self.partner.name,
+            self.government_intervention.country_programme.name,
+            self.government_intervention.number,
+            cp_outputs,
+            dataset[0][4],
+        ))
 
     def test_intervention_export_api(self):
         response = self.forced_auth_req(
@@ -187,47 +185,46 @@ class TestModelExport(APITenantTestCase):
         ])
 
         self.assertEqual(dataset[0], (
-                self.intervention.status,
-                unicode(self.intervention.agreement.partner.name),
-                self.intervention.agreement.partner.partner_type,
-                self.intervention.agreement.agreement_number,
-                unicode(self.intervention.agreement.country_programme.name),
-                self.intervention.document_type,
-                self.intervention.reference_number,
-                unicode(self.intervention.title),
-                '{}'.format(self.intervention.start),
-                '{}'.format(self.intervention.end),
-                u'',
-                u'',
-                u'',
-                u'',
-                u'',
-                self.intervention.population_focus,
-                unicode(self.intervention.hrp.name),
-                u'',
-                u'',
-                u', '.join(self.intervention.fr_numbers),
-                '{}'.format(self.intervention.planned_budget.first().currency),
-                u'{:.2f}'.format(self.intervention.total_budget_local),
-                u'{:.2f}'.format(self.intervention.total_unicef_cash),
-                u'{:.2f}'.format(self.intervention.total_partner_contribution),
-                u'{:.2f}'.format(self.intervention.total_partner_contribution_local),
-                u'',
-                u'',
-                u'',
-                '{}'.format(self.intervention.submission_date),
-                '{}'.format(self.intervention.submission_date_prc),
-                '{}'.format(self.intervention.review_date_prc),
-                u'{}'.format(self.intervention.partner_authorized_officer_signatory.get_full_name()),
-                '{}'.format(self.intervention.signed_by_unicef_date),
-                u'',
-                '{}'.format(self.intervention.signed_by_partner_date),
-                '{}'.format(self.intervention.days_from_submission_to_signed),
-                '{}'.format(self.intervention.days_from_review_to_signed),
-                u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id)
-            )
+            self.intervention.status,
+            unicode(self.intervention.agreement.partner.name),
+            self.intervention.agreement.partner.partner_type,
+            self.intervention.agreement.agreement_number,
+            unicode(self.intervention.agreement.country_programme.name),
+            self.intervention.document_type,
+            self.intervention.reference_number,
+            unicode(self.intervention.title),
+            '{}'.format(self.intervention.start),
+            '{}'.format(self.intervention.end),
+            u'',
+            u'',
+            u'',
+            u'',
+            u'',
+            self.intervention.population_focus,
+            unicode(self.intervention.hrp.name),
+            u'',
+            u'',
+            u', '.join(self.intervention.fr_numbers),
+            '{}'.format(self.intervention.planned_budget.first().currency),
+            u'{:.2f}'.format(self.intervention.total_budget_local),
+            u'{:.2f}'.format(self.intervention.total_unicef_cash),
+            u'{:.2f}'.format(self.intervention.total_partner_contribution),
+            u'{:.2f}'.format(self.intervention.total_partner_contribution_local),
+            u'',
+            u'',
+            u'',
+            '{}'.format(self.intervention.submission_date),
+            '{}'.format(self.intervention.submission_date_prc),
+            '{}'.format(self.intervention.review_date_prc),
+            u'{}'.format(self.intervention.partner_authorized_officer_signatory.get_full_name()),
+            '{}'.format(self.intervention.signed_by_unicef_date),
+            u'',
+            '{}'.format(self.intervention.signed_by_partner_date),
+            '{}'.format(self.intervention.days_from_submission_to_signed),
+            '{}'.format(self.intervention.days_from_review_to_signed),
+            u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id)
         )
-
+        )
 
     def test_agreement_export_api(self):
         response = self.forced_auth_req(
@@ -257,20 +254,20 @@ class TestModelExport(APITenantTestCase):
         ])
 
         self.assertEqual(dataset[0], (
-                self.agreement.agreement_number,
-                unicode(self.agreement.status),
-                unicode(self.agreement.partner.name),
-                self.agreement.agreement_type,
-                '{}'.format(self.agreement.start),
-                '{}'.format(self.agreement.end),
-                u'',
-                '{}'.format(self.agreement.signed_by_partner_date),
-                u'',
-                '{}'.format(self.agreement.signed_by_unicef_date),
-                ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
-                u'',
-                u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id)
-            )
+            self.agreement.agreement_number,
+            unicode(self.agreement.status),
+            unicode(self.agreement.partner.name),
+            self.agreement.agreement_type,
+            '{}'.format(self.agreement.start),
+            '{}'.format(self.agreement.end),
+            u'',
+            '{}'.format(self.agreement.signed_by_partner_date),
+            u'',
+            '{}'.format(self.agreement.signed_by_unicef_date),
+            ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
+            u'',
+            u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id)
+        )
         )
 
     def test_partners_export_api(self):
@@ -310,25 +307,26 @@ class TestModelExport(APITenantTestCase):
         blocked = "Yes" if self.partner.blocked else "No"
 
         self.assertEqual(dataset[0], (
-                self.partner.vendor_number,
-                unicode(self.partner.name),
-                self.partner.short_name,
-                self.partner.alternate_name,
-                "{}".format(self.partner.partner_type),
-                u', '.join([x for x in self.partner.shared_with]),
-                self.partner.address,
-                self.partner.phone_number,
-                self.partner.email,
-                self.partner.rating,
-                u'{}'.format(self.partner.core_values_assessment_date),
-                u'{:.2f}'.format(self.partner.total_ct_cp),
-                u'{:.2f}'.format(self.partner.total_ct_cy),
-                deleted_flag,
-                blocked,
-                self.partner.type_of_assessment,
-                u'{}'.format(self.partner.last_assessment_date),
-                u'',
-                ', '.join(["{} ({})".format(sm.get_full_name(), sm.email) for sm in self.partner.staff_members.filter(active=True).all()]),
-                u'https://testserver/pmp/partners/{}/details/'.format(self.partner.id)
-            )
+            self.partner.vendor_number,
+            unicode(self.partner.name),
+            self.partner.short_name,
+            self.partner.alternate_name,
+            "{}".format(self.partner.partner_type),
+            u', '.join([x for x in self.partner.shared_with]),
+            self.partner.address,
+            self.partner.phone_number,
+            self.partner.email,
+            self.partner.rating,
+            u'{}'.format(self.partner.core_values_assessment_date),
+            u'{:.2f}'.format(self.partner.total_ct_cp),
+            u'{:.2f}'.format(self.partner.total_ct_cy),
+            deleted_flag,
+            blocked,
+            self.partner.type_of_assessment,
+            u'{}'.format(self.partner.last_assessment_date),
+            u'',
+            ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
+                       for sm in self.partner.staff_members.filter(active=True).all()]),
+            u'https://testserver/pmp/partners/{}/details/'.format(self.partner.id)
+        )
         )
