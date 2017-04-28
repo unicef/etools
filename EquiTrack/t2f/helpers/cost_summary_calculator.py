@@ -26,7 +26,7 @@ class CostSummaryCalculator(object):
         total_expense_local = total_expense_local.quantize(Decimal('1.0000'))
 
         usd_expenses = [e.usd_amount for e in chain.from_iterable(expense_mapping.values())
-                        if e.currency != self.travel.currency]
+                        if e.currency != self.travel.currency and e.usd_amount]
         total_expense_usd = sum(usd_expenses, Decimal(0))
         total_expense_usd = total_expense_usd.quantize(Decimal('1.0000'))
 
