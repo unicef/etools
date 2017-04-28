@@ -20,12 +20,14 @@ class CostSummaryCalculator(object):
     def get_cost_summary(self):
         expense_mapping = self.get_expenses()
 
-        local_expenses = [e.amount for e in chain.from_iterable(expense_mapping.values())
+        sorted_expense_mapping_values = sorted(chain.from_iterable(expense_mapping.values()),
+                                               cmp=lambda x, y: cmp(x.id, y.id))
+        local_expenses = [e.amount for e in sorted_expense_mapping_values
                           if e.currency == self.travel.currency]
         total_expense_local = sum(local_expenses, Decimal(0))
         total_expense_local = total_expense_local.quantize(Decimal('1.0000'))
 
-        usd_expenses = [e.usd_amount for e in chain.from_iterable(expense_mapping.values())
+        usd_expenses = [e.usd_amount for e in sorted_expense_mapping_values
                         if e.currency != self.travel.currency and e.usd_amount]
         total_expense_usd = sum(usd_expenses, Decimal(0))
         total_expense_usd = total_expense_usd.quantize(Decimal('1.0000'))
