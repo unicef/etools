@@ -92,6 +92,18 @@ class TestReportViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(int(response.data[0]["id"]), self.result1.id)
 
+    def test_apiv2_results_list_minimal(self):
+        params = {"verbosity": "minimal"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/results/',
+            user=self.unicef_staff,
+            data=params,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data[0].keys(), ["id", "name"])
+
     def test_apiv2_results_retrieve(self):
         response = self.forced_auth_req(
             'get',
