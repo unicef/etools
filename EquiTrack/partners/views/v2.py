@@ -1,6 +1,5 @@
 import datetime
 import operator
-import functools
 
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import models
@@ -163,11 +162,16 @@ class PmpStaticDropdownsListApiView(APIView):
         """
 
         local_workspace = self.request.user.profile.country
-        cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).order_by('cso_type').distinct('cso_type')))
+        cso_types = choices_to_json_ready(
+            list(
+                PartnerOrganization.objects.values_list(
+                    'cso_type',
+                    flat=True).order_by('cso_type').distinct('cso_type')))
         partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
         agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
         assessment_types = choices_to_json_ready(Assessment.ASSESMENT_TYPES)
-        agreement_types = choices_to_json_ready([typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
+        agreement_types = choices_to_json_ready(
+            [typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendmentType.AMENDMENT_TYPES))
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
@@ -193,9 +197,10 @@ class PmpStaticDropdownsListApiView(APIView):
                 'intervention_amendment_types': intervention_amendment_types,
                 'currencies': currencies,
                 'local_currency': local_currency
-             },
+            },
             status=status.HTTP_200_OK
         )
+
 
 class PMPDropdownsListApiView(APIView):
     # serializer_class = InterventionSerializer
@@ -210,7 +215,7 @@ class PMPDropdownsListApiView(APIView):
             groups__name__in=['Senior Management Team'],
             profile__country=request.tenant).annotate(
                 full_name=Concat('first_name', Value(' '), 'last_name'), user_id=F('id')
-            ).values('user_id', 'full_name', 'username', 'email'))
+        ).values('user_id', 'full_name', 'username', 'email'))
 
         hrps = list(ResultStructure.objects.values())
         current_country_programme = CountryProgramme.current()
@@ -229,7 +234,7 @@ class PMPDropdownsListApiView(APIView):
                 'file_types': file_types,
                 'donors': donors,
 
-             },
+            },
             status=status.HTTP_200_OK
         )
 
@@ -329,6 +334,6 @@ class PartnershipDashboardAPIView(APIView):
         result['expire_in_two_months_value'] = total_value_for_parternships(expire_in_two_months)
         result['expire_in_two_months_percentage'] = "{0:.0f}%".format(
             operator.truediv(result['expire_in_two_months_count'], result['active_count']) * 100) \
-        if result['active_count'] and result['expire_in_two_months_count'] else "0%"
+            if result['active_count'] and result['expire_in_two_months_count'] else "0%"
 
         return Response(result, status=status.HTTP_200_OK)

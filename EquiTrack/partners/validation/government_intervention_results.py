@@ -1,4 +1,4 @@
-from EquiTrack.validation_mixins import CompleteValidation, check_rigid_fields
+from EquiTrack.validation_mixins import CompleteValidation
 from reports.models import ResultType
 
 
@@ -18,6 +18,7 @@ def cp_output_valid(r):
         return False
     return True
 
+
 def year_valid(r):
     if not r.year:
         return False
@@ -25,11 +26,11 @@ def year_valid(r):
         return False
     return True
 
+
 def planned_amount_valid(r):
     if not r.planned_amount:
         return False
     return True
-
 
 
 class GovernmentInterventionResultValid(CompleteValidation):

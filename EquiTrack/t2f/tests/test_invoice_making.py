@@ -102,27 +102,23 @@ class InvoiceMaking(APITenantTestCase):
         # Add expenses
         Expense.objects.create(travel=self.travel,
                                type=self.et_t_food,
-                               document_currency=self.huf,
-                               account_currency=self.huf,
+                               currency=self.huf,
                                amount=35)
 
         Expense.objects.create(travel=self.travel,
                                type=self.et_t_travel,
-                               document_currency=self.huf,
-                               account_currency=self.huf,
+                               currency=self.huf,
                                amount=50)
 
         expense_other = Expense.objects.create(travel=self.travel,
                                                type=self.et_t_other,
-                                               document_currency=self.huf,
-                                               account_currency=self.huf,
+                                               currency=self.huf,
                                                amount=15)
 
         # Amount == None
         Expense.objects.create(travel=self.travel,
                                type=self.et_t_travel,
-                               document_currency=self.huf,
-                               account_currency=self.huf,
+                               currency=self.huf,
                                amount=None)
 
         # Add cost assignments
@@ -173,13 +169,11 @@ class InvoiceMaking(APITenantTestCase):
 
         Expense.objects.create(travel=self.travel,
                                type=self.et_a_nico,
-                               document_currency=self.huf,
-                               account_currency=self.huf,
+                               currency=self.huf,
                                amount=1000)
         Expense.objects.create(travel=self.travel,
                                type=self.et_a_torben,
-                               document_currency=self.huf,
-                               account_currency=self.huf,
+                               currency=self.huf,
                                amount=500)
 
         # Generate invoice

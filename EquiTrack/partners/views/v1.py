@@ -22,8 +22,6 @@ from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
 from locations.models import Location
 from reports.models import CountryProgramme
-from publics.models import Country as PublicsCountry, BusinessArea
-from users.models import Country
 from partners.models import (
     FileType,
     PartnershipBudget,
@@ -51,7 +49,7 @@ from partners.filters import (
     GovernmentInterventionExportFilter,
     PartnerScopeFilter
 )
-from partners.permissions import PartnerPermission # ResultChainPermission
+from partners.permissions import PartnerPermission  # ResultChainPermission
 from partners.serializers.v1 import (
     FileTypeSerializer,
     LocationSerializer,
@@ -70,6 +68,7 @@ from partners.serializers.v1 import (
     GovernmentInterventionSerializer,
 )
 from EquiTrack.utils import get_data_from_insight
+
 
 class PcaPDFView(PDFTemplateView):
     template_name = "partners/pca_pdf.html"
@@ -92,7 +91,7 @@ class PcaPDFView(PDFTemplateView):
             return {"error": response}
         try:
             banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
-        except KeyError as e:
+        except KeyError:
             return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
 
         bank_key_values = [
@@ -140,7 +139,7 @@ class InterventionLocationView(ListAPIView):
         """
         Handle 424 exception
         """
-        if type(exc) == AttributeError:
+        if isinstance(exc, AttributeError):
             r = Response(status='424')
             return r
 
@@ -257,11 +256,11 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
 
 
 class AgreementViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.UpdateModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of Agreements
     """
@@ -317,7 +316,7 @@ class AgreementViewSet(
         return Response(serializer.data)
 
     @detail_route(methods=['get'], url_path='interventions')
-    def interventions(self, request, partner_pk=None, pk =None):
+    def interventions(self, request, partner_pk=None, pk=None):
         """
         Return All Interventions for Partner and Agreement
         """
@@ -357,8 +356,8 @@ class AgreementViewSet(
 
 
 class GovernmentInterventionsViewSet(viewsets.GenericViewSet,
-                                    mixins.RetrieveModelMixin,
-                                    mixins.ListModelMixin,):
+                                     mixins.RetrieveModelMixin,
+                                     mixins.ListModelMixin,):
     queryset = GovernmentIntervention.objects.all()
     serializer_class = GovernmentInterventionSerializer
     permission_classes = (PartnerPermission,)
@@ -375,12 +374,13 @@ class GovernmentInterventionsViewSet(viewsets.GenericViewSet,
         response.write(dataset.csv)
         return response
 
+
 class InterventionsViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.UpdateModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of all Interventions,
     """
@@ -404,9 +404,11 @@ class InterventionsViewSet(
 
         serializer.instance = serializer.save()
         try:
-            serializer.instance.created_at = datetime.datetime.strptime(request.data['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            serializer.instance.created_at = datetime.datetime.strptime(
+                request.data['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
         except Exception:
-            serializer.instance.created_at = datetime.datetime.strptime(request.data['created_at'], '%Y-%m-%dT%H:%M:%SZ')
+            serializer.instance.created_at = datetime.datetime.strptime(
+                request.data['created_at'], '%Y-%m-%dT%H:%M:%SZ')
         serializer.instance.updated_at = datetime.datetime.strptime(request.data['updated_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
         serializer.instance.save()
         data = serializer.data
@@ -469,10 +471,10 @@ class InterventionsViewSet(
 
 
 class IndicatorReportViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.CreateModelMixin,
+        mixins.ListModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of all Indicator Reports for an Intervention and Result
     """
@@ -516,11 +518,12 @@ class IndicatorReportViewSet(
             status=status.HTTP_200_OK
         )
 
+
 class PCASectorViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.CreateModelMixin,
+        mixins.ListModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of Sectors for an Interventions (PCA)
     """
@@ -570,10 +573,10 @@ class PCASectorViewSet(
 
 
 class PartnershipBudgetViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.CreateModelMixin,
+        mixins.ListModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of partnership Budgets for an Intervention (PCA)
     """
@@ -626,10 +629,10 @@ class PartnershipBudgetViewSet(
 
 
 class PCAFileViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.CreateModelMixin,
+        mixins.ListModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of files URL for an Intervention (PCA)
     """
@@ -687,10 +690,10 @@ class PCAFileViewSet(
 
 
 class PCAGrantViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.CreateModelMixin,
+        mixins.ListModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of Grants for a Intervention (PCA)
     """
@@ -743,10 +746,10 @@ class PCAGrantViewSet(
 
 
 class GwPCALocationViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.CreateModelMixin,
+        mixins.ListModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of GW Locations for an Intervention (PCA)
     """
@@ -796,10 +799,10 @@ class GwPCALocationViewSet(
 
 
 class AmendmentLogViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.CreateModelMixin,
+        mixins.ListModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of Amendment logs for an Intervention (PCA)
     """
@@ -852,11 +855,11 @@ class AmendmentLogViewSet(
 
 
 class PartnerOrganizationsViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.UpdateModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of all Partner Organizations
     """
@@ -895,10 +898,10 @@ class PartnerOrganizationsViewSet(
 
 
 class PartnerStaffMembersViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of all Partner staff members
     """
@@ -933,10 +936,10 @@ class PartnerStaffMembersViewSet(
 
 
 class FileTypeViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    viewsets.GenericViewSet):
+        mixins.RetrieveModelMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        viewsets.GenericViewSet):
     """
     Returns a list of all Partner file types
     """

@@ -137,7 +137,7 @@ class InvoiceMaker(object):
             else:
                 try:
                     expense = self.travel.expenses.get(type__vendor_number=vendor_number)
-                    currency = expense.document_currency
+                    currency = expense.currency
                 except ObjectDoesNotExist:
                     # In case an expense type got deleted, the currency have to be looked up from the existing invoi
                     currency = self.invoice_currencies[vendor_number]

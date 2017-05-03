@@ -5,7 +5,7 @@ from django.conf import settings
 from EquiTrack.celery import app
 
 import requests
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db import IntegrityError
 from django.db.models import Q
@@ -123,8 +123,6 @@ class UserMapper(object):
 
         return self._set_simple_attr(obj, attr, cleaned_value)
 
-
-
     @transaction.atomic
     def create_or_update_user(self, ad_user):
         print(ad_user['sn'], ad_user['givenName'])
@@ -184,7 +182,6 @@ class UserMapper(object):
         except IntegrityError as e:
             logging.error('Integrity error on user: {} - exception {}'.format(user.email, e))
 
-
     def _set_supervisor(self, profile, manager_id):
         if not manager_id or manager_id == 'Vacant':
             return False
@@ -205,8 +202,8 @@ class UserMapper(object):
 
         # get all section codes
         section_codes = UserProfile.objects.values_list('section_code', flat=True)\
-                .exclude(Q(section_code__isnull=True) | Q(section_code=''))\
-                .distinct()
+            .exclude(Q(section_code__isnull=True) | Q(section_code=''))\
+            .distinct()
 
         for code in section_codes:
             self.section_users = {}
@@ -228,7 +225,8 @@ class UserMapper(object):
                     continue
 
                 profile_updated = self._set_attribute(user.profile, "post_number", in_user["STAFF_POST_NO"])
-                profile_updated = self._set_attribute(user.profile, "vendor_number", in_user["VENDOR_CODE"]) or profile_updated
+                profile_updated = self._set_attribute(
+                    user.profile, "vendor_number", in_user["VENDOR_CODE"]) or profile_updated
 
                 supervisor_updated = self._set_supervisor(user.profile, in_user["MANAGER_ID"])
 
@@ -283,7 +281,7 @@ def map_users():
 def sync_users_local(n=20):
     user_sync = UserMapper()
     with open('/code/etools.dat') as csvfile:
-    #with open('/Users/Rob/Downloads/users.dat') as csvfile:
+        # with open('/Users/Rob/Downloads/users.dat') as csvfile:
         reader = csv.DictReader(csvfile, delimiter='|')
         i = 0
         for row in reader:
@@ -296,7 +294,6 @@ def sync_users_local(n=20):
 
 
 class UserSynchronizer(object):
-
 
     NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS_MAP = {

@@ -4,7 +4,7 @@ from django import forms
 from django.db import connection
 from django.contrib.auth import get_user_model
 
-from .models import UserProfile, Country, Section, Office
+from .models import UserProfile, Section, Office
 
 User = get_user_model()
 
@@ -37,4 +37,3 @@ class ProfileForm(forms.ModelForm):
         super(ProfileForm, self).__init__(*args, **kwargs)
         self.fields['office'].queryset = connection.tenant.offices.all()
         self.fields['section'].queryset = connection.tenant.sections.all()
-

@@ -3,13 +3,16 @@ from __future__ import unicode_literals
 from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
+from itertools import chain
 
 
 class CostSummaryCalculator(object):
     class ExpenseDTO(object):
-        def __init__(self, vendor_number, amount):
+        def __init__(self, vendor_number, expense):
             self.vendor_number = vendor_number
-            self.amount = amount
+            self.label = expense.type.title
+            self.currency = expense.currency
+            self.amount = expense.amount
 
     def __init__(self, travel):
         self.travel = travel
@@ -17,47 +20,72 @@ class CostSummaryCalculator(object):
     def get_cost_summary(self):
         expense_mapping = self.get_expenses()
 
-        total_expense = sum(expense_mapping.values(), Decimal(0))
-        total_expense = total_expense.quantize(Decimal('1.0000'))
+        sorted_expense_mapping_values = sorted(chain.from_iterable(expense_mapping.values()),
+                                               cmp=lambda x, y: cmp(x.id, y.id))
+        local_expenses = [e.amount for e in sorted_expense_mapping_values
+                          if e.currency == self.travel.currency]
+        total_expense_local = sum(local_expenses, Decimal(0))
+        total_expense_local = total_expense_local.quantize(Decimal('1.0000'))
+
+        usd_expenses = [e.usd_amount for e in sorted_expense_mapping_values
+                        if e.currency != self.travel.currency and e.usd_amount]
+        total_expense_usd = sum(usd_expenses, Decimal(0))
+        total_expense_usd = total_expense_usd.quantize(Decimal('1.0000'))
 
         # Order the expenses
         expenses = []
         if 'user' in expense_mapping:
-            expenses.append(self.ExpenseDTO('user', expense_mapping.pop('user')))
-        parking_money = expense_mapping.pop('', None)
+            for expense in expense_mapping.pop('user'):
+                expenses.append(self.ExpenseDTO('user', expense))
+        parking_money = expense_mapping.pop('', [])
 
         # Create data transfer object for each expense
-        travel_agent_expenses = [self.ExpenseDTO(*e) for e in expense_mapping.items()]
+        travel_agent_expenses = []
+        for key, values in expense_mapping.items():
+            travel_agent_expenses.extend(self.ExpenseDTO(key, e) for e in values)
         travel_agent_expenses = sorted(travel_agent_expenses, key=lambda o: o.vendor_number)
         expenses.extend(travel_agent_expenses)
 
         # explicit None checking should happen here otherwise the 0 will be filtered out
-        if parking_money is not None:
-            expenses.append(self.ExpenseDTO('', parking_money))
+        for parking_money_expense in parking_money:
+            expenses.append(self.ExpenseDTO('', parking_money_expense))
 
-        if self.travel.preserved_expenses is not None:
-            expenses_delta = self.travel.preserved_expenses - total_expense
+        if self.travel.preserved_expenses_local is not None:
+            expenses_delta_local = self.travel.preserved_expenses_local - total_expense_local
         else:
-            expenses_delta = Decimal(0)
+            expenses_delta_local = Decimal(0)
+
+        if self.travel.preserved_expenses_usd is not None:
+            expenses_delta_usd = self.travel.preserved_expenses_usd - total_expense_usd
+        else:
+            expenses_delta_usd = Decimal(0)
 
         dsa_calculator = DSACalculator(self.travel)
         dsa_calculator.calculate_dsa()
 
+        expenses_total = defaultdict(Decimal)
+        for expense in expenses:
+            expenses_total[expense.currency] += expense.amount
+
+        expenses_total = [{'currency': k, 'amount': v} for k, v in expenses_total.items()]
+
         result = {'dsa_total': dsa_calculator.total_dsa,
-                  'expenses_total': total_expense,
+                  'expenses_total': expenses_total,
                   'deductions_total': dsa_calculator.total_deductions.quantize(Decimal('1.0000')),
                   'dsa': dsa_calculator.detailed_dsa,
-                  'preserved_expenses': self.travel.preserved_expenses,
-                  'expenses_delta': expenses_delta,
+                  'preserved_expenses': self.travel.preserved_expenses_local,
+                  'expenses_delta': expenses_delta_local,
+                  'expenses_delta_local': expenses_delta_local,
+                  'expenses_delta_usd': expenses_delta_usd,
                   'expenses': expenses,
                   'paid_to_traveler': dsa_calculator.paid_to_traveler.quantize(Decimal('1.0000'))}
         return result
 
     def get_expenses(self):
-        expenses_mapping = defaultdict(Decimal)
+        expenses_mapping = defaultdict(list)
         expenses_qs = self.travel.expenses.exclude(amount=None).select_related('type')
         for expense in expenses_qs:
-            expenses_mapping[expense.type.vendor_number] += expense.amount
+            expenses_mapping[expense.type.vendor_number].append(expense)
         return expenses_mapping
 
 

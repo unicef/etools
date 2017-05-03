@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User
 from rest_framework import permissions
 
 
@@ -37,7 +36,7 @@ class PartneshipManagerPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                    request.user.groups.filter(name='Partnership Manager').exists()
+                request.user.groups.filter(name='Partnership Manager').exists()
 
 
 class PartneshipManagerRepPermission(permissions.BasePermission):
@@ -56,8 +55,8 @@ class PartneshipManagerRepPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                   request.user.groups.filter(name__in=['Partnership Manager','Senior Management Team',
-                                                        'Representative Office']).exists()
+                request.user.groups.filter(name__in=['Partnership Manager', 'Senior Management Team',
+                                                     'Representative Office']).exists()
 
 
 class ResultChainPermission(permissions.BasePermission):

@@ -1,7 +1,4 @@
 from __future__ import unicode_literals
-import json
-import logging
-from operator import xor
 import datetime
 
 from django.core.exceptions import ValidationError
@@ -9,12 +6,11 @@ from django.db import transaction
 from django.db.models import Sum
 from rest_framework import serializers
 
-from reports.serializers.v1 import SectorLightSerializer, ResultLightSerializer, RAMIndicatorLightSerializer
+from reports.serializers.v1 import SectorLightSerializer
 from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 from locations.models import Location
 
 from partners.models import (
-    PCA,
     InterventionBudget,
     SupplyPlan,
     DistributionPlan,
@@ -22,18 +18,12 @@ from partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
-    PartnerOrganization,
-    PartnerType,
-    Agreement,
-    PartnerStaffMember,
     InterventionSectorLocationLink,
     InterventionResultLink,
 )
 from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
-from funds.models import FundsCommitmentHeader, FundsCommitmentItem
-
-from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
+from funds.models import FundsCommitmentItem
 
 
 class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
@@ -78,7 +68,7 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "total",
             'currency'
         )
-        #read_only_fields = [u'total']
+        # read_only_fields = [u'total']
 
     def validate(self, data):
         errors = {}
@@ -86,8 +76,6 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             data = super(InterventionBudgetCUSerializer, self).validate(data)
         except ValidationError as e:
             errors.update(e)
-
-        intervention = data.get('intervention', None)
 
         year = data.get("year", "")
         # To avoid any confusion.. budget year will always be required
@@ -135,6 +123,7 @@ class DistributionPlanNestedSerializer(serializers.ModelSerializer):
 class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
+
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
@@ -143,6 +132,7 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
     spot_checks = serializers.IntegerField(read_only=True)
     audit = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = InterventionPlannedVisits
         fields = "__all__"
@@ -185,14 +175,17 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'offices'
         )
 
+
 class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
     locations = LocationLightSerializer(many=True)
     sector = SectorLightSerializer()
+
     class Meta:
         model = InterventionSectorLocationLink
         fields = (
             'id', 'sector', 'locations'
         )
+
 
 class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
     class Meta:
@@ -201,17 +194,20 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
             'id', 'intervention', 'sector', 'locations'
         )
 
+
 class InterventionAttachmentSerializer(serializers.ModelSerializer):
     attachment_file = serializers.FileField(source="attachment", read_only=True)
+
     class Meta:
         model = InterventionAttachment
         fields = (
             'id', 'intervention', 'type', 'attachment', "attachment_file"
         )
 
+
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
-    #cp_output = ResultLightSerializer()
-    #ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
+    # cp_output = ResultLightSerializer()
+    # ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)
 
     class Meta:
@@ -219,6 +215,7 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'intervention', 'cp_output', 'ram_indicators', 'll_results'
         )
+
 
 class InterventionResultCUSerializer(serializers.ModelSerializer):
 
@@ -238,7 +235,7 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
             if instance_id:
                 try:
                     ll_result_instance = LowerResult.objects.get(pk=instance_id)
-                except LowerResult.DoesNotExist as e:
+                except LowerResult.DoesNotExist:
                     raise ValidationError('lower_result has an id but cannot be found in the db')
 
                 ll_result_serializer = LowerResultCUSerializer(
@@ -253,8 +250,6 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
 
             if ll_result_serializer.is_valid(raise_exception=True):
                 ll_result_serializer.save()
-
-
 
     @transaction.atomic
     def create(self, validated_data):
@@ -324,9 +319,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     def get_fr_numbers_details(self, obj):
         data = {}
         if obj.fr_numbers:
-            data = {k:[] for k in obj.fr_numbers}
+            data = {k: [] for k in obj.fr_numbers}
             try:
-                fc_items = FundsCommitmentItem.objects.filter(fr_number__in=obj.fr_numbers).select_related('fund_commitment')
+                fc_items = FundsCommitmentItem.objects.filter(
+                    fr_number__in=obj.fr_numbers).select_related('fund_commitment')
             except FundsCommitmentItem.DoesNotExist:
                 pass
             else:
@@ -347,6 +343,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "amendments", "planned_visits", "attachments", "supplies", "distributions", "fr_numbers_details",
         )
 
+
 class InterventionExportSerializer(serializers.ModelSerializer):
 
     # TODO CP Outputs, RAM Indicators, Fund Commitment(s), Supply Plan, Distribution Plan, URL
@@ -360,10 +357,26 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     locations = serializers.SerializerMethodField()
     fr_numbers = serializers.SerializerMethodField()
     local_currency = serializers.SerializerMethodField()
-    planned_budget_local = serializers.DecimalField(source='total_budget_local', read_only=True, max_digits=20, decimal_places=2)
-    unicef_budget = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
-    cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True,max_digits=20, decimal_places=2)
-    partner_contribution_local = serializers.DecimalField(source='total_partner_contribution_local', read_only=True, max_digits=20, decimal_places=2)
+    planned_budget_local = serializers.DecimalField(
+        source='total_budget_local',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2)
+    unicef_budget = serializers.DecimalField(
+        source='total_unicef_cash',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2)
+    cso_contribution = serializers.DecimalField(
+        source='total_partner_contribution',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2)
+    partner_contribution_local = serializers.DecimalField(
+        source='total_partner_contribution_local',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2)
     # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
     unicef_signatory = serializers.SerializerMethodField()
     hrp_name = serializers.CharField(source='hrp.name')
@@ -474,6 +487,7 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
 
 class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer):
     sector = SectorLightSerializer()
+
     class Meta:
         model = InterventionSectorLocationLink
         fields = (
@@ -492,5 +506,3 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
             "id", "partner_id", "partner_name", "agreement", "document_type", "hrp", "number", "title", "status", "start", "end",
             "offices", "sector_locations",
         )
-
-

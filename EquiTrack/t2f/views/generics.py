@@ -1,6 +1,10 @@
 from __future__ import unicode_literals
 
+import os
+import yaml
+
 from django.conf import settings
+from django.core.cache import cache
 
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -12,7 +16,6 @@ from reports.models import Result, ResultType
 
 from t2f.models import TravelType, ModeOfTravel, ActionPoint
 from t2f.serializers.static_data import StaticDataSerializer
-from t2f.permission_matrix import PERMISSION_MATRIX
 from t2f.views import get_filtered_users
 from users.models import UserProfile
 
@@ -48,8 +51,17 @@ class VendorNumberListView(generics.GenericAPIView):
 
 
 class PermissionMatrixView(generics.GenericAPIView):
+    CACHE_KEY = 't2f_permission_matrix'
+
     def get(self, request):
-        return Response(PERMISSION_MATRIX, status.HTTP_200_OK)
+        permission_matrix = cache.get(self.CACHE_KEY)
+        if not permission_matrix:
+            path = os.path.join(settings.SITE_ROOT, 't2f', 'permission_matrix.yaml')
+            with open(path) as permission_matrix_file:
+                permission_matrix = yaml.load(permission_matrix_file.read())
+            cache.set(self.CACHE_KEY, permission_matrix)
+
+        return Response(permission_matrix, status.HTTP_200_OK)
 
 
 class SettingsView(generics.GenericAPIView):

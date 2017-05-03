@@ -150,7 +150,6 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             return AgreementCreateUpdateSerializer
         return super(AgreementDetailAPIView, self).get_serializer_class()
 
-
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['amendments']
@@ -164,7 +163,7 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
-            #raise Exception(validator.errors)
+            # raise Exception(validator.errors)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to

@@ -21,12 +21,11 @@ class CostAssignmentSynch(VisionDataSynchronizer):
         super(CostAssignmentSynch, self).__init__(*args, **kwargs)
         all_grants = Grant.objects.prefetch_related('funds').all()
         all_funds = Fund.objects.all()
-        self.grants = {k.name:k for k in all_grants}
-        self.funds = {k.name:k for k in all_funds}
+        self.grants = {k.name: k for k in all_grants}
+        self.funds = {k.name: k for k in all_funds}
 
         self.business_area = None
         self.wbss = {}
-
 
     def local_get_or_create_grant(self, grant_name):
         if self.grants.get(grant_name, None):
@@ -63,7 +62,6 @@ class CostAssignmentSynch(VisionDataSynchronizer):
         if list_of_grants:
             wbs.grants.add(*list_of_grants)
 
-
     def _convert_records(self, records):
         return json.loads(records)
 
@@ -91,13 +89,14 @@ class CostAssignmentSynch(VisionDataSynchronizer):
         local_list_of_wbs_objects = WBS.objects.filter(business_area__code=current_business_area_code). \
             prefetch_related('grants', 'business_area', 'grants__funds').all()
 
-        self.wbss = {k.name:k for k in local_list_of_wbs_objects}
+        self.wbss = {k.name: k for k in local_list_of_wbs_objects}
 
         for record in records:
             mapped_record = self._map_object(record)
             self.create_or_update_record(mapped_record)
 
         return len(records)
+
 
 class CurrencySyncronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetCurrencyXrate_JSON'
@@ -188,7 +187,7 @@ class TravelAgenciesSyncronizer(VisionDataSynchronizer):
                 log.debug('Travel agent created with code %s', vendor_code)
 
             travel_expense_type, _ = TravelExpenseType.objects.get_or_create(vendor_number=vendor_code,
-                                                    defaults={'title': name})
+                                                                             defaults={'title': name})
 
             travel_agent.expense_type = travel_expense_type
             travel_agent.name = name
@@ -214,7 +213,4 @@ class TravelAgenciesSyncronizer(VisionDataSynchronizer):
             travel_agent.save()
             log.info('Travel agent %s saved.', travel_agent.name)
 
-
         return processed
-
-

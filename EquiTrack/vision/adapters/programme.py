@@ -1,7 +1,7 @@
 import json
 import datetime
 
-from reports.models import ResultStructure, ResultType, Result, Indicator, CountryProgramme
+from reports.models import ResultType, Result, Indicator, CountryProgramme
 from vision.utils import wcf_json_date_as_datetime
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 
@@ -118,7 +118,6 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         cps = {}
         outcomes = {}
         outputs = {}
-        activities = {}
 
         for result in filtered_records:
             # Find the country programme:
@@ -207,7 +206,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                     # we need to skip this record since the wbs's don;t match
                     # TODO in these cases... send an email with the record and make the country aware
                     continue
-                    #raise Exception('Wbs of output does not map under country_programme')
+                    # raise Exception('Wbs of output does not map under country_programme')
                 output.save()
 
             try:

@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views.v1 import PcaPDFView
@@ -77,7 +77,7 @@ urlpatterns = (
     url(r'^interventions/map/$', view=InterventionListMapView.as_view(http_method_names=['get', ]), name='intervention-map'),
     # url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(), name='intervention-detail'),
 
-    #GOVERNMENT
+    # GOVERNMENT
     url(r'^government_interventions/$', view=GovernmentInterventionListAPIView.as_view(http_method_names=['get', 'post']), name='government-intervention-list'),
     url(r'^government_interventions/(?P<pk>\d+)/$', view=GovernmentDetailAPIView.as_view(http_method_names=['get', 'patch']), name='government-intervention-detail'),
     url(r'^government_interventions/results/(?P<pk>\d+)/$', view=GovernmentInterventionResultDeleteView.as_view(http_method_names=['delete', ]), name='government-intervention-results-del'),

@@ -71,8 +71,7 @@ class VisionXML(APITenantTestCase):
         # Add expenses
         Expense.objects.create(travel=travel,
                                type=et_t_food,
-                               document_currency=huf,
-                               account_currency=huf,
+                               currency=huf,
                                amount=35)
 
         # Add cost assignments
@@ -136,8 +135,7 @@ class VisionXML(APITenantTestCase):
         # Add expenses
         Expense.objects.create(travel=travel,
                                type=travel_agent_expense_type,
-                               document_currency=eur,
-                               account_currency=eur,
+                               currency=eur,
                                amount=35)
 
         # Generate invoice

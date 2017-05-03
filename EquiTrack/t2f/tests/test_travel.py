@@ -40,26 +40,22 @@ class TravelMethods(APITenantTestCase):
         # Add expenses
         Expense.objects.create(travel=travel,
                                type=et_t_food,
-                               document_currency=huf,
-                               account_currency=huf,
+                               currency=huf,
                                amount=35)
 
         Expense.objects.create(travel=travel,
                                type=et_t_travel,
-                               document_currency=huf,
-                               account_currency=huf,
+                               currency=huf,
                                amount=50)
 
         Expense.objects.create(travel=travel,
                                type=et_t_other,
-                               document_currency=huf,
-                               account_currency=huf,
+                               currency=huf,
                                amount=15)
 
         Expense.objects.create(travel=travel,
                                type=et_t_travel,
-                               document_currency=huf,
-                               account_currency=huf,
+                               currency=huf,
                                amount=None)
 
         # This should not raise 500
