@@ -15,13 +15,13 @@ def copy_pca_fr_number_to_intervention(apps, schema_editor):
     for pca in PCA.objects.filter(fr_number__isnull=False).exclude(fr_number__exact=''):
         try:
             intervention = Intervention.objects.get(number=pca.number)
-            if not intervention.fr_numbers:
-                fr_numbers = re.split(', |;|/', pca.fr_number)
-                intervention.fr_numbers = fr_numbers
-                intervention.save()
-                print intervention.fr_numbers
+            # if not intervention.fr_numbers:
+            fr_numbers = re.split(', |;|/', pca.fr_number)
+            intervention.fr_numbers = fr_numbers
+            intervention.save()
+            print intervention.fr_numbers
         except Intervention.DoesNotExist:
-            print 'intervention with reference number {} does not exist'.format(pca.number)
+            print 'intervention type {} does not exist'.format(pca.partnership_type)
 
 
 class Migration(migrations.Migration):
