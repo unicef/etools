@@ -379,6 +379,18 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
 
+    def test_api_partners_list_minimal(self):
+        params = {"verbosity": "minimal"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data[0].keys(), ["id", "name"])
+
     def test_api_partners_filter_partner_type(self):
         # make some other type to filter against
         PartnerFactory(partner_type=PartnerType.GOVERNMENT)
@@ -1411,6 +1423,18 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
 
+    def test_intervention_list_minimal(self):
+        params = {"verbosity": "minimal"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data[0].keys(), ["id", "title"])
+
     def test_intervention_create(self):
         data = {
             "document_type": Intervention.SHPD,
@@ -1805,6 +1829,18 @@ class TestGovernmentInterventionViews(APITenantTestCase):
         self.assertEquals(response.data[0]["id"], self.govint.id)
         self.assertEquals(response.data[0]["partner"], self.govint.partner.id)
         self.assertEquals(response.data[0]["country_programme"], self.govint.country_programme.id)
+
+    def test_govint_list(self):
+        params = {"verbosity": "minimal"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=params,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data[0].keys(), ["id", "partner_name"])
 
     def test_govint_list_filter(self):
         response = self.forced_auth_req(
