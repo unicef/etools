@@ -7,10 +7,10 @@ from rest_framework.response import Response
 from rest_framework_csv import renderers
 
 from t2f.filters import travel_list
-from t2f.serializers.export import TravelListExportSerializer, FinanceExportSerializer, TravelAdminExportSerializer, \
+from t2f.serializers.export import TravelActivityExportSerializer, FinanceExportSerializer, TravelAdminExportSerializer, \
     InvoiceExportSerializer
 
-from t2f.models import Travel, IteneraryItem, InvoiceItem
+from t2f.models import Travel, IteneraryItem, InvoiceItem, TravelActivity
 from t2f.views import T2FPagePagination
 
 
@@ -30,15 +30,27 @@ class ExportBaseView(generics.GenericAPIView):
         return context
 
 
-class TravelListExport(ExportBaseView):
-    serializer_class = TravelListExportSerializer
+class TravelActivityExport(ExportBaseView):
+    serializer_class = TravelActivityExportSerializer
+
+    class SimpleDTO(object):
+        def __init__(self, travel, activity):
+            self.travel = travel
+            self.activity = activity
 
     def get(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
+        queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office',
+                                                           'travels__section', 'locations')
+        queryset = queryset.select_related('partner', 'partnership', 'result', 'primary_traveler')
+        dto_list = []
+        for activity in queryset:
+            for travel in activity.travels.all():
+                dto_list.append(self.SimpleDTO(travel, activity))
+
+        serializer = self.get_serializer(dto_list, many=True)
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="TravelListExport.csv"'
+        response['Content-Disposition'] = 'attachment; filename="TravelActivityExport.csv"'
         return response
 
 
