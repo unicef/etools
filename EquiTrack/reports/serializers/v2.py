@@ -15,6 +15,16 @@ class ResultListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class MinimalResultListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Result
+        fields = (
+            "id",
+            "name",
+        )
+
+
 class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
     name = serializers.CharField(source='indicator.name')
