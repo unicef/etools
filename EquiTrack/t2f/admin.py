@@ -21,6 +21,9 @@ class TravelAdmin(admin.ModelAdmin):
         'start_date',
         'end_date',
     )
+    readonly_fields = (
+        'status',
+    )
 
 
 class TravelActivityAdmin(admin.ModelAdmin):
