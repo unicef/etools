@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 
 from t2f import models
+from publics.admin import AdminListMixin
 
 
 class TravelAdmin(admin.ModelAdmin):
@@ -80,7 +81,49 @@ class ActionPointAdmin(admin.ModelAdmin):
         'completed_at',
     )
 
+
+class ExpenseAdmin(AdminListMixin, admin.ModelAdmin):
+    pass
+
+
+class DeductionAdmin(AdminListMixin, admin.ModelAdmin):
+    pass
+
+
+class CostAssignmentAdmin(AdminListMixin, admin.ModelAdmin):
+    pass
+
+
+class ClearancesAdmin(AdminListMixin, admin.ModelAdmin):
+    pass
+
+
+class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
+    pass
+
+
+class TravelPermissionAdmin(AdminListMixin, admin.ModelAdmin):
+    pass
+
+
+class InvoiceAdmin(AdminListMixin, admin.ModelAdmin):
+    pass
+
+
+class InvoiceItemAdmin(AdminListMixin, admin.ModelAdmin):
+    pass
+
+
+
 admin.site.register(models.TravelActivity, TravelActivityAdmin)
 admin.site.register(models.Travel, TravelAdmin)
 admin.site.register(models.IteneraryItem, ItineraryItemAdmin)
 admin.site.register(models.ActionPoint, ActionPointAdmin)
+admin.site.register(models.Expense, ExpenseAdmin)
+admin.site.register(models.Deduction, DeductionAdmin)
+admin.site.register(models.CostAssignment, CostAssignmentAdmin)
+admin.site.register(models.Clearances, ClearancesAdmin)
+admin.site.register(models.TravelAttachment, TravelAttachmentAdmin)
+admin.site.register(models.TravelPermission, TravelPermissionAdmin)
+admin.site.register(models.Invoice, InvoiceAdmin)
+admin.site.register(models.InvoiceItem, InvoiceItemAdmin)
