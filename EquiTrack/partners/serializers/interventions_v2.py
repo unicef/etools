@@ -176,6 +176,16 @@ class InterventionListSerializer(serializers.ModelSerializer):
         )
 
 
+class MinimalInterventionListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Intervention
+        fields = (
+            'id',
+            'title',
+        )
+
+
 class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
     locations = LocationLightSerializer(many=True)
     sector = SectorLightSerializer()
