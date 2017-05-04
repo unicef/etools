@@ -123,6 +123,14 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
 
         if query_params:
             queries = []
+            if "values" in query_params.keys():
+                # Used for ghost data - filter in all(), and return straight away.
+                try:
+                    ids = [int(x) for x in query_params.get("values").split(",")]
+                except ValueError:
+                    raise ValidationError("ID values must be integers")
+                else:
+                    return Intervention.objects.filter(id__in=ids)
             if query_params.get("my_partnerships", "").lower() == "true":
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))

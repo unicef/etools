@@ -175,7 +175,7 @@ class TestReportViews(APITenantTestCase):
             data=param,
         )
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ['Query parameter values are not integers'])
+        self.assertEquals(response.data, ['ID values must be integers'])
 
     def test_apiv2_results_list_filter_combined(self):
         param = {
