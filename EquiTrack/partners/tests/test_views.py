@@ -4,7 +4,6 @@ from unittest import skip
 import datetime
 from datetime import date, timedelta
 
-from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
 from actstream.models import model_stream
@@ -54,7 +53,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             vendor_number="DDD",
             short_name="Short name",
         )
-        report = SimpleUploadedFile("report.pdf", "foobar", "application/pdf")
+        report = "report.pdf"
         self.assessment1 = Assessment.objects.create(
             partner=self.partner,
             type="Micro Assessment"
@@ -380,6 +379,18 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
 
+    def test_api_partners_list_minimal(self):
+        params = {"verbosity": "minimal"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data[0].keys(), ["id", "name"])
+
     def test_api_partners_filter_partner_type(self):
         # make some other type to filter against
         PartnerFactory(partner_type=PartnerType.GOVERNMENT)
@@ -682,7 +693,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.partnership_manager_user.profile.partner_staff_member = self.partner_staff.id
         self.partnership_manager_user.save()
 
-        attached_agreement = SimpleUploadedFile("agreement.pdf", "foobar", "application/pdf")
+        attached_agreement = "agreement.pdf"
         self.agreement = AgreementFactory(
             partner=self.partner,
             partner_manager=self.partner_staff,
@@ -1391,7 +1402,7 @@ class TestInterventionViews(APITenantTestCase):
         self.planned_visit = InterventionPlannedVisits.objects.create(
             intervention=intervention_obj
         )
-        attachment = SimpleUploadedFile("attachment.pdf", "foobar", "application/pdf")
+        attachment = "attachment.pdf"
         self.attachment = InterventionAttachment.objects.create(
             intervention=intervention_obj,
             attachment=attachment,
@@ -1401,7 +1412,7 @@ class TestInterventionViews(APITenantTestCase):
             intervention=intervention_obj,
             cp_output=ResultFactory(),
         )
-        amendment = SimpleUploadedFile("amendment.pdf", "foobar", "application/pdf")
+        amendment = "amendment.pdf"
         self.amendment = InterventionAmendment.objects.create(
             intervention=intervention_obj,
             type="Change in Programme Result",
@@ -1428,6 +1439,18 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
+
+    def test_intervention_list_minimal(self):
+        params = {"verbosity": "minimal"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data[0].keys(), ["id", "title"])
 
     def test_intervention_create(self):
         data = {
@@ -1837,6 +1860,18 @@ class TestGovernmentInterventionViews(APITenantTestCase):
         self.assertEquals(response.data[0]["id"], self.govint.id)
         self.assertEquals(response.data[0]["partner"], self.govint.partner.id)
         self.assertEquals(response.data[0]["country_programme"], self.govint.country_programme.id)
+
+    def test_govint_list(self):
+        params = {"verbosity": "minimal"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=params,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data[0].keys(), ["id", "partner_name"])
 
     def test_govint_list_filter(self):
         response = self.forced_auth_req(

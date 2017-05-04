@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from reports.models import Result, CountryProgramme, Indicator, LowerResult
-from reports.serializers.v2 import ResultListSerializer
+from reports.serializers.v2 import ResultListSerializer, MinimalResultListSerializer
 from reports.serializers.v1 import IndicatorSerializer
 from partners.models import Intervention
 from rest_framework.exceptions import ValidationError
@@ -18,6 +18,15 @@ from partners.permissions import PartneshipManagerRepPermission
 class ResultListAPIView(ListAPIView):
     serializer_class = ResultListSerializer
     permission_classes = (IsAdminUser,)
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        if self.request.method == "GET":
+            if self.request.query_params.get("verbosity", "") == 'minimal':
+                return MinimalResultListSerializer
+        return super(ResultListAPIView, self).get_serializer_class()
 
     def get_queryset(self):
         q = Result.objects.all()

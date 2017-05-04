@@ -260,9 +260,11 @@ class ActionPoints(APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:action_points:export'),
                                         data={'format': 'csv'}, user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
+        rows = [r for r in export_csv]
+        self.assertEqual(len(rows), 2)
 
         # check header
-        self.assertEqual(export_csv.next(),
+        self.assertEqual(rows[0],
                          ['Action Point Number',
                           'Trip Reference Number',
                           'Description',
@@ -274,3 +276,8 @@ class ActionPoints(APITenantTestCase):
                           'Flag For Follow Up',
                           'Assigned By',
                           'URL'])
+
+        self.assertTrue(isinstance(rows[1][4], (str, unicode)))
+        self.assertFalse(rows[1][4].isdigit())
+        self.assertTrue(isinstance(rows[1][9], (str, unicode)))
+        self.assertFalse(rows[1][9].isdigit())
