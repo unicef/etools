@@ -22,6 +22,7 @@ from partners.serializers.government import (
     GovernmentInterventionExportSerializer,
     GovernmentInterventionResultNestedSerializer,
     GovernmentInterventionResultActivityNestedSerializer,
+    MinimalGovernmentInterventionListSerializer,
 )
 from partners.filters import PartnerScopeFilter
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -53,6 +54,9 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return GovernmentInterventionExportSerializer
+            if "verbosity" in query_params.keys():
+                if query_params.get("verbosity") == 'minimal':
+                    return MinimalGovernmentInterventionListSerializer
         if self.request.method == "POST":
             return GovernmentInterventionCreateUpdateSerializer
         return super(GovernmentInterventionListAPIView, self).get_serializer_class()
