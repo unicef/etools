@@ -236,8 +236,9 @@ class TravelExports(APITenantTestCase):
         travel_2.expenses.all().delete()
         ExpenseFactory(travel=travel_2, amount=Decimal('200'))
 
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
-                                        user=self.unicef_staff)
+        with self.assertNumQueries(33):
+            response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
+                                            user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
         rows = [r for r in export_csv]
 
@@ -362,8 +363,9 @@ class TravelExports(APITenantTestCase):
         itinerary_item_5.airlines.all().delete()
         itinerary_item_5.airlines.add(airline_spiceair)
 
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
-                                        user=self.unicef_staff)
+        with self.assertNumQueries(6):
+            response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
+                                            user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
         rows = [r for r in export_csv]
 
@@ -534,8 +536,9 @@ class TravelExports(APITenantTestCase):
                            fund=fund_2,
                            amount=Decimal('919.11'))
 
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
-                                        user=self.unicef_staff)
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
+                                            user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
         rows = [r for r in export_csv]
 

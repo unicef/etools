@@ -59,6 +59,7 @@ class FinanceExport(ExportBaseView):
 
     def get(self, request):
         queryset = self.filter_queryset(self.get_queryset())
+        queryset = queryset.select_related('traveler', 'office', 'section', 'supervisor')
         serializer = self.get_serializer(queryset, many=True)
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -72,7 +73,8 @@ class TravelAdminExport(ExportBaseView):
     def get(self, request):
         travel_queryset = self.filter_queryset(self.get_queryset())
         queryset = IteneraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number', 'id')
-        queryset = queryset.prefetch_related('airlines')
+        queryset = queryset.select_related('travel', 'travel__office', 'travel__section', 'travel__traveler',
+                                           'dsa_region')
         serializer = self.get_serializer(queryset, many=True)
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -87,6 +89,8 @@ class InvoiceExport(ExportBaseView):
         travel_queryset = self.filter_queryset(self.get_queryset())
         queryset = InvoiceItem.objects.filter(invoice__travel__in=travel_queryset)
         queryset = queryset.order_by('invoice__travel__reference_number', 'id')
+        queryset = queryset.select_related('invoice', 'invoice__travel', 'invoice__currency', 'wbs', 'grant', 'fund')
+
         serializer = self.get_serializer(queryset, many=True)
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
