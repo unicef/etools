@@ -4,7 +4,6 @@ from unittest import skip
 import datetime
 from datetime import date, timedelta
 
-from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
 from actstream.models import model_stream
@@ -54,7 +53,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             vendor_number="DDD",
             short_name="Short name",
         )
-        report = SimpleUploadedFile("report.pdf", "foobar", "application/pdf")
+        report = "report.pdf"
         self.assessment1 = Assessment.objects.create(
             partner=self.partner,
             type="Micro Assessment"
@@ -677,7 +676,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.partnership_manager_user.profile.partner_staff_member = self.partner_staff.id
         self.partnership_manager_user.save()
 
-        attached_agreement = SimpleUploadedFile("agreement.pdf", "foobar", "application/pdf")
+        attached_agreement = "agreement.pdf"
         self.agreement = AgreementFactory(
             partner=self.partner,
             partner_manager=self.partner_staff,
@@ -1386,7 +1385,7 @@ class TestInterventionViews(APITenantTestCase):
         self.planned_visit = InterventionPlannedVisits.objects.create(
             intervention=intervention_obj
         )
-        attachment = SimpleUploadedFile("attachment.pdf", "foobar", "application/pdf")
+        attachment = "attachment.pdf"
         self.attachment = InterventionAttachment.objects.create(
             intervention=intervention_obj,
             attachment=attachment,
@@ -1396,7 +1395,7 @@ class TestInterventionViews(APITenantTestCase):
             intervention=intervention_obj,
             cp_output=ResultFactory(),
         )
-        amendment = SimpleUploadedFile("amendment.pdf", "foobar", "application/pdf")
+        amendment = "amendment.pdf"
         self.amendment = InterventionAmendment.objects.create(
             intervention=intervention_obj,
             type="Change in Programme Result",
