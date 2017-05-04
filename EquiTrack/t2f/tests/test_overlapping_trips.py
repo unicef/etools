@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 import pytz
 from pytz import UTC
+from freezegun import freeze_time
 
 from django.core.urlresolvers import reverse
 
@@ -84,10 +85,11 @@ class OverlappingTravelsTest(APITenantTestCase):
 
         travel_id = response_json['id']
 
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': travel_id,
-                                                                'transition_name': 'submit_for_approval'}),
-                                        data=response_json, user=self.unicef_staff)
+        with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
+            response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                            kwargs={'travel_pk': travel_id,
+                                                                    'transition_name': 'submit_for_approval'}),
+                                            data=response_json, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json,
                          {'non_field_errors': ['You have an existing trip with overlapping dates. '
@@ -140,12 +142,14 @@ class OverlappingTravelsTest(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': response_json['id'],
-                                                                'transition_name': 'submit_for_approval'}),
-                                        data=response_json, user=self.unicef_staff)
+        with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
+            response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                            kwargs={'travel_pk': response_json['id'],
+                                                                    'transition_name': 'submit_for_approval'}),
+                                            data=response_json, user=self.unicef_staff)
         # No error should appear, expected 200
-        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response.status_code, 200, response_json)
         response_json = json.loads(response.rendered_content)
 
         travel = Travel.objects.get(id=response_json['id'])
@@ -199,11 +203,13 @@ class OverlappingTravelsTest(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 
-        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': response_json['id'],
-                                                                'transition_name': 'submit_for_approval'}),
-                                        data=response_json, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 200)
+        with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
+            response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                            kwargs={'travel_pk': response_json['id'],
+                                                                    'transition_name': 'submit_for_approval'}),
+                                            data=response_json, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response.status_code, 200, response_json)
 
         travel = Travel.objects.get(id=response_json['id'])
         travel.reject()
