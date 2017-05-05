@@ -77,6 +77,14 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         if query_params:
             queries = []
 
+            if "values" in query_params.keys():
+                # Used for ghost data - filter in all(), and return straight away.
+                try:
+                    ids = [int(x) for x in query_params.get("values").split(",")]
+                except ValueError:
+                    raise ValidationError("ID values must be integers")
+                else:
+                    return PartnerOrganization.objects.filter(id__in=ids)
             if "partner_type" in query_params.keys():
                 queries.append(Q(partner_type=query_params.get("partner_type")))
             if "cso_type" in query_params.keys():
@@ -101,7 +109,6 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
-        print q.count()
         return q
 
     def list(self, request, format=None):
