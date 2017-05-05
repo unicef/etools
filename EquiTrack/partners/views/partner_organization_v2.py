@@ -42,21 +42,6 @@ from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
 
-class GhostMixin(object):
-
-    def list(self, request):
-        qs = super(GhostMixin, self).list(request)
-        values = self.request.query_params.get("values", "")
-        if values:
-            try:
-                ids = [int(x) for x in values.split(",")]
-            except ValueError:
-                raise ValidationError("Query parameter values are not integers")
-            else:
-                return qs.filter(id__in=ids)
-        return qs
-
-
 class PartnerOrganizationListAPIView(ListCreateAPIView):
     """
     Create new Partners.
