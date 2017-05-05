@@ -92,6 +92,18 @@ class TestReportViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(int(response.data[0]["id"]), self.result1.id)
 
+    def test_apiv2_results_list_minimal(self):
+        params = {"verbosity": "minimal"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/results/',
+            user=self.unicef_staff,
+            data=params,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data[0].keys(), ["id", "name"])
+
     def test_apiv2_results_retrieve(self):
         response = self.forced_auth_req(
             'get',
@@ -175,7 +187,7 @@ class TestReportViews(APITenantTestCase):
             data=param,
         )
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ['Query parameter values are not integers'])
+        self.assertEquals(response.data, ['ID values must be integers'])
 
     def test_apiv2_results_list_filter_combined(self):
         param = {

@@ -221,6 +221,16 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
         )
 
 
+class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "id",
+            "name",
+        )
+
+
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
