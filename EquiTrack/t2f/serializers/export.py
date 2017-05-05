@@ -125,12 +125,12 @@ class ActionPointExportSerializer(serializers.Serializer):
     trip_reference_number = serializers.CharField(source='travel.reference_number')
     description = serializers.CharField()
     due_date = serializers.DateTimeField()
-    person_responsible = serializers.PrimaryKeyRelatedField(read_only=True)
+    person_responsible = serializers.CharField(source='person_responsible.get_full_name')
     status = serializers.CharField()
     completed_date = serializers.DateTimeField(source='completed_at')
     actions_taken = serializers.CharField()
     flag_for_follow_up = serializers.BooleanField(source='follow_up')
-    assigned_by = serializers.PrimaryKeyRelatedField(read_only=Travel)
+    assigned_by = serializers.CharField(source='assigned_by.get_full_name')
     url = serializers.SerializerMethodField()
 
     class Meta:

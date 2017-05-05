@@ -40,6 +40,7 @@ from partners.serializers.interventions_v2 import (
     InterventionSectorLocationCUSerializer,
     InterventionResultCUSerializer,
     InterventionListMapSerializer,
+    MinimalInterventionListSerializer,
 )
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
@@ -75,6 +76,9 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return InterventionExportSerializer
+            if "verbosity" in query_params.keys():
+                if query_params.get("verbosity") == 'minimal':
+                    return MinimalInterventionListSerializer
         if self.request.method == "POST":
             return InterventionCreateUpdateSerializer
         return super(InterventionListAPIView, self).get_serializer_class()

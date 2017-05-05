@@ -36,6 +36,7 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
     AssessmentDetailSerializer,
+    MinimalPartnerOrganizationListSerializer,
 )
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
@@ -62,6 +63,9 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return PartnerOrganizationExportSerializer
+            if "verbosity" in query_params.keys():
+                if query_params.get("verbosity") == 'minimal':
+                    return MinimalPartnerOrganizationListSerializer
         if self.request.method == "POST":
             return PartnerOrganizationCreateUpdateSerializer
         return super(PartnerOrganizationListAPIView, self).get_serializer_class()

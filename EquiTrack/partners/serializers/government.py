@@ -125,6 +125,17 @@ class GovernmentInterventionListSerializer(serializers.ModelSerializer):
                   "country_programme_name", "unicef_focal_points", "sectors", "cp_outputs", "years")
 
 
+class MinimalGovernmentInterventionListSerializer(serializers.ModelSerializer):
+    partner_name = serializers.CharField(source='partner.name')
+
+    class Meta:
+        model = GovernmentIntervention
+        fields = (
+            "id",
+            "partner_name",
+        )
+
+
 class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
     results = GovernmentInterventionResultNestedSerializer(many=True, read_only=True, required=False)
     implementation_status = serializers.SerializerMethodField()
