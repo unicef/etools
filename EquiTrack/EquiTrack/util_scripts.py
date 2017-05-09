@@ -13,7 +13,9 @@ from reports.models import ResultType, Result, CountryProgramme, Indicator, Resu
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, RAMIndicator, \
     InterventionResultLink, PartnershipBudget, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
-    InterventionSectorLocationLink, SupplyPlan, DistributionPlan, Agreement, PartnerOrganization
+    InterventionSectorLocationLink, SupplyPlan, DistributionPlan, Agreement, PartnerOrganization, PartnerStaffMember, \
+    Assessment
+from t2f.models import TravelActivity
 
 def printtf(*args):
     print([arg for arg in args])
@@ -851,3 +853,43 @@ def release_3_migrations():
     all_countries_do(migrate_authorized_officers, 'migrate authorized officers')
     all_countries_do(change_partner_shared_women, 'change Women to UN Women migrations')
     all_countries_do(change_partner_cso_type, 'change old partner cso types')
+
+
+def migrate_to_good_partner(partner_list):
+    if not partner_list:
+        partner_list = [(39, 61), (41, 92), (54, 95), (33, 97), (16,80), (35, 78), (57, 228), (59, 233), (47, 208),
+                        (338, 239), (60, 238), (58, 227), (48, 223), (56, 218), (24, 307), (49, 74), (55, 125),
+                        (53, 67), (52, 176), (43, 296), (28, 245), (6, 243), (4, 207), (33, 242), (26, 132), (38, 151),
+                        (50, 70), (32, 82), (27, 107)]
+
+    for partner_tuple in partner_list:
+        partner_old = PartnerOrganization.objects.get(id=partner_tuple[0])
+        partner_new = PartnerOrganization.objects.get(id=partner_tuple[1])
+
+        #agreements
+        agreements = Agreement.objects.filter(partner=partner_old)
+        for agreement in agreements:
+            agreement.partner = partner_new
+            agreement.save()
+
+        #staff members
+            staff_members = PartnerStaffMember.objects.filter(partner=partner_old)
+        for staff_member in staff_members:
+            staff_member.partner = partner_new
+            staff_member.save()
+
+        #assesments
+            assesments = Assessment.objects.filter(partner=partner_old)
+        for assesment in assesments:
+            assesment.partner = partner_new
+            assesment.save()
+
+        #travel activities
+            travel_activities = TravelActivity.objects.filter(partner=partner_old)
+        for travel_activity in travel_activities:
+            travel_activity.partner = partner_new
+            travel_activity.save()
+
+
+
+
