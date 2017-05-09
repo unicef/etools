@@ -923,3 +923,4 @@ def create_test_user(email, password):
     userp.country = country
     userp.country_override = country
     userp.save()
+    logging.info("user {} created".format(u.email))
