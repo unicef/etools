@@ -3,12 +3,13 @@ from string import translate
 import json
 import logging
 import time
+import re
 
 from django.db import connection
 from django.db.models import Count
 from datetime import datetime, timedelta
-
-from users.models import Country
+from django.contrib.auth.models import User, Group
+from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, RAMIndicator, \
@@ -855,41 +856,70 @@ def release_3_migrations():
     all_countries_do(change_partner_cso_type, 'change old partner cso types')
 
 
-def migrate_to_good_partner(partner_list):
+def migrate_to_good_partner(country_name, partner_list):
+    if not country_name:
+        logging.info("country name required")
+
+    set_country(country_name)
     if not partner_list:
-        partner_list = [(39, 61), (41, 92), (54, 95), (33, 97), (16,80), (35, 78), (57, 228), (59, 233), (47, 208),
-                        (338, 239), (60, 238), (58, 227), (48, 223), (56, 218), (24, 307), (49, 74), (55, 125),
-                        (53, 67), (52, 176), (43, 296), (28, 245), (6, 243), (4, 207), (33, 242), (26, 132), (38, 151),
-                        (50, 70), (32, 82), (27, 107)]
+        logging.info("partner list of tuples required")
 
     for partner_tuple in partner_list:
         partner_old = PartnerOrganization.objects.get(id=partner_tuple[0])
         partner_new = PartnerOrganization.objects.get(id=partner_tuple[1])
+        logging.info("old partner: {} --- new partner: {}".format(partner_old, partner_new))
 
         #agreements
         agreements = Agreement.objects.filter(partner=partner_old)
         for agreement in agreements:
             agreement.partner = partner_new
             agreement.save()
+            logging.info("agreement: {}".format(agreement.reference_number))
 
         #staff members
-            staff_members = PartnerStaffMember.objects.filter(partner=partner_old)
+        staff_members = PartnerStaffMember.objects.filter(partner=partner_old)
         for staff_member in staff_members:
             staff_member.partner = partner_new
             staff_member.save()
+            logging.info("staff_member name: {}".format(staff_member.get_full_name()))
 
         #assesments
-            assesments = Assessment.objects.filter(partner=partner_old)
+        assesments = Assessment.objects.filter(partner=partner_old)
         for assesment in assesments:
             assesment.partner = partner_new
             assesment.save()
+            logging.info("assessment id: {}".format(assesment.id))
 
         #travel activities
-            travel_activities = TravelActivity.objects.filter(partner=partner_old)
+        travel_activities = TravelActivity.objects.filter(partner=partner_old)
         for travel_activity in travel_activities:
             travel_activity.partner = partner_new
             travel_activity.save()
+            logging.info("travel_activity id: {}".format(travel_activity.id))
 
 
+def create_test_user(email, password):
+    country = Country.objects.get(name='UAT')
+    g = Group.objects.get(name='UNICEF User')
 
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        raise Exception("Not a valid email")
 
+    u = User(username=email, email=email)
+    u.first_name = email.split("@")[0]
+    u.last_name = email.split("@")[0]
+    u.set_password(password)
+    u.is_superuser = False
+    u.is_staff = True
+    u.save()
+    g.user_set.add(u)
+    userp = UserProfile.objects.get(user=u)
+    userp.countries_available = [1, 12, 2, 3, 4, 5, 6, 7, 8,
+                                 9, 10, 11, 13, 14, 15, 16, 18,
+                                 19, 20, 21, 22, 23, 24, 25, 26,
+                                 27, 28, 29, 30, 31, 32, 34, 35,
+                                 36, 37, 38, 39, 40, 42, 43, 44,
+                                 45, 46, 47, 49, 50, 52, 53, 54, 55]
+    userp.country = country
+    userp.country_override = country
+    userp.save()
