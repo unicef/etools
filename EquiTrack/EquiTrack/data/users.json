@@ -1,5 +1,4 @@
 [
-
     {
         "pk": 1,
         "model": "auth.user",
@@ -16,86 +15,6 @@
             "password": "pbkdf2_sha256$12000$WbNATmp9l9rt$iyl2GLYOF+MnzGhBULKzE4Tu6cogDaxKuZTdwJcdpiw=",
             "email": "",
             "date_joined": "2014-03-25T09:27:16Z"
-        }
-    },
-    {
-        "model": "auth.user",
-        "pk": 50000,
-        "fields": {
-            "password": "pbkdf2_sha256$24000$LcYaftdpHZWU$N/LspL08vwax+VnTJ3fNz1wgAjn9jqS67Y9NQ0zy9F0=",
-            "last_login": null,
-            "is_superuser": false,
-            "username": "pulitest11@unicef.org",
-            "first_name": "puli",
-            "last_name": "test1",
-            "email": "pulitest1@unicef.org",
-            "is_staff": true,
-            "is_active": true,
-            "date_joined": "2017-05-08T15:14:20.273Z",
-            "groups": [
-                6
-            ],
-            "user_permissions": []
-        }
-    },
-    {
-        "model": "auth.user",
-        "pk": 50001,
-        "fields": {
-            "password": "pbkdf2_sha256$24000$S9Zf5M59Due2$UyAJ7lIW3oAu1MGLl9LQYES3xmHvz2+pDPW3Z5MG1TA=",
-            "last_login": null,
-            "is_superuser": false,
-            "username": "pulitest21@unicef.org",
-            "first_name": "puli",
-            "last_name": "test2",
-            "email": "pulitest2@unicef.org",
-            "is_staff": true,
-            "is_active": true,
-            "date_joined": "2017-05-08T15:18:28.277Z",
-            "groups": [
-                6
-            ],
-            "user_permissions": []
-        }
-    },
-    {
-        "model": "auth.user",
-        "pk": 50002,
-        "fields": {
-            "password": "pbkdf2_sha256$24000$S9Zf5M59Due2$UyAJ7lIW3oAu1MGLl9LQYES3xmHvz2+pDPW3Z5MG1TA=",
-            "last_login": null,
-            "is_superuser": false,
-            "username": "pulitest31@unicef.org",
-            "first_name": "puli",
-            "last_name": "test3",
-            "email": "pulitest3@unicef.org",
-            "is_staff": true,
-            "is_active": true,
-            "date_joined": "2017-05-08T15:18:28.277Z",
-            "groups": [
-                6
-            ],
-            "user_permissions": []
-        }
-    },
-    {
-        "model": "auth.user",
-        "pk": 50003,
-        "fields": {
-            "password": "pbkdf2_sha256$24000$S9Zf5M59Due2$UyAJ7lIW3oAu1MGLl9LQYES3xmHvz2+pDPW3Z5MG1TA=",
-            "last_login": null,
-            "is_superuser": false,
-            "username": "k@unicef.org",
-            "first_name": "k1",
-            "last_name": "k1",
-            "email": "k@unicef.org",
-            "is_staff": true,
-            "is_active": true,
-            "date_joined": "2017-05-08T15:18:28.277Z",
-            "groups": [
-                6
-            ],
-            "user_permissions": []
         }
     }
 ]
