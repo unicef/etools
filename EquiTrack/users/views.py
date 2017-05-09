@@ -245,6 +245,15 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if filter_param.lower() == "true":
             queryset = queryset.filter(groups__name="Partnership Manager")
 
+        if "values" in self.request.query_params.keys():
+            # Used for ghost data - filter in all(), and return straight away.
+            try:
+                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
+            except ValueError:
+                raise ValidationError("ID values must be integers")
+            else:
+                queryset = queryset.filter(id__in=ids)
+
         return queryset
 
     def list(self, request, *args, **kwargs):
@@ -304,7 +313,16 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        return Office.objects.all()
+        queryset = Office.objects.all()
+        if "values" in self.request.query_params.keys():
+            # Used for ghost data - filter in all(), and return straight away.
+            try:
+                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
+            except ValueError:
+                raise ValidationError("ID values must be integers")
+            else:
+                queryset = queryset.filter(id__in=ids)
+        return queryset
 
 
 class SectionViewSet(mixins.RetrieveModelMixin,
@@ -318,4 +336,13 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        return Section.objects.all()
+        queryset = Section.objects.all()
+        if "values" in self.request.query_params.keys():
+            # Used for ghost data - filter in all(), and return straight away.
+            try:
+                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
+            except ValueError:
+                raise ValidationError("ID values must be integers")
+            else:
+                queryset = queryset.filter(id__in=ids)
+        return queryset
