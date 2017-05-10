@@ -1,8 +1,5 @@
 from __future__ import unicode_literals
 
-from decimal import Decimal
-
-from django.conf import settings
 from django.db.transaction import atomic
 
 from rest_framework import viewsets, mixins, status
@@ -14,12 +11,10 @@ from rest_framework.response import Response
 
 from rest_framework_csv import renderers
 
-from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter
 from t2f.filters import travel_list, action_points
 from t2f.renderers import ActionPointCSVRenderer
-from t2f.serializers.export import TravelListExportSerializer, FinanceExportSerializer, TravelAdminExportSerializer, \
-    InvoiceExportSerializer, ActionPointExportSerializer
+from t2f.serializers.export import ActionPointExportSerializer
 
 from t2f.models import Travel, TravelAttachment, ActionPoint, IteneraryItem, InvoiceItem, TravelActivity
 from t2f.serializers.travel import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
@@ -59,41 +54,6 @@ class TravelListViewSet(mixins.ListModelMixin,
     def perform_create(self, serializer):
         super(TravelListViewSet, self).perform_create(serializer)
         run_transition(serializer)
-
-    def export(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        serialzier = TravelListExportSerializer(queryset, many=True, context=self.get_serializer_context())
-
-        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="TravelListExport.csv"'
-        return response
-
-    def export_finances(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        serialzier = FinanceExportSerializer(queryset, many=True, context=self.get_serializer_context())
-
-        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="TravelListExport.csv"'
-        return response
-
-    def export_travel_admins(self, request, *args, **kwargs):
-        travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = IteneraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number')
-        queryset = queryset.prefetch_related('airlines')
-        serialzier = TravelAdminExportSerializer(queryset, many=True, context=self.get_serializer_context())
-
-        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="TravelListExport.csv"'
-        return response
-
-    def export_invoices(self, request, *args, **kwargs):
-        travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = InvoiceItem.objects.filter(invoice__travel__in=travel_queryset).order_by('invoice__travel__reference_number')
-        serialzier = InvoiceExportSerializer(queryset, many=True, context=self.get_serializer_context())
-
-        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="TravelListExport.csv"'
-        return response
 
 
 class TravelDetailsViewSet(mixins.RetrieveModelMixin,
