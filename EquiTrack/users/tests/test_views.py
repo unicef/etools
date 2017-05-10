@@ -5,9 +5,43 @@ from unittest import skip
 
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory, GroupFactory, CountryFactory
+from EquiTrack.factories import UserFactory, GroupFactory, CountryFactory, SectionFactory, OfficeFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory
+
+
+class TestSectionViews(APITenantTestCase):
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+
+    def test_api_section_list_values(self):
+        s1 = SectionFactory()
+        s2 = SectionFactory()
+        response = self.forced_auth_req(
+            'get',
+            '/api/sections/',
+            user=self.unicef_staff,
+            data={"values": "{},{}".format(s1.id, s2.id)}
+        )
+        # Returns empty set - figure out public schema testing
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+
+class TestOfficeViews(APITenantTestCase):
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+
+    def test_api_office_list_values(self):
+        o1 = OfficeFactory()
+        o2 = OfficeFactory()
+        response = self.forced_auth_req(
+            'get',
+            '/api/offices/',
+            user=self.unicef_staff,
+            data={"values": "{},{}".format(o1.id, o2.id)}
+        )
+        # Returns empty set - figure out public schema testing
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
 
 class TestUserViews(APITenantTestCase):
@@ -34,6 +68,16 @@ class TestUserViews(APITenantTestCase):
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 1)
+
+    def test_api_users_list_values(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/users/',
+            user=self.unicef_staff,
+            data={"values": "{},{}".format(self.partnership_manager_user.id, self.unicef_superuser.id)}
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
 
     def test_api_users_list_values_bad(self):
         response = self.forced_auth_req(
