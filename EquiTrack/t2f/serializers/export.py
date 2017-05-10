@@ -23,19 +23,40 @@ class YesOrNoField(serializers.BooleanField):
         return ugettext('No')
 
 
-class TravelListExportSerializer(TravelListSerializer):
-    traveler = serializers.CharField(source='traveler.get_full_name')
-    section = serializers.CharField(source='section.name')
-    office = serializers.CharField(source='office.name')
-    ta_reference_number = serializers.CharField(source='reference_number')
-    approval_date = serializers.DateTimeField(source='approved_at')
-    attachment_count = serializers.IntegerField(source='attachments.count')
+class TravelActivityExportSerializer(serializers.Serializer):
+    reference_number = serializers.CharField(source='travel.reference_number')
+    traveler = serializers.CharField(source='travel.traveler.get_full_name')
+    section = serializers.CharField(source='travel.section.name')
+    office = serializers.CharField(source='travel.office.name')
+    status = serializers.CharField(source='travel.status')
+    trip_type = serializers.CharField(source='activity.travel_type')
+    partner = serializers.CharField(source='activity.partner.name')
+    partnership = serializers.CharField(source='activity.partnership.title')
+    results = serializers.CharField(source='activity.result.name')
+    locations = serializers.SerializerMethodField()
+    when = serializers.DateTimeField(source='activity.date', format='%d-%b-%Y')
+    is_secondary_traveler = serializers.SerializerMethodField()
+    primary_traveler_name = serializers.SerializerMethodField()
 
     class Meta:
-        model = Travel
-        fields = ('id', 'reference_number', 'traveler', 'purpose', 'start_date', 'end_date', 'status', 'created',
-                  'section', 'office', 'supervisor', 'ta_required', 'ta_reference_number', 'approval_date', 'is_driver',
-                  'attachment_count')
+        fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'trip_type', 'partner', 'partnership',
+                  'results', 'locations', 'when', 'is_secondary_traveler',	'primary_traveler_name')
+
+    def get_locations(self, obj):
+        return ', '.join([l.name for l in obj.activity.locations.all()])
+
+    def get_is_secondary_traveler(self, obj):
+        if self._is_secondary_traveler(obj):
+            return 'YES'
+        return ''
+
+    def get_primary_traveler_name(self, obj):
+        if self._is_secondary_traveler(obj):
+            return obj.activity.primary_traveler.get_full_name()
+        return ''
+
+    def _is_secondary_traveler(self, obj):
+        return obj.activity.primary_traveler != obj.travel.traveler
 
 
 class FinanceExportSerializer(serializers.Serializer):
