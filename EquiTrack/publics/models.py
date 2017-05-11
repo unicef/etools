@@ -10,6 +10,7 @@ from django.db.models import QuerySet
 from django.db.models.query_utils import Q
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
+from django.contrib.postgres.fields import JSONField
 
 # UTC have to be here to be able to directly compare with the values from the db (orm always returns tz aware values)
 EPOCH_ZERO = datetime(1970, 1, 1, tzinfo=UTC)
@@ -284,3 +285,36 @@ class DSARate(models.Model):
         return '{} ({} - {})'.format(self.region.label,
                                      self.effective_from_date.isoformat(),
                                      self.effective_to_date.isoformat())
+
+
+class DSARateUpload(models.Model):
+    UPLOADED = 'uploaded'
+    PROCESSING = 'processing'
+    FAILED = 'failed'
+    DONE = 'done'
+    STATUS = (
+        (UPLOADED, 'Uploaded'),
+        (PROCESSING, 'Processing'),
+        (FAILED, 'Failed'),
+        (DONE, 'Done'),
+    )
+
+    csv = models.FileField(upload_to="publics/dsa_rate/")
+    status = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        choices=STATUS
+    )
+    upload_date = models.DateTimeField(auto_now_add=True)
+    errors = JSONField(blank=True, null=True, default=dict)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.status = DSARateUpload.UPLOADED
+            super(DSARateUpload, self).save(*args, **kwargs)
+            # resolve circular imports with inline importing
+            from .tasks import upload_dsa_rates
+            upload_dsa_rates.delay(self.pk)
+        else:
+            super(DSARateUpload, self).save(*args, **kwargs)
