@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from datetime import timedelta
 from decimal import Decimal
 from itertools import chain
@@ -64,8 +64,12 @@ class CostSummaryCalculator(object):
         dsa_calculator.calculate_dsa()
 
         expenses_total = defaultdict(Decimal)
+        paid_to_traveler = dsa_calculator.paid_to_traveler.quantize(Decimal('1.0000'))
         for expense in expenses:
             expenses_total[expense.currency] += expense.amount
+
+            if expense.vendor_number == 'user':
+                paid_to_traveler -= expense.amount
 
         expenses_total = [{'currency': k, 'amount': v} for k, v in expenses_total.items()]
 
@@ -78,13 +82,18 @@ class CostSummaryCalculator(object):
                   'expenses_delta_local': expenses_delta_local,
                   'expenses_delta_usd': expenses_delta_usd,
                   'expenses': expenses,
-                  'paid_to_traveler': dsa_calculator.paid_to_traveler.quantize(Decimal('1.0000'))}
+                  'traveler_dsa': dsa_calculator.paid_to_traveler.quantize(Decimal('1.0000')),
+                  'paid_to_traveler': paid_to_traveler}
         return result
 
     def get_expenses(self):
-        expenses_mapping = defaultdict(list)
+        expenses_mapping = OrderedDict()
         expenses_qs = self.travel.expenses.exclude(amount=None).select_related('type')
+
         for expense in expenses_qs:
+            if expense.type.vendor_number not in expenses_mapping:
+                expenses_mapping[expense.type.vendor_number] = []
+
             expenses_mapping[expense.type.vendor_number].append(expense)
         return expenses_mapping
 
