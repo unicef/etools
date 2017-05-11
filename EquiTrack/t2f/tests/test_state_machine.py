@@ -246,3 +246,53 @@ class StateMachineTest(APITenantTestCase):
         self.assertEqual(response_json,
                          {'non_field_errors': ["Transition conditions have not been met "
                                                "for method 'mark_as_completed'"]})
+
+    def test_expense_required_on_send_for_payment(self):
+        business_area = BusinessAreaFactory()
+
+        wbs = WBSFactory(business_area=business_area)
+        grant = wbs.grants.first()
+        fund = grant.funds.first()
+
+        workspace = self.unicef_staff.profile.country
+        workspace.business_area_code = business_area.code
+        workspace.save()
+
+        data = {'cost_assignments': [{'wbs': wbs.id,
+                                      'grant': grant.id,
+                                      'fund': fund.id,
+                                      'share': 100}],
+                'deductions': [{'date': '2016-11-03',
+                                'breakfast': True,
+                                'lunch': True,
+                                'dinner': False,
+                                'accomodation': True}],
+                'traveler': self.traveler.id,
+                'ta_required': True,
+                'supervisor': self.unicef_staff.id,
+                'expenses': []}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
+
+        travel_id = response_json['id']
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'submit_for_approval'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'approve'}),
+                                        data=response_json, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'send_for_payment'}),
+                                        data=response_json, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json,
+                         {u'non_field_errors': [u'Travel should have at least one expense.']})

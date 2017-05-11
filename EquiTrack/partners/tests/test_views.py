@@ -484,6 +484,23 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEquals(len(response.data), 1)
         self.assertEquals(response.data[0]["id"], self.partner.id)
 
+    def test_api_partners_values(self):
+        # make some other instance to filter against
+        p1 = PartnerFactory()
+        p2 = PartnerFactory()
+        params = {"values": "{},{}".format(p1.id, p2.id)}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
+        self.assertEquals(response.data[0]["id"], p1.id)
+        self.assertEquals(response.data[1]["id"], p2.id)
+
 
 class TestPartnershipViews(APITenantTestCase):
     fixtures = ['initial_data.json']
@@ -1791,6 +1808,20 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(response.data, ["You do not have permissions to delete a sector location"])
+
+
+    def test_api_interventions_values(self):
+        params = {"values": "{}".format(self.intervention["id"])}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.intervention["id"])
 
 
 class TestGovernmentInterventionViews(APITenantTestCase):

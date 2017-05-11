@@ -90,6 +90,18 @@ class LocationsViewSet(ETagMixin,
         else:
             return super(LocationsViewSet, self).get_object()
 
+    def get_queryset(self):
+        queryset = Location.objects.all()
+        if "values" in self.request.query_params.keys():
+            # Used for ghost data - filter in all(), and return straight away.
+            try:
+                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
+            except ValueError:
+                raise ValidationError("ID values must be integers")
+            else:
+                queryset = queryset.filter(id__in=ids)
+        return queryset
+
 
 class LocationsLightViewSet(ETagMixin,
                             mixins.ListModelMixin,

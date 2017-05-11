@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
-from t2f.vision import InvoiceUpdater
+from datetime import datetime
+from pytz import UTC
 
 try:
     import xml.etree.cElementTree as ET
@@ -12,10 +13,12 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
+from publics.tests.factories import DSARegionFactory, DSARateFactory
 from t2f.helpers.invoice_maker import InvoiceMaker
-
 from t2f.models import Travel, Expense, CostAssignment, Invoice
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory, \
+    IteneraryItemFactory
+from t2f.vision import InvoiceUpdater
 
 
 class VisionXML(APITenantTestCase):
@@ -60,6 +63,9 @@ class VisionXML(APITenantTestCase):
         fund_1 = FundFactory(name='Fund #1')
         grant_1.funds.add(fund_1)
 
+        dsa_region = DSARegionFactory()
+        DSARateFactory(region=dsa_region)
+
         # Expense types
         et_t_food = ExpenseTypeFactory(title='Food', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
 
@@ -73,6 +79,15 @@ class VisionXML(APITenantTestCase):
                                type=et_t_food,
                                currency=huf,
                                amount=35)
+
+        IteneraryItemFactory(travel=travel,
+                             departure_date=datetime(2017, 5, 10, tzinfo=UTC),
+                             arrival_date=datetime(2017, 5, 11, tzinfo=UTC),
+                             dsa_region=dsa_region)
+        IteneraryItemFactory(travel=travel,
+                             departure_date=datetime(2017, 5, 20, tzinfo=UTC),
+                             arrival_date=datetime(2017, 5, 21, tzinfo=UTC),
+                             dsa_region=dsa_region)
 
         # Add cost assignments
         CostAssignment.objects.create(travel=travel,

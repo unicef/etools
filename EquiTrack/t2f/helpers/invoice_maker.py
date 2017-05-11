@@ -84,7 +84,7 @@ class InvoiceMaker(object):
                 vendor_grouping[vendor_number][key] += share * amount
 
         # Add dsa amount to user vendor number too
-        dsa_amount = self.travel.cost_summary['paid_to_traveler']
+        dsa_amount = self.travel.cost_summary['traveler_dsa']
         for ca in cost_assignment_list:
             key = (ca.wbs.id, ca.grant.id, ca.fund.id)
             share = Decimal(ca.share) / Decimal(100)
