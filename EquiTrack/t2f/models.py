@@ -400,7 +400,7 @@ class Travel(models.Model):
                                      'emails/certified.html')
 
     @mark_as_certified_or_completed_threshold_decorator
-    @transition(status, source=[CERTIFIED, SUBMITTED, PLANNED], target=COMPLETED,
+    @transition(status, source=[CERTIFIED, SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
                 conditions=[check_trip_report, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
