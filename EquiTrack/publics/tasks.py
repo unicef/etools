@@ -206,7 +206,10 @@ class DSARateUploader(object):
 
     def read_input_file(self, input_file_path):
         with open(input_file_path) as input_file:
-            return [dict(r) for r in csv.DictReader(input_file)]
+            return [dict(r) for r in csv.DictReader(
+                                            input_file,
+                                            restkey='__extra_columns__',
+                                            restval='__missing_columns__')]
 
     @atomic
     def update_dsa_regions(self):
@@ -258,6 +261,14 @@ class DSARateUploader(object):
 
         for line, row in enumerate(rows):
             has_error = False
+
+            if '__extra_columns__' in row.keys():
+                self.errors['Misaligned csv (line {})'.format(line+1)] = 'There are more fields than header columns ({}).'.format(row['__extra_columns__'])
+                continue
+
+            if '__missing_columns__' in row.values():
+                self.errors['Misaligned csv (line {})'.format(line+1)] = 'There are missing fields compared to header columns.'
+                continue
 
             row['Local_60'] = process_number('Local_60')
             row['Local_60Plus'] = process_number('Local_60Plus')
