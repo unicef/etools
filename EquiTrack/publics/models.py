@@ -173,6 +173,7 @@ class Country(SoftDeleteMixin, models.Model):
     vision_code = models.CharField(max_length=3, null=True, unique=True)
     iso_2 = models.CharField(max_length=2, null=True)
     iso_3 = models.CharField(max_length=3, null=True)
+    dsa_code = models.CharField(max_length=3, null=True)
     currency = models.ForeignKey('Currency', null=True)
     valid_from = models.DateField(null=True)
     valid_to = models.DateField(null=True)
