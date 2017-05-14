@@ -204,15 +204,6 @@ class DSARateUploader(object):
         self.errors = {}
         self.dsa_rate_upload = dsa_rate_upload
 
-        dsa_code_country_mapping = self.get_country_mapping()
-        rows = self.read_input_file(self.dsa_rate_upload.csv.path)
-
-        self.update_dsa_regions(rows, dsa_code_country_mapping)
-
-        if self.errors:
-            self.dsa_rate_upload.errors = self.errors
-            self.dsa_rate_upload.save()
-
     def get_country_mapping(self):
         """DSA country code: ISO_3 code"""
         dsa_code_iso_mapping = [('AFG', 'AFG'),
@@ -442,7 +433,7 @@ class DSARateUploader(object):
             return [dict(r) for r in csv.DictReader(input_file)]
 
     @atomic
-    def update_dsa_regions(self, rows, dsa_code_country_mapping):
+    def update_dsa_regions(self):
         """
          'Country Code': 'AFG',
          'Country Name': 'Afghanistan (Afghani)',
@@ -462,6 +453,9 @@ class DSARateUploader(object):
          'Finalization_Date': '1/2/16',
          'DSA_Eff_Date': '1/3/17'
         """
+        rows = self.read_input_file(self.dsa_rate_upload.csv.path)
+        dsa_code_country_mapping = self.get_country_mapping()
+
         def process_number(field):
             try:
                 n = Decimal(row[field].replace(',', ''))
@@ -498,13 +492,14 @@ class DSARateUploader(object):
             row['DSA_Eff_Date'] = process_date('DSA_Eff_Date')
             row['Finalization_Date'] = process_date('Finalization_Date')
 
-            if has_error:
-                continue
 
             try:
                 country = dsa_code_country_mapping[row['Country Code']]
             except KeyError:
                 self.errors['Country Code (line {})'.format(line+1)] = 'Cannot find country for country code {}. Skipping it.'.format(row['Country Code'])
+                has_error = True
+
+            if has_error:
                 continue
 
             dsa_region, created = DSARegion.objects.get_or_create(area_code=row['Area Code'],
@@ -533,10 +528,16 @@ def upload_dsa_rates(dsa_rate_upload_id):
     dsa_rate_upload.status = DSARateUpload.PROCESSING
     dsa_rate_upload.save()
 
-    uploader = DSARateUploader(dsa_rate_upload)
-
-    if dsa_rate_upload.errors:
+    try:
+        uploader = DSARateUploader(dsa_rate_upload)
+        uploader.update_dsa_regions()
+    except Exception as e:
+        dsa_rate_upload.errors = {"exception": e.message}
         dsa_rate_upload.status = DSARateUpload.FAILED
     else:
-        dsa_rate_upload.status = DSARateUpload.DONE
+        if uploader.errors:
+            dsa_rate_upload.errors = uploader.errors
+            dsa_rate_upload.status = DSARateUpload.FAILED
+        else:
+            dsa_rate_upload.status = DSARateUpload.DONE
     dsa_rate_upload.save()
