@@ -307,7 +307,7 @@ def upload_dsa_rates(dsa_rate_upload_id):
         uploader = DSARateUploader(dsa_rate_upload)
         uploader.update_dsa_regions()
     except Exception as e:
-        dsa_rate_upload.errors = {"exception": e.message}
+        dsa_rate_upload.errors = {e.__class__.__name__: e.message}
         dsa_rate_upload.status = DSARateUpload.FAILED
     else:
         if uploader.errors:

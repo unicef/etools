@@ -316,7 +316,6 @@ class DSARateUpload(models.Model):
             super(DSARateUpload, self).save(*args, **kwargs)
             # resolve circular imports with inline importing
             from .tasks import upload_dsa_rates
-            #upload_dsa_rates.delay(self.pk)
-            upload_dsa_rates(self.pk)
+            upload_dsa_rates.delay(self.pk)
         else:
             super(DSARateUpload, self).save(*args, **kwargs)
