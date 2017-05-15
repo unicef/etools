@@ -428,6 +428,9 @@ TENANT_APPS = (
     't2f',
     'workplan',
     'actstream',
+    'audit',
+
+    'utils.organizations',
 )
 
 
