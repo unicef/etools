@@ -738,7 +738,6 @@ class Assessment(models.Model):
         ('Simplified Checklist', u'Simplified Checklist'),
         ('Scheduled Audit report', u'Scheduled Audit report'),
         ('Special Audit report', u'Special Audit report'),
-        ('High Risk Assumed', u'High Risk Assumed'),
         ('Other', u'Other'),
     )
 

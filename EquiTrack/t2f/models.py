@@ -354,7 +354,8 @@ class Travel(models.Model):
     @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         # Expenses total should have at least one element
-        assert len(self.cost_summary['expenses_total']) >= 1, 'Expenses total is empty. Please investigate'
+        if len(self.cost_summary['expenses_total']) == 0:
+            raise TransitionError('Travel should have at least one expense.')
 
         self.preserved_expenses_local = self.cost_summary['expenses_total'][0]['amount']
         self.generate_invoices()

@@ -26,8 +26,6 @@ def transition_to_active(i):
         raise TransitionError(['Partner focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
     if not unicef_focal_points_valid(i):
         raise TransitionError(['Unicef focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    if not population_focus_valid(i):
-        raise TransitionError(['Population focus is required if Intervention status is ACTIVE or IMPLEMENTED.'])
     # Planned budget fields
     if not i.planned_budget.exists():
         raise TransitionError(['Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED.'])
@@ -56,8 +54,6 @@ def transition_to_implemented(i):
         raise TransitionError(['Partner focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
     if not unicef_focal_points_valid(i):
         raise TransitionError(['Unicef focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    if not population_focus_valid(i):
-        raise TransitionError(['Population focus is required if Intervention status is ACTIVE or IMPLEMENTED.'])
     # Planned budget fields
     if not i.planned_budget.exists():
         raise TransitionError(['Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED.'])
@@ -116,12 +112,6 @@ def partner_focal_points_valid(i):
 
 def unicef_focal_points_valid(i):
     if not i.unicef_focal_points:
-        return False
-    return True
-
-
-def population_focus_valid(i):
-    if not i.population_focus:
         return False
     return True
 

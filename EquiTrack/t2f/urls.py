@@ -2,7 +2,7 @@
 from django.conf.urls import url, patterns, include
 
 from t2f.views.dashboard import TravelDashboardViewSet, ActionPointDashboardViewSet
-from t2f.views.exports import TravelListExport, FinanceExport, TravelAdminExport, InvoiceExport
+from t2f.views.exports import TravelActivityExport, FinanceExport, TravelAdminExport, InvoiceExport
 from t2f.views.generics import SettingsView, StaticDataView, PermissionMatrixView, VendorNumberListView
 from t2f.views.invoices import InvoiceViewSet
 from t2f.views.travel import TravelListViewSet, TravelDetailsViewSet, TravelAttachmentViewSet, ActionPointViewSet,\
@@ -60,7 +60,7 @@ travel_list_patterns = patterns(
     '',
     url(r'^$', travel_list, name='index'),
     url(r'^(?P<transition_name>save_and_submit|mark_as_completed)/$', travel_list_state_change, name='state_change'),
-    url(r'^export/$', TravelListExport.as_view(), name='export'),
+    url(r'^export/$', TravelActivityExport.as_view(), name='activity_export'),
     url(r'^finance-export/$', FinanceExport.as_view(), name='finance_export'),
     url(r'^travel-admin-export/$', TravelAdminExport.as_view(),
         name='travel_admin_export'),
