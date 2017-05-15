@@ -1497,11 +1497,7 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
             data=self.intervention_data
         )
-
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
-            response.data,
-            ["Population focus is required if Intervention status is ACTIVE or IMPLEMENTED."])
 
     def test_intervention_active_update_planned_budget(self):
         InterventionBudget.objects.filter(intervention=self.intervention_data.get("id")).delete()
