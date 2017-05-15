@@ -278,32 +278,31 @@ class DSARateUploader(object):
             row['DSA_Eff_Date'] = process_date('DSA_Eff_Date')
             row['Finalization_Date'] = process_date('Finalization_Date')
 
-
-            try:
-                country = Country.objects.get(dsa_code=row['Country Code'])
-            except ObjectDoesNotExist:
+            country_qs = Country.objects.filter(dsa_code=row['Country Code'])
+            if not country_qs.exists():
                 self.errors['Country Code (line {})'.format(line+1)] = 'Cannot find country for country code {}. Skipping it.'.format(row['Country Code'])
                 has_error = True
 
             if has_error:
                 continue
 
-            dsa_region, created = DSARegion.objects.get_or_create(area_code=row['Area Code'],
-                                                                  country=country,
-                                                                  defaults={'area_name': row['DSA Area Name']})
+            for country in country_qs:
+                dsa_region, created = DSARegion.objects.get_or_create(area_code=row['Area Code'],
+                                                                      country=country,
+                                                                      defaults={'area_name': row['DSA Area Name']})
 
-            if not created:
-                regions_to_delete.discard(dsa_region.id)
+                if not created:
+                    regions_to_delete.discard(dsa_region.id)
 
-            if created or dsa_region.effective_from_date != row['DSA_Eff_Date']:
-                DSARate.objects.create(region=dsa_region,
-                                       effective_from_date=row['DSA_Eff_Date'],
-                                       finalization_date=row['Finalization_Date'],
-                                       dsa_amount_usd=row['USD_60'],
-                                       dsa_amount_60plus_usd=row['USD_60Plus'],
-                                       dsa_amount_local=row['Local_60'],
-                                       dsa_amount_60plus_local=row['Local_60Plus'],
-                                       room_rate=row['Room_Percentage'])
+                if created or dsa_region.effective_from_date != row['DSA_Eff_Date']:
+                    DSARate.objects.create(region=dsa_region,
+                                           effective_from_date=row['DSA_Eff_Date'],
+                                           finalization_date=row['Finalization_Date'],
+                                           dsa_amount_usd=row['USD_60'],
+                                           dsa_amount_60plus_usd=row['USD_60Plus'],
+                                           dsa_amount_local=row['Local_60'],
+                                           dsa_amount_60plus_local=row['Local_60Plus'],
+                                           room_rate=row['Room_Percentage'])
 
         DSARegion.objects.filter(id__in=regions_to_delete).delete()
 

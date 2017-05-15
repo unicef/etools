@@ -227,11 +227,9 @@ def insert_dsa_codes(apps, schema_editor):
     Country = apps.get_model('publics', 'Country')
     for dsa_code, iso_code in dsa_code_iso_mapping:
         try:
-            country = Country.objects.get(iso_3=iso_code)
+            Country.objects.filter(iso_3=iso_code).update(dsa_code=dsa_code)
         except ObjectDoesNotExist as e:
             log.error(e.message)
-        else:
-            country.dsa_code = dsa_code
 
 
 class Migration(migrations.Migration):
