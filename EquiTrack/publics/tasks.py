@@ -199,6 +199,21 @@ def import_cost_assignments(xml_structure):
 
 
 class DSARateUploader(object):
+    FIELDS = (
+         'Country Code',
+         'Country Name',
+         'DSA Area Name',
+         'Area Code',
+         'Unique Name',
+         'Unique ID',
+         'USD_60Plus',
+         'USD_60',
+         'Local_60',
+         'Local_60Plus',
+         'Room_Percentage',
+         'Finalization_Date',
+         'DSA_Eff_Date',
+    )
 
     def __init__(self, dsa_rate_upload):
         self.errors = {}
@@ -236,7 +251,9 @@ class DSARateUploader(object):
 
         def process_number(field):
             try:
-                n = Decimal(row[field].replace(',', ''))
+                raw = row[field].replace(',', '')
+                raw = raw.replace(' ', '')  # remove space delimiter
+                n = Decimal(raw)
             except InvalidOperation as e:
                 self.errors['{} (line {})'.format(field, line+1)] = e.message
                 has_error = True
@@ -247,8 +264,9 @@ class DSARateUploader(object):
         def process_date(field):
             try:
                 day, month, year = map(int, row[field].split('/'))
-                # Year is coming in a 2 digit format
-                year += 2000
+                # If year is coming in a 2 digit format
+                if len(str(year)) == 2:
+                    year += 2000
                 d = date(year, month, day)
             except ValueError as e:
                 self.errors['{} (line {})'.format(field, line+1)] = e.message
@@ -256,6 +274,17 @@ class DSARateUploader(object):
                 return None
             else:
                 return d
+
+        missing_fields = [x for x in self.FIELDS if x not in rows[0].keys()]
+        if missing_fields:
+                self.errors['Missing fields'] = ', '.join(missing_fields)
+
+        unknown_fields = [x for x in rows[0].keys() if x not in self.FIELDS]
+        if unknown_fields:
+                self.errors['Unknown fields'] = ', '.join(unknown_fields)
+
+        if unknown_fields or missing_fields:
+            return
 
         regions_to_delete = set(DSARegion.objects.all().values_list('id', flat=True))
 
