@@ -218,6 +218,7 @@ class DSARateUploader(object):
 
     def __init__(self, dsa_rate_upload):
         self.errors = {}
+        self.warnings = {}
         self.dsa_rate_upload = dsa_rate_upload
 
     def read_input_file(self, input_file_path):
@@ -302,6 +303,11 @@ class DSARateUploader(object):
                 self.errors['Misaligned csv (line {})'.format(line+1)] = 'There are missing fields compared to header columns.'
                 continue
 
+            country_qs = Country.objects.filter(dsa_code=row['Country Code'])
+            if not country_qs.exists():
+                self.warnings['Country Code (line {})'.format(line+1)] = 'Cannot find country for country code {}. Skipping it.'.format(row['Country Code'])
+                continue
+
             row['Local_60'] = process_number('Local_60')
             row['Local_60Plus'] = process_number('Local_60Plus')
             row['USD_60'] = process_number('USD_60')
@@ -309,11 +315,6 @@ class DSARateUploader(object):
             row['Room_Percentage'] = process_number('Room_Percentage')
             row['DSA_Eff_Date'] = process_date('DSA_Eff_Date')
             row['Finalization_Date'] = process_date('Finalization_Date')
-
-            country_qs = Country.objects.filter(dsa_code=row['Country Code'])
-            if not country_qs.exists():
-                self.errors['Country Code (line {})'.format(line+1)] = 'Cannot find country for country code {}. Skipping it.'.format(row['Country Code'])
-                has_error = True
 
             if has_error:
                 continue
@@ -356,5 +357,6 @@ def upload_dsa_rates(dsa_rate_upload_id):
             dsa_rate_upload.errors = uploader.errors
             dsa_rate_upload.status = DSARateUpload.FAILED
         else:
+            dsa_rate_upload.errors = uploader.warnings
             dsa_rate_upload.status = DSARateUpload.DONE
     dsa_rate_upload.save()
