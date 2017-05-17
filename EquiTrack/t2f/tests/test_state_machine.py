@@ -4,6 +4,7 @@ import json
 from collections import defaultdict
 from datetime import datetime, timedelta
 
+from django.core import mail
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
@@ -180,6 +181,8 @@ class StateMachineTest(APITenantTestCase):
         self.assertEqual(response.status_code, 201)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
+
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_ta_not_required_flow_send_for_approval(self):
         data = {'traveler': self.traveler.id,

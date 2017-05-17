@@ -403,9 +403,15 @@ class Travel(models.Model):
                 conditions=[check_trip_report, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
-        self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
-                                     self.supervisor.email,
-                                     'emails/trip_completed.html')
+
+        if not self.ta_required and self.status == self.PLANNED:
+            self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
+                                         self.supervisor.email,
+                                         'emails/no_approval_complete.html')
+        else:
+            self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
+                                         self.supervisor.email,
+                                         'emails/trip_completed.html')
 
         try:
             from partners.models import PartnerOrganization
