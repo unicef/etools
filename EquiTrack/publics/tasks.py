@@ -220,7 +220,7 @@ class DSARateUploader(object):
         self.dsa_rate_upload = dsa_rate_upload
 
     def read_input_file(self, input_file_path):
-        with open(input_file_path) as input_file:
+        with open(input_file_path, 'rU') as input_file:
             return [dict(r) for r in csv.DictReader(
                                             input_file,
                                             restkey='__extra_columns__',
