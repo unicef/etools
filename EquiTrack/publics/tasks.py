@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import csv
+import codecs
 from decimal import Decimal, InvalidOperation
 from collections import defaultdict
 from datetime import datetime, date
@@ -220,9 +221,11 @@ class DSARateUploader(object):
         self.dsa_rate_upload = dsa_rate_upload
 
     def read_input_file(self, input_file_path):
-        with open(input_file_path, 'rU') as input_file:
+        # Utilize codecs module to remove BOM if present
+        with codecs.open(input_file_path, 'r', encoding='utf-8-sig') as input_file:
+            utf_8_file = codecs.iterencode(input_file, encoding='utf-8')
             return [dict(r) for r in csv.DictReader(
-                                            input_file,
+                                            utf_8_file,
                                             restkey='__extra_columns__',
                                             restval='__missing_columns__')]
 
