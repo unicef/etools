@@ -26,6 +26,7 @@ from .serializers import (
     SimpleProfileSerializer,
     SimpleUserSerializer,
     ProfileRetrieveUpdateSerializer,
+    CountrySerializer
 )
 
 
@@ -95,6 +96,21 @@ class UsersView(ListAPIView):
             country=user.profile.country,
             user__is_staff=True
         ).order_by('user__first_name')
+
+
+class CountryView(ListAPIView):
+    """
+    Gets a list of Unicef Staff users in the current country.
+    Country is determined by the currently logged in user.
+    """
+    model = Country
+    serializer_class = CountrySerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.model.objects.filter(
+            name=user.profile.country.name,
+        )
 
 
 class MyProfileAPIView(RetrieveUpdateAPIView):
