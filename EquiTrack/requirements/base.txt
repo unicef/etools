@@ -68,7 +68,6 @@ easy-thumbnails==2.3
 dateutils==0.6.6
 django-debug-toolbar==1.6 # add debug-toolbar to be able to test in dev while we have the current docker build
 pyyaml==3.12
-Pygments==2.2.0
 
 # Testing packages
 coverage==4.2

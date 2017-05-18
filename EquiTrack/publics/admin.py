@@ -3,10 +3,6 @@ from __future__ import unicode_literals
 import json
 
 from django.contrib import admin
-from django.utils.safestring import mark_safe
-from pygments import highlight
-from pygments.lexers import JsonLexer
-from pygments.formatters import HtmlFormatter
 
 from publics import models
 from publics.models import EPOCH_ZERO
@@ -58,22 +54,8 @@ class DSARateUploadAdmin(admin.ModelAdmin):
         'csv',
         'status',
         'upload_date',
-        'errors_pretty',
+        'errors',
     )
-
-    def errors_pretty(self, obj):
-        # Convert the data to sorted, indented JSON
-        response = json.dumps(obj.errors, indent=2)
-
-        # Truncate the data.
-        response = response[:5000]
-
-        formatter = HtmlFormatter(style='colorful')
-        response = highlight(response, JsonLexer(), formatter)
-        style = "<style>" + formatter.get_style_defs() + "</style><br>"
-
-        return mark_safe(style + response)
-    errors_pretty.short_description = 'Upload errors'
 
     def get_form(self, request, obj=None, **kwargs):
         if not obj:
@@ -83,7 +65,6 @@ class DSARateUploadAdmin(admin.ModelAdmin):
                 'status',
                 'upload_date',
                 'errors',
-                'errors_pretty',
             )
         else:
             self.readonly_fields = (
@@ -91,7 +72,7 @@ class DSARateUploadAdmin(admin.ModelAdmin):
                 'csv',
                 'status',
                 'upload_date',
-                'errors_pretty',
+                'errors',
             )
             self.exclude = (
                 'errors',
