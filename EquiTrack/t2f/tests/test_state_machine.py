@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from decimal import Decimal
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -304,5 +305,6 @@ class StateMachineTest(APITenantTestCase):
                                                                 'transition_name': 'send_for_payment'}),
                                         data=response_json, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json,
-                         {u'non_field_errors': [u'Travel should have at least one expense.']})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Decimal(response_json['cost_summary']['preserved_expenses']),
+                         Decimal('0.00'))
