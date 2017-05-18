@@ -628,7 +628,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         'title',
     )
     readonly_fields = (
-        'number',
         'total_budget',
     )
     filter_horizontal = (
@@ -1027,7 +1026,6 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
     )
     readonly_fields = (
         u'download_url',
-        u'agreement_number',
     )
     filter_horizontal = (
         u'authorized_officers',
