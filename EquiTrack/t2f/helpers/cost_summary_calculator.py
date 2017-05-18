@@ -88,7 +88,7 @@ class CostSummaryCalculator(object):
 
     def get_expenses(self):
         expenses_mapping = OrderedDict()
-        expenses_qs = self.travel.expenses.exclude(amount=None).select_related('type')
+        expenses_qs = self.travel.expenses.exclude(amount=None).select_related('type').order_by('-id')
 
         for expense in expenses_qs:
             if expense.type.vendor_number not in expenses_mapping:
