@@ -42,6 +42,7 @@ class TravelActivityExport(ExportBaseView):
         queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office',
                                                            'travels__section', 'locations')
         queryset = queryset.select_related('partner', 'partnership', 'result', 'primary_traveler')
+        queryset = queryset.order_by('id')
         dto_list = []
         for activity in queryset:
             for travel in activity.travels.all():

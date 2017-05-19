@@ -245,8 +245,7 @@ class Travel(models.Model):
 
     # Completion conditions
     def check_trip_report(self):
-        if (not self.international_travel) and (self.ta_required) and ((not self.report_note) or
-                                                                           (len(self.report_note) < 1)):
+        if not self.report_note:
             raise TransitionError('Field report has to be filled.')
         return True
 
@@ -353,11 +352,10 @@ class Travel(models.Model):
     @send_for_payment_threshold_decorator
     @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
-        # Expenses total should have at least one element
-        if len(self.cost_summary['expenses_total']) == 0:
-            raise TransitionError('Travel should have at least one expense.')
-
-        self.preserved_expenses_local = self.cost_summary['expenses_total'][0]['amount']
+        if self.cost_summary['expenses_total']:
+            self.preserved_expenses_local = self.cost_summary['expenses_total'][0]['amount']
+        else:
+            self.preserved_expenses_local = Decimal(0)
         self.generate_invoices()
 
         # If invoicing is turned off, don't send a mail
@@ -400,13 +398,19 @@ class Travel(models.Model):
                                      'emails/certified.html')
 
     @mark_as_certified_or_completed_threshold_decorator
-    @transition(status, source=[CERTIFIED, SUBMITTED, PLANNED], target=COMPLETED,
+    @transition(status, source=[CERTIFIED, SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
                 conditions=[check_trip_report, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
-        self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
-                                     self.supervisor.email,
-                                     'emails/trip_completed.html')
+
+        if not self.ta_required and self.status == self.PLANNED:
+            self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
+                                         self.supervisor.email,
+                                         'emails/no_approval_complete.html')
+        else:
+            self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
+                                         self.supervisor.email,
+                                         'emails/trip_completed.html')
 
         try:
             from partners.models import PartnerOrganization

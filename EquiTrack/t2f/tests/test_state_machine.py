@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
 
+from decimal import Decimal
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
 
+from django.core import mail
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
@@ -31,8 +33,11 @@ class StateMachineTest(APITenantTestCase):
         self.assertEqual(dict(transition_mapping),
                          {'*': ['planned'],
                           'approved': ['sent_for_payment',
-                                       'cancelled'],
-                          'cancelled': ['submitted', 'planned'],
+                                       'cancelled',
+                                       'completed'],
+                          'cancelled': ['submitted',
+                                        'planned',
+                                        'completed'],
                           'certification_approved': ['certification_rejected',
                                                      'certified'],
                           'certification_rejected': ['certification_submitted'],
@@ -168,6 +173,7 @@ class StateMachineTest(APITenantTestCase):
                 'ta_required': False,
                 'international_travel': False,
                 'start_date': datetime.utcnow(),
+                'report': 'something',
                 'end_date': datetime.utcnow() + timedelta(hours=10),
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
@@ -177,10 +183,13 @@ class StateMachineTest(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
+        self.assertEqual(len(mail.outbox), 1)
+
     def test_ta_not_required_flow_send_for_approval(self):
         data = {'traveler': self.traveler.id,
                 'ta_required': False,
                 'international_travel': False,
+                'report': 'something',
                 'start_date': datetime.utcnow(),
                 'end_date': datetime.utcnow() + timedelta(hours=10),
                 'supervisor': self.unicef_staff.id}
@@ -217,6 +226,7 @@ class StateMachineTest(APITenantTestCase):
         data = {'traveler': self.traveler.id,
                 'ta_required': False,
                 'international_travel': True,
+                'report': 'something',
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
                                                         kwargs={'transition_name': 'save_and_submit'}),
@@ -237,6 +247,7 @@ class StateMachineTest(APITenantTestCase):
         data = {'traveler': self.traveler.id,
                 'ta_required': False,
                 'international_travel': True,
+                'report': 'something',
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
                                                         kwargs={'transition_name': 'mark_as_completed'}),
@@ -294,5 +305,6 @@ class StateMachineTest(APITenantTestCase):
                                                                 'transition_name': 'send_for_payment'}),
                                         data=response_json, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json,
-                         {u'non_field_errors': [u'Travel should have at least one expense.']})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Decimal(response_json['cost_summary']['preserved_expenses']),
+                         Decimal('0.00'))

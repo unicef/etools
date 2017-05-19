@@ -45,7 +45,7 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(duplicate_travel_url, '/api/t2f/travels/1/duplicate_travel/')
 
     def test_details_view(self):
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(19):
             response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                            kwargs={'travel_pk': self.travel.id}),
                                             user=self.unicef_staff)
@@ -258,11 +258,11 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['expenses'],
-                         [{'amount': '80.00',
+                         [{'amount': '120.00',
                            'currency': currency.id,
                            'label': user_et.title,
                            'vendor_number': 'Traveler'},
-                          {'amount': '120.00',
+                          {'amount': '80.00',
                            'currency': currency.id,
                            'label': user_et.title,
                            'vendor_number': 'Traveler'},
