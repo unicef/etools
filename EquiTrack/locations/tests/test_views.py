@@ -24,7 +24,7 @@ class TestLocationViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data[0].keys(), ["id", "name", "p_code"])
-        self.assertIn("Location", response.data[0]["name"])
+        self.assertEquals(response.data[0]["name"], '{} ({} - {})'.format(self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
 
     def test_api_location_heavy_list(self):
         response = self.forced_auth_req('get', '/api/locations/', user=self.unicef_staff)

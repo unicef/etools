@@ -57,6 +57,10 @@ class LocationSerializer(serializers.ModelSerializer):
 class LocationLightSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
+    name = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        return '{} ({} - {})'.format(obj.name, obj.gateway.name, obj.p_code)
 
     class Meta:
         model = Location
