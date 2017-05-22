@@ -104,8 +104,8 @@ class GovernmentInterventionListSerializer(serializers.ModelSerializer):
     def get_unicef_focal_points(self, obj):
         unicef_focal_points = []
         for r in obj.results.all():
-            unicef_focal_points = list(set([s.id for s in r.unicef_managers.all()] + unicef_focal_points))
-        return unicef_focal_points
+            unicef_focal_points = list(set([(s.id, s.get_full_name()) for s in r.unicef_managers.all()] + unicef_focal_points))
+        return list({"id": ufp[0], "name": ufp[1]} for ufp in unicef_focal_points)
 
     def get_sectors(self, obj):
         sectors = []
