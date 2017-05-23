@@ -40,6 +40,7 @@ from partners.serializers.interventions_v2 import (
     InterventionSectorLocationCUSerializer,
     InterventionResultCUSerializer,
     InterventionListMapSerializer,
+    MinimalInterventionListSerializer,
 )
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
@@ -75,6 +76,9 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return InterventionExportSerializer
+            if "verbosity" in query_params.keys():
+                if query_params.get("verbosity") == 'minimal':
+                    return MinimalInterventionListSerializer
         if self.request.method == "POST":
             return InterventionCreateUpdateSerializer
         return super(InterventionListAPIView, self).get_serializer_class()
@@ -123,6 +127,14 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
 
         if query_params:
             queries = []
+            if "values" in query_params.keys():
+                # Used for ghost data - filter in all(), and return straight away.
+                try:
+                    ids = [int(x) for x in query_params.get("values").split(",")]
+                except ValueError:
+                    raise ValidationError("ID values must be integers")
+                else:
+                    return Intervention.objects.filter(id__in=ids)
             if query_params.get("my_partnerships", "").lower() == "true":
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))

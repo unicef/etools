@@ -9,12 +9,14 @@ from pytz import UTC
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
+from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, ResultFactory, LocationFactory, \
+    InterventionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory, WBSFactory, GrantFactory, FundFactory, DSARegionFactory, \
     AirlineCompanyFactory, DSARateFactory
-from t2f.models import Invoice, ModeOfTravel
-from t2f.tests.factories import InvoiceFactory, InvoiceItemFactory, IteneraryItemFactory, ExpenseFactory
+from t2f.models import Invoice, ModeOfTravel, TravelType, TravelActivity
+from t2f.tests.factories import InvoiceFactory, InvoiceItemFactory, IteneraryItemFactory, ExpenseFactory, \
+    TravelActivityFactory
 
 from .factories import TravelFactory
 
@@ -28,7 +30,7 @@ class TravelExports(APITenantTestCase):
         self.unicef_staff = UserFactory(first_name='Jakab', last_name='Gipsz', is_staff=True)
 
     def test_urls(self):
-        export_url = reverse('t2f:travels:list:export')
+        export_url = reverse('t2f:travels:list:activity_export')
         self.assertEqual(export_url, '/api/t2f/travels/export/')
 
         export_url = reverse('t2f:travels:list:finance_export')
@@ -40,32 +42,182 @@ class TravelExports(APITenantTestCase):
         export_url = reverse('t2f:travels:list:invoice_export')
         self.assertEqual(export_url, '/api/t2f/travels/invoice-export/')
 
-    def test_export(self):
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:export'),
-                                        user=self.unicef_staff)
+    def test_activity_export(self):
+        office = OfficeFactory(name='Budapest')
+        section_health = SectionFactory(name='Health')
+        section_education = SectionFactory(name='Education')
+
+        location_ABC = LocationFactory(name='Location ABC')
+        location_345 = LocationFactory(name='Location 345')
+        location_111 = LocationFactory(name='Location 111')
+
+        partnership_A1 = InterventionFactory(title='Partnership A1')
+        partner = partnership_A1.agreement.partner
+        partner.name = 'Partner A'
+        partner.save()
+
+        partnership_A2 = InterventionFactory(title='Partnership A2')
+        agreement = partnership_A2.agreement
+        agreement.partner = partner
+        agreement.save()
+
+        partnership_B3 = InterventionFactory(title='Partnership B3')
+        partner = partnership_B3.agreement.partner
+        partner.name = 'Partner B'
+        partner.save()
+
+        partnership_C1 = InterventionFactory(title='Partnership C1')
+        partner = partnership_C1.agreement.partner
+        partner.name = 'Partner C'
+        partner.save()
+
+        # Some results
+        result_A11 = ResultFactory(name='Result A11')
+        result_A21 = ResultFactory(name='Result A21')
+
+        # set up travels
+        user_joe_smith = UserFactory(first_name='Joe',
+                                     last_name='Smith')
+        user_alice_carter = UserFactory(first_name='Alice',
+                                        last_name='Carter')
+        user_lenox_lewis = UserFactory(first_name='Lenox',
+                                       last_name='Lewis')
+        travel_1 = TravelFactory(reference_number='2016/1000',
+                                 traveler=user_joe_smith,
+                                 office=office,
+                                 section=section_health)
+        travel_2 = TravelFactory(reference_number='2016/1211',
+                                 traveler=user_alice_carter,
+                                 office=office,
+                                 section=section_education)
+
+        # Do some cleanup
+        TravelActivity.objects.all().delete()
+
+        # Create the activities finally
+        activity_1 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING,
+                                           date=datetime(2016, 12, 3, tzinfo=UTC),
+                                           result=result_A11,
+                                           primary_traveler=user_joe_smith)
+        activity_1.travels.add(travel_1)
+        activity_1.locations.set([location_ABC, location_345])
+        activity_1.partner = partnership_A1.agreement.partner
+        activity_1.partnership = partnership_A1
+        activity_1.save()
+
+        activity_2 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING,
+                                           date=datetime(2016, 12, 4, tzinfo=UTC),
+                                           result=result_A21,
+                                           primary_traveler=user_lenox_lewis)
+        activity_2.travels.add(travel_1)
+        activity_2.locations.set([location_111])
+        activity_2.partner = partnership_A2.agreement.partner
+        activity_2.partnership = partnership_A2
+        activity_2.save()
+
+        activity_3 = TravelActivityFactory(travel_type=TravelType.MEETING,
+                                           date=datetime(2016, 12, 3, tzinfo=UTC),
+                                           result=None,
+                                           primary_traveler=user_joe_smith)
+        activity_3.travels.add(travel_1)
+        activity_3.locations.set([location_ABC])
+        activity_3.partner = partnership_B3.agreement.partner
+        activity_3.partnership = partnership_B3
+        activity_3.save()
+
+        activity_4 = TravelActivityFactory(travel_type=TravelType.SPOT_CHECK,
+                                           date=datetime(2016, 12, 6, tzinfo=UTC),
+                                           result=None,
+                                           primary_traveler=user_alice_carter)
+        activity_4.travels.add(travel_2)
+        activity_4.locations.set([location_111, location_345])
+        activity_4.partner = partnership_C1.agreement.partner
+        activity_4.partnership = partnership_C1
+        activity_4.save()
+
+        with self.assertNumQueries(6):
+            response = self.forced_auth_req('get', reverse('t2f:travels:list:activity_export'),
+                                            user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
         rows = [r for r in export_csv]
 
-        self.assertEqual(len(rows), 1)
+        self.assertEqual(len(rows), 5)
 
         # check header
         self.assertEqual(rows[0],
-                         ['id',
-                          'reference_number',
+                         ['reference_number',
                           'traveler',
-                          'purpose',
-                          'start_date',
-                          'end_date',
-                          'status',
-                          'created',
-                          'section',
                           'office',
-                          'supervisor',
-                          'ta_required',
-                          'ta_reference_number',
-                          'approval_date',
-                          'is_driver',
-                          'attachment_count'])
+                          'section',
+                          'status',
+                          'trip_type',
+                          'partner',
+                          'partnership',
+                          'results',
+                          'locations',
+                          'when',
+                          'is_secondary_traveler',
+                          'primary_traveler_name'])
+
+        self.assertEqual(rows[1],
+                         ['2016/1000',
+                          'Joe Smith',
+                          'Budapest',
+                          'Health',
+                          'planned',
+                          'Programmatic Visit',
+                          'Partner A',
+                          'Partnership A1',
+                          'Result A11',
+                          'Location 345, Location ABC',
+                          '03-Dec-2016',
+                          '',
+                          ''])
+
+        self.assertEqual(rows[2],
+                         ['2016/1000',
+                          'Joe Smith',
+                          'Budapest',
+                          'Health',
+                          'planned',
+                          'Programmatic Visit',
+                          'Partner A',
+                          'Partnership A2',
+                          'Result A21',
+                          'Location 111',
+                          '04-Dec-2016',
+                          'YES',
+                          'Lenox Lewis'])
+
+        self.assertEqual(rows[3],
+                         ['2016/1000',
+                          'Joe Smith',
+                          'Budapest',
+                          'Health',
+                          'planned',
+                          'Meeting',
+                          'Partner B',
+                          'Partnership B3',
+                          '',
+                          'Location ABC',
+                          '03-Dec-2016',
+                          '',
+                          ''])
+
+        self.assertEqual(rows[4],
+                         ['2016/1211',
+                          'Alice Carter',
+                          'Budapest',
+                          'Education',
+                          'planned',
+                          'Spot Check',
+                          'Partner C',
+                          'Partnership C1',
+                          '',
+                          'Location 111, Location 345',
+                          '06-Dec-2016',
+                          '',
+                          ''])
 
     def test_finance_export(self):
         travel = TravelFactory(traveler=self.traveler,
@@ -84,8 +236,9 @@ class TravelExports(APITenantTestCase):
         travel_2.expenses.all().delete()
         ExpenseFactory(travel=travel_2, amount=Decimal('200'))
 
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
-                                        user=self.unicef_staff)
+        with self.assertNumQueries(21):
+            response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
+                                            user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
         rows = [r for r in export_csv]
 
@@ -210,8 +363,9 @@ class TravelExports(APITenantTestCase):
         itinerary_item_5.airlines.all().delete()
         itinerary_item_5.airlines.add(airline_spiceair)
 
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
-                                        user=self.unicef_staff)
+        with self.assertNumQueries(6):
+            response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
+                                            user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
         rows = [r for r in export_csv]
 
@@ -382,8 +536,9 @@ class TravelExports(APITenantTestCase):
                            fund=fund_2,
                            amount=Decimal('919.11'))
 
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
-                                        user=self.unicef_staff)
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
+                                            user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
         rows = [r for r in export_csv]
 

@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from datetime import timedelta
 from decimal import Decimal
 from itertools import chain
@@ -20,8 +20,7 @@ class CostSummaryCalculator(object):
     def get_cost_summary(self):
         expense_mapping = self.get_expenses()
 
-        sorted_expense_mapping_values = sorted(chain.from_iterable(expense_mapping.values()),
-                                               cmp=lambda x, y: cmp(x.id, y.id))
+        sorted_expense_mapping_values = chain.from_iterable(expense_mapping.values())
         local_expenses = [e.amount for e in sorted_expense_mapping_values
                           if e.currency == self.travel.currency]
         total_expense_local = sum(local_expenses, Decimal(0))
@@ -34,9 +33,9 @@ class CostSummaryCalculator(object):
 
         # Order the expenses
         expenses = []
-        if 'user' in expense_mapping:
-            for expense in expense_mapping.pop('user'):
-                expenses.append(self.ExpenseDTO('user', expense))
+        for expense in expense_mapping.pop('user', []):
+            expenses.append(self.ExpenseDTO('user', expense))
+
         parking_money = expense_mapping.pop('', [])
 
         # Create data transfer object for each expense
@@ -46,7 +45,6 @@ class CostSummaryCalculator(object):
         travel_agent_expenses = sorted(travel_agent_expenses, key=lambda o: o.vendor_number)
         expenses.extend(travel_agent_expenses)
 
-        # explicit None checking should happen here otherwise the 0 will be filtered out
         for parking_money_expense in parking_money:
             expenses.append(self.ExpenseDTO('', parking_money_expense))
 
@@ -63,28 +61,39 @@ class CostSummaryCalculator(object):
         dsa_calculator = DSACalculator(self.travel)
         dsa_calculator.calculate_dsa()
 
-        expenses_total = defaultdict(Decimal)
+        expenses_total = OrderedDict()
+        paid_to_traveler = dsa_calculator.paid_to_traveler.quantize(Decimal('1.0000'))
         for expense in expenses:
+            if expense.currency not in expenses_total:
+                expenses_total[expense.currency] = Decimal(0)
             expenses_total[expense.currency] += expense.amount
+
+            if expense.vendor_number == 'user':
+                paid_to_traveler -= expense.amount
 
         expenses_total = [{'currency': k, 'amount': v} for k, v in expenses_total.items()]
 
         result = {'dsa_total': dsa_calculator.total_dsa,
-                  'expenses_total': expenses_total,
-                  'deductions_total': dsa_calculator.total_deductions.quantize(Decimal('1.0000')),
                   'dsa': dsa_calculator.detailed_dsa,
+                  'deductions_total': dsa_calculator.total_deductions.quantize(Decimal('1.0000')),
+                  'traveler_dsa': dsa_calculator.paid_to_traveler.quantize(Decimal('1.0000')),
+                  'expenses_total': expenses_total,
                   'preserved_expenses': self.travel.preserved_expenses_local,
                   'expenses_delta': expenses_delta_local,
                   'expenses_delta_local': expenses_delta_local,
                   'expenses_delta_usd': expenses_delta_usd,
                   'expenses': expenses,
-                  'paid_to_traveler': dsa_calculator.paid_to_traveler.quantize(Decimal('1.0000'))}
+                  'paid_to_traveler': paid_to_traveler}
         return result
 
     def get_expenses(self):
-        expenses_mapping = defaultdict(list)
-        expenses_qs = self.travel.expenses.exclude(amount=None).select_related('type')
+        expenses_mapping = OrderedDict()
+        expenses_qs = self.travel.expenses.exclude(amount=None).select_related('type').order_by('id')
+
         for expense in expenses_qs:
+            if expense.type.vendor_number not in expenses_mapping:
+                expenses_mapping[expense.type.vendor_number] = []
+
             expenses_mapping[expense.type.vendor_number].append(expense)
         return expenses_mapping
 

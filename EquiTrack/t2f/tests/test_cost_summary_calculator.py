@@ -1,28 +1,137 @@
 from __future__ import unicode_literals
 
+from datetime import date, datetime
+from decimal import Decimal
+from pytz import UTC
+
+from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import CurrencyFactory
-from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
-from t2f.tests.factories import TravelFactory, ExpenseFactory
+from publics.models import TravelExpenseType
+from publics.tests.factories import CurrencyFactory, CountryFactory, DSARegionFactory, DSARateFactory, \
+    ExpenseTypeFactory
+from t2f.helpers.cost_summary_calculator import CostSummaryCalculator, DSACalculator
+from t2f.tests.factories import TravelFactory, ExpenseFactory, IteneraryItemFactory, DeductionFactory
 
 
 class CostSummaryTest(APITenantTestCase):
-    def test_cost_summary_calculator(self):
-        currency_usd = CurrencyFactory(code='USD')
-        currency_huf = CurrencyFactory(code='HUF')
+    def setUp(self):
+        super(CostSummaryTest, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
 
-        travel = TravelFactory()
-        ExpenseFactory(travel=travel,
-                       currency=currency_huf,
+        self.currency_usd = CurrencyFactory(code='USD')
+        self.currency_huf = CurrencyFactory(name='Hungarian Forint', code='HUF')
+
+        self.user_et_1 = ExpenseTypeFactory(title='Train cost',
+                                                 vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
+        self.user_et_2 = ExpenseTypeFactory(title='Other expenses',
+                                                 vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
+        self.ta_et = ExpenseTypeFactory(title='Travel agent')
+
+        netherlands = CountryFactory(name='Netherlands', long_name='Netherlands')
+        hungary = CountryFactory(name='Hungary', long_name='Hungary')
+        denmark = CountryFactory(name='Denmark', long_name='Denmark')
+        germany = CountryFactory(name='Germany', long_name='Germany')
+
+        self.amsterdam = DSARegionFactory(country=netherlands,
+                                            area_name='Amsterdam',
+                                            area_code='ds1')
+        DSARateFactory(region=self.amsterdam,
+                       dsa_amount_usd=100,
+                       dsa_amount_60plus_usd=60)
+
+        self.budapest = DSARegionFactory(country=hungary,
+                                           area_name='Budapest',
+                                           area_code='ds2')
+        DSARateFactory(region=self.budapest,
+                       dsa_amount_usd=200,
+                       dsa_amount_60plus_usd=120)
+
+        self.copenhagen = DSARegionFactory(country=denmark,
+                                           area_name='Copenhagen',
+                                           area_code='ds3')
+        DSARateFactory(region=self.copenhagen,
+                       dsa_amount_usd=300,
+                       dsa_amount_60plus_usd=180)
+
+        self.dusseldorf = DSARegionFactory(country=germany,
+                                           area_name='Duesseldorf',
+                                           area_code='ds4')
+        DSARateFactory(region=self.dusseldorf,
+                       dsa_amount_usd=400,
+                       dsa_amount_60plus_usd=240)
+
+        # Delete default items created by factory
+        self.travel = TravelFactory(currency=self.currency_huf)
+        self.travel.itinerary.all().delete()
+        self.travel.expenses.all().delete()
+        self.travel.deductions.all().delete()
+
+    def test_calculations(self):
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
+                             dsa_region=self.copenhagen)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 23, 0, tzinfo=UTC),
+                             dsa_region=self.dusseldorf)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 3, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 3, 13, 0, tzinfo=UTC),
+                             dsa_region=self.amsterdam)
+
+        ExpenseFactory(travel=self.travel,
+                       type=self.user_et_1,
+                       currency=self.currency_huf,
+                       amount=100)
+        ExpenseFactory(travel=self.travel,
+                       type=self.user_et_2,
+                       currency=self.currency_huf,
+                       amount=200)
+
+        calculator = CostSummaryCalculator(self.travel)
+        cost_summary = calculator.get_cost_summary()
+        cost_summary.pop('expenses')
+
+        self.assertEqual(cost_summary,
+                         {'deductions_total': Decimal('0.0000'),
+                          'dsa': [{'daily_rate': Decimal('200.0000'),
+                                   'deduction': Decimal('0.00000'),
+                                   'dsa_region': self.dusseldorf.id,
+                                   'dsa_region_name': 'Germany - Duesseldorf',
+                                   'end_date': date(2017, 1, 3),
+                                   'night_count': 2,
+                                   'paid_to_traveler': Decimal('640.00000'),
+                                   'start_date': date(2017, 1, 1),
+                                   'total_amount': Decimal('640.00000')}],
+                          'dsa_total': Decimal('640.00000'),
+                          'expenses_delta': Decimal('0'),
+                          'expenses_delta_local': Decimal('0'),
+                          'expenses_delta_usd': Decimal('0'),
+                          'expenses_total': [{'amount': Decimal('300.0000'),
+                                              'currency': self.currency_huf}],
+                          'paid_to_traveler': Decimal('340.0000'),
+                          'preserved_expenses': None,
+                          'traveler_dsa': Decimal('640.0000')})
+
+    def test_cost_summary_calculator(self):
+        ExpenseFactory(travel=self.travel,
+                       currency=self.currency_huf,
                        amount=None)
-        ExpenseFactory(travel=travel,
+        ExpenseFactory(travel=self.travel,
                        currency=None,
                        amount=600)
-        ExpenseFactory(travel=travel,
-                       currency=currency_usd,
+        ExpenseFactory(travel=self.travel,
+                       currency=self.currency_usd,
                        amount=50)
 
-
-        calculator = CostSummaryCalculator(travel)
+        calculator = CostSummaryCalculator(self.travel)
         # Should not raise TypeError
         calculator.get_cost_summary()
