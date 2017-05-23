@@ -33,30 +33,6 @@ class TransitionError(RuntimeError):
     pass
 
 
-class UserTypes(object):
-
-    #TODO: remove God
-    GOD = 'God'
-    ANYONE = 'Anyone'
-    TRAVELER = 'Traveler'
-    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
-    SUPERVISOR = 'Supervisor'
-    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
-    FINANCE_FOCAL_POINT = 'Finance Focal Point'
-    REPRESENTATIVE = 'Representative'
-
-    CHOICES = (
-        (GOD, 'God'),
-        (ANYONE, ugettext_lazy('Anyone')),
-        (TRAVELER, ugettext_lazy('Traveler')),
-        (TRAVEL_ADMINISTRATOR, ugettext_lazy('Travel Administrator')),
-        (SUPERVISOR, ugettext_lazy('Supervisor')),
-        (TRAVEL_FOCAL_POINT, ugettext_lazy('Travel Focal Point')),
-        (FINANCE_FOCAL_POINT, ugettext_lazy('Finance Focal Point')),
-        (REPRESENTATIVE, ugettext_lazy('Representative')),
-    )
-
-
 class TravelType(object):
     PROGRAMME_MONITORING = 'Programmatic Visit'
     SPOT_CHECK = 'Spot Check'

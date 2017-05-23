@@ -13,6 +13,7 @@ from locations.models import Location
 from partners.models import PartnerOrganization, Intervention, GovernmentIntervention
 from publics.models import TravelAgent
 from reports.models import Result, ResultType
+from t2f.helpers.permission_matrix import get_permission_matrix
 
 from t2f.models import TravelType, ModeOfTravel, ActionPoint
 from t2f.serializers.static_data import StaticDataSerializer
@@ -51,16 +52,8 @@ class VendorNumberListView(generics.GenericAPIView):
 
 
 class PermissionMatrixView(generics.GenericAPIView):
-    CACHE_KEY = 't2f_permission_matrix'
-
     def get(self, request):
-        permission_matrix = cache.get(self.CACHE_KEY)
-        if not permission_matrix:
-            path = os.path.join(settings.SITE_ROOT, 't2f', 'permission_matrix.yaml')
-            with open(path) as permission_matrix_file:
-                permission_matrix = yaml.load(permission_matrix_file.read())
-            cache.set(self.CACHE_KEY, permission_matrix)
-
+        permission_matrix = get_permission_matrix()
         return Response(permission_matrix, status.HTTP_200_OK)
 
 
