@@ -13,9 +13,10 @@ class PermissionMatrix(object):
         return UserTypes.GOD
 
     def get_permission_dict(self):
-        from t2f.models import TravelPermission
-        permissions = TravelPermission.objects.filter(status=self.travel.status, user_type=self._user_type)
-        return {(p.model, p.field, p.permission_type): p.value for p in permissions}
+        # TODO PMATRIX
+        return {}
+        # permissions = TravelPermission.objects.filter(status=self.travel.status, user_type=self._user_type)
+        # return {(p.model, p.field, p.permission_type): p.value for p in permissions}
 
     def has_permission(self, permission_type, model_name, field_name):
         return self._permission_dict.get((permission_type, model_name, field_name), True)

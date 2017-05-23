@@ -595,36 +595,7 @@ class TravelAttachment(models.Model):
     type = models.CharField(max_length=64)
 
     name = models.CharField(max_length=255)
-    file = models.FileField(
-        upload_to=determine_file_upload_path,
-        max_length=255
-    )
-
-
-class TravelPermission(models.Model):
-    EDIT = 'edit'
-    VIEW = 'view'
-    PERMISSION_TYPE_CHOICES = (
-        (EDIT, 'Edit'),
-        (VIEW, 'View'),
-    )
-
-    TRAVEL = 'travel'
-    ACTION_POINT = 'action_point'
-    USAGE_PLACE_CHOICES = (
-        (TRAVEL, 'Travel'),
-        (ACTION_POINT, 'Action point'),
-    )
-
-    name = models.CharField(max_length=128)
-    code = models.CharField(max_length=128)
-    status = models.CharField(max_length=50)
-    usage_place = models.CharField(max_length=12, choices=USAGE_PLACE_CHOICES)
-    user_type = models.CharField(max_length=25)
-    model = models.CharField(max_length=128)
-    field = models.CharField(max_length=64)
-    permission_type = models.CharField(max_length=5, choices=PERMISSION_TYPE_CHOICES)
-    value = models.BooleanField(default=False)
+    file = models.FileField(upload_to=determine_file_upload_path, max_length=255)
 
 
 def make_action_point_number():
