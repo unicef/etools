@@ -214,7 +214,7 @@ class TravelAttachmentSerializer(serializers.ModelSerializer):
         return super(TravelAttachmentSerializer, self).create(validated_data)
 
 
-class TravelDetailsSerializer(serializers.ModelSerializer):
+class TravelDetailsSerializer(PermissionBasedModelSerializer):
     itinerary = IteneraryItemSerializer(many=True, required=False)
     expenses = ExpenseSerializer(many=True, required=False)
     deductions = DeductionSerializer(many=True, required=False)

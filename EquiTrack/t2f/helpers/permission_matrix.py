@@ -77,11 +77,11 @@ class PermissionMatrix(object):
 
                     for field, fm in mm.items():
                         if not isinstance(fm, dict):
-                            permissions[('travel', model, field)] |= fm
+                            permissions[(field, 'travel', model)] |= fm
                             continue
 
                         for permission_type, value in fm.items():
-                            permissions[(model, field, permission_type)] |= value
+                            permissions[(permission_type, model, field, )] |= value
 
         return permissions
 

@@ -1,23 +1,24 @@
 from __future__ import unicode_literals
 
+import json
 import mock
-from django.contrib.auth.models import Group
 
+from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
+from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from publics.tests.factories import CurrencyFactory, WBSFactory, DSARegionFactory
 from t2f import UserTypes
 from t2f.helpers.permission_matrix import PermissionMatrix, get_user_role_list
-from t2f.models import Travel
-
-from .factories import TravelFactory
+from t2f.models import Travel, ModeOfTravel, TravelType
+from t2f.tests.factories import TravelFactory
 
 
 class TestPermissionMatrix(APITenantTestCase):
     def setUp(self):
         super(TestPermissionMatrix, self).setUp()
-        self.traveler = UserFactory()
+        self.traveler = UserFactory(is_staff=True)
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
@@ -138,3 +139,81 @@ class TestPermissionMatrix(APITenantTestCase):
         self.assertEqual(dict(permissions),
                          {('travel', 'ta_required', 'edit'): True,
                           ('travel', 'ta_required', 'view'): True})
+
+    def test_travel_creation(self):
+        dsaregion = DSARegionFactory()
+        currency = CurrencyFactory()
+        wbs = WBSFactory()
+        grant = wbs.grants.first()
+        fund = grant.funds.first()
+        location = LocationFactory()
+
+        purpose = 'Some purpose to check later'
+
+        data = {'deductions': [{'date': '2016-12-15',
+                                'breakfast': False,
+                                'lunch': False,
+                                'dinner': False,
+                                'accomodation': False,
+                                'no_dsa': False},
+                                {'date': '2016-12-16',
+                                 'breakfast': False,
+                                 'lunch': False,
+                                 'dinner': False,
+                                 'accomodation': False,
+                                 'no_dsa': False}],
+                'itinerary': [{'airlines': [],
+                               'overnight_travel': False,
+                               'origin': 'a',
+                               'destination': 'b',
+                               'dsa_region': dsaregion.id,
+                               'departure_date': '2016-12-15T15:02:13+01:00',
+                               'arrival_date': '2016-12-16T15:02:13+01:00',
+                               'mode_of_travel': ModeOfTravel.BOAT}],
+                'activities': [{'is_primary_traveler': True,
+                                'locations': [location.id],
+                                'travel_type': TravelType.ADVOCACY,
+                                'date': '2016-12-15T15:02:13+01:00'}],
+                'cost_assignments': [{'wbs': wbs.id,
+                                      'grant': grant.id,
+                                      'fund': fund.id,
+                                      'share': '100'}],
+                'clearances': {'medical_clearance': 'requested',
+                               'security_clearance': 'requested',
+                               'security_course': 'requested'},
+                'ta_required': True,
+                'international_travel': False,
+                'mode_of_travel': [ModeOfTravel.BOAT],
+                'traveler': self.traveler.id,
+                'supervisor': self.unicef_staff.id,
+                'start_date': '2016-12-15T15:02:13+01:00',
+                'end_date': '2016-12-16T15:02:13+01:00',
+                'estimated_travel_cost': '123',
+                'currency': currency.id,
+                'purpose': purpose,
+                'additional_note': 'Notes',
+                'medical_clearance': 'requested',
+                'security_clearance': 'requested',
+                'security_course': 'requested'}
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
+                                                        kwargs={'transition_name': 'save_and_submit'}),
+                                        data=data, user=self.traveler)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['purpose'], purpose)
+        self.assertEqual(response_json['status'], Travel.SUBMITTED)
+        travel_id = response_json['id']
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'approve'}),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.APPROVED)
+
+        data = {'purpose': 'Some totally different purpose than before'}
+        response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
+                                                         kwargs={'travel_pk': response_json['id']}),
+                                        data=data, user=self.traveler)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['purpose'], purpose)
