@@ -108,10 +108,10 @@ class TravelDetails(APITenantTestCase):
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
-                              'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['expenses'][0]['currency'], response_json['expenses'][0]['document_currency'])
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']

@@ -89,6 +89,9 @@ class FinanceExportSerializer(serializers.Serializer):
     def get_expense_total(self, obj):
         ret = []
         for expense in obj.cost_summary['expenses_total']:
+            if not expense['currency']:
+                continue
+
             ret.append('{amount:.{currency.decimal_places}f} {currency.code}'.format(amount=expense['amount'],
                                                                                      currency=expense['currency']))
         return '+'.join(ret)
