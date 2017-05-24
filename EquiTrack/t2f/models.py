@@ -105,7 +105,7 @@ def approve_decorator(func):
         # If invoicing is turned off, jump to sent_for_payment when someone approves the travel
         func(self, *args, **kwargs)
 
-        if settings.DISABLE_INVOICING:
+        if settings.DISABLE_INVOICING and self.ta_required:
             self.send_for_payment(*args, **kwargs)
 
     return wrapper
@@ -267,7 +267,7 @@ class Travel(models.Model):
 
     def check_pending_invoices(self):
         # If invoicing is turned off, don't check pending invoices
-        if settings.DISABLE_INVOICING:
+        if settings.DISABLE_INVOICING and self.ta_required:
             return True
 
         if self.invoices.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING]).exists():
@@ -359,7 +359,7 @@ class Travel(models.Model):
         self.generate_invoices()
 
         # If invoicing is turned off, don't send a mail
-        if settings.DISABLE_INVOICING:
+        if settings.DISABLE_INVOICING and self.ta_required:
             return
 
         self.send_notification_email('Travel #{} sent for payment.'.format(self.reference_number),
@@ -704,7 +704,7 @@ class Invoice(models.Model):
     reference_number = models.CharField(max_length=32, unique=True)
     business_area = models.CharField(max_length=32)
     vendor_number = models.CharField(max_length=32)
-    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
+    currency = models.ForeignKey('publics.Currency', related_name='+')
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
     messages = ArrayField(models.TextField(null=True, blank=True), default=[])
@@ -731,6 +731,9 @@ class Invoice(models.Model):
     @property
     def message(self):
         return '\n'.join(self.messages)
+
+    def __unicode__(self):
+        return self.reference_number
 
 
 class InvoiceItem(models.Model):

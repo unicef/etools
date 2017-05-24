@@ -14,7 +14,7 @@ from django.utils.translation import ugettext
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from publics.models import AirlineCompany
+from publics.models import AirlineCompany, Currency
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     TravelAttachment, ActionPoint, TravelPermission
 from locations.models import Location
@@ -132,10 +132,11 @@ class IteneraryItemSerializer(PermissionBasedModelSerializer):
 class ExpenseSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     amount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False)
+    document_currency = serializers.PrimaryKeyRelatedField(source='currency', queryset=Currency.objects.all())
 
     class Meta:
         model = Expense
-        fields = ('id', 'type', 'currency', 'amount')
+        fields = ('id', 'type', 'currency', 'document_currency', 'amount')
 
 
 class DeductionSerializer(PermissionBasedModelSerializer):
