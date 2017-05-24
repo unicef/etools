@@ -22,9 +22,6 @@ def get_user_role_list(user, travel=None):
         if user == travel.supervisor:
             roles.append(UserTypes.SUPERVISOR)
 
-    if user.groups.filter(name='Representative Office').exists():
-        roles.append(UserTypes.REPRESENTATIVE)
-
     if user.groups.filter(name='Finance Focal Point').exists():
         roles.append(UserTypes.FINANCE_FOCAL_POINT)
 
@@ -33,6 +30,9 @@ def get_user_role_list(user, travel=None):
 
     if user.groups.filter(name='Travel Administrator').exists():
         roles.append(UserTypes.TRAVEL_ADMINISTRATOR)
+
+    if user.groups.filter(name='Representative Office').exists():
+        roles.append(UserTypes.REPRESENTATIVE)
 
     return roles
 
