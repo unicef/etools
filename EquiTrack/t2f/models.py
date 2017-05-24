@@ -732,6 +732,9 @@ class Invoice(models.Model):
     def message(self):
         return '\n'.join(self.messages)
 
+    def __unicode__(self):
+        return self.reference_number
+
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey('Invoice', related_name='items')
