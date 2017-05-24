@@ -704,7 +704,7 @@ class Invoice(models.Model):
     reference_number = models.CharField(max_length=32, unique=True)
     business_area = models.CharField(max_length=32)
     vendor_number = models.CharField(max_length=32)
-    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
+    currency = models.ForeignKey('publics.Currency', related_name='+')
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
     messages = ArrayField(models.TextField(null=True, blank=True), default=[])
