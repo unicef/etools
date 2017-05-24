@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import os
 import yaml
+from collections import defaultdict
 
 from django.conf import settings
 from django.core.cache import cache
@@ -49,6 +50,9 @@ def get_permission_matrix():
 
 
 class PermissionMatrix(object):
+    VIEW = 'view'
+    EDIT = 'edit'
+
     def __init__(self, travel, user):
         self.travel = travel
         self.user = user
@@ -56,10 +60,30 @@ class PermissionMatrix(object):
         self._permission_dict = self.get_permission_dict()
 
     def get_permission_dict(self):
-        # TODO PMATRIX
-        return {}
-        # permissions = TravelPermission.objects.filter(status=self.travel.status, user_type=self._user_type)
-        # return {(p.model, p.field, p.permission_type): p.value for p in permissions}
+        permission_matrix = get_permission_matrix()['travel']
+
+        permissions = defaultdict(bool)
+        for user_type, um in permission_matrix.items():
+            if user_type not in self._user_roles:
+                continue
+
+            for state, sm in um.items():
+                if state != self.travel.status:
+                    continue
+
+                for model, mm in sm.items():
+                    if model == 'baseDetails':
+                        model = 'travel'
+
+                    for field, fm in mm.items():
+                        if not isinstance(fm, dict):
+                            permissions[('travel', model, field)] |= fm
+                            continue
+
+                        for permission_type, value in fm.items():
+                            permissions[(model, field, permission_type)] |= value
+
+        return permissions
 
     def has_permission(self, permission_type, model_name, field_name):
         return self._permission_dict.get((permission_type, model_name, field_name), True)

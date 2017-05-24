@@ -15,6 +15,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from publics.models import AirlineCompany, Currency
+from t2f.helpers.permission_matrix import PermissionMatrix
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     TravelAttachment, ActionPoint
 from locations.models import Location
@@ -53,7 +54,7 @@ class PermissionBasedModelSerializer(serializers.ModelSerializer):
         return [f for f in fields if self._can_read_field(f)]
 
     def _check_permission(self, permission_type, field_name):
-        model_name = model_name = self.Meta.model.__name__.lower()
+        model_name = self.Meta.model.__name__.lower()
 
         permission_matrix = self.context.get('permission_matrix')
 
@@ -63,14 +64,10 @@ class PermissionBasedModelSerializer(serializers.ModelSerializer):
         return permission_matrix.has_permission(permission_type, model_name, field_name)
 
     def _can_read_field(self, field):
-        # TODO PMATRIX
-        return True
-        # return self._check_permission(TravelPermission.VIEW, field.field_name)
+        return self._check_permission(PermissionMatrix.VIEW, field.field_name)
 
     def _can_write_field(self, field):
-        # TODO PMATRIX
-        return True
-        # return self._check_permission(TravelPermission.EDIT, field.field_name)
+        return self._check_permission(PermissionMatrix.EDIT, field.field_name)
 
 
 class ActionPointSerializer(serializers.ModelSerializer):
