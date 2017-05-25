@@ -14,9 +14,10 @@ from django.utils.translation import ugettext
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from publics.models import AirlineCompany
+from publics.models import AirlineCompany, Currency
+from t2f.helpers.permission_matrix import PermissionMatrix
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelAttachment, ActionPoint, TravelPermission
+    TravelAttachment, ActionPoint
 from locations.models import Location
 from t2f.serializers import CostSummarySerializer
 
@@ -53,7 +54,7 @@ class PermissionBasedModelSerializer(serializers.ModelSerializer):
         return [f for f in fields if self._can_read_field(f)]
 
     def _check_permission(self, permission_type, field_name):
-        model_name = model_name = self.Meta.model.__name__.lower()
+        model_name = self.Meta.model.__name__.lower()
 
         permission_matrix = self.context.get('permission_matrix')
 
@@ -63,10 +64,10 @@ class PermissionBasedModelSerializer(serializers.ModelSerializer):
         return permission_matrix.has_permission(permission_type, model_name, field_name)
 
     def _can_read_field(self, field):
-        return self._check_permission(TravelPermission.VIEW, field.field_name)
+        return self._check_permission(PermissionMatrix.VIEW, field.field_name)
 
     def _can_write_field(self, field):
-        return self._check_permission(TravelPermission.EDIT, field.field_name)
+        return self._check_permission(PermissionMatrix.EDIT, field.field_name)
 
 
 class ActionPointSerializer(serializers.ModelSerializer):
@@ -132,10 +133,11 @@ class IteneraryItemSerializer(PermissionBasedModelSerializer):
 class ExpenseSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     amount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False)
+    document_currency = serializers.PrimaryKeyRelatedField(source='currency', queryset=Currency.objects.all())
 
     class Meta:
         model = Expense
-        fields = ('id', 'type', 'currency', 'amount')
+        fields = ('id', 'type', 'currency', 'document_currency', 'amount')
 
 
 class DeductionSerializer(PermissionBasedModelSerializer):
@@ -212,7 +214,7 @@ class TravelAttachmentSerializer(serializers.ModelSerializer):
         return super(TravelAttachmentSerializer, self).create(validated_data)
 
 
-class TravelDetailsSerializer(serializers.ModelSerializer):
+class TravelDetailsSerializer(PermissionBasedModelSerializer):
     itinerary = IteneraryItemSerializer(many=True, required=False)
     expenses = ExpenseSerializer(many=True, required=False)
     deductions = DeductionSerializer(many=True, required=False)
@@ -265,10 +267,6 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         return value
 
     def validate_itinerary(self, value):
-        if self.transition_name == 'submit_for_approval' and len(value) < 2:
-            if self.instance and self.instance.ta_required:
-                raise ValidationError('Travel must have at least two itinerary item')
-
         if not value:
             return value
 

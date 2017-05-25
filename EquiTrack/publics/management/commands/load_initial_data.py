@@ -4,12 +4,10 @@ from __future__ import unicode_literals
 from datetime import datetime
 
 from django.contrib.auth.models import Group
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db.transaction import atomic
 
 from publics.models import Currency, AirlineCompany, DSARegion, TravelExpenseType, BusinessRegion, BusinessArea, Country
-from dsa_regions_data import DSA_REGION_DATA
 
 # DEVELOPMENT CODE -
 class Command(BaseCommand):
@@ -20,7 +18,6 @@ class Command(BaseCommand):
         self._load_airlines()
         self._load_business_areas()
         dsa_country_mapping = self._load_countries()
-        self._load_dsa_regions(dsa_country_mapping)
         self._add_expense_types()
         self._add_user_groups()
 
@@ -461,12 +458,10 @@ class Command(BaseCommand):
                                                        business_area=BusinessArea.objects.filter(code=ba_code).first(),
                                                        iso_2=iso_2,
                                                        iso_3=iso_3,
+                                                       dsa_code=dsa_code,
                                                        currency=Currency.objects.filter(code=currency_code).first(),
                                                        valid_from=valid_from,
                                                        valid_to=valid_to)
-            if dsa_code:
-                dsa_country_mapping[dsa_code] = c
-
             if created:
                 self.stdout.write('Country created: {}'.format(name))
             else:
@@ -597,32 +592,6 @@ class Command(BaseCommand):
                 self.stdout.write('Airline created: {}'.format(airline_name))
             else:
                 self.stdout.write('Airline found: {}'.format(airline_name))
-
-    def _load_dsa_regions(self, dsa_country_mapping):
-
-        for data in DSA_REGION_DATA:
-            country_code = data.pop('country_code')
-            area_code = data.pop('area_code')
-
-            country = dsa_country_mapping[country_code]
-
-            data['dsa_amount_usd'] = data['dsa_amount_usd'].replace(',', '')
-            data['dsa_amount_60plus_usd'] = data['dsa_amount_60plus_usd'].replace(',', '')
-            data['dsa_amount_local'] = data['dsa_amount_local'].replace(',', '')
-            data['dsa_amount_60plus_local'] = data['dsa_amount_60plus_local'].replace(',', '')
-
-            def make_datetime(date_str):
-                day, month, year = date_str.split('/')
-                return datetime(int(year), int(month), int(day))
-
-            data['finalization_date'] = make_datetime(data['finalization_date'])
-            data['eff_date'] = make_datetime(data['eff_date'])
-
-            d, created = DSARegion.objects.get_or_create(country=country, area_code=area_code, defaults=data)
-            if created:
-                self.stdout.write('DSA Region created: {}'.format(d.label))
-            else:
-                self.stdout.write('DSA Region found: {}'.format(d.label))
 
     def _add_expense_types(self):
         expense_type_data = [
