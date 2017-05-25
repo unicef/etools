@@ -108,6 +108,7 @@ class StateMachineTest(APITenantTestCase):
                                'airlines': []}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
+                'currency': currency.id,
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
@@ -231,6 +232,7 @@ class StateMachineTest(APITenantTestCase):
                                'airlines': []}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
+                'currency': currency.id,
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
@@ -393,6 +395,7 @@ class StateMachineTest(APITenantTestCase):
     def test_expense_required_on_send_for_payment(self):
         business_area = BusinessAreaFactory()
         dsa_region = DSARegionFactory()
+        currency = CurrencyFactory()
 
         wbs = WBSFactory(business_area=business_area)
         grant = wbs.grants.first()
@@ -430,7 +433,8 @@ class StateMachineTest(APITenantTestCase):
                 'traveler': self.traveler.id,
                 'ta_required': True,
                 'supervisor': self.unicef_staff.id,
-                'expenses': []}
+                'expenses': [],
+                'currency': currency.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
