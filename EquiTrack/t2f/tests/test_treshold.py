@@ -1,13 +1,15 @@
 from __future__ import unicode_literals
 
 import json
+import mock
 
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.models import Travel
+from publics.tests.factories import DSARegionFactory, AirlineCompanyFactory
+from t2f.models import Travel, ModeOfTravel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
 
 from .factories import TravelFactory
@@ -16,7 +18,7 @@ from .factories import TravelFactory
 class ThresholdTest(APITenantTestCase):
     def setUp(self):
         super(ThresholdTest, self).setUp()
-        self.traveler = UserFactory()
+        self.traveler = UserFactory(is_staff=True)
         self.unicef_staff = UserFactory(is_staff=True)
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
@@ -28,6 +30,8 @@ class ThresholdTest(APITenantTestCase):
     def _prepare_test(self):
         currency = CurrencyFactory()
         expense_type = ExpenseTypeFactory()
+        dsaregion = DSARegionFactory()
+        airlines = AirlineCompanyFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [{'date': '2016-11-03',
@@ -35,6 +39,22 @@ class ThresholdTest(APITenantTestCase):
                                 'lunch': True,
                                 'dinner': False,
                                 'accomodation': True}],
+                'itinerary': [{'origin': 'Berlin',
+                               'destination': 'Budapest',
+                               'departure_date': '2016-11-15T12:06:55.821490',
+                               'arrival_date': '2016-11-16T12:06:55.821490',
+                               'dsa_region': dsaregion.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': [airlines.id]},
+                              {'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2016-11-16T12:06:55.821490',
+                               'arrival_date': '2016-11-17T12:06:55.821490',
+                               'dsa_region': dsaregion.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': [airlines.id]}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
                 'supervisor': self.unicef_staff.id,
@@ -42,7 +62,7 @@ class ThresholdTest(APITenantTestCase):
                               'type': expense_type.id,
                               'currency': currency.id,
                               'document_currency': currency.id}]}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
@@ -51,20 +71,23 @@ class ThresholdTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'submit_for_approval'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         return travel_id, data
 
     @override_settings(DISABLE_INVOICING=False)
-    def test_threshold_with_invoicing(self):
+    @mock.patch('t2f.helpers.permission_matrix.get_permission_matrix')
+    def test_threshold_with_invoicing(self, permission_matrix_getter):
+        permission_matrix_getter.return_value = {'travel': {}}
+
         travel_id, data = self._prepare_test()
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
         travel = Travel.objects.get(id=travel_id)
@@ -74,7 +97,7 @@ class ThresholdTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
 
         response_json = json.loads(response.rendered_content)
 
@@ -88,7 +111,7 @@ class ThresholdTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.SUBMITTED)
@@ -133,13 +156,16 @@ class ThresholdTest(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.SENT_FOR_PAYMENT)
 
-    def test_multi_step_reach(self):
+    @mock.patch('t2f.helpers.permission_matrix.get_permission_matrix')
+    def test_multi_step_reach(self, permission_matrix_getter):
+        permission_matrix_getter.return_value = {'travel': {}}
+
         travel_id, data = self._prepare_test()
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
         travel = Travel.objects.get(id=travel_id)
@@ -149,7 +175,7 @@ class ThresholdTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
-                                        data=response_json, user=self.unicef_staff)
+                                        data=response_json, user=self.traveler)
 
         response_json = json.loads(response.rendered_content)
 
@@ -163,7 +189,7 @@ class ThresholdTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.SENT_FOR_PAYMENT)
@@ -186,7 +212,7 @@ class ThresholdTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.SUBMITTED)
@@ -222,19 +248,21 @@ class ThresholdTest(APITenantTestCase):
         self.assertEqual(response_json['status'], Travel.CERTIFIED)
 
     @override_settings(DISABLE_INVOICING=False)
-    def test_threshold_check_on_complete(self):
+    @mock.patch('t2f.helpers.permission_matrix.get_permission_matrix')
+    def test_threshold_check_on_complete(self, permission_matrix_getter):
+        permission_matrix_getter.return_value = {'travel': {}}
         travel_id, data = self._prepare_test()
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
-                                        data=response_json, user=self.unicef_staff)
+                                        data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
         data = response_json
@@ -243,7 +271,7 @@ class ThresholdTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_certified'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.CERTIFICATION_SUBMITTED)
 
@@ -253,13 +281,13 @@ class ThresholdTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
-                                        data=response_json, user=self.unicef_staff)
+                                        data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
         data = response_json

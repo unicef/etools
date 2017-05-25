@@ -267,10 +267,6 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return value
 
     def validate_itinerary(self, value):
-        if self.transition_name == 'submit_for_approval' and len(value) < 2:
-            if self.instance and self.instance.ta_required:
-                raise ValidationError('Travel must have at least two itinerary item')
-
         if not value:
             return value
 

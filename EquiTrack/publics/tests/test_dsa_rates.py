@@ -22,7 +22,7 @@ class DSARateTest(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_new_rate_addition(self):
-        region = DSARegionFactory()
+        region = DSARegionFactory(rates=[])
 
         rate_1 = DSARateFactory(region=region,
                                 effective_from_date=date(2017, 4, 17))
@@ -44,7 +44,7 @@ class DSARateTest(APITenantTestCase):
         business_area = BusinessAreaFactory(code=workspace.business_area_code)
         country = CountryFactory(business_area=business_area)
 
-        region = DSARegionFactory(country=country)
+        region = DSARegionFactory(country=country, rates=[])
 
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('public:dsa_regions'),
@@ -77,7 +77,7 @@ class DSARateTest(APITenantTestCase):
         business_area = BusinessAreaFactory(code=workspace.business_area_code)
         country = CountryFactory(business_area=business_area)
 
-        region = DSARegionFactory(country=country)
+        region = DSARegionFactory(country=country, rates=[])
 
         response = self.forced_auth_req('get', reverse('public:static'),
                                         user=self.unicef_staff)
@@ -108,7 +108,8 @@ class DSARateTest(APITenantTestCase):
         business_area = BusinessAreaFactory(code=workspace.business_area_code)
         country = CountryFactory(business_area=business_area)
 
-        region = DSARegionFactory(country=country)
+        region = DSARegionFactory(country=country,
+                                  rates=[])
 
         with freeze_time('2017-04-01'):
             rate_1 = DSARateFactory(region=region,
@@ -147,7 +148,7 @@ class DSARateTest(APITenantTestCase):
         self.assertEqual(len(response_json), 0)
 
     def test_effective_from_date(self):
-        region = DSARegionFactory()
+        region = DSARegionFactory(rates=[])
 
         now_date = now().date()
         rate_1 = DSARateFactory(region=region,

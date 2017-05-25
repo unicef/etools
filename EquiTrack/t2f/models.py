@@ -271,8 +271,13 @@ class Travel(models.Model):
 
         return True
 
+    def check_itinerary_count(self):
+        if self.ta_required and self.itinerary.all().count() < 2:
+            raise TransitionError(ugettext('Travel must have at least two itinerary item'))
+        return True
+
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
-                conditions=[has_supervisor, check_pending_invoices, check_travel_count])
+                conditions=[check_itinerary_count, has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
         self.submitted_at = now()
         if not self.first_submission_date:

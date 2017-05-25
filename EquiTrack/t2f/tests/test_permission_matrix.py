@@ -121,15 +121,15 @@ class TestPermissionMatrix(APITenantTestCase):
         permission_matrix = PermissionMatrix(travel, self.traveler)
         permissions = permission_matrix.get_permission_dict()
         self.assertEqual(dict(permissions),
-                         {('travel', 'ta_required', 'edit'): True,
-                          ('travel', 'ta_required', 'view'): True})
+                         {('edit', 'travel', 'ta_required'): True,
+                          ('view', 'travel', 'ta_required'): True})
 
         # Check supervisor
         permission_matrix = PermissionMatrix(travel, self.unicef_staff)
         permissions = permission_matrix.get_permission_dict()
         self.assertEqual(dict(permissions),
-                         {('travel', 'ta_required', 'edit'): False,
-                          ('travel', 'ta_required', 'view'): True})
+                         {('edit', 'travel', 'ta_required'): False,
+                          ('view', 'travel', 'ta_required'): True})
 
         travel = TravelFactory(traveler=self.traveler,
                                supervisor=self.traveler)
@@ -137,11 +137,11 @@ class TestPermissionMatrix(APITenantTestCase):
         permission_matrix = PermissionMatrix(travel, self.traveler)
         permissions = permission_matrix.get_permission_dict()
         self.assertEqual(dict(permissions),
-                         {('travel', 'ta_required', 'edit'): True,
-                          ('travel', 'ta_required', 'view'): True})
+                         {('edit', 'travel', 'ta_required'): True,
+                          ('view', 'travel', 'ta_required'): True})
 
     def test_travel_creation(self):
-        dsaregion = DSARegionFactory()
+        dsa_region = DSARegionFactory()
         currency = CurrencyFactory()
         wbs = WBSFactory()
         grant = wbs.grants.first()
@@ -162,14 +162,22 @@ class TestPermissionMatrix(APITenantTestCase):
                                  'dinner': False,
                                  'accomodation': False,
                                  'no_dsa': False}],
-                'itinerary': [{'airlines': [],
+                'itinerary': [{'origin': 'Berlin',
+                               'destination': 'Budapest',
+                               'departure_date': '2017-04-14T17:06:55.821490',
+                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'dsa_region': dsa_region.id,
                                'overnight_travel': False,
-                               'origin': 'a',
-                               'destination': 'b',
-                               'dsa_region': dsaregion.id,
-                               'departure_date': '2016-12-15T15:02:13+01:00',
-                               'arrival_date': '2016-12-16T15:02:13+01:00',
-                               'mode_of_travel': ModeOfTravel.BOAT}],
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []},
+                              {'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2017-05-20T12:06:55.821490',
+                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []}],
                 'activities': [{'is_primary_traveler': True,
                                 'locations': [location.id],
                                 'travel_type': TravelType.ADVOCACY,
