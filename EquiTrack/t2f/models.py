@@ -33,30 +33,6 @@ class TransitionError(RuntimeError):
     pass
 
 
-class UserTypes(object):
-
-    #TODO: remove God
-    GOD = 'God'
-    ANYONE = 'Anyone'
-    TRAVELER = 'Traveler'
-    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
-    SUPERVISOR = 'Supervisor'
-    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
-    FINANCE_FOCAL_POINT = 'Finance Focal Point'
-    REPRESENTATIVE = 'Representative'
-
-    CHOICES = (
-        (GOD, 'God'),
-        (ANYONE, ugettext_lazy('Anyone')),
-        (TRAVELER, ugettext_lazy('Traveler')),
-        (TRAVEL_ADMINISTRATOR, ugettext_lazy('Travel Administrator')),
-        (SUPERVISOR, ugettext_lazy('Supervisor')),
-        (TRAVEL_FOCAL_POINT, ugettext_lazy('Travel Focal Point')),
-        (FINANCE_FOCAL_POINT, ugettext_lazy('Finance Focal Point')),
-        (REPRESENTATIVE, ugettext_lazy('Representative')),
-    )
-
-
 class TravelType(object):
     PROGRAMME_MONITORING = 'Programmatic Visit'
     SPOT_CHECK = 'Spot Check'
@@ -295,8 +271,13 @@ class Travel(models.Model):
 
         return True
 
+    def check_itinerary_count(self):
+        if self.ta_required and self.itinerary.all().count() < 2:
+            raise TransitionError(ugettext('Travel must have at least two itinerary item'))
+        return True
+
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
-                conditions=[has_supervisor, check_pending_invoices, check_travel_count])
+                conditions=[check_itinerary_count, has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
         self.submitted_at = now()
         if not self.first_submission_date:
@@ -595,36 +576,7 @@ class TravelAttachment(models.Model):
     type = models.CharField(max_length=64)
 
     name = models.CharField(max_length=255)
-    file = models.FileField(
-        upload_to=determine_file_upload_path,
-        max_length=255
-    )
-
-
-class TravelPermission(models.Model):
-    EDIT = 'edit'
-    VIEW = 'view'
-    PERMISSION_TYPE_CHOICES = (
-        (EDIT, 'Edit'),
-        (VIEW, 'View'),
-    )
-
-    TRAVEL = 'travel'
-    ACTION_POINT = 'action_point'
-    USAGE_PLACE_CHOICES = (
-        (TRAVEL, 'Travel'),
-        (ACTION_POINT, 'Action point'),
-    )
-
-    name = models.CharField(max_length=128)
-    code = models.CharField(max_length=128)
-    status = models.CharField(max_length=50)
-    usage_place = models.CharField(max_length=12, choices=USAGE_PLACE_CHOICES)
-    user_type = models.CharField(max_length=25)
-    model = models.CharField(max_length=128)
-    field = models.CharField(max_length=64)
-    permission_type = models.CharField(max_length=5, choices=PERMISSION_TYPE_CHOICES)
-    value = models.BooleanField(default=False)
+    file = models.FileField(upload_to=determine_file_upload_path, max_length=255)
 
 
 def make_action_point_number():
