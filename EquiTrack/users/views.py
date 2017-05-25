@@ -100,7 +100,7 @@ class UsersView(ListAPIView):
 
 class CountryView(ListAPIView):
     """
-    Gets a list of Unicef Staff users in the current country.
+    Gets country info.
     Country is determined by the currently logged in user.
     """
     model = Country

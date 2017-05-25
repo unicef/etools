@@ -21,12 +21,6 @@ from .stream_feed.feeds import JSONActivityFeedWithCustomData
 from .utils import staff_required
 from .views import (
     MainView,
-    MapView,
-    DashboardView,
-    UserDashboardView,
-    CmtDashboardView,
-    HACTDashboardView,
-    PartnershipsView,
     OutdatedBrowserView
 )
 from locations.views import (
@@ -35,20 +29,13 @@ from locations.views import (
     LocationsLightViewSet,
 )
 from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
-
 from partners.views.v1 import (
-    PartnerOrganizationsViewSet,
-    AgreementViewSet,
-    PartnerStaffMembersViewSet,
     FileTypeViewSet,
 )
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
-from funds.views import DonorViewSet, GrantViewSet
 from reports.views.v1 import (
-    ResultStructureViewSet,
     ResultTypeViewSet,
     SectorViewSet,
-    # GoalViewSet,
     IndicatorViewSet,
     ResultViewSet,
     UnitViewSet
@@ -166,7 +153,7 @@ urlpatterns = patterns(
     url(r'^api/t2f/', include(t2f_patterns, namespace='t2f')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2')),
-    url(r'^api/v2/users/', include('users.urls_v2')),
+    # url(r'^api/v2/users/', include('users.urls_v2')), not needed
 
 
     url(r'^api/docs/', schema_view),
