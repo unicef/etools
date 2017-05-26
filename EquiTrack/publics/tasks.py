@@ -225,10 +225,10 @@ class DSARateUploader(object):
 
     def read_input_file(self, filename):
         storage = AzureStorage()
-        with storage.open("publics/dsa_rate/{}".format(filename)) as input_file:
-            utf_8_file = codecs.iterencode(input_file, encoding='utf-8')
+        with storage.open("{}".format(filename)) as input_file:
+            # utf_8_file = codecs.iterencode(input_file, encoding='utf-8')
             return [dict(r) for r in csv.DictReader(
-                                            utf_8_file,
+                                            input_file,
                                             restkey='__extra_columns__',
                                             restval='__missing_columns__')]
 
@@ -253,7 +253,7 @@ class DSARateUploader(object):
          'Finalization_Date': '1/2/16',
          'DSA_Eff_Date': '1/3/17'
         """
-        rows = self.read_input_file(self.dsa_rate_upload.dsa_file.filename)
+        rows = self.read_input_file(self.dsa_rate_upload.dsa_file.name)
 
         def process_number(field):
             try:
