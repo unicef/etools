@@ -351,6 +351,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     core_values_assessment = models.FileField(
         blank=True, null=True,
         upload_to='partners/core_values/',
+        max_length=1024,
         help_text=u'Only required for CSO partners'
     )
     vision_synced = models.BooleanField(default=False)
@@ -792,6 +793,7 @@ class Assessment(models.Model):
     # Assesment Report
     report = models.FileField(
         blank=True, null=True,
+        max_length=1024,
         upload_to=get_assesment_path
     )
     # Basis for Risk Rating
@@ -941,6 +943,7 @@ class Agreement(TimeStampedModel):
     attached_agreement = models.FileField(
         upload_to=get_agreement_path,
         blank=True,
+        max_length=1024
     )
     start = models.DateField(null=True, blank=True)
     end = models.DateField(null=True, blank=True)
@@ -1131,7 +1134,7 @@ class AgreementAmendment(TimeStampedModel):
     number = models.CharField(max_length=5)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
     signed_amendment = models.FileField(
-        max_length=255,
+        max_length=1024,
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
     )
@@ -1326,7 +1329,7 @@ class Intervention(TimeStampedModel):
         null=True, blank=True,
     )
     prc_review_document = models.FileField(
-        max_length=255,
+        max_length=1024,
         null=True, blank=True,
         upload_to=get_prc_intervention_file_path
     )
@@ -1414,6 +1417,11 @@ class Intervention(TimeStampedModel):
     def total_budget(self):
         # TODO: test this
         return self.total_unicef_cash + self.total_partner_contribution + self.total_in_kind_amount
+
+    @cached_property
+    def total_unicef_budget(self):
+        # TODO: test this
+        return self.total_unicef_cash + self.total_in_kind_amount
 
     @cached_property
     def total_partner_contribution_local(self):
@@ -1598,7 +1606,7 @@ class InterventionAmendment(TimeStampedModel):
     signed_date = models.DateField(null=True)
     amendment_number = models.IntegerField(default=0)
     signed_amendment = models.FileField(
-        max_length=255,
+        max_length=1024,
         upload_to=get_intervention_amendment_file_path
     )
 
@@ -1759,7 +1767,7 @@ class InterventionAttachment(models.Model):
     type = models.ForeignKey(FileType, related_name='+')
 
     attachment = models.FileField(
-        max_length=255,
+        max_length=1024,
         upload_to=get_intervention_attachments_file_path
     )
 
@@ -2874,7 +2882,7 @@ class AgreementAmendmentLog(TimeStampedModel):
     amended_at = models.DateField(null=True, verbose_name='Signed At')
 
     signed_document = models.FileField(
-        max_length=255,
+        max_length=1024,
         upload_to=get_agreement_amd_file_path,
         blank=True,
         null=True,

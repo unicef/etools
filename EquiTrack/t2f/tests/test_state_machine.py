@@ -1,15 +1,18 @@
 from __future__ import unicode_literals
 
+from decimal import Decimal
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
 
+from django.core import mail
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import BusinessAreaFactory, WBSFactory
-from t2f.models import Travel, Invoice
+from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
+from t2f.models import Travel, Invoice, ModeOfTravel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
 
 from .factories import TravelFactory
@@ -18,7 +21,10 @@ from .factories import TravelFactory
 class StateMachineTest(APITenantTestCase):
     def setUp(self):
         super(StateMachineTest, self).setUp()
-        self.traveler = UserFactory()
+        self.traveler = UserFactory(is_staff=True)
+        self.traveler.profile.vendor_number = 'usrvend'
+        self.traveler.profile.save()
+
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_possible_transitions(self):
@@ -31,8 +37,11 @@ class StateMachineTest(APITenantTestCase):
         self.assertEqual(dict(transition_mapping),
                          {'*': ['planned'],
                           'approved': ['sent_for_payment',
-                                       'cancelled'],
-                          'cancelled': ['submitted', 'planned'],
+                                       'cancelled',
+                                       'completed'],
+                          'cancelled': ['submitted',
+                                        'planned',
+                                        'completed'],
                           'certification_approved': ['certification_rejected',
                                                      'certified'],
                           'certification_rejected': ['certification_submitted'],
@@ -62,6 +71,7 @@ class StateMachineTest(APITenantTestCase):
         currency = CurrencyFactory()
         expense_type = ExpenseTypeFactory()
         business_area = BusinessAreaFactory()
+        dsa_region = DSARegionFactory()
 
         wbs = WBSFactory(business_area=business_area)
         grant = wbs.grants.first()
@@ -80,8 +90,25 @@ class StateMachineTest(APITenantTestCase):
                                 'lunch': True,
                                 'dinner': False,
                                 'accomodation': True}],
+                'itinerary': [{'origin': 'Berlin',
+                               'destination': 'Budapest',
+                               'departure_date': '2017-04-14T17:06:55.821490',
+                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []},
+                              {'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2017-05-20T12:06:55.821490',
+                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
+                'currency': currency.id,
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
@@ -96,7 +123,7 @@ class StateMachineTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'submit_for_approval'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
         travel = Travel.objects.get(id=travel_id)
@@ -106,19 +133,19 @@ class StateMachineTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
-                                        data=response_json, user=self.unicef_staff)
+                                        data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
-                                        data=response_json, user=self.unicef_staff)
+                                        data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_certified'}),
-                                        data=response_json, user=self.unicef_staff)
+                                        data=response_json, user=self.traveler)
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['non_field_errors'], ['Your TA has pending payments to be processed through '
@@ -132,14 +159,14 @@ class StateMachineTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_certified'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.CERTIFIED)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
         self.assertEqual(travel.report_note, '')
@@ -149,7 +176,7 @@ class StateMachineTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
         self.assertEqual(travel.report_note, None)
@@ -159,7 +186,119 @@ class StateMachineTest(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=data, user=self.traveler)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.COMPLETED)
+
+    @override_settings(DISABLE_INVOICING=True)
+    def test_state_machine_flow_invoice_disabled(self):
+        currency = CurrencyFactory()
+        expense_type = ExpenseTypeFactory()
+        business_area = BusinessAreaFactory()
+        dsa_region = DSARegionFactory()
+
+        wbs = WBSFactory(business_area=business_area)
+        grant = wbs.grants.first()
+        fund = grant.funds.first()
+
+        workspace = self.unicef_staff.profile.country
+        workspace.business_area_code = business_area.code
+        workspace.save()
+
+        data = {'cost_assignments': [{'wbs': wbs.id,
+                                      'grant': grant.id,
+                                      'fund': fund.id,
+                                      'share': 100}],
+                'deductions': [{'date': '2016-11-03',
+                                'breakfast': True,
+                                'lunch': True,
+                                'dinner': False,
+                                'accomodation': True}],
+                'itinerary': [{'origin': 'Berlin',
+                               'destination': 'Budapest',
+                               'departure_date': '2017-04-14T17:06:55.821490',
+                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []},
+                              {'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2017-05-20T12:06:55.821490',
+                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []}],
+                'traveler': self.traveler.id,
+                'ta_required': True,
+                'currency': currency.id,
+                'supervisor': self.unicef_staff.id,
+                'expenses': [{'amount': '120',
+                              'type': expense_type.id,
+                              'currency': currency.id,
+                              'document_currency': currency.id}]}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
+
+        travel_id = response_json['id']
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'submit_for_approval'}),
+                                        data=data, user=self.traveler)
+        response_json = json.loads(response.rendered_content)
+
+        travel = Travel.objects.get(id=travel_id)
+        self.assertIsNotNone(travel.submitted_at)
+        self.assertIsNotNone(travel.first_submission_date)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'approve'}),
+                                        data=response_json, user=self.traveler)
+        response_json = json.loads(response.rendered_content)
+        # Go straight to sent for payment when invoicing is disabled.
+        self.assertEquals(response_json['status'], Travel.SENT_FOR_PAYMENT)
+
+        # No email has been sent regarding SENT_FOR_PAYMENT status when invoicing is disabled.
+        subjects = [x.subject for x in mail.outbox]
+        self.assertNotIn('Travel #{} sent for payment.'.format(response_json["reference_number"]), subjects)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'mark_as_certified'}),
+                                        data=response_json, user=self.traveler)
+
+        response_json = json.loads(response.rendered_content)
+        # No pending invoice check when invoicing is disabled.
+        self.assertEqual(response_json['status'], Travel.CERTIFIED)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'mark_as_completed'}),
+                                        data=data, user=self.traveler)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
+        self.assertEqual(travel.report_note, '')
+
+        # None should be handled as empty string
+        travel.report_note = None   # This has to be set explicitly since serializer does not accept None
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'mark_as_completed'}),
+                                        data=data, user=self.traveler)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
+        self.assertEqual(travel.report_note, None)
+
+        data = response_json
+        data['report'] = 'Something'
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'mark_as_completed'}),
+                                        data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
@@ -168,6 +307,7 @@ class StateMachineTest(APITenantTestCase):
                 'ta_required': False,
                 'international_travel': False,
                 'start_date': datetime.utcnow(),
+                'report': 'something',
                 'end_date': datetime.utcnow() + timedelta(hours=10),
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
@@ -177,10 +317,13 @@ class StateMachineTest(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
+        self.assertEqual(len(mail.outbox), 1)
+
     def test_ta_not_required_flow_send_for_approval(self):
         data = {'traveler': self.traveler.id,
                 'ta_required': False,
                 'international_travel': False,
+                'report': 'something',
                 'start_date': datetime.utcnow(),
                 'end_date': datetime.utcnow() + timedelta(hours=10),
                 'supervisor': self.unicef_staff.id}
@@ -217,6 +360,7 @@ class StateMachineTest(APITenantTestCase):
         data = {'traveler': self.traveler.id,
                 'ta_required': False,
                 'international_travel': True,
+                'report': 'something',
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
                                                         kwargs={'transition_name': 'save_and_submit'}),
@@ -237,6 +381,7 @@ class StateMachineTest(APITenantTestCase):
         data = {'traveler': self.traveler.id,
                 'ta_required': False,
                 'international_travel': True,
+                'report': 'something',
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
                                                         kwargs={'transition_name': 'mark_as_completed'}),
@@ -249,6 +394,8 @@ class StateMachineTest(APITenantTestCase):
 
     def test_expense_required_on_send_for_payment(self):
         business_area = BusinessAreaFactory()
+        dsa_region = DSARegionFactory()
+        currency = CurrencyFactory()
 
         wbs = WBSFactory(business_area=business_area)
         grant = wbs.grants.first()
@@ -267,10 +414,27 @@ class StateMachineTest(APITenantTestCase):
                                 'lunch': True,
                                 'dinner': False,
                                 'accomodation': True}],
+                'itinerary': [{'origin': 'Berlin',
+                               'destination': 'Budapest',
+                               'departure_date': '2017-04-14T17:06:55.821490',
+                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []},
+                              {'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2017-05-20T12:06:55.821490',
+                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []}],
                 'traveler': self.traveler.id,
                 'ta_required': True,
                 'supervisor': self.unicef_staff.id,
-                'expenses': []}
+                'expenses': [],
+                'currency': currency.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
@@ -294,5 +458,6 @@ class StateMachineTest(APITenantTestCase):
                                                                 'transition_name': 'send_for_payment'}),
                                         data=response_json, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json,
-                         {u'non_field_errors': [u'Travel should have at least one expense.']})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Decimal(response_json['cost_summary']['preserved_expenses']),
+                         Decimal('0.00'))

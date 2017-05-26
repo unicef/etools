@@ -5,7 +5,6 @@ from unittest.case import skip
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
-from t2f.models import TravelPermission
 from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory
 
 from .factories import TravelFactory
@@ -106,12 +105,3 @@ class TravelViews(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertNotEqual(response_json['id'], new_travel_id)
         self.assertEqual(response_json, {})
-
-    @skip('To be fixed')
-    def test_payload(self):
-        TravelPermission.objects.create(name='afds', code='can_see_travel_status', user_type='God', status='planned')
-
-        travel = TravelFactory()
-        response = self.forced_auth_req('get', '/api/t2f/travels/{}/'.format(travel.id), user=self.unicef_staff)
-        self.assertEqual(json.loads(response.rendered_content), {})
-

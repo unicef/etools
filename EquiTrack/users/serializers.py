@@ -227,3 +227,15 @@ class UserCreationSerializer(serializers.ModelSerializer):
             'profile',
             't2f',
         )
+
+
+class CountrySerializer(SimpleUserSerializer):
+
+    class Meta:
+        model = Country
+        fields = (
+                'name',
+                'latitude',
+                'longitude',
+                'initial_zoom',
+        )

@@ -33,30 +33,6 @@ class TransitionError(RuntimeError):
     pass
 
 
-class UserTypes(object):
-
-    #TODO: remove God
-    GOD = 'God'
-    ANYONE = 'Anyone'
-    TRAVELER = 'Traveler'
-    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
-    SUPERVISOR = 'Supervisor'
-    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
-    FINANCE_FOCAL_POINT = 'Finance Focal Point'
-    REPRESENTATIVE = 'Representative'
-
-    CHOICES = (
-        (GOD, 'God'),
-        (ANYONE, ugettext_lazy('Anyone')),
-        (TRAVELER, ugettext_lazy('Traveler')),
-        (TRAVEL_ADMINISTRATOR, ugettext_lazy('Travel Administrator')),
-        (SUPERVISOR, ugettext_lazy('Supervisor')),
-        (TRAVEL_FOCAL_POINT, ugettext_lazy('Travel Focal Point')),
-        (FINANCE_FOCAL_POINT, ugettext_lazy('Finance Focal Point')),
-        (REPRESENTATIVE, ugettext_lazy('Representative')),
-    )
-
-
 class TravelType(object):
     PROGRAMME_MONITORING = 'Programmatic Visit'
     SPOT_CHECK = 'Spot Check'
@@ -105,7 +81,7 @@ def approve_decorator(func):
         # If invoicing is turned off, jump to sent_for_payment when someone approves the travel
         func(self, *args, **kwargs)
 
-        if settings.DISABLE_INVOICING:
+        if settings.DISABLE_INVOICING and self.ta_required:
             self.send_for_payment(*args, **kwargs)
 
     return wrapper
@@ -245,8 +221,7 @@ class Travel(models.Model):
 
     # Completion conditions
     def check_trip_report(self):
-        if (not self.international_travel) and (self.ta_required) and ((not self.report_note) or
-                                                                           (len(self.report_note) < 1)):
+        if not self.report_note:
             raise TransitionError('Field report has to be filled.')
         return True
 
@@ -268,7 +243,7 @@ class Travel(models.Model):
 
     def check_pending_invoices(self):
         # If invoicing is turned off, don't check pending invoices
-        if settings.DISABLE_INVOICING:
+        if settings.DISABLE_INVOICING and self.ta_required:
             return True
 
         if self.invoices.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING]).exists():
@@ -296,8 +271,13 @@ class Travel(models.Model):
 
         return True
 
+    def check_itinerary_count(self):
+        if self.ta_required and self.itinerary.all().count() < 2:
+            raise TransitionError(ugettext('Travel must have at least two itinerary item'))
+        return True
+
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
-                conditions=[has_supervisor, check_pending_invoices, check_travel_count])
+                conditions=[check_itinerary_count, has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
         self.submitted_at = now()
         if not self.first_submission_date:
@@ -353,15 +333,14 @@ class Travel(models.Model):
     @send_for_payment_threshold_decorator
     @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
-        # Expenses total should have at least one element
-        if len(self.cost_summary['expenses_total']) == 0:
-            raise TransitionError('Travel should have at least one expense.')
-
-        self.preserved_expenses_local = self.cost_summary['expenses_total'][0]['amount']
+        if self.cost_summary['expenses_total']:
+            self.preserved_expenses_local = self.cost_summary['expenses_total'][0]['amount']
+        else:
+            self.preserved_expenses_local = Decimal(0)
         self.generate_invoices()
 
         # If invoicing is turned off, don't send a mail
-        if settings.DISABLE_INVOICING:
+        if settings.DISABLE_INVOICING and self.ta_required:
             return
 
         self.send_notification_email('Travel #{} sent for payment.'.format(self.reference_number),
@@ -400,13 +379,19 @@ class Travel(models.Model):
                                      'emails/certified.html')
 
     @mark_as_certified_or_completed_threshold_decorator
-    @transition(status, source=[CERTIFIED, SUBMITTED, PLANNED], target=COMPLETED,
+    @transition(status, source=[CERTIFIED, SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
                 conditions=[check_trip_report, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
-        self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
-                                     self.supervisor.email,
-                                     'emails/trip_completed.html')
+
+        if not self.ta_required and self.status == self.PLANNED:
+            self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
+                                         self.supervisor.email,
+                                         'emails/no_approval_complete.html')
+        else:
+            self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
+                                         self.supervisor.email,
+                                         'emails/trip_completed.html')
 
         try:
             from partners.models import PartnerOrganization
@@ -591,36 +576,7 @@ class TravelAttachment(models.Model):
     type = models.CharField(max_length=64)
 
     name = models.CharField(max_length=255)
-    file = models.FileField(
-        upload_to=determine_file_upload_path,
-        max_length=255
-    )
-
-
-class TravelPermission(models.Model):
-    EDIT = 'edit'
-    VIEW = 'view'
-    PERMISSION_TYPE_CHOICES = (
-        (EDIT, 'Edit'),
-        (VIEW, 'View'),
-    )
-
-    TRAVEL = 'travel'
-    ACTION_POINT = 'action_point'
-    USAGE_PLACE_CHOICES = (
-        (TRAVEL, 'Travel'),
-        (ACTION_POINT, 'Action point'),
-    )
-
-    name = models.CharField(max_length=128)
-    code = models.CharField(max_length=128)
-    status = models.CharField(max_length=50)
-    usage_place = models.CharField(max_length=12, choices=USAGE_PLACE_CHOICES)
-    user_type = models.CharField(max_length=25)
-    model = models.CharField(max_length=128)
-    field = models.CharField(max_length=64)
-    permission_type = models.CharField(max_length=5, choices=PERMISSION_TYPE_CHOICES)
-    value = models.BooleanField(default=False)
+    file = models.FileField(upload_to=determine_file_upload_path, max_length=255)
 
 
 def make_action_point_number():
@@ -700,7 +656,7 @@ class Invoice(models.Model):
     reference_number = models.CharField(max_length=32, unique=True)
     business_area = models.CharField(max_length=32)
     vendor_number = models.CharField(max_length=32)
-    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
+    currency = models.ForeignKey('publics.Currency', related_name='+')
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
     messages = ArrayField(models.TextField(null=True, blank=True), default=[])
@@ -727,6 +683,9 @@ class Invoice(models.Model):
     @property
     def message(self):
         return '\n'.join(self.messages)
+
+    def __unicode__(self):
+        return self.reference_number
 
 
 class InvoiceItem(models.Model):

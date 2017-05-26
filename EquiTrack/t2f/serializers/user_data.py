@@ -8,13 +8,14 @@ from rest_framework import serializers
 
 from publics.models import BusinessArea
 from t2f.helpers.misc import get_open_travels_for_check
-from t2f.models import UserTypes
+from t2f import UserTypes
+from t2f.helpers.permission_matrix import get_user_role_list
 
 log = logging.getLogger(__name__)
 
 
 class T2FUserDataSerializer(serializers.ModelSerializer):
-    roles = serializers.SerializerMethodField('get_assigned_roles')
+    roles = serializers.SerializerMethodField()
     travel_count = serializers.SerializerMethodField()
     business_area = serializers.SerializerMethodField()
 
@@ -22,22 +23,8 @@ class T2FUserDataSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ('roles', 'travel_count', 'business_area')
 
-    def get_assigned_roles(self, obj):
-        roles = [UserTypes.ANYONE]
-
-        if obj.groups.filter(name='Representative Office').exists():
-            roles.append(UserTypes.REPRESENTATIVE)
-
-        if obj.groups.filter(name='Finance Focal Point').exists():
-            roles.append(UserTypes.FINANCE_FOCAL_POINT)
-
-        if obj.groups.filter(name='Travel Focal Point').exists():
-            roles.append(UserTypes.TRAVEL_FOCAL_POINT)
-
-        if obj.groups.filter(name='Travel Administrator').exists():
-            roles.append(UserTypes.TRAVEL_ADMINISTRATOR)
-
-        return roles
+    def get_roles(self, obj):
+        return get_user_role_list(obj)
 
     def get_travel_count(self, obj):
         return get_open_travels_for_check(obj).count()

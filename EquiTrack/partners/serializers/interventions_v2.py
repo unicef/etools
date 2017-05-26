@@ -368,12 +368,12 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     fr_numbers = serializers.SerializerMethodField()
     local_currency = serializers.SerializerMethodField()
     planned_budget_local = serializers.DecimalField(
-        source='total_budget_local',
+        source='total_unicef_cash_local',
         read_only=True,
         max_digits=20,
         decimal_places=2)
     unicef_budget = serializers.DecimalField(
-        source='total_unicef_cash',
+        source='total_unicef_budget',
         read_only=True,
         max_digits=20,
         decimal_places=2)
