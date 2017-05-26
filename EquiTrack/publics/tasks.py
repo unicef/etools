@@ -9,6 +9,8 @@ from datetime import datetime, date
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
+from storages.backends.azure_storage import AzureStorage
+
 
 from publics.models import TravelAgent, Country, Currency, ExchangeRate, WBS, Grant, Fund, TravelExpenseType, \
     BusinessArea, DSARateUpload, Country, DSARegion, DSARate
@@ -222,8 +224,8 @@ class DSARateUploader(object):
         self.dsa_rate_upload = dsa_rate_upload
 
     def read_input_file(self, input_file_path):
-        # Utilize codecs module to remove BOM if present
-        with codecs.open(input_file_path, 'r', encoding='utf-8-sig') as input_file:
+        storage = AzureStorage()
+        with storage.open(input_file_path) as input_file:
             utf_8_file = codecs.iterencode(input_file, encoding='utf-8')
             return [dict(r) for r in csv.DictReader(
                                             utf_8_file,
@@ -251,7 +253,7 @@ class DSARateUploader(object):
          'Finalization_Date': '1/2/16',
          'DSA_Eff_Date': '1/3/17'
         """
-        rows = self.read_input_file(self.dsa_rate_upload.csv.path)
+        rows = self.read_input_file(self.dsa_rate_upload.dsa_file.path)
 
         def process_number(field):
             try:
