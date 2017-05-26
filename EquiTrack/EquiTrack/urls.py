@@ -94,7 +94,7 @@ actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='act
 # ******************  API version 1  ******************************
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
 
-api.register(r'users', UserViewSet, base_name='users')
+# api.register(r'users', UserViewSet, base_name='users')
 api.register(r'groups', GroupViewSet, base_name='groups')
 api.register(r'offices', OfficeViewSet, base_name='offices')
 api.register(r'sections', SectionViewSet, base_name='sections')
