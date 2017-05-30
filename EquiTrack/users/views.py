@@ -78,7 +78,7 @@ class UsersView(ListAPIView):
     model = UserProfile
     serializer_class = SimpleProfileSerializer
 
-    def get_queryset(self):
+    def get_queryset(self, pk=None):
         user = self.request.user
         user_ids = self.request.query_params.get("values", None)
         if user_ids:

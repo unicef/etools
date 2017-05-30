@@ -13,7 +13,14 @@ from .views import (
     UserViewSet,
 )
 
-api = routers.SimpleRouter()
+
+user_list = UserViewSet.as_view({
+    'get': 'list',
+    'post': 'create',
+})
+user_detail = UserViewSet.as_view({
+    'get': 'retrieve',
+})
 
 urlpatterns = patterns(
     '',
@@ -21,9 +28,10 @@ urlpatterns = patterns(
     # api
     url(r'^api/profile/$', UserAuthAPIView.as_view()),
     url(r'^api/changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post'])),
+    url(r'^api/(?P<pk>[0-9]+)/$', UsersDetailAPIView.as_view(http_method_names=['get'])),
+    url(r'^api/viewset/(?P<pk>\d+)/$', user_detail, name='user-detail'),
+    url(r'^api/viewset/', user_list, name='user-list'),
     url(r'^api/', UsersView.as_view()),  # TODO: staff required , partners should not be able to hit this
-    url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view(http_method_names=['get'])),
-    url(r'^api/viewset/', UserViewSet),
     url(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
     url(r'^country/$', CountryView.as_view(http_method_names=['get']), name="country-detail"),
 
