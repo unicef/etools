@@ -12,8 +12,6 @@ from .views import (
     CountryView,
     UserViewSet,
 )
-
-
 user_list = UserViewSet.as_view({
     'get': 'list',
     'post': 'create',
@@ -34,7 +32,6 @@ urlpatterns = patterns(
     url(r'^api/', UsersView.as_view()),  # TODO: staff required , partners should not be able to hit this
     url(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
     url(r'^country/$', CountryView.as_view(http_method_names=['get']), name="country-detail"),
-
 
     # user profile
     url(r'^profile_view/$', ProfileEdit.as_view(), name='user_profile'),

@@ -54,7 +54,7 @@ class TestUserViews(APITenantTestCase):
         self.partnership_manager_user.groups.add(self.group)
 
     def test_api_users_list(self):
-        response = self.forced_auth_req('get', '/api/users/', user=self.unicef_staff)
+        response = self.forced_auth_req('get', '/users/api/viewset/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 3)
@@ -68,16 +68,6 @@ class TestUserViews(APITenantTestCase):
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 1)
-
-    def test_api_users_list_values(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/users/',
-            user=self.unicef_staff,
-            data={"values": "{},{}".format(self.partnership_manager_user.id, self.unicef_superuser.id)}
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
 
     def test_api_users_list_values_bad(self):
         response = self.forced_auth_req(
@@ -93,7 +83,7 @@ class TestUserViews(APITenantTestCase):
     def test_api_users_list_managers(self):
         response = self.forced_auth_req(
             'get',
-            '/api/users/',
+            '/users/api/viewset/',
             user=self.unicef_staff,
             data={"partnership_managers": True}
         )
@@ -109,7 +99,7 @@ class TestUserViews(APITenantTestCase):
     def test_api_users_retrieve_myprofile(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/users/myprofile/',
+            '/users/myprofile/',
             user=self.unicef_staff,
         )
 
@@ -155,7 +145,7 @@ class TestUserViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_minimal_verbosity(self):
-        response = self.forced_auth_req('get', '/api/users/', data={'verbosity': 'minimal'}, user=self.unicef_superuser)
+        response = self.forced_auth_req('get', '/users/api/viewset/', data={'verbosity': 'minimal'}, user=self.unicef_superuser)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
 
