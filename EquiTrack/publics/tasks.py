@@ -226,7 +226,6 @@ class DSARateUploader(object):
     def read_input_file(self, filename):
         storage = AzureStorage()
         with storage.open(filename) as input_file:
-            # utf_8_file = codecs.iterencode(input_file, encoding='utf-8')
             return [dict(r) for r in csv.DictReader(
                                             input_file,
                                             restkey='__extra_columns__',
