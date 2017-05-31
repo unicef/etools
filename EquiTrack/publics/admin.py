@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import json
+
 from django.contrib import admin
 
 from publics import models
@@ -44,6 +46,46 @@ class AdminListMixin(object):
 class DSARateAdmin(admin.ModelAdmin):
     search_fields = ('region__area_name', 'region__country__name')
     list_filter = ('region__country__name',)
+
+
+class DSARateUploadAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'csv',
+        'status',
+        'upload_date',
+        'errors',
+    )
+
+    def get_form(self, request, obj=None, **kwargs):
+        if not obj:
+            self.readonly_fields = []
+            self.exclude = (
+                'id',
+                'status',
+                'upload_date',
+                'errors',
+            )
+        else:
+            self.readonly_fields = (
+                'id',
+                'csv',
+                'status',
+                'upload_date',
+                'errors',
+            )
+            self.exclude = (
+                'errors',
+            )
+        return super(DSARateUploadAdmin, self).get_form(request, obj, **kwargs)
+
+    def change_view(self, *args, **kwargs):
+        extra_context = {}
+        extra_context['show_save_and_continue'] = False
+        extra_context['show_save_and_add_another'] = False
+        extra_context['show_save'] = False
+        return super(DSARateUploadAdmin, self).change_view(extra_context=extra_context, *args, **kwargs)
+
 
 class TravelAgentAdmin(AdminListMixin, admin.ModelAdmin):
     pass
@@ -94,6 +136,7 @@ class DSARegionAdmin(AdminListMixin, admin.ModelAdmin):
 
 
 admin.site.register(models.DSARate, DSARateAdmin)
+admin.site.register(models.DSARateUpload, DSARateUploadAdmin)
 admin.site.register(models.TravelAgent, TravelAgentAdmin)
 admin.site.register(models.TravelExpenseType, TravelExpenseTypeAdmin)
 admin.site.register(models.Currency, CurrencyAdmin)

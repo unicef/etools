@@ -29,6 +29,7 @@ class GatewayTypeSerializer(serializers.ModelSerializer):
         model = GatewayType
         fields = '__all__'
 
+
 class LocationSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
@@ -40,7 +41,7 @@ class LocationSerializer(serializers.ModelSerializer):
         return "{}".format(obj.geo_point)
 
     def get_name(self, obj):
-        return "{} [{}]".format(obj.name, obj.gateway.name)
+        return '{} [{} - {}]'.format(obj.name, obj.gateway.name, obj.p_code)
 
     class Meta:
         model = Location
@@ -57,6 +58,10 @@ class LocationSerializer(serializers.ModelSerializer):
 class LocationLightSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
+    name = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        return '{} [{} - {}]'.format(obj.name, obj.gateway.name, obj.p_code)
 
     class Meta:
         model = Location

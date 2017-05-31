@@ -1419,6 +1419,11 @@ class Intervention(TimeStampedModel):
         return self.total_unicef_cash + self.total_partner_contribution + self.total_in_kind_amount
 
     @cached_property
+    def total_unicef_budget(self):
+        # TODO: test this
+        return self.total_unicef_cash + self.total_in_kind_amount
+
+    @cached_property
     def total_partner_contribution_local(self):
         if self.planned_budget.exists():
             return self.planned_budget.aggregate(mysum=Sum('partner_contribution_local'))['mysum']

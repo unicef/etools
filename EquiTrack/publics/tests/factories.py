@@ -128,6 +128,11 @@ class DSARegionFactory(factory.DjangoModelFactory):
     class Meta:
         model = DSARegion
 
+    @factory.post_generation
+    def rates(self, create, extracted, **kwargs):
+        if extracted != [] and not self.rates.exists():
+            DSARateFactory(region=self)
+
 
 class DSARateFactory(factory.DjangoModelFactory):
     region = factory.SubFactory(DSARegionFactory)
