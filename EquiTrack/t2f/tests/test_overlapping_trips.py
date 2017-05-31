@@ -104,8 +104,8 @@ class OverlappingTravelsTest(APITenantTestCase):
     def test_almost_overlapping_trips(self):
         currency = CurrencyFactory()
         expense_type = ExpenseTypeFactory()
-        dsa_region = DSARegionFactory()
-        DSARateFactory(region=dsa_region)
+        dsa_rate = DSARateFactory(effective_from_date=datetime(2017, 4, 10, 16, 00, tzinfo=UTC))
+        dsa_region = dsa_rate.region
 
         data = {'deductions': [],
                 'itinerary': [{'origin': 'Berlin',
