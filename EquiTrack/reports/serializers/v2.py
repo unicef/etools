@@ -6,8 +6,8 @@ from rest_framework.exceptions import ValidationError
 from reports.models import Result, AppliedIndicator, IndicatorBlueprint, LowerResult
 
 
-class ResultListSerializer(serializers.ModelSerializer):
-
+class OutputListSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="output_name", read_only=True)
     result_type = serializers.SlugRelatedField(slug_field="name", read_only=True)
 
     class Meta:
@@ -15,8 +15,8 @@ class ResultListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MinimalResultListSerializer(serializers.ModelSerializer):
-
+class MinimalOutputListSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="output_name", read_only=True)
     class Meta:
         model = Result
         fields = (

@@ -155,6 +155,11 @@ class ResultManager(models.Manager):
             'country_programme', 'result_structure', 'result_type')
 
 
+class OutputManager(models.Manager):
+    def get_queryset(self):
+        return super(OutputManager, self).get_queryset().filter(result_type__name=ResultType.OUTPUT).select_related(
+            'country_programme', 'result_structure', 'result_type')
+
 class Result(MPTTModel):
     """
     Represents a result, wbs is unique
@@ -194,6 +199,7 @@ class Result(MPTTModel):
     ram = models.BooleanField(default=False)
 
     objects = ResultManager()
+    outputs = OutputManager()
 
     class Meta:
         ordering = ['name']
@@ -204,6 +210,20 @@ class Result(MPTTModel):
         return u'{} {}: {}'.format(
             self.code if self.code else u'',
             self.result_type.name,
+            self.name
+        )
+
+    @cached_property
+    def output_name(self):
+        assert self.result_type.name == ResultType.OUTPUT
+
+        # if "A0" not in the wbs, it means that the result belongs to a CP that's a special CP such as Palestinian
+        country_programme_short = 'Special-' if self.wbs[5] != 'A' else ''
+
+        return u'[{}] {}{}'.format(
+            #self.status if self.status else u'Active',
+            'Active',
+            country_programme_short,
             self.name
         )
 
