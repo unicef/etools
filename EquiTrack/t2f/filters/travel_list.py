@@ -6,6 +6,7 @@ from datetime import date
 from django.db.models.query_utils import Q
 from rest_framework.filters import BaseFilterBackend
 
+from partners.models import InterventionResultLink
 from t2f.filters import BaseSearchFilter, BaseSortFilter, BaseFilterBoxFilter
 from t2f.models import Travel
 from t2f.serializers.filters.travel_list import ShowHiddenFilterSerializer, TravelFilterBoxSerializer,\
@@ -53,9 +54,19 @@ class TravelFilterBoxFilter(BaseFilterBoxFilter):
 
             data['start_date__lte'] = end_date
             data['end_date__gte'] = start_date
+        else:
+            if month:
+                data['start_date__month__lte'] = month
+                data['end_date__month__gte'] = month
 
-        # TODO simon: figure out what to do with this
-        data.pop('cp_output', None)
+        cp_output = data.pop('cp_output', None)
+        if cp_output:
+            interventions = InterventionResultLink.objects.filter(
+                cp_output_id=cp_output).values_list('intervention_id',
+                flat=True
+            )
+            data['activities__partnership_id__in'] = interventions
+
         return data
 
 
