@@ -29,3 +29,20 @@ POST_OFFICE = {
         'default': 'django.core.mail.backends.console.EmailBackend'
     }
 }
+
+AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME', None)
+AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY', None)
+AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER', None)
+AZURE_SSL = True
+AZURE_AUTO_SIGN = True  # flag for automatically signing urls
+AZURE_ACCESS_POLICY_EXPIRY = 120  # length of time before signature expires in seconds
+AZURE_ACCESS_POLICY_PERMISSION = 'r'  # read permission
+
+CORS_ORIGIN_ALLOW_ALL = False
+
+if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
+
+    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+    # MEDIA_URL = 'https://{}.blob.core.windows.net/{}/'.format(
+    #     AZURE_ACCOUNT_NAME, AZURE_CONTAINER
+    # )
