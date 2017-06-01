@@ -14,10 +14,11 @@ from django.utils.translation import ugettext
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from partners.models import PartnerType
 from publics.models import AirlineCompany, Currency
 from t2f.helpers.permission_matrix import PermissionMatrix
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelAttachment, ActionPoint
+    TravelAttachment, ActionPoint, TravelType
 from locations.models import Location
 from t2f.serializers import CostSummarySerializer
 
@@ -193,6 +194,14 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
             attrs['government_partnership'] = None
         elif 'government_partnership' in attrs:
             attrs['partnership'] = None
+
+        if attrs.get('partner', None) and \
+                attrs['partner'].partner_type == PartnerType.GOVERNMENT and \
+                'travel_type' in attrs and \
+                (attrs['travel_type'] == TravelType.PROGRAMME_MONITORING or
+                attrs['travel_type'] == TravelType.SPOT_CHECK) and \
+                'result' not in attrs:
+            raise ValidationError({'result': serializers.Field.default_error_messages['required']})
 
         return attrs
 
