@@ -20,7 +20,7 @@ from django_fsm import FSMField, transition
 from publics.models import TravelExpenseType
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from t2f.helpers.invoice_maker import InvoiceMaker
-from t2f.serializers.mailing import TravelMailSerializer
+from t2f.serializers.mailing import TravelMailSerializer, ActionPointMailSerializer
 from users.models import WorkspaceCounter
 
 log = logging.getLogger(__name__)
@@ -630,6 +630,8 @@ class ActionPoint(models.Model):
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
 
     def save(self, *args, **kwargs):
+        created = self.pk is None
+
         if self.status == ActionPoint.OPEN and self.actions_taken:
             self.status = ActionPoint.ONGOING
 
@@ -637,6 +639,45 @@ class ActionPoint(models.Model):
             self.status = ActionPoint.COMPLETED
 
         super(ActionPoint, self).save(*args, **kwargs)
+
+        if created:
+            self.send_notification_email()
+
+    def send_notification_email(self):
+        # TODO this could be async to avoid too long api calls in case of mail server issue
+        serializer = ActionPointMailSerializer(self, context={})
+
+        recipient = self.person_responsible.email
+        cc = self.assigned_by.email
+        subject = '[eTools] ACTION POINT ASSIGNED to {}'.format(self.person_responsible)
+        url = 'https://{host}/t2f/action-point/{action_point_id}/'.format(host=settings.HOST,
+                                                                          action_point_id=self.id)
+
+        context = Context({'travel': serializer.data,
+                           'url': url})
+        html_content = render_to_string('emails/action_point_assigned.html', context)
+
+        # TODO what should be used?
+        sender = settings.DEFAULT_FROM_EMAIL
+        msg = EmailMultiAlternatives(subject, '',
+                                     sender, [recipient],
+                                     cc=[cc])
+        msg.attach_alternative(html_content, 'text/html')
+
+        # Core mailing is broken. Multiple headers will throw an exception
+        # https://bugs.python.org/issue28881
+        # for filename in ['emails/logo-etools.png', 'emails/logo-unicef.png']:
+        #     path = finders.find(filename)
+        #     with open(path, 'rb') as fp:
+        #         msg_img = MIMEImage(fp.read())
+        #
+        #     msg_img.add_header('Content-ID', '<{}>'.format(filename))
+        #     msg.attach(msg_img)
+
+        try:
+            msg.send(fail_silently=False)
+        except ValidationError as exc:
+            log.error('Was not able to send the email. Exception: %s', exc.message)
 
 
 class Invoice(models.Model):
