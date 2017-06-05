@@ -77,7 +77,6 @@ class ResultStructureSynchronizer(object):
                 total_updated += 1
             del remote_outcomes[local_outcome.wbs]
 
-        # Normally a bulk save, but in this case there are very few records, and things are calculated on save:
         new_outcomes = {}
         for remote_outcome in remote_outcomes.values():
             remote_outcome['country_programme'] = self._get_local_parent(remote_outcome['wbs'], 'cp')
@@ -106,7 +105,6 @@ class ResultStructureSynchronizer(object):
                 total_updated += 1
             del rem_outputs[loc_output.wbs]
 
-        # Normally a bulk save, but in this case there are very few records, and things are calculated on save:
         new_outputs = {}
         for rem_output in rem_outputs.values():
             rem_output['country_programme'] = self._get_local_parent(rem_output['wbs'], 'cp')
@@ -136,7 +134,6 @@ class ResultStructureSynchronizer(object):
                 total_updated += 1
             del rem_activities[loc_activity.wbs]
 
-        # Normally a bulk save, but in this case there are very few records, and things are calculated on save:
         new_activities = {}
         for rem_activity in rem_activities.values():
             rem_activity['country_programme'] = self._get_local_parent(rem_activity['wbs'], 'cp')

@@ -247,20 +247,17 @@ class Result(MPTTModel):
     def output_name(self):
         assert self.result_type.name == ResultType.OUTPUT
 
-        # if "A0" not in the wbs, it means that the result belongs to a CP that's a special CP such as Palestinian
-        country_programme_short = 'Special-' if self.wbs[5] != 'A' else ''
-
-        return u'[{}] {}{}'.format(
+        return u'{}{}{}'.format(
             #self.status if self.status else u'Active',
-            'Active',
-            country_programme_short,
+            '[Expired] ' if self.expired else '',
+            'Special- ' if self.special else '',
             self.name
         )
 
     @cached_property
     def expired(self):
         today = datetime.date.today()
-        return self.to_date < self.today
+        return self.to_date < today
 
     @cached_property
     def special(self):
