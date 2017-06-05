@@ -257,6 +257,15 @@ class Result(MPTTModel):
             self.name
         )
 
+    @cached_property
+    def expired(self):
+        today = datetime.date.today()
+        return self.to_date < self.today
+
+    @cached_property
+    def special(self):
+        return self.country_programme.special
+
     def __unicode__(self):
         return u'{} {}: {}'.format(
             self.code if self.code else u'',

@@ -26,9 +26,10 @@ class ResultStructureSynchronizer(object):
 
     def _get_local_parent(self, wbs, parent_type):
         parent_map = {
-            'cp': (5, self.cps),
-            'outcome': (10, self.outcomes),
-            'output': (14, self.outputs)
+            # 10 is the number of characters for a cp wbs
+            'cp': (10, self.cps),
+            'outcome': (14, self.outcomes),
+            'output': (18, self.outputs)
         }
         parent_group = parent_map[parent_type][1]
         wbs_length = parent_map[parent_type][0]
