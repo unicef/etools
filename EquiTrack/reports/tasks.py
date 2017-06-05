@@ -1,3 +1,0 @@
-
-
-def update_results
