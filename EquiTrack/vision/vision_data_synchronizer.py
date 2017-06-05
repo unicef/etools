@@ -113,7 +113,16 @@ class VisionDataSynchronizer:
             converted_records = self._convert_records(original_records)
             log.total_records = len(converted_records)
             logger.info('Processing {} records'.format(len(converted_records)))
-            log.total_processed = self._save_records(converted_records)
+
+            totals = self._save_records(converted_records)
+
+            if isinstance(totals, dict):
+                log.total_processed = totals.get('processed', 0)
+                log.details = totals.get('details', None)
+                log.total_records = totals.get('total_records', log.total_records)
+            else:
+                log.total_processed = totals
+
             log.successful = True
         except Exception as e:
             log.exception_message = e.message

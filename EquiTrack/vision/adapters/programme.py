@@ -168,7 +168,8 @@ class ResultStructureSynchronizer(object):
         activities = 'Activities updated: Total {}, Updated {}, New {}'.format(*total_activities)
 
         return {
-            'message': '\n'.join([cps, outcomes, outputs, activities]),
+            'details': '\n'.join([cps, outcomes, outputs, activities]),
+            'total_records': sum([i[0] for i in [total_cps, total_outcomes, total_outputs, total_activities]]),
             'processed': sum([i[1]+i[2] for i in [total_cps, total_outcomes, total_outputs, total_activities]])
         }
 
@@ -308,9 +309,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
 
         synchronizer = ResultStructureSynchronizer(records)
 
-        updated = synchronizer.update()
-
-        return updated['processed']
+        return synchronizer.update()
 
 
 
