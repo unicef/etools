@@ -52,7 +52,7 @@ class ResultStructureSynchronizer(object):
         # Normally a bulk save, but in this case there are very few records, and things are calculated on save:
         new_cps = {}
         for remote_cp in remote_cps.values():
-            new_cps[remote_cp['wbs']] = CountryProgramme.objects.get_or_create(**remote_cp)
+            new_cps[remote_cp['wbs']], _ = CountryProgramme.objects.get_or_create(**remote_cp)
 
         # add the newly created cps
         local_cps.update(new_cps)
@@ -83,7 +83,7 @@ class ResultStructureSynchronizer(object):
             remote_outcome['country_programme'] = self._get_local_parent(remote_outcome['wbs'], 'cp')
             remote_outcome['result_type'] = OUTCOME_TYPE
 
-            new_outcomes[remote_outcome['wbs']] = Result.objects.get_or_create(**remote_outcome)
+            new_outcomes[remote_outcome['wbs']], _ = Result.objects.get_or_create(**remote_outcome)
 
         # add the newly created cps
         local_outcomes.update(new_outcomes)
@@ -113,7 +113,7 @@ class ResultStructureSynchronizer(object):
             rem_output['parent'] = self._get_local_parent(rem_output['wbs'], 'outcome')
             rem_output['result_type'] = OUTPUT_TYPE
 
-            new_outputs[rem_output['wbs']] = Result.objects.get_or_create(**rem_output)
+            new_outputs[rem_output['wbs']], _ = Result.objects.get_or_create(**rem_output)
 
         # add the newly created cps
         loc_outputs.update(new_outputs)
@@ -143,7 +143,7 @@ class ResultStructureSynchronizer(object):
             rem_activity['parent'] = self._get_local_parent(rem_activity['wbs'], 'output')
             rem_activity['result_type'] = ACTIVITY_TYPE
 
-            new_activities[rem_activity['wbs']] = Result.objects.get_or_create(**rem_activity)
+            new_activities[rem_activity['wbs']], _ = Result.objects.get_or_create(**rem_activity)
 
         # add the newly created cps
         loc_activities.update(new_activities)
