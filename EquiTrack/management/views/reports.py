@@ -2,7 +2,7 @@ from django.db import connection
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from vision.adapters.programme import ProgrammeSynchronizer, ProgrammeVisionParser
+from vision.adapters.programme import ProgrammeSynchronizer
 from management.permissions import IsSuperUser
 from users.models import Country as Workspace
 from EquiTrack.utils import set_country
@@ -18,8 +18,7 @@ class LoadResultStructure(APIView):
             return Response(status=400, data={'error': 'Country not found'})
 
         try:
-            #p = ProgrammeSynchronizer(workspace)
-            p = ProgrammeVisionParser(workspace)
+            p = ProgrammeSynchronizer(workspace)
             p.sync()
         except BaseException as e:
             set_country(request.user, request)
