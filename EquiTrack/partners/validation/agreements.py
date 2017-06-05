@@ -81,11 +81,7 @@ def start_end_dates_valid(agreement):
 
 def end_date_country_programme_valid(agreement):
     if agreement.agreement_type == agreement.PCA and agreement.start and agreement.end:
-        try:
-            cp = CountryProgramme.encapsulates(agreement.start, agreement.start)
-        except CountryProgramme.DoesNotExist:
-            return True
-        if agreement.end > cp.to_date:
+        if agreement.country_programme.to_date != agreement.end:
             return False
     return True
 

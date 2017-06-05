@@ -122,7 +122,7 @@ class TestReportViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(int(response.data[0]["country_programme"]), CountryProgramme.current().id)
+        self.assertEquals(int(response.data[0]["country_programme"]), CountryProgramme.all_active().first().id)
 
     def test_apiv2_results_list_filter_year(self):
         param = {
