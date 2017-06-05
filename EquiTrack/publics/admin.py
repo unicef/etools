@@ -51,7 +51,7 @@ class DSARateAdmin(admin.ModelAdmin):
 class DSARateUploadAdmin(admin.ModelAdmin):
     list_display = (
         'id',
-        'csv',
+        'dsa_file',
         'status',
         'upload_date',
         'errors',
@@ -69,7 +69,7 @@ class DSARateUploadAdmin(admin.ModelAdmin):
         else:
             self.readonly_fields = (
                 'id',
-                'csv',
+                'dsa_file',
                 'status',
                 'upload_date',
                 'errors',
