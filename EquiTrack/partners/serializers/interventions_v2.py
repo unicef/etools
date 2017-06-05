@@ -474,12 +474,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='agreement.partner.name')
-    # government intervention = true, for distinguishing on the front end
-    government_intervention = serializers.SerializerMethodField()
     planned_budget = serializers.SerializerMethodField()
-
-    def get_government_intervention(self, obj):
-        return False
 
     def get_planned_budget(self, obj):
         year = datetime.datetime.now().year
@@ -489,8 +484,7 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end',
-            'government_intervention', 'planned_budget'
+            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'planned_budget'
         )
 
 
