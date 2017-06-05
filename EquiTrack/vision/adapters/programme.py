@@ -152,21 +152,28 @@ class ResultStructureSynchronizer(object):
     @transaction.atomic
     def update(self):
         # update / add new cps
-        cps = 'CPs updated: Total {}, Updated {}, New {}'.format(*self.update_cps())
+        total_cps = self.update_cps()
+        cps = 'CPs updated: Total {}, Updated {}, New {}'.format(*total_cps)
 
         # update / add new Outcomes
-        outcomes = 'Outcomes updated: Total {}, Updated {}, New {}'.format(*self.update_outcomes())
+        total_outcomes = self.update_outcomes()
+        outcomes = 'Outcomes updated: Total {}, Updated {}, New {}'.format(*total_outcomes)
 
         # update / add new Outputs
-        outputs = 'Outputs updated: Total {}, Updated {}, New {}'.format(*self.update_outputs())
+        total_outputs = self.update_outputs()
+        outputs = 'Outputs updated: Total {}, Updated {}, New {}'.format(*total_outputs)
 
         # update / add new Activities
-        activities = 'Activities updated: Total {}, Updated {}, New {}'.format(*self.update_activities())
+        total_activities = self.update_activities()
+        activities = 'Activities updated: Total {}, Updated {}, New {}'.format(*total_activities)
 
-        return '\n'.join([cps, outcomes, outputs, activities])
+        return {
+            'message': '\n'.join([cps, outcomes, outputs, activities]),
+            'processed': sum([i[1]+i[2] for i in [total_cps, total_outcomes, total_outputs, total_activities]])
+        }
 
 
-class ProgrammeVisionParser(VisionDataSynchronizer):
+class ProgrammeSynchronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetProgrammeStructureList_JSON'
     REQUIRED_KEYS = (
         "COUNTRY_PROGRAMME_NAME",
@@ -251,16 +258,9 @@ class ProgrammeVisionParser(VisionDataSynchronizer):
     def _get_json(self, data):
         return [] if data == self.NO_DATA_MESSAGE else data
 
-    def _convert_records(self, records):
-        records = json.loads(records.get('GetProgrammeStructureList_JSONResult', []))
-        for r in records:
-            for k in self.DATES:
-                r[k] = wcf_json_date_as_date(r[k])
-            r['HUMANITARIAN_TAG'] = r['HUMANITARIAN_TAG'] not in ['No', 'None', '0']
-        return records
-
     def _filter_by_time_range(self, records):
-        records = super(ProgrammeVisionParser, self)._filter_records(records)
+        records = super(ProgrammeSynchronizer, self)._filter_records(records)
+
         today = datetime.datetime.today()
         last_year = datetime.datetime(today.year - 1, 1, 1).date()
 
@@ -291,10 +291,16 @@ class ProgrammeVisionParser(VisionDataSynchronizer):
             if not activities.get(r['ACTIVITY_WBS'], None):
                 activities[r['ACTIVITY_WBS']] = dict([(i[1], r[i[0]]) for i in self.ACTIVITY_MAP])
 
-
         return {'cps':cps, 'outcomes':outcomes, 'outputs':outputs, 'activities':activities}
 
+    def _convert_records(self, records):
+        records = json.loads(records.get('GetProgrammeStructureList_JSONResult', []))
+        for r in records:
+            for k in self.DATES:
+                r[k] = wcf_json_date_as_date(r[k])
+            r['HUMANITARIAN_TAG'] = r['HUMANITARIAN_TAG'] not in ['No', 'None', '0']
 
+        return self._clean_records(records)
 
     def _save_records(self, records):
         #print records[0]
@@ -302,255 +308,10 @@ class ProgrammeVisionParser(VisionDataSynchronizer):
 
         synchronizer = ResultStructureSynchronizer(records)
 
-        return synchronizer.update()
+        updated = synchronizer.update()
 
+        return updated['processed']
 
-
-
-class ProgrammeSynchronizer(VisionDataSynchronizer):
-    ENDPOINT = 'GetProgrammeStructureList_JSON'
-    REQUIRED_KEYS = (
-        "COUNTRY_PROGRAMME_NAME",
-        "COUNTRY_PROGRAMME_WBS",
-        "CP_START_DATE",
-        "CP_END_DATE",
-        "OUTCOME_AREA_CODE",
-        "OUTCOME_AREA_NAME",
-        "OUTCOME_AREA_NAME_LONG",
-        "OUTCOME_WBS",
-        "OUTCOME_DESCRIPTION",
-        "OUTCOME_START_DATE",
-        "OUTCOME_END_DATE",
-        "OUTPUT_WBS",
-        "OUTPUT_DESCRIPTION",
-        "OUTPUT_START_DATE",
-        "OUTPUT_END_DATE",
-        "ACTIVITY_WBS",
-        "ACTIVITY_DESCRIPTION",
-        "ACTIVITY_START_DATE",
-        "ACTIVITY_END_DATE",
-        "SIC_CODE",
-        "SIC_NAME",
-        "GIC_CODE",
-        "GIC_NAME",
-        "ACTIVITY_FOCUS_CODE",
-        "ACTIVITY_FOCUS_NAME",
-        "GENDER_MARKER_CODE",
-        "GENDER_MARKER_NAME",
-        "HUMANITARIAN_TAG",
-        "HUMANITARIAN_MARKER_CODE",
-        "HUMANITARIAN_MARKER_NAME",
-        "PROGRAMME_AREA_CODE",
-        "PROGRAMME_AREA_NAME",
-    )
-
-    def _get_json(self, data):
-        return [] if data == self.NO_DATA_MESSAGE else data
-
-    def _convert_records(self, records):
-        return json.loads(records.get('GetProgrammeStructureList_JSONResult', []))
-
-    def _filter_records(self, records):
-        records = super(ProgrammeSynchronizer, self)._filter_records(records)
-        today = datetime.datetime.today()
-        last_year = datetime.datetime(today.year - 1, 1, 1)
-
-        def in_time_range(record):
-            end = wcf_json_date_as_datetime(record['OUTCOME_END_DATE'])
-            if end >= last_year:
-                return True
-            return False
-
-        return filter(in_time_range, records)
-
-    def _changed_fields(self, obj_type, fields, local_obj, api_obj):
-        tmap = {
-            'cp': {
-                'name': "COUNTRY_PROGRAMME_NAME",
-                'wbs': "COUNTRY_PROGRAMME_WBS",
-                'from_date': 'CP_START_DATE',
-                'to_date': 'CP_END_DATE'
-            },
-            'outcome': {
-                'name': "OUTCOME_DESCRIPTION",
-                'wbs': "OUTCOME_WBS",
-                'from_date': 'OUTCOME_START_DATE',
-                'to_date': 'OUTCOME_END_DATE'
-            },
-            'output': {
-                'name': "OUTPUT_DESCRIPTION",
-                'wbs': "OUTPUT_WBS",
-                'from_date': 'OUTPUT_START_DATE',
-                'to_date': 'OUTPUT_END_DATE'
-            },
-            'activity': {
-                'name': "ACTIVITY_DESCRIPTION",
-                'wbs': "ACTIVITY_WBS",
-                'from_date': 'ACTIVITY_START_DATE',
-                'to_date': 'ACTIVITY_END_DATE',
-                'sic_code': 'SIC_CODE',
-                'sic_name': 'SIC_NAME',
-                'gic_code': 'GIC_CODE',
-                'gic_name': 'GIC_NAME',
-                'activity_focus_code': 'ACTIVITY_FOCUS_CODE',
-                'activity_focus_name': 'ACTIVITY_FOCUS_NAME',
-            }
-        }
-        mapping = tmap[obj_type]
-        for field in fields:
-            apiobj_field = api_obj[mapping[field]]
-            if field.endswith('date'):
-                if not wcf_json_date_as_datetime(api_obj[mapping[field]]):
-                    apiobj_field = None
-                else:
-                    apiobj_field = wcf_json_date_as_datetime(api_obj[mapping[field]]).date()
-            if getattr(local_obj, field) != apiobj_field:
-                print "field changed", field, obj_type, getattr(local_obj, field), 'Changed To', apiobj_field
-                return True
-        return False
-
-    def _update_record(self):
-        pass
-
-    def _save_records(self, records):
-
-        processed = 0
-        filtered_records = self._filter_records(records)
-        cps = {}
-        outcomes = {}
-        outputs = {}
-
-        for result in filtered_records:
-            # Find the country programme:
-            updating_cp = False
-            country_programme = cps.get(result["COUNTRY_PROGRAMME_WBS"], None)
-            if not country_programme:
-                try:
-                    country_programme = CountryProgramme.objects.get(
-                        wbs=result["COUNTRY_PROGRAMME_WBS"],
-                    )
-                except CountryProgramme.DoesNotExist:
-                    country_programme = CountryProgramme(
-                        wbs=result["COUNTRY_PROGRAMME_WBS"]
-                    )
-                    updating_cp = True
-                except CountryProgramme.MultipleObjectsReturned as exp:
-                    exp.message += 'Result Structure: ' + result['COUNTRY_PROGRAMME_NAME']
-                    raise
-                else:
-                    cps[result["COUNTRY_PROGRAMME_WBS"]] = country_programme
-
-            possible_changes = ['name', 'from_date', 'to_date']
-            if updating_cp or self._changed_fields('cp', possible_changes, country_programme, result):
-                country_programme.name = result['COUNTRY_PROGRAMME_NAME']
-                country_programme.from_date = wcf_json_date_as_datetime(result['CP_START_DATE'])
-                country_programme.to_date = wcf_json_date_as_datetime(result['CP_END_DATE'])
-                print country_programme
-                print result
-                country_programme.save()
-
-            updating_outcome = False
-            outcome = outcomes.get(result['OUTCOME_WBS'], None)
-            if not outcome:
-                try:
-                    outcome, updating_outcome = Result.objects.get_or_create(
-                        country_programme=country_programme,
-                        result_type=ResultType.objects.get_or_create(name='Outcome')[0],
-                        wbs=result['OUTCOME_WBS'],
-                    )
-                except Result.MultipleObjectsReturned as exp:
-                    exp.message += 'Outcome WBS: ' + result['OUTCOME_WBS'] \
-                                   + ' Output WBS: ' + result['OUTPUT_WBS'] \
-                                   + ' Activity WBS: ' + result['ACTIVITY_WBS']
-                    raise
-                else:
-                    outcomes[result['OUTCOME_WBS']] = outcome
-
-            possible_changes = ['name', 'from_date', 'to_date']
-            if updating_outcome or self._changed_fields('outcome', possible_changes, outcome, result):
-                # check if any of the information on the result is changing...
-                outcome.name = result['OUTCOME_DESCRIPTION']
-                outcome.from_date = wcf_json_date_as_datetime(result['OUTCOME_START_DATE'])
-                outcome.to_date = wcf_json_date_as_datetime(result['OUTCOME_END_DATE'])
-                if not outcome.valid_entry():
-                    print 'Skipping outcome because of wbs missmatch: ', outcome
-                    # we need to skip this record since the wbs's don;t match
-                    # TODO in these cases... send an email with the record and make the country aware
-                    continue
-                    # raise Exception('Wbs of outcome does not map under country_programme')
-                outcome.save()
-
-            updating_output = False
-            output = outputs.get(result['OUTPUT_WBS'], None)
-            if not output:
-                try:
-                    output, updating_output = Result.objects.get_or_create(
-                        country_programme=country_programme,
-                        result_type=ResultType.objects.get_or_create(name='Output')[0],
-                        wbs=result['OUTPUT_WBS'],
-                    )
-                except Result.MultipleObjectsReturned as exp:
-                    exp.message += 'Outcome WBS: ' + result['OUTCOME_WBS'] \
-                                   + ' Output WBS: ' + result['OUTPUT_WBS'] \
-                                   + ' Activity WBS: ' + result['ACTIVITY_WBS']
-                    raise
-                else:
-                    outputs[result['OUTPUT_WBS']] = output
-
-            possible_changes = ['name', 'from_date', 'to_date']
-            if updating_output or self._changed_fields('output', possible_changes, output, result):
-                output.name = result['OUTPUT_DESCRIPTION']
-                output.from_date = wcf_json_date_as_datetime(result['OUTPUT_START_DATE'])
-                output.to_date = wcf_json_date_as_datetime(result['OUTPUT_END_DATE'])
-                output.parent = outcome
-                if not output.valid_entry():
-                    # we need to skip this record since the wbs's don;t match
-                    # TODO in these cases... send an email with the record and make the country aware
-                    continue
-                    # raise Exception('Wbs of output does not map under country_programme')
-                output.save()
-
-            try:
-                activity, updating_activity = Result.objects.get_or_create(
-                    country_programme=country_programme,
-                    result_type=ResultType.objects.get_or_create(name='Activity')[0],
-                    wbs=result['ACTIVITY_WBS'],
-                )
-            except Result.MultipleObjectsReturned as exp:
-                exp.message += 'Outcome WBS: ' + result['OUTCOME_WBS'] \
-                               + ' Output WBS: ' + result['OUTPUT_WBS'] \
-                               + ' Activity WBS: ' + result['ACTIVITY_WBS']
-                raise
-
-            possible_changes = ['name', 'from_date', 'to_date', 'sic_code', 'sic_name', 'gic_code',
-                                'gic_name', 'activity_focus_code', 'activity_focus_name']
-
-            if updating_activity or self._changed_fields('activity', possible_changes, activity, result):
-                activity.name = result['ACTIVITY_DESCRIPTION']
-                activity.from_date = wcf_json_date_as_datetime(result['ACTIVITY_START_DATE'])
-                activity.to_date = wcf_json_date_as_datetime(result['ACTIVITY_END_DATE'])
-                activity.parent = output
-                activity.sic_code = result['SIC_CODE']
-                activity.sic_name = result['SIC_NAME']
-                activity.gic_code = result['GIC_CODE']
-                activity.gic_name = result['GIC_NAME']
-                activity.activity_focus_code = result['ACTIVITY_FOCUS_CODE']
-                activity.activity_focus_name = result['ACTIVITY_FOCUS_NAME']
-                if not activity.valid_entry():
-                    activity.delete()
-                    raise Exception('Wbs of activity does not map under country_programme')
-                activity.save()
-
-            if updating_cp:
-                print 'add cp', country_programme
-            if updating_activity:
-                print 'added activity', activity
-            if updating_outcome:
-                print 'add outcome', outcome
-            if updating_output:
-                print 'add output', output
-            processed += 1
-        return processed
 
 
 class RAMSynchronizer(VisionDataSynchronizer):
