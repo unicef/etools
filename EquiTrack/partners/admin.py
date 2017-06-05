@@ -611,7 +611,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         'signed_by_unicef_date',
         'start',
         'end',
-        'hrp',
         'sector_names',
         'title',
         'total_unicef_cash',
@@ -641,7 +640,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                 'agreement',
                 'document_type',
                 'number',
-                'hrp',
                 'title',
                 'status',
                 'submission_date',)

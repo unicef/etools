@@ -1280,12 +1280,6 @@ class Intervention(TimeStampedModel):
         Agreement,
         related_name='interventions'
     )
-    hrp = models.ForeignKey(
-        ResultStructure,
-        related_name='interventions',
-        blank=True, null=True, on_delete=models.DO_NOTHING,
-        help_text=u'Which humanitarian response plan does this PD/SSFA report under?'
-    )
     number = models.CharField(
         max_length=64,
         blank=True,
@@ -2175,7 +2169,6 @@ class PCA(AdminURLMixin, models.Model):
         max_length=255,
         verbose_name=u'Document type'
     )
-    # TODO: rename result_structure to hrp
     result_structure = models.ForeignKey(
         ResultStructure,
         blank=True, null=True, on_delete=models.DO_NOTHING,
