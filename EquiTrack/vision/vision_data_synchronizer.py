@@ -51,6 +51,10 @@ class VisionDataSynchronizer:
         pass
 
     @abstractmethod
+    def _clean_records(self, records):
+        return records
+
+    @abstractmethod
     def _save_records(self, records):
         pass
 
@@ -94,8 +98,9 @@ class VisionDataSynchronizer:
             original_records = self._load_records()
             converted_records = self._convert_records(original_records)
             log.total_records = len(converted_records)
+            cleaned_records = self._clean_records(converted_records)
             logger.info('Processing {} records'.format(len(converted_records)))
-            log.total_processed = self._save_records(converted_records)
+            log.total_processed = self._save_records(cleaned_records)
             log.successful = True
         except Exception as e:
             log.exception_message = e.message

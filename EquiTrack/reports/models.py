@@ -91,10 +91,10 @@ class CountryProgramme(models.Model):
         cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
         return cps.first()
 
-    def save(self, *args):
+    def save(self, *args, **kwargs):
         if 'A0/99' in self.wbs:
             self.invalid = True
-        super(CountryProgramme, self).save(*args)
+        super(CountryProgramme, self).save(*args, **kwargs)
 
 
 class ResultStructure(models.Model):
