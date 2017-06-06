@@ -73,6 +73,8 @@ class ThresholdTest(APITenantTestCase):
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
+        if 'non_field_errors' in response_json:
+            print(response_json)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         return travel_id, data
@@ -114,6 +116,7 @@ class ThresholdTest(APITenantTestCase):
                                         data=data, user=self.traveler)
 
         response_json = json.loads(response.rendered_content)
+        print(response_json)
         self.assertEqual(response_json['status'], Travel.SUBMITTED)
 
         travel = Travel.objects.get(id=travel_id)
@@ -215,6 +218,7 @@ class ThresholdTest(APITenantTestCase):
                                         data=data, user=self.traveler)
 
         response_json = json.loads(response.rendered_content)
+        print(response_json)
         self.assertEqual(response_json['status'], Travel.SUBMITTED)
 
         travel = Travel.objects.get(id=travel_id)

@@ -347,7 +347,25 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return data
 
     # -------- Create and update methods --------
+    def align_dates_to_itinerary(self, validated_data):
+        '''Updates travel start and end date based on itineraries'''
+        itinerary = validated_data.get('itinerary', [])
+        departures = []
+        arrivals = []
+        for item in itinerary:
+            departures.append(item['departure_date'])
+            arrivals.append(item['arrival_date'])
+
+        validated_data['start_date'] = min(departures)
+        validated_data['end_date'] = max(arrivals)
+
+        return validated_data
+
     def create(self, validated_data):
+        # Align start and end dates based on itinerary
+        if validated_data.get('itinerary', []):
+            validated_data = self.align_dates_to_itinerary(validated_data)
+
         itinerary = validated_data.pop('itinerary', [])
         expenses = validated_data.pop('expenses', [])
         deductions = validated_data.pop('deductions', [])
@@ -396,6 +414,10 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return new_models
 
     def update(self, instance, validated_data, model_serializer=None):
+        # Align start and end dates based on itinerary
+        if validated_data.get('itinerary', []):
+            validated_data = self.align_dates_to_itinerary(validated_data)
+
         model_serializer = model_serializer or self
 
         related_attributes = {}
