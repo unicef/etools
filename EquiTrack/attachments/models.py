@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext as _
 
 
 @python_2_unicode_compatible
@@ -35,7 +36,7 @@ class Attachment(models.Model):
     def clean(self):
         super(Attachment, self).clean()
         if bool(self.file) == bool(self.hyperlink):
-            raise ValidationError('Please provide file or hyperlink.')
+            raise ValidationError(_('Please provide file or hyperlink.'))
 
     def __str__(self):
         return six.text_type(self.file)
