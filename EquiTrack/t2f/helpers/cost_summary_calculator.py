@@ -171,7 +171,14 @@ class DSACalculator(object):
 
     def calculate_dsa(self):
         # If TA not required, dsa amounts should be zero
+        dsa_should_be_zero = False
         if not self.travel.ta_required:
+            dsa_should_be_zero = True
+
+        if self.travel.itinerary.filter(dsa_region=None).exists():
+            dsa_should_be_zero = True
+
+        if dsa_should_be_zero:
             self.total_dsa = Decimal(0)
             self.total_deductions = Decimal(0)
             self.paid_to_traveler = Decimal(0)
