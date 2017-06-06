@@ -195,11 +195,13 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         elif 'government_partnership' in attrs:
             attrs['partnership'] = None
 
-        if attrs.get('partner', None) and \
-                attrs['partner'].partner_type == PartnerType.GOVERNMENT and \
-                'travel_type' in attrs and \
-                (attrs['travel_type'] == TravelType.PROGRAMME_MONITORING or
-                attrs['travel_type'] == TravelType.SPOT_CHECK) and \
+        partner = attrs.get('partner', getattr(self.instance, 'partner', None))
+        travel_type = attrs.get('travel_type', getattr(self.instance, 'travel_type', None))
+
+        if partner and travel_type and \
+                partner.partner_type == PartnerType.GOVERNMENT and \
+                (travel_type == TravelType.PROGRAMME_MONITORING or
+                travel_type == TravelType.SPOT_CHECK) and \
                 'result' not in attrs:
             raise ValidationError({'result': serializers.Field.default_error_messages['required']})
 
