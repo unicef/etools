@@ -428,6 +428,7 @@ TENANT_APPS = (
     't2f',
     'workplan',
     'actstream',
+    'attachments',
 )
 
 
