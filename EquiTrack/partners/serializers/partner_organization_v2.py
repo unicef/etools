@@ -8,12 +8,10 @@ from rest_framework import serializers
 
 from partners.serializers.v1 import PartnerOrganizationSerializer
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
-from partners.serializers.government import GovernmentInterventionSummaryListSerializer
 
 from partners.models import (
     Assessment,
     Intervention,
-    GovernmentIntervention,
     PartnerOrganization,
     PartnerType,
     PartnerStaffMember,
@@ -244,18 +242,10 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def get_interventions(self, obj):
-        if obj.partner_type != PartnerType.GOVERNMENT:
-            interventions = Intervention.objects \
-                .filter(agreement__partner=obj) \
-                .exclude(status='draft')
-
-            interventions = InterventionSummaryListSerializer(interventions, many=True)
-
-        else:
-            interventions = GovernmentIntervention.objects.filter(partner=obj)
-
-            interventions = GovernmentInterventionSummaryListSerializer(interventions, many=True)
-
+        interventions = Intervention.objects \
+            .filter(agreement__partner=obj) \
+            .exclude(status='draft')
+        interventions = InterventionSummaryListSerializer(interventions, many=True)
         return interventions.data
 
     class Meta:
