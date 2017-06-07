@@ -265,7 +265,7 @@ class Travel(models.Model):
             raise TransitionError('Maximum 3 open travels are allowed.')
 
         end_date_limit = datetime.utcnow() - timedelta(days=15)
-        if travels.filter(end_date__lte=end_date_limit).exists():
+        if travels.filter(end_date__lte=end_date_limit).exclude(id=self.id).exists():
             raise TransitionError(ugettext('Another of your trips ended more than 15 days ago, but was not completed '
                                            'yet. Please complete that before creating a new trip.'))
 
