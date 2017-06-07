@@ -75,11 +75,7 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class StaticDataSerializer(serializers.Serializer):
-    partners = PartnerOrganizationSerializer(many=True)
     partnerships = PartnershipSerializer(many=True)
-    government_partnerships = GovernmentPartnershipSerializer(many=True)
-    results = ResultSerializer(many=True)
-    locations = LocationSerializer(many=True)
     travel_types = serializers.ListField(child=serializers.CharField())
     travel_modes = serializers.ListField(child=serializers.CharField())
     action_point_statuses = serializers.ListField(child=serializers.CharField())

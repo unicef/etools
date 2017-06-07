@@ -9,11 +9,13 @@ from unittest import skip
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, GovernmentInterventionFactory
+from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, \
+    GovernmentInterventionFactory, PartnerFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from partners.models import PartnerType
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
-from t2f.models import TravelAttachment, Travel, ModeOfTravel
+from t2f.models import TravelAttachment, Travel, ModeOfTravel, TravelType
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory, IteneraryItemFactory
 
 from .factories import TravelFactory
@@ -368,6 +370,25 @@ class TravelDetails(APITenantTestCase):
 
         self.assertEqual(response_json['activities'][0]['locations'], [location.id, location_2.id])
         self.assertEqual(response_json['activities'][1]['locations'], [location_3.id])
+
+    def test_activity_results(self):
+        location = LocationFactory()
+        location_2 = LocationFactory()
+
+        data = {'cost_assignments': [],
+                'activities': [{
+                    'is_primary_traveler': True,
+                    'locations': [location.id, location_2.id],
+                    'partner': PartnerFactory(partner_type=PartnerType.GOVERNMENT).id,
+                    'travel_type': TravelType.PROGRAMME_MONITORING,
+                }],
+                'traveler': self.traveler.id}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
+                                        user=self.traveler)
+
+        self.assertEqual(response.status_code, 400)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {u'activities': [{u'result': [u'This field is required.']}]})
 
     def test_itinerary_dates(self):
         dsaregion = DSARegion.objects.first()
