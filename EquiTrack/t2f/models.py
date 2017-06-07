@@ -449,7 +449,6 @@ class TravelActivity(models.Model):
     # Partnership has to be filtered based on partner
     # TODO: assert self.partnership.agreement.partner == self.partner
     partnership = models.ForeignKey('partners.Intervention', null=True, related_name='+')
-    government_partnership = models.ForeignKey('partners.GovernmentIntervention', null=True, related_name='+')
     result = models.ForeignKey('reports.Result', null=True, related_name='+')
     locations = models.ManyToManyField('locations.Location', related_name='+')
     primary_traveler = models.ForeignKey(User)
