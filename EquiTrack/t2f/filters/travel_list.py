@@ -57,8 +57,8 @@ class TravelFilterBoxFilter(BaseFilterBoxFilter):
             data['start_date__lte'] = end_date
             data['end_date__gte'] = start_date
         elif month:
-                data['start_date__month__lte'] = month
-                data['end_date__month__gte'] = month
+            data['start_date__month__lte'] = month
+            data['end_date__month__gte'] = month
 
         cp_output = data.pop('cp_output', None)
         if cp_output:
