@@ -275,7 +275,7 @@ class Travel(models.Model):
         if self.ta_required and self.itinerary.all().count() < 2:
             raise TransitionError(ugettext('Travel must have at least two itinerary item'))
 
-        if self.itinerary.filter(dsa_region=None).exists():
+        if self.ta_required and self.itinerary.filter(dsa_region=None).exists():
             raise TransitionError(ugettext('All itinerary items has to have DSA region assigned'))
 
         return True
