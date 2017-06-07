@@ -48,6 +48,19 @@ class TravelList(APITenantTestCase):
                          'section', 'start_date', 'status', 'traveler']
         self.assertKeysIn(expected_keys, travel_data)
 
+    def test_list_search_partial(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('t2f:travels:list:index'),
+            data={'reference_number': self.travel.reference_number[2:5]},
+            user=self.unicef_staff
+        )
+
+        response_json = json.loads(response.rendered_content)
+        expected_keys = ['data', 'page_count', 'total_count']
+        self.assertKeysIn(expected_keys, response_json)
+        self.assertEqual(len(response_json['data']), 1)
+
     def test_dashboard_travels_list_view(self):
         with self.assertNumQueries(10):
             response = self.forced_auth_req(
