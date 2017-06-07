@@ -25,14 +25,12 @@ class StaticDataView(generics.GenericAPIView):
     serializer_class = StaticDataSerializer
 
     def get(self, request):
-        data = {'partners': PartnerOrganization.objects.all(),
-                'partnerships': Intervention.objects.all(),
-                'government_partnerships': GovernmentIntervention.objects.all(),
-                'results': Result.objects.filter(result_type__name=ResultType.OUTPUT),
-                'locations': Location.objects.all(),
-                'travel_types': [c[0] for c in TravelType.CHOICES],
-                'travel_modes': [c[0] for c in ModeOfTravel.CHOICES],
-                'action_point_statuses': [c[0] for c in ActionPoint.STATUS]}
+        data = {
+            'partnerships': Intervention.objects.all(),
+            'travel_types': [c[0] for c in TravelType.CHOICES],
+            'travel_modes': [c[0] for c in ModeOfTravel.CHOICES],
+            'action_point_statuses': [c[0] for c in ActionPoint.STATUS],
+        }
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)

@@ -15,7 +15,7 @@ class GhostData(APITenantTestCase):
     def setUp(self):
         super(GhostData, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
-        
+
     def test_urls(self):
         static_data_url = reverse('public:missing_static')
         self.assertEqual(static_data_url, '/api/static_data/missing/')
