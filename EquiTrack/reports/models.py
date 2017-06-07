@@ -256,7 +256,7 @@ class Result(MPTTModel):
 
     @cached_property
     def expired(self):
-        today = datetime.date.today()
+        today = date.today()
         return self.to_date < today
 
     @cached_property

@@ -7,8 +7,10 @@ from reports.models import Result, AppliedIndicator, IndicatorBlueprint, LowerRe
 
 
 class OutputListSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source="output_name", read_only=True)
+    name = serializers.ReadOnlyField(source="output_name")
     result_type = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    expired = serializers.ReadOnlyField()
+    special = serializers.ReadOnlyField()
 
     class Meta:
         model = Result
@@ -16,12 +18,13 @@ class OutputListSerializer(serializers.ModelSerializer):
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source="output_name", read_only=True)
+    name = serializers.ReadOnlyField(source="output_name")
+
     class Meta:
         model = Result
         fields = (
             "id",
-            "name",
+            "name"
         )
 
 
