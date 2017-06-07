@@ -69,7 +69,7 @@ class CostSummaryCalculator(object):
             expenses_total[expense.currency] += expense.amount
 
             if expense.vendor_number == 'user':
-                paid_to_traveler -= expense.amount
+                paid_to_traveler += expense.amount
 
         expenses_total = [{'currency': k, 'amount': v} for k, v in expenses_total.items()]
 
