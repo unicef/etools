@@ -28,6 +28,7 @@ class MailingTest(APITenantTestCase):
                                     supervisor=self.unicef_staff)
         IteneraryItemFactory(travel=self.travel)
         IteneraryItemFactory(travel=self.travel)
+        mail.outbox = []
 
     @override_settings(DISABLE_INVOICING=False)
     def test_mailing(self):
