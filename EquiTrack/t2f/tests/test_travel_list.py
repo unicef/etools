@@ -11,7 +11,6 @@ from rest_framework import status
 
 from EquiTrack.factories import UserFactory, LocationFactory, ResultFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from partners.models import InterventionResultLink
 from publics.models import DSARegion
 from publics.tests.factories import WBSFactory
 from t2f.models import ModeOfTravel, make_travel_reference_number, Travel, TravelType
@@ -211,15 +210,18 @@ class TravelList(APITenantTestCase):
         a1 = TravelActivityFactory(travel_type=TravelType.MEETING, primary_traveler=self.unicef_staff)
         a1.travels.add(t1)
 
-        t2 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
-        a2 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING, primary_traveler=self.unicef_staff)
-        a2.travels.add(t2)
         result = ResultFactory()
-        irl = InterventionResultLink.objects.create(intervention=a2.partnership, cp_output=result)
+        t2 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
+        a2 = TravelActivityFactory(
+            travel_type=TravelType.PROGRAMME_MONITORING,
+            primary_traveler=self.unicef_staff,
+            result=result
+        )
+        a2.travels.add(t2)
 
         data = {
             'f_travel_type': TravelType.PROGRAMME_MONITORING,
-            'f_month': t2.start_date.month,
+            'f_month': t2.start_date.month-1,  # Frontend sends 0-11
             'f_cp_output': result.id,
         }
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),
