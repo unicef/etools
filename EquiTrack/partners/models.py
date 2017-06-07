@@ -1202,7 +1202,7 @@ class AgreementAmendmentType(models.Model):
 
     def save(self, **kwargs):
         if self.pk is None and self.type == 'CP extension':
-            self.cp_cycle_end = CountryProgramme.current().to_date
+            self.cp_cycle_end = self.agreement_amendment.agreement.country_programme.to_date
         return super(AgreementAmendmentType, self).save(**kwargs)
 
     def __unicode__(self):

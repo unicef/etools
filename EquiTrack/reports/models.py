@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
@@ -56,17 +56,17 @@ class CountryProgramme(models.Model):
 
     @cached_property
     def active(self):
-        today = datetime.date.today()
+        today = date.today()
         return self.from_date <= today < self.to_date
 
     @cached_property
     def future(self):
-        today = datetime.date.today()
+        today = date.today()
         return self.from_date >= today
 
     @cached_property
     def expired(self):
-        today = datetime.date.today()
+        today = date.today()
         return self.to_date < today
 
     @cached_property
@@ -75,19 +75,19 @@ class CountryProgramme(models.Model):
 
     @classmethod
     def all_active(cls):
-        today = datetime.now()
+        today = date.today()
         qs = cls.objects.filter(from_date__lte=today, to_date__gt=today)
         return qs
 
     @classmethod
     def all_future(cls, qs=None):
-        today = datetime.now()
+        today = date.today()
         qs = cls.objects.filter(from_date__gt=today)
         return qs
 
     @classmethod
     def main_active(cls):
-        today = datetime.date.today()
+        today = date.today()
         cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
         return cps.first()
 

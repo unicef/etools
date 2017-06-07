@@ -62,7 +62,7 @@ class OutputListAPIView(ListAPIView):
         if any(x in ['year', 'country_programme', 'values'] for x in query_params.keys()):
             return q
         else:
-            current_cp = CountryProgramme.current()
+            current_cp = CountryProgramme.main_active()
             return q.filter(country_programme=current_cp)
 
     def list(self, request):
