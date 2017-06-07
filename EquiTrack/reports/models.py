@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from django.db import models
+from django.db import models, transaction
 from django.contrib.postgres.fields import JSONField
 
 from django.utils.functional import cached_property
@@ -94,6 +94,15 @@ class CountryProgramme(models.Model):
     def save(self, *args, **kwargs):
         if 'A0/99' in self.wbs:
             self.invalid = True
+
+        if self.pk:
+            old_version = CountryProgramme.objects.get(id=self.pk)
+            if old_version.to_date != self.to_date:
+                from partners.models import Agreement
+                with transaction.atomic():
+                    Agreement.objects.filter(agreement_type='PCA', country_programme=self).update(end=self.to_date)
+                    super(CountryProgramme, self).save(*args, **kwargs)
+                    return
         super(CountryProgramme, self).save(*args, **kwargs)
 
 

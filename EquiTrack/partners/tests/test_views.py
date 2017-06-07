@@ -1,5 +1,4 @@
-__author__ = 'unicef-leb-inn'
-
+import json
 from unittest import skip
 import datetime
 from datetime import date, timedelta
@@ -790,6 +789,36 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_cp_end_date_update(self):
+        data = {
+            'agreement_type': 'PCA'
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/'.format(self.partner.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+        response_json = json.loads(response.rendered_content)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        for r in response_json:
+            self.assertEqual(r['end'], self.country_programme.to_date.isoformat())
+
+
+        self.country_programme.to_date = self.country_programme.to_date + timedelta(days=1)
+        self.country_programme.save()
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/'.format(self.partner.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+        response_json = json.loads(response.rendered_content)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        for r in response_json:
+            self.assertEqual(r['end'], self.country_programme.to_date.isoformat())
+
 
     def test_agreements_create_max_signoff_no_date(self):
         today = datetime.date.today()
