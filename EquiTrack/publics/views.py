@@ -53,7 +53,6 @@ class StaticDataView(GhostDataMixin,
         expense_types = TravelExpenseType.objects.select_related('travel_agent').filter(expense_type_q)
 
         data = {'currencies': currencies, # Moved
-                'dsa_regions': dsa_regions, # Moved
                 'business_areas': business_areas, # Moved
                 'expense_types': expense_types, # Moved
 

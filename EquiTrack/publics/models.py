@@ -300,7 +300,7 @@ class DSARateUpload(models.Model):
         (DONE, 'Done'),
     )
 
-    csv = models.FileField(upload_to="publics/dsa_rate/")
+    dsa_file = models.FileField(upload_to="publics/dsa_rate/")
     status = models.CharField(
         max_length=64,
         blank=True,
