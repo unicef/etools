@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
 
 import csv
-import json
 from datetime import datetime, timedelta
-from unittest import skip
-
+import json
 from StringIO import StringIO
+
+from django.core import mail
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
@@ -22,6 +22,7 @@ class ActionPoints(APITenantTestCase):
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
         self.due_date = (datetime.now() + timedelta(days=1)).isoformat()
+        mail.outbox = []
 
     def test_urls(self):
         list_url = reverse('t2f:action_points:list')
@@ -141,6 +142,8 @@ class ActionPoints(APITenantTestCase):
 
         action_points = json.loads(response.rendered_content)['action_points']
         self.assertEqual(len(action_points), 1)
+
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_conditionally_required_fields(self):
         data = {'action_points': [{'description': 'Something',
@@ -281,3 +284,15 @@ class ActionPoints(APITenantTestCase):
         self.assertFalse(rows[1][4].isdigit())
         self.assertTrue(isinstance(rows[1][9], (str, unicode)))
         self.assertFalse(rows[1][9].isdigit())
+
+    def test_mail_on_first_save(self):
+        self.assertEqual(len(mail.outbox), 0)
+
+        action_point = ActionPointFactory(travel=self.travel)
+        self.assertEqual(len(mail.outbox), 1)
+
+        action_point.save()
+        self.assertEqual(len(mail.outbox), 1)
+
+        action_point.save()
+        self.assertEqual(len(mail.outbox), 1)
