@@ -118,7 +118,6 @@ class ThresholdTest(APITenantTestCase):
                                         data=data, user=self.traveler)
 
         response_json = json.loads(response.rendered_content)
-        print(response_json)
         self.assertEqual(response_json['status'], Travel.SUBMITTED)
 
         travel = Travel.objects.get(id=travel_id)
