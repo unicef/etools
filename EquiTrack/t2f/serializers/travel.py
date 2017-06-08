@@ -14,10 +14,11 @@ from django.utils.translation import ugettext
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from partners.models import PartnerType
 from publics.models import AirlineCompany, Currency
 from t2f.helpers.permission_matrix import PermissionMatrix
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelAttachment, ActionPoint
+    TravelAttachment, ActionPoint, TravelType
 from locations.models import Location
 from t2f.serializers import CostSummarySerializer
 
@@ -177,7 +178,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
 
     class Meta:
         model = TravelActivity
-        fields = ('id', 'travel_type', 'partner', 'partnership', 'government_partnership', 'result', 'locations',
+        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations',
                   'primary_traveler', 'date', 'is_primary_traveler')
 
     def validate(self, attrs):
@@ -186,13 +187,13 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
                 if not attrs.get('primary_traveler'):
                     raise ValidationError({'primary_traveler': serializers.Field.default_error_messages['required']})
 
-        if attrs.get('partnership') and attrs.get('government_partnership'):
-            raise ValidationError('Partnership and government partnership cannot be set at the same time')
+        partner = attrs.get('partner', getattr(self.instance, 'partner', None))
+        travel_type = attrs.get('travel_type', getattr(self.instance, 'travel_type', None))
 
-        if 'partnership' in attrs:
-            attrs['government_partnership'] = None
-        elif 'government_partnership' in attrs:
-            attrs['partnership'] = None
+        if partner and partner.partner_type == PartnerType.GOVERNMENT and \
+                travel_type in [TravelType.PROGRAMME_MONITORING, TravelType.SPOT_CHECK] and \
+                'result' not in attrs:
+            raise ValidationError({'result': serializers.Field.default_error_messages['required']})
 
         return attrs
 
@@ -333,6 +334,10 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
             if travel_activity_data.get('is_primary_traveler'):
                 travel_activity_data['primary_traveler'] = traveler_id
 
+        # Align start and end dates based on itinerary
+        if data.get('itinerary', []):
+            data = self.align_dates_to_itinerary(data)
+
         return super(TravelDetailsSerializer, self).to_internal_value(data)
 
     def to_representation(self, instance):
@@ -343,6 +348,20 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
                 travel_activity_data['is_primary_traveler'] = True
             else:
                 travel_activity_data['is_primary_traveler'] = False
+
+        return data
+
+    def align_dates_to_itinerary(self, data):
+        '''Updates travel start and end date based on itineraries'''
+        itinerary = data.get('itinerary', [])
+        departures = []
+        arrivals = []
+        for item in itinerary:
+            departures.append(item['departure_date'])
+            arrivals.append(item['arrival_date'])
+
+        data['start_date'] = min(departures)
+        data['end_date'] = max(arrivals)
 
         return data
 

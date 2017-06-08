@@ -117,7 +117,7 @@ class CostSummaryTest(APITenantTestCase):
                           'expenses_delta_usd': Decimal('0'),
                           'expenses_total': [{'amount': Decimal('300.0000'),
                                               'currency': self.currency_huf}],
-                          'paid_to_traveler': Decimal('340.0000'),
+                          'paid_to_traveler': Decimal('940.0000'),
                           'preserved_expenses': None,
                           'traveler_dsa': Decimal('640.0000')})
 

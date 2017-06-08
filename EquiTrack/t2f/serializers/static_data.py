@@ -4,8 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from locations.models import Location
-from partners.models import PartnerOrganization, Intervention, InterventionResultLink, GovernmentIntervention, \
-    GovernmentInterventionResult
+from partners.models import PartnerOrganization, Intervention, InterventionResultLink
 from reports.models import Result
 from users.models import Office, Section
 
@@ -49,19 +48,6 @@ class PartnershipSerializer(serializers.ModelSerializer):
         return InterventionResultLink.objects.filter(intervention=obj).values_list('cp_output_id', flat=True)
 
 
-class GovernmentPartnershipSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='reference_number')
-    partner = serializers.PrimaryKeyRelatedField(read_only=True)
-    results = serializers.SerializerMethodField()
-
-    class Meta:
-        model = GovernmentIntervention
-        fields = ('id', 'name', 'partner', 'results')
-
-    def get_results(self, obj):
-        return GovernmentInterventionResult.objects.filter(intervention=obj).values_list('result_id', flat=True)
-
-
 class ResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = Result
@@ -75,11 +61,7 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class StaticDataSerializer(serializers.Serializer):
-    partners = PartnerOrganizationSerializer(many=True)
     partnerships = PartnershipSerializer(many=True)
-    government_partnerships = GovernmentPartnershipSerializer(many=True)
-    results = ResultSerializer(many=True)
-    locations = LocationSerializer(many=True)
     travel_types = serializers.ListField(child=serializers.CharField())
     travel_modes = serializers.ListField(child=serializers.CharField())
     action_point_statuses = serializers.ListField(child=serializers.CharField())
