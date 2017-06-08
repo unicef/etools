@@ -1,18 +1,12 @@
 from __future__ import unicode_literals
 
-import os
-import yaml
-
 from django.conf import settings
-from django.core.cache import cache
 
 from rest_framework import generics, status
 from rest_framework.response import Response
 
-from locations.models import Location
-from partners.models import PartnerOrganization, Intervention, GovernmentIntervention
+from partners.models import Intervention
 from publics.models import TravelAgent
-from reports.models import Result, ResultType
 from t2f.helpers.permission_matrix import get_permission_matrix
 
 from t2f.models import TravelType, ModeOfTravel, ActionPoint
@@ -25,14 +19,12 @@ class StaticDataView(generics.GenericAPIView):
     serializer_class = StaticDataSerializer
 
     def get(self, request):
-        data = {'partners': PartnerOrganization.objects.all(),
-                'partnerships': Intervention.objects.all(),
-                'government_partnerships': GovernmentIntervention.objects.all(),
-                'results': Result.objects.filter(result_type__name=ResultType.OUTPUT),
-                'locations': Location.objects.all(),
-                'travel_types': [c[0] for c in TravelType.CHOICES],
-                'travel_modes': [c[0] for c in ModeOfTravel.CHOICES],
-                'action_point_statuses': [c[0] for c in ActionPoint.STATUS]}
+        data = {
+            'partnerships': Intervention.objects.all(),
+            'travel_types': [c[0] for c in TravelType.CHOICES],
+            'travel_modes': [c[0] for c in ModeOfTravel.CHOICES],
+            'action_point_statuses': [c[0] for c in ActionPoint.STATUS],
+        }
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)
