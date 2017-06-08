@@ -9,8 +9,7 @@ from unittest import skip
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, \
-    GovernmentInterventionFactory, PartnerFactory
+from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, PartnerFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerType
 from publics.models import DSARegion
@@ -847,10 +846,8 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
 
-    @skip('Factories are broken, fix later...')
     def test_travel_activity_partnership(self):
         partnership = InterventionFactory()
-        # government_partnership = GovernmentInterventionFactory()
 
         data = {'itinerary': [],
                 'activities': [{'is_primary_traveler': True,
@@ -873,24 +870,6 @@ class TravelDetails(APITenantTestCase):
         activity = response_json['activities'][0]
 
         self.assertEqual(activity['partnership'], partnership.id)
-        self.assertEqual(activity['government_partnership'], None)
-
-        government_partnership = GovernmentInterventionFactory()
-
-        new_data = response_json
-        new_data['activities'][0]['government_partnership'] = government_partnership.id
-        del new_data['activities'][0]['partnership']
-
-        new_response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
-                                                       kwargs={'travel_pk': response_json['id']}),
-                                        data=new_data, user=self.unicef_staff)
-
-        self.assertEqual(new_response.status_code, 200)
-
-        new_response_json = json.loads(new_response.rendered_content)
-        new_activity = new_response_json['activities'][0]
-
-        self.assertEqual(new_activity['government_partnership'], government_partnership.id)
 
     def test_ghost_data_existence(self):
         dsa_region = DSARegion.objects.first()

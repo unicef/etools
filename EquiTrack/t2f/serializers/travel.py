@@ -178,7 +178,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
 
     class Meta:
         model = TravelActivity
-        fields = ('id', 'travel_type', 'partner', 'partnership', 'government_partnership', 'result', 'locations',
+        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations',
                   'primary_traveler', 'date', 'is_primary_traveler')
 
     def validate(self, attrs):
@@ -187,21 +187,11 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
                 if not attrs.get('primary_traveler'):
                     raise ValidationError({'primary_traveler': serializers.Field.default_error_messages['required']})
 
-        if attrs.get('partnership') and attrs.get('government_partnership'):
-            raise ValidationError('Partnership and government partnership cannot be set at the same time')
-
-        if 'partnership' in attrs:
-            attrs['government_partnership'] = None
-        elif 'government_partnership' in attrs:
-            attrs['partnership'] = None
-
         partner = attrs.get('partner', getattr(self.instance, 'partner', None))
         travel_type = attrs.get('travel_type', getattr(self.instance, 'travel_type', None))
 
-        if partner and travel_type and \
-                partner.partner_type == PartnerType.GOVERNMENT and \
-                (travel_type == TravelType.PROGRAMME_MONITORING or
-                travel_type == TravelType.SPOT_CHECK) and \
+        if partner and partner.partner_type == PartnerType.GOVERNMENT and \
+                travel_type in [TravelType.PROGRAMME_MONITORING, TravelType.SPOT_CHECK] and \
                 'result' not in attrs:
             raise ValidationError({'result': serializers.Field.default_error_messages['required']})
 

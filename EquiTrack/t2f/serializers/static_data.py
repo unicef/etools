@@ -4,8 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from locations.models import Location
-from partners.models import PartnerOrganization, Intervention, InterventionResultLink, GovernmentIntervention, \
-    GovernmentInterventionResult
+from partners.models import PartnerOrganization, Intervention, InterventionResultLink
 from reports.models import Result
 from users.models import Office, Section
 
@@ -47,19 +46,6 @@ class PartnershipSerializer(serializers.ModelSerializer):
 
     def get_results(self, obj):
         return InterventionResultLink.objects.filter(intervention=obj).values_list('cp_output_id', flat=True)
-
-
-class GovernmentPartnershipSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='reference_number')
-    partner = serializers.PrimaryKeyRelatedField(read_only=True)
-    results = serializers.SerializerMethodField()
-
-    class Meta:
-        model = GovernmentIntervention
-        fields = ('id', 'name', 'partner', 'results')
-
-    def get_results(self, obj):
-        return GovernmentInterventionResult.objects.filter(intervention=obj).values_list('result_id', flat=True)
 
 
 class ResultSerializer(serializers.ModelSerializer):
