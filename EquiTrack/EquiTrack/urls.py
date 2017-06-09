@@ -135,7 +135,7 @@ urlpatterns = patterns(
 
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
-    url(r'^users/', include('users.urls')),
+    # url(r'^users/', include('users.urls')), removing old version
     url(r'^supplies/', include('supplies.urls')),
     url(r'^api/', include(api.urls)),
     url(r'^api/', include(staffm_api.urls)),
@@ -153,8 +153,7 @@ urlpatterns = patterns(
     url(r'^api/t2f/', include(t2f_patterns, namespace='t2f')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2')),
-    # url(r'^api/v2/users/', include('users.urls_v2')), not needed
-
+    url(r'^api/v2/', include('users.urls_v2')),
 
     url(r'^api/docs/', schema_view),
     # Uncomment the next line to enable the admin:
