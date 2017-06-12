@@ -523,43 +523,16 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         year = datetime.date.today().year
         total = 0
         if partner.partner_type == u'Government':
-            if budget_record:
-                total = GovernmentInterventionResult.objects.filter(
-                    intervention__partner=partner,
-                    year=year).exclude(id=budget_record.id).aggregate(
-                    models.Sum('planned_amount')
-                )['planned_amount__sum'] or 0
-                total += budget_record.planned_amount
-            else:
-                total = GovernmentInterventionResult.objects.filter(
-                    intervention__partner=partner,
-                    year=year).aggregate(
-                    models.Sum('planned_amount')
-                )['planned_amount__sum'] or 0
+            pass
         else:
-            if budget_record:
-                q = InterventionBudget.objects.filter(
-                    intervention__agreement__partner=partner,
-                    intervention__status__in=[
-                        Intervention.ACTIVE,
-                        Intervention.IMPLEMENTED
-                    ],
-                    year=year).exclude(id=budget_record.id)
-
-                q = q.order_by("intervention__id", "-created") \
-                    .distinct('intervention__id') \
-                    .values_list('unicef_cash', flat=True)
-
-                total = sum(q)
-                total += budget_record.unicef_cash if budget_record.year == str(year) else 0
-            else:
-                q = InterventionBudget.objects.filter(intervention__agreement__partner=partner,
-                                                      intervention__status__in=[
-                                                          Intervention.ACTIVE, Intervention.IMPLEMENTED],
-                                                      year=year)
-                q = q.order_by("intervention__id", "-created").\
-                    distinct('intervention__id').values_list('unicef_cash', flat=True)
-                total = sum(q)
+            q = InterventionBudget.objects.filter(
+                intervention__agreement__partner=partner,
+                intervention__status__in=[
+                    Intervention.ACTIVE,
+                    Intervention.IMPLEMENTED
+                ])
+            q = q.values_list('unicef_cash', flat=True)
+            total = sum(q)
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         hact["planned_cash_transfer"] = float(total)
@@ -586,20 +559,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         # planned visits
         pv = 0
         if partner.partner_type == u'Government':
-
-            if pv_intervention:
-                pv = GovernmentInterventionResult.objects.filter(
-                    intervention__partner=partner,
-                    year=year).exclude(id=pv_intervention.id).aggregate(
-                    models.Sum('planned_visits')
-                )['planned_visits__sum'] or 0
-                pv += pv_intervention.planned_visits
-            else:
-                pv = GovernmentInterventionResult.objects.filter(
-                    intervention__partner=partner,
-                    year=year).aggregate(
-                    models.Sum('planned_visits')
-                )['planned_visits__sum'] or 0
+           pass
         else:
             if pv_intervention:
                 pv = InterventionPlannedVisits.objects.filter(
