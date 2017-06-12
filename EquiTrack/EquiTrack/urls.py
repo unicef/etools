@@ -153,7 +153,7 @@ urlpatterns = patterns(
     url(r'^api/t2f/', include(t2f_patterns, namespace='t2f')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2')),
-    url(r'^api/v2/', include('users.urls_v2')),
+    url(r'^api/v2/users/', include('users.urls_v2')),
 
     url(r'^api/docs/', schema_view),
     # Uncomment the next line to enable the admin:

@@ -59,11 +59,20 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
     supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
     name = serializers.CharField(source='user.get_full_name', read_only=True)
+    t2f = T2FUserDataSerializer(source='user')
+    last_login = serializers.CharField(source='user.last_login', read_only=True)
+    is_superuser = serializers.CharField(source='user.is_superuser', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    is_staff = serializers.CharField(source='user.is_staff', read_only=True)
+    is_active = serializers.CharField(source='user.is_active', read_only=True)
+
 
     class Meta:
         model = UserProfile
-        fields = ('name', 'office', 'section', 'supervisor', 'countries_available',
-                  'oic', 'groups', 'supervisees', 'job_title', 'phone_number')
+        fields = '__all__'
 
 
 class UserSerializer(serializers.ModelSerializer):

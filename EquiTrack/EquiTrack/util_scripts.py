@@ -21,7 +21,7 @@ from t2f.models import TravelActivity
 def printtf(*args):
     print([arg for arg in args])
     f = open('mylogs.txt','a')
-    print([arg for arg in args], file=f)
+    print('\n'.join([arg for arg in args]), file=f)
     f.close()
 
 def log_to_file(file_name='fail_logs.txt', *args):
@@ -924,3 +924,45 @@ def create_test_user(email, password):
     userp.country_override = country
     userp.save()
     logging.info("user {} created".format(u.email))
+
+
+def stats():
+    for c in Country.objects.exclude(name='Global').all():
+        set_country(c.name)
+        printtf(c.name)
+        # Total Number of PDs per workspace (for active status only)
+        int_active_count = Intervention.objects.filter(status=Intervention.ACTIVE).count()
+        printtf("Total Number of PDs: {}".format(int_active_count))
+
+        # Total Number of PCA (agreement) amendments per workspace (for active status only)
+        agr_amd_active_count = AgreementAmendment.objects.filter(agreement__status=Agreement.ACTIVE).count()
+        printtf("Total Number of PCA (agreement) amendments: {}".format(agr_amd_active_count))
+
+        # total Number of PD (intervention) amendments per workspace (for active status only)
+        int_amd_active_count = InterventionAmendment.objects.filter(intervention__status=Intervention.ACTIVE).count()
+        printtf("total Number of PD (intervention) amendments {}:".format(int_amd_active_count))
+
+        # Total number of PDs per workspace that have multi-currency budgets (for active status only)
+        int_budgets = InterventionBudget.objects.filter(intervention__status=Intervention.ACTIVE,
+                                                        unicef_cash__gt=0,
+                                                        unicef_cash_local__gt=0).distinct('intervention').count()
+        printtf("Total number of PDs per workspace that have multi-currency budgets {}:".format(int_budgets))
+
+        # Total number of PDs per workspace that have only USD budgets
+        int_budgets_usd = InterventionBudget.objects.filter(intervention__status=Intervention.ACTIVE,
+                                                            unicef_cash__gt=0,
+                                                            unicef_cash_local=0).distinct('intervention').count()
+        printtf("Total number of PDs per workspace that have only USD budgets {}:".format(int_budgets_usd))
+
+        # Total number of PDs per workspace that have only local currency budgets
+        int_budgets_local = InterventionBudget.objects.filter(intervention__status=Intervention.ACTIVE, unicef_cash=0, unicef_cash_local__gt=0).distinct('intervention').count()
+        printtf("Total number of PDs per workspace that have only local currency budgets {}:".format(int_budgets_local))
+
+        # Total number of PDs per workspace that have no budgets
+        int_budgets_zero = InterventionBudget.objects.filter(intervention__status=Intervention.ACTIVE, unicef_cash=0, unicef_cash_local=0).distinct('intervention').count()
+        printtf("Total number of PDs per workspace that have no budgets {}:".format(int_budgets_zero))
+
+        # Total number of PDs that contain an FR per workspace
+        int_frs = Intervention.objects.filter(status=Intervention.ACTIVE, fr_numbers__isnull=False).count()
+        printtf("Total number of PDs that contain an FR {}:".format(int_frs))
+

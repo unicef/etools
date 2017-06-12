@@ -30,7 +30,7 @@ from .serializers import (
 )
 
 
-class UserAuthAPIView(RetrieveAPIView):
+class UserAuthAPIView(RetrieveUpdateAPIView):
     # TODO: Consider removing now use JWT
     model = User
     serializer_class = UserSerializer

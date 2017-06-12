@@ -99,7 +99,7 @@ class TestUserViews(APITenantTestCase):
     def test_api_users_retrieve_myprofile(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/users/myprofile/',
+            '/api/v2/users/profile/',
             user=self.unicef_staff,
         )
 
