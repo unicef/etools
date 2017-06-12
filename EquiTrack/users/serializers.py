@@ -149,7 +149,7 @@ class SimpleNestedProfileSerializer(serializers.ModelSerializer):
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):
-    profile = SimpleNestedProfileSerializer()
+    country = serializers.CharField(source='profile.country', read_only=True)
 
     class Meta:
         model = User
@@ -162,16 +162,17 @@ class SimpleUserSerializer(serializers.ModelSerializer):
             'last_name',
             'is_staff',
             'is_active',
-            'profile'
+            'country'
         )
 
 
 class MinimalUserSerializer(SimpleUserSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
 
+
     class Meta:
         model = User
-        fields = ('id', 'name', 'first_name', 'last_name')
+        fields = ('id', 'name', 'first_name', 'last_name', 'username', 'email')
 
 
 class UserCreationSerializer(serializers.ModelSerializer):
