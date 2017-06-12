@@ -295,6 +295,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
+    signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     supplies = SupplyPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
     distributions = DistributionPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
@@ -317,6 +318,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
+    signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     supplies = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
     distributions = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
@@ -325,6 +327,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     fr_numbers_details = serializers.SerializerMethodField(read_only=True, required=False)
+    submitted_to_prc = serializers.ReadOnlyField()
 
     def get_fr_numbers_details(self, obj):
         data = {}
@@ -345,10 +348,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             "id", "partner", "agreement", "document_type", "hrp", "number", "prc_review_document_file",
-            "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
-            "submission_date", "prc_review_document", "signed_by_unicef_date", "signed_by_partner_date",
+            "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
+            "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
-            "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations",
+            "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
             "created", "modified", "planned_budget", "result_links",
             "amendments", "planned_visits", "attachments", "supplies", "distributions", "fr_numbers_details",
         )
