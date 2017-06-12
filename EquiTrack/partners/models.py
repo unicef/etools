@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 import logging
 import datetime
 import json
@@ -10,6 +10,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
 from django.db.models import Q, Sum, F
 from django.db.models.signals import post_save, pre_delete
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
@@ -1408,19 +1409,18 @@ class Intervention(TimeStampedModel):
     @cached_property
     def total_partner_contribution(self):
         # TODO: test this
-        return sum([i.partner_contribution for i in self.planned_budget.all()])
-        # return self.planned_budget.aggregate(mysum=Sum('partner_contribution'))['mysum'] or 0
+        return self.planned_budget.partner_contribution if self.planned_budget else 0
 
     @cached_property
     def total_unicef_cash(self):
         # TODO: test this
-        return sum([i.unicef_cash for i in self.planned_budget.all()])
-        # return self.planned_budget.aggregate(mysum=Sum('unicef_cash'))['mysum'] or 0
+        return self.planned_budget.unicef_cash if self.planned_budget else 0
+
 
     @cached_property
     def total_in_kind_amount(self):
         # TODO: test this
-        return sum([i.in_kind_amount for i in self.planned_budget.all()])
+        return self.planned_budget.in_kind_amount if self.planned_budget else 0
 
     @cached_property
     def total_budget(self):
@@ -1434,23 +1434,21 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution_local(self):
-        if self.planned_budget.exists():
-            return self.planned_budget.aggregate(mysum=Sum('partner_contribution_local'))['mysum']
+        if self.planned_budget:
+            return self.planned_budget.partner_contribution_local
         return 0
 
     @cached_property
     def total_unicef_cash_local(self):
-        # TODO: test this
-        if self.planned_budget.exists():
-            # return sum([i.unicef_cash_local for i in self.planned_budget.all()])
-            return self.planned_budget.aggregate(mysum=Sum('unicef_cash_local'))['mysum']
+        if self.planned_budget:
+            return self.planned_budget.unicef_cash_local
         return 0
 
     @cached_property
     def total_budget_local(self):
         # TODO: test this
-        if self.planned_budget.exists():
-            return self.planned_budget.aggregate(mysum=Sum('in_kind_amount_local'))['mysum'] + self.total_unicef_cash_local + self.total_partner_contribution_local
+        if self.planned_budget:
+            return self.planned_budget.in_kind_amount_local
         return 0
 
     @property
@@ -1692,7 +1690,7 @@ class InterventionResultLink(models.Model):
             self.intervention, self.cp_output
         )
 
-
+@python_2_unicode_compatible
 class InterventionBudget(TimeStampedModel):
     """
     Represents a budget for the intervention
@@ -1700,26 +1698,21 @@ class InterventionBudget(TimeStampedModel):
     Relates to :model:`partners.PCA`
     Relates to :model:`partners.AmendmentLog`
     """
-    intervention = models.ForeignKey(Intervention, related_name='planned_budget', null=True, blank=True)
+    intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True)
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount = models.DecimalField(
         max_digits=20,
         decimal_places=2,
         default=0,
-        verbose_name='UNICEF Supplies'
+        verbose_name=_('UNICEF Supplies')
     )
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
-        verbose_name='UNICEF Supplies Local'
+        verbose_name=_('UNICEF Supplies Local')
     )
-    year = models.CharField(
-        max_length=5,
-        blank=True, null=True
-    )
-
     currency = models.ForeignKey('publics.Currency', on_delete=models.SET_NULL, null=True, blank=True)
     total = models.DecimalField(max_digits=20, decimal_places=2)
 
@@ -1742,14 +1735,11 @@ class InterventionBudget(TimeStampedModel):
 
         super(InterventionBudget, self).save(**kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{}: {}'.format(
             self.intervention,
             self.total
         )
-
-    class Meta:
-        unique_together = (('year', 'intervention'),)
 
 
 class FileType(models.Model):
