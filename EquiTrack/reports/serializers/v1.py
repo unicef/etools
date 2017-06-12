@@ -136,6 +136,10 @@ class UnitSerializer(serializers.ModelSerializer):
 
 
 class CountryProgrammeSerializer(serializers.ModelSerializer):
+    expired = serializers.ReadOnlyField()
+    active = serializers.ReadOnlyField()
+    special = serializers.ReadOnlyField()
+    future = serializers.ReadOnlyField()
 
     class Meta:
         model = CountryProgramme

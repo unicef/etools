@@ -24,17 +24,23 @@ class TestReportViews(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.result_type = ResultType.objects.get(id=random.choice([1, 2, 3]))
+        self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
+
+        today = datetime.date.today()
+        self.country_programme = CountryProgrammeFactory(
+            wbs='0000/A0/01',
+            from_date=datetime.date(today.year - 1, 1, 1),
+            to_date=datetime.date(today.year + 1, 1, 1))
+
+
         self.result1 = ResultFactory(
             result_type=self.result_type,
-            result_structure=ResultStructureFactory(),
-            country_programme=CountryProgrammeFactory(wbs="/A0/"),
+            country_programme=self.country_programme,
         )
 
         self.result2 = ResultFactory(
             result_type=self.result_type,
-            result_structure=self.result1.result_structure,
-            country_programme=self.result1.country_programme,
+            country_programme=self.country_programme
         )
 
         # Additional data to use in tests
@@ -122,7 +128,7 @@ class TestReportViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(int(response.data[0]["country_programme"]), CountryProgramme.current().id)
+        self.assertEquals(int(response.data[0]["country_programme"]), CountryProgramme.all_active().first().id)
 
     def test_apiv2_results_list_filter_year(self):
         param = {
