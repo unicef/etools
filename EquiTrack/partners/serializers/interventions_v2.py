@@ -349,7 +349,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         fields = (
             "id", "partner", "agreement", "document_type", "hrp", "number", "prc_review_document_file",
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
-            "submission_date", "prc_review_document", "signed_pd_document", "signed_by_unicef_date",
+            "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
             "created", "modified", "planned_budget", "result_links",
