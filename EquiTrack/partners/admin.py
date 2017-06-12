@@ -201,7 +201,6 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
         'unicef_cash',
         'in_kind_amount',
         'total',
-        'year',
         'amendment',
     )
     readonly_fields = (
@@ -253,7 +252,6 @@ class InterventionBudgetAdmin(admin.ModelAdmin):
     model = InterventionBudget
     fields = (
         'intervention',
-        'year',
         'currency',
         'partner_contribution',
         'unicef_cash',
@@ -265,12 +263,10 @@ class InterventionBudgetAdmin(admin.ModelAdmin):
     )
     list_display = (
         'intervention',
-        'year',
         'total'
     )
     list_filter = (
         'intervention',
-        'year',
     )
     search_fields = (
         'intervention__number',
