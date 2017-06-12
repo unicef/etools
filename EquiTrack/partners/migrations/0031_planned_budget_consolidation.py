@@ -22,27 +22,43 @@ def migrate_planned_budget(apps, schema_editor):
     print("Total interventions {}".format(interventions.count()))
     uped = 0
     for i in interventions:
-        pb = i.planned_budget.aggregate(
-            total_partner_contribution=Sum('partner_contribution'),
-            total_unicef_cash=Sum('unicef_cash'),
-            total_in_kind_amount=Sum('in_kind_amount'),
-            total_partner_contribution_local=Sum('partner_contribution_local'),
-            unicef_cash_local=Sum('unicef_cash_local'),
-            total_in_kind_amount_local=Sum('in_kind_amount_local')
-        )
-        currency = pb[0].currency or local_currency
-        i.planned_budget.all().delete()
-        if pb.total_unicef_cash > 0:
-            uped += 1
+        if i.planned_budget.exists():
+            pb = i.planned_budget.aggregate(
+                total_partner_contribution=Sum('partner_contribution'),
+                total_unicef_cash=Sum('unicef_cash'),
+                total_in_kind_amount=Sum('in_kind_amount'),
+                total_partner_contribution_local=Sum('partner_contribution_local'),
+                total_unicef_cash_local=Sum('unicef_cash_local'),
+                total_in_kind_amount_local=Sum('in_kind_amount_local')
+            )
+            currency = i.planned_budget.first().currency or local_currency
+            i.planned_budget.all().delete()
+
+            if pb['total_unicef_cash'] > 0 or pb['total_unicef_cash_local'] > 0:
+                uped += 1
+                new_planned_budget = InterventionBudget(
+                    intervention=i,
+                    partner_contribution=pb['total_partner_contribution'],
+                    unicef_cash=pb['total_unicef_cash'],
+                    in_kind_amount=pb['total_in_kind_amount'],
+                    partner_contribution_local=pb['total_partner_contribution_local'],
+                    unicef_cash_local=pb['total_unicef_cash_local'],
+                    in_kind_amount_local=pb['total_in_kind_amount_local'],
+                    total=pb['total_partner_contribution'] + pb['total_in_kind_amount'] + pb['total_unicef_cash'],
+                    currency=currency,
+                )
+                new_planned_budget.save()
+        else:
             new_planned_budget = InterventionBudget(
                 intervention=i,
-                partner_contribution=pb['total_partner_contribution'],
-                unicef_cash=pb['total_unicef_cash'],
-                in_kind_amount=pb['total_in_kind_amount'],
-                partner_contribution_local=pb['total_partner_contribution_local'],
-                unicef_cash_local=pb['unicef_cash_local'],
-                in_kind_amount_local=pb['total_in_kind_amount_local'],
-                currency=currency,
+                partner_contribution=0,
+                unicef_cash=0,
+                in_kind_amount=0,
+                partner_contribution_local=0,
+                unicef_cash_local=0,
+                in_kind_amount_local=0,
+                currency=local_currency,
+                total = 0
             )
             new_planned_budget.save()
         print('Updated automatically {}'.format(uped))
