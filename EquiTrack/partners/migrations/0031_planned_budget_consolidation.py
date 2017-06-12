@@ -51,7 +51,7 @@ def migrate_planned_budget(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0029_auto_20170517_2017'),
+        ('partners', '0030_intervention_signed_pd_document'),
         ('users', '0008_workspacecounter'),
         ('publics', '0024_auto_20170526_1600')
     ]
