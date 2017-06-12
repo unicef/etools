@@ -656,12 +656,10 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
+                 # ('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start', 'end'),
                  'population_focus',
-                 'fr_numbers',
-                 ('total_unicef_cash', 'total_budget', 'total_partner_contribution', 'total_in_kind_amount', 'total_unicef_budget'),
-                 ('total_partner_contribution_local', 'total_unicef_cash_local', 'total_budget_local',),
-                 ('days_from_submission_to_signed', 'submitted_to_prc', 'days_from_review_to_signed',),)
+                 'fr_numbers',),
         }),
         # (_('Add sites by P Code'), {
         #     u'classes': (u'suit-tab suit-tab-locations',),
