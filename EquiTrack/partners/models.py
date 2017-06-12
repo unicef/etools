@@ -460,7 +460,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
-            current_cycle = CountryProgramme.current()
+            current_cycle = CountryProgramme.main_active()
             last_audit = partner.latest_assessment(u'Scheduled Audit report')
             if assesment:
                 if last_audit:
@@ -1100,7 +1100,8 @@ class Agreement(TimeStampedModel):
         # auto-update country programme:
         if not self.country_programme and self.start and self.end:
             try:
-                self.country_programme = CountryProgramme.encapsulates(self.start, self.end)
+                self.country_programme = CountryProgramme.objects.get(from_date__lte=self.start,
+                                                                      to_date__gte=self.start)
             except (CountryProgramme.MultipleObjectsReturned, CountryProgramme.DoesNotExist):
                 logging.warn('CountryProgramme not found for agreement {} in country {}'.
                              format(self.id, connection.tenant))
@@ -1201,7 +1202,7 @@ class AgreementAmendmentType(models.Model):
 
     def save(self, **kwargs):
         if self.pk is None and self.type == 'CP extension':
-            self.cp_cycle_end = CountryProgramme.current().to_date
+            self.cp_cycle_end = self.agreement_amendment.agreement.country_programme.to_date
         return super(AgreementAmendmentType, self).save(**kwargs)
 
     def __unicode__(self):
@@ -1333,7 +1334,11 @@ class Intervention(TimeStampedModel):
         null=True, blank=True,
         upload_to=get_prc_intervention_file_path
     )
-
+    signed_pd_document = models.FileField(
+        max_length=1024,
+        null=True, blank=True,
+        upload_to=get_prc_intervention_file_path
+    )
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
 
@@ -1382,6 +1387,10 @@ class Intervention(TimeStampedModel):
             return u'Not fully signed'
         signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
         return relativedelta(signed_date - self.submission_date).days
+
+    @property
+    def submitted_to_prc(self):
+        return True if self.submission_date else False
 
     @property
     def days_from_review_to_signed(self):

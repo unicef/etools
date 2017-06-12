@@ -218,7 +218,7 @@ class PMPDropdownsListApiView(APIView):
         ).values('user_id', 'full_name', 'username', 'email'))
 
         hrps = list(ResultStructure.objects.values())
-        current_country_programme = CountryProgramme.current()
+        current_country_programme = CountryProgramme.main_active()
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False,
                                                 country_programme=current_country_programme).values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
@@ -258,7 +258,7 @@ class PartnershipDashboardAPIView(APIView):
 
         # Otherwise, use current CountryProgramme this year to filter Intervention and GovernmentIntervention
         else:
-            currentCountryProgramme = CountryProgramme.current()
+            currentCountryProgramme = CountryProgramme.main_active()
 
             interventions = Intervention.objects.filter(
                 agreement__country_programme=currentCountryProgramme)

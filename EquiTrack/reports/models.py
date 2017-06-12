@@ -1,5 +1,5 @@
-from datetime import datetime
-from django.db import models
+from datetime import datetime, date
+from django.db import models, transaction
 from django.contrib.postgres.fields import JSONField
 
 from django.utils.functional import cached_property
@@ -35,6 +35,9 @@ class Quarter(models.Model):
     def save(self, *args, **kwargs):
         super(Quarter, self).save(*args, **kwargs)
 
+class CountryProgrammeManager(models.Manager):
+    def get_queryset(self):
+        return super(CountryProgrammeManager, self).get_queryset().filter(invalid=False)
 
 class CountryProgramme(models.Model):
     """
@@ -42,29 +45,65 @@ class CountryProgramme(models.Model):
     """
     name = models.CharField(max_length=150)
     wbs = models.CharField(max_length=30, unique=True)
+    invalid = models.BooleanField(default=False)
     from_date = models.DateField()
     to_date = models.DateField()
+
+    objects = CountryProgrammeManager()
 
     def __unicode__(self):
         return ' '.join([self.name, self.wbs])
 
+    @cached_property
+    def active(self):
+        today = date.today()
+        return self.from_date <= today < self.to_date
+
+    @cached_property
+    def future(self):
+        today = date.today()
+        return self.from_date >= today
+
+    @cached_property
+    def expired(self):
+        today = date.today()
+        return self.to_date < today
+
+    @cached_property
+    def special(self):
+        return self.wbs[5] != 'A'
+
     @classmethod
-    def current(cls):
-        today = datetime.now()
+    def all_active(cls):
+        today = date.today()
+        qs = cls.objects.filter(from_date__lte=today, to_date__gt=today)
+        return qs
+
+    @classmethod
+    def all_future(cls, qs=None):
+        today = date.today()
+        qs = cls.objects.filter(from_date__gt=today)
+        return qs
+
+    @classmethod
+    def main_active(cls):
+        today = date.today()
         cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
         return cps.first()
 
-    @classmethod
-    def encapsulates(cls, date_from, date_to):
-        '''
-        :param date_from:
-        :param date_to:
-        :return: CountryProgramme instance - Country programme that contains the dates specified
-        raises cls.DoesNotExist if the dates span outside existing country programmes
-        raises cls.MultipleObjectsReturned if the dates span multiple country programmes
-        '''
+    def save(self, *args, **kwargs):
+        if 'A0/99' in self.wbs:
+            self.invalid = True
 
-        return cls.objects.get(wbs__contains='/A0/', from_date__lte=date_from, to_date__gte=date_to)
+        if self.pk:
+            old_version = CountryProgramme.objects.get(id=self.pk)
+            if old_version.to_date != self.to_date:
+                from partners.models import Agreement
+                with transaction.atomic():
+                    Agreement.objects.filter(agreement_type='PCA', country_programme=self).update(end=self.to_date)
+                    super(CountryProgramme, self).save(*args, **kwargs)
+                    return
+        super(CountryProgramme, self).save(*args, **kwargs)
 
 
 class ResultStructure(models.Model):
@@ -155,6 +194,11 @@ class ResultManager(models.Manager):
             'country_programme', 'result_structure', 'result_type')
 
 
+class OutputManager(models.Manager):
+    def get_queryset(self):
+        return super(OutputManager, self).get_queryset().filter(result_type__name=ResultType.OUTPUT).select_related(
+            'country_programme', 'result_structure', 'result_type')
+
 class Result(MPTTModel):
     """
     Represents a result, wbs is unique
@@ -194,6 +238,7 @@ class Result(MPTTModel):
     ram = models.BooleanField(default=False)
 
     objects = ResultManager()
+    outputs = OutputManager()
 
     class Meta:
         ordering = ['name']
@@ -206,6 +251,26 @@ class Result(MPTTModel):
             self.result_type.name,
             self.name
         )
+
+    @cached_property
+    def output_name(self):
+        assert self.result_type.name == ResultType.OUTPUT
+
+        return u'{}{}{}'.format(
+            #self.status if self.status else u'Active',
+            '[Expired] ' if self.expired else '',
+            'Special- ' if self.special else '',
+            self.name
+        )
+
+    @cached_property
+    def expired(self):
+        today = date.today()
+        return self.to_date < today
+
+    @cached_property
+    def special(self):
+        return self.country_programme.special
 
     def __unicode__(self):
         return u'{} {}: {}'.format(
