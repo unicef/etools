@@ -25,6 +25,7 @@ class VisionSyncLogAdmin(admin.ModelAdmin):
     )
     readonly_fields = (
         'country',
+        'details',
         'handler_name',
         'total_records',
         'total_processed',

@@ -6,22 +6,25 @@ from rest_framework.exceptions import ValidationError
 from reports.models import Result, AppliedIndicator, IndicatorBlueprint, LowerResult
 
 
-class ResultListSerializer(serializers.ModelSerializer):
-
+class OutputListSerializer(serializers.ModelSerializer):
+    name = serializers.ReadOnlyField(source="output_name")
     result_type = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    expired = serializers.ReadOnlyField()
+    special = serializers.ReadOnlyField()
 
     class Meta:
         model = Result
         fields = '__all__'
 
 
-class MinimalResultListSerializer(serializers.ModelSerializer):
+class MinimalOutputListSerializer(serializers.ModelSerializer):
+    name = serializers.ReadOnlyField(source="output_name")
 
     class Meta:
         model = Result
         fields = (
             "id",
-            "name",
+            "name"
         )
 
 

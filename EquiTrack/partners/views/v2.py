@@ -256,7 +256,7 @@ class PartnershipDashboardAPIView(APIView):
 
         # Otherwise, use current CountryProgramme this year to filter Intervention and GovernmentIntervention
         else:
-            currentCountryProgramme = CountryProgramme.current()
+            currentCountryProgramme = CountryProgramme.main_active()
 
             interventions = Intervention.objects.filter(
                 agreement__country_programme=currentCountryProgramme)
