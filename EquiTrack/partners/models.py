@@ -522,17 +522,21 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         """
         year = datetime.date.today().year
         total = 0
-        if partner.partner_type == u'Government':
-            pass
-        else:
+        if partner.partner_type != u'Government':
             q = InterventionBudget.objects.filter(
                 intervention__agreement__partner=partner,
                 intervention__status__in=[
                     Intervention.ACTIVE,
                     Intervention.IMPLEMENTED
                 ])
-            q = q.values_list('unicef_cash', flat=True)
-            total = sum(q)
+            if budget_record:
+                q = q.exclude(id=budget_record.id).values_list('unicef_cash', flat=True)
+
+                total = sum(q)
+                total += budget_record.unicef_cash
+            else:
+                q = q.values_list('unicef_cash', flat=True)
+                total = sum(q)
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         hact["planned_cash_transfer"] = float(total)
