@@ -54,10 +54,10 @@ class TestUserViews(APITenantTestCase):
         self.partnership_manager_user.groups.add(self.group)
 
     def test_api_users_list(self):
-        response = self.forced_auth_req('get', '/api/v2/users/full/', user=self.unicef_staff)
+        response = self.forced_auth_req('get', '/api/v2/users/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 3)
+        self.assertEquals(len(response.data), 2)
 
     def test_api_users_list_values(self):
         response = self.forced_auth_req(
@@ -83,13 +83,13 @@ class TestUserViews(APITenantTestCase):
     def test_api_users_list_managers(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/users/full/',
+            '/api/v2/users/',
             user=self.unicef_staff,
             data={"partnership_managers": True}
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEquals(len(response.data), 2)
 
     def test_api_groups_list(self):
         response = self.forced_auth_req('get', '/api/groups/', user=self.unicef_staff)
@@ -145,9 +145,9 @@ class TestUserViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_minimal_verbosity(self):
-        response = self.forced_auth_req('get', '/api/v2/users/full/', data={'verbosity': 'minimal'}, user=self.unicef_superuser)
+        response = self.forced_auth_req('get', '/api/v2/users/', data={'verbosity': 'minimal'}, user=self.unicef_superuser)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json), 1)
+        self.assertEqual(len(response_json), 2)
 
     @skip('How to create new schemas?')
     def test_business_area_code(self):
