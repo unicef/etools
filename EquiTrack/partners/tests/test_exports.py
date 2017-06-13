@@ -6,7 +6,7 @@ from tablib.core import Dataset
 
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, \
     GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory, \
-    ResultStructureFactory, InterventionBudgetFactory, PartnerStaffFactory
+    InterventionBudgetFactory, PartnerStaffFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory
 from partners.models import GovernmentInterventionResult, SupplyPlan, DistributionPlan

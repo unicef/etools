@@ -106,31 +106,6 @@ class CountryProgramme(models.Model):
         super(CountryProgramme, self).save(*args, **kwargs)
 
 
-class ResultStructure(models.Model):
-    """
-    Represents a humanitarian response plan in the country programme
-
-    Relates to :model:`reports.CountryProgramme`
-    """
-
-    name = models.CharField(max_length=150)
-    country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
-    from_date = models.DateField()
-    to_date = models.DateField()
-    # TODO: add validation these dates should never extend beyond the country programme structure
-
-    class Meta:
-        ordering = ['name']
-        unique_together = (("name", "from_date", "to_date"),)
-
-    def __unicode__(self):
-        return self.name
-
-    @classmethod
-    def current(cls):
-        return ResultStructure.objects.order_by('to_date').last()
-
-
 class ResultType(models.Model):
     """
     Represents a result type
@@ -191,13 +166,13 @@ class Sector(models.Model):
 class ResultManager(models.Manager):
     def get_queryset(self):
         return super(ResultManager, self).get_queryset().select_related(
-            'country_programme', 'result_structure', 'result_type')
+            'country_programme', 'result_type')
 
 
 class OutputManager(models.Manager):
     def get_queryset(self):
         return super(OutputManager, self).get_queryset().filter(result_type__name=ResultType.OUTPUT).select_related(
-            'country_programme', 'result_structure', 'result_type')
+            'country_programme', 'result_type')
 
 class Result(MPTTModel):
     """
@@ -207,8 +182,6 @@ class Result(MPTTModel):
     Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.ResultType`
     """
-
-    result_structure = models.ForeignKey(ResultStructure, null=True, blank=True, on_delete=models.DO_NOTHING)
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     sector = models.ForeignKey(Sector, null=True, blank=True)
@@ -333,9 +306,6 @@ class Goal(models.Model):
     Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.Sector`
     """
-
-    result_structure = models.ForeignKey(
-        ResultStructure, blank=True, null=True, on_delete=models.DO_NOTHING)
     sector = models.ForeignKey(Sector, related_name='goals')
     name = models.CharField(max_length=512, unique=True)
     description = models.CharField(max_length=512, blank=True)
@@ -437,10 +407,6 @@ class Indicator(models.Model):
     sector = models.ForeignKey(
         Sector,
         blank=True, null=True
-    )
-    result_structure = models.ForeignKey(
-        ResultStructure,
-        blank=True, null=True, on_delete=models.DO_NOTHING
     )
 
     result = models.ForeignKey(Result, null=True, blank=True)

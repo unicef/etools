@@ -19,7 +19,6 @@ from rest_framework.views import APIView
 from publics.models import Currency
 
 from reports.models import (
-    ResultStructure,
     CountryProgramme,
     Result,
     ResultType,

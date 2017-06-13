@@ -13,7 +13,6 @@ from EquiTrack.factories import (
     ResultFactory,
     SectionFactory,
     LocationFactory,
-    ResultStructureFactory,
     CountryProgrammeFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase

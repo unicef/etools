@@ -5,7 +5,6 @@ from rest_framework import serializers
 from workplan.serializers import ResultWorkplanPropertySerializer
 from workplan.models import ResultWorkplanProperty
 from reports.models import (
-    ResultStructure,
     ResultType,
     Unit,
     Sector,
@@ -106,15 +105,6 @@ class ResultLightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Result
         fields = ('id', 'result_name')
-
-
-class ResultStructureSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = ResultStructure
-        fields = '__all__'
 
 
 class ResultTypeSerializer(serializers.ModelSerializer):

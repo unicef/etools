@@ -11,7 +11,6 @@ from EquiTrack.factories import (
     PartnerFactory,
     UserFactory,
     ResultFactory,
-    ResultStructureFactory,
     LocationFactory,
     AgreementFactory,
     PartnerStaffFactory,
@@ -74,8 +73,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.output_res_type, _ = ResultType.objects.get_or_create(name='Output')
 
         self.result = ResultFactory(
-            result_type=self.output_res_type,
-            result_structure=ResultStructureFactory())
+            result_type=self.output_res_type,)
         self.pcasector = InterventionSectorLocationLink.objects.create(
             intervention=self.intervention,
             sector=Sector.objects.create(name="Sector 1")
@@ -511,7 +509,7 @@ class TestPartnershipViews(APITenantTestCase):
         self.intervention = InterventionFactory(agreement=agreement)
 
         self.result_type = ResultType.objects.get(id=1)
-        self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
+        self.result = ResultFactory(result_type=self.result_type,)
         self.pcasector = InterventionSectorLocationLink.objects.create(
             intervention=self.intervention,
             sector=Sector.objects.create(name="Sector 1")
