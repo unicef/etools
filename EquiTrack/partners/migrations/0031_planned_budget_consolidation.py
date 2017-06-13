@@ -4,8 +4,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models, connection
 from django.db.models import Sum
-import partners.models
-
 def reverse(apps, schema_editor):
     pass
 
@@ -15,7 +13,8 @@ def migrate_planned_budget(apps, schema_editor):
     Workspace = apps.get_model('users', 'Country')
     current_workspace = Workspace.objects.get(schema_name=connection.schema_name)
 
-    assert current_workspace.local_currency is not None
+    if not current_workspace.schema_name == 'test':
+        assert current_workspace.local_currency is not None
 
     local_currency = current_workspace.local_currency
     interventions = Intervention.objects.all()

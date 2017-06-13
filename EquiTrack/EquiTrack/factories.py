@@ -202,7 +202,6 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     partner_contribution_local = 20.00
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
-    year = '2017'
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
