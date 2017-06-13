@@ -1,7 +1,8 @@
 import copy
 import logging
 from django.apps import apps
-from django.db.models import QuerySet
+from django.db.models import QuerySet, ObjectDoesNotExist
+
 from django.utils.functional import cached_property
 
 from django_fsm import (
@@ -148,14 +149,19 @@ class ValidatorViewMixin(object):
         main_object = main_serializer.save()
 
         for k in my_relations.iterkeys():
-            prop = '{}_old'.format(k)
-            if isinstance(getattr(old_instance, k), QuerySet):
-                # This means foreign key into main object
-                val = list(getattr(old_instance, k).all())
+            try:
+                rel_field_val = getattr(old_instance, k)
+            except ObjectDoesNotExist:
+                pass
             else:
-                # This means OneToOne field
-                val = getattr(old_instance, k)
-            setattr(old_instance, prop, val)
+                prop = '{}_old'.format(k)
+                if isinstance(rel_field_val, QuerySet):
+                    # This means foreign key into main object
+                    val = list(rel_field_val.all())
+                else:
+                    # This means OneToOne field
+                    val = rel_field_val
+                setattr(old_instance, prop, val)
 
         def _get_model_for_field(field):
             return main_object.__class__._meta.get_field(field).related_model
