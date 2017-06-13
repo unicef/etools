@@ -36,17 +36,15 @@ from partners.models import (
     PartnerStaffMember,
     # ResultChain,
     IndicatorReport,
-    GovernmentIntervention
 )
 from partners.exports import (
     PartnerExport, AgreementExport,
-    InterventionExport, GovernmentExport
+    InterventionExport,
 )
 from partners.filters import (
     PartnerOrganizationExportFilter,
     AgreementExportFilter,
     InterventionExportFilter,
-    GovernmentInterventionExportFilter,
     PartnerScopeFilter
 )
 from partners.permissions import PartnerPermission  # ResultChainPermission
@@ -65,7 +63,6 @@ from partners.serializers.v1 import (
     AgreementSerializer,
     PartnershipBudgetSerializer,
     PCAFileSerializer,
-    GovernmentInterventionSerializer,
 )
 from EquiTrack.utils import get_data_from_insight
 
@@ -351,26 +348,6 @@ class AgreementViewSet(
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="ModelExportAgreements.csv"'
-        response.write(dataset.csv)
-        return response
-
-
-class GovernmentInterventionsViewSet(viewsets.GenericViewSet,
-                                     mixins.RetrieveModelMixin,
-                                     mixins.ListModelMixin,):
-    queryset = GovernmentIntervention.objects.all()
-    serializer_class = GovernmentInterventionSerializer
-    permission_classes = (PartnerPermission,)
-    filter_backends = (PartnerScopeFilter, GovernmentInterventionExportFilter,)
-
-    @list_route(methods=['get'])
-    def export(self, request, partner_pk=None):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        dataset = GovernmentExport().export(queryset)
-
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="ModelExportGovernmentInterventions.csv"'
         response.write(dataset.csv)
         return response
 

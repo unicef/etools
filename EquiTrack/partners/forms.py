@@ -38,7 +38,6 @@ from .models import (
     SupplyItem,
     DistributionPlan,
     PartnershipBudget,
-    GovernmentIntervention,
     Intervention,
     InterventionSectorLocationLink,
 )
@@ -135,25 +134,6 @@ class AssessmentAdminForm(AutoSizeTextForm):
                 )
 
         return cleaned_data
-
-
-class GovernmentInterventionAdminForm(forms.ModelForm):
-
-    class Meta:
-        model = GovernmentIntervention
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        super(GovernmentInterventionAdminForm, self).__init__(*args, **kwargs)
-
-        # by default add the previous 1 years and the next 2 years
-        current_year = date.today().year
-        years = range(current_year - 1, current_year + 2)
-
-        self.fields['year'] = forms.ChoiceField(
-            choices=[(year, year) for year in years]
-        )
-        self.fields['year'].empty_label = u'Select year'
 
 
 class AmendmentForm(forms.ModelForm):

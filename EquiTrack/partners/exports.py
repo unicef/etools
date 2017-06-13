@@ -1,4 +1,3 @@
-from partners.models import GovernmentIntervention
 
 __author__ = 'jcranwellward'
 
@@ -359,23 +358,3 @@ class InterventionExport(resources.ModelResource):
     def dehydrate_total_budget(self, intervention):
         return intervention.total_budget
 
-
-class GovernmentExport(resources.ModelResource):
-    sectors = resources.Field()
-    cash_transfer = resources.Field()
-    year = resources.Field()
-
-    class Meta:
-        model = GovernmentIntervention
-        fields = ('number', 'partner__name', 'result_structure__name', 'sectors', 'cash_transfer',
-                  'year')
-        export_order = fields
-
-    def dehydrate_sectors(self, government):
-        return ''
-
-    def dehydrate_cash_transfer(self, government):
-        return sum([r.planned_amount for r in government.results.all()])
-
-    def dehydrate_year(self, government):
-        return government.result_structure.to_date.year
