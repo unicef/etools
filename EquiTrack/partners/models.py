@@ -1470,54 +1470,22 @@ class Intervention(TimeStampedModel):
 
     @property
     def reference_number(self):
-        if self.status in [self.DRAFT, self.CANCELLED]:
-            number = u'{}/TempRef:{}'.format(self.agreement.agreement_number, self.id)
-        else:
-            interventions_count = Intervention.objects.filter(
-                status__in=[self.ACTIVE, self.SUSPENDED,
-                            self.TERMINATED, self.IMPLEMENTED],
-                signed_by_unicef_date__year=self.year,
-                document_type=self.document_type
-            ).exclude(id=self.pk).count()
-
-            sequence = '{0:02d}'.format(interventions_count + 1)
-            number = u'{agreement}/{type}{year}{seq}'.format(
-                agreement=self.agreement.agreement_number,
-                code=connection.tenant.country_short_code or '',
-                type=self.document_type,
-                year=self.year,
-                seq=sequence,
-            )
-        # assuming in tempRef (status Draft or Cancelled we don't have
-        # amendments)
+        number = u'{agreement}/{type}{year}{id}'.format(
+            agreement=self.agreement.agreement_number,
+            code=connection.tenant.country_short_code or '',
+            type=self.document_type,
+            year=self.year,
+            id=self.id
+        )
         return u'{}'.format(number)
 
-    def check_status_auto_updates(self):
-
-        if self.status == Intervention.DRAFT and self.start and self.end and \
-                self.signed_by_unicef_date and self.signed_by_partner_date and \
-                self.unicef_signatory and self.partner_authorized_officer_signatory:
-            self.status = Intervention.ACTIVE
-            return
-        today = datetime.date.today()
-        if self.end and self.status == self.ACTIVE and self.end < today:
-            self.status = Intervention.IMPLEMENTED
-            return
-
-    def update_reference_number(self, oldself=None, amendment_number=None, **kwargs):
+    def update_reference_number(self, amendment_number=None):
 
         if amendment_number:
             self.number = u'{}-{}'.format(self.number.split('-')[0], amendment_number)
             return
 
-        # to create a reference number we need a pk
-        elif not oldself:
-            super(Intervention, self).save()
-            self.number = self.reference_number
-
-        elif self.status != oldself.status:
-            if self.status not in [self.CANCELLED, self.DRAFT] and 'TempRef' in self.number:
-                self.number = self.reference_number
+        self.number = self.reference_number
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -1533,9 +1501,11 @@ class Intervention(TimeStampedModel):
         # update reference number if needed
         amendment_number = kwargs.get('amendment_number', None)
         if amendment_number:
-            self.update_reference_number(oldself, amendment_number)
-        else:
-            self.update_reference_number(oldself)
+            self.update_reference_number(amendment_number)
+        if not oldself:
+            # to create a reference number we need a pk
+            super(Intervention, self).save()
+            self.update_reference_number()
 
         super(Intervention, self).save()
 
