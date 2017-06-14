@@ -26,7 +26,6 @@ class TravelViews(APITenantTestCase):
     def test_travel_creation(self):
         dsaregion = DSARegion.objects.first()
         airlines = AirlineCompanyFactory()
-        airlines2 = AirlineCompanyFactory()
         office = OfficeFactory()
         section = SectionFactory()
         currency = CurrencyFactory()
@@ -133,4 +132,3 @@ class TravelViews(APITenantTestCase):
         travel = TravelFactory()
         response = self.forced_auth_req('get', '/api/t2f/travels/{}/'.format(travel.id), user=self.unicef_staff)
         self.assertEqual(json.loads(response.rendered_content), {})
-

@@ -32,7 +32,6 @@ class TravelSortFilter(BaseSortFilter):
         return first_name_lookup, last_name_lookup
 
 
-
 class TravelFilterBoxFilter(BaseFilterBoxFilter):
     serializer_class = TravelFilterBoxSerializer
 

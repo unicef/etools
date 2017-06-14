@@ -87,7 +87,7 @@ class InvoiceExport(object):
 
     def generate_expense_nodes(self, main, invoice):
         for item_no, invoice_item in enumerate(invoice.items.all()):
-            self._generate_expense_node(main, invoice_item, item_no+1) # +1 to start from 1
+            self._generate_expense_node(main, invoice_item, item_no + 1)  # +1 to start from 1
 
     def _generate_expense_node(self, main, invoice_item, item_no):
         expense = ET.SubElement(main, 'expense')
@@ -177,7 +177,7 @@ class InvoiceUpdater(object):
     @run_on_tenants
     def _update_invoices_in_tenants(self, workspace, invoice_grouping):
         if workspace.business_area_code not in invoice_grouping:
-            return 
+            return
 
         workspace_group = invoice_grouping.pop(workspace.business_area_code, [])
         for invoice_data in workspace_group:

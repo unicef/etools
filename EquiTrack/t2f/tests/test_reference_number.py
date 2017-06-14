@@ -9,7 +9,6 @@ from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
-
 class TestReferenceNumber(APITenantTestCase):
     def setUp(self):
         super(TestReferenceNumber, self).setUp()

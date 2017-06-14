@@ -73,9 +73,9 @@ class TravelList(APITenantTestCase):
 
     def test_dashboard_travels_list_view_no_section(self):
         travel = TravelFactory(reference_number=make_travel_reference_number(),
-                                    traveler=self.traveler,
-                                    supervisor=self.unicef_staff,
-                                    section=None)
+                               traveler=self.traveler,
+                               supervisor=self.unicef_staff,
+                               section=None)
 
         with self.assertNumQueries(10):
             response = self.forced_auth_req(
@@ -248,12 +248,12 @@ class TravelList(APITenantTestCase):
                                 'dinner': False,
                                 'accomodation': False,
                                 'no_dsa': False},
-                                {'date': '2016-12-16',
-                                 'breakfast': False,
-                                 'lunch': False,
-                                 'dinner': False,
-                                 'accomodation': False,
-                                 'no_dsa': False}],
+                               {'date': '2016-12-16',
+                                'breakfast': False,
+                                'lunch': False,
+                                'dinner': False,
+                                'accomodation': False,
+                                'no_dsa': False}],
                 'itinerary': [{'airlines': [],
                                'overnight_travel': False,
                                'origin': 'a',

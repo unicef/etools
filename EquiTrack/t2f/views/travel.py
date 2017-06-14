@@ -1,8 +1,5 @@
 from __future__ import unicode_literals
 
-from decimal import Decimal
-
-from django.conf import settings
 from django.db.transaction import atomic
 
 from rest_framework import viewsets, mixins, status
@@ -14,7 +11,6 @@ from rest_framework.response import Response
 
 from rest_framework_csv import renderers
 
-from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter
 from t2f.filters import travel_list, action_points
 from t2f.renderers import ActionPointCSVRenderer
@@ -88,7 +84,8 @@ class TravelListViewSet(mixins.ListModelMixin,
 
     def export_invoices(self, request, *args, **kwargs):
         travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = InvoiceItem.objects.filter(invoice__travel__in=travel_queryset).order_by('invoice__travel__reference_number')
+        queryset = InvoiceItem.objects.filter(
+            invoice__travel__in=travel_queryset).order_by('invoice__travel__reference_number')
         serialzier = InvoiceExportSerializer(queryset, many=True, context=self.get_serializer_context())
 
         response = Response(data=serialzier.data, status=status.HTTP_200_OK)

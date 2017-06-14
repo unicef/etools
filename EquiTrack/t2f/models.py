@@ -34,7 +34,7 @@ class TransitionError(RuntimeError):
 
 class UserTypes(object):
 
-    #TODO: remove God
+    # TODO: remove God
     GOD = 'God'
     ANYONE = 'Anyone'
     TRAVELER = 'Traveler'
@@ -134,7 +134,6 @@ def mark_as_certified_or_completed_threshold_decorator(func):
         func(self, *args, **kwargs)
 
     return wrapper
-
 
 
 class Travel(models.Model):
@@ -242,7 +241,7 @@ class Travel(models.Model):
     # Completion conditions
     def check_trip_report(self):
         if (not self.international_travel) and (self.ta_required) and ((not self.report_note) or
-                                                                           (len(self.report_note) < 1)):
+                                                                       (len(self.report_note) < 1)):
             raise TransitionError('Field report has to be filled.')
         return True
 
@@ -562,7 +561,6 @@ def determine_file_upload_path(instance, filename):
     #          instance.travel.id,
     #          filename]
     #     )
-    country_name = connection.schema_name or 'Uncategorized'
     return 'travels/{}/{}/{}'.format(connection.schema_name, instance.travel.id, filename)
 
 

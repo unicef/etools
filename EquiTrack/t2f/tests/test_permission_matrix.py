@@ -1,16 +1,9 @@
 from __future__ import unicode_literals
 
-import json
-import csv
-from cStringIO import StringIO
-from unittest.case import skip
-
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-
-from .factories import TravelFactory
 
 
 class TestPermissionMatrix(APITenantTestCase):
