@@ -217,10 +217,15 @@ class PMPDropdownsListApiView(APIView):
                 full_name=Concat('first_name', Value(' '), 'last_name'), user_id=F('id')
         ).values('user_id', 'full_name', 'username', 'email'))
 
-        hrps = list(ResultStructure.objects.values())
+        country_programmes = list(CountryProgramme.objects.all_active_and_future.values('id', 'wbs', 'name',
+                                                                                        'from_date', 'to_date'))
         current_country_programme = CountryProgramme.main_active()
-        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False,
-                                                country_programme=current_country_programme).values('id', 'name', 'wbs'))
+        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT,
+                                                wbs__isnull=False,
+                                                country_programme=current_country_programme).values('id',
+                                                                                                    'name',
+                                                                                                    'wbs',
+                                                                                                    'country_programme'))
         supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.all().values())
         donors = list(Donor.objects.all().values())
@@ -228,7 +233,7 @@ class PMPDropdownsListApiView(APIView):
         return Response(
             {
                 'signed_by_unicef_users': signed_by_unicef,
-                'hrps': hrps,
+                'country_programmes': country_programmes,
                 'cp_outputs': cp_outputs,
                 'supply_items': supply_items,
                 'file_types': file_types,

@@ -1252,6 +1252,13 @@ class Intervention(TimeStampedModel):
         blank=True, null=True, on_delete=models.DO_NOTHING,
         help_text=u'Which humanitarian response plan does this PD/SSFA report under?'
     )
+    # Even though CP is defined at the Agreement Level, for a particular intervention this can be different.
+    country_programme = models.ForeignKey(
+        CountryProgramme,
+        related_name='interventions',
+        blank=True, null=True, on_delete=models.DO_NOTHING,
+        help_text=u'Which Country Programme does this Intervention belong to?'
+    )
     number = models.CharField(
         max_length=64,
         blank=True,
