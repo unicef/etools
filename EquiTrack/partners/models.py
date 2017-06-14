@@ -28,7 +28,6 @@ from EquiTrack.mixins import AdminURLMixin
 
 from funds.models import Grant
 from reports.models import (
-    ResultStructure,
     Indicator,
     Sector,
     Goal,
@@ -1246,12 +1245,6 @@ class Intervention(TimeStampedModel):
         Agreement,
         related_name='interventions'
     )
-    hrp = models.ForeignKey(
-        ResultStructure,
-        related_name='interventions',
-        blank=True, null=True, on_delete=models.DO_NOTHING,
-        help_text=u'Which humanitarian response plan does this PD/SSFA report under?'
-    )
     number = models.CharField(
         max_length=64,
         blank=True,
@@ -1737,9 +1730,6 @@ class GovernmentIntervention(models.Model):
         PartnerOrganization,
         related_name='work_plans',
     )
-    result_structure = models.ForeignKey(
-        ResultStructure, on_delete=models.DO_NOTHING, null=True, blank=True
-    )
     country_programme = models.ForeignKey(
         CountryProgramme, on_delete=models.DO_NOTHING, null=True, blank=True,
         related_query_name='government_interventions'
@@ -2108,12 +2098,6 @@ class PCA(AdminURLMixin, models.Model):
         max_length=255,
         verbose_name=u'Document type'
     )
-    # TODO: rename result_structure to hrp
-    result_structure = models.ForeignKey(
-        ResultStructure,
-        blank=True, null=True, on_delete=models.DO_NOTHING,
-        help_text=u'Which result structure does this partnership report under?'
-    )
     number = models.CharField(
         max_length=45L,
         blank=True, null=True,
@@ -2434,9 +2418,6 @@ class PCA(AdminURLMixin, models.Model):
             if not self.agreement.signed_by_unicef_date\
                     and self.agreement.signed_by_partner_date and self.start_date is None:
                 self.start_date = self.agreement.signed_by_partner_date
-
-            if self.end_date is None and self.result_structure:
-                self.end_date = self.result_structure.to_date
 
         super(PCA, self).save(**kwargs)
 

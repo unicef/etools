@@ -150,7 +150,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            'id', 'number', 'hrp', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
+            'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
             'unicef_budget', 'cso_contribution',
             'sectors', 'cp_outputs', 'unicef_focal_points',
             'offices'
@@ -328,7 +328,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner", "agreement", "document_type", "hrp", "number", "prc_review_document_file",
+            "id", "partner", "agreement", "document_type", "number", "prc_review_document_file",
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
@@ -373,7 +373,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         decimal_places=2)
     # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
     unicef_signatory = serializers.SerializerMethodField()
-    hrp_name = serializers.CharField(source='hrp.name')
     partner_focal_points = serializers.SerializerMethodField()
     unicef_focal_points = serializers.SerializerMethodField()
     partner_authorized_officer_signatory = serializers.SerializerMethodField()
@@ -391,7 +390,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         fields = (
             "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
             "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
-            "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
+            "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
             "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
             "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
@@ -489,6 +488,6 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner_id", "partner_name", "agreement", "document_type", "hrp", "number", "title", "status", "start", "end",
+            "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status", "start", "end",
             "offices", "sector_locations",
         )

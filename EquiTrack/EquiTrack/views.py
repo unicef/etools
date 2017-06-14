@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.admin.models import LogEntry
 from partners.models import PCA, PartnerOrganization, GwPCALocation
-from reports.models import Sector, ResultStructure, Indicator
+from reports.models import Sector, Indicator
 from locations.models import CartoDBTable, GatewayType
 from funds.models import Donor
 from trips.models import Trip, ActionPoint
@@ -64,7 +64,6 @@ class DashboardView(TemplateView):
         return {
             'sectors': sectors,
             'current_structure': current_structure,
-            'structures': ResultStructure.objects.all(),
             'pcas': {
                 'active': PCA.objects.filter(
                     result_structure=current_structure,

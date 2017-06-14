@@ -13,7 +13,6 @@ from EquiTrack.factories import (
     ResultFactory,
     SectionFactory,
     LocationFactory,
-    ResultStructureFactory,
     CountryProgrammeFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -48,12 +47,6 @@ class TestReportViews(APITenantTestCase):
         self.location3 = LocationFactory()
         self.section1 = SectionFactory()
         self.section3 = SectionFactory()
-
-    @skip("rename to hrp")
-    def test_api_resultstructures_list(self):
-        response = self.forced_auth_req('get', '/api/reports/result-structures/', user=self.unicef_staff)
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_api_resulttypes_list(self):
         response = self.forced_auth_req('get', '/api/reports/result-types/', user=self.unicef_staff)
