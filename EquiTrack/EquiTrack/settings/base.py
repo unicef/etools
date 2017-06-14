@@ -401,6 +401,7 @@ SHARED_APPS = (
     'mptt',
     'easy_pdf',
     'django_hstore',
+    'ordered_model',
 
     'vision',
     'management',

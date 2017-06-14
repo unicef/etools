@@ -6,9 +6,12 @@ from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 
+from model_utils.models import TimeStampedModel
+from ordered_model.models import OrderedModel
+
 
 @python_2_unicode_compatible
-class FileType(models.Model):
+class FileType(OrderedModel, models.Model):
     name = models.CharField(max_length=64, unique=True)
 
     code = models.CharField(max_length=64, default="")
@@ -18,10 +21,11 @@ class FileType(models.Model):
 
     class Meta:
         unique_together = ("name", "code", )
+        ordering = ('code', 'order')
 
 
 @python_2_unicode_compatible
-class Attachment(models.Model):
+class Attachment(TimeStampedModel, models.Model):
     file_type = models.ForeignKey(FileType)
 
     file = models.FileField(upload_to='files', blank=True, null=True)
