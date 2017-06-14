@@ -202,7 +202,7 @@ class TestModelExport(APITenantTestCase):
             u'',
             u'',
             u', '.join(self.intervention.fr_numbers),
-            '{}'.format(self.intervention.planned_budget.first().currency),
+            '{}'.format(self.intervention.planned_budget.currency),
             u'{:.2f}'.format(self.intervention.total_unicef_cash_local),
             u'{:.2f}'.format(self.intervention.total_unicef_budget),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),

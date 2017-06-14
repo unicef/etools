@@ -38,7 +38,6 @@ class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
             "partner_contribution_local",
             "unicef_cash_local",
             "in_kind_amount_local",
-            "year",
             "total",
             "currency"
         )
@@ -64,28 +63,10 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "partner_contribution_local",
             "unicef_cash_local",
             "in_kind_amount_local",
-            "year",
             "total",
             'currency'
         )
         # read_only_fields = [u'total']
-
-    def validate(self, data):
-        errors = {}
-        try:
-            data = super(InterventionBudgetCUSerializer, self).validate(data)
-        except ValidationError as e:
-            errors.update(e)
-
-        year = data.get("year", "")
-        # To avoid any confusion.. budget year will always be required
-        if not year:
-            errors.update(year="Budget year is required")
-
-        if errors:
-            raise serializers.ValidationError(errors)
-
-        return data
 
 
 class SupplyPlanCreateUpdateSerializer(serializers.ModelSerializer):
@@ -292,7 +273,7 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
-    planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
+    planned_budget = InterventionBudgetNestedSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
@@ -315,7 +296,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
-    planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
+    planned_budget = InterventionBudgetNestedSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
@@ -467,7 +448,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return obj.days_from_review_to_signed
 
     def get_local_currency(self, obj):
-        planned_budget = obj.planned_budget.first()
+        planned_budget = obj.planned_budget
         return planned_budget.currency if planned_budget else ""
 
     def get_fr_numbers(self, obj):
@@ -480,9 +461,7 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     planned_budget = serializers.SerializerMethodField()
 
     def get_planned_budget(self, obj):
-        year = datetime.datetime.now().year
-        return obj.planned_budget.filter(year=year).aggregate(
-            total=Sum('unicef_cash'))['total'] or 0
+        return obj.planned_budget.unicef_cash if obj.planned_budget else 0
 
     class Meta:
         model = Intervention
