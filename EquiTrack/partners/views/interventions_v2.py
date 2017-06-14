@@ -248,14 +248,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         return Response(InterventionDetailSerializer(instance).data)
 
 
-class InterventionBudgetDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
-
-    def delete(self, request, *args, **kwargs):
-        # TODO: Remove endpoint after porting over to new functionality.. for now return 400
-        return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Budget cannot be deleted'})
-
-
 class InterventionPlannedVisitsDeleteView(DestroyAPIView):
     permission_classes = (PartneshipManagerRepPermission,)
 

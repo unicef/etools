@@ -1698,16 +1698,6 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 1)
 
-    def test_intervention_planned_budget_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            '/api/v2/interventions/budgets/{}/'.format(self.intervention_data["planned_budget"]["id"]),
-            user=self.unicef_staff,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data['error'], "Budget cannot be deleted")
-
     def test_intervention_planned_visits_delete(self):
         response = self.forced_auth_req(
             'delete',
