@@ -6,7 +6,7 @@ from tablib.core import Dataset
 
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, \
     GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory, \
-    ResultStructureFactory, InterventionBudgetFactory, PartnerStaffFactory
+    InterventionBudgetFactory, PartnerStaffFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory
 from partners.models import GovernmentInterventionResult, SupplyPlan, DistributionPlan
@@ -55,7 +55,6 @@ class TestModelExport(APITenantTestCase):
         self.intervention = InterventionFactory(
             agreement=self.agreement,
             document_type='SHPD',
-            hrp=ResultStructureFactory(),
             status='draft',
             start=datetime.date.today(),
             end=datetime.date.today(),
@@ -160,7 +159,6 @@ class TestModelExport(APITenantTestCase):
             'UNICEF Focal Points',
             'CSO Authorized Officials',
             'Population Focus',
-            'Humanitarian Response Plan',
             'CP Outputs',
             'RAM Indicators',
             'FR Number(s)',
@@ -201,7 +199,6 @@ class TestModelExport(APITenantTestCase):
             u'',
             u'',
             self.intervention.population_focus,
-            unicode(self.intervention.hrp.name),
             u'',
             u'',
             u', '.join(self.intervention.fr_numbers),
