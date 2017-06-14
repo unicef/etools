@@ -1446,7 +1446,7 @@ class Intervention(TimeStampedModel):
     @property
     def reference_number(self):
         number = u'{agreement}/{type}{year}{id}'.format(
-            agreement=self.agreement.agreement_number,
+            agreement=self.agreement.base_number,
             code=connection.tenant.country_short_code or '',
             type=self.document_type,
             year=self.year,
