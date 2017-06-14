@@ -433,7 +433,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         'start_date',
         'end_date',
         'partner',
-        'result_structure',
         'sector_names',
         'title',
         'total_unicef_cash',
@@ -441,7 +440,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
     list_filter = (
         'partnership_type',
-        'result_structure',
         PCASectorFilter,
         'status',
         'current',
@@ -473,7 +471,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                  'agreement',
                  'partnership_type',
                  'number',
-                 'result_structure',
                  ('title', 'project_type',),
                  'status',
                  'initiation_date',)
@@ -759,7 +756,6 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
         (_('Government Intervention Details'), {
             'fields':
                 ('partner',
-                 'result_structure',
                  'country_programme',
                  'number'),
         }),
@@ -767,7 +763,6 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
     list_display = (
         u'number',
         u'partner',
-        u'result_structure',
         u'country_programme'
     )
     list_filter = (
