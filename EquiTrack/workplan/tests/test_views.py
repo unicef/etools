@@ -12,6 +12,8 @@ from workplan.tasks import notify_comment_tagged_users
 
 
 class TestWorkplanViews(APITenantTestCase):
+    fixtures = ['initial_data.json']
+
     maxDiff = None
     def setUp(self):
         self.user = UserFactory()

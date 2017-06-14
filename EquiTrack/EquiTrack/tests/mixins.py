@@ -35,6 +35,8 @@ class FastTenantTestCase(TenantTestCase):
 
         connection.set_tenant(cls.tenant)
 
+        cls.cls_atomics = cls._enter_atomics()
+
         if cls.fixtures:
             for db_name in cls._databases_names(include_mirrors=False):
                     try:
@@ -54,6 +56,7 @@ class FastTenantTestCase(TenantTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls._rollback_atomics(cls.cls_atomics)
         connection.set_schema_to_public()
 
     def assertKeysIn(self, keys, container, msg=None, exact=False):

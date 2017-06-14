@@ -166,7 +166,7 @@ class TestHACTCalculations(TenantTestCase):
 
 
 class TestPartnerOrganizationModel(TenantTestCase):
-    fixtures = ['reports.initial_data.json']
+    fixtures = ['initial_data.json']
 
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
@@ -543,7 +543,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
 
 class TestAgreementModel(TenantTestCase):
-    fixtures = ['reports.initial_data.json']
+    fixtures = ['initial_data.json']
 
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
@@ -590,7 +590,7 @@ class TestAgreementModel(TenantTestCase):
 
 
 class TestInterventionModel(TenantTestCase):
-    fixtures = ['reports.initial_data.json']
+    fixtures = ['initial_data.json']
 
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
