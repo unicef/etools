@@ -10,6 +10,7 @@ Welcome to eTools's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   guidelines
 
 
 Indices and tables
