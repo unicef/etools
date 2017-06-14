@@ -39,6 +39,21 @@ class CountryProgrammeManager(models.Manager):
     def get_queryset(self):
         return super(CountryProgrammeManager, self).get_queryset().filter(invalid=False)
 
+    @property
+    def all_active_and_future(self):
+        today = date.today()
+        return self.get_queryset().filter(to_date__gt=today)
+
+    @property
+    def all_future(self):
+        today = date.today()
+        return self.get_queryset().filter(from_date__gt=today)
+
+    @property
+    def all_active(self):
+        today = date.today()
+        return self.get_queryset().filter(from_date__lte=today, to_date__gt=today)
+
 class CountryProgramme(models.Model):
     """
     Represents a country programme cycle
@@ -72,18 +87,6 @@ class CountryProgramme(models.Model):
     @cached_property
     def special(self):
         return self.wbs[5] != 'A'
-
-    @classmethod
-    def all_active(cls):
-        today = date.today()
-        qs = cls.objects.filter(from_date__lte=today, to_date__gt=today)
-        return qs
-
-    @classmethod
-    def all_future(cls, qs=None):
-        today = date.today()
-        qs = cls.objects.filter(from_date__gt=today)
-        return qs
 
     @classmethod
     def main_active(cls):

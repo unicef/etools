@@ -26,23 +26,6 @@ from locations.serializers import LocationLightSerializer
 from funds.models import FundsCommitmentItem
 
 
-class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = InterventionBudget
-        fields = (
-            "id",
-            "partner_contribution",
-            "unicef_cash",
-            "in_kind_amount",
-            "partner_contribution_local",
-            "unicef_cash_local",
-            "in_kind_amount_local",
-            "total",
-            "currency"
-        )
-
-
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):
     total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     partner_contribution = serializers.DecimalField(max_digits=20, decimal_places=2)
@@ -66,7 +49,6 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "total",
             'currency'
         )
-        # read_only_fields = [u'total']
 
 
 class SupplyPlanCreateUpdateSerializer(serializers.ModelSerializer):
@@ -151,7 +133,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
-            'unicef_budget', 'cso_contribution',
+            'unicef_budget', 'cso_contribution', 'country_programme',
             'sectors', 'cp_outputs', 'unicef_focal_points',
             'offices'
         )
@@ -273,7 +255,7 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
-    planned_budget = InterventionBudgetNestedSerializer(read_only=True)
+    planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
@@ -296,7 +278,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
-    planned_budget = InterventionBudgetNestedSerializer(read_only=True)
+    planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
@@ -333,7 +315,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
-            "created", "modified", "planned_budget", "result_links",
+            "created", "modified", "planned_budget", "result_links", 'country_programme',
             "amendments", "planned_visits", "attachments", "supplies", "distributions", "fr_numbers_details",
         )
 

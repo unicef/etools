@@ -110,7 +110,6 @@ class IndicatorAdmin(admin.ModelAdmin):
     )
     list_filter = (
         SectorListFilter,
-        'result__result_structure',
         'result__result_type',
         'ram_indicator',
     )
