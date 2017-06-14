@@ -32,7 +32,6 @@ class TravelSortFilter(BaseSortFilter):
         return first_name_lookup, last_name_lookup
 
 
-
 class TravelFilterBoxFilter(BaseFilterBoxFilter):
     serializer_class = TravelFilterBoxSerializer
 
@@ -40,6 +39,10 @@ class TravelFilterBoxFilter(BaseFilterBoxFilter):
         data = super(TravelFilterBoxFilter, self)._get_filter_kwargs(request, queryset, view)
 
         # Construct a backend readable date
+        travel_type = data.pop('travel_type', None)
+        if travel_type:
+            data['activities__travel_type'] = travel_type
+
         year = data.pop('year', None)
         month = data.pop('month', None)
         if year:
@@ -53,9 +56,14 @@ class TravelFilterBoxFilter(BaseFilterBoxFilter):
 
             data['start_date__lte'] = end_date
             data['end_date__gte'] = start_date
+        elif month:
+            data['start_date__month__lte'] = month
+            data['end_date__month__gte'] = month
 
-        # TODO simon: figure out what to do with this
-        data.pop('cp_output', None)
+        cp_output = data.pop('cp_output', None)
+        if cp_output:
+            data['activities__result_id'] = cp_output
+
         return data
 
 
