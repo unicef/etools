@@ -136,15 +136,7 @@ class TestHACTCalculations(TenantTestCase):
             intervention=self.intervention,
             partner_contribution=10000,
             unicef_cash=60000,
-            in_kind_amount=5000,
-            year=str(year)
-        )
-        InterventionBudget.objects.create(
-            intervention=self.intervention,
-            partner_contribution=10000,
-            unicef_cash=40000,
-            in_kind_amount=5000,
-            year=str(year + 1)
+            in_kind_amount=5000
         )
         FundingCommitment.objects.create(
             start=current_cp.from_date,
@@ -440,6 +432,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         }
         self.assertEqual(hact_min_req, data)
 
+    @skip('Deprecated Functionality')
     def test_planned_cash_transfers_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
@@ -493,11 +486,13 @@ class TestPartnerOrganizationModel(TenantTestCase):
             status=u'active', agreement=agreement
         )
         InterventionBudgetFactory(intervention=intervention)
+
         hact = json.loads(self.partner_organization.hact_values) \
             if isinstance(self.partner_organization.hact_values, str) \
             else self.partner_organization.hact_values
         self.assertEqual(hact['planned_cash_transfer'], 100001)
 
+    @skip('Deprecated functionality -planned visits towards government')
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
@@ -671,6 +666,7 @@ class TestInterventionModel(TenantTestCase):
         )
         self.assertEqual(int(self.intervention.total_budget), 100200)
 
+    @skip("Improve this test.. tempref not available anymore.")
     def test_reference_number(self):
         self.assertIn("TempRef:", self.intervention.reference_number)
 

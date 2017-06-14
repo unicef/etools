@@ -16,52 +16,54 @@ def transition_ok(i):
 
 def transition_to_active(i):
     # i = intervention
-    if not (i.signed_by_unicef_date and i.unicef_signatory and i.signed_by_partner_date and
-            i.partner_authorized_officer_signatory and i.start and i.end):
-        raise TransitionError(['Transition to active illegal: signatories and dates required'])
-    today = date.today()
-    if not i.start <= today and i.end > today:
-        raise TransitionError(['Transition to active illegal: not within the date range'])
-    if not partner_focal_points_valid(i):
-        raise TransitionError(['Partner focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    if not unicef_focal_points_valid(i):
-        raise TransitionError(['Unicef focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    # Planned budget fields
-    if not i.planned_budget.exists():
-        raise TransitionError(['Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    for budget in i.planned_budget.all():
-        if not unicef_cash_valid(budget):
-            raise TransitionError(['Unicef cash is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-        if not partner_contribution_valid(budget):
-            raise TransitionError(['Partner contrubution is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    # Sector locations field
-    if not i.sector_locations.exists():
-        raise TransitionError(['Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    for sectorlocation in i.sector_locations.all():
-        if not sector_location_valid(sectorlocation):
-            raise TransitionError(
-                ['Sector and locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    # TODO: validation update
+    # if not (i.signed_by_unicef_date and i.unicef_signatory and i.signed_by_partner_date and
+    #         i.partner_authorized_officer_signatory and i.start and i.end):
+    #     raise TransitionError(['Transition to active illegal: signatories and dates required'])
+    # today = date.today()
+    # if not i.start <= today and i.end > today:
+    #     raise TransitionError(['Transition to active illegal: not within the date range'])
+    # if not partner_focal_points_valid(i):
+    #     raise TransitionError(['Partner focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    # if not unicef_focal_points_valid(i):
+    #     raise TransitionError(['Unicef focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    # # Planned budget fields
+    # if not i.planned_budget:
+    #     raise TransitionError(['Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    # for budget in i.planned_budget.all():
+    #     if not unicef_cash_valid(budget):
+    #         raise TransitionError(['Unicef cash is required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    #     if not partner_contribution_valid(budget):
+    #         raise TransitionError(['Partner contrubution is required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    # # Sector locations field
+    # if not i.sector_locations.exists():
+    #     raise TransitionError(['Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    # for sectorlocation in i.sector_locations.all():
+    #     if not sector_location_valid(sectorlocation):
+    #         raise TransitionError(
+    #             ['Sector and locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
 
     return True
 
 
 def transition_to_implemented(i):
     # i = intervention
-    today = date.today()
-    if not i.end < today:
-        raise TransitionError(['Transition to ended illegal: end date has not passed'])
-    if not partner_focal_points_valid(i):
-        raise TransitionError(['Partner focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    if not unicef_focal_points_valid(i):
-        raise TransitionError(['Unicef focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    # Planned budget fields
-    if not i.planned_budget.exists():
-        raise TransitionError(['Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    for budget in i.planned_budget.all():
-        if not unicef_cash_valid(budget):
-            raise TransitionError(['Unicef cash is required if Intervention status is ACTIVE or IMPLEMENTED.'])
-        if not partner_contribution_valid(budget):
-            raise TransitionError(['Partner contrubution is required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    # TODO: validation update
+    # today = date.today()
+    # if not i.end < today:
+    #     raise TransitionError(['Transition to ended illegal: end date has not passed'])
+    # if not partner_focal_points_valid(i):
+    #     raise TransitionError(['Partner focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    # if not unicef_focal_points_valid(i):
+    #     raise TransitionError(['Unicef focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    # # Planned budget fields
+    # if not i.planned_budget.exists():
+    #     raise TransitionError(['Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    # for budget in i.planned_budget.all():
+    #     if not unicef_cash_valid(budget):
+    #         raise TransitionError(['Unicef cash is required if Intervention status is ACTIVE or IMPLEMENTED.'])
+    #     if not partner_contribution_valid(budget):
+    #         raise TransitionError(['Partner contrubution is required if Intervention status is ACTIVE or IMPLEMENTED.'])
     # Sector locations field
     if not i.sector_locations.exists():
         raise TransitionError(['Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])

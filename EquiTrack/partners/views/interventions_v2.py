@@ -248,25 +248,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         return Response(InterventionDetailSerializer(instance).data)
 
 
-class InterventionBudgetDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            intervention_budget = InterventionBudget.objects.get(id=int(kwargs['pk']))
-        except InterventionBudget.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_budget.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_budget.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_budget.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete a planned budget")
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-
 class InterventionPlannedVisitsDeleteView(DestroyAPIView):
     permission_classes = (PartneshipManagerRepPermission,)
 

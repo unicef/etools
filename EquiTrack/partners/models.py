@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 import logging
 import datetime
 import json
@@ -10,6 +10,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
 from django.db.models import Q, Sum, F
 from django.db.models.signals import post_save, pre_delete
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
@@ -521,43 +522,20 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         """
         year = datetime.date.today().year
         total = 0
-        if partner.partner_type == u'Government':
+        if partner.partner_type != u'Government':
+            q = InterventionBudget.objects.filter(
+                intervention__agreement__partner=partner,
+                intervention__status__in=[
+                    Intervention.ACTIVE,
+                    Intervention.IMPLEMENTED
+                ])
             if budget_record:
-                total = GovernmentInterventionResult.objects.filter(
-                    intervention__partner=partner,
-                    year=year).exclude(id=budget_record.id).aggregate(
-                    models.Sum('planned_amount')
-                )['planned_amount__sum'] or 0
-                total += budget_record.planned_amount
-            else:
-                total = GovernmentInterventionResult.objects.filter(
-                    intervention__partner=partner,
-                    year=year).aggregate(
-                    models.Sum('planned_amount')
-                )['planned_amount__sum'] or 0
-        else:
-            if budget_record:
-                q = InterventionBudget.objects.filter(
-                    intervention__agreement__partner=partner,
-                    intervention__status__in=[
-                        Intervention.ACTIVE,
-                        Intervention.IMPLEMENTED
-                    ],
-                    year=year).exclude(id=budget_record.id)
-
-                q = q.order_by("intervention__id", "-created") \
-                    .distinct('intervention__id') \
-                    .values_list('unicef_cash', flat=True)
+                q = q.exclude(id=budget_record.id).values_list('unicef_cash', flat=True)
 
                 total = sum(q)
-                total += budget_record.unicef_cash if budget_record.year == str(year) else 0
+                total += budget_record.unicef_cash
             else:
-                q = InterventionBudget.objects.filter(intervention__agreement__partner=partner,
-                                                      intervention__status__in=[
-                                                          Intervention.ACTIVE, Intervention.IMPLEMENTED],
-                                                      year=year)
-                q = q.order_by("intervention__id", "-created").\
-                    distinct('intervention__id').values_list('unicef_cash', flat=True)
+                q = q.values_list('unicef_cash', flat=True)
                 total = sum(q)
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
@@ -585,20 +563,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         # planned visits
         pv = 0
         if partner.partner_type == u'Government':
-
-            if pv_intervention:
-                pv = GovernmentInterventionResult.objects.filter(
-                    intervention__partner=partner,
-                    year=year).exclude(id=pv_intervention.id).aggregate(
-                    models.Sum('planned_visits')
-                )['planned_visits__sum'] or 0
-                pv += pv_intervention.planned_visits
-            else:
-                pv = GovernmentInterventionResult.objects.filter(
-                    intervention__partner=partner,
-                    year=year).aggregate(
-                    models.Sum('planned_visits')
-                )['planned_visits__sum'] or 0
+           pass
         else:
             if pv_intervention:
                 pv = InterventionPlannedVisits.objects.filter(
@@ -1408,19 +1373,18 @@ class Intervention(TimeStampedModel):
     @cached_property
     def total_partner_contribution(self):
         # TODO: test this
-        return sum([i.partner_contribution for i in self.planned_budget.all()])
-        # return self.planned_budget.aggregate(mysum=Sum('partner_contribution'))['mysum'] or 0
+        return self.planned_budget.partner_contribution if self.planned_budget else 0
 
     @cached_property
     def total_unicef_cash(self):
         # TODO: test this
-        return sum([i.unicef_cash for i in self.planned_budget.all()])
-        # return self.planned_budget.aggregate(mysum=Sum('unicef_cash'))['mysum'] or 0
+        return self.planned_budget.unicef_cash if self.planned_budget else 0
+
 
     @cached_property
     def total_in_kind_amount(self):
         # TODO: test this
-        return sum([i.in_kind_amount for i in self.planned_budget.all()])
+        return self.planned_budget.in_kind_amount if self.planned_budget else 0
 
     @cached_property
     def total_budget(self):
@@ -1434,23 +1398,21 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution_local(self):
-        if self.planned_budget.exists():
-            return self.planned_budget.aggregate(mysum=Sum('partner_contribution_local'))['mysum']
+        if self.planned_budget:
+            return self.planned_budget.partner_contribution_local
         return 0
 
     @cached_property
     def total_unicef_cash_local(self):
-        # TODO: test this
-        if self.planned_budget.exists():
-            # return sum([i.unicef_cash_local for i in self.planned_budget.all()])
-            return self.planned_budget.aggregate(mysum=Sum('unicef_cash_local'))['mysum']
+        if self.planned_budget:
+            return self.planned_budget.unicef_cash_local
         return 0
 
     @cached_property
     def total_budget_local(self):
         # TODO: test this
-        if self.planned_budget.exists():
-            return self.planned_budget.aggregate(mysum=Sum('in_kind_amount_local'))['mysum'] + self.total_unicef_cash_local + self.total_partner_contribution_local
+        if self.planned_budget:
+            return self.planned_budget.in_kind_amount_local
         return 0
 
     @property
@@ -1512,54 +1474,22 @@ class Intervention(TimeStampedModel):
 
     @property
     def reference_number(self):
-        if self.status in [self.DRAFT, self.CANCELLED]:
-            number = u'{}/TempRef:{}'.format(self.agreement.agreement_number, self.id)
-        else:
-            interventions_count = Intervention.objects.filter(
-                status__in=[self.ACTIVE, self.SUSPENDED,
-                            self.TERMINATED, self.IMPLEMENTED],
-                signed_by_unicef_date__year=self.year,
-                document_type=self.document_type
-            ).exclude(id=self.pk).count()
-
-            sequence = '{0:02d}'.format(interventions_count + 1)
-            number = u'{agreement}/{type}{year}{seq}'.format(
-                agreement=self.agreement.agreement_number,
-                code=connection.tenant.country_short_code or '',
-                type=self.document_type,
-                year=self.year,
-                seq=sequence,
-            )
-        # assuming in tempRef (status Draft or Cancelled we don't have
-        # amendments)
+        number = u'{agreement}/{type}{year}{id}'.format(
+            agreement=self.agreement.agreement_number,
+            code=connection.tenant.country_short_code or '',
+            type=self.document_type,
+            year=self.year,
+            id=self.id
+        )
         return u'{}'.format(number)
 
-    def check_status_auto_updates(self):
-
-        if self.status == Intervention.DRAFT and self.start and self.end and \
-                self.signed_by_unicef_date and self.signed_by_partner_date and \
-                self.unicef_signatory and self.partner_authorized_officer_signatory:
-            self.status = Intervention.ACTIVE
-            return
-        today = datetime.date.today()
-        if self.end and self.status == self.ACTIVE and self.end < today:
-            self.status = Intervention.IMPLEMENTED
-            return
-
-    def update_reference_number(self, oldself=None, amendment_number=None, **kwargs):
+    def update_reference_number(self, amendment_number=None):
 
         if amendment_number:
             self.number = u'{}-{}'.format(self.number.split('-')[0], amendment_number)
             return
 
-        # to create a reference number we need a pk
-        elif not oldself:
-            super(Intervention, self).save()
-            self.number = self.reference_number
-
-        elif self.status != oldself.status:
-            if self.status not in [self.CANCELLED, self.DRAFT] and 'TempRef' in self.number:
-                self.number = self.reference_number
+        self.number = self.reference_number
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -1575,9 +1505,11 @@ class Intervention(TimeStampedModel):
         # update reference number if needed
         amendment_number = kwargs.get('amendment_number', None)
         if amendment_number:
-            self.update_reference_number(oldself, amendment_number)
-        else:
-            self.update_reference_number(oldself)
+            self.update_reference_number(amendment_number)
+        if not oldself:
+            # to create a reference number we need a pk
+            super(Intervention, self).save()
+            self.update_reference_number()
 
         super(Intervention, self).save()
 
@@ -1692,7 +1624,7 @@ class InterventionResultLink(models.Model):
             self.intervention, self.cp_output
         )
 
-
+@python_2_unicode_compatible
 class InterventionBudget(TimeStampedModel):
     """
     Represents a budget for the intervention
@@ -1700,26 +1632,21 @@ class InterventionBudget(TimeStampedModel):
     Relates to :model:`partners.PCA`
     Relates to :model:`partners.AmendmentLog`
     """
-    intervention = models.ForeignKey(Intervention, related_name='planned_budget', null=True, blank=True)
+    intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True)
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount = models.DecimalField(
         max_digits=20,
         decimal_places=2,
         default=0,
-        verbose_name='UNICEF Supplies'
+        verbose_name=_('UNICEF Supplies')
     )
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
-        verbose_name='UNICEF Supplies Local'
+        verbose_name=_('UNICEF Supplies Local')
     )
-    year = models.CharField(
-        max_length=5,
-        blank=True, null=True
-    )
-
     currency = models.ForeignKey('publics.Currency', on_delete=models.SET_NULL, null=True, blank=True)
     total = models.DecimalField(max_digits=20, decimal_places=2)
 
@@ -1742,14 +1669,11 @@ class InterventionBudget(TimeStampedModel):
 
         super(InterventionBudget, self).save(**kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{}: {}'.format(
             self.intervention,
             self.total
         )
-
-    class Meta:
-        unique_together = (('year', 'intervention'),)
 
 
 class FileType(models.Model):
