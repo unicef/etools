@@ -1333,7 +1333,11 @@ class Intervention(TimeStampedModel):
         null=True, blank=True,
         upload_to=get_prc_intervention_file_path
     )
-
+    signed_pd_document = models.FileField(
+        max_length=1024,
+        null=True, blank=True,
+        upload_to=get_prc_intervention_file_path
+    )
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
 
@@ -1382,6 +1386,10 @@ class Intervention(TimeStampedModel):
             return u'Not fully signed'
         signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
         return relativedelta(signed_date - self.submission_date).days
+
+    @property
+    def submitted_to_prc(self):
+        return True if self.submission_date else False
 
     @property
     def days_from_review_to_signed(self):

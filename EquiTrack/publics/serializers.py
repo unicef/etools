@@ -27,7 +27,7 @@ class DSARateSerializer(serializers.ModelSerializer):
         fields = ('dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local', 'dsa_amount_60plus_local',
                   'effective_from_date')
 
-        
+
 class DSARegionSerializer(serializers.ModelSerializer):
     country = serializers.IntegerField(source='country.id', read_only=True)
     long_name = serializers.CharField(source='label')
@@ -120,7 +120,6 @@ class ExpenseTypeSerializer(serializers.ModelSerializer):
 class PublicStaticDataSerializer(serializers.Serializer):
     currencies = CurrencySerializer(many=True)
     airlines = AirlineSerializer(many=True)
-    dsa_regions = DSARegionSerializer(many=True)
     countries = CountrySerializer(many=True)
     business_areas = BusinessAreaSerializer(many=True)
     expense_types = ExpenseTypeSerializer(many=True)
@@ -128,7 +127,7 @@ class PublicStaticDataSerializer(serializers.Serializer):
     travel_modes = serializers.ListField(child=serializers.CharField())
 
     class Meta:
-        fields = ('currencies', 'airlines', 'dsa_regions', 'countries', 'business_areas', 'expense_types',
+        fields = ('currencies', 'airlines', 'countries', 'business_areas', 'expense_types',
                   'travel_types', 'travel_modes')
 
 

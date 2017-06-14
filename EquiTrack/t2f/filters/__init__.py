@@ -34,7 +34,7 @@ class BaseSearchFilter(BaseFilterBackend):
         if search_str:
             q = Q()
             for field_name in self._search_fields:
-                constructed_field_name = '{}__iexact'.format(field_name)
+                constructed_field_name = '{}__icontains'.format(field_name)
                 q |= Q(**{constructed_field_name: search_str})
             queryset = queryset.filter(q)
 

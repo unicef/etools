@@ -20,8 +20,8 @@ class ThresholdTest(APITenantTestCase):
         super(ThresholdTest, self).setUp()
         self.traveler = UserFactory(is_staff=True)
         self.unicef_staff = UserFactory(is_staff=True)
-        self.travel = TravelFactory(traveler=self.traveler,
-                                    supervisor=self.unicef_staff)
+        # self.travel = TravelFactory(traveler=self.traveler,
+        #                             supervisor=self.unicef_staff)
         workspace = self.unicef_staff.profile.country
         workspace.threshold_tae_usd = 100
         workspace.threshold_tre_usd = 100
@@ -72,8 +72,12 @@ class ThresholdTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.traveler)
+
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
+        try:
+            self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
+        except KeyError:
+            self.assertEqual(response_json, {})
 
         return travel_id, data
 
@@ -275,6 +279,10 @@ class ThresholdTest(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.CERTIFICATION_SUBMITTED)
 
+    @override_settings(DISABLE_INVOICING=False)
+    @mock.patch('t2f.helpers.permission_matrix.get_permission_matrix')
+    def test_threshold_check_on_complete_not_reached(self, permission_matrix_getter):
+        permission_matrix_getter.return_value = {'travel': {}}
         # Threshold not reached
         travel_id, data = self._prepare_test()
 

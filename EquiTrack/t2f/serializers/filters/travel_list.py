@@ -26,8 +26,6 @@ class TravelFilterBoxSerializer(serializers.Serializer):
     f_partner = serializers.IntegerField(source='activities__partner__pk', required=False)
     f_cp_output = serializers.IntegerField(source='cp_output', required=False)
 
-    # TODO simon: figure out how to handle when year is not in the payload but month is
-
     def to_internal_value(self, data):
         data = super(TravelFilterBoxSerializer, self).to_internal_value(data)
 
