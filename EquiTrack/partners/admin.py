@@ -651,6 +651,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                 (('submission_date_prc',),
                  'review_date_prc',
                  'prc_review_document',
+                 'signed_pd_document',
                  ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',

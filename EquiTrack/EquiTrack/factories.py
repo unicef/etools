@@ -231,16 +231,6 @@ class ResultFactory(factory.django.DjangoModelFactory):
     to_date = date(date.today().year, 12, 31)
 
 
-class CountryProgrammeFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = report_models.CountryProgramme
-
-    name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
-    from_date = date(date.today().year, 1, 1)
-    to_date = date(date.today().year, 12, 31)
-
-
 class GovernmentInterventionFactory(factory.DjangoModelFactory):
     class Meta:
         model = partner_models.GovernmentIntervention
