@@ -1,12 +1,12 @@
 from __future__ import unicode_literals
 
-from django.db import connection
 from django.db.models.query_utils import Q
 from django.utils.functional import cached_property
 from rest_framework import viewsets, mixins, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
+from EquiTrack.utils import etag_cached
 from publics.models import Country, DSARegion, Currency, AirlineCompany, WBS, Grant, Fund, TravelExpenseType, \
     BusinessArea
 from publics.serializers import CountrySerializer, DSARegionSerializer, PublicStaticDataSerializer, \
@@ -14,7 +14,6 @@ from publics.serializers import CountrySerializer, DSARegionSerializer, PublicSt
     GhostDataPKSerializer, MultiGhostDataSerializer, AirlineSerializer, FundSerializer, WBSSerializer, GrantSerializer,\
     DSARegionsParameterSerializer
 from t2f.models import TravelType, ModeOfTravel
-from users.models import Country as Workspace, User
 
 
 class GhostDataMixin(object):
@@ -168,6 +167,7 @@ class ExpenseTypesView(GhostDataMixin,
 class WBSGrantFundView(GhostDataMixin,
                        viewsets.GenericViewSet):
 
+    @etag_cached('wbs_grant_fund', public_cache=True)
     def list(self, request):
         wbs_qs = self.wbs_queryset
         grant_qs = self.grants_queryset
