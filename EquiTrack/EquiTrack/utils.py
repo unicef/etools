@@ -6,7 +6,6 @@ from functools import wraps
 from import_export.resources import ModelResource
 import json
 import requests
-import six
 import tablib
 import uuid
 
@@ -181,7 +180,7 @@ def etag_cached(cache_key, public_cache=False):
     match the one sent along with the request.
     Otherwise it returns 304 NOT MODIFIED.
     """
-    assert isinstance(cache_key, six.string_types), 'Cache key has to be a string'
+    assert isinstance(cache_key, (str, unicode)), 'Cache key has to be a string'
 
     def decorator(func):
         @wraps(func)
