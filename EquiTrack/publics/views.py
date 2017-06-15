@@ -6,12 +6,13 @@ from rest_framework import viewsets, mixins, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
+from EquiTrack.utils import etag_cached
 from publics.models import Country, DSARegion, Currency, AirlineCompany, WBS, Grant, Fund, TravelExpenseType, \
     BusinessArea
 from publics.serializers import CountrySerializer, DSARegionSerializer, PublicStaticDataSerializer, \
-    WBSGrantFundSerializer, WBSGrantFundParameterSerializer, CurrencySerializer, ExpenseTypeSerializer, \
-    BusinessAreaSerializer, GhostDataPKSerializer, MultiGhostDataSerializer, AirlineSerializer, FundSerializer, \
-    WBSSerializer, GrantSerializer, DSARegionsParameterSerializer
+    WBSGrantFundParameterSerializer, CurrencySerializer, ExpenseTypeSerializer, BusinessAreaSerializer, \
+    GhostDataPKSerializer, MultiGhostDataSerializer, AirlineSerializer, FundSerializer, WBSSerializer, GrantSerializer,\
+    DSARegionsParameterSerializer
 from t2f.models import TravelType, ModeOfTravel
 
 
@@ -165,17 +166,25 @@ class ExpenseTypesView(GhostDataMixin,
 
 class WBSGrantFundView(GhostDataMixin,
                        viewsets.GenericViewSet):
-    serializer_class = WBSGrantFundSerializer
 
+    @etag_cached('wbs_grant_fund', public_cache=True)
     def list(self, request):
         wbs_qs = self.wbs_queryset
         grant_qs = self.grants_queryset
         funds_qs = self.funds_queryset
-        data = {'wbs': wbs_qs,
-                'funds': funds_qs,
-                'grants': grant_qs}
-        serializer = self.get_serializer(data)
-        return Response(serializer.data, status.HTTP_200_OK)
+
+        wbs = self._aggregate_values(wbs_qs.values('id', 'name', 'grants'),
+                                     ('id', 'name'),
+                                     ('grants',))
+
+        grants = self._aggregate_values(grant_qs.values('id', 'name', 'funds'),
+                                        ('id', 'name'),
+                                        ('funds',))
+
+        data = {'wbs': wbs,
+                'funds': funds_qs.values('id', 'name'),
+                'grants': grants}
+        return Response(data, status.HTTP_200_OK)
 
     def missing(self, request):
         context = {'allowed_categories': ['wbs', 'grants', 'funds']}
@@ -209,18 +218,35 @@ class WBSGrantFundView(GhostDataMixin,
         parameter_serializer.is_valid(raise_exception=True)
 
         business_area = parameter_serializer.validated_data['business_area']
-        return WBS.objects.filter(business_area=business_area).prefetch_related('grants')
+        return WBS.objects.filter(business_area=business_area)
 
     @cached_property
     def grants_queryset(self):
         wbs_qs = self.wbs_queryset
-        return Grant.objects.filter(wbs__in=wbs_qs).prefetch_related('funds')
+        return Grant.objects.filter(wbs__in=wbs_qs)
 
     @cached_property
     def funds_queryset(self):
         grant_qs = self.grants_queryset
         return Fund.objects.filter(grants__in=grant_qs)
 
+    def _aggregate_values(self, values, common_keys, keys_to_group):
+        def make_dict(data):
+            ret = {}
+            for key in common_keys:
+                ret[key] = data[key]
+            for key in keys_to_group:
+                ret[key] = []
+            return ret
+
+        ret = {}
+        for val_dict in values:
+            if val_dict['id'] not in ret:
+                ret[val_dict['id']] = make_dict(val_dict)
+            for key in keys_to_group:
+                if val_dict[key] not in ret[val_dict['id']][key]:
+                    ret[val_dict['id']][key].append(val_dict[key])
+        return ret.values()
 
 class AirlinesView(GhostDataMixin,
                    viewsets.GenericViewSet):
