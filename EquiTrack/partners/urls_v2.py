@@ -77,13 +77,6 @@ urlpatterns = (
     url(r'^interventions/map/$', view=InterventionListMapView.as_view(http_method_names=['get', ]), name='intervention-map'),
     # url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(), name='intervention-detail'),
 
-    # GOVERNMENT
-    url(r'^government_interventions/$', view=GovernmentInterventionListAPIView.as_view(http_method_names=['get', 'post']), name='government-intervention-list'),
-    url(r'^government_interventions/(?P<pk>\d+)/$', view=GovernmentDetailAPIView.as_view(http_method_names=['get', 'patch']), name='government-intervention-detail'),
-    url(r'^government_interventions/results/(?P<pk>\d+)/$', view=GovernmentInterventionResultDeleteView.as_view(http_method_names=['delete', ]), name='government-intervention-results-del'),
-    url(r'^government_interventions/results/activities/(?P<pk>\d+)/$', view=GovernmentInterventionResultActivityDeleteView.as_view(http_method_names=['delete', ]), name='government-intervention-activities-del'),
-
-
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
     url(r'^dropdowns/static/$', view=PmpStaticDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-static-list'),
