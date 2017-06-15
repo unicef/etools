@@ -44,3 +44,18 @@ E.g.::
     from sys import exit
 
 Per PEP-8, "You should put a blank line between each group of imports.".
+
+
+Python 3 Prep
+~~~~~~~~~~~~~
+
+To make your code easier to port to Python 3, add the following to the top of
+all new files::
+
+	from __future__ import division
+	from __future__ import absolute_import
+	from __future__ import print_function
+	from __future__ import unicode_literals
+
+You can also add them to existing files, but be aware that they may change
+the behavior of your code (particularly the default use of unicode literals).
