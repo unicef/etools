@@ -230,6 +230,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
 
 
 class CountrySerializer(SimpleUserSerializer):
+    local_currency = serializers.CharField(source='local_currency.name', read_only=True)
 
     class Meta:
         model = Country
@@ -238,4 +239,5 @@ class CountrySerializer(SimpleUserSerializer):
                 'latitude',
                 'longitude',
                 'initial_zoom',
+                'local_currency'
         )
