@@ -3,10 +3,8 @@
 from rest_framework.generics import ListAPIView
 from rest_framework.exceptions import ValidationError
 
-from users.serializers import MinimalUserSerializer, UserSerializer
-from users.models import Office, Section
-from .forms import ProfileForm
-from .models import User, UserProfile, Country
+from users.serializers import MinimalUserSerializer
+from .models import User
 
 
 class UsersListApiView(ListAPIView):
@@ -40,9 +38,4 @@ class UsersListApiView(ListAPIView):
             queryset = queryset.filter(groups__name=group)
 
         return queryset
-
-    def get_serializer_class(self):
-        if self.request.query_params.get('verbosity', None) == 'verbose':
-            return UserSerializer
-        return super(UsersListApiView, self).get_serializer_class()
 
