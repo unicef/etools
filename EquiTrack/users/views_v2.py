@@ -3,13 +3,10 @@
 from rest_framework.generics import ListAPIView
 from rest_framework.exceptions import ValidationError
 
-from users.serializers import MinimalUserSerializer
+from users.serializers import MinimalUserSerializer, UserSerializer
 from users.models import Office, Section
 from .forms import ProfileForm
 from .models import User, UserProfile, Country
-from .serializers import (
-    SimpleUserSerializer,
-)
 
 
 class UsersListApiView(ListAPIView):
@@ -18,7 +15,7 @@ class UsersListApiView(ListAPIView):
     Country is determined by the currently logged in user.
     """
     model = User
-    serializer_class = SimpleUserSerializer
+    serializer_class = MinimalUserSerializer
 
     def get_queryset(self, pk=None):
         user = self.request.user
@@ -45,7 +42,7 @@ class UsersListApiView(ListAPIView):
         return queryset
 
     def get_serializer_class(self):
-        if self.request.query_params.get('verbosity', None) == 'minimal':
-            return MinimalUserSerializer
+        if self.request.query_params.get('verbosity', None) == 'verbose':
+            return UserSerializer
         return super(UsersListApiView, self).get_serializer_class()
 

@@ -32,7 +32,7 @@ from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
 from partners.views.v1 import (
     FileTypeViewSet,
 )
-from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
+from users.views import GroupViewSet, OfficeViewSet, SectionViewSet
 from reports.views.v1 import (
     ResultTypeViewSet,
     SectorViewSet,
