@@ -11,6 +11,7 @@ from partners.models import (
     AgreementAmendment,
     AgreementAmendmentType,
 )
+from reports.models import CountryProgramme
 
 
 class AgreementAmendmentTypeSerializer(serializers.ModelSerializer):
@@ -149,6 +150,7 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner.name', read_only=True)
 
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
+    country_programme = serializers.PrimaryKeyRelatedField(queryset=CountryProgramme.objects.all(), required=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager', read_only=True)
     agreement_number = serializers.CharField(read_only=True)
