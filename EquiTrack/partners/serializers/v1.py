@@ -329,7 +329,6 @@ class InterventionExportFilterSerializer(serializers.Serializer):
     search = serializers.CharField(default='', required=False)
     document_type = serializers.ChoiceField(PCA.PARTNERSHIP_TYPES, required=False)
     country_programme = serializers.CharField(required=False)
-    result_structure = serializers.CharField(required=False)
     sector = serializers.CharField(required=False)
     status = serializers.ChoiceField(PCA.PCA_STATUS, required=False)
     unicef_focal_point = serializers.CharField(required=False)

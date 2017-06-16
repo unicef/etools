@@ -19,7 +19,6 @@ from rest_framework.views import APIView
 from publics.models import Currency
 
 from reports.models import (
-    ResultStructure,
     CountryProgramme,
     Result,
     ResultType,
@@ -216,10 +215,15 @@ class PMPDropdownsListApiView(APIView):
                 full_name=Concat('first_name', Value(' '), 'last_name'), user_id=F('id')
         ).values('user_id', 'full_name', 'username', 'email'))
 
-        hrps = list(ResultStructure.objects.values())
-        current_country_programme = CountryProgramme.current()
-        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False,
-                                                country_programme=current_country_programme).values('id', 'name', 'wbs'))
+        country_programmes = list(CountryProgramme.objects.all_active_and_future.values('id', 'wbs', 'name',
+                                                                                        'from_date', 'to_date'))
+        current_country_programme = CountryProgramme.main_active()
+        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT,
+                                                wbs__isnull=False,
+                                                country_programme=current_country_programme).values('id',
+                                                                                                    'name',
+                                                                                                    'wbs',
+                                                                                                    'country_programme'))
         supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.all().values())
         donors = list(Donor.objects.all().values())
@@ -227,7 +231,7 @@ class PMPDropdownsListApiView(APIView):
         return Response(
             {
                 'signed_by_unicef_users': signed_by_unicef,
-                'hrps': hrps,
+                'country_programmes': country_programmes,
                 'cp_outputs': cp_outputs,
                 'supply_items': supply_items,
                 'file_types': file_types,
@@ -256,7 +260,7 @@ class PartnershipDashboardAPIView(APIView):
 
         # Otherwise, use current CountryProgramme this year to filter Intervention
         else:
-            currentCountryProgramme = CountryProgramme.current()
+            currentCountryProgramme = CountryProgramme.main_active()
 
             interventions = Intervention.objects.filter(
                 agreement__country_programme=currentCountryProgramme)
@@ -295,6 +299,9 @@ class PartnershipDashboardAPIView(APIView):
         ]:
             result['partners'][p_type] = active_partnerships.filter(
                 agreement__partner__partner_type=p_type).count()
+
+        # Count GovernmentInterventions separately
+        result['partners'][PartnerType.GOVERNMENT] = 0
 
         # (1) Number and value of Active Interventions for this year
         result['active_count'] = len(active_partnerships)

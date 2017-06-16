@@ -316,7 +316,7 @@ class InterventionExport(resources.ModelResource):
         #   FR Numbers (comma separated)
         #   Number of Active Action Points
         fields = ('title', 'reference_number', 'status', 'partner__name', 'partnership_type', 'sectors', 'start_date',
-                  'end_date', 'result_structure__name', 'locations', 'initiation_date', 'submission_date',
+                  'end_date', 'locations', 'initiation_date', 'submission_date',
                   'review_date', 'days_from_submission_to_signed', 'days_from_review_to_signed',
                   'signed_by_partner_date', 'partner_manager_name', 'signed_by_unicef_date', 'unicef_manager_name',
                   'total_unicef_cash', 'supplies', 'total_budget', 'planned_visits')

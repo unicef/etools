@@ -1,6 +1,8 @@
 import copy
 import logging
 from django.apps import apps
+from django.db.models import QuerySet, ObjectDoesNotExist
+
 from django.utils.functional import cached_property
 
 from django_fsm import (
@@ -43,23 +45,52 @@ class ValidatorViewMixin(object):
                          partial=False, nested_related_names=None):
         if not field:
             return
-        for item in field:
-            item.update({reverse_name: mother_obj.pk})
+
+        if isinstance(field, list):
+            for item in field:
+                item.update({reverse_name: mother_obj.pk})
+                nested_related_data = {}
+                if nested_related_names:
+                    nested_related_data = {k: v for k, v in item.items() if k in nested_related_names}
+                if item.get('id', None):
+                    try:
+                        instance = fieldClass.objects.get(id=item['id'])
+                    except fieldClass.DoesNotExist:
+                        instance = None
+
+                    instance_serializer = fieldSerializer(instance=instance,
+                                                          data=item,
+                                                          partial=partial,
+                                                          context=nested_related_data)
+                else:
+                    instance_serializer = fieldSerializer(data=item,
+                                                          context=nested_related_data)
+
+                try:
+                    instance_serializer.is_valid(raise_exception=True)
+                    # ValidationError can be raised by one of the sub-related fields inside the serializer on save
+                    instance_serializer.save()
+                except ValidationError as e:
+                    e.detail = {rel_prop_name: e.detail}
+                    raise e
+        else:
+            # This is in case we have a OneToOne field
+            field.update({reverse_name: mother_obj.pk})
             nested_related_data = {}
             if nested_related_names:
-                nested_related_data = {k: v for k, v in item.items() if k in nested_related_names}
-            if item.get('id', None):
+                nested_related_data = {k: v for k, v in field.items() if k in nested_related_names}
+            if field.get('id', None):
                 try:
-                    instance = fieldClass.objects.get(id=item['id'])
+                    instance = fieldClass.objects.get(id=field['id'])
                 except fieldClass.DoesNotExist:
                     instance = None
 
                 instance_serializer = fieldSerializer(instance=instance,
-                                                      data=item,
+                                                      data=field,
                                                       partial=partial,
                                                       context=nested_related_data)
             else:
-                instance_serializer = fieldSerializer(data=item,
+                instance_serializer = fieldSerializer(data=field,
                                                       context=nested_related_data)
 
             try:
@@ -118,9 +149,19 @@ class ValidatorViewMixin(object):
         main_object = main_serializer.save()
 
         for k in my_relations.iterkeys():
-            prop = '{}_old'.format(k)
-            val = list(getattr(old_instance, k).all())
-            setattr(old_instance, prop, val)
+            try:
+                rel_field_val = getattr(old_instance, k)
+            except ObjectDoesNotExist:
+                pass
+            else:
+                prop = '{}_old'.format(k)
+                if isinstance(rel_field_val, QuerySet):
+                    # This means foreign key into main object
+                    val = list(rel_field_val.all())
+                else:
+                    # This means OneToOne field
+                    val = rel_field_val
+                setattr(old_instance, prop, val)
 
         def _get_model_for_field(field):
             return main_object.__class__._meta.get_field(field).related_model

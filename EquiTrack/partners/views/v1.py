@@ -118,7 +118,7 @@ class PcaPDFView(PDFTemplateView):
             title="Partnership",
             agreement=agreement,
             bank_details=bank_objects,
-            cp=CountryProgramme.current(),
+            cp=agreement.country_programme,
             auth_officers=officers_list,
             country=self.request.tenant.long_name,
             **kwargs

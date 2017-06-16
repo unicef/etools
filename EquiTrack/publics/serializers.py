@@ -143,15 +143,6 @@ class WBSGrantFundParameterSerializer(serializers.Serializer):
         return ret
 
 
-class WBSGrantFundSerializer(serializers.Serializer):
-    wbs = WBSSerializer(many=True)
-    grants = GrantSerializer(many=True)
-    funds = FundSerializer(many=True)
-
-    class Meta:
-        fields = ('wbs', 'grant', 'fund')
-
-
 class GhostDataPKSerializer(serializers.Serializer):
     values = serializers.ListField(child=serializers.IntegerField(min_value=1, required=True), required=True,
                                    allow_empty=False)
