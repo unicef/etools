@@ -11,16 +11,19 @@ def reverse(apps, schema_editor):
 def migrate_cps(apps, schema_editor):
     CountryProgramme = apps.get_model('reports', 'CountryProgramme')
     Agreement = apps.get_model('partners', 'Agreement')
+    Intervention = apps.get_model('partners', 'Intervention')
     cps = CountryProgramme.objects.filter(invalid=False, wbs__contains='/A0/')
     for cp in cps:
         agrs = Agreement.objects.all()
         agreements = Agreement.objects.filter(start__gte=cp.from_date,
                                               start__lte=cp.to_date,
                                               country_programme__isnull=True).update(country_programme=cp)
-        if agreements == 0:
-            print('No agreements found with CP {}'.format(cp.name))
-        else:
-            print('CP {} updated {} agreements'.format(cp.name, agreements))
+        print('CP {} updated {} agreements'.format(cp.name, agreements))
+
+        interventions = Intervention.objects.filter(start__gte=cp.from_date,
+                                                    start__lte=cp.to_date,
+                                                    country_programme__isnull=True).update(country_programme=cp)
+        print('CP {} updated {} interventions'.format(cp.name, interventions))
 
 
 class Migration(migrations.Migration):
