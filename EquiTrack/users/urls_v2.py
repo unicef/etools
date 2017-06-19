@@ -18,14 +18,4 @@ urlpatterns = patterns(
     url(r'^changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post'])),
     url(r'^(?P<pk>[0-9]+)/$', UsersDetailAPIView.as_view(http_method_names=['get'])),
     url(r'^', UsersListApiView.as_view()),  # TODO: staff required , partners should not be able to hit this
-
-
-
-    # user profile
-    url(r'^profile_view/$', ProfileEdit.as_view(), name='user_profile'),
-
-    url(r'^profile_view/complete/$',
-        TemplateView.as_view(
-            template_name='users/profile_change_done.html'),
-        name='profile_complete'),
 )
