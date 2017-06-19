@@ -464,7 +464,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
-        self.assertEquals(response.data[0]["id"], self.partner.id)
+        self.assertIn(self.partner.id, [i["id"] for i in response.data])
 
     def test_api_partners_short_name(self):
         # make some other type to filter against
