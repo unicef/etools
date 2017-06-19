@@ -260,7 +260,7 @@ class StateMachineTest(APITenantTestCase):
                                         data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         # Go straight to sent for payment when invoicing is disabled.
-        self.assertEquals(response_json['status'], Travel.SENT_FOR_PAYMENT)
+        self.assertEqual(response_json['status'], Travel.SENT_FOR_PAYMENT)
 
         # No email has been sent regarding SENT_FOR_PAYMENT status when invoicing is disabled.
         subjects = [x.subject for x in mail.outbox]
