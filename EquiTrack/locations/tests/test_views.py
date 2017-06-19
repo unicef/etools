@@ -19,20 +19,20 @@ class TestLocationViews(APITenantTestCase):
 
     def test_api_locationtypes_list(self):
         response = self.forced_auth_req('get', reverse('locationtypes-list'), user=self.unicef_staff)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_location_light_list(self):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data[0].keys(), ["id", "name", "p_code"])
-        self.assertEquals(response.data[0]["name"], '{} [{} - {}]'.format(self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
+        self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
 
     def test_api_location_heavy_list(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(sorted(response.data[0].keys()), self.heavy_detail_expected_keys)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data[0].keys()), self.heavy_detail_expected_keys)
         self.assertIn("Location", response.data[0]["name"])
 
     def test_api_location_values(self):
@@ -44,13 +44,13 @@ class TestLocationViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
     def _assert_heavy_detail_view_fundamentals(self, response):
         '''Utility function that collects common assertions for heavy detail tests'''
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(sorted(response.data.keys()), self.heavy_detail_expected_keys)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data.keys()), self.heavy_detail_expected_keys)
         self.assertIn("Location", response.data["name"])
 
     def test_api_location_heavy_detail(self):
@@ -70,24 +70,24 @@ class TestLocationViews(APITenantTestCase):
 
     def test_api_location_list_cached(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 5)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 5)
         etag = response["ETag"]
 
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
-        self.assertEquals(response.status_code, status.HTTP_304_NOT_MODIFIED)
+        self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
 
     def test_api_location_list_modified(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 5)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 5)
         etag = response["ETag"]
 
         LocationFactory()
 
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 6)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 6)
 
     def test_location_delete_etag(self):
         # Activate cache-aside with a request.
@@ -101,7 +101,7 @@ class TestLocationViews(APITenantTestCase):
     def test_api_location_autocomplete(self):
         response = self.forced_auth_req('get', reverse('locations_autocomplete'), user=self.unicef_staff, data={"q": "Loc"})
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 5)
-        self.assertEquals(response.data[0].keys(), ["id", "name", "p_code"])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 5)
+        self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
         self.assertIn("Loc", response.data[0]["name"])

@@ -22,5 +22,4 @@ class DisableMigrations(object):
 # MIGRATION_MODULES = dict((app, '%s.fake_migrations' % app) for app in INSTALLED_APPS)
 # MIGRATION_MODULES = dict((app, None) for app in INSTALLED_APPS)
 
-
 TEST_RUNNER = 'EquiTrack.tests.runners.TestRunner'

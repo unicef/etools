@@ -31,13 +31,13 @@ class TestTripViews(APITenantTestCase):
 
         response = self.forced_auth_req('get', '/api/trips/')
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # the length of this list should be 1
-        self.assertEquals(len(response.data), 1)
+        self.assertEqual(len(response.data), 1)
 
     def test_view_trips_api_action(self):
         # the trip should be in status planned
-        self.assertEquals(self.trip.status, Trip.PLANNED)
+        self.assertEqual(self.trip.status, Trip.PLANNED)
         response = self.forced_auth_req(
             'post',
             '/api/trips/{}/change-status/submitted/'.format(self.trip.id),
@@ -46,20 +46,20 @@ class TestTripViews(APITenantTestCase):
         # refresh trip from db
         self.trip.refresh_from_db()
         # trip should now have the status submitted
-        self.assertEquals(self.trip.status, Trip.SUBMITTED)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.trip.status, Trip.SUBMITTED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @skip('Not using trips anymore')
     def test_view_trip_action(self):
         response = self.forced_auth_req('get', '/trips/offices/')
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     @skip('Not using trips anymore')
     def test_view_trips_dashboard(self):
         response = self.forced_auth_req('get', '/trips/')
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
 # TODO: Test all the rest of the views
 
