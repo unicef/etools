@@ -18,6 +18,10 @@ def migrate_cps(apps, schema_editor):
                                               start__lte=cp.to_date,
                                               country_programme__isnull=True,).exclude(
                                               agreement_type__in=['MOU']).update(country_programme=cp)
+        mou_agreements = Agreement.objects.filter(country_programme__isnull=False,
+                                                  agreement_type__in=['MOU']).update(country_programme=None)
+        if mou_agreements > 0:
+            print('CP {} updated {} MOU agreements'.format(cp.name, mou_agreements))
         print('CP {} updated {} agreements'.format(cp.name, agreements))
 
         interventions = Intervention.objects.filter(start__gte=cp.from_date,
