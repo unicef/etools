@@ -2,7 +2,9 @@ from __future__ import unicode_literals
 
 import csv
 from datetime import datetime, timedelta
+from freezegun import freeze_time
 import json
+from pytz import UTC
 from StringIO import StringIO
 
 from django.core import mail
@@ -296,3 +298,16 @@ class ActionPoints(APITenantTestCase):
 
         action_point.save()
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_due_date_validation(self):
+        action_point = ActionPointFactory(travel=self.travel,
+                                          due_date=datetime(2017, 6, 15, 12, tzinfo=UTC))
+        data = {'due_date': datetime(2017, 6, 15, 12, tzinfo=UTC),
+                'completed_at': datetime(2017, 6, 16, 11, tzinfo=UTC),
+                'actions_taken': 'stuff'}
+
+        with freeze_time(datetime(2017, 6, 16, 12, tzinfo=UTC)):
+            response = self.forced_auth_req('patch', reverse('t2f:action_points:details',
+                                                             kwargs={'action_point_pk': action_point.id}),
+                                            data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
