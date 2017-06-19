@@ -635,6 +635,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                 'number',
                 'title',
                 'status',
+                'country_programme',
                 'submission_date',)
         }),
         (_('Dates and Signatures'), {

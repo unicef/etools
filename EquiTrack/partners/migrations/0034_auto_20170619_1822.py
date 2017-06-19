@@ -14,10 +14,10 @@ def migrate_cps(apps, schema_editor):
     Intervention = apps.get_model('partners', 'Intervention')
     cps = CountryProgramme.objects.filter(invalid=False, wbs__contains='/A0/')
     for cp in cps:
-        agrs = Agreement.objects.all()
         agreements = Agreement.objects.filter(start__gte=cp.from_date,
                                               start__lte=cp.to_date,
-                                              country_programme__isnull=True).update(country_programme=cp)
+                                              country_programme__isnull=True,).exclude(
+                                              agreement_type__in=['MOU']).update(country_programme=cp)
         print('CP {} updated {} agreements'.format(cp.name, agreements))
 
         interventions = Intervention.objects.filter(start__gte=cp.from_date,
