@@ -7,3 +7,7 @@ source = .
 fail_under = 50
 show_missing = true
 skip_covered = True
+exclude_lines =
+   pragma: no cover
+   from\s+__future__\s+import\s+
+   __author__\s+=
