@@ -15,8 +15,7 @@ def migrate_cps(apps, schema_editor):
     cps = CountryProgramme.objects.filter(invalid=False, wbs__contains='/A0/')
     for cp in cps:
         agreements = Agreement.objects.filter(start__gte=cp.from_date,
-                                              start__lte=cp.to_date,
-                                              country_programme__isnull=True,).exclude(
+                                              start__lte=cp.to_date,).exclude(
                                               agreement_type__in=['MOU']).update(country_programme=cp)
         mou_agreements = Agreement.objects.filter(country_programme__isnull=False,
                                                   agreement_type__in=['MOU']).update(country_programme=None)
@@ -25,8 +24,7 @@ def migrate_cps(apps, schema_editor):
         print('CP {} updated {} agreements'.format(cp.name, agreements))
 
         interventions = Intervention.objects.filter(start__gte=cp.from_date,
-                                                    start__lte=cp.to_date,
-                                                    country_programme__isnull=True).update(country_programme=cp)
+                                                    start__lte=cp.to_date,).update(country_programme=cp)
         print('CP {} updated {} interventions'.format(cp.name, interventions))
 
 
