@@ -31,7 +31,7 @@ class WBSGrantFundEndpoint(APITenantTestCase):
         WBSFactory(business_area=business_area)
         WBSFactory(business_area=business_area)
 
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(4):
             response = self.forced_auth_req('get', reverse('public:wbs_grants_funds'),
                                             user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -45,7 +45,7 @@ class WBSGrantFundEndpoint(APITenantTestCase):
         WBSFactory(business_area=business_area_2)
         WBSFactory(business_area=business_area_2)
 
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(4):
             response = self.forced_auth_req('get', reverse('public:wbs_grants_funds'),
                                             data={'business_area': business_area_2.id},
                                             user=self.unicef_staff)

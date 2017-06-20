@@ -1,20 +1,25 @@
 """
 Project wide base classes and utility functions for apps
 """
-import requests
-import json
 from collections import OrderedDict as SortedDict
+from functools import wraps
+from import_export.resources import ModelResource
+import json
+import requests
+import tablib
+import uuid
+
 from django.conf import settings
+from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.sites.models import Site
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import connection
+from django.utils.cache import patch_cache_control
 
-import tablib
-import traceback
-
-from import_export.resources import ModelResource
+from rest_framework import status
+from rest_framework.response import Response
 
 
 def get_environment():
@@ -167,3 +172,39 @@ def get_data_from_insight(endpoint, data={}):
     except ValueError as e:
         return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
     return True, result
+
+
+def etag_cached(cache_key, public_cache=False):
+    """
+    Returns list of instances only if there's a new ETag, and it does not
+    match the one sent along with the request.
+    Otherwise it returns 304 NOT MODIFIED.
+    """
+    assert isinstance(cache_key, (str, unicode)), 'Cache key has to be a string'
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            if public_cache:
+                schema_name = 'public'
+            else:
+                schema_name = connection.schema_name
+            cache_etag = cache.get("{}-{}-etag".format(schema_name, cache_key))
+            request_etag = self.request.META.get("HTTP_IF_NONE_MATCH", None)
+
+            local_etag = cache_etag if cache_etag else '"{}"'.format(uuid.uuid4().hex)
+
+            if cache_etag and request_etag and cache_etag == request_etag:
+                response = Response(status=status.HTTP_304_NOT_MODIFIED)
+            else:
+                response = func(self, *args, **kwargs)
+                response["ETag"] = local_etag
+
+            if not cache_etag:
+                cache.set("{}-locations-etag".format(schema_name), local_etag)
+
+            patch_cache_control(response, private=True, must_revalidate=True)
+            return response
+
+        return wrapper
+    return decorator

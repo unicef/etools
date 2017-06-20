@@ -91,7 +91,11 @@ class ActionPointSerializer(serializers.ModelSerializer):
                   'assigned_by_name', 'person_responsible_name', 'trip_id')
 
     def validate_due_date(self, value):
-        if value.date() < datetime.utcnow().date():
+        if self.instance:
+            existing_due_date = self.instance.due_date.date()
+        else:
+            existing_due_date = None
+        if (not existing_due_date or existing_due_date != value.date()) and value.date() < datetime.utcnow().date():
             raise ValidationError('Due date cannot be earlier than today.')
         return value
 

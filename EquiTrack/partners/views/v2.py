@@ -38,7 +38,6 @@ from partners.models import (
     AgreementAmendmentType,
     Intervention,
     FileType,
-    GovernmentIntervention,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
@@ -244,27 +243,22 @@ class PartnershipDashboardAPIView(APIView):
 
     def get(self, request, ct_pk=None, office_pk=None):
         """
-        Return the aggregation data for Intervention and GovernmentIntervention
+        Return the aggregation data for Intervention
         """
 
         current = datetime.date.today()
         last_year = datetime.date(current.year - 1, 12, 31)
 
-        # Use given CountryProgramme pk to filter Intervention and GovernmentIntervention
+        # Use given CountryProgramme pk to filter Intervention
         if ct_pk:
             interventions = Intervention.objects.filter(agreement__country_programme=ct_pk)
 
-            gov_interventions = GovernmentIntervention.objects.filter(country_programme=ct_pk)
-
-        # Otherwise, use current CountryProgramme this year to filter Intervention and GovernmentIntervention
+        # Otherwise, use current CountryProgramme this year to filter Intervention
         else:
             currentCountryProgramme = CountryProgramme.current()
 
             interventions = Intervention.objects.filter(
                 agreement__country_programme=currentCountryProgramme)
-
-            gov_interventions = GovernmentIntervention.objects.filter(
-                country_programme=currentCountryProgramme)
 
         # If Office pk is given, filter even more
         if office_pk:
@@ -302,7 +296,7 @@ class PartnershipDashboardAPIView(APIView):
                 agreement__partner__partner_type=p_type).count()
 
         # Count GovernmentInterventions separately
-        result['partners'][PartnerType.GOVERNMENT] = gov_interventions.count()
+        result['partners'][PartnerType.GOVERNMENT] = 0
 
         # (1) Number and value of Active Interventions for this year
         result['active_count'] = len(active_partnerships)

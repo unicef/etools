@@ -95,43 +95,6 @@ class TestModelExport(APITenantTestCase):
             planned_amount=100,
         )
 
-    def test_government_intervention_export_api(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data={"format": "csv"},
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        dataset = Dataset().load(response.content, 'csv')
-        self.assertEqual(dataset.height, 1)
-        self.assertEqual(dataset._get_headers(),
-                         [
-            'Government Partner',
-            'Country Programme',
-            'Reference Number',
-            'CP Output',
-            'URL',
-        ])
-
-        cp_outputs = ', '.join([
-            'Output: {} ({}/{}/{})'.format(
-                gr.result.name,
-                gr.year,
-                gr.planned_amount,
-                gr.planned_visits)
-            for gr in self.government_intervention.results.all()
-        ])
-        self.assertEqual(dataset[0],
-                         (
-            self.partner.name,
-            self.government_intervention.country_programme.name,
-            self.government_intervention.number,
-            cp_outputs,
-            dataset[0][4],
-        ))
-
     def test_intervention_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -140,7 +103,7 @@ class TestModelExport(APITenantTestCase):
             data={"format": "csv"},
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
@@ -234,7 +197,7 @@ class TestModelExport(APITenantTestCase):
             data={"format": "csv"},
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [
@@ -278,7 +241,7 @@ class TestModelExport(APITenantTestCase):
             data={"format": "csv"},
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [
