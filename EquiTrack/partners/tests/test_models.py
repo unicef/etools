@@ -22,7 +22,6 @@ from partners.models import (
     PartnerOrganization,
     Assessment,
     Result,
-    ResultStructure,
     GovernmentIntervention,
     GovernmentInterventionResult,
     Intervention,
@@ -123,7 +122,7 @@ class TestHACTCalculations(TenantTestCase):
         self.intervention = InterventionFactory(
             status=u'active'
         )
-        current_cp = ResultStructure.objects.create(
+        current_cp = CountryProgramme.objects.create(
             name='Current Country Programme',
             from_date=datetime.date(year, 1, 1),
             to_date=datetime.date(year + 1, 12, 31)
@@ -136,15 +135,7 @@ class TestHACTCalculations(TenantTestCase):
             intervention=self.intervention,
             partner_contribution=10000,
             unicef_cash=60000,
-            in_kind_amount=5000,
-            year=str(year)
-        )
-        InterventionBudget.objects.create(
-            intervention=self.intervention,
-            partner_contribution=10000,
-            unicef_cash=40000,
-            in_kind_amount=5000,
-            year=str(year + 1)
+            in_kind_amount=5000
         )
         FundingCommitment.objects.create(
             start=current_cp.from_date,
@@ -175,7 +166,7 @@ class TestHACTCalculations(TenantTestCase):
 
 
 class TestPartnerOrganizationModel(TenantTestCase):
-    fixtures = ['reports.initial_data.json']
+    fixtures = ['initial_data.json']
 
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
@@ -440,6 +431,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         }
         self.assertEqual(hact_min_req, data)
 
+    @skip('Deprecated Functionality')
     def test_planned_cash_transfers_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
@@ -449,20 +441,12 @@ class TestPartnerOrganizationModel(TenantTestCase):
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        rs = ResultStructure.objects.create(
-            name="RS 1",
-            country_programme=cp,
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         gi = GovernmentIntervention.objects.create(
             partner=self.partner_organization,
-            result_structure=rs,
         )
         rt = ResultType.objects.get(id=1)
         r = Result.objects.create(
             result_type=rt,
-            result_structure=rs
         )
         GovernmentInterventionResult.objects.create(
             intervention=gi,
@@ -493,11 +477,13 @@ class TestPartnerOrganizationModel(TenantTestCase):
             status=u'active', agreement=agreement
         )
         InterventionBudgetFactory(intervention=intervention)
+
         hact = json.loads(self.partner_organization.hact_values) \
             if isinstance(self.partner_organization.hact_values, str) \
             else self.partner_organization.hact_values
         self.assertEqual(hact['planned_cash_transfer'], 100001)
 
+    @skip('Deprecated functionality -planned visits towards government')
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
@@ -507,20 +493,12 @@ class TestPartnerOrganizationModel(TenantTestCase):
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        rs = ResultStructure.objects.create(
-            name="RS 1",
-            country_programme=cp,
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         gi = GovernmentIntervention.objects.create(
             partner=self.partner_organization,
-            result_structure=rs,
         )
         rt = ResultType.objects.get(id=1)
         r = Result.objects.create(
             result_type=rt,
-            result_structure=rs
         )
         GovernmentInterventionResult.objects.create(
             intervention=gi,
@@ -565,7 +543,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
 
 class TestAgreementModel(TenantTestCase):
-    fixtures = ['reports.initial_data.json']
+    fixtures = ['initial_data.json']
 
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
@@ -592,27 +570,27 @@ class TestAgreementModel(TenantTestCase):
         self.agreement.save()
 
         # Check if new activity action has been created
-        self.assertEquals(model_stream(Agreement).count(), 2)
+        self.assertEqual(model_stream(Agreement).count(), 2)
 
         # Check the previous content
         previous = model_stream(Agreement).first().data['previous']
-        self.assertNotEquals(previous, {})
+        self.assertNotEqual(previous, {})
 
         # Check the changes content
         changes = model_stream(Agreement).first().data['changes']
-        self.assertNotEquals(changes, {})
+        self.assertNotEqual(changes, {})
 
         # Check if the previous had the empty date fields
-        self.assertEquals(previous['start'], 'None')
-        self.assertEquals(previous['signed_by_unicef_date'], 'None')
+        self.assertEqual(previous['start'], 'None')
+        self.assertEqual(previous['signed_by_unicef_date'], 'None')
 
         # Check if the changes had the updated date fields
-        self.assertEquals(changes['start'], str(self.agreement.start))
-        self.assertEquals(changes['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
+        self.assertEqual(changes['start'], str(self.agreement.start))
+        self.assertEqual(changes['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
 
 
 class TestInterventionModel(TenantTestCase):
-    fixtures = ['reports.initial_data.json']
+    fixtures = ['initial_data.json']
 
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
@@ -671,6 +649,7 @@ class TestInterventionModel(TenantTestCase):
         )
         self.assertEqual(int(self.intervention.total_budget), 100200)
 
+    @skip("Improve this test.. tempref not available anymore.")
     def test_reference_number(self):
         self.assertIn("TempRef:", self.intervention.reference_number)
 

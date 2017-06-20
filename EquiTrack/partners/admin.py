@@ -201,7 +201,6 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
         'unicef_cash',
         'in_kind_amount',
         'total',
-        'year',
         'amendment',
     )
     readonly_fields = (
@@ -253,7 +252,6 @@ class InterventionBudgetAdmin(admin.ModelAdmin):
     model = InterventionBudget
     fields = (
         'intervention',
-        'year',
         'currency',
         'partner_contribution',
         'unicef_cash',
@@ -265,12 +263,10 @@ class InterventionBudgetAdmin(admin.ModelAdmin):
     )
     list_display = (
         'intervention',
-        'year',
         'total'
     )
     list_filter = (
         'intervention',
-        'year',
     )
     search_fields = (
         'intervention__number',
@@ -437,7 +433,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         'start_date',
         'end_date',
         'partner',
-        'result_structure',
         'sector_names',
         'title',
         'total_unicef_cash',
@@ -445,7 +440,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
     list_filter = (
         'partnership_type',
-        'result_structure',
         PCASectorFilter,
         'status',
         'current',
@@ -477,7 +471,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                  'agreement',
                  'partnership_type',
                  'number',
-                 'result_structure',
                  ('title', 'project_type',),
                  'status',
                  'initiation_date',)
@@ -611,7 +604,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         'signed_by_unicef_date',
         'start',
         'end',
-        'hrp',
         'sector_names',
         'title',
         'total_unicef_cash',
@@ -641,7 +633,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                 'agreement',
                 'document_type',
                 'number',
-                'hrp',
                 'title',
                 'status',
                 'submission_date',)
@@ -651,6 +642,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                 (('submission_date_prc',),
                  'review_date_prc',
                  'prc_review_document',
+                 'signed_pd_document',
                  ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
@@ -764,7 +756,6 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
         (_('Government Intervention Details'), {
             'fields':
                 ('partner',
-                 'result_structure',
                  'country_programme',
                  'number'),
         }),
@@ -772,7 +763,6 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
     list_display = (
         u'number',
         u'partner',
-        u'result_structure',
         u'country_programme'
     )
     list_filter = (

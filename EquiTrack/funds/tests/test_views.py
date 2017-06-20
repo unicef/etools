@@ -14,9 +14,9 @@ class TestFundViews(APITenantTestCase):
     def test_api_donors_list(self):
         response = self.forced_auth_req('get', '/api/funds/donors/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_grants_list(self):
         response = self.forced_auth_req('get', '/api/funds/grants/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

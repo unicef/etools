@@ -6,7 +6,7 @@ from tablib.core import Dataset
 
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, \
     GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory, \
-    ResultStructureFactory, InterventionBudgetFactory, PartnerStaffFactory
+    InterventionBudgetFactory, PartnerStaffFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory
 from partners.models import GovernmentInterventionResult, SupplyPlan, DistributionPlan
@@ -55,7 +55,6 @@ class TestModelExport(APITenantTestCase):
         self.intervention = InterventionFactory(
             agreement=self.agreement,
             document_type='SHPD',
-            hrp=ResultStructureFactory(),
             status='draft',
             start=datetime.date.today(),
             end=datetime.date.today(),
@@ -95,43 +94,6 @@ class TestModelExport(APITenantTestCase):
             planned_amount=100,
         )
 
-    def test_government_intervention_export_api(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data={"format": "csv"},
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        dataset = Dataset().load(response.content, 'csv')
-        self.assertEqual(dataset.height, 1)
-        self.assertEqual(dataset._get_headers(),
-                         [
-            'Government Partner',
-            'Country Programme',
-            'Reference Number',
-            'CP Output',
-            'URL',
-        ])
-
-        cp_outputs = ', '.join([
-            'Output: {} ({}/{}/{})'.format(
-                gr.result.name,
-                gr.year,
-                gr.planned_amount,
-                gr.planned_visits)
-            for gr in self.government_intervention.results.all()
-        ])
-        self.assertEqual(dataset[0],
-                         (
-            self.partner.name,
-            self.government_intervention.country_programme.name,
-            self.government_intervention.number,
-            cp_outputs,
-            dataset[0][4],
-        ))
-
     def test_intervention_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -140,7 +102,7 @@ class TestModelExport(APITenantTestCase):
             data={"format": "csv"},
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
@@ -160,7 +122,6 @@ class TestModelExport(APITenantTestCase):
             'UNICEF Focal Points',
             'CSO Authorized Officials',
             'Population Focus',
-            'Humanitarian Response Plan',
             'CP Outputs',
             'RAM Indicators',
             'FR Number(s)',
@@ -201,11 +162,10 @@ class TestModelExport(APITenantTestCase):
             u'',
             u'',
             self.intervention.population_focus,
-            unicode(self.intervention.hrp.name),
             u'',
             u'',
             u', '.join(self.intervention.fr_numbers),
-            '{}'.format(self.intervention.planned_budget.first().currency),
+            '{}'.format(self.intervention.planned_budget.currency),
             u'{:.2f}'.format(self.intervention.total_unicef_cash_local),
             u'{:.2f}'.format(self.intervention.total_unicef_budget),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
@@ -234,7 +194,7 @@ class TestModelExport(APITenantTestCase):
             data={"format": "csv"},
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [
@@ -278,7 +238,7 @@ class TestModelExport(APITenantTestCase):
             data={"format": "csv"},
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [

@@ -6,7 +6,6 @@ from EquiTrack.factories import (
     PartnerFactory,
     UserFactory,
     ResultFactory,
-    ResultStructureFactory,
     AgreementFactory,
     InterventionFactory
 )
@@ -29,7 +28,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.intervention = InterventionFactory(agreement=agreement)
 
         self.result_type = ResultType.objects.get(id=1)
-        self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
+        self.result = ResultFactory(result_type=self.result_type)
         self.pcasector = InterventionSectorLocationLink.objects.create(
             intervention=self.intervention,
             sector=Sector.objects.create(name="Sector 1")
@@ -67,6 +66,6 @@ class TestInterventionsAPI(APITenantTestCase):
             user=self.unicef_staff,
             data=data
         )
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         result = json.loads(response.rendered_content)
-        self.assertEquals(result.get('result_links'), {'name': ['This field may not be null.']})
+        self.assertEqual(result.get('result_links'), {'name': ['This field may not be null.']})

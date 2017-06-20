@@ -54,13 +54,12 @@ class StaticDataEndpoints(APITenantTestCase):
         FundFactory()
         ExpenseTypeFactory()
 
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(10):
             response = self.forced_auth_req('get', reverse('public:static'),
                                             user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
-        self.assertKeysIn(['dsa_regions',
-                           'currencies',
+        self.assertKeysIn(['currencies',
                            'travel_types',
                            'countries',
                            'airlines',

@@ -13,7 +13,6 @@ from EquiTrack.factories import (
     ResultFactory,
     SectionFactory,
     LocationFactory,
-    ResultStructureFactory,
     CountryProgrammeFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -24,17 +23,23 @@ class TestReportViews(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.result_type = ResultType.objects.get(id=random.choice([1, 2, 3]))
+        self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
+
+        today = datetime.date.today()
+        self.country_programme = CountryProgrammeFactory(
+            wbs='0000/A0/01',
+            from_date=datetime.date(today.year - 1, 1, 1),
+            to_date=datetime.date(today.year + 1, 1, 1))
+
+
         self.result1 = ResultFactory(
             result_type=self.result_type,
-            result_structure=ResultStructureFactory(),
-            country_programme=CountryProgrammeFactory(wbs="/A0/"),
+            country_programme=self.country_programme,
         )
 
         self.result2 = ResultFactory(
             result_type=self.result_type,
-            result_structure=self.result1.result_structure,
-            country_programme=self.result1.country_programme,
+            country_programme=self.country_programme
         )
 
         # Additional data to use in tests
@@ -43,44 +48,38 @@ class TestReportViews(APITenantTestCase):
         self.section1 = SectionFactory()
         self.section3 = SectionFactory()
 
-    @skip("rename to hrp")
-    def test_api_resultstructures_list(self):
-        response = self.forced_auth_req('get', '/api/reports/result-structures/', user=self.unicef_staff)
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
     def test_api_resulttypes_list(self):
         response = self.forced_auth_req('get', '/api/reports/result-types/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_sectors_list(self):
         response = self.forced_auth_req('get', '/api/reports/sectors/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_indicators_list(self):
         response = self.forced_auth_req('get', '/api/reports/indicators/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_results_list(self):
         response = self.forced_auth_req('get', '/api/reports/results/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(int(response.data[0]["id"]), self.result1.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
 
     def test_api_results_patch(self):
         url = '/api/reports/results/{}/'.format(self.result1.id)
         data = {"name": "patched name"}
         response = self.forced_auth_req('patch', url, user=self.unicef_staff, data=data)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["name"], "patched name")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], "patched name")
 
     def test_api_units_list(self):
         response = self.forced_auth_req('get', '/api/reports/units/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_apiv2_results_list(self):
         response = self.forced_auth_req(
@@ -89,8 +88,8 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(int(response.data[0]["id"]), self.result1.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
 
     def test_apiv2_results_list_minimal(self):
         params = {"verbosity": "minimal"}
@@ -101,8 +100,8 @@ class TestReportViews(APITenantTestCase):
             data=params,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data[0].keys(), ["id", "name"])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0].keys(), ["id", "name"])
 
     def test_apiv2_results_retrieve(self):
         response = self.forced_auth_req(
@@ -111,8 +110,8 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(int(response.data["id"]), self.result1.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(int(response.data["id"]), self.result1.id)
 
     def test_apiv2_results_list_current_cp(self):
         response = self.forced_auth_req(
@@ -121,8 +120,8 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(int(response.data[0]["country_programme"]), CountryProgramme.current().id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(int(response.data[0]["country_programme"]), CountryProgramme.objects.all_active.first().id)
 
     def test_apiv2_results_list_filter_year(self):
         param = {
@@ -134,8 +133,8 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff,
             data=param,
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
     def test_apiv2_results_list_filter_cp(self):
         param = {
@@ -147,8 +146,8 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff,
             data=param,
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(int(response.data[0]["id"]), self.result1.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
 
     def test_apiv2_results_list_filter_result_type(self):
         param = {
@@ -160,8 +159,8 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff,
             data=param,
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(int(response.data[0]["id"]), self.result1.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
 
     def test_apiv2_results_list_filter_values(self):
         param = {
@@ -173,8 +172,8 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff,
             data=param,
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
     def test_apiv2_results_list_filter_values_bad(self):
         param = {
@@ -186,8 +185,8 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff,
             data=param,
         )
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ['ID values must be integers'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ['ID values must be integers'])
 
     def test_apiv2_results_list_filter_combined(self):
         param = {
@@ -201,5 +200,5 @@ class TestReportViews(APITenantTestCase):
             data=param,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(int(response.data[0]["id"]), self.result1.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(int(response.data[0]["id"]), self.result1.id)

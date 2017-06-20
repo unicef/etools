@@ -202,7 +202,7 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     partner_contribution_local = 20.00
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
-    year = '2017'
+
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -211,32 +211,12 @@ class ResultTypeFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
 
 
-class ResultStructureFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.ResultStructure
-
-    name = factory.Sequence(lambda n: 'RSSP {}'.format(n))
-    from_date = date(date.today().year, 1, 1)
-    to_date = date(date.today().year, 12, 31)
-
-
 class ResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Result
 
-    result_structure = factory.SubFactory(ResultStructureFactory)
     result_type = factory.SubFactory(ResultTypeFactory)
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
-    from_date = date(date.today().year, 1, 1)
-    to_date = date(date.today().year, 12, 31)
-
-
-class CountryProgrammeFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = report_models.CountryProgramme
-
-    name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
 
@@ -247,7 +227,6 @@ class GovernmentInterventionFactory(factory.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     country_programme = factory.SubFactory(CountryProgrammeFactory)
-    result_structure = factory.SubFactory(ResultStructureFactory)
     number = 'RefNumber'
 
 

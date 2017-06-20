@@ -16,7 +16,6 @@ from views.interventions_v2 import (
     InterventionListAPIView,
     InterventionListDashView,
     InterventionDetailAPIView,
-    InterventionBudgetDeleteView,
     InterventionPlannedVisitsDeleteView,
     InterventionAttachmentDeleteView,
     InterventionResultLinkDeleteView,
@@ -68,7 +67,6 @@ urlpatterns = (
     url(r'^interventions/$', view=InterventionListAPIView.as_view(http_method_names=['get', 'post']), name='intervention-list'),
     url(r'^interventions/dash/$', view=InterventionListDashView.as_view(http_method_names=['get', 'post']), name='intervention-list-dash'),
     url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(http_method_names=['get', 'patch']), name='intervention-detail'),
-    url(r'^interventions/budgets/(?P<pk>\d+)/$', view=InterventionBudgetDeleteView.as_view(http_method_names=['delete', ]), name='intervention-budget-del'),
     url(r'^interventions/planned-visits/(?P<pk>\d+)/$', view=InterventionPlannedVisitsDeleteView.as_view(http_method_names=['delete', ]), name='intervention-visits-del'),
     url(r'^interventions/attachments/(?P<pk>\d+)/$', view=InterventionAttachmentDeleteView.as_view(http_method_names=['delete', ]), name='intervention-attachments-del'),
     url(r'^interventions/results/(?P<pk>\d+)/$', view=InterventionResultLinkDeleteView.as_view(http_method_names=['delete', ]), name='intervention-results-del'),
@@ -76,13 +74,6 @@ urlpatterns = (
     url(r'^interventions/sector-locations/(?P<pk>\d+)/$', view=InterventionSectorLocationLinkDeleteView.as_view(http_method_names=['delete', ]), name='intervention-sector-locations-del'),
     url(r'^interventions/map/$', view=InterventionListMapView.as_view(http_method_names=['get', ]), name='intervention-map'),
     # url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(), name='intervention-detail'),
-
-    # GOVERNMENT
-    url(r'^government_interventions/$', view=GovernmentInterventionListAPIView.as_view(http_method_names=['get', 'post']), name='government-intervention-list'),
-    url(r'^government_interventions/(?P<pk>\d+)/$', view=GovernmentDetailAPIView.as_view(http_method_names=['get', 'patch']), name='government-intervention-detail'),
-    url(r'^government_interventions/results/(?P<pk>\d+)/$', view=GovernmentInterventionResultDeleteView.as_view(http_method_names=['delete', ]), name='government-intervention-results-del'),
-    url(r'^government_interventions/results/activities/(?P<pk>\d+)/$', view=GovernmentInterventionResultActivityDeleteView.as_view(http_method_names=['delete', ]), name='government-intervention-activities-del'),
-
 
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),

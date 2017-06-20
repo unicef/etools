@@ -45,7 +45,6 @@ from partners.views.v1 import (
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from funds.views import DonorViewSet, GrantViewSet
 from reports.views.v1 import (
-    ResultStructureViewSet,
     ResultTypeViewSet,
     SectorViewSet,
     # GoalViewSet,
@@ -57,8 +56,6 @@ from reports.views.v1 import (
 from partners.urls import (
     simple_interventions_api,
     # interventions_api,
-    government_interventions_api,
-    simple_government_interventions_api,
     # results_api,
     # simple_results_api,
     # intervention_reports_api,
@@ -74,6 +71,8 @@ from partners.urls import (
     # agreement_api,
     # simple_agreements_api,
 )
+
+from management.urls import urlpatterns as management_urls
 
 from workplan.views import (
     CommentViewSet,
@@ -150,11 +149,11 @@ urlpatterns = patterns(
     url(r'^locations/', include('locations.urls')),
     url(r'^users/', include('users.urls')),
     url(r'^supplies/', include('supplies.urls')),
+    url(r'^api/management/', include(management_urls, namespace='management')),
     url(r'^api/', include(api.urls)),
     url(r'^api/', include(staffm_api.urls)),
-    url(r'^api/', include(government_interventions_api.urls)),
-    url(r'^api/', include(simple_government_interventions_api.urls)),
     url(r'^api/', include(publics_patterns, namespace='public')),
+
 
     # url(r'^trips/', include('trips.urls')),
     url(r'^api/', include(trips_api.urls)),

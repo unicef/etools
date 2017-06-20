@@ -20,7 +20,7 @@ from django_fsm import FSMField, transition
 from publics.models import TravelExpenseType
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from t2f.helpers.invoice_maker import InvoiceMaker
-from t2f.serializers.mailing import TravelMailSerializer
+from t2f.serializers.mailing import TravelMailSerializer, ActionPointMailSerializer
 from users.models import WorkspaceCounter
 
 log = logging.getLogger(__name__)
@@ -265,19 +265,23 @@ class Travel(models.Model):
             raise TransitionError('Maximum 3 open travels are allowed.')
 
         end_date_limit = datetime.utcnow() - timedelta(days=15)
-        if travels.filter(end_date__lte=end_date_limit).exists():
+        if travels.filter(end_date__lte=end_date_limit).exclude(id=self.id).exists():
             raise TransitionError(ugettext('Another of your trips ended more than 15 days ago, but was not completed '
                                            'yet. Please complete that before creating a new trip.'))
 
         return True
 
-    def check_itinerary_count(self):
+    def validate_itinerary(self):
         if self.ta_required and self.itinerary.all().count() < 2:
             raise TransitionError(ugettext('Travel must have at least two itinerary item'))
+
+        if self.ta_required and self.itinerary.filter(dsa_region=None).exists():
+            raise TransitionError(ugettext('All itinerary items has to have DSA region assigned'))
+
         return True
 
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
-                conditions=[check_itinerary_count, has_supervisor, check_pending_invoices, check_travel_count])
+                conditions=[validate_itinerary, has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
         self.submitted_at = now()
         if not self.first_submission_date:
@@ -428,16 +432,6 @@ class Travel(models.Model):
                                      sender, [recipient])
         msg.attach_alternative(html_content, 'text/html')
 
-        # Core mailing is broken. Multiple headers will throw an exception
-        # https://bugs.python.org/issue28881
-        # for filename in ['emails/logo-etools.png', 'emails/logo-unicef.png']:
-        #     path = finders.find(filename)
-        #     with open(path, 'rb') as fp:
-        #         msg_img = MIMEImage(fp.read())
-        #
-        #     msg_img.add_header('Content-ID', '<{}>'.format(filename))
-        #     msg.attach(msg_img)
-
         try:
             msg.send(fail_silently=False)
         except ValidationError as exc:
@@ -455,7 +449,6 @@ class TravelActivity(models.Model):
     # Partnership has to be filtered based on partner
     # TODO: assert self.partnership.agreement.partner == self.partner
     partnership = models.ForeignKey('partners.Intervention', null=True, related_name='+')
-    government_partnership = models.ForeignKey('partners.GovernmentIntervention', null=True, related_name='+')
     result = models.ForeignKey('reports.Result', null=True, related_name='+')
     locations = models.ManyToManyField('locations.Location', related_name='+')
     primary_traveler = models.ForeignKey(User)
@@ -630,6 +623,8 @@ class ActionPoint(models.Model):
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
 
     def save(self, *args, **kwargs):
+        created = self.pk is None
+
         if self.status == ActionPoint.OPEN and self.actions_taken:
             self.status = ActionPoint.ONGOING
 
@@ -637,6 +632,35 @@ class ActionPoint(models.Model):
             self.status = ActionPoint.COMPLETED
 
         super(ActionPoint, self).save(*args, **kwargs)
+
+        if created:
+            self.send_notification_email()
+
+    def send_notification_email(self):
+        # TODO this could be async to avoid too long api calls in case of mail server issue
+        serializer = ActionPointMailSerializer(self, context={})
+
+        recipient = self.person_responsible.email
+        cc = self.assigned_by.email
+        subject = '[eTools] ACTION POINT ASSIGNED to {}'.format(self.person_responsible)
+        url = 'https://{host}/t2f/action-point/{action_point_id}/'.format(host=settings.HOST,
+                                                                          action_point_id=self.id)
+
+        context = Context({'travel': serializer.data,
+                           'url': url})
+        html_content = render_to_string('emails/action_point_assigned.html', context)
+
+        # TODO what should be used?
+        sender = settings.DEFAULT_FROM_EMAIL
+        msg = EmailMultiAlternatives(subject, '',
+                                     sender, [recipient],
+                                     cc=[cc])
+        msg.attach_alternative(html_content, 'text/html')
+
+        try:
+            msg.send(fail_silently=False)
+        except ValidationError as exc:
+            log.error('Was not able to send the email. Exception: %s', exc.message)
 
 
 class Invoice(models.Model):

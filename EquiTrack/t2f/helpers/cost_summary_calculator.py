@@ -69,7 +69,7 @@ class CostSummaryCalculator(object):
             expenses_total[expense.currency] += expense.amount
 
             if expense.vendor_number == 'user':
-                paid_to_traveler -= expense.amount
+                paid_to_traveler += expense.amount
 
         expenses_total = [{'currency': k, 'amount': v} for k, v in expenses_total.items()]
 
@@ -171,7 +171,14 @@ class DSACalculator(object):
 
     def calculate_dsa(self):
         # If TA not required, dsa amounts should be zero
+        dsa_should_be_zero = False
         if not self.travel.ta_required:
+            dsa_should_be_zero = True
+
+        if self.travel.itinerary.filter(dsa_region=None).exists():
+            dsa_should_be_zero = True
+
+        if dsa_should_be_zero:
             self.total_dsa = Decimal(0)
             self.total_deductions = Decimal(0)
             self.paid_to_traveler = Decimal(0)
@@ -194,13 +201,15 @@ class DSACalculator(object):
         self.detailed_dsa = self.aggregate_detailed_dsa(dsa_dto_list)
 
     def get_dsa_amount(self, dsa_region, over_60_days):
+        dsa_rate = dsa_region.get_rate_at(self.travel.submitted_at)
+
         if self.travel.currency:
             currency = 'usd' if self.travel.currency.code == self.USD_CODE else 'local'
         else:
             currency = 'local'
         over_60 = '60plus_' if over_60_days else ''
         field_name = 'dsa_amount_{over_60}{currency}'.format(over_60=over_60, currency=currency)
-        return getattr(dsa_region, field_name)
+        return getattr(dsa_rate, field_name)
 
     def get_by_day_grouping(self):
         """
