@@ -172,22 +172,31 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
+        self.cp = CountryProgramme.objects.create(
+            name="CP 1",
+            wbs="/A0/",
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
+        )
         year = datetime.date.today().year
         self.pca_signed1 = Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
             signed_by_unicef_date=datetime.date(year - 1, 1, 1),
             signed_by_partner_date=datetime.date(year - 1, 1, 1),
+            country_programme=self.cp,
         )
         Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
             signed_by_unicef_date=datetime.date(year - 2, 1, 1),
             signed_by_partner_date=datetime.date(year - 2, 1, 1),
+            country_programme=self.cp,
         )
         Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
+            country_programme=self.cp,
         )
 
     def test_get_last_pca(self):
@@ -264,12 +273,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_needed_last_audit_is_in_current(self):
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         Assessment.objects.create(
             partner=self.partner_organization,
             type="Scheduled Audit report",
@@ -281,12 +284,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_needed_last_audit_is_not_in_current(self):
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         Assessment.objects.create(
             partner=self.partner_organization,
             type="Scheduled Audit report",
@@ -298,12 +295,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_needed_extra_assessment_after_last(self):
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         Assessment.objects.create(
             partner=self.partner_organization,
             type="Scheduled Audit report",
@@ -320,12 +311,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_needed_extra_assessment_only(self):
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         assessment = Assessment.objects.create(
             partner=self.partner_organization,
             type="Scheduled Audit report",
@@ -337,12 +322,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_done(self):
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         Assessment.objects.create(
             partner=self.partner_organization,
             type="Scheduled Audit report",
@@ -471,6 +450,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         agreement = Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
+            country_programme=self.cp,
         )
 
         intervention = InterventionFactory(
@@ -549,9 +529,16 @@ class TestAgreementModel(TenantTestCase):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
+        cp = CountryProgramme.objects.create(
+            name="CP 1",
+            wbs="/A0/",
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
+        )
         self.agreement = Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
+            country_programme=cp
         )
         # Trigger created event activity stream
         create_snapshot_activity_stream(
@@ -596,9 +583,16 @@ class TestInterventionModel(TenantTestCase):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
+        cp = CountryProgramme.objects.create(
+            name="CP 1",
+            wbs="/A0/",
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
+        )
         agreement = Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
+            country_programme=cp,
         )
         self.intervention = Intervention.objects.create(
             title="Intervention 1",

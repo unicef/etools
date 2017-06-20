@@ -1022,11 +1022,7 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
             data=data
         )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["errors"],
-            ["Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date)."])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_agreements_create_PCA_must_be_CSO(self):
         self.partner.partner_type = "Government"
@@ -1037,6 +1033,7 @@ class TestAgreementAPIView(APITenantTestCase):
             "status": "draft",
             "signed_by": self.unicef_staff.id,
             "partner_manager": self.partner_staff.id,
+            "country_programme": self.country_programme.id
         }
         response = self.forced_auth_req(
             'post',
