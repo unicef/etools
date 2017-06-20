@@ -45,6 +45,7 @@ class Grant(models.Model):
 
 
 class FundsReservationHeader(models.Model):
+    intervention = models.ForeignKey('partners.Intervention', related_name='frs', blank=True, null=True)
     vendor_code = models.CharField(max_length=20)
     fr_number = models.CharField(max_length=20, unique=True)
     document_date = models.DateField(null=True, blank=True)
@@ -53,11 +54,11 @@ class FundsReservationHeader(models.Model):
     document_text = models.CharField(max_length=255, null=True, blank=True)
 
     # this is the field required for validation
-    pd_fr_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    intervention_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     # overall_amount
-    fr_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
-    actual_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
-    outstanding_dct = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    total_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    actual_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    outstanding_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
