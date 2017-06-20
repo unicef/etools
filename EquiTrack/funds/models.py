@@ -51,6 +51,14 @@ class FundsReservationHeader(models.Model):
     fr_type = models.CharField(max_length=50, null=True, blank=True)
     currency = models.CharField(max_length=50, null=True, blank=True)
     document_text = models.CharField(max_length=255, null=True, blank=True)
+
+    # this is the field required for validation
+    pd_fr_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    # overall_amount
+    fr_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    actual_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    outstanding_dct = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
 
@@ -68,6 +76,8 @@ class FundsReservationItem(models.Model):
     fund_reservation = models.ForeignKey(FundsReservationHeader, related_name="fr_items")
     fr_ref_number = models.CharField(max_length=30, null=True, blank=True)
     line_item = models.CharField(max_length=5)
+
+    # grant and fund will be needed for filtering in the future
     wbs = models.CharField(max_length=30, null=True, blank=True)
     grant_number = models.CharField(max_length=20, null=True, blank=True)
     fund = models.CharField(max_length=10, null=True, blank=True)
