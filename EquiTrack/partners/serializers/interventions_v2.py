@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Sum
 from rest_framework import serializers
 
+from funds.serializers import FRsSerializer
 from reports.serializers.v1 import SectorLightSerializer
 from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 from locations.models import Location
@@ -291,6 +292,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     fr_numbers_details = serializers.SerializerMethodField(read_only=True, required=False)
     submitted_to_prc = serializers.ReadOnlyField()
+    frs_details = FRsSerializer(source='frs', read_only=True)
 
     def get_fr_numbers_details(self, obj):
         data = {}
@@ -310,7 +312,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner", "agreement", "document_type", "number", "prc_review_document_file",
+            "id", 'frs', "partner", "agreement", "document_type", "number", "prc_review_document_file", "frs_details",
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
