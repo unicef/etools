@@ -166,7 +166,7 @@ urlpatterns = patterns(
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2')),
     url(r'^api/v2/users/', include('users.urls_v2')),
-    url(r'^api/v2/funds/', include('funds.urls')),
+    url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
 
 
     url(r'^api/docs/', schema_view),
