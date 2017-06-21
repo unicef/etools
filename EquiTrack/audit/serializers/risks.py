@@ -30,6 +30,9 @@ class RiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
 
 
 class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    """
+    Risk blueprint connected with risk value for certain engagement instance.
+    """
     risk = RiskSerializer()
 
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -42,6 +45,9 @@ class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.M
         ]
 
     def update(self, instance, validated_data):
+        """
+        Updating engagement risk value for selected blueprint.
+        """
         if 'risk' in validated_data:
             data = validated_data.pop('risk')
             field = self.fields['risk']
@@ -60,9 +66,14 @@ class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.M
 
 
 class RiskCategoryNestedSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    """
+    Nested recursive serializer for risk category.
+    """
+
     blueprints = WritableListSerializer(child=RiskBlueprintNestedSerializer(required=False), required=False)
     children = RecursiveListSerializer(child=WriteListSerializeFriendlyRecursiveField(required=False), required=False)
 
+    # Aggregated values wouldn't exists in result data if calculate_risk wasn't called in root serializer.
     risk_rating = serializers.CharField(read_only=True)
     risk_score = serializers.FloatField(read_only=True)
     total_number_risk_points = serializers.IntegerField(read_only=True)
@@ -87,6 +98,10 @@ class RiskCategoryNestedSerializer(WritableNestedSerializerMixin, serializers.Mo
 
 
 class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    """
+    Root serializer for recursive risks categories. Contain questions and values together for easier usage.
+    """
+
     blueprints = RiskBlueprintNestedSerializer(required=False, many=True)
     children = RiskCategoryNestedSerializer(many=True)
 
@@ -103,6 +118,10 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
         super(RiskRootSerializer, self).__init__(*args, **kwargs)
 
     def get_attribute(self, instance):
+        """
+        Collect categories tree with connected blueprints and risks related to engagement.
+        This allows us to avoid passing instance deeper for filtering risks.
+        """
         categories = self.Meta.model.objects.filter(code=self.code).prefetch_related(
             'blueprints',
             models.Prefetch('blueprints__risks', Risk.objects.filter(engagement=instance))
@@ -140,6 +159,10 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
 
 
 class AggregatedRiskRootSerializer(RiskRootSerializer):
+    """
+    Risk root serializer with additional aggregated data.
+    """
+
     risk_rating = serializers.CharField(read_only=True)
     risk_score = serializers.FloatField(read_only=True)
     total_number_risk_points = serializers.IntegerField(read_only=True)
@@ -157,6 +180,9 @@ class AggregatedRiskRootSerializer(RiskRootSerializer):
         ]
 
     def to_representation(self, instance):
+        """
+        Processing nested categories to collect aggregates.
+        """
         # Depth-first search
         stack = [instance]
         while stack:
@@ -175,6 +201,10 @@ class AggregatedRiskRootSerializer(RiskRootSerializer):
 
     @staticmethod
     def calculate_risk(category):
+        """
+        Calculate aggregated values for category.
+        :param category: RiskCategory instance with filtered risks by engagement.
+        """
         for blueprint in category.blueprints.all():
             if blueprint.risks.all().exists():
                 # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer.
