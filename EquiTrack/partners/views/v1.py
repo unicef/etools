@@ -86,7 +86,10 @@ class PcaPDFView(PDFTemplateView):
         agr_id = self.kwargs.get('agr')
         lang = self.request.GET.get('lang', None)
         if lang:
-            self.template_name = self.language_templates_mapping.get(lang, self.template_name)
+            try:
+                self.template_name = self.language_templates_mapping[lang]
+            except KeyError:
+                return {"error": "Cannot find document with given query parameter lang={}".format(lang)}
         error = None
         try:
             agreement = Agreement.objects.get(id=agr_id)
