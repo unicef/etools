@@ -1088,16 +1088,15 @@ class Agreement(TimeStampedModel):
 
         self.update_related_interventions(oldself)
 
-        if not self.country_programme:
-            raise AssertionError('Country programme is required but not selected')
-
         if self.agreement_type in [Agreement.PCA]:
             # set start date
             if self.signed_by_partner_date and self.signed_by_unicef_date:
                 self.start = self.signed_by_unicef_date \
                     if self.signed_by_unicef_date > self.signed_by_partner_date else self.signed_by_partner_date
-                # set end date
-                self.end = self.country_programme.to_date
+
+            # set end date
+            assert self.country_programme is not None, 'Country Programme is required'
+            self.end = self.country_programme.to_date
 
         return super(Agreement, self).save()
 
