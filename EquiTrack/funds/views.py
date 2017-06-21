@@ -2,7 +2,7 @@
 import datetime
 
 from django.utils.translation import ugettext as _
-
+from django.db.models import Q
 from rest_framework import (
     viewsets,
     mixins,
@@ -64,20 +64,28 @@ class FRsView(APIView):
         Return a list of all users.
         """
         values = request.query_params.get("values", '').split(",")
+        intervention_id = request.query_params.get("intervention", None)
 
-        if not values:
+        if not values[0]:
             return Response(data={'error': _('Values are required')}, status=status.HTTP_400_BAD_REQUEST)
 
+
         today = datetime.datetime.utcnow().date()
-        qs = FundsReservationHeader.objects.filter(end_date__gte=today, fr_number__in=values, intervention__isnull=True)
+        qs = FundsReservationHeader.objects.filter(end_date__gte=today, fr_number__in=values)
+
+        if intervention_id:
+            qs = qs.filter((Q(intervention__id=intervention_id) | Q(intervention__isnull=True)))
+        else:
+            qs = qs.filter(intervention__isnull=True)
 
         if qs.count() != len(values):
             return Response(
-                data={'error': _('One of the FRs selected is either expired, has been used or could not be found')},
+                data={'error': _('One or more of the FRs selected is either expired, '
+                                 'has been used by another intervention or could not be found in eTools')},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = FRsSerializer(data={'frs': qs.all()})
-        serializer.is_valid()
+        serializer = FRsSerializer(qs)
 
         return Response(serializer.data)
+
