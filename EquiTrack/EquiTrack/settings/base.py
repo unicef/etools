@@ -401,6 +401,7 @@ SHARED_APPS = (
     'mptt',
     'easy_pdf',
     'django_hstore',
+    'ordered_model',
 
     'vision',
     'management',
@@ -428,6 +429,7 @@ TENANT_APPS = (
     't2f',
     'workplan',
     'actstream',
+    'attachments',
 )
 
 
