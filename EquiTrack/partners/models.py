@@ -1148,9 +1148,11 @@ class AgreementAmendmentType(models.Model):
 
     AMENDMENT_TYPES = Choices(
         ('Change IP name', 'Change in Legal Name of Implementing Partner'),
+        ('CP extension', 'Extension of Country Programme Cycle'),
         ('Change authorized officer', 'Change Authorized Officer(s)'),
         ('Change banking info', 'Banking Information'),
-        ('Change in clause', 'Change in Clause'),
+        ('Additional clause', 'Additional Clause'),
+        ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
     )
     agreement_amendment = models.ForeignKey(AgreementAmendment, related_name='amendment_types')
     type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
