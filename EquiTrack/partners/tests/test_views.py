@@ -1085,14 +1085,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.data["status"], "suspended")
         self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, "suspended")
 
-    def test_partner_agreement_amendment_cp_cycle_end(self):
-        amendment_type = AgreementAmendmentType.objects.create(
-            agreement_amendment=self.amendment1,
-            type="CP extension"
-        )
-
-        self.assertEqual(amendment_type.cp_cycle_end, CountryProgramme.main_active().to_date)
-
     @skip("signed amendment is now mandatory so we cannot delete?")
     def test_agreement_amendment_delete_valid(self):
         response = self.forced_auth_req(
