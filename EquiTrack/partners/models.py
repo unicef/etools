@@ -1148,11 +1148,9 @@ class AgreementAmendmentType(models.Model):
 
     AMENDMENT_TYPES = Choices(
         ('Change IP name', 'Change in Legal Name of Implementing Partner'),
-        ('CP extension', 'Extension of Country Programme Cycle'),
-        ('Change authorized officer', 'Change Authorized Officer'),
+        ('Change authorized officer', 'Change Authorized Officer(s)'),
         ('Change banking info', 'Banking Information'),
-        ('Additional clause', 'Additional Clause'),
-        ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
+        ('Change in clause', 'Change in Clause'),
     )
     agreement_amendment = models.ForeignKey(AgreementAmendment, related_name='amendment_types')
     type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
@@ -1163,11 +1161,6 @@ class AgreementAmendmentType(models.Model):
     cp_cycle_end = models.DateField(null=True, blank=True)
     additional_clauses = models.TextField(null=True, blank=True)
     existing_clause_amended = models.TextField(null=True, blank=True)
-
-    def save(self, **kwargs):
-        if self.pk is None and self.type == 'CP extension':
-            self.cp_cycle_end = self.agreement_amendment.agreement.country_programme.to_date
-        return super(AgreementAmendmentType, self).save(**kwargs)
 
     def __unicode__(self):
         return "{}-{}-{}".format(
