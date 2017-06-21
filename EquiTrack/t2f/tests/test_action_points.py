@@ -19,8 +19,11 @@ from t2f.tests.factories import TravelFactory, ActionPointFactory
 class ActionPoints(APITenantTestCase):
     def setUp(self):
         super(ActionPoints, self).setUp()
-        self.traveler = UserFactory()
-        self.unicef_staff = UserFactory(is_staff=True)
+        self.traveler = UserFactory(first_name='John',
+                                    last_name='Doe')
+        self.unicef_staff = UserFactory(first_name='Max',
+                                        last_name='Mustermann',
+                                        is_staff=True)
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
         self.due_date = (datetime.now() + timedelta(days=1)).isoformat()
@@ -290,7 +293,9 @@ class ActionPoints(APITenantTestCase):
     def test_mail_on_first_save(self):
         self.assertEqual(len(mail.outbox), 0)
 
-        action_point = ActionPointFactory(travel=self.travel)
+        action_point = ActionPointFactory(travel=self.travel,
+                                          person_responsible=self.unicef_staff,
+                                          assigned_by=self.traveler)
         self.assertEqual(len(mail.outbox), 1)
 
         action_point.save()
