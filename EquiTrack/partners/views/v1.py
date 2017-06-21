@@ -71,22 +71,22 @@ from EquiTrack.utils import get_data_from_insight
 
 
 class PcaPDFView(PDFTemplateView):
-    template_name = "partners/pca/engilsh_pdf.html"
+    template_name = "partners/pca/english_pdf.html"
     language_templates_mapping = {
-        "arabic": "partners/pca/arabic_pdf",
-        "english": "partners/pca/engilsh_pdf",
-        "french": "partners/pca/french_pdf",
-        "portuguese": "partners/pca/portugese_pdf",
-        "russian": "partners/pca/russian_pdf",
-        "spanish": "partners/pca/spanish_pdf",
-        "ifrc": "partners/pca/ifrc_pdf"
+        "arabic": "partners/pca/arabic_pdf.html",
+        "english": "partners/pca/english_pdf.html",
+        "french": "partners/pca/french_pdf.html",
+        "portugese": "partners/pca/portugese_pdf.html",
+        "russian": "partners/pca/russian_pdf.html",
+        "spanish": "partners/pca/spanish_pdf.html",
+        "ifrc": "partners/pca/ifrc_pdf.html"
     }
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
-        lang = self.kwargs.get('lang')
-        self.template_name = self.language_templates_mapping[lang] if \
-            lang in self.language_templates_mapping.keys() else self.template_name
+        lang = self.request.GET.get('lang', None)
+        if lang:
+            self.template_name = self.language_templates_mapping.get(lang, self.template_name)
         error = None
         try:
             agreement = Agreement.objects.get(id=agr_id)

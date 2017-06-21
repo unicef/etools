@@ -40,7 +40,7 @@ urlpatterns = (
 
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
     url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(), name='agreement-detail'),
-    url(r'^agreements/(?P<agr>\d+)/(?P<lang>[\w\-]+)/$', PcaPDFView.as_view(), name='pca_pdf'),
+    url(r'^agreements/(?P<agr>\d+)/generate_doc/$', PcaPDFView.as_view(), name='pca_pdf'),
     url(r'^agreements/amendments/(?P<pk>\d+)/$', view=AgreementAmendmentDeleteView.as_view(http_method_names=['delete']), name='agreement-amendment-del'),
     url(r'^agreements/amendments/types/(?P<pk>\d+)/$', view=AgreementAmendmentTypeDeleteView.as_view(http_method_names=['delete']), name='agreement-amendment-type-del'),
     # url(r'^agreements/(?P<pk>\d+)/interventions/$', view=AgreementInterventionsListAPIView.as_view(), name='agreement-interventions-list'),
