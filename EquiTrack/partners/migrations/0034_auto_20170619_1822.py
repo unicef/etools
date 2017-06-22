@@ -24,8 +24,18 @@ def migrate_cps(apps, schema_editor):
         print('CP {} updated {} agreements'.format(cp.name, agreements))
 
         interventions = Intervention.objects.filter(start__gte=cp.from_date,
-                                                    start__lte=cp.to_date,).update(country_programme=cp)
-        print('CP {} updated {} interventions'.format(cp.name, interventions))
+                                                    start__lte=cp.to_date,)
+        for intervention in interventions:
+            print(intervention.number)
+            for rl in intervention.result_links.all():
+                print(rl.cp_output)
+                if rl.cp_output.country_programme != cp:
+                    print(rl.cp_output.name)
+                assert rl.cp_output.country_programme != cp, 'CP output {} is not in the same CountryProgramme as PD'.format(rl.cp_output)
+            intervention.country_programme = cp
+            intervention.save()
+
+        print('CP {} updated {} interventions'.format(cp.name, interventions.count()))
 
 
 class Migration(migrations.Migration):
