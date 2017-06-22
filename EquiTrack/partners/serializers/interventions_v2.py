@@ -278,7 +278,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     def validate_frs(self, frs):
         for fr in frs:
             if fr.intervention:
-                if (not self.instance.id) or (fr.intervention.id != self.instance.id):
+                if (self.instance is None) or (not self.instance.id) or (fr.intervention.id != self.instance.id):
                     raise ValidationError({'error': 'One or more of the FRs selected is related to a different PD/SSFA,'
                                                     ' {}'.format(fr.fr_number)})
             else:
@@ -306,24 +306,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
-    fr_numbers_details = serializers.SerializerMethodField(read_only=True, required=False)
     submitted_to_prc = serializers.ReadOnlyField()
     frs_details = FRsSerializer(source='frs', read_only=True)
-
-    def get_fr_numbers_details(self, obj):
-        data = {}
-        if obj.fr_numbers:
-            data = {k: [] for k in obj.fr_numbers}
-            try:
-                fc_items = FundsCommitmentItem.objects.filter(
-                    fr_number__in=obj.fr_numbers).select_related('fund_commitment')
-            except FundsCommitmentItem.DoesNotExist:
-                pass
-            else:
-                for fc in fc_items:
-                    serializer = FundingCommitmentNestedSerializer(fc)
-                    data[fc.fr_number].append(serializer.data)
-        return data
 
     class Meta:
         model = Intervention
@@ -334,7 +318,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
             "created", "modified", "planned_budget", "result_links", 'country_programme',
-            "amendments", "planned_visits", "attachments", "supplies", "distributions", "fr_numbers_details",
+            "amendments", "planned_visits", "attachments", "supplies", "distributions"
         )
 
 
@@ -488,6 +472,7 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status", "start", "end",
+            "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
+            "start", "end",
             "offices", "sector_locations",
         )
