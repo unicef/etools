@@ -26,12 +26,12 @@ def migrate_cps(apps, schema_editor):
         interventions = Intervention.objects.filter(start__gte=cp.from_date,
                                                     start__lte=cp.to_date,)
         for intervention in interventions:
-            print(intervention.number)
+            wrong_cp = []
             for rl in intervention.result_links.all():
-                print(rl.cp_output)
                 if rl.cp_output.country_programme != cp:
-                    print(rl.cp_output.name)
-                assert rl.cp_output.country_programme != cp, 'CP output {} is not in the same CountryProgramme as PD'.format(rl.cp_output)
+                    wrong_cp.append(rl.cp_output.wbs)
+            if len(wrong_cp) > 0:
+                print ("PD [{}] STATUS [{}] CP [{}] has wrongly mapped outputs {}".format(intervention.id, intervention.status, intervention.country_programme.wbs, wrong_cp))
             intervention.country_programme = cp
             intervention.save()
 
@@ -42,6 +42,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('partners', '0033_auto_20170614_1831'),
+        ('reports', '0010_auto_20170614_1831')
     ]
 
     operations = [
