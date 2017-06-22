@@ -43,9 +43,6 @@ class StaticDataView(GhostDataMixin,
 
     def list(self, request):
         country = request.user.profile.country
-        dsa_regions = DSARegion.objects.filter(country__business_area__code=country.business_area_code).active()
-        dsa_regions = dsa_regions.select_related('country')
-
         currencies = Currency.objects.all().prefetch_related('exchange_rates')
         business_areas = BusinessArea.objects.all().select_related('region')
 
@@ -166,8 +163,9 @@ class ExpenseTypesView(GhostDataMixin,
 
 class WBSGrantFundView(GhostDataMixin,
                        viewsets.GenericViewSet):
+    permission_classes = ()
 
-    @etag_cached('wbs_grant_fund', public_cache=True)
+    # @etag_cached('wbs_grant_fund', public_cache=True)
     def list(self, request):
         wbs_qs = self.wbs_queryset
         grant_qs = self.grants_queryset
@@ -228,7 +226,7 @@ class WBSGrantFundView(GhostDataMixin,
     @cached_property
     def funds_queryset(self):
         grant_qs = self.grants_queryset
-        return Fund.objects.filter(grants__in=grant_qs)
+        return Fund.objects.filter(grants__in=grant_qs).distinct()
 
     def _aggregate_values(self, values, common_keys, keys_to_group):
         def make_dict(data):
@@ -247,6 +245,7 @@ class WBSGrantFundView(GhostDataMixin,
                 if val_dict[key] not in ret[val_dict['id']][key]:
                     ret[val_dict['id']][key].append(val_dict[key])
         return ret.values()
+
 
 class AirlinesView(GhostDataMixin,
                    viewsets.GenericViewSet):
