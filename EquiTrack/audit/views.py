@@ -205,8 +205,8 @@ class EngagementPDFView(SingleObjectMixin, PDFTemplateView):
     model = Engagement
 
     def get_pdf_filename(self):
-        return 'engagement_{}.pdf'.format(self.object.unique_id)
+        return 'engagement_{}.pdf'.format(self.obj.unique_id)
 
     def dispatch(self, request, *args, **kwargs):
-        self.object = self.get_object()
+        self.obj = self.get_object()
         return super(EngagementPDFView, self).dispatch(request, *args, **kwargs)

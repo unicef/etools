@@ -62,7 +62,7 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
                 file_type, created = FileType.objects.get_or_create(name='audit', code='audit')
 
                 attachment = Attachment(
-                    object=self.engagement,
+                    content_object=self.engagement,
                     code=code,
                     file_type=file_type
                 )

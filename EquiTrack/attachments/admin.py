@@ -13,5 +13,5 @@ class FileTypeAdmin(OrderedModelAdmin):
 
 @admin.register(app_models.Attachment)
 class AttachmentAdmin(admin.ModelAdmin):
-    list_display = ['file_type', 'file', 'object', ]
+    list_display = ['file_type', 'file', 'content_object', ]
     list_filter = ['file_type', ]

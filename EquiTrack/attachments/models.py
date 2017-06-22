@@ -33,7 +33,7 @@ class Attachment(TimeStampedModel, models.Model):
 
     content_type = models.ForeignKey(ContentType)
     object_id = models.IntegerField()
-    object = GenericForeignKey()
+    content_object = GenericForeignKey()
 
     code = models.CharField(max_length=20, blank=True)
 

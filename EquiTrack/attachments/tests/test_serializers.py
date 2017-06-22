@@ -30,7 +30,7 @@ class TestAttachmentsModels(FastTenantTestCase):
             'file_type': self.file_type.pk,
         })
         self.assertTrue(valid_serializer.is_valid())
-        attachment_instance = valid_serializer.save(object=self.file_type)
+        attachment_instance = valid_serializer.save(content_object=self.file_type)
         self.assertTrue(
             os.path.splitext(os.path.split(attachment_instance.file.url)[-1])[0].startswith(
                 os.path.splitext(self.file_name)[0]
