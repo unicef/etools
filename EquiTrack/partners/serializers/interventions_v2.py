@@ -269,7 +269,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
 
     frs = serializers.PrimaryKeyRelatedField(many=True, queryset=FundsReservationHeader.
-                                             objects.prefetch_related('intervention').all())
+                                             objects.prefetch_related('intervention').all(), required=False)
 
     class Meta:
         model = Intervention
