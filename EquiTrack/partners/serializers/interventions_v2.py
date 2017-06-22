@@ -24,7 +24,7 @@ from partners.models import (
 )
 from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
-from funds.models import FundsCommitmentItem
+from funds.models import FundsCommitmentItem, FundsReservationHeader
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):
@@ -268,9 +268,25 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     sector_locations = InterventionSectorLocationCUSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
 
+    frs = serializers.PrimaryKeyRelatedField(many=True, queryset=FundsReservationHeader.
+                                             objects.prefetch_related('intervention').all())
+
     class Meta:
         model = Intervention
         fields = "__all__"
+
+    def validate_frs(self, frs):
+        for fr in frs:
+            if fr.intervention:
+                if (not self.instance.id) or (fr.intervention.id != self.instance.id):
+                    raise ValidationError({'error': 'One or more of the FRs selected is related to a different PD/SSFA,'
+                                                    ' {}'.format(fr.fr_number)})
+            else:
+                # make sure it's not expired
+                if fr.expired:
+                    raise ValidationError({'error': 'One or more selected FRs is expired,'
+                                                    ' {}'.format(fr.fr_number)})
+        return frs
 
     @transaction.atomic
     def update(self, instance, validated_data):

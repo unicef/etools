@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Donor(models.Model):
@@ -71,6 +72,11 @@ class FundsReservationHeader(models.Model):
     class Meta:
         ordering = ['fr_number']
         unique_together = ('vendor_code', 'fr_number')
+
+    @property
+    def expired(self):
+        today = timezone.now().date()
+        return self.end_date < today
 
 
 class FundsReservationItem(models.Model):
