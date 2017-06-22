@@ -20,7 +20,7 @@ from reports.models import Result
 from users.models import Section
 
 from .exports import (
-    PartnerExport, GovernmentExport,
+    PartnerExport,
     InterventionExport, AgreementExport
 )
 from .models import (
@@ -42,8 +42,6 @@ from .models import (
     DistributionPlan,
     FundingCommitment,
     AgreementAmendmentLog,
-    GovernmentIntervention,
-    GovernmentInterventionResult,
     IndicatorDueDates,
     IndicatorReport,
     InterventionPlannedVisits,
@@ -55,7 +53,6 @@ from .models import (
     InterventionBudget,
     InterventionAttachment,
     AgreementAmendmentType,
-    GovernmentInterventionResultActivity,
 
 )
 from .filters import (
@@ -76,7 +73,6 @@ from .forms import (
     PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
     LocationForm,
-    GovernmentInterventionAdminForm,
     SectorLocationForm
 )
 
@@ -720,85 +716,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         return request.user.is_superuser
 
 
-class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.StackedInline):
-    model = GovernmentInterventionResult
-    form = GovernmentInterventionAdminForm
-    fields = (
-        'result',
-        ('year', 'planned_amount',),
-        'planned_visits',
-        'unicef_managers',
-        'sectors',
-        'sections',
-    )
-    filter_horizontal = (
-        'unicef_managers',
-        'sectors',
-        'sections',
-    )
-
-    def get_extra(self, request, obj=None, **kwargs):
-        return 0 if obj else 1
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        if db_field.name == u'result':
-            kwargs['queryset'] = Result.objects.filter(
-                result_type__name=u'Output', hidden=False)
-
-        return super(GovernmentInterventionResultAdminInline, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-
-class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
-    resource_class = GovernmentExport
-    fieldsets = (
-        (_('Government Intervention Details'), {
-            'fields':
-                ('partner',
-                 'country_programme',
-                 'number'),
-        }),
-    )
-    list_display = (
-        u'number',
-        u'partner',
-        u'country_programme'
-    )
-    list_filter = (
-        'partner',
-        'country_programme'
-    )
-    search_fields = (
-        'number',
-        'partner__name'
-    )
-    inlines = [GovernmentInterventionResultAdminInline]
-
-    # government funding disabled temporarily. awaiting Vision API updates
-    # suit_form_includes = (
-    #     ('admin/partners/government_funding.html', 'bottom'),
-    # )
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        if db_field.rel.to is PartnerOrganization:
-            kwargs['queryset'] = PartnerOrganization.objects.filter(
-                partner_type=u'Government', hidden=False)
-
-        return super(GovernmentInterventionAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-    def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
-
-        super(GovernmentInterventionAdmin, self).save_model(request, obj, form, change)
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser
-
-
 class AssessmentAdmin(admin.ModelAdmin):
     model = Assessment
     fields = (
@@ -1117,6 +1034,5 @@ admin.site.register(SupplyItem, SupplyItemAdmin)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(FileType, FileTypeAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
-admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
 
 

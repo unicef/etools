@@ -54,7 +54,6 @@ from reports.views.v1 import (
 )
 
 from partners.urls import (
-    simple_interventions_api,
     # interventions_api,
     # results_api,
     # simple_results_api,
