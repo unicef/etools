@@ -31,13 +31,18 @@ class WBSGrantFundEndpoint(APITenantTestCase):
         WBSFactory(business_area=business_area)
         WBSFactory(business_area=business_area)
 
+        wbs = WBSFactory(business_area=business_area)
+        wbs.grants.clear()
+
         with self.assertNumQueries(4):
             response = self.forced_auth_req('get', reverse('public:wbs_grants_funds'),
                                             user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 
-        self.assertEqual(len(response_json['wbs']), 4)
+        self.assertEqual(len(response_json['wbs']), 5)
         self.assertKeysIn(['wbs', 'grants', 'funds'], response_json)
+
+        self.assertEqual(response_json['wbs'][4]['grants'], [])
 
         # Check different business area lookup
         business_area_2 = BusinessAreaFactory()

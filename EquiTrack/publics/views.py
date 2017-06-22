@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from collections import OrderedDict
+
 from django.db.models.query_utils import Q
 from django.utils.functional import cached_property
 from rest_framework import viewsets, mixins, status
@@ -230,7 +232,7 @@ class WBSGrantFundView(GhostDataMixin,
 
     def _aggregate_values(self, values, common_keys, keys_to_group):
         def make_dict(data):
-            ret = {}
+            ret = OrderedDict()
             for key in common_keys:
                 ret[key] = data[key]
             for key in keys_to_group:
@@ -242,7 +244,7 @@ class WBSGrantFundView(GhostDataMixin,
             if val_dict['id'] not in ret:
                 ret[val_dict['id']] = make_dict(val_dict)
             for key in keys_to_group:
-                if val_dict[key] not in ret[val_dict['id']][key]:
+                if val_dict[key] and val_dict[key] not in ret[val_dict['id']][key]:
                     ret[val_dict['id']][key].append(val_dict[key])
         return ret.values()
 
