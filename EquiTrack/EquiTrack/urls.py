@@ -164,7 +164,7 @@ urlpatterns = patterns(
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
     url(r'^api/t2f/', include(t2f_patterns, namespace='t2f')),
     url(r'^api/v2/', include('reports.urls_v2')),
-    url(r'^api/v2/', include('partners.urls_v2')),
+    url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
     url(r'^api/v2/users/', include('users.urls_v2')),
     url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
 
