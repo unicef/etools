@@ -19,8 +19,6 @@ Flake8 exceptions
 
 We allow the following flake8 "rules" to be violated:
 
-* E121 and E126: These rules specify the proper amount of "hanging indent" for multi-line
-  statements. We allow them to be violated.
 * max-line-length: The default maximum is 80 characters, which we have increased to 120 characters.
   Allowing unlimited line lengths makes PRs difficult to review in the Github interface.
 
