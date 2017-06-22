@@ -1,0 +1,13 @@
+[run]
+branch = true
+omit = */tests/*, */migrations/*, */urls.py, */settings/*, */wsgi.py, manage.py, manage_debug.py
+source = .
+
+[report]
+fail_under = 50
+show_missing = true
+skip_covered = True
+exclude_lines =
+   pragma: no cover
+   from\s+__future__\s+import\s+
+   __author__\s+=
