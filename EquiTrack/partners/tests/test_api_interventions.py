@@ -67,6 +67,6 @@ class TestInterventionsAPI(APITenantTestCase):
             user=self.unicef_staff,
             data=data
         )
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         result = json.loads(response.rendered_content)
-        self.assertEquals(result.get('result_links'), {'name': ['This field may not be null.']})
+        self.assertEqual(result.get('result_links'), {'name': ['This field may not be null.']})
