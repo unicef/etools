@@ -31,7 +31,7 @@ def migrate_cps(apps, schema_editor):
                 if rl.cp_output.country_programme != cp:
                     wrong_cp.append(rl.cp_output.wbs)
             if len(wrong_cp) > 0:
-                print ("PD [{}] STATUS [{}] CP [{}] has wrongly mapped outputs {}".format(intervention.id, intervention.status, intervention.country_programme.wbs, wrong_cp))
+                print ("PD [{}] STATUS [{}] CP [{}] has wrongly mapped outputs {}".format(intervention.id, intervention.status, cp.wbs, wrong_cp))
             intervention.country_programme = cp
             intervention.save()
 
