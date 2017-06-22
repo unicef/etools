@@ -26,7 +26,7 @@ from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
 from utils.groups.wrappers import GroupWrapper
 from utils.permissions import has_action_permission
-from utils.permissions.models import StatusBasePermission
+from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from .transitions.conditions import AuditSubmitReportRequiredFieldsCheck, ValidateAuditRiskCategories, \
     EngagementHasReportAttachmentsCheck, SPSubmitReportRequiredFieldsCheck, ValidateMARiskCategories, \

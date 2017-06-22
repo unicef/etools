@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from django.test import TestCase, override_settings
 
-from utils.permissions.models import BasePermission
+from utils.permissions.models.models import BasePermission
 
 
 @override_settings(SHARED_APPS=[

@@ -3,9 +3,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from audit.models import AuditPermission
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
+
+from ..models import AuditPermission
+from .risks import RiskRootSerializer
 
 
 class AuditPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
@@ -20,8 +22,6 @@ class AuditPermissionsBasedRootSerializerMixin(StatusPermissionsBasedRootSeriali
 
 class RiskCategoriesUpdateMixin(object):
     def update(self, instance, validated_data):
-        from audit.serializers import RiskRootSerializer
-
         risk_data = {}
         for field in self.fields.values():
             if isinstance(field, RiskRootSerializer) and field.source in validated_data:

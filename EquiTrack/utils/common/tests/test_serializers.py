@@ -2,7 +2,7 @@ from django.test import TestCase
 from rest_framework import serializers
 
 from .models import Parent
-from ..serializers import PkSerializerMixin
+from ..serializers.mixins import PkSerializerMixin
 
 
 class PKFieldSerializerTestCase(TestCase):

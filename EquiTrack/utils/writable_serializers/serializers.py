@@ -14,7 +14,7 @@ from rest_framework.fields import get_attribute
 from rest_framework.serializers import SerializerMetaclass
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator, BaseUniqueForValidator
 
-from utils.common.serializers import PkSerializerMixin
+from utils.common.serializers.mixins import PkSerializerMixin
 from utils.common.utils import pop_keys
 from utils.common.models.fields import CodedGenericRelation
 

@@ -16,10 +16,10 @@ from .models import Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, 
     AuditorStaffMember, Auditor, AuditPermission
 from utils.common.pagination import DynamicPageNumberPagination
 from .permissions import HasCreatePermission, CanCreateStaffMembers
-from .serializers import EngagementSerializer, AuditorFirmSerializer, AuditorFirmLightSerializer, \
-    MicroAssessmentSerializer, AuditSerializer, SpotCheckSerializer, PurchaseOrderSerializer, \
-    AuditorStaffMemberSerializer, EngagementLightSerializer, AuditorFirmExportSerializer, \
-    EngagementExportSerializer
+from .serializers.auditor import AuditorFirmSerializer, AuditorFirmLightSerializer, PurchaseOrderSerializer, \
+    AuditorStaffMemberSerializer, AuditorFirmExportSerializer
+from .serializers.engagement import EngagementSerializer, MicroAssessmentSerializer, AuditSerializer, \
+    SpotCheckSerializer, EngagementLightSerializer, EngagementExportSerializer
 from .metadata import AuditBaseMetadata, EngagementMetadata
 from .exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
 

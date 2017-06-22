@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import permissions
 
 from audit.models import AuditPermission, UNICEFAuditFocalPoint
-from utils.permissions.models import BasePermission
+from utils.permissions.models.models import BasePermission
 
 
 class HasCreatePermission(permissions.BasePermission):

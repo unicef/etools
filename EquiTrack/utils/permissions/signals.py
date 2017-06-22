@@ -1,4 +1,4 @@
-from .models import BasePermission, StatusBasePermission
+from .models.models import BasePermission, StatusBasePermission
 
 
 def prepare_permission_choices(models):

@@ -1,6 +1,7 @@
 from rest_framework_csv.renderers import CSVRenderer
 
-from .serializers import AuditorFirmExportSerializer, EngagementExportSerializer
+from .serializers.auditor import AuditorFirmExportSerializer
+from .serializers.engagement import EngagementExportSerializer
 
 
 class BaseCSVRenderer(CSVRenderer):
