@@ -5,7 +5,7 @@ from collections import OrderedDict
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 from vision.utils import wcf_json_date_as_datetime, comp_decimals
 from funds.models import Grant, Donor
-from audit.models import PurchaseOrder, AuditOrganization
+from audit.models import PurchaseOrder, AuditorFirm
 
 
 class POSynchronizer(VisionDataSynchronizer):
@@ -26,9 +26,9 @@ class POSynchronizer(VisionDataSynchronizer):
         'order': {
             "order_number": "PO_NUMBER",
             "contract_start_date": "PO_DATE",
-            "audit_organization": "VENDOR_CODE",
+            "auditor_firm": "VENDOR_CODE",
         },
-        'audit_organization': {
+        'auditor_firm': {
             "vendor_number": "VENDOR_CODE",
             "name": "VENDOR_NAME",
             "country": "VENDOR_CTRY_NAME",
@@ -45,7 +45,7 @@ class POSynchronizer(VisionDataSynchronizer):
     MODEL_MAPPING = OrderedDict({
         'donor': Donor,
         'grant': Grant,
-        'audit_organization': AuditOrganization,
+        'audit_firm': AuditorFirm,
         'order': PurchaseOrder,
     })
     DATE_FIELDS = ['EXPIRY_DATE', 'PO_DATE', ]

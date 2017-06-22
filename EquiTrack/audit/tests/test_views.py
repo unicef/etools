@@ -239,46 +239,46 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTe
         self._test_list(self.usual_user, [])
 
 
-class TestAuditOrganizationViewSet(AuditTestCaseMixin, APITenantTestCase):
+class TestAuditorFirmViewSet(AuditTestCaseMixin, APITenantTestCase):
     def setUp(self):
-        super(TestAuditOrganizationViewSet, self).setUp()
-        self.second_audit_organization = AuditPartnerFactory()
+        super(TestAuditorFirmViewSet, self).setUp()
+        self.second_auditor_firm = AuditPartnerFactory()
 
-    def _test_list_view(self, user, expected_organizations):
+    def _test_list_view(self, user, expected_firms):
         response = self.forced_auth_req(
             'get',
-            '/api/audit/audit-organizations/',
+            '/api/audit/audit-firms/',
             user=user
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
             sorted(map(lambda x: x['id'], response.data['results'])),
-            sorted(map(lambda x: x.id, expected_organizations))
+            sorted(map(lambda x: x.id, expected_firms))
         )
 
     def test_unicef_list_view(self):
-        self._test_list_view(self.unicef_user, [self.audit_organization, self.second_audit_organization])
+        self._test_list_view(self.unicef_user, [self.auditor_firm, self.second_auditor_firm])
 
     def test_auditor_list_view(self):
-        self._test_list_view(self.auditor, [self.audit_organization])
+        self._test_list_view(self.auditor, [self.auditor_firm])
 
     def test_usual_user_list_view(self):
         self._test_list_view(self.usual_user, [])
 
 
-class TestAuditOrganizationStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
+class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
     def test_list_view(self):
         response = self.forced_auth_req(
             'get',
-            '/api/audit/audit-organizations/{0}/staff-members/'.format(self.audit_organization.id),
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             user=self.unicef_focal_point
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
-            '/api/audit/audit-organizations/{0}/staff-members/'.format(self.audit_organization.id),
+            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             user=self.usual_user
         )
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -286,9 +286,9 @@ class TestAuditOrganizationStaffMembersViewSet(AuditTestCaseMixin, APITenantTest
     def test_detail_view(self):
         response = self.forced_auth_req(
             'get',
-            '/api/audit/audit-organizations/{0}/staff-members/{1}/'.format(
-                self.audit_organization.id,
-                self.audit_organization.staff_members.first().id
+            '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(
+                self.auditor_firm.id,
+                self.auditor_firm.staff_members.first().id
             ),
             user=self.unicef_focal_point
         )
@@ -296,9 +296,9 @@ class TestAuditOrganizationStaffMembersViewSet(AuditTestCaseMixin, APITenantTest
 
         response = self.forced_auth_req(
             'get',
-            '/api/audit/audit-organizations/{0}/staff-members/{1}/'.format(
-                self.audit_organization.id,
-                self.audit_organization.staff_members.first().id
+            '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(
+                self.auditor_firm.id,
+                self.auditor_firm.staff_members.first().id
             ),
             user=self.usual_user
         )
@@ -307,9 +307,9 @@ class TestAuditOrganizationStaffMembersViewSet(AuditTestCaseMixin, APITenantTest
     def test_create_view(self):
         response = self.forced_auth_req(
             'post',
-            '/api/audit/audit-organizations/{0}/staff-members/'.format(
-                self.audit_organization.id,
-                self.audit_organization.staff_members.first().id
+            '/api/audit/audit-firms/{0}/staff-members/'.format(
+                self.auditor_firm.id,
+                self.auditor_firm.staff_members.first().id
             ),
             data={
                 "user": {
@@ -324,9 +324,9 @@ class TestAuditOrganizationStaffMembersViewSet(AuditTestCaseMixin, APITenantTest
 
         response = self.forced_auth_req(
             'post',
-            '/api/audit/audit-organizations/{0}/staff-members/'.format(
-                self.audit_organization.id,
-                self.audit_organization.staff_members.first().id
+            '/api/audit/audit-firms/{0}/staff-members/'.format(
+                self.auditor_firm.id,
+                self.auditor_firm.staff_members.first().id
             ),
             data={
                 "user": {
@@ -342,9 +342,9 @@ class TestAuditOrganizationStaffMembersViewSet(AuditTestCaseMixin, APITenantTest
     def test_update_view(self):
         response = self.forced_auth_req(
             'patch',
-            '/api/audit/audit-organizations/{0}/staff-members/{1}/'.format(
-                self.audit_organization.id,
-                self.audit_organization.staff_members.first().id
+            '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(
+                self.auditor_firm.id,
+                self.auditor_firm.staff_members.first().id
             ),
             data={
                 "user": {
@@ -358,9 +358,9 @@ class TestAuditOrganizationStaffMembersViewSet(AuditTestCaseMixin, APITenantTest
 
         response = self.forced_auth_req(
             'patch',
-            '/api/audit/audit-organizations/{0}/staff-members/{1}/'.format(
-                self.audit_organization.id,
-                self.audit_organization.staff_members.first().id
+            '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(
+                self.auditor_firm.id,
+                self.auditor_firm.staff_members.first().id
             ),
             data={
                 "user": {

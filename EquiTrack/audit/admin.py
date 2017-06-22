@@ -11,13 +11,13 @@ class AuditPermissionAdmin(admin.ModelAdmin):
     search_fields = ['target']
 
 
-class AuditOrganizationStaffMemberInlineAdmin(admin.StackedInline):
-    model = models.AuditOrganizationStaffMember
+class AuditorStaffMemberInlineAdmin(admin.StackedInline):
+    model = models.AuditorStaffMember
     extra = 1
 
 
-@admin.register(models.AuditOrganization)
-class AuditOrganizationAdmin(admin.ModelAdmin):
+@admin.register(models.AuditorFirm)
+class AuditorFirmAdmin(admin.ModelAdmin):
     list_display = [
         'vendor_number', 'name', 'email', 'phone_number', 'blocked', 'hidden',
         'country',
@@ -25,20 +25,20 @@ class AuditOrganizationAdmin(admin.ModelAdmin):
     list_filter = ['blocked', 'hidden', 'country', ]
     search_fields = ['vendor_number', 'name', ]
     inlines = [
-        AuditOrganizationStaffMemberInlineAdmin,
+        AuditorStaffMemberInlineAdmin,
     ]
 
 
 @admin.register(models.PurchaseOrder)
 class PurchaseOrderAdmin(admin.ModelAdmin):
     list_display = [
-        'order_number', 'audit_organization', 'contract_start_date',
+        'order_number', 'auditor_firm', 'contract_start_date',
         'contract_end_date',
     ]
     list_filter = [
-        'audit_organization', 'contract_start_date', 'contract_end_date',
+        'auditor_firm', 'contract_start_date', 'contract_end_date',
     ]
-    search_fields = ['order_number', 'audit_organization__name', ]
+    search_fields = ['order_number', 'auditor_firm__name', ]
 
 
 @admin.register(models.Engagement)
@@ -51,7 +51,7 @@ class EngagementAdmin(admin.ModelAdmin):
         'status', 'start_date', 'end_date', 'status', 'type',
     ]
     readonly_fields = ('status', )
-    search_fields = ['partner__name', 'audit_organization__name', ]
+    search_fields = ['partner__name', 'auditor_firm__name', ]
 
 
 @admin.register(models.RiskCategory)

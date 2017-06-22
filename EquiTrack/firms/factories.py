@@ -38,7 +38,7 @@ class BaseStaffMemberFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
 
 
-class BaseOrganizationFactory(factory.DjangoModelFactory):
+class BaseFirmFactory(factory.DjangoModelFactory):
     class Meta:
         abstract = True
 

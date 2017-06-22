@@ -5,17 +5,17 @@ from django.conf.urls import include, url
 from rest_framework_nested import routers
 
 from audit.views import (
-    AuditOrganizationViewSet, AuditViewSet,
+    AuditorFirmViewSet, AuditViewSet,
     EngagementViewSet, MicroAssessmentViewSet, SpotCheckViewSet,
-    PurchaseOrderViewSet, AuditOrganizationStaffMembersViewSet,
+    PurchaseOrderViewSet, AuditorStaffMembersViewSet,
     EngagementPDFView)
 
 
-audit_organizations_api = routers.SimpleRouter()
-audit_organizations_api.register(r'audit-organizations', AuditOrganizationViewSet, base_name='audit-organizations')
+auditor_firms_api = routers.SimpleRouter()
+auditor_firms_api.register(r'audit-firms', AuditorFirmViewSet, base_name='audit-firms')
 
-audit_organization_staffm_api = routers.NestedSimpleRouter(audit_organizations_api, r'audit-organizations', lookup='organization')
-audit_organization_staffm_api.register(r'staff-members', AuditOrganizationStaffMembersViewSet, base_name='auditorganizationstaffmembers')
+auditor_staffmember_api = routers.NestedSimpleRouter(auditor_firms_api, r'audit-firms', lookup='firm')
+auditor_staffmember_api.register(r'staff-members', AuditorStaffMembersViewSet, base_name='auditorstaffmembers')
 
 purchase_orders_api = routers.SimpleRouter()
 purchase_orders_api.register(r'purchase-orders', PurchaseOrderViewSet, base_name='purchase-orders')
@@ -34,8 +34,8 @@ audits_api.register('audits', AuditViewSet, base_name='audits')
 
 
 urlpatterns = [
-    url(r'^', include(audit_organizations_api.urls)),
-    url(r'^', include(audit_organization_staffm_api.urls)),
+    url(r'^', include(auditor_firms_api.urls)),
+    url(r'^', include(auditor_staffmember_api.urls)),
     url(r'^', include(purchase_orders_api.urls)),
     url(r'^', include(engagements_api.urls)),
     url(r'^', include(micro_assessments_api.urls)),

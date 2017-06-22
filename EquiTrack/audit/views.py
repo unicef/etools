@@ -12,16 +12,16 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from utils.common.views import MultiSerializerViewSetMixin, ExportViewSetDataMixin, FSMTransitionActionMixin
-from .models import Engagement, AuditOrganization, MicroAssessment, Audit, SpotCheck, PurchaseOrder, \
-    AuditOrganizationStaffMember, Auditor, AuditPermission
+from .models import Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, PurchaseOrder, \
+    AuditorStaffMember, Auditor, AuditPermission
 from utils.common.pagination import DynamicPageNumberPagination
 from .permissions import HasCreatePermission, CanCreateStaffMembers
-from .serializers import EngagementSerializer, AuditOrganizationSerializer, AuditOrganizationLightSerializer, \
+from .serializers import EngagementSerializer, AuditorFirmSerializer, AuditorFirmLightSerializer, \
     MicroAssessmentSerializer, AuditSerializer, SpotCheckSerializer, PurchaseOrderSerializer, \
-    AuditOrganizationStaffMemberSerializer, EngagementLightSerializer, AuditOrganizationExportSerializer, \
+    AuditorStaffMemberSerializer, EngagementLightSerializer, AuditorFirmExportSerializer, \
     EngagementExportSerializer
 from .metadata import AuditBaseMetadata, EngagementMetadata
-from .exports import AuditOrganizationCSVRenderer, EngagementCSVRenderer
+from .exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
 
 
 class BaseAuditViewSet(
@@ -33,7 +33,7 @@ class BaseAuditViewSet(
     permission_classes = (IsAuthenticated, )
 
 
-class AuditOrganizationViewSet(
+class AuditorFirmViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
@@ -42,20 +42,20 @@ class AuditOrganizationViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = AuditOrganization.objects.filter(hidden=False)
-    serializer_class = AuditOrganizationSerializer
+    queryset = AuditorFirm.objects.filter(hidden=False)
+    serializer_class = AuditorFirmSerializer
     serializer_action_classes = {
-        'list': AuditOrganizationLightSerializer
+        'list': AuditorFirmLightSerializer
     }
-    export_serializer_class = AuditOrganizationExportSerializer
-    renderer_classes = [JSONRenderer, AuditOrganizationCSVRenderer]
+    export_serializer_class = AuditorFirmExportSerializer
+    renderer_classes = [JSONRenderer, AuditorFirmCSVRenderer]
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'email')
     ordering_fields = ('name', )
     filter_fields = ('country', )
 
     def get_queryset(self):
-        queryset = super(AuditOrganizationViewSet, self).get_queryset()
+        queryset = super(AuditorFirmViewSet, self).get_queryset()
 
         user_type = AuditPermission._get_user_type(self.request.user)
         if not user_type or user_type == Auditor:
@@ -116,10 +116,10 @@ class EngagementViewSet(
     renderer_classes = [JSONRenderer, EngagementCSVRenderer]
 
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
-    search_fields = ('partner__name', 'agreement__order_number', 'agreement__audit_organization__name')
-    ordering_fields = ('agreement__order_number', 'agreement__audit_organization__name',
+    search_fields = ('partner__name', 'agreement__order_number', 'agreement__auditor_firm__name')
+    ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'type', 'status')
-    filter_fields = ('agreement', 'agreement__audit_organization', 'partner', 'type', 'status')
+    filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'type', 'status')
 
     def get_serializer_class(self):
         serializer_class = None
@@ -140,7 +140,7 @@ class EngagementViewSet(
         queryset = super(EngagementViewSet, self).get_queryset()\
 
         queryset = queryset.prefetch_related(
-            'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('audit_organization'))
+            'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
         )
 
         user_type = AuditPermission._get_user_type(self.request.user)
@@ -174,7 +174,7 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     serializer_class = SpotCheckSerializer
 
 
-class AuditOrganizationStaffMembersViewSet(
+class AuditorStaffMembersViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
@@ -183,19 +183,19 @@ class AuditOrganizationStaffMembersViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-    serializer_class = AuditOrganizationStaffMemberSerializer
+    serializer_class = AuditorStaffMemberSerializer
     permission_classes = (IsAuthenticated, CanCreateStaffMembers, )
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
 
     def get_queryset(self):
-        organization_pk = self.kwargs.get('organization_pk')
-        return AuditOrganizationStaffMember.objects.filter(audit_organization=organization_pk)
+        firm_pk = self.kwargs.get('firm_pk')
+        return AuditorStaffMember.objects.filter(auditor_firm=firm_pk)
 
     def perform_create(self, serializer, **kwargs):
-        organization_pk = self.kwargs.get('organization_pk')
-        instance = serializer.save(audit_organization_id=organization_pk, **kwargs)
+        firm_pk = self.kwargs.get('firm_pk')
+        instance = serializer.save(auditor_firm_id=firm_pk, **kwargs)
         instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.save()
 

@@ -1,6 +1,6 @@
 from rest_framework_csv.renderers import CSVRenderer
 
-from .serializers import AuditOrganizationExportSerializer, EngagementExportSerializer
+from .serializers import AuditorFirmExportSerializer, EngagementExportSerializer
 
 
 class BaseCSVRenderer(CSVRenderer):
@@ -10,8 +10,8 @@ class BaseCSVRenderer(CSVRenderer):
         return super(BaseCSVRenderer, self).render(data, *args, **kwargs)
 
 
-class AuditOrganizationCSVRenderer(BaseCSVRenderer):
-    header = AuditOrganizationExportSerializer.Meta.fields
+class AuditorFirmCSVRenderer(BaseCSVRenderer):
+    header = AuditorFirmExportSerializer.Meta.fields
     labels = {h: h.capitalize() for h in header}
 
 

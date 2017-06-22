@@ -21,7 +21,7 @@ from post_office import mail
 
 from EquiTrack.utils import get_environment
 from attachments.models import Attachment
-from firms.models import BaseOrganization, BaseStaffMember
+from firms.models import BaseFirm, BaseStaffMember
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
 from utils.groups.wrappers import GroupWrapper
@@ -34,18 +34,18 @@ from .transitions.conditions import AuditSubmitReportRequiredFieldsCheck, Valida
 from .transitions.serializers import EngagementCancelSerializer
 
 
-class AuditOrganization(BaseOrganization):
+class AuditorFirm(BaseFirm):
     pass
 
 
 @python_2_unicode_compatible
-class AuditOrganizationStaffMember(BaseStaffMember):
-    audit_organization = models.ForeignKey(AuditOrganization, verbose_name=_('organization'), related_name='staff_members')
+class AuditorStaffMember(BaseStaffMember):
+    auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('firm'), related_name='staff_members')
 
     def __str__(self):
         return '{} ({})'.format(
             self.get_full_name(),
-            self.audit_organization.name
+            self.auditor_firm.name
         )
 
     def send_user_appointed_email(self, engagement):
@@ -72,7 +72,7 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         unique=True,
         max_length=30
     )
-    audit_organization = models.ForeignKey(AuditOrganization, verbose_name=_('auditor'), related_name='purchase_orders')
+    auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('auditor'), related_name='purchase_orders')
     contract_start_date = models.DateField(_('contract start date'), null=True, blank=True)
     contract_end_date = models.DateField(_('contract end date'), null=True, blank=True)
 
@@ -158,7 +158,7 @@ class Engagement(TimeStampedModel, models.Model):
     write_off_required = models.IntegerField(_('write off required'), null=True, blank=True)
     pending_unsupported_amount = models.IntegerField(_('pending unsupported amount'), null=True, blank=True)
 
-    staff_members = models.ManyToManyField(AuditOrganizationStaffMember, verbose_name=_('staff members'))
+    staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('staff members'))
 
     cancel_comment = models.TextField(blank=True)
 
@@ -587,9 +587,9 @@ class AuditPermission(StatusBasePermission):
 
         if user_type == Auditor and engagement:
             try:
-                if user.audit_auditorganizationstaffmember not in engagement.staff_members.all():
+                if user.audit_auditorstaffmember not in engagement.staff_members.all():
                     return None
-            except AuditOrganizationStaffMember.DoesNotExist:
+            except AuditorStaffMember.DoesNotExist:
                 return None
 
         return user_type

@@ -2,7 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from audit.models import AuditOrganization, AuditOrganizationStaffMember, PurchaseOrder
+from audit.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from firms.serializers import BaseStaffMemberSerializer, UserSerializer as BaseUserSerializer
 from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
@@ -22,16 +22,16 @@ class UserSerializer(BaseUserSerializer):
         return super(UserSerializer, self).update(instance, validated_data)
 
 
-class AuditOrganizationStaffMemberSerializer(BaseStaffMemberSerializer):
+class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
     user = UserSerializer()
 
     class Meta(BaseStaffMemberSerializer.Meta):
-        model = AuditOrganizationStaffMember
+        model = AuditorStaffMember
 
 
-class AuditOrganizationLightSerializer(serializers.ModelSerializer):
+class AuditorFirmLightSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AuditOrganization
+        model = AuditorFirm
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
@@ -39,18 +39,18 @@ class AuditOrganizationLightSerializer(serializers.ModelSerializer):
         ]
 
 
-class AuditOrganizationSerializer(WritableNestedSerializerMixin, AuditOrganizationLightSerializer):
-    staff_members = AuditOrganizationStaffMemberSerializer(many=True, required=False, read_only=True)
+class AuditorFirmSerializer(WritableNestedSerializerMixin, AuditorFirmLightSerializer):
+    staff_members = AuditorStaffMemberSerializer(many=True, required=False, read_only=True)
 
-    class Meta(WritableNestedSerializerMixin.Meta, AuditOrganizationLightSerializer.Meta):
-        fields = AuditOrganizationLightSerializer.Meta.fields + [
+    class Meta(WritableNestedSerializerMixin.Meta, AuditorFirmLightSerializer.Meta):
+        fields = AuditorFirmLightSerializer.Meta.fields + [
             'staff_members',
         ]
 
 
-class AuditOrganizationExportSerializer(serializers.ModelSerializer):
+class AuditorFirmExportSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AuditOrganization
+        model = AuditorFirm
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
@@ -59,13 +59,13 @@ class AuditOrganizationExportSerializer(serializers.ModelSerializer):
 
 
 class PurchaseOrderSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
-    audit_organization = SeparatedReadWriteField(
-        read_field=AuditOrganizationLightSerializer(read_only=True),
+    auditor_firm = SeparatedReadWriteField(
+        read_field=AuditorFirmLightSerializer(read_only=True),
     )
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = PurchaseOrder
         fields = [
-            'id', 'order_number', 'audit_organization',
+            'id', 'order_number', 'auditor_firm',
             'contract_start_date', 'contract_end_date'
         ]

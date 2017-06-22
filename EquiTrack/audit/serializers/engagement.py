@@ -12,7 +12,7 @@ from audit.serializers.mixins import AuditPermissionsBasedRootSerializerMixin
 from utils.writable_serializers.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
 from .mixins import RiskCategoriesUpdateMixin, EngagementDatesValidation
-from .auditor import AuditOrganizationStaffMemberSerializer
+from .auditor import AuditorStaffMemberSerializer
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -39,8 +39,8 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
 class EngagementExportSerializer(serializers.ModelSerializer):
     agreement_number = serializers.ReadOnlyField(source='agreement.order_number')
     partner_name = serializers.ReadOnlyField(source='partner.name')
-    audit_organization_vendor_number = serializers.ReadOnlyField(source='agreement.audit_organization.vendor_number')
-    audit_organization_name = serializers.ReadOnlyField(source='agreement.audit_organization.name')
+    auditor_firm_vendor_number = serializers.ReadOnlyField(source='agreement.auditor_firm.vendor_number')
+    auditor_firm_name = serializers.ReadOnlyField(source='agreement.auditor_firm.name')
     status = serializers.ChoiceField(
         choices=Engagement.DISPLAY_STATUSES,
         source='displayed_status',
@@ -55,8 +55,8 @@ class EngagementExportSerializer(serializers.ModelSerializer):
             'id',
             'partner_name',
             'agreement_number',
-            'audit_organization_vendor_number',
-            'audit_organization_name',
+            'auditor_firm_vendor_number',
+            'auditor_firm_name',
             'status',
             'status_date',
             'unique_id',
@@ -90,7 +90,7 @@ class EngagementSerializer(EngagementDatesValidation,
                            WritableNestedParentSerializerMixin,
                            EngagementLightSerializer):
     staff_members = SeparatedReadWriteField(
-        read_field=AuditOrganizationStaffMemberSerializer(many=True, required=False),
+        read_field=AuditorStaffMemberSerializer(many=True, required=False),
     )
 
     engagement_attachments = EngagementBase64AttachmentSerializer(many=True, required=False)
@@ -129,8 +129,8 @@ class EngagementSerializer(EngagementDatesValidation,
         staff_members = validated_data.get('staff_members', [])
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
 
-        if staff_members and agreement and agreement.audit_organization:
-            existed_staff_members = agreement.audit_organization.staff_members.all()
+        if staff_members and agreement and agreement.auditor_firm:
+            existed_staff_members = agreement.auditor_firm.staff_members.all()
             unexisted = set(staff_members) - set(existed_staff_members)
             if unexisted:
                 msg = self.fields['staff_members'].write_field.child_relation.error_messages['does_not_exist']

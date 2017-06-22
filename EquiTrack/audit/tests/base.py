@@ -10,7 +10,7 @@ from EquiTrack.factories import UserFactory
 from attachments.models import FileType, Attachment
 from audit.models import RiskBluePrint, UNICEFUser, UNICEFAuditFocalPoint, Auditor, PME
 from utils.groups.wrappers import GroupWrapper
-from .factories import RiskFactory, AuditOrganizationStaffMemberFactory, AuditPartnerFactory
+from .factories import RiskFactory, AuditorStaffMemberFactory, AuditPartnerFactory
 
 
 class AuditTestCaseMixin(object):
@@ -19,8 +19,8 @@ class AuditTestCaseMixin(object):
 
         GroupWrapper.invalidate_instances()
 
-        self.audit_organization = AuditPartnerFactory()
-        self.auditor = self.audit_organization.staff_members.first().user
+        self.auditor_firm = AuditPartnerFactory()
+        self.auditor = self.auditor_firm.staff_members.first().user
 
         self.unicef_user = UserFactory()
         self.unicef_user.groups = [
@@ -104,9 +104,9 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
         super(EngagementTransitionsTestCaseMixin, self).setUp()
         call_command('update_audit_permissions')
 
-        self.engagement = self.engagement_factory(agreement__audit_organization=self.audit_organization)
+        self.engagement = self.engagement_factory(agreement__auditor_firm=self.auditor_firm)
 
-        self.non_engagement_auditor = AuditOrganizationStaffMemberFactory(
+        self.non_engagement_auditor = AuditorStaffMemberFactory(
             user__first_name='Auditor 2',
-            audit_organization=self.audit_organization
+            auditor_firm=self.auditor_firm
         ).user

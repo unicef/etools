@@ -15,7 +15,7 @@ from EquiTrack.utils import get_environment, get_current_site
 
 
 @python_2_unicode_compatible
-class BaseOrganization(TimeStampedModel, models.Model):
+class BaseFirm(TimeStampedModel, models.Model):
     vendor_number = models.CharField(
         _('vendor number'),
         blank=True,

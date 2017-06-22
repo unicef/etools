@@ -5,10 +5,10 @@ from django.contrib.auth.models import Group
 from factory import fuzzy
 
 from EquiTrack.factories import PartnerFactory
-from audit.models import AuditOrganization, PurchaseOrder, Engagement, RiskCategory, \
-    RiskBluePrint, Risk, AuditOrganizationStaffMember, MicroAssessment, \
+from audit.models import AuditorFirm, PurchaseOrder, Engagement, RiskCategory, \
+    RiskBluePrint, Risk, AuditorStaffMember, MicroAssessment, \
     Audit, SpotCheck, Auditor
-from firms.factories import BaseStaffMemberFactory, BaseOrganizationFactory
+from firms.factories import BaseStaffMemberFactory, BaseFirmFactory
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
@@ -16,9 +16,9 @@ class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
         return bool(random.getrandbits(1))
 
 
-class AuditOrganizationStaffMemberFactory(BaseStaffMemberFactory):
+class AuditorStaffMemberFactory(BaseStaffMemberFactory):
     class Meta:
-        model = AuditOrganizationStaffMember
+        model = AuditorStaffMember
 
     @factory.post_generation
     def user_groups(self, create, extracted, **kwargs):
@@ -28,18 +28,18 @@ class AuditOrganizationStaffMemberFactory(BaseStaffMemberFactory):
             ]
 
 
-class AuditPartnerFactory(BaseOrganizationFactory):
+class AuditPartnerFactory(BaseFirmFactory):
     class Meta:
-        model = AuditOrganization
+        model = AuditorFirm
 
-    staff_members = factory.RelatedFactory(AuditOrganizationStaffMemberFactory, 'audit_organization')
+    staff_members = factory.RelatedFactory(AuditorStaffMemberFactory, 'auditor_firm')
 
 
 class PurchaseOrderFactory(factory.DjangoModelFactory):
     class Meta:
         model = PurchaseOrder
 
-    audit_organization = factory.SubFactory(AuditPartnerFactory)
+    auditor_firm = factory.SubFactory(AuditPartnerFactory)
     order_number = fuzzy.FuzzyText(length=30)
 
 
@@ -53,7 +53,7 @@ class EngagementFactory(factory.DjangoModelFactory):
     @factory.post_generation
     def staff_members(self, create, extracted, **kwargs):
         if create:
-            self.staff_members.add(*self.agreement.audit_organization.staff_members.all())
+            self.staff_members.add(*self.agreement.auditor_firm.staff_members.all())
 
 
 class MicroAssessmentFactory(EngagementFactory):
