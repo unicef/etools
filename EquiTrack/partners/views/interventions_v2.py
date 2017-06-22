@@ -109,14 +109,20 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
                                     nested_related_names=nested_related_names,
                                     **kwargs)
 
-        validator = InterventionValid(serializer.instance, user=request.user)
+        instance = serializer.instance
+
+        validator = InterventionValid(instance, user=request.user)
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
         headers = self.get_success_headers(serializer.data)
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            instance = self.get_object()
         return Response(
-            serializer.data,
+            InterventionDetailSerializer(instance).data,
             status=status.HTTP_201_CREATED,
             headers=headers
         )
