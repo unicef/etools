@@ -1,9 +1,5 @@
-__author__ = 'achamseddine'
-
 from unittest import skip
-import random
 import datetime
-
 
 from rest_framework import status
 
