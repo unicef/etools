@@ -316,7 +316,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
-            "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
+            "offices", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
             "created", "modified", "planned_budget", "result_links", 'country_programme',
             "amendments", "planned_visits", "attachments", "supplies", "distributions"
         )
@@ -436,7 +436,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return planned_budget.currency if planned_budget else ""
 
     def get_fr_numbers(self, obj):
-        return ', '.join([x for x in obj.fr_numbers]) if obj.fr_numbers else ""
+        return ', '.join([x.fr_number for x in obj.frs.all()]) if obj.frs.all().count() > 0 else ""
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
