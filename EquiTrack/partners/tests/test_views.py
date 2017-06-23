@@ -1133,6 +1133,27 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["Cannot delete an amendment type once amendment is signed"])
 
+    def test_agreement_generate_pdf_default(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/{}/generate_doc/'.format(self.agreement.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_agreement_generate_pdf_lang(self):
+        params = {
+            "lang": "arabic",
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/{}/generate_doc/'.format(self.agreement.id),
+            user=self.unicef_staff,
+            data=params
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
