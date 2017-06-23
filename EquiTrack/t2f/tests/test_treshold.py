@@ -12,8 +12,6 @@ from publics.tests.factories import DSARegionFactory, AirlineCompanyFactory
 from t2f.models import Travel, ModeOfTravel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
 
-from .factories import TravelFactory
-
 
 class ThresholdTest(APITenantTestCase):
     def setUp(self):
@@ -74,10 +72,7 @@ class ThresholdTest(APITenantTestCase):
                                         data=data, user=self.traveler)
 
         response_json = json.loads(response.rendered_content)
-        try:
-            self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
-        except KeyError:
-            self.assertEqual(response_json, {})
+        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         return travel_id, data
 

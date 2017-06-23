@@ -23,12 +23,7 @@ from views.interventions_v2 import (
     InterventionSectorLocationLinkDeleteView,
     InterventionListMapView,
 )
-from views.government import (
-    GovernmentInterventionListAPIView,
-    GovernmentDetailAPIView,
-    GovernmentInterventionResultActivityDeleteView,
-    GovernmentInterventionResultDeleteView,
-)
+
 from views.v2 import (
     PmpStaticDropdownsListApiView, PMPDropdownsListApiView, PartnershipDashboardAPIView
 )
