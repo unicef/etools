@@ -22,8 +22,7 @@ class TestWorkplanViews(APITenantTestCase):
 
         self.workplan_project = WorkplanProjectFactory(workplan=self.workplan)
         self.labels = [LabelFactory() for x in xrange(3)]
-        # Grab a random result type that's not Sub-Activity
-        self.result_type = ResultType.objects.exclude(name__iexact=ResultType.SUBACTIVITY).order_by('?').first()
+        self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
         self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
 
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(

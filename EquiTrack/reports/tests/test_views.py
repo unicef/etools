@@ -20,8 +20,7 @@ class TestReportViews(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        # Grab a random result type that's not Sub-Activity
-        self.result_type = ResultType.objects.exclude(name__iexact=ResultType.SUBACTIVITY).order_by('?').first()
+        self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
         self.result1 = ResultFactory(
             result_type=self.result_type,
             result_structure=ResultStructureFactory(),
