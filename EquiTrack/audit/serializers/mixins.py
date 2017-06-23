@@ -11,16 +11,27 @@ from .risks import RiskRootSerializer
 
 
 class AuditPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
+    """
+    Mixin that filter writable and readable fields based on AuditPremission model.
+    Use it in nested to engagement serializers.
+    """
     class Meta(StatusPermissionsBasedSerializerMixin.Meta):
         permission_class = AuditPermission
 
 
 class AuditPermissionsBasedRootSerializerMixin(StatusPermissionsBasedRootSerializerMixin):
+    """
+    Mixin that filter writable and readable fields based on AuditPremission model.
+    Use it in engagement serializer.
+    """
     class Meta(StatusPermissionsBasedRootSerializerMixin.Meta):
         permission_class = AuditPermission
 
 
 class RiskCategoriesUpdateMixin(object):
+    """
+    Mixin that allow to update risk values through engagement serializer.
+    """
     def update(self, instance, validated_data):
         risk_data = {}
         for field in self.fields.values():

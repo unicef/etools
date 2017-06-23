@@ -13,6 +13,9 @@ from .serializers.fields import SeparatedReadWriteField
 
 
 class SeparatedReadWriteFieldMetadata(object):
+    """
+    Mixin for providing correct information about SeparatedReadWriteField.
+    """
     def get_field_info(self, field):
         if isinstance(field, SeparatedReadWriteField):
             if field.context['request'].method == 'GET':
@@ -24,6 +27,9 @@ class SeparatedReadWriteFieldMetadata(object):
 
 
 class FSMTransitionActionMetadataMixin(object):
+    """
+    Return list of available FSM transitions.
+    """
     def _collect_actions(self, instance):
         actions = []
         attrs = dir(instance)
@@ -61,6 +67,9 @@ class FSMTransitionActionMetadataMixin(object):
 
 
 class CRUActionsMetadataMixin(object):
+    """
+    Return "GET" with readable fields as allowed method.
+    """
     def _remove_read_only(self, field_info):
         field_info.pop('read_only', None)
 
@@ -124,6 +133,9 @@ class CRUActionsMetadataMixin(object):
 
 
 class ReadOnlyFieldWithChoicesMixin(object):
+    """
+    Return choices for read only fields.
+    """
     def get_field_info(self, field):
         field_info = super(ReadOnlyFieldWithChoicesMixin, self).get_field_info(field)
         if isinstance(field, ChoiceField) and hasattr(field, 'choices'):

@@ -4,6 +4,9 @@ from .serializers_fields import ModelChoiceField
 
 
 class ModelChoiceFieldMixin(object):
+    """
+    Mixin for displaying field choices based on model data.
+    """
     def get_field_info(self, field):
         field_info = super(ModelChoiceFieldMixin, self).get_field_info(field)
         if (not field_info.get('read_only') and
