@@ -102,7 +102,7 @@ class TestModelExport(APITenantTestCase):
             data={"format": "csv"},
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
@@ -194,7 +194,7 @@ class TestModelExport(APITenantTestCase):
             data={"format": "csv"},
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [
@@ -238,7 +238,7 @@ class TestModelExport(APITenantTestCase):
             data={"format": "csv"},
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [
