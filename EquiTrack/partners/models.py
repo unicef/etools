@@ -1333,7 +1333,6 @@ class Intervention(TimeStampedModel):
     )
 
     offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
-    fr_numbers = ArrayField(models.CharField(max_length=50, blank=True), blank=True, null=True)
     population_focus = models.CharField(max_length=130, null=True, blank=True)
 
     class Meta:

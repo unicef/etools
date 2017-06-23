@@ -195,6 +195,5 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff,
             data=param,
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])
