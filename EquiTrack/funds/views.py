@@ -55,14 +55,11 @@ class GrantViewSet(mixins.ListModelMixin,
 
 class FRsView(APIView):
     """
-    Returns a list of all Grants
+    Returns the FRs requested with the values query param
     """
     permission_classes = (permissions.IsAdminUser,)
 
     def get(self, request, format=None):
-        """
-        Return a list of all users.
-        """
         values = request.query_params.get("values", '').split(",")
         intervention_id = request.query_params.get("intervention", None)
 
