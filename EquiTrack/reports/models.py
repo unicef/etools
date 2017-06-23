@@ -100,13 +100,11 @@ class ResultType(models.Model):
     OUTCOME = 'Outcome'
     OUTPUT = 'Output'
     ACTIVITY = 'Activity'
-    SUBACTIVITY = 'Sub-Activity'
 
     NAME_CHOICES = (
         (OUTCOME, 'Outcome'),
         (OUTPUT, 'Output'),
         (ACTIVITY, 'Activity'),
-        (SUBACTIVITY, 'Sub-Activity'),
     )
     name = models.CharField(max_length=150, unique=True, choices=NAME_CHOICES)
 
