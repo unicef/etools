@@ -107,6 +107,8 @@ class Command(BaseCommand):
         return self._update_permissions(status, roles, 'disallow', perm, targets)
 
     def handle(self, *args, **options):
+        verbosity = options.get('verbosity', 1)
+
         # new status: only focal point can edit
         self.add_permissions(self.new_engagement, self.everybody, 'view', self.everything)
         self.add_permissions(self.new_engagement, self.focal_point, 'edit', self.engagement_overview_page + [
@@ -157,8 +159,23 @@ class Command(BaseCommand):
 
         for tenant in all_tenants:
             connection.set_tenant(tenant)
+            if verbosity >= 3:
+                print('Using {} tenant'.format(tenant.name))
 
-            AuditPermission.objects.all().delete()
-            print('{}: {} objects created.'.format(
-                tenant.name, len(AuditPermission.objects.bulk_create(self.permissions))
-            ))
+            old_permissions = AuditPermission.objects.all()
+            for user in self.everybody:
+                if verbosity >= 3:
+                    print('Updating permissions for {}. {} -> {}'.format(
+                        user,
+                        len(filter(lambda p: p.user_type == self.user_roles[user], old_permissions)),
+                        len(filter(lambda p: p.user_type == self.user_roles[user], self.permissions)),
+                    ))
+
+            old_permissions.delete()
+            AuditPermission.objects.bulk_create(self.permissions)
+
+        if verbosity >= 1:
+            print(
+                'Audit permissions was successfully updated for {}'.format(
+                    ', '.join(map(lambda t: t.name, all_tenants)))
+            )

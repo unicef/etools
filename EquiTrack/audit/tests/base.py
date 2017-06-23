@@ -102,7 +102,7 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
 
     def setUp(self):
         super(EngagementTransitionsTestCaseMixin, self).setUp()
-        call_command('update_audit_permissions')
+        call_command('update_audit_permissions', verbosity=0)
 
         self.engagement = self.engagement_factory(agreement__auditor_firm=self.auditor_firm)
 
