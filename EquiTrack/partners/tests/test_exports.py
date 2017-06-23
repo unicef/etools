@@ -65,7 +65,6 @@ class TestModelExport(APITenantTestCase):
             signed_by_partner_date=datetime.date.today(),
             unicef_signatory=self.unicef_staff,
             population_focus="Population focus",
-            fr_numbers=["1234", "124456"],
             partner_authorized_officer_signatory=self.partnerstaff,
         )
         self.supply_item = SupplyItem.objects.create(name="foo", description="bar")
@@ -164,7 +163,7 @@ class TestModelExport(APITenantTestCase):
             self.intervention.population_focus,
             u'',
             u'',
-            u', '.join(self.intervention.fr_numbers),
+            u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
             '{}'.format(self.intervention.planned_budget.currency),
             u'{:.2f}'.format(self.intervention.total_unicef_cash_local),
             u'{:.2f}'.format(self.intervention.total_unicef_budget),
