@@ -155,8 +155,7 @@ class SpotCheckSerializer(EngagementSerializer):
         model = SpotCheck
         fields = EngagementSerializer.Meta.fields + [
             'total_amount_tested', 'total_amount_of_ineligible_expenditure',
-            'amount_of_ineligible_expenditures', 'internal_controls',
-            'findings',
+            'internal_controls', 'findings',
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
@@ -164,7 +163,7 @@ class SpotCheckSerializer(EngagementSerializer):
         })
         extra_kwargs.update({
             field: {'required': True} for field in [
-                'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'amount_of_ineligible_expenditures'
+                'total_amount_tested', 'total_amount_of_ineligible_expenditure',
             ]
         })
 

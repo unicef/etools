@@ -76,7 +76,6 @@ class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     def _fill_sc_specified_fields(self):
         self.engagement.total_amount_tested = random.randint(1, 22)
         self.engagement.total_amount_of_ineligible_expenditure = random.randint(1, 22)
-        self.engagement.amount_of_ineligible_expenditures = random.randint(1, 22)
         self.engagement.internal_controls = fuzzy.FuzzyText(length=50).fuzz()
         self.engagement.save()
 

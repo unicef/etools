@@ -79,8 +79,7 @@ class EngagementSubmitReportRequiredFieldsCheck(BaseRequiredFieldsCheck):
 
 class SPSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsCheck):
     fields = EngagementSubmitReportRequiredFieldsCheck.fields + [
-        'total_amount_tested', 'total_amount_of_ineligible_expenditure',
-        'amount_of_ineligible_expenditures', 'internal_controls',
+        'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'internal_controls',
     ]
 
 
