@@ -1,155 +1,104 @@
-__author__ = 'jcranwellward'
-
 from django.contrib import admin
-from django.contrib.contenttypes.admin import GenericTabularInline
 
-from reversion.admin import VersionAdmin
-from import_export.admin import ExportMixin
-
-from trips.models import FileAttachment
-from reports.models import Sector
-from partners.models import PCA, PartnerOrganization, GwPCALocation
-from .models import TPMVisit
-from .exports import TPMResource
+from publics.admin import AdminListMixin
+from . import models
 
 
-class SectorListFilter(admin.SimpleListFilter):
-
-    title = 'Sector'
-    parameter_name = 'sector'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (sector.id, sector.name) for sector in Sector.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            sector = Sector.objects.get(pk=self.value())
-            return queryset.filter(pca__sectors__icontains=sector.name)
-        return queryset
-
-
-class TPMPartnerFilter(admin.SimpleListFilter):
-
-    title = 'Partner'
-    parameter_name = 'partner'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (partner.id, partner.name) for partner in PartnerOrganization.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            return queryset.filter(pca__partner__id=self.value())
-        return queryset
-
-
-class TPMVisitAdmin(ExportMixin, VersionAdmin):
-    resource_class = TPMResource
-    date_hierarchy = u'tentative_date'
+@admin.register(models.TPMLowResult)
+class TPMLowResultAdmin(admin.ModelAdmin):
     list_display = (
-        u'status',
-        u'cycle_number',
-        u'pca',
-        u'sectors',
-        u'pca_location',
-        u'assigned_by',
-        u'tentative_date',
-        u'completed_date'
-    )
-    list_filter = (
-        u'pca',
-        u'status',
-        u'assigned_by',
-        u'created_date',
-        u'completed_date',
-        u'cycle_number',
-        SectorListFilter,
-        TPMPartnerFilter,
-    )
-    readonly_fields = (
-        u'pca',
-        u'pca_location',
-        u'assigned_by',
-        u'unicef_manager',
-        u'partner_manager',
+        '__str__',
     )
 
-    def sectors(self, obj):
-        return obj.pca.sector_names
 
-    def unicef_manager(self, obj):
-        return u'{} {} ({})'.format(
-            obj.pca.unicef_mng_first_name,
-            obj.pca.unicef_mng_last_name,
-            obj.pca.unicef_mng_email
-        )
-
-    def partner_manager(self, obj):
-        return u'{} {} ({})'.format(
-            obj.pca.partner_mng_first_name,
-            obj.pca.partner_mng_last_name,
-            obj.pca.partner_mng_email
-        )
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser
-
-class TPMLocationsAdmin(admin.ModelAdmin):
+@admin.register(models.TPMSectorCovered)
+class TPMSectorCoveredAdmin(admin.ModelAdmin):
     list_display = (
-        u'pca',
-        u'sectors',
-        u'location',
-        u'view_location',
-        u'tpm_visit',
+        '__str__',
     )
+
+
+@admin.register(models.TPMActivity)
+class TPMActivityInline(admin.ModelAdmin):
+    list_display = (
+        '__str__',
+    )
+
+
+@admin.register(models.TPMVisit)
+class TPMVisitAdmin(AdminListMixin, admin.ModelAdmin):
+    readonly_fields = ['status']
+    list_display = ('tpm_partner', 'visit_start', 'visit_end', 'status', )
     list_filter = (
-        u'pca',
-        SectorListFilter,
-        TPMPartnerFilter,
-        u'location',
+        'visit_start', 'visit_end', 'status',
     )
-    search_fields = (
-        u'pca__number',
-        u'location__name',
-        u'location__gateway__name',
+
+
+@admin.register(models.TPMVisitReport)
+class TPMVisitReportAdmin(admin.ModelAdmin):
+    list_display = ('tpm_visit', 'recommendations', )
+
+
+@admin.register(models.TPMPermission)
+class TPMPermissionAdmin(admin.ModelAdmin):
+    list_display = ['target', 'user_type', 'permission_type', 'permission', 'instance_status']
+    list_filter = ['user_type', 'permission_type', 'permission', 'instance_status']
+    search_fields = ['target']
+
+
+class TPMPartnerStaffMemberInlineAdmin(admin.StackedInline):
+    model = models.TPMPartnerStaffMember
+    extra = 1
+
+
+@admin.register(models.TPMPartner)
+class TPMPartnerAdmin(admin.ModelAdmin):
+    list_display = [
+        'vendor_number', 'name', 'email', 'phone_number', 'blocked', 'hidden',
+        'country',
+    ]
+    list_filter = ['blocked', 'hidden', 'country', ]
+    search_fields = ['vendor_number', 'name', ]
+    inlines = [
+        TPMPartnerStaffMemberInlineAdmin,
+    ]
+
+
+@admin.register(models.TPMLocation)
+class TPMLocationAdmin(admin.ModelAdmin):
+    list_display = [
+        '__str__', 'start_date', 'end_date', 'location', 'type_of_site',
+    ]
+    list_filter = (
+        'start_date', 'end_date',
     )
-    readonly_fields = (
-        u'view_location',
-        u'tpm_visit',
-    )
-    actions = ['create_tpm_visits']
-
-    def sectors(self, obj):
-        return obj.pca.sector_names
-
-    def get_queryset(self, request):
-        return PCALocation.objects.filter(
-            pca__status=PCA.ACTIVE
-        )
-
-    def create_tpm_visits(self, request, queryset):
-        for pca_location in queryset:
-            TPMVisit.objects.create(
-                pca=pca_location.pca,
-                pca_location=pca_location,
-                assigned_by=request.user
-            )
-            pca_location.tpm_visit = True
-            pca_location.save()
-        self.message_user(
-            request,
-            u'{} TPM visits created'.format(
-                queryset.count()
-            )
-        )
 
 
-admin.site.register(TPMVisit, TPMVisitAdmin)
-#admin.site.register(PCALocation, TPMLocationsAdmin)
+@admin.register(models.TPMPartnerStaffMember)
+class TPMPartnerStaffMemberAdmin(admin.ModelAdmin):
+    list_display = [
+        'email', 'first_name', 'last_name', 'phone', 'active', 'tpm_partner',
+        'receive_tpm_notifications',
+    ]
+    list_filter = ['receive_tpm_notifications', 'user__is_active', ]
+    search_fields = ['user__email', 'user__first_name', 'user__last_name', 'user__profile__phone_number', ]
+
+    def email(self, obj):
+        return obj.user.email
+    email.admin_order_field = 'user__email'
+
+    def first_name(self, obj):
+        return obj.user.first_name
+    first_name.admin_order_field = 'user__first_name'
+
+    def last_name(self, obj):
+        return obj.user.last_name
+    last_name.admin_order_field = 'user__last_name'
+
+    def phone(self, obj):
+        return obj.user.profile.phone_number
+    phone.admin_order_field = 'user__profile__phone_number'
+
+    def active(self, obj):
+        return obj.user.is_active
+    active.admin_order_field = 'user__is_active'

@@ -1,155 +1,301 @@
-__author__ = 'jcranwellward'
+from __future__ import unicode_literals
 
+from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.signals import post_save
-from django.contrib.sites.models import Site
-from django.contrib.auth.models import Group
-
+from django.utils.encoding import python_2_unicode_compatible
+from django_fsm import FSMField, transition
+from django.utils.translation import ugettext_lazy as _
+from model_utils import Choices
+from model_utils.models import TimeStampedModel
 from post_office import mail
-from post_office.models import EmailTemplate
 
-from EquiTrack.mixins import AdminURLMixin
+from EquiTrack.utils import get_environment
+from attachments.models import Attachment
+from firms.models import BaseFirm, BaseStaffMember
+from publics.models import SoftDeleteMixin
+from utils.common.models.fields import CodedGenericRelation
+from utils.common.urlresolvers import site_url
+from utils.groups.wrappers import GroupWrapper
+from utils.permissions import has_action_permission
+from utils.permissions.models.models import StatusBasePermission
+from utils.permissions.models.query import StatusBasePermissionQueryset
+from .transitions.serializers import TPMVisitRejectSerializer
+from .transitions.conditions import ValidateTPMVisitActivities, TPMVisitReportRequiredFieldsCheck, \
+                                    TPMVisitReportValidations, TPMVisitSubmitRequiredFieldsCheck
 
 
-class TPMVisit(AdminURLMixin, models.Model):
-    """
-    Represents a third-party organization visit for the intervention
+class TPMPartner(BaseFirm):
+    pass
 
-    Relates to :model:`partners.PCA`
-    Relates to :model:`partners.GwPCALocation`
-    Relates to :model:`auth.User`
-    """
 
-    PLANNED = u'planned'
-    COMPLETED = u'completed'
-    RESCHEDULED = u'rescheduled'
-    NOACTIVITY = u'no-activity'
-    DISCONTINUED = u'discontinued'
-    TPM_STATUS = (
-        (PLANNED, u"Planned"),
-        (COMPLETED, u"Completed"),
-        (RESCHEDULED, u"Rescheduled"),
-        (NOACTIVITY, u"No-Activity"),
-        (DISCONTINUED, u'Discontinued')
+class TPMPartnerStaffMember(BaseStaffMember):
+    tpm_partner = models.ForeignKey(TPMPartner, related_name='staff_members')
+
+    receive_tpm_notifications = models.BooleanField(default=False)
+
+
+def _has_action_permission(action):
+    return lambda instance=None, user=None: has_action_permission(TPMPermission, instance=instance, user=user, action=action)
+
+
+@python_2_unicode_compatible
+class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
+    STATUSES = Choices(
+        ('draft', 'Draft'),
+        ('submitted', 'Submitted'),
+        ('tpm_accepted', 'TPM Accepted'),
+        ('tpm_rejected', 'TPM Rejected'),
+        ('tpm_reported', 'TPM Reported'),
+        ('tpm_action_required', 'TPM Action required'),
+        ('unicef_approved', 'Approved'),
     )
 
-    pca = models.ForeignKey('partners.PCA')
-    status = models.CharField(
-        max_length=32L,
-        choices=TPM_STATUS,
-        default=PLANNED,
-    )
-    cycle_number = models.PositiveIntegerField(
-        blank=True, null=True
-    )
-    pca_location = models.ForeignKey(
-        'partners.GwPCALocation',
-        blank=True, null=True
-    )
-    tentative_date = models.DateField(
-        blank=True, null=True
-    )
-    completed_date = models.DateField(
-        blank=True, null=True
-    )
-    comments = models.TextField(
-        blank=True, null=True
-    )
-    assigned_by = models.ForeignKey(
-        'auth.User'
-    )
-    created_date = models.DateTimeField(
-        auto_now_add=True
-    )
-    report = models.FileField(
-        blank=True, null=True,
-        upload_to=u'tpm_reports'
-    )
+    visit_start = models.DateField()
+    visit_end = models.DateField()
+
+    tpm_partner = models.ForeignKey(TPMPartner)
+
+    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='tpm_visits')
+
+    status = FSMField(max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
+
+    reject_comment = models.TextField(blank=True)
+
+    attachments = GenericRelation(Attachment, blank=True)
+
+    @property
+    def reference_number(self):
+        start_year = self.visit_start.year
+        end_year = self.visit_end.year
+        return '{0}/{1}/{2}'.format(
+            self.created.year,
+            self.tpm_partner.vendor_number,
+            self.id
+        )
+
+    def __str__(self):
+        return 'Visit ({}, {})'.format(self.visit_start, self.visit_end)
+
+    def has_action_permission(self, user=None, action=None):
+        return _has_action_permission(self, user, action)
+
+    def _send_email(self, recipients, template_name, context=None, **kwargs):
+        context = context or {}
+
+        base_context = {
+            'visit': self,
+            'url': site_url(),
+            'environment': get_environment(),
+        }
+        base_context.update(context)
+        context = base_context
+
+        recipients = list(recipients)
+        # assert recipients
+        if recipients:
+            mail.send(
+                recipients,
+                settings.DEFAULT_FROM_EMAIL,
+                template=template_name,
+                context=context,
+                **kwargs
+            )
+
+    def _get_tpm_as_email_recipients(self):
+        return list(self.tpm_partner.staff_members.filter(receive_tpm_notifications=True).values_list('user__email',
+                                                                                                 flat=True))
+
+    def _get_unicef_focal_points_as_email_recipients(self):
+        return list(self.unicef_focal_points.values_list('email', flat=True))
+
+    def _get_ip_focal_points_as_email_recipients(self):
+        return list(self.tpm_activities.values_list('partnership__partner_focal_points__email', flat=True))
+
+    @transition(status, source=[STATUSES.draft, STATUSES.tpm_rejected], target=STATUSES.submitted,
+                conditions=[
+                    TPMVisitSubmitRequiredFieldsCheck.as_condition(),
+                    ValidateTPMVisitActivities.as_condition(),
+                ],
+                permission=_has_action_permission(action='submit'))
+    def submit(self):
+        self._send_email(self._get_tpm_as_email_recipients(), 'tpm/visit/assign',
+                         cc=self._get_unicef_focal_points_as_email_recipients())
+
+    @transition(status, source=[STATUSES.submitted], target=STATUSES.tpm_rejected,
+                permission=_has_action_permission(action='reject'),
+                custom={'serializer': TPMVisitRejectSerializer})
+    def reject(self, reject_comment):
+        self.reject_comment = reject_comment
+
+        self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/reject',
+                         cc=self._get_tpm_as_email_recipients())
+
+    @transition(status, source=[STATUSES.submitted], target=STATUSES.tpm_accepted,
+                permission=_has_action_permission(action='accept'))
+    def accept(self):
+        self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/accept',
+                         cc=self._get_tpm_as_email_recipients())
+
+    @transition(status, source=[STATUSES.tpm_accepted, STATUSES.tpm_action_required], target=STATUSES.tpm_reported,
+                conditions=[
+                    TPMVisitReportRequiredFieldsCheck.as_condition(),
+                    TPMVisitReportValidations.as_condition(),
+                ],
+                permission=_has_action_permission(action='report'))
+    def report(self):
+        self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/report',
+                         cc=self._get_tpm_as_email_recipients())
+
+    @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.tpm_action_required,
+                permission=_has_action_permission(action='action_required'))
+    def action_required(self):
+        self._send_email(self._get_tpm_as_email_recipients(), 'tpm/visit/report/action_required',
+                         cc=self._get_unicef_focal_points_as_email_recipients())
+
+    @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
+                permission=_has_action_permission(action='approve'))
+    def approve(self, mark_as_programmatic_visit=True, notify_focal_point=True, notify_partner=True):
+        if notify_focal_point:
+            self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/approve')
+
+        if notify_partner:
+            # TODO: Generate report as PDF attachment.
+            self._send_email(self._get_ip_focal_points_as_email_recipients(), 'tpm/visit/report_for_ip')
+
+    def get_object_url(self):
+        return ''
+
+
+@python_2_unicode_compatible
+class TPMActivity(models.Model):
+    partnership = models.ForeignKey('partners.Intervention')
+
+    tpm_visit = models.ForeignKey(TPMVisit, related_name='tpm_activities')
+
+    def __str__(self):
+        return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
 
     class Meta:
-        verbose_name = u'TPM Visit'
-        verbose_name_plural = u'TPM Visits'
+        verbose_name_plural = _('TPM Activities')
 
-    def save(self, **kwargs):
-        if self.completed_date:
-            self.status = self.COMPLETED
-            location = self.pca_location
-            location.tpm_visit = False
-            location.save()
-        super(TPMVisit, self).save(**kwargs)
+
+@python_2_unicode_compatible
+class TPMSectorCovered(models.Model):
+    sector = models.ForeignKey('reports.Sector', blank=True)
+    tpm_activity = models.ForeignKey(TPMActivity, related_name='tpm_sectors')
+
+    def __str__(self):
+        return 'Sector {0} for {1}'.format(self.sector, self.tpm_activity)
+
+    class Meta:
+        verbose_name_plural = _('TPM Sectors Covered')
+
+
+@python_2_unicode_compatible
+class TPMLowResult(models.Model):
+    # TODO: Results is LowerResult? (TPM Spec: Low-level Results  (see PD/SSFA Output [array]0..* in Partnership Management))
+    result = models.ForeignKey('partners.InterventionResultLink', blank=True)
+    tpm_sector = models.ForeignKey(TPMSectorCovered, related_name='tpm_low_results')
+
+    def __str__(self):
+        return 'Result {0} for {1}'.format(self.result, self.tpm_sector)
+
+
+@python_2_unicode_compatible
+class TPMLocation(models.Model):
+    tpm_low_result = models.ForeignKey(TPMLowResult, null=True, blank=True, related_name='tpm_locations')
+
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+
+    location = models.ForeignKey('locations.Location')
+    type_of_site = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return '{}: {}'.format(self.tpm_low_result, self.location)
+
+
+@python_2_unicode_compatible
+class TPMVisitReport(models.Model):
+    tpm_visit = models.OneToOneField(TPMVisit, related_name='tpm_report')
+
+    recommendations = models.TextField(blank=True)
+
+    report = CodedGenericRelation(Attachment, code='tpm_report', blank=True)
+    report_attachments = CodedGenericRelation(Attachment, code='tpm_report_attach', blank=True)
+
+    def __str__(self):
+        return '{} report'.format(self.tpm_visit)
+
+    def get_object_url(self):
+        return ''
+
+
+UNICEFFocalPoint = GroupWrapper(code='unicef_focal_point',
+                                name='UNICEF Focal Point')
+
+PME = GroupWrapper(code='pme',
+                   name='PME')
+
+ThirdPartyMonitor = GroupWrapper(code='third_party_monitor',
+                                 name='Third Party Monitor')
+
+UNICEFUser = GroupWrapper(code='unicef_user',
+                          name='UNICEF User')
+
+
+class TPMPermissionsQueryset(StatusBasePermissionQueryset):
+    def filter(self, *args, **kwargs):
+        if 'user' in kwargs and 'instance' in kwargs and kwargs['instance']:
+            kwargs['user_type'] = self.model._get_user_type(kwargs.pop('user'), instance=kwargs['instance'])
+            return self.filter(**kwargs)
+
+        if 'user' in kwargs and 'instance__in' in kwargs:
+            user_type = self.model._get_user_type(kwargs.pop('user'))
+            if user_type == UNICEFUser:
+                return self.filter(models.Q(user_type=UNICEFUser.code) | models.Q(user_type=UNICEFFocalPoint.code)) \
+                    .filter(**kwargs)
+
+            kwargs['user_type'] = user_type
+            return self.filter(**kwargs)
+
+        return super(TPMPermissionsQueryset, self).filter(**kwargs)
+
+
+@python_2_unicode_compatible
+class TPMPermission(StatusBasePermission):
+    STATUSES = StatusBasePermission.STATUSES + TPMVisit.STATUSES
+
+    USER_TYPES = Choices(
+        UNICEFFocalPoint.as_choice(),
+        PME.as_choice(),
+        ThirdPartyMonitor.as_choice(),
+        UNICEFUser.as_choice(),
+    )
+
+    objects = TPMPermissionsQueryset.as_manager()
+
+    def __str__(self):
+        return '{} can {} {} in {} visit'.format(self.user_type, self.permission, self.target, self.instance_status)
 
     @classmethod
-    def send_emails(cls, sender, instance, created, **kwargs):
+    def _get_user_type(cls, user, instance=None):
+        if instance and user in instance.unicef_focal_points.all():
+            return UNICEFFocalPoint.code
 
-        current_site = Site.objects.get_current()
+        user_type = super(TPMPermission, cls)._get_user_type(user)
 
-        if created:
+        if user_type == ThirdPartyMonitor:
+            if not instance:
+                return user_type
 
-            email_name = 'tpm/visit/created'
             try:
-                template = EmailTemplate.objects.get(
-                    name=email_name
-                )
-            except EmailTemplate.DoesNotExist:
-                template = EmailTemplate.objects.create(
-                    name=email_name,
-                    description='The email that is sent to TPM company when a visit request is created',
-                    subject="TPM Visit Created",
-                    content="The following TPM Visit has been created:"
-                            "\r\n\r\n{{url}}"
-                            "\r\n\r\nThank you."
-                )
+                if user.tpm_tpmpartnerstaffmember not in instance.tpm_partner.staff_members.all():
+                    return None
+            except TPMPartnerStaffMember.DoesNotExist:
+                return None
 
-            tpm_group, created = Group.objects.get_or_create(
-                name='Third Party Monitor'
-            )
-
-            tpm_users = tpm_group.user_set.all()
-            if tpm_users:
-                mail.send(
-                    [tpm.email for tpm in tpm_users],
-                    instance.assigned_by.email,
-                    template=template,
-                    context={
-                        'url': 'https://{}{}'.format(
-                            current_site.domain,
-                            instance.get_admin_url()
-                        )
-                    },
-                )
-        else:
-
-            if instance.status == TPMVisit.COMPLETED:
-                state = 'Completed'
-            else:
-                state = 'Updated'
-
-            email_name = 'tpm/visit/updated/completed'
-            try:
-                template = EmailTemplate.objects.get(
-                    name=email_name
-                )
-            except EmailTemplate.DoesNotExist:
-                template = EmailTemplate.objects.create(
-                    name=email_name,
-                    description='The email that is sent to the user who created the TPM Visit',
-                    subject="TPM Visit {{state}}",
-                    content="The following TPM Visit has been {{state}}:"
-                            "\r\n\r\n{{url}}"
-                            "\r\n\r\nThank you."
-                )
-
-            mail.send(
-                [instance.assigned_by.email],
-                template=template,
-                context={
-                    'state': state,
-                    'url': 'https://{}{}'.format(
-                        current_site.domain,
-                        instance.get_admin_url()
-                    )
-                },
-            )
-
-
-post_save.connect(TPMVisit.send_emails, sender=TPMVisit)
+        return user_type
