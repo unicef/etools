@@ -123,7 +123,6 @@ class CRUActionsMetadataMixin(object):
                 # If user has appropriate permissions for the view, include
                 # appropriate metadata about the fields that should be supplied.
                 serializer = view.get_serializer(instance=instance)
-                serializer.context['instance'] = instance
                 info = self.get_serializer_info(serializer)
                 actions[method] = self._filter_serializer_info(serializer, info, method)
             finally:

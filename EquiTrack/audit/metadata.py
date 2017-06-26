@@ -21,4 +21,7 @@ class EngagementMetadata(
     PermissionsBasedMetadataMixin,
     AuditBaseMetadata
 ):
-    pass
+    def get_serializer_info(self, serializer):
+        if serializer.instance:
+            serializer.context['instance'] = serializer.instance
+        return super(EngagementMetadata, self).get_serializer_info(serializer)

@@ -73,8 +73,8 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         max_length=30
     )
     auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('auditor'), related_name='purchase_orders')
-    contract_start_date = models.DateField(_('contract start date'), null=True, blank=True)
-    contract_end_date = models.DateField(_('contract end date'), null=True, blank=True)
+    contract_start_date = models.DateField(_('PO Date'), null=True, blank=True)
+    contract_end_date = models.DateField(_('Contract Expiry Date'), null=True, blank=True)
 
     def __str__(self):
         return self.order_number
