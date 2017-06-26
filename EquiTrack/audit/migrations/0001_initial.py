@@ -105,6 +105,7 @@ class Migration(migrations.Migration):
                 ('write_off_required', models.IntegerField(blank=True, null=True, verbose_name='write off required')),
                 ('pending_unsupported_amount', models.IntegerField(blank=True, null=True, verbose_name='pending unsupported amount')),
                 ('cancel_comment', models.TextField(blank=True)),
+                ('explanation_for_additional_information', models.TextField(blank=True, verbose_name='Provide explanation for additional information received from the IP or add attachments')),
             ],
             options={
                 'verbose_name': 'Engagement',
@@ -224,10 +225,9 @@ class Migration(migrations.Migration):
             name='SpotCheck',
             fields=[
                 ('engagement_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='audit.Engagement')),
-                ('total_amount_tested', models.IntegerField(blank=True, null=True, verbose_name='total amount tested')),
-                ('total_amount_of_ineligible_expenditure', models.IntegerField(blank=True, null=True, verbose_name='total amount of ineligible expenditure')),
-                ('amount_of_ineligible_expenditures', models.IntegerField(blank=True, null=True, verbose_name='amount of ineligible expenditures')),
-                ('internal_controls', models.TextField(blank=True, verbose_name='internal controls')),
+                ('total_amount_tested', models.IntegerField(blank=True, null=True, verbose_name='Total amount tested')),
+                ('total_amount_of_ineligible_expenditure', models.IntegerField(blank=True, null=True, verbose_name='Total amount of ineligible expenditure')),
+                ('internal_controls', models.TextField(blank=True, verbose_name='Internal controls')),
             ],
             options={
                 'verbose_name': 'Spot Check',

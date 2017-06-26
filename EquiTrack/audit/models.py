@@ -157,6 +157,9 @@ class Engagement(TimeStampedModel, models.Model):
                                                               blank=True)
     write_off_required = models.IntegerField(_('write off required'), null=True, blank=True)
     pending_unsupported_amount = models.IntegerField(_('pending unsupported amount'), null=True, blank=True)
+    explanation_for_additional_information = models.TextField(
+        _('Provide explanation for additional information received from the IP or add attachments'), blank=True
+    )
 
     staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('staff members'))
 
@@ -354,13 +357,11 @@ class Risk(models.Model):
 
 @python_2_unicode_compatible
 class SpotCheck(Engagement):
-    total_amount_tested = models.IntegerField(_('total amount tested'), null=True, blank=True)
-    total_amount_of_ineligible_expenditure = models.IntegerField(_('total amount of ineligible expenditure'),
+    total_amount_tested = models.IntegerField(_('Total amount tested'), null=True, blank=True)
+    total_amount_of_ineligible_expenditure = models.IntegerField(_('Total amount of ineligible expenditure'),
                                                                          null=True, blank=True)
-    amount_of_ineligible_expenditures = models.IntegerField(_('amount of ineligible expenditures'),
-                                                                    null=True, blank=True)
 
-    internal_controls = models.TextField(_('internal controls'), blank=True)
+    internal_controls = models.TextField(_('Internal controls'), blank=True)
 
     class Meta:
         verbose_name = _('Spot Check')
