@@ -15,7 +15,7 @@ from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
 from EquiTrack.utils import get_staticfile_link
 from supplies.models import SupplyItem
-from tpm.models import TPMVisit
+# from tpm.models import TPMVisit
 from reports.models import Result
 from users.models import Section
 
@@ -576,19 +576,21 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         formset.save()
         if change:
             for form in formset.forms:
-                obj = form.instance
-                if isinstance(obj, GwPCALocation) and obj.tpm_visit:
-                    visits = TPMVisit.objects.filter(
-                        pca=obj.pca,
-                        pca_location=obj,
-                        completed_date__isnull=True
-                    )
-                    if not visits:
-                        TPMVisit.objects.create(
-                            pca=obj.pca,
-                            pca_location=obj,
-                            assigned_by=request.user
-                        )
+                pass
+                # todo: tpmvisit admin
+                # obj = form.instance
+                # if isinstance(obj, GwPCALocation) and obj.tpm_visit:
+                #     visits = TPMVisit.objects.filter(
+                #         pca=obj.pca,
+                #         pca_location=obj,
+                #         completed_date__isnull=True
+                #     )
+                #     if not visits:
+                #         TPMVisit.objects.create(
+                #             pca=obj.pca,
+                #             pca_location=obj,
+                #             assigned_by=request.user
+                #         )
 
     def save_model(self, request, obj, form, change):
         created = False if change else True

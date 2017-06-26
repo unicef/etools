@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
 from audit.models import Auditor
+from tpm.models import ThirdPartyMonitor
 from users.serializers import MinimalUserSerializer
 from users.models import Office, Section
 from .forms import ProfileForm
@@ -369,7 +370,11 @@ class ModuleRedirectView(RedirectView):
     url = '/dash/'
     permanent = False
 
+    # TODO: Rewrite this ...
     def get_redirect_url(self, *args, **kwargs):
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+            return '/tpm/'
+
         if Auditor.as_group() in self.request.user.groups.all():
             return '/ap/'
 
