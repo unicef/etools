@@ -4,12 +4,11 @@ from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from tpm.models import TPMVisit
-from utils.common.tests.mixins import AttachmentMixin
 from .base import TPMTestCaseMixin
 from .factories import TPMVisitFactory, TPMVisitReportFactory
 
 
-class TestTPMTransitions(AttachmentMixin, TPMTestCaseMixin, APITenantTestCase):
+class TestTPMTransitions(TPMTestCaseMixin, APITenantTestCase):
     def setUp(self):
         super(TestTPMTransitions, self).setUp()
         call_command('update_tpm_permissions')

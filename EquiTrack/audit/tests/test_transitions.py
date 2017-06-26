@@ -13,7 +13,7 @@ from .factories import MicroAssessmentFactory, AuditFactory, SpotCheckFactory
 
 class EngagementCheckTransitionsTestCaseMixin(object):
     def setUp(self):
-        call_command('loaddata', 'audit_risks_blueprints')
+        call_command('loaddata', 'audit_risks_blueprints', verbosity=0)
         super(EngagementCheckTransitionsTestCaseMixin, self).setUp()
 
     def _test_transition(self, user, action, expected_response, errors=None, data=None):

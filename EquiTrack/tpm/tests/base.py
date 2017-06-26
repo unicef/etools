@@ -1,9 +1,38 @@
+import os
+import tempfile
+
+from django.core.files import File
+
+from attachments.models import FileType, Attachment
 from tpm.models import UNICEFFocalPoint, PME, ThirdPartyMonitor, UNICEFUser
 from EquiTrack.factories import UserFactory
 from .factories import TPMVisitFactory, TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
 
 class TPMTestCaseMixin(object):
+    def _add_attachment(self, code, instance):
+        with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=".trash") as temporary_file:
+            try:
+                temporary_file.write(b'\x04\x02')
+                temporary_file.seek(0)
+                file_type, created = FileType.objects.get_or_create(name='tpm', code='tpm')
+
+                attachment = Attachment(
+                    content_object=instance,
+                    code=code,
+                    file_type=file_type
+                )
+
+                attachment.file.save(
+                    temporary_file.name,
+                    File(temporary_file)
+                )
+                attachment.save()
+
+            finally:
+                if os.path.exists(temporary_file.name):
+                    os.remove(temporary_file.name)
+
     def setUp(self):
         super(TPMTestCaseMixin, self).setUp()
 
