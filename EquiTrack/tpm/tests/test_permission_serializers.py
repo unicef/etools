@@ -5,6 +5,7 @@ from unittest import skip
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
+from django.core.management import call_command
 
 from EquiTrack.tests.mixins import FastTenantTestCase
 from tpm.models import TPMVisit, ThirdPartyMonitor, UNICEFUser
@@ -13,8 +14,6 @@ from tpm.tests.factories import TPMVisitFactory, TPMPartnerFactory
 
 
 class TPMPermissionsBasedSerializerTestCase(FastTenantTestCase):
-    fixtures = [os.path.join(settings.SITE_ROOT, 'tpm/tests/fixtures/permissions.json')]
-
     @classmethod
     def setUpTestData(cls):
         cls.tpm_partner = TPMPartnerFactory()
@@ -30,9 +29,9 @@ class TPMPermissionsBasedSerializerTestCase(FastTenantTestCase):
         tpm_staff_member.save()
 
     def setUp(self):
-        self.draft_visit = TPMVisitFactory(tpm_partner=self.tpm_partner, unicef_focal_points=[self.unicef_user])
-        self.submitted_visit = TPMVisitFactory(tpm_partner=self.tpm_partner, unicef_focal_points=[self.unicef_user],
-                                               status=TPMVisit.STATUSES.submitted)
+        call_command('update_tpm_permissions')
+        self.draft_visit = TPMVisitFactory(tpm_partner=self.tpm_partner)
+        self.submitted_visit = TPMVisitFactory(tpm_partner=self.tpm_partner, status=TPMVisit.STATUSES.submitted)
 
     @skip("Permissions for tpm module disabled")
     def test_representation(self):
@@ -100,7 +99,6 @@ class TPMPermissionsBasedSerializerTestCase(FastTenantTestCase):
             'visit_end': self.draft_visit.visit_end.isoformat(),
             'partnership': self.draft_visit.partnership_id,
             'results': [],
-            'unicef_focal_points': [self.unicef_user.id],
         })
         serializer.is_valid(raise_exception=True)
         visit = serializer.save()
@@ -119,7 +117,6 @@ class TPMPermissionsBasedSerializerTestCase(FastTenantTestCase):
             'visit_end': self.draft_visit.visit_end.isoformat(),
             'partnership': self.draft_visit.partnership_id,
             'results': [],
-            'unicef_focal_points': [self.tpm_user.id],
         })
         serializer.is_valid(raise_exception=True)
         with self.assertRaises(IntegrityError) as cm:

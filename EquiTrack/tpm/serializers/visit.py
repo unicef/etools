@@ -71,10 +71,14 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         read_field=InterventionListSerializer(read_only=True),
     )
 
+    unicef_focal_point = SeparatedReadWriteField(
+        read_field=MinimalUserSerializer(read_only=True),
+    )
+
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
     # class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMActivity
-        fields = ['id', 'partnership', 'tpm_sectors']
+        fields = ['id', 'partnership', 'tpm_sectors', 'unicef_focal_point']
 
 
 class TPMReportSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
@@ -111,10 +115,6 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
         read_field=TPMPartnerLightSerializer(read_only=True),
     )
 
-    unicef_focal_points = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(many=True, read_only=True),
-    )
-
     class Meta(StatusPermissionsBasedRootSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
     # class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMVisit
@@ -122,8 +122,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
         fields = [
             'id', 'visit_start', 'visit_end',
             'tpm_activities', 'tpm_partner',
-            'unicef_focal_points', 'status',
-            'reference_number',
+            'status', 'reference_number',
         ]
 
 

@@ -48,13 +48,13 @@ class TPMVisitViewSet(
     queryset = TPMVisit.objects.all().prefetch_related(
         'tpm_partner',
         'tpm_activities',
+        'tpm_activities__unicef_focal_point',
         'tpm_activities__partnership',
         'tpm_activities__tpm_sectors',
         'tpm_activities__tpm_sectors__sector',
         'tpm_activities__tpm_sectors__tpm_low_results',
         'tpm_activities__tpm_sectors__tpm_low_results__result',
         'tpm_activities__tpm_sectors__tpm_low_results__tpm_locations',
-        'unicef_focal_points',
         'tpm_report',
         'attachments',
     )

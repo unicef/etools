@@ -36,7 +36,6 @@ class Command(BaseCommand):
         'tpmvisit.tpm_partner',
         'tpmvisit.visit_start',
         'tpmvisit.visit_end',
-        'tpmvisit.unicef_focal_points',
         'tpmvisit.attachments',
         'tpmactivity.*',
         'tpmsectorcovered.*',

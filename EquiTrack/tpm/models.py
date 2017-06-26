@@ -58,8 +58,6 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     tpm_partner = models.ForeignKey(TPMPartner)
 
-    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='tpm_visits')
-
     status = FSMField(max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
     reject_comment = models.TextField(blank=True)
@@ -109,7 +107,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                                                                                                  flat=True))
 
     def _get_unicef_focal_points_as_email_recipients(self):
-        return list(self.unicef_focal_points.values_list('email', flat=True))
+        return list(TPMActivity.objects.filter(tpm_visit=self).values_list('unicef_focal_point__email', flat=True))
 
     def _get_ip_focal_points_as_email_recipients(self):
         return list(self.tpm_activities.values_list('partnership__partner_focal_points__email', flat=True))
@@ -174,6 +172,8 @@ class TPMActivity(models.Model):
     partnership = models.ForeignKey('partners.Intervention')
 
     tpm_visit = models.ForeignKey(TPMVisit, related_name='tpm_activities')
+
+    unicef_focal_point = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='tpm_activities', null=True)
 
     def __str__(self):
         return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
@@ -283,7 +283,7 @@ class TPMPermission(StatusBasePermission):
 
     @classmethod
     def _get_user_type(cls, user, instance=None):
-        if instance and user in instance.unicef_focal_points.all():
+        if instance and instance.tpm_activities.filter(unicef_focal_point=user).exists():
             return UNICEFFocalPoint.code
 
         user_type = super(TPMPermission, cls)._get_user_type(user)

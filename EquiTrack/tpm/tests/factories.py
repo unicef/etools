@@ -138,14 +138,6 @@ class TPMVisitFactory(factory.DjangoModelFactory):
         if extracted:
             self.results.add(*extracted)
 
-    @factory.post_generation
-    def unicef_focal_points(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted:
-            self.unicef_focal_points.add(*extracted)
-
 
 class TPMVisitReportFactory(factory.django.DjangoModelFactory):
     class Meta:
