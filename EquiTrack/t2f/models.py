@@ -646,7 +646,7 @@ class ActionPoint(models.Model):
         url = 'https://{host}/t2f/action-point/{action_point_id}/'.format(host=settings.HOST,
                                                                           action_point_id=self.id)
 
-        context = Context({'travel': serializer.data,
+        context = Context({'action_point': serializer.data,
                            'url': url})
         html_content = render_to_string('emails/action_point_assigned.html', context)
 

@@ -24,7 +24,7 @@ class TestSectionViews(APITenantTestCase):
             data={"values": "{},{}".format(s1.id, s2.id)}
         )
         # Returns empty set - figure out public schema testing
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestOfficeViews(APITenantTestCase):
@@ -41,7 +41,7 @@ class TestOfficeViews(APITenantTestCase):
             data={"values": "{},{}".format(o1.id, o2.id)}
         )
         # Returns empty set - figure out public schema testing
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestUserViews(APITenantTestCase):
@@ -66,8 +66,8 @@ class TestUserViews(APITenantTestCase):
             user=self.unicef_staff,
             data={"values": "{},{}".format(self.partnership_manager_user.id, self.unicef_superuser.id)}
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
 
     def test_api_users_list_values_bad(self):
         response = self.forced_auth_req(
@@ -77,8 +77,8 @@ class TestUserViews(APITenantTestCase):
             data={"values": '1],2fg'}
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, [u'Query parameter values are not integers'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, [u'Query parameter values are not integers'])
 
     def test_api_users_list_managers(self):
         response = self.forced_auth_req(
@@ -94,7 +94,7 @@ class TestUserViews(APITenantTestCase):
     def test_api_groups_list(self):
         response = self.forced_auth_req('get', '/api/groups/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_users_retrieve_myprofile(self):
         response = self.forced_auth_req(
@@ -103,8 +103,8 @@ class TestUserViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["name"], self.unicef_staff.get_full_name())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], self.unicef_staff.get_full_name())
 
     @skip('no update method on view')
     def test_api_users_patch_myprofile(self):
@@ -119,9 +119,9 @@ class TestUserViews(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["supervisor"], self.unicef_superuser.id)
-        self.assertEquals(response.data["oic"], self.unicef_superuser.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["supervisor"], self.unicef_superuser.id)
+        self.assertEqual(response.data["oic"], self.unicef_superuser.id)
 
         response = self.forced_auth_req(
             'get',
@@ -129,20 +129,20 @@ class TestUserViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["user"], self.unicef_staff.id)
-        self.assertEquals(response.data["supervisor"], self.unicef_superuser.id)
-        self.assertEquals(response.data["oic"], self.unicef_superuser.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["user"], self.unicef_staff.id)
+        self.assertEqual(response.data["supervisor"], self.unicef_superuser.id)
+        self.assertEqual(response.data["oic"], self.unicef_superuser.id)
 
     def test_api_offices_detail(self):
         response = self.forced_auth_req('get', '/api/offices/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_sections_detail(self):
         response = self.forced_auth_req('get', '/api/sections/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_minimal_verbosity(self):
         response = self.forced_auth_req('get', '/api/v2/users/', data={'verbosity': 'minimal'}, user=self.unicef_superuser)
