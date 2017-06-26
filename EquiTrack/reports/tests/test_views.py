@@ -1,9 +1,5 @@
-__author__ = 'achamseddine'
-
 from unittest import skip
-import random
 import datetime
-
 
 from rest_framework import status
 
@@ -24,7 +20,7 @@ class TestReportViews(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.result_type = ResultType.objects.get(id=random.choice([1, 2, 3]))
+        self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
         self.result1 = ResultFactory(
             result_type=self.result_type,
             result_structure=ResultStructureFactory(),
