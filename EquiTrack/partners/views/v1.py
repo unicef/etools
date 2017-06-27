@@ -68,10 +68,26 @@ from EquiTrack.utils import get_data_from_insight
 
 
 class PcaPDFView(PDFTemplateView):
-    template_name = "partners/pca_pdf.html"
+    template_name = "partners/pca/english_pdf.html"
+    # TODO add proper templates for different languages
+    language_templates_mapping = {
+        "arabic": "partners/pca/arabic_pdf.html",
+        "english": "partners/pca/english_pdf.html",
+        "french": "partners/pca/french_pdf.html",
+        "portugese": "partners/pca/portugese_pdf.html",
+        "russian": "partners/pca/russian_pdf.html",
+        "spanish": "partners/pca/spanish_pdf.html",
+        "ifrc": "partners/pca/ifrc_pdf.html"
+    }
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
+        lang = self.request.GET.get('lang', None)
+        if lang:
+            try:
+                self.template_name = self.language_templates_mapping[lang]
+            except KeyError:
+                return {"error": "Cannot find document with given query parameter lang={}".format(lang)}
         error = None
         try:
             agreement = Agreement.objects.get(id=agr_id)

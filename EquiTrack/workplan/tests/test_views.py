@@ -1,8 +1,5 @@
-import random
-
 from django.core import mail
 from rest_framework import status
-from rest_framework.fields import DateTimeField
 
 from EquiTrack.factories import UserFactory, CommentFactory, WorkplanFactory, \
     ResultWorkplanPropertyFactory, WorkplanProjectFactory, LabelFactory, ResultFactory
@@ -15,6 +12,7 @@ class TestWorkplanViews(APITenantTestCase):
     fixtures = ['initial_data.json']
 
     maxDiff = None
+
     def setUp(self):
         self.user = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -23,9 +21,8 @@ class TestWorkplanViews(APITenantTestCase):
 
         self.workplan_project = WorkplanProjectFactory(workplan=self.workplan)
         self.labels = [LabelFactory() for x in xrange(3)]
-
-        self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
-        self.result = ResultFactory(result_type=self.result_type,)
+        self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
+        self.result = ResultFactory(result_type=self.result_type)
 
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(
                                             workplan=self.workplan,
@@ -53,6 +50,7 @@ class TestWorkplanViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         # TODO test the following:
+        # from rest_framework.fields import DateTimeField
         # payload = response.data[0]
         #
         # comment_timestamp = DateTimeField().to_representation(self.comment.modified)
