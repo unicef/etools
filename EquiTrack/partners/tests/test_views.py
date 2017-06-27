@@ -775,7 +775,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -801,7 +801,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -850,7 +850,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 

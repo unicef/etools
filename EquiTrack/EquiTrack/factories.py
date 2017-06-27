@@ -154,7 +154,7 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
         model = report_models.CountryProgramme
 
     name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
+    wbs = factory.Sequence(lambda n: '0000/A0/{:02d}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
 
