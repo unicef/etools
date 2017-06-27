@@ -968,51 +968,30 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        # if self.status in [self.DRAFT, self.CANCELLED]:
-        #     number = 'TempRef:{}'.format(self.id)
-        # else:
-        agreements_count = Agreement.objects.filter(
-            # status__in=[self.ACTIVE, self.SUSPENDED,
-            #             self.TERMINATED, self.ENDED],
-            created__year=self.created.year,
-            # agreement_type=self.agreement_type #removing type: in case agreement saved and agreement_type changed after
-        ).count()
-        sequence = '{0:02d}'.format(agreements_count + 1)
-        number = u'{code}/{type}{year}{seq}'.format(
+        number = u'{code}/{type}{year}{id}'.format(
             code=connection.tenant.country_short_code or '',
             type=self.agreement_type,
             year=self.created.year,
-            seq=sequence,
+            id=self.id,
         )
-        # assuming in tempRef (status Draft or Cancelled we don't have
-        # amendments)
         return u'{}'.format(number)
 
     @property
     def base_number(self):
         return self.agreement_number.split('-')[0]
 
-    def update_reference_number(self, oldself=None, amendment_number=None, **kwargs):
+    def update_reference_number(self, amendment_number=None, **kwargs):
 
         if amendment_number:
-            self.agreement_number = u'{}-{}'.format(self.agreement_number.split('-')[0], amendment_number)
+            self.agreement_number = u'{}-{}'.format(self.base_number, amendment_number)
             return
-        # to create a reference number we need a pk
-        elif not oldself:
-            super(Agreement, self).save()
-            self.agreement_number = self.reference_number
-
-        elif self.status != oldself.status:
-            if self.status not in [self.CANCELLED, self.DRAFT] and self.agreement_number.startswith('TempRef'):
-                self.agreement_number = self.reference_number
+        self.agreement_number = self.reference_number
 
     def update_related_interventions(self, oldself, **kwargs):
         '''
         When suspending or terminating an agreement we need to suspend or terminate all interventions related
         this should only be called in a transaction with agreement save
         '''
-        # TODO: question: should reactivated agreements reactivate
-        # interventions?
 
         if oldself and oldself.status != self.status and \
                 self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
@@ -1060,19 +1039,8 @@ class Agreement(TimeStampedModel):
     def transition_to_terminated(self):
         pass
 
-    def check_auto_updates(self):
-        # auto-update country programme:
-        if not self.country_programme and self.start and self.end:
-            try:
-                self.country_programme = CountryProgramme.objects.get(from_date__lte=self.start,
-                                                                      to_date__gte=self.start)
-            except (CountryProgramme.MultipleObjectsReturned, CountryProgramme.DoesNotExist):
-                logging.warn('CountryProgramme not found for agreement {} in country {}'.
-                             format(self.id, connection.tenant))
-
     @transaction.atomic
     def save(self, **kwargs):
-        self.check_auto_updates()
 
         oldself = None
         if self.pk:
@@ -1082,11 +1050,14 @@ class Agreement(TimeStampedModel):
         # update reference number if needed
         amendment_number = kwargs.pop('amendment_number', None)
         if amendment_number:
-            self.update_reference_number(oldself, amendment_number)
-        else:
-            self.update_reference_number(oldself)
+            self.update_reference_number(amendment_number)
 
-        self.update_related_interventions(oldself)
+        if not oldself:
+            # to create a ref number we need an id
+            super(Agreement, self).save()
+            self.update_reference_number()
+        else:
+            self.update_related_interventions(oldself)
 
         return super(Agreement, self).save()
 
@@ -1474,7 +1445,7 @@ class Intervention(TimeStampedModel):
     @property
     def reference_number(self):
         number = u'{agreement}/{type}{year}{id}'.format(
-            agreement=self.agreement.agreement_number,
+            agreement=self.agreement.base_number,
             code=connection.tenant.country_short_code or '',
             type=self.document_type,
             year=self.year,
