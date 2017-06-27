@@ -363,7 +363,6 @@ class Indicator(models.Model):
     Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.Sector`
     Relates to :model:`reports.Result`
-    Relates to :model:`activityinfo.Indicator`
     """
     # TODO: rename this to RAMIndicator and rename/remove RAMIndicator
 
