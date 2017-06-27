@@ -137,6 +137,16 @@ class PartnerScopeFilter(BaseFilterBackend):
         return queryset
 
 
+class InterventionScopeFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        if request.query_params and 'intervention_id' in request.query_params:
+            try:
+                return queryset.filter(intervention_id=int(request.query_params['intervention_id']))
+            except ValueError:
+                return queryset.none()
+        return queryset
+
+
 class PartnerOrganizationExportFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         parameter_serializer = PartnershipExportFilterSerializer(data=request.GET)

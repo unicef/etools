@@ -15,6 +15,7 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
+    ListAPIView,
 )
 
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -43,9 +44,11 @@ from partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
 )
 from partners.exports_v2 import InterventionCvsRenderer
-from partners.filters import PartnerScopeFilter
+from partners.filters import PartnerScopeFilter, InterventionScopeFilter
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartneshipManagerRepPermission
+from reports.models import Sector
+from reports.serializers.v1 import SectorSerializer
 
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
@@ -341,6 +344,17 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
         else:
             raise ValidationError("You do not have permissions to delete an amendment")
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionSectorListView(ListAPIView):
+    queryset = InterventionSectorLocationLink.objects.all()
+    filter_backends = (InterventionScopeFilter, )
+    serializer_class = SectorSerializer
+
+    def filter_queryset(self, queryset):
+        queryset = super(InterventionSectorListView, self).filter_queryset(queryset)
+        print queryset
+        return Sector.objects.filter(id__in=queryset.values_list('sector_id', flat=True))
 
 
 class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
