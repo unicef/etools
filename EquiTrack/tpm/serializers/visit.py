@@ -5,7 +5,7 @@ from rest_framework import serializers
 from locations.models import Location
 from locations.serializers import LocationLightSerializer
 from partners.models import Intervention, InterventionResultLink
-from partners.serializers.interventions_v2 import InterventionListSerializer
+from partners.serializers.interventions_v2 import InterventionDetailSerializer
 from reports.models import Sector
 from reports.serializers.v1 import SectorLightSerializer
 from tpm.models import TPMVisit, TPMLocation, TPMVisitReport, TPMPartner, \
@@ -68,7 +68,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     tpm_sectors = TPMSectorCoveredSerializer(many=True)
 
     partnership = SeparatedReadWriteField(
-        read_field=InterventionListSerializer(read_only=True),
+        read_field=InterventionDetailSerializer(read_only=True),
     )
 
     unicef_focal_point = SeparatedReadWriteField(
