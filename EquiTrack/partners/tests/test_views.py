@@ -376,6 +376,24 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
 
+    def test_api_partners_delete_with_agreements(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/delete/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data[0], "This partner has agreements associated to it")
+
+    def test_api_partners_delete(self):
+        partner = PartnerFactory()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/delete/{}/'.format(partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
     def test_api_partners_list_minimal(self):
         params = {"verbosity": "minimal"}
         response = self.forced_auth_req(
