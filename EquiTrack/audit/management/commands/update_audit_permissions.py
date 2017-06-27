@@ -132,6 +132,7 @@ class Command(BaseCommand):
         self.revoke_permissions(self.partner_contacted, self.auditor, 'edit', 'engagement.engagement_attachments')
         self.add_permissions(self.partner_contacted, self.auditor, 'action', ['engagement.submit'])
         self.add_permissions(self.partner_contacted, self.auditor, 'view', [
+            'purchaseorder.*',
             'partnerorganization.*',
             'engagementstaffmember.*',
             'profile.*',
