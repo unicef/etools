@@ -167,7 +167,7 @@ class WBSGrantFundView(GhostDataMixin,
                        viewsets.GenericViewSet):
     permission_classes = ()
 
-    # @etag_cached('wbs_grant_fund', public_cache=True)
+    @etag_cached('wbs_grant_fund', public_cache=True)
     def list(self, request):
         wbs_qs = self.wbs_queryset
         grant_qs = self.grants_queryset

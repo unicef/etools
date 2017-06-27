@@ -8,6 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from publics.models import BusinessArea, WBS, Grant, Fund, Currency, ExchangeRate, TravelExpenseType, Country, \
     TravelAgent
+from publics.views import WBSGrantFundView
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 
 log = logging.getLogger(__name__)
@@ -95,6 +96,8 @@ class CostAssignmentSynch(VisionDataSynchronizer):
             mapped_record = self._map_object(record)
             self.create_or_update_record(mapped_record)
 
+        # Invalidate wbs/grant/fund etag cache
+        WBSGrantFundView.list.invalidate()
         return len(records)
 
 
