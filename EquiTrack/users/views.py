@@ -13,7 +13,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from users.serializers import MinimalUserSerializer
+from users.serializers import MinimalUserSerializer, MinimalUserDetailSerializer
 from users.models import Office, Section
 from .forms import ProfileForm
 from .models import User, UserProfile, Country
@@ -124,8 +124,8 @@ class UsersDetailAPIView(RetrieveAPIView):
     """
     Retrieve a User in the current country
     """
-    queryset = UserProfile.objects.all()
-    serializer_class = MinimalUserSerializer
+    queryset = User.objects.all()
+    serializer_class = MinimalUserDetailSerializer
 
     def retrieve(self, request, pk=None):
         """
@@ -133,10 +133,10 @@ class UsersDetailAPIView(RetrieveAPIView):
         """
         data = None
         try:
-            queryset = self.queryset.get(user__id=pk)
+            queryset = self.queryset.get(id=pk)
             serializer = self.serializer_class(queryset)
             data = serializer.data
-        except UserProfile.DoesNotExist:
+        except User.DoesNotExist:
             data = {}
         return Response(
             data,

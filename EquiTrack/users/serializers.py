@@ -38,7 +38,18 @@ class MinimalUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'name', 'first_name', 'last_name', 'username', 'email')
+        fields = ('id', 'name', 'first_name', 'last_name', 'username', 'email', )
+
+
+# used for user detail view
+class MinimalUserDetailSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='get_full_name', read_only=True)
+    job_title = serializers.CharField(source='profile.job_title')
+    vendor_number = serializers.CharField(source='profile.vendor_number')
+
+    class Meta:
+        model = User
+        fields = ('name', 'first_name', 'last_name', 'username', 'email', 'job_title', 'vendor_number',)
 
 
 class GroupSerializer(serializers.ModelSerializer):
