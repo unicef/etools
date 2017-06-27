@@ -170,7 +170,6 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
                 country_programme = data.get('country_programme', None) or self.instance.country_programme
             except AttributeError:
                 raise ValidationError({'country_programme': 'Country Programme is required for PCAs!'})
-            print country_programme
             # if for some reason agreement_type is none because agreement type changed, raise
             if country_programme is None:
                 raise ValidationError({'country_programme': 'Country Programme is required for PCAs!'})
