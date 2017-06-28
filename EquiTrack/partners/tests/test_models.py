@@ -174,7 +174,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
         self.cp = CountryProgramme.objects.create(
             name="CP 1",
-            wbs="/A0/",
+            wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
@@ -416,7 +416,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.partner_organization.save()
         cp = CountryProgramme.objects.create(
             name="CP 1",
-            wbs="/A0/",
+            wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
@@ -531,7 +531,7 @@ class TestAgreementModel(TenantTestCase):
         )
         cp = CountryProgramme.objects.create(
             name="CP 1",
-            wbs="/A0/",
+            wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
@@ -585,7 +585,7 @@ class TestInterventionModel(TenantTestCase):
         )
         cp = CountryProgramme.objects.create(
             name="CP 1",
-            wbs="/A0/",
+            wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
