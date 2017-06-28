@@ -875,6 +875,7 @@ class Agreement(TimeStampedModel):
     DRAFT = u"draft"
     CANCELLED = u"cancelled"
     ACTIVE = u"active"
+    SIGNED = u"signed"
     ENDED = u"ended"
     SUSPENDED = u"suspended"
     TERMINATED = u"terminated"
@@ -882,6 +883,7 @@ class Agreement(TimeStampedModel):
         (DRAFT, u"Draft"),
         (CANCELLED, u"Cancelled"),
         (ACTIVE, u"Active"),
+        (SIGNED, u"Signed"),
         (ENDED, u"Ended"),
         (SUSPENDED, u"Suspended"),
         (TERMINATED, u"Terminated"),
