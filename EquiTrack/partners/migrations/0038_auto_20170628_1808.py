@@ -17,11 +17,9 @@ def migrate_cps(apps, schema_editor):
         agreements = Agreement.objects.filter(start__gte=cp.from_date,
                                               start__lte=cp.to_date,).exclude(
                                               agreement_type__in=['MOU']).update(country_programme=cp)
+
         mou_agreements = Agreement.objects.filter(country_programme__isnull=False,
                                                   agreement_type__in=['MOU']).update(country_programme=None)
-        if mou_agreements > 0:
-            print('CP {} updated {} MOU agreements'.format(cp.name, mou_agreements))
-        print('CP {} updated {} agreements'.format(cp.name, agreements))
 
         interventions = Intervention.objects.filter(start__gte=cp.from_date,
                                                     start__lte=cp.to_date,)
@@ -31,18 +29,18 @@ def migrate_cps(apps, schema_editor):
                 if rl.cp_output.country_programme != cp:
                     wrong_cp.append(rl.cp_output.wbs)
             if len(wrong_cp) > 0:
-                print ("PD [{}] STATUS [{}] CP [{}] has wrongly mapped outputs {}".format(intervention.id, intervention.status, cp.wbs, wrong_cp))
+                raise BaseException("PD [{}] STATUS [{}] CP [{}] has wrongly mapped outputs {}".format(
+                    intervention.id, intervention.status, cp.wbs, wrong_cp))
+                # print ("PD [P{}] STATUS [{}] CP [{}] has wrongly mapped outputs {}".format(intervention.id, intervention.status, cp.wbs, wrong_cp))
             intervention.country_programme = cp
             intervention.save()
-
-        print('CP {} updated {} interventions'.format(cp.name, interventions.count()))
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0033_auto_20170614_1831'),
-        ('reports', '0010_auto_20170614_1831')
+        ('partners', '0037_auto_20170627_1854'),
+        ('reports', '0011_auto_20170614_1831')
     ]
 
     operations = [
