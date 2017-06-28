@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 import json
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 from django.core.urlresolvers import reverse
 from django.utils import timezone
@@ -61,6 +61,35 @@ class TestFRHeaderView(APITenantTestCase):
                           float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
         self.assertEquals(result['total_intervention_amt'],
                           float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+
+    def test_get_earliest_start_date_from_two_frs(self):
+
+        data = {'values': ','.join([self.fr_1.fr_number, self.fr_2.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(result['frs']), 2)
+
+        self.assertEquals(datetime.strptime(result['earliest_start_date'], '%Y-%m-%d').date(),
+                          min([self.fr_1.start_date, self.fr_2.start_date]))
+        self.assertEquals(datetime.strptime(result['latest_end_date'], '%Y-%m-%d').date(),
+                          max([self.fr_1.end_date, self.fr_2.end_date]))
+
+    def test_get_earliest_start_date_from_one_fr(self):
+
+        data = {'values': ','.join([self.fr_1.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(result['frs']), 1)
+
+        self.assertEquals(datetime.strptime(result['earliest_start_date'], '%Y-%m-%d').date(),
+                          self.fr_1.start_date)
+        self.assertEquals(datetime.strptime(result['latest_end_date'], '%Y-%m-%d').date(),
+                          self.fr_1.end_date)
+
 
     def test_get_fail_with_no_values(self):
         data = {}
