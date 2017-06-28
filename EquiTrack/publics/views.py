@@ -165,7 +165,6 @@ class ExpenseTypesView(GhostDataMixin,
 
 class WBSGrantFundView(GhostDataMixin,
                        viewsets.GenericViewSet):
-    permission_classes = ()
 
     @etag_cached('wbs_grant_fund', public_cache=True)
     def list(self, request):
