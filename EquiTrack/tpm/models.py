@@ -28,7 +28,21 @@ from .transitions.conditions import ValidateTPMVisitActivities, TPMVisitReportRe
 
 
 class TPMPartner(BaseFirm):
-    pass
+    STATUSES = Choices(
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('cancelled', 'Cancelled'),
+    )
+
+    status = FSMField(max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
+
+    @transition(status, source=[STATUSES.draft, STATUSES.cancelled], target=STATUSES.active)
+    def activate(self):
+        pass
+
+    @transition(status, source=[STATUSES.draft, STATUSES.active], target=STATUSES.cancelled)
+    def cancel(self):
+        pass
 
 
 class TPMPartnerStaffMember(BaseStaffMember):
