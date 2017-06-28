@@ -103,3 +103,6 @@ frontend/
 pmp_frontend/
 
 db_dumps/*.bz2
+
+# Sphinx documentation
+docs/_build/

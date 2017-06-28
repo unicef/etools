@@ -1,0 +1,1076 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize %}
+
+{% block style_base %}
+    {% comment %}
+        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+        for base style.
+    {% endcomment %}
+
+    {% block layout_style %}
+        <style type="text/css">
+            @page {
+                size: {{ pagesize|default:"letter" }};
+                margin-left: 2.0cm;
+                margin-right: 2.0cm;
+                margin-top: 1.8cm;
+                margin-bottom: 1.8cm;
+                @frame header {
+                -pdf-frame-content: page-header;
+                margin-top: 0cm;
+                margin-right: 0mm;
+                margin-bottom: 0.3cm;
+                margin-left: 0cm;
+                background-color: #0099ff;
+                height: 2cm;
+            }
+            @frame footer_frame {
+                /* Static frame */
+            -pdf-frame-content:footer_content;
+            left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+            }
+
+            }
+        </style>
+    {% endblock %}
+    {% block extra_style %}
+        <style type="text/css">
+            #page-header {
+            {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
+            }
+
+            {#        #page-footer{#}
+            {#            -pdf-frame-content: page-footer;#}
+            {#            bottom: 0cm;#}
+            {#            margin-left: 1cm;#}
+            {#            margin-right: 1cm;#}
+            {#            color: #0099ff;#}
+            {#            line-height: 1.0cm;#}
+            {#            background-color: #0099ff;#}
+            {#        }#}
+            .details div {
+            {#            background-color: #f1f1f1;#} border-radius: 25px;
+                border: 2px solid #f1f1f1;
+                padding: 20px;
+                width: 200px;
+                height: 150px;
+            }
+
+            ul {
+                list-style-type: none;
+            }
+
+            #content {
+                font-family: "Times New Roman";
+                font-size: 12pt;
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+        </style>
+    {% endblock %}
+{% endblock %}
+
+{% block content %}
+{% if error %}
+    PDF could not be generated properly: <br> {{ error }}
+{% else %}
+    <div id="content">
+        <div id="title" style="text-align: center; padding-top: 15px">
+            <div style="text-align: right"><b><u>REF #: {{ agreement.agreement_number }}</u></b></div>
+            <div style="font-size: 16pt"><b>PROGRAMME COOPERATION AGREEMENT PORTUGESE</b></div>
+            <div><b>BETWEEN</b></div>
+            <div><b>{{ agreement.partner|upper }}</b></div>
+            <div><b>AND THE</b></div>
+            <div><b>UNITED NATIONS CHILDREN'S FUND</b></div>
+            <div><b>FOR THE</b></div>
+            <div><b>IMPLEMENTATION of UNICEF-FUNDED PROGRAMME RELATING TO THE UNICEF COUNTRY PROGRAMME
+                FOR {{ country|upper }}</b></div>
+            <div>{{ agreement.partner }} and the United Nations Children’s Fund (referred to jointly as the “Parties”
+                and each separately as a “Party”), hereby agree as follows:
+            </div>
+            <div><b>ARTICLE I</b></div>
+            <div style="padding-top: 0px"><b>DEFINITION</b></div>
+        </div>
+
+        <div article-I>
+            <div style="padding-bottom: 10px; padding-left: 5px">In this Agreement, the expression:</div>
+            <ol style="padding-bottom: 10px">
+                <li>“<u>United Nations Children’s Fund</u>” or “<u>UNICEF</u>” means the subsidiary organ of the United
+                    Nations established by the General Assembly pursuant to resolution 57(I) of 11 December 1946.
+                </li>
+                <li>“<u>Implementing Partner</u>” or “<u>IP</u>”
+                    means {{ agreement.partner }}, {{ agreement.partner.address }}, {{ agreement.partner.city }} {{ agreement.partner.country }} </li>
+                <li>“<u>Country Programme</u>” means the UNICEF [country programme for {{ country }}], approved by the
+                    Executive Board of the United Nations Children’s Fund for the period [{{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}].
+                </li>
+                <li>“<u>Programme Document</u>” means the formal document (in standard format) attached to this
+                    Agreement, which is concluded by the Parties and reflects expected results, detailed activities,
+                    timeframes and budget, and defines what is to be accomplished. The Programme Document is the basis
+                    for requisitioning, committing and disbursing funds to carry out planned activities and for their
+                    monitoring and reporting.
+                </li>
+                <li>“<u>Programme Document Progress Report</u>” or “<u>PDPR</u>” means UNICEF’s standard form of
+                    Workplan progress report, available at <u>http://www.unicef.org/about/partnerships/index_81428.html</u> or at such other URL as may be decided from time to time
+                    by UNICEF.
+                </li>
+                <li>“<u>HACT</u>” means the Harmonized Approach to Cash Transfer of the United Nations Development Group
+                    (“<u>UNDG</u>”), available at <u>https://undg.org/home/undg-mechanisms/business-operations-working-group/hact-advisory-committee/</u> or at such other URL as UNDG may
+                    from time to time decide.
+                </li>
+                <li>“<u>FACE form</u>” means the UNDG’s standard Funding Authorization and Certificate of Expenditure
+                    Form, a copy of which is available at http://www.unicef.org/about/partnerships/index_81428.html or at such other URL as
+                    UNDG may from time to time decide.
+                </li>
+                <li>“<u>e-FACE</u>” means UNICEF’s electronic data entry facility for the information contained in FACE
+                    forms, when available.
+                </li>
+                <li>“<u>Headquarters support costs</u>” means those costs incurred by the IP which cannot be
+                    unequivocally attributed to a specific activity implemented by the IP in accordance with this
+                    Agreement, including any Programme Document.
+                </li>
+                <li>“<u>Authorized Officer</u>” means one of the following officers of the IP:</li>
+                {% for officer in auth_officers %}
+                    <div>Full name: {{ officer.first_name }} {{ officer.last_name }} </div>
+                    <div>Title: {{ officer.title }}</div>
+                    <div>Sample signature: ____________________________</div>
+                {% endfor %}
+                <div style="background-color: #f1f1f1; border: 2px solid #000; padding-bottom: 1px; padding-top: 5px">
+                    <i><u>Note to UNICEF user:</u> Add details regarding further Authorized Officers as needed.</i>
+                </div>
+                <div style="padding-top: 15px">It is understood, for the avoidance of doubt, that any removals from or
+                    amendments to the (list of) Authorized Officer(s) identified above shall require a written amendment
+                    to this Agreement in accordance with section 20.0 of the General Terms and Conditions for Programme
+                    Cooperation Agreements appended hereto.
+                </div>
+
+                <li>“<u>non-expendable equipment</u>” means any item that cost two thousand five hundred US dollars
+                    (US$2,500) or more, including costs of initial delivery and handling, and which has a service
+                    lifetime of at least three (3) years.
+                </li>
+                <li>“<u>Government</u>” means the Government of {{ country }}.</li>
+                <li>“<u>Country</u>” means {{ country }}.</li>
+            </ol>
+        </div>
+        <div class="page-break"></div>
+        <div id="article-II" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-bottom: 0px"><b>ARTICLE II</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>AGREEMENT DOCUMENTS</b></div>
+            <ol>
+                <li>
+                    This Agreement consists of the following documents:
+                    <div>(a) This Agreement;</div>
+                    <div>(b) The General Terms and Conditions for Programme Cooperation Agreements appended hereto;
+                    </div>
+                    <div>(c) Any Programme Documents concluded hereunder; and</div>
+                    <div>(d) Any Special Conditions established with regard to a particular programme, IP, or Programme
+                        Document, attached to this Agreement.
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-III" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE III</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>PURPOSE AND SCOPE</b></div>
+            <ol>
+                <li>
+                    This Agreement shall govern the implementation by the IP of the relevant parts of the Programme
+                    (including humanitarian response in the Country) through one or several Programme Documents. It
+                    describes the relationship between the Parties and the Parties’ responsibilities.
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-IV" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE IV</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>GENERAL RESPONSIBILITIES OF THE PARTIES</b></div>
+            <ol>
+                <li>The Parties will work together in a spirit of cooperation and partnership, with the responsibilities
+                    and accountabilities set out in this Agreement, to implement the Programme Documents) in full in a
+                    timely, efficient, and effective, manner.
+                </li>
+                <li>The Parties agree to carry out their respective responsibilities in accordance with the provisions
+                    of this Agreement, including the Programme Documents.
+                </li>
+                <li>The Parties shall keep each other informed of all relevant activities pertaining to the
+                    implementation of the Programme Documents, and shall hold consultations when either Party considers
+                    it appropriate, including any circumstance that may affect the achievement of the results of the
+                    Country Programme and the Programme Documents.
+                </li>
+                <li>The Parties shall fulfill their commitments with the fullest regard for the terms and conditions of
+                    this Agreement and the principles of the United Nations.
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-V" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE V</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>RESPONSIBILITIES OF THE IP</b></div>
+            <ol>
+                <li>The IP will contribute to the implementation of each Programme Document covered by this Agreement by
+                    undertaking the responsibilities allocated to it in this Agreement, in full cooperation with UNICEF,
+                    and will do so in accordance with the budget, schedule, and other details set out in the Programme
+                    Document, including by:
+                </li>
+                <div>(a) Commencing work on the responsibilities allocated to it in the Programme Document promptly upon
+                    signing the Programme Document (but in no case prior to signing this Agreement) and, as applicable,
+                    receipt of the first installment of the cash, supplies and equipment to be transferred to it by
+                    UNICEF;
+                </div>
+                <div>(b) Making its designated contributions of technical assistance, services, supplies and equipment
+                    towards the implementation of the Programme Document as provided for under this Agreement, including
+                    the Programme Document;
+                </div>
+                <div>(c) Completing its responsibilities with diligence and efficiency, and in conformity with the
+                    requirements set out in the Programme Document (including in connection with the schedule and
+                    budget);
+                </div>
+                <div>(d) Providing the reports required under this Agreement in a timely manner and satisfactory to
+                    UNICEF, and furnishing all other information covering the Programme Document and the use of any
+                    cash, supplies and equipment transferred to it by UNICEF that UNICEF may reasonably ask for;
+                </div>
+                <div>(e) Exercising the highest standard of care when handling and administering the cash, supplies and
+                    equipment provided to it by UNICEF, and ensuring that its personnel will conduct itself with the
+                    highest standards of integrity and care in the administration of public assets including money.
+                </div>
+                <li>In addition to the obligations set out in paragraph 1 above,</li>
+                <div>(a) The IP will maximize the use of any tax exemptions or exemptions from customs duties, excise or
+                    import taxes, available to it in the Country or elsewhere, with regard to the purchase, importing,
+                    registration, or use of supplies and equipment purchased using funds provided by UNICEF under this
+                    Agreement and shall consult with UNICEF in that regard.
+                </div>
+                <div>(b) The IP will establish and maintain a system for monitoring progress of the implementation of
+                    the Programme Document using the defined results, including outputs, indicators and targets as set
+                    out in the Programme Document.
+                </div>
+                <div>(c) The IP will accommodate monitoring visits of representatives of any donors that are
+                    contributing to the costs of implementing the Programme Document. UNICEF will give the IP reasonable
+                    prior notice of any such visits.
+                </div>
+            </ol>
+        </div>
+        <div id="article-VI" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE VI</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>RESPONSIBILITIES OF UNICEF</b></div>
+            <ol>
+                <li>UNICEF will contribute to the implementation of each Programme Document covered by this Agreement by
+                    undertaking the responsibilities allocated to it in this Agreement, including by:
+                </li>
+                <div>(a) Commencing and completing the responsibilities allocated to it in the Programme Document in a
+                    timely manner, provided that all necessary reports and other documents are available;
+                </div>
+                <div>(b) Making transfers of cash, supplies and equipment in accordance with the provisions of this
+                    Agreement;
+                </div>
+                <div>(c) Undertaking and completing monitoring, assessment, assurance activities, evaluation and
+                    oversight of the Programme Document;
+                </div>
+                <div>(d) Liaising on an ongoing basis, as needed, with the Government (as applicable), other members of
+                    the United Nations Country Team, donors, and other stakeholders; and
+                </div>
+                <div>(e) Providing overall guidance, oversight, technical assistance and leadership, as appropriate, for
+                    the implementation of the Programme Document, and making itself available for consultations as
+                    reasonably requested; and
+                </div>
+                <div>(f) Initiating joint monitoring and review meetings that shall be held at least at mid-term and at
+                    the end of the Programme Document in order to agree on the resolution of findings and to build on
+                    lessons learned to better serve the needs of children. The joint partnership review shall take into
+                    account: (a) the progress of the Programme Document; (b) working relationship of the Parties; (c)
+                    the compliance of the Parties with this Agreement; and (d) the success and challenges of the IP in
+                    meeting the agreed objectives and desired results of the Programme Document.
+                </div>
+                <li>Headquarters support costs with respect of any single Programme Document and associated budget shall
+                    be reimbursable by UNICEF to the IP at a rate of seven percent (7%) of actual expenditures in
+                    connection with that Programme Document and associated budget. The IP shall record the headquarters
+                    support costs in the FACE forms to be submitted to UNICEF in accordance with the terms of this
+                    Agreement.
+                </li>
+            </ol>
+        </div>
+        <div id="article-VII" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE VII</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>PROGRAMME DOCUMENTS</b></div>
+            <ol>
+                <li>The Parties will conclude one or several Programme Documents as the case may be. Programme Documents
+                    shall be signed by duly authorized representatives of the Parties.
+                </li>
+                <li>Programme Documents may be modified only by written agreement between the Parties.</li>
+            </ol>
+        </div>
+        <div id="article-VIII" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE VIII</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>INPUTS BY UNICEF TOWARDS IMPLEMENTATION OF PROGRAMME
+                DOCUMENTS</b></div>
+            <div><b>(A) Cash Transfer by UNICEF to/on behalf of IP</b></div>
+            <div><p><u>General Provisions:</u></p></div>
+            <ol>
+                <li>UNICEF will provide the IP with cash assistance for the activities as stipulated in the Programme
+                    Documents (the “Cash Transfer”), subject to the availability of funds and the terms of this
+                    Agreement. UNICEF’s assistance to the IP will not exceed the amounts included in the Programme
+                    Documents. UNICEF will provide the cash assistance to the IP following three Cash Transfer
+                    modalities (the “Cash Transfer Modalities” and each a “Cash Transfer Modality”):
+                </li>
+                <div>(a) Advance payment by UNICEF to IP (referred to in the HACT as “Direct Cash Transfer”);</div>
+                <div>(b) Reimbursement by UNICEF to IP (referred to in the HACT as “Reimbursement”); and</div>
+                <div>(c) Payment by UNICEF on IP’s behalf to IP’s vendor or supplier (referred to in HACT and in this
+                    Agreement as “Direct Payment”).
+                </div>
+                <li>The Cash Transfer shall be done in installments as requested by the IP on the FACE form and
+                    supporting itemized cost estimate representing the cash requirements to undertake the activities
+                    identified in the Programme Documents or as otherwise decided by UNICEF (the “Cash Transfer
+                    Installments” and each one of them separately a “Cash Transfer Installment”).
+                </li>
+                <li>In each Cash Transfer request, the IP will provide UNICEF with a written request for a Cash Transfer
+                    Installment in an amount equal to the IP’s cash needs for the Quarter relating to the activities as
+                    specified in the Programme Document. The first such written request is to be submitted when the IP
+                    provides UNICEF with a signed copy of this Agreement and the Programme Document. The request will be
+                    signed by an Authorized Officer.
+                </li>
+                <div><p><u>Cash Transfer procedures:</u></p></div>
+                <li>Cash Transfer Installments will be transferred to or, where the Direct Payment modality is used, on
+                    behalf of the IP solely to contribute to the implementation of the Programme Documents. The IP
+                    agrees that the funds so transferred will be used exclusively for the implementation of the
+                    Programme Documents.
+                </li>
+                <li>UNICEF will make each Cash Transfer Installment to or, where the Direct Payment modality is used, on
+                    behalf of the IP in response to a written request from the IP, in accordance with the following
+                    procedures:
+                </li>
+                <div><p><u>Procedures for requests for Cash Transfer Installments under all three Cash Transfer
+                    Modalities:</u></p></div>
+                <div>(a) Unless otherwise indicated by UNICEF in writing, every three calendar months during the term of
+                    this Agreement (“Quarter”) the IP will provide UNICEF with a written request for the Cash Transfer
+                    Installment in an amount equal to the IP’s cash needs for that Quarter relating to the activities as
+                    specified in the Programme Document. The IP will do so using the FACE form and Itemized Cost
+                    Estimate. The request will be signed by an Authorized Officer.
+                </div>
+                <div>(b) The first written request, using the FACE form, may be made as soon as this Agreement and the
+                    Programme Document have been signed by both Parties. If such written request is in proper form and
+                    complete, UNICEF will determine the amount to be transferred and will transfer that amount to or,
+                    where the modality of Direct Payment is used, on behalf of the IP within a reasonable time.
+                </div>
+                <div>(c) Unless otherwise decided by UNICEF, the second and each subsequent written request, using the
+                    FACE form, may not be made before expenditures have been reported to UNICEF, using the FACE form,
+                    and activity progress has been reported using the PDPR. If such second or subsequent request is
+                    received in a timely fashion and is in proper form and complete, UNICEF will determine the amount to
+                    be transferred and will transfer that amount to or, where the modality of Direct Payment is used, on
+                    behalf of the IP within a reasonable time.
+                </div>
+                <div><p><u>Additional procedures applicable only to Direct Payment modality:</u></p></div>
+                <div>(d) The request for a Direct Payment is submitted using the FACE form and shall in all cases
+                    include the vendor’s complete details and banking information in a format specified by UNICEF at the
+                    time of Programme Document finalization.
+                </div>
+                <div>(e) For both Direct Payment and Reimbursement modalities, the requested expenditures should have
+                    been previously authorized through the FACE form by UNICEF.
+                </div>
+                <div><p><u>Special terms and conditions for Cash Transfer Installments:</u></p></div>
+                <li>Any request for a Cash Transfer Installment by the IP will fulfill the following criteria to the
+                    satisfaction of UNICEF, failing which UNICEF may decide not to honor the request in whole or in
+                    part:
+                </li>
+                <div>(a) The amount and purpose of the request will correspond to the provisions of the Programme
+                    Document, including its activities, schedule and budget;
+                </div>
+                <div>(b) The request will be reasonable and justified under principles of sound financial management, in
+                    particular the principles of value for money and cost-effectiveness;
+                </div>
+                <div>(c) There are to be no other grounds for believing the expenditure is in contravention of this
+                    Agreement, including the Programme Document; and
+                </div>
+                <div>(d) Subject to paragraph 4(d) above, prior Cash Transfer Installments will have been reported on to
+                    UNICEF’s satisfaction in accordance with Article X of this Agreement.
+                </div>
+                <li>UNICEF may decide to adjust the amount of any Cash Transfer Installment where it has reason to do
+                    so, including:
+                </li>
+                <div>(a) To take into consideration the general progress made to date under the Programme Document; or
+                </div>
+                <div>(b) To offset any unspent or unreported balance remaining with the IP from any previous Cash
+                    Transfer Installment
+                </div>
+                <li>UNICEF will only be required to transfer to or, where the Direct Payment modality is used, on behalf
+                    of, the IP the amount UNICEF determines is due under the terms of this Agreement. The IP agrees that
+                    UNICEF will not be liable to the IP or any third party, including the IP’s vendor or supplier, for
+                    any amounts that UNICEF determines are not in compliance with this Agreement.
+                </li>
+                <li>(a) The administration by the IP of the Cash Transfer shall be carried out under its own financial
+                    regulations, rules and procedures, which UNICEF has reviewed and assessed and found to be
+                    appropriate.
+                </li>
+                <div>(b) Where, in accordance with HACT, UNICEF provides a Cash Transfer prior to the review and
+                    assessment of the IP’s financial regulations, rules and procedures, then in the event UNICEF
+                    subsequently determines that the IP’s financial regulations, rules and procedures are not
+                    appropriate, UNICEF shall give written notice to the IP and in such case UNICEF may require return
+                    of unspent Cash Transfers already provided to the IP and may decide to implement the Programme
+                    Document or any parts thereof (including any procurement activities) directly.
+                </div>
+                <li>Where the IP buys goods or services from the Cash Transfer, the IP shall do so giving due
+                    consideration to the following principles:
+                </li>
+                <div>(a) Best value for money;</div>
+                <div>(b) Fairness, integrity and transparency;</div>
+                <div>(c) Competition.</div>
+                <li>The Cash Transfer other than Direct Payments shall be made by UNICEF to the following bank account
+                    of the IP:
+                </li>
+
+                {% for bank_detail in bank_details %}
+                        <div class="bank_details" style="border-top: solid 1px; padding-top: 10px">Bank name: {{ bank_detail.bank_name }}</div>
+                        <div class="bank_details">Bank address: {{ bank_detail.bank_address }}</div>
+                        <div class="bank_details">Account title: {{ bank_detail.account_title }}</div>
+                        <div class="bank_details">Account No.: {{ bank_detail.account_number }}</div>
+                        <div class="bank_details">Routing Details, including SWIFT/IBAN (if
+                            applicable): {{ bank_detail.routing_details }}</div>
+{#                        <div style=class="bank_details" style="padding-bottom: 20px">Bank contact#}
+{#                            person: {{ bank_detail.bank_contact_person }}</div>#}
+                        <br>
+                {% endfor %}
+                <div><p><b>(B) Transfer of supplies/equipment by UNICEF to IP</b></p></div>
+                <li>Supplies and equipment transferred to the IP by UNICEF will be used exclusively for the
+                    implementation of the Programme Document, unless UNICEF agrees otherwise.
+                </li>
+                <li>The IP will become owner of the supplies and equipment when it receives them. In the event that
+                    UNICEF agrees to store the supplies and equipment for the IP or hold them on the IP’s behalf, the IP
+                    will become owner of those supplies and equipment as agreed between UNICEF and the IP.
+                    Exceptionally, UNICEF may decide in writing that UNICEF shall remain the owner of the supplies and
+                    equipment transferred to the IP by UNICEF.
+                </li>
+                <li>UNICEF may, in its absolute discretion, decide that supplies and equipment already transferred to
+                    the IP should be deployed by the IP for implementation of another Programme Document, or reassigned
+                    to another implementing partner in connection with implementation of the Programme Document or
+                    another Programme Document. The IP will promptly comply with UNICEF’s decision and in the latter
+                    case, the IP agrees that, notwithstanding the provisions of Article VIII, paragraph 12 above, it
+                    shall upon written instructions by UNICEF transfer ownership of the supplies and equipment to the
+                    successor implementing partner designated by UNICEF.
+                </li>
+                <li>The IP shall exercise the highest standard of care when using and administering such supplies and
+                    equipment, and the IP shall place UNICEF markings thereon in consultation with UNICEF.
+                </li>
+                <li>Vehicles, if any, made available to the IP by UNICEF will be transferred on loan only. Such vehicles
+                    will be provided to IP once the Parties sign the standard UNICEF vehicle loan agreement, a copy of
+                    which will be provided to the IP.
+                </li>
+
+            </ol>
+        </div>
+        <div class="page-break"></div>
+
+        <div id="article-IX" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE IX</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>RECORD KEEPING</b></div>
+            <ol>
+                <li>The IP agrees to maintain books and records that are accurate, complete and up-to-date.</li>
+                <div><p><u>Cash Transfer:</u></p></div>
+                <li>The IP’s books and records will clearly identify all Cash Transfer Installments received by the IP
+                    as well as disbursements made by the IP under this Agreement, including the amount of any unspent
+                    funds. Without limiting the foregoing, the IP is required to maintain:
+                </li>
+                <div>(a) Records showing which transactions recorded in its accounting system represent the expenditures
+                    reported for each line on the FACE forms and any income earned by the IP in relation to Advance
+                    Payments (Direct Cash Transfers) made by UNICEF;
+                </div>
+                <div>(b) Original documentation including bills, invoices, receipts and any other relevant
+                    documentation, which shall be kept by the IP for a period of five (5) years after the completion of
+                    the last Programme Document or the termination of this Agreement, whichever happens later. Such
+                    documentation shall include but not be limited to purchase orders, suppliers’ invoices, contracts,
+                    delivery notes, leases, payment vouchers, bank statements, airline tickets, gasoline coupons,
+                    payroll records, employment contracts, attendance lists, expenses claims, petty cash receipts,
+                    journal vouchers, procurement files documenting competitive and fair selection, and any other
+                    relevant supporting documentation. Unless agreed in advance with UNICEF, the IP shall ensure that
+                    all vouchers related to the utilization of Cash Transfers carry clear notation showing a reference
+                    to the Programme Document. The IP understands that a written statement by the IP that money has been
+                    spent is insufficient and cannot replace the original documentation to support expenditures.
+                </div>
+                <div><p><u>Supplies/equipment:</u></p></div>
+                <li>The IP will maintain records of supplies and equipment purchased from the Cash Transfer or
+                    transferred to the IP in accordance with Article VIII (B) of this Agreement. Detailed inventories
+                    shall be taken by the IP and kept for a period of five (5) years after the completion of the last
+                    Programme Document or the termination of this Agreement, whichever happens later.
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-X" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE X</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>REPORTING REQUIREMENTS</b></div>
+            <ol>
+                <li>The IP will deliver to UNICEF the reports set out below. Narrative reports will, if possible, be
+                    provided in English, French, or Spanish.
+                </li>
+                <div><p><b>(A) Financial reporting</b></p></div>
+                <div><p><u>Financial reporting using FACE form:</u></p></div>
+                <li>(a) Unless otherwise agreed between the Parties in writing, the IP will submit FACE forms at the end
+                    of every Quarter, using the FACE form. Should a FACE form not be submitted within six (6) months
+                    from the last Quarter, UNICEF will, unless agreed otherwise, suspend any further cash transfers to
+                    the IP, or on behalf of the IP.
+                </li>
+                <div>(b) The final FACE form will be submitted no later than thirty (30) calendar days after the end of
+                    the Programme Document.
+                </div>
+                <div>(c) The FACE form:</div>
+                <div style="padding-left: 15px">(i) will only include expenditures that are identifiable and verifiable.
+                    (The term “identifiable” includes that the expenditures are recorded in the IP’s accounting system
+                    and that the accounting system shows which transactions represent the expenditures reported for each
+                    line on the FACE form. The term “verifiable” includes that the expenditures may be confirmed by the
+                    records in Article IX.)
+                </div>
+                <div style="padding-left: 15px"> (ii) will only include those expenditures that are directly
+                    attributable to the implementation of the activities included in the Programme Document;
+                </div>
+                <div style="padding-left: 15px"> (iii) will only include expenditures that have actually been incurred
+                    and borne by the IP;
+                </div>
+                <div style="padding-left: 15px">(iv) will not include any expenditures that are ineligible for Cash
+                    Transfer (“Ineligible Expenditures”, as stipulated in sub-paragraph 2(c) of this Article X, below);
+                </div>
+                <div style="padding-left: 15px">(v) will include the balance of any unspent funds remaining from any
+                    previous Cash Transfer Installments; and
+                </div>
+                <div style="padding-left: 15px">(vi) will include any refunds or adjustments received by the IP against
+                    any previous Cash Transfer Installments.
+                </div>
+                <div>(b) UNICEF will have access, upon request, to all documents and records that support or may be
+                    deemed to support the information contained in the FACE form.
+                </div>
+                <div><p><u>Ineligible Expenditures:</u></p></div>
+                <div>(c) The following are Ineligible Expenditures (as determined by UNICEF in its sole discretion) and,
+                    therefore, will not be included in the FACE form:
+                </div>
+                <div style="padding-left: 15px">(i) Expenditures not made for activities, or not necessary for the
+                    implementation of the activities, included in the Programme Document;
+                </div>
+                <div style="padding-left: 15px">(ii) Expenditures for value added tax (“VAT”) unless the IP can
+                    reasonably demonstrate to UNICEF that it is unable to recover the VAT;
+                </div>
+                <div style="padding-left: 15px">(iii) Expenditures covered by or relating to another Programme
+                    Document;
+                </div>
+                <div style="padding-left: 15px">(iv) Expenditures paid or reimbursed to the IP by another donor or
+                    entity;
+                </div>
+                <div style="padding-left: 15px">(v) Expenditures in relation to which the IP has received an in-kind
+                    contribution from another donor or entity;
+                </div>
+                <DIV style="padding-left: 15px">(vi) Support costs, if any, exceeding the support cost rate referred to
+                    in Article VI, paragraph 2, of this Agreement;
+                </div>
+                <div style="padding-left: 15px">(vii) Expenditures that are not verifiable by records as provided in
+                    Article IX of this Agreement (other than support costs, if any, referred to in Article VI, paragraph
+                    2 of this Agreement);
+                </div>
+                <div style="padding-left: 15px">(viii) Salaries for IP’s employees exceeding the rates payable by UNICEF
+                    for comparable functions performed by locally-recruited staff members at the relevant duty station;
+                </div>
+                <div style="padding-left: 15px">(ix) Salaries for IP’s internationally recruited employees exceeding the
+                    rates payable by UNICEF for comparable functions performed by internationally recruited staff
+                    members at the relevant duty station;
+                </div>
+                <div style="padding-left: 15px">(x) Expenditures in respect of fees for individual consultants retained
+                    by the IP exceeding those payable by UNICEF for comparable services rendered by individual
+                    consultants;
+                </div>
+                <div style="padding-left: 15px">(xi) Expenditures for travel, daily subsistence and related allowances
+                    for the IP’s employees or consultants exceeding those payable by UNICEF to its staff members or
+                    consultants, as applicable;
+                </div>
+                <div style="padding-left: 15px">(xii) Amounts that represent accruals of costs not expenditures actually
+                    incurred by the IP;
+                </div>
+                <div style="padding-left: 15px">(xiii) Expenditures that merely represent financial transfers between
+                    administrative units or locations of the IP, for example as payment for services provided by one
+                    administrative unit of the IP to another;
+                </div>
+                <div style="padding-left: 15px">(xiv) Expenditures that are not reasonable and justified under
+                    principles of sound financial management, in particular the principles of value for money and
+                    cost-effectiveness;
+                </div>
+                <div style="padding-left: 15px">(xv) Expenditures that relate to obligations that were entered into
+                    after the end date of the relevant WP;
+                </div>
+                <div style="padding-left: 15px">(xvi) Debt and debt service charges;</div>
+                <div style="padding-left: 15px">(xvii) Foreign exchange loss;</div>
+                <div style="padding-left: 15px">(xviii) Fines or levies payable to the authorities related to timeliness
+                    of payment of VAT or custom payments required by law;
+                </div>
+                <div style="padding-left: 15px">(xiv) Expenditures made in contravention of any of the terms of this
+                    Agreement.
+                </div>
+                <li>All financial reporting to UNICEF will be performed by the IP in the currency in which the Cash
+                    Transfer was made. The IP is not required to convert transactions into United States Dollars or any
+                    other currency.
+                </li>
+                <div><p><u>Use of eFACE:</u></p></div>
+                <li>In addition to using the FACE form, the IP may enter the information contained in the FACE form into
+                    the eFACE portal, once available, if requested by UNICEF.
+                </li>
+                <div><p><b>(B) Progress reporting</b></p></div>
+                <li>The IP will submit to UNICEF narrative progress reports against the planned activities contained in
+                    the Programme Document, using the PDPR. Unless otherwise agreed between the Parties in writing,
+                    these reports will be submitted at the end of every Quarter. The final report will be submitted no
+                    later than thirty (30) calendar days after the end the Programme and will be provided together with
+                    the FACE form.
+                </li>
+                <div><p><b>(C) Additional reporting</b></p></div>
+                <li>Additional reporting requirements will be specified in the Programme Document. The IP will provide
+                    ad hoc reporting as may be requested by UNICEF from time to time. UNICEF will make every reasonable
+                    effort to minimize ad hoc reporting requests.
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-XI" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XI</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>ACTIONS UPON COMPLETION OF ACTIVITIES UNDER PROGRAMME
+                DOCUMENT</b></div>
+            <ol>
+                <li>(a) Upon completion of the IP’s activities under a Programme Document, the IP shall refund to UNICEF
+                    the unspent balances of all Cash Transfers under that Programme Document (which shall be reported on
+                    the final FACE form submitted by the IP) and all other amounts of money it is not entitled to.
+                </li>
+                <div>(b) Upon completion of the IP’s activities under a Programme Document, the IP shall return to
+                    UNICEF all unused supplies and equipment provided by UNICEF as inputs for programme implementation
+                    but not used.
+                </div>
+                <div>(c) Such refunds and returns shall be effected no later than ninety (90) calendar days after the
+                    end date of the Programme Document or the effective date activities have ceased, whichever occurred
+                    earlier.
+                </div>
+                <li>Upon winding up of the IP’s activities under a Programme Document, the Parties shall consult as to
+                    the disposition of all non-expendable property provided by UNICEF or acquired from the Cash Transfer
+                    to or, insofar as the Direct Payment modality was used, on behalf of the IP, with regard to that
+                    Programme Document. UNICEF may decide that such non-expendable property shall be transferred for use
+                    by another implementing partner. In that case, the IP shall, upon written instructions by UNICEF,
+                    transfer ownership of such property to the implementing partner designated by UNICEF.
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-XII" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XII</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>PRIVILEGES AND IMMUNITIES; RESOLUTION OF DISPUTES</b>
+            </div>
+            <ol>
+                <li>In accordance with Article 16 of the General Terms and Conditions for Implementing Partner
+                    Agreements, nothing in or relating to this Agreement shall be deemed a waiver, express or implied,
+                    of any of the privileges and immunities of the United Nations, including UNICEF.
+                </li>
+                <li>The Parties shall use their best efforts to amicably settle any dispute, controversy, or claim
+                    arising out of this Agreement or the breach, termination, or invalidity thereof. Where the Parties
+                    wish to seek such an amicable settlement through conciliation, the conciliation shall take place in
+                    accordance with the Conciliation Rules then obtaining of the United Nations Commission on
+                    International Trade Law (“UNCITRAL”), or according to such other procedure as may be agreed between
+                    the Parties in writing.
+                </li>
+                <li>Any dispute, controversy, or claim between the Parties arising out of this Agreement or the breach,
+                    termination, or invalidity thereof, unless settled amicably under the preceding paragraph, within
+                    sixty (60) days after receipt by one Party of the other Party’s written request for such amicable
+                    settlement, shall be referred by either Party to arbitration in accordance with the UNCITRAL
+                    Arbitration Rules then obtaining. The decisions of the arbitral tribunal shall be based on general
+                    principles of international commercial law. The arbitral tribunal shall be empowered to order the
+                    return or destruction of goods or any property, whether tangible or intangible, or of any
+                    confidential information provided under the Agreement, order the termination of the Agreement, or
+                    order that any other protective measures be taken with respect to the goods, services or any other
+                    property, whether tangible or intangible, or of any confidential information provided under the
+                    Agreement, as appropriate, all in accordance with the authority of the arbitral tribunal pursuant to
+                    Article 26 (“Interim Measures of Protection”) and Article 34 (“Form and Effect of the Award”) of the
+                    UNCITRAL Arbitration Rules. The arbitral tribunal shall have no authority to award punitive damages.
+                    In addition, unless otherwise expressly provided in the Agreement, the arbitral tribunal shall have
+                    no authority to award interest in excess of the London Inter-Bank Offered Rate (“LIBOR”) then
+                    prevailing, and any such interest shall be simple interest only. The Parties shall be bound by any
+                    arbitration award rendered as a result of such arbitration as the final adjudication of any such
+                    dispute, controversy, or claim.
+                </li>
+            </ol>
+        </div>
+        <div id="article-XIII" style="padding-bottom: 10px">
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XIII</b></div>
+            <div style="padding-top: 0px; text-align: center"><b>FINAL PROVISIONS</b></div>
+            <ol>
+                <li>This Agreement shall enter into force on the date it is signed by both Parties. It shall expire on
+                    the last day of the Country Programme unless terminated earlier in accordance with Article 11 of the
+                    General Terms and Conditions attached to and incorporated in this Agreement.
+                </li>
+                <div><p>IN WITNESS WHEREOF, the undersigned, duly authorized by the respective Parties, have signed this
+                    Agreement.</p></div>
+                <div style="padding-top: 3px">
+                    <table border="0" style="border: none;">
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px; border:none;"><b>For the Implementing Partner</b></td>
+                            <td style="padding-top: 8px; padding-bottom: 0px"><b>For the United Nations Children’s
+                                Fund:</b></td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Name:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Name:</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Title:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Title:</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Signature: ______________________</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Signature: ______________________</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Date:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Date:</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Email:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Email:</td>
+                        </tr>
+                    </table>
+                </div>
+            </ol>
+        </div>
+        <div class="page-break"></div>
+        <div id="general-terms" style="font: 10pt; padding-bottom: 10px">
+            <div style="padding-bottom: 0px; text-align: center"><b>GENERAL TERMS AND CONDITIONS</b></div>
+            <div style="text-align: center; padding-top: 0px"><b>FOR PROGRAMME COOPERATION AGREEMENTS</b></div>
+            <ol>
+                <li><b>LEGAL STATUS:</b> IP shall be considered as having the legal status of an independent contractor
+                    vis-à-vis UNICEF. IP’s employees, personnel and sub-contractors shall not be considered in any
+                    respect as being the employees or agents of UNICEF.
+                </li>
+                <li><b>IP'S RESPONSIBILITY FOR EMPLOYEES, PERSONNEL AND SUBCONTRACTORS:</b> IP shall be responsible for
+                    the professional and technical competence of its employees, personnel and subcontractors and will
+                    select, for work under this Agreement, reliable persons who will perform effectively in the
+                    implementation of this Agreement, respect the local customs, and conform to a high standard of moral
+                    and ethical conduct.
+                </li>
+                <li><b>ASSIGNMENT:</b> IP shall not assign, transfer, pledge or make other disposition of this Agreement
+                    or any parts thereof, including any Programme Documents, or any of IP’s rights, claims or
+                    obligations under this Agreement except with the prior written consent of UNICEF.
+                </li>
+                <li><b>SUB-CONTRACTING:</b> IP may not use the services of sub-contractors unless permission is granted
+                    in advance by UNICEF in writing in any particular case. If UNICEF approves a particular
+                    sub-contracting of services, the IP shall ensure that IP’s sub-contractors do not use further tiers
+                    of sub-contractors, including sub-subcontractors, unless UNICEF has given prior written permission
+                    in each particular case. The use by IP of sub-contractors, or of further tiers of sub-contractors in
+                    the event that UNICEF has given prior written permission in accordance with the preceding sentence,
+                    shall not relieve IP of any of its obligations under this Agreement. The terms of any sub-contract,
+                    sub-subcontract and so forth shall be subject to, conform to and give full effect to the provisions
+                    of this Agreement.
+                </li>
+                <li><b>OFFICIALS NOT TO BENEFIT; RESTRICTION ON HIRING UNICEF PERSONNEL:</b></li>
+                <div>a. IP warrants that no official of UNICEF has received or will be offered by IP any direct or
+                    indirect benefit arising from this Agreement or the award thereof. IP agrees that breach of this
+                    provision is a breach of an essential term of this Agreement.
+                </div>
+                <div>b. The IP represents and warrants that the following with regard to former UNICEF officials have
+                    been complied with and will be complied with: (i) during the one year period after an official has
+                    separated from UNICEF, the IP may not make a direct or indirect offer of employment to that former
+                    UNICEF official if that former UNICEF official was, during the three years prior to separating
+                    from UNICEF, involved in any aspect of the process leading to the IP’s selection or the
+                    implementation of the Programme; and (ii) during the two year period after an official has separated
+                    from UNICEF, the former official may not communicate with UNICEF, or present to UNICEF, on behalf
+                    of the IP on any matters that were within such former official's responsibilities while at UNICEF.
+                </div>
+                <li><b>INDEMNIFICATION:</b> IP shall indemnify, hold and save harmless, and defend, at its own expense,
+                    UNICEF, its officials, agents, servants and employees from and against all suits, claims, demands,
+                    and liability of any nature or kind, including their costs and expenses, arising out of acts or
+                    omissions of IP, or IP's employees, officers, agents or sub-contractors, in the performance of this
+                    Agreement and Programme Documents. This provision shall extend, inter alia, to claims and liability
+                    in the nature of workmen's compensation, products liability and liability arising out of the use of
+                    patented inventions or devices, copyrighted material or other intellectual property by IP, its
+                    employees, officers, agents, servants or sub-contractors. The obligations under this Article do not
+                    lapse upon termination of this Agreement.
+                </li>
+                <li><b>ENCUMBRANCES/LIENS:</b> IP shall not cause or permit any lien, attachment or other encumbrance by
+                    any person to be placed on file or to remain on file in any public office against any monies due or
+                    to become due for any work done, services rendered or materials, supplies or equipment furnished
+                    under this Agreement, or by reason of any other claim or demand against IP.
+                </li>
+                <li><b>COPYRIGHT, PATENTS AND OTHER PROPRIETARY RIGHTS; CONFIDENTIALITY:</b></li>
+                <div>8.1 Except as is otherwise expressly provided in writing in the Agreement, UNICEF shall be entitled
+                    to all intellectual property and other proprietary rights including, but not limited to, patents,
+                    copyrights, and trademarks, with regard to products, processes, inventions, ideas, know-how, or
+                    documents and other materials which IP has developed under the Agreement and which bear a direct
+                    relation to or are produced or prepared or collected in consequence of, or during the course of, the
+                    performance of the Agreement, and IP acknowledges and agrees that such products, documents and other
+                    materials constitute works made for hire.
+                </div>
+                <div>8.2 At the request of UNICEF, IP shall take all necessary steps, execute all necessary documents
+                    and generally assist in securing such proprietary rights and transferring or licensing them to
+                    UNICEF in compliance with the requirements of applicable law.
+                </div>
+                <div>8.3 Subject to the foregoing provisions, all maps, drawings, photographs, mosaics, plans, reports,
+                    estimates, recommendations, documents, and all other data compiled by or received by IP under this
+                    Agreement shall be the property of UNICEF, shall be made available for use or inspection by UNICEF
+                    at reasonable times and in reasonable places, shall be treated as confidential, and shall be
+                    delivered only to UNICEF authorized officials on completion of work under the Agreement.
+                </div>
+                <div>8.4 The IP shall respect the confidentiality of all information that UNICEF advises the IP is
+                    confidential, and shall treat it no less confidentially that the most IP’s most confidential
+                    information. When the IP is required to disclose UNICEF’s confidential information by law, the IP
+                    shall give UNICEF sufficient prior notice of a request for the disclosure of information in order to
+                    allow UNICEF to have reasonable opportunities to take protective measures of such other actions as
+                    may be appropriate prior to any disclosure being made.
+                </div>
+                <div>8.5 Where collection and use of data related to beneficiaries (meaning any personal information
+                    including identifying information such as the name, identification or passport number, mobile
+                    telephone number, email address, cash transaction details) is part of the responsibilities of the IP
+                    under this Agreement, such information shall be deemed to be UNICEF’s confidential information and
+                    shall be governed by the UNICEF Disclosure of Information policy, a copy of which is available at
+                    <u>http://www.unicef.org/about/legal_disclosure.html</u> The IP shall only use such data in order to
+                    implement the Programme Document. The IP shall promptly notify UNICEF of any actual or suspected or
+                    threatened incident of accidental or unlawful destruction or accidental loss, alteration,
+                    unauthorized or accidental disclosure or access to such data.
+                </div>
+                <li><b>USE OF UNICEF’s AND IP’s NAME, LOGO AND EMBLEM:</b> Each of the Parties is permitted to use the
+                    other’s name, logo, and emblem, as applicable, solely in connection with this Agreement and the
+                    implementation of the Programme Documents, unless permission is withdrawn in any particular case by
+                    any of the Parties and notified in writing to the other Party. When reporting to third parties
+                    and/or general public, the IP will attribute results reported as being funded by UNICEF. At UNICEF’s
+                    request, the IP shall provide visibility, as specified by UNICEF, to UNICEF’s donors that are
+                    contributing funds for the Programme Document. Where such visibility would jeopardize the safety and
+                    security of the IP’s staff, the IP shall propose appropriate alternative arrangements.
+                </li>
+                <li><b>FORCE MAJEURE; OTHER CHANGES IN CONDITIONS:</b></li>
+                <div>10.1 In the event of and as soon as possible after the occurrence of any cause constituting force
+                    majeure, IP shall give notice and full particulars in writing to UNICEF, of such occurrence or
+                    change if IP is thereby rendered unable, wholly or in part, to perform its obligations and meet its
+                    responsibilities under this Agreement. IP shall also notify UNICEF of any other changes in
+                    conditions or the occurrence of any event that interferes or threatens to interfere with its
+                    performance of this Agreement. On receipt of the notice required under this Article, UNICEF shall
+                    take such action as it considers, in its sole discretion, to be appropriate or necessary in the
+                    circumstances, including the granting to IP of a reasonable extension of time in which to perform
+                    its obligations under this Agreement.
+                </div>
+                <div>10.2 If the IP is rendered permanently unable, wholly or in part, by reason of force majeure to
+                    perform its obligations and meet its responsibilities under this Agreement, UNICEF shall have the
+                    right to suspend or terminate this Agreement on the same terms and conditions as are provided for in
+                    Article 11, "Termination", except that the period of notice shall be seven (7) days instead of
+                    thirty (30) days.
+                </div>
+                <div>10.3 Force majeure as used in this Article means any unforeseeable and irresistible act of nature,
+                    any act of war (whether declared or not), invasion, revolution, insurrection, terrorism, or any
+                    other acts of a similar force or nature, provided that such acts arise from causes beyond the
+                    control and without the fault or negligence of the Party concerned.
+                </div>
+                <div>10.4 The IP acknowledges and agrees that, with respect to any obligations under this Agreement that
+                    the IP must perform in or for any areas in which UNICEF is engaged in, preparing to engage in, or
+                    disengaging from any peacekeeping, humanitarian or similar operations, any delays or failure to
+                    perform such obligations arising from or relating to harsh conditions within such areas or to any
+                    incidents of civil unrest occurring in such areas shall not, in and of itself, constitute force
+                    majeure.
+                </div>
+                <li><b>TERMINATION:</b></li>
+                <div>11.1 Either Party may terminate this Agreement by giving thirty (30) calendar days’ written notice
+                    to the other Party in each of the following situations:
+                </div>
+                <div style="padding-left: 15px">a. if it concludes that the other Party has breached its obligations
+                    under this Agreement or any Programme Document and has not remedied that breach after having been
+                    given not less than fourteen (14) calendar days’ written notice to do so with effect from a date
+                    specified in such notice; and
+                </div>
+                <div style="padding-left: 15px">b. if it concludes that the other Party cannot meet its obligations
+                    under this Agreement.
+                </div>
+                <div>11.2 UNICEF may also suspend or terminate this Agreement forthwith in each of the following
+                    situations:
+                </div>
+                <div style="padding-left: 15px">a. if implementation of any Programme Document has not commenced within
+                    a reasonable time;
+                </div>
+                <div style="padding-left: 15px">b. if it decides that IP or any of its employees or personnel has
+                    engaged in any corrupt, fraudulent, collusive, coercive or obstructive practice (as such terms are
+                    defined in clause 13.3 b.);
+                </div>
+                <div style="padding-left: 15px">c. should UNICEF’s funding decrease, be curtailed or terminated; or
+                </div>
+                <div style="padding-left: 15px">d. should IP be adjudged bankrupt, or be liquidated or become insolvent,
+                    or should IP make an assignment for the benefit of its creditors, or should a Receiver be appointed
+                    on account of the insolvency of IP, in which case IP shall immediately inform UNICEF of the
+                    occurrence of any of the above events.
+                </div>
+                <div>11.3 The Party receiving a notice of suspension or termination will immediately take all necessary
+                    steps to suspend or terminate (as the case may be) its activities in an orderly manner so that
+                    continued expenses are kept to a minimum.
+                </div>
+                <div>11.4 Immediately upon sending or receiving a notice of termination UNICEF will cease disbursement
+                    of any funds under this Agreement and IP will not make any forward commitments, financial or
+                    otherwise, in connection with this Agreement.
+                </div>
+                <div>11.5 On termination of this Agreement pursuant to this clause 11, IP will transfer either to UNICEF
+                    or in accordance with UNICEF’s instructions the unexpended balance of the Cash Transfer held by IP
+                    and the unused supplies and equipment provided by UNICEF under this Agreement and any non-expendable
+                    property provided by UNICEF under this Agreement or purchased by the IP using funds provided by
+                    UNICEF under this Agreement.
+                </div>
+                <div>11.6 If UNICEF exercises its right to terminate this Agreement, UNICEF will have the right to
+                    require IP to repay to UNICEF such amount of money, up to the total amount paid to IP by UNICEF
+                    prior to the date of the notice of termination, as UNICEF shall determine. It is understood that
+                    expenditures incurred by the IP in compliance with this Agreement prior to the date of the notice of
+                    termination will not be required to be repaid. The payment owing by IP will be made promptly upon
+                    receipt of UNICEF’s notice to pay.
+                </div>
+                <div>11.7 If UNICEF exercises its right to terminate this Agreement and decides that the Programme
+                    Document is to be implemented by another organization, IP will promptly provide full cooperation to
+                    UNICEF and the other organization in the orderly transfer to the other organization of all unused
+                    supplies and equipment provided to IP by UNICEF and the provisions of paragraph 11.5 above will
+                    apply.
+                </div>
+                <li><b>EVALUATION:</b> The evaluation of the activities performed under this Agreement shall be subject
+                    to the provisions of the UNICEF Evaluation Policy as from time to time approved or amended by
+                    UNICEF’s Executive Board.
+                </li>
+                <li><b>COMPLIANCE WITH UNICEF POLICIES:</b> The IP will be required to comply with the relevant
+                    provisions of UNICEF’s Policy Prohibiting and Combatting Fraud and Corruption, available at <u>http://www.unicef.org/publicpartnerships/files/Policy_Prohibiting_and_Combatting_Fraud_and_Corruption.pdf</u>
+                    or such other URL as may be decided from time to time by UNICEF.
+                </li>
+                <li><b>14. ASSURANCE ACTIVITIES:</b></li>
+                <div>14.1 Audit:</div>
+                <div style="padding-left: 15px">a. At the request of and at such times as determined solely by UNICEF,
+                    IP will have its activities under this Agreement audited. Audits will be performed subject to such
+                    standards, scope, frequency and timing as decided by UNICEF (and may cover financial transactions
+                    and internal controls related to the activities implemented by IP).
+                </div>
+                <div style="padding-left: 15px">b. Audits as provided under paragraph 1 of this Article shall be
+                    conducted by individual or corporate auditors to be designated by UNICEF, such as, for example, an
+                    audit or accounting firm. IP shall provide its full and timely cooperation with any audits. Such
+                    cooperation shall include, but shall not be limited to, IP’s obligation to make available its
+                    personnel and any relevant documentation and records for such purposes at reasonable times and on
+                    reasonable conditions and to grant the auditors access to IP’s premises and/or sites of programme
+                    implementation at reasonable times and on reasonable conditions in connection with such access to
+                    IP’s personnel and relevant documentation and records. IP shall require its agents, including, but
+                    not limited to, IP’s attorneys, accountants or other advisers, and its subcontractors to reasonably
+                    cooperate with any audits carried out hereunder.
+                </div>
+                <div style="padding-left: 15px">c. In the event that the audit is conducted by auditors designated by
+                    UNICEF, UNICEF or the auditors will provide a copy of the final audit report to IP without delay.
+                </div>
+                <div>14.2 Spot checks and programmatic visits:</div>
+                <div>IP agrees that, from time to time, UNICEF may conduct on site reviews (“spot checks” and
+                    programmatic visits), subject to such standards, scope, frequency and timing as decided by UNICEF.
+                    IP shall provide its full and timely cooperation with any such spot checks or programmatic visits,
+                    which shall include IP’s obligation to make available its personnel and any relevant documentation
+                    and records for such purposes at reasonable times and on reasonable conditions and to grant to
+                    UNICEF access to IP’s premises and/or sites of programme implementation at reasonable times and on
+                    reasonable conditions. IP shall require its agents, including, but not limited to, IP’s attorneys,
+                    accountants or other advisers, and its subcontractors to reasonably cooperate with any spot checks
+                    carried out by UNICEF hereunder. It is understood that UNICEF may, at its sole discretion, contract
+                    for the services of an individual or corporate person to conduct spot checks or programmatic visits,
+                    or UNICEF may conduct spot checks or programmatic visits with its own staff, employees and agents.
+                </div>
+                <div>14.3 Investigation:</div>
+                <div style="padding-left: 15px">a. IP agrees that UNICEF may conduct investigations, at such times as
+                    determined solely by UNICEF, relating to any aspect of this Agreement or the award thereof, the
+                    obligations performed under the Agreement, and the operations of the IP relating to performance of
+                    this Agreement. The right of UNICEF to conduct investigations shall not lapse upon expiration or
+                    prior termination of this Agreement. IP shall provide its full and timely cooperation with any such
+                    investigations. Such cooperation shall include, but shall not be limited to, IP’s obligation to make
+                    available its personnel and any relevant documentation and records at reasonable times and on
+                    reasonable conditions and to grant to UNICEF access to the IP’s premises and/or sites of programme
+                    implementation at reasonable times and on reasonable conditions. IP shall require its agents,
+                    including, but not limited to, IP’s attorneys, accountants or other advisers, and its subcontractors
+                    to reasonably cooperate with any investigations carried out by UNICEF hereunder. It is understood
+                    that UNICEF may, at its sole discretion, contract for investigation services of an individual or
+                    corporate person, or UNICEF may conduct investigations with its own staff, employees and agents.
+                </div>
+                <div style="padding-left: 15px">b. IP agrees to bring allegations of corrupt, fraudulent, collusive,
+                    coercive or obstructive practices arising in relation to this Agreement, of which IP has been
+                    informed or has otherwise become aware, promptly to the attention of the Director, Office of
+                    Internal Audit and Investigation, UNICEF. For purposes of this Agreement, the following definitions
+                    shall apply:
+                </div>
+                <div style="padding-left: 30px">(i) “corrupt practice” means the offering, giving, receiving, or
+                    soliciting, directly or indirectly, of anything of value to influence improperly the actions of a
+                    public official;
+{#                </div>#}
+{#                <div style="padding-left: 30px">#}
+                    <br />
+                    (ii) “fraudulent practice” means any act or omission, including
+                    misrepresentation, that knowingly or recklessly misleads, or attempts to mislead, a party to obtain
+                    a financial or other benefit, or to avoid an obligation;
+{#                </div>#}
+                    <br />
+{#                <div style="padding-left: 30px">#}
+                    (iii) “collusive practice” means an arrangement between two or more
+                    parties designed to achieve an improper purpose, including influencing improperly the actions of
+                    another party;
+{#                </div>#}
+                    <br />
+{#                <div style="padding-left: 30px">#}
+                    (iv) “coercive practice” means impairing or harming, or threatening to
+                    impair or harm, directly or indirectly, any party or the property of the party to influence
+                    improperly the actions of a party;
+{#                </div>#}
+                    <br />
+{#                <div style="padding-left: 30px">#}
+                    (v) “obstructive practice” means acts intended to materially impede the
+                    exercise of UNICEF’s contractual rights of audit, investigation and access to information, including
+                    destruction, falsification, alteration or concealment of evidence material to a UNICEF investigation
+                    into allegations of fraud and corruption.
+                </div>
+                <div>14.4 IP consents to the public disclosure by UNICEF of the audit reports referred to in article
+                    14.1; the spot check and programmatic visit reports referred to in article 14.2; and the
+                    investigation reports referred to in article 14.3.
+                </div>
+                <li><b>ASSESSMENTS:</b> IP agrees that UNICEF may from time to time conduct assessments of IP, including
+                    IP’s capacity and internal control framework (“assessment”). UNICEF may conduct such assessments
+                    subject to such standards, scope, frequency and timing as decided by UNICEF with reasonable advance
+                    notice provided to the IP. IP shall provide its full and timely cooperation with any assessments.
+                    Such cooperation shall include, but shall not be limited to, IP’s obligation to make available its
+                    personnel and any relevant documentation and records at reasonable times and on reasonable
+                    conditions and to grant to UNICEF access to IP’s premises at reasonable times and on reasonable
+                    conditions. IP shall require its agents, including, but not limited to, IP’s attorneys, accountants
+                    or other advisers, and its subcontractors to reasonably cooperate with any assessments carried out
+                    by UNICEF hereunder. It is understood that UNICEF may, at its sole discretion, contract for services
+                    of an individual or corporate person to conduct any assessment, or UNICEF may conduct the assessment
+                    with its own staff, employees and agents. IP consent to the public disclosure by UNICEF of the
+                    assessments referred to in this article 15.
+                </li>
+                <li><b>REFUNDS/OFFSETS:</b> UNICEF shall be entitled to a refund from IP or to make an offset against
+                    any amounts payable to IP: for any amounts paid by UNICEF or used by IP other than in accordance
+                    with the terms and conditions of this Agreement, including any amounts shown by audits, spot checks
+                    or investigations to have been so paid or used; for any amounts paid by UNICEF or used by IP as a
+                    result of IP or any of its employees or personnel having engaged in any corrupt, fraudulent,
+                    collusive, coercive or obstructive practice (as such terms are defined in clause 13.3 b.); for any
+                    unspent amounts; for any amounts transferred by UNICEF to IP but not included or properly reflected
+                    in any financial report (using the FACE form) or supported by appropriate documentation and records;
+                    for any amounts paid by UNICEF in relation to an Ineligible Expenditure; or for any amounts
+                    otherwise subject to a refund in accordance with the terms of this Agreement. IP will make payment
+                    of such refund within promptly upon receiving from UNICEF a written request for such refund.
+                </li>
+                <li><b>PRIVILEGES AND IMMUNITIES:</b> Nothing in or relating to this Agreement shall be deemed a waiver,
+                    express or implied, of any of the privileges and immunities of the United Nations, including UNICEF.
+                </li>
+                <li><b>OBSERVANCE OF THE LAW:</b> IP shall comply with all laws, ordinances, rules, and regulations
+                    bearing upon the performance of its obligations under the terms of this Agreement.
+                </li>
+                <li><b>SEXUAL EXPLOITATION AND PROTECTION OF CHILDREN:</b> IP shall ensure that all its employees and
+                    personnel comply with the provisions of ST/SGB/2003/13 entitled “Special Measures for Protection
+                    from Sexual Exploitation and Sexual Abuse”, which is available at
+                    http://www.un.org/Docs/journal/asp/ws.asp?m=ST/SGB/2003/13. IP shall further ensure that none of its
+                    employees and personnel exposes any intended beneficiary, including children, to any form of
+                    discrimination, abuse or exploitation and that each of the IP’s employees and personnel complies
+                    with the provisions of other UNICEF policies relating to protection of children as advised by UNICEF
+                    from time to time.
+                </li>
+                <li><b>AUTHORITY TO MODIFY:</b> No modification or change in this Agreement shall be valid and
+                    enforceable against UNICEF unless provided by a written amendment to this Agreement signed by a duly
+                    authorized officer of UNICEF and an Authorized Officer of IP.
+                </li>
+                <li><b>SUPPORT TO TERRORISM:</b> IP agrees to apply the highest reasonable standard of diligence to
+                    ensure that cash, supplies and equipment under its control, including but not limited to cash,
+                    supplies and equipment transferred by UNICEF to IP: (a) are not used to provide support to
+                    individuals or entities associated with terrorism; (b) are not transferred by the IP to any
+                    individual or entity on the UN Security Council Committee Consolidated List available at
+                    https://www.un.org/sc/suborg/en/sanctions/un-sc-consolidated-list; and (c) are not used, in the case
+                    of money, for the purpose of any payment to persons or entities, or for any import of goods, if such
+                    payment or import is prohibited by a decision of the United Nations Security Council taken under
+                    Chapter VII of the Charter of the United Nations.
+                </li>
+
+            </ol>
+        </div>
+        <div id="footer_content" style="text-align: right">
+            <pdf:pagenumber>
+                {#        of <pdf:pagecount>#}
+
+{% endif %}
+{% endblock %}
