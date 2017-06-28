@@ -28,15 +28,10 @@ class TPMActivityInline(admin.ModelAdmin):
 @admin.register(models.TPMVisit)
 class TPMVisitAdmin(AdminListMixin, admin.ModelAdmin):
     readonly_fields = ['status']
-    list_display = ('tpm_partner', 'visit_start', 'visit_end', 'status', )
+    list_display = ('tpm_partner', 'status', )
     list_filter = (
-        'visit_start', 'visit_end', 'status',
+        'status',
     )
-
-
-@admin.register(models.TPMVisitReport)
-class TPMVisitReportAdmin(admin.ModelAdmin):
-    list_display = ('tpm_visit', 'recommendations', )
 
 
 @admin.register(models.TPMPermission)

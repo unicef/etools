@@ -9,7 +9,7 @@ from EquiTrack.factories import InterventionFactory, LocationFactory, PartnerSta
 from partners.models import IndicatorReport, InterventionResultLink
 from reports.models import AppliedIndicator, LowerResult, IndicatorBlueprint, Sector
 from tpm.models import TPMPartner, TPMPartnerStaffMember, TPMVisit, TPMLocation, \
-                       TPMVisitReport, TPMActivity, TPMSectorCovered, TPMLowResult
+                       TPMActivity, TPMSectorCovered, TPMLowResult
 from firms.factories import BaseStaffMemberFactory, BaseFirmFactory
 
 
@@ -125,9 +125,6 @@ class TPMVisitFactory(factory.DjangoModelFactory):
         duration = datetime.timedelta(days=10)
 
     tpm_partner = factory.SubFactory(TPMPartnerFactory)
-    visit_start = factory.fuzzy.FuzzyDate(datetime.datetime.now().date())
-    visit_end = factory.LazyAttribute(lambda obj: obj.visit_start + obj.duration)
-
     tpm_activities = factory.RelatedFactory(TPMActivityFactory, 'tpm_visit')
 
     @factory.post_generation
@@ -137,8 +134,3 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
         if extracted:
             self.results.add(*extracted)
-
-
-class TPMVisitReportFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = TPMVisitReport

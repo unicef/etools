@@ -11,19 +11,11 @@ class TPMVisitSubmitRequiredFieldsCheck(BaseRequiredFieldsCheck):
     ]
 
 
-class TPMVisitReportRequiredFieldsCheck(BaseRequiredFieldsCheck):
-    fields = [
-        'tpm_report',
-    ]
-
-
 class TPMVisitReportValidations(BaseTransitionCheck):
     def get_errors(self, instance, *args, **kwargs):
         errors = {}
-        report = getattr(instance, 'tpm_report', None)
-
-        if not report or report.report.all().count() <= 0:
-            errors["tpm_report"] = _('This field required')
+        if instance.report.all().count() <= 0:
+            errors["report"] = _('This field required')
         return errors
 
 
