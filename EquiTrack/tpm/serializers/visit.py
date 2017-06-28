@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import serializers
 
 from locations.models import Location
@@ -35,6 +37,11 @@ class TPMLocationSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     #class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMLocation
         fields = ['id', 'location', 'start_date', 'end_date', 'type_of_site']
+
+    def validate(self, data):
+        validated_data = super(TPMLocationSerializer, self).validate(data)
+        print "data: ", data
+        return validated_data
 
 
 class TPMLowResultSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
@@ -80,21 +87,52 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         model = TPMActivity
         fields = ['id', 'partnership', 'tpm_sectors', 'unicef_focal_point']
 
-    def validate(self, data):
-        validated_data = super(TPMActivitySerializer, self).validate(data)
-
-        tpm_sectors = validated_data.get('tpm_sectors', [])
+    def _validate_sectors(self, tpm_sectors, partnership):
         if tpm_sectors:
             sector_ids = map(lambda s: s["sector"].id, tpm_sectors)
-            partnership = self.instance if 'partnership' not in validated_data else validated_data['partnership']
             allowed = partnership.sector_locations.values_list('sector_id', flat=True)
             if len(set(sector_ids) - set(allowed)) > 0:
                 raise serializers.ValidationError({
-                    'tpm_sectors': '{0} not allowed for {1}'.format(
+                    'tpm_sectors': ' '.join([
                         ','.join(map(str, set(sector_ids) - set(allowed))),
+                        'is not allowed for',
                         str(partnership)
-                    )
+                    ])
                 })
+
+    def _validate_tpm_low_results(self, sector, partnership):
+        result_errors = []
+        for result in sector.get("tpm_low_results", []):
+
+            tpm_locations = result.get("tpm_locations", [])
+
+            location_errors = []
+            for tpm_location in tpm_locations:
+
+                location = tpm_location.get('location', None)
+                if location:
+                    if not partnership.sector_locations.filter(
+                        sector=sector["sector"], locations=location
+                    ).exists():
+                        location_errors.append('{0} not allowed for {1}'.format(location, sector["sector"]))
+
+            if location_errors:
+                result_errors.append({"tpm_locations": location_errors})
+
+        if result_errors:
+            raise serializers.ValidationError({
+                "tpm_low_results": result_errors
+            })
+
+    def validate(self, data):
+        validated_data = super(TPMActivitySerializer, self).validate(data)
+
+        partnership = self.instance if 'partnership' not in validated_data else validated_data['partnership']
+        tpm_sectors = validated_data.get('tpm_sectors', [])
+
+        self._validate_sectors(tpm_sectors, partnership)
+        for sector in tpm_sectors:
+            self._validate_tpm_low_results(sector, partnership)
 
         return validated_data
 
