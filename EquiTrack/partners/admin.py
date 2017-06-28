@@ -631,6 +631,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                 'number',
                 'title',
                 'status',
+                'country_programme',
                 'submission_date',)
         }),
         (_('Dates and Signatures'), {
@@ -910,8 +911,10 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
         u'agreement_number',
         u'partner',
         u'agreement_type',
+        u'status',
         u'signed_by_unicef_date',
-        u'download_url'
+        u'download_url',
+
     )
     fieldsets = (
         (_('Agreement Details'), {
@@ -920,6 +923,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
                     u'partner',
                     u'agreement_type',
                     u'agreement_number',
+                    u'country_programme',
                     u'status',
                     u'attached_agreement',
                     (u'start', u'end',),
