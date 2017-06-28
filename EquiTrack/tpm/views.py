@@ -1,6 +1,7 @@
 from django.db.models import Prefetch
 
 from rest_framework import viewsets, mixins
+from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBackend
 
 from partners.models import Agreement, Intervention, InterventionResultLink
 from reports.models import Result
@@ -32,6 +33,10 @@ class TPMPartnerViewSet(
     serializer_action_classes = {
         'list': TPMPartnerLightSerializer
     }
+    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
+    search_fields = ('vendor_number', 'name')
+    ordering_fields = ('vendor_number', 'name', 'country')
+    filter_fields = ('status', )
 
 
 class TPMVisitViewSet(
