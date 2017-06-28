@@ -1123,7 +1123,8 @@ class AgreementAmendmentType(models.Model):
         ('Change authorized officer', 'Change Authorized Officer(s)'),
         ('Change banking info', 'Banking Information'),
         ('Additional clause', 'Additional Clause'),
-        ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
+        ('Amend existing clause', 'Amend Existing Clause'),  # previously known as Agreement Changes
+        ('Change in clause', 'Change in clause'),
     )
     agreement_amendment = models.ForeignKey(AgreementAmendment, related_name='amendment_types')
     type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
