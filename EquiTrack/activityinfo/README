@@ -1,2 +1,0 @@
-This app is no longer used, but we keep it in INSTALLED_APPS because the reports app references its
-migrations.

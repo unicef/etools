@@ -417,7 +417,6 @@ TENANT_APPS = (
     'reversion',
     'funds',
     'locations',
-    'activityinfo',  # No longer used, but we need it to maintain migration history integrity
     'reports',
     'partners',
     'trips',
