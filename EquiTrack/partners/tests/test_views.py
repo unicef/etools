@@ -775,7 +775,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -792,6 +792,7 @@ class TestAgreementAPIView(APITenantTestCase):
             "agreement_type": "PCA",
             "partner": self.partner.id,
             "status": "draft",
+            "country_programme": self.agreement.country_programme.id,
             "start": date(today.year - 1, 1, 1),
             "end": self.country_programme.to_date,
             "signed_by": self.unicef_staff.id,
@@ -800,7 +801,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -841,6 +842,7 @@ class TestAgreementAPIView(APITenantTestCase):
         data = {
             "agreement_type": "PCA",
             "partner": self.partner.id,
+            "country_programme": self.agreement.country_programme.id,
             "status": "draft",
             "start": date(today.year - 1, 1, 1),
             "end": self.country_programme.to_date
@@ -848,7 +850,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -1027,6 +1029,7 @@ class TestAgreementAPIView(APITenantTestCase):
             "agreement_type": "PCA",
             "partner": self.partner.id,
             "status": "draft",
+            "country_programme": self.agreement.country_programme.id,
             "start": date(today.year - 1, 1, 1),
             "end": self.country_programme.to_date,
             "signed_by": self.unicef_staff.id,
@@ -1052,6 +1055,7 @@ class TestAgreementAPIView(APITenantTestCase):
         data = {
             "agreement_type": "PCA",
             "partner": self.partner.id,
+            "country_programme": self.agreement.country_programme.id,
             "status": "draft",
             "signed_by": self.unicef_staff.id,
             "partner_manager": self.partner_staff.id,

@@ -29,6 +29,16 @@ class PartneshipManagerPermission(permissions.BasePermission):
                 object.partner.staff_members.values_list('id', flat=True):
             return True
 
+    def has_permission(self, request, view):
+        """
+        Return `True` if permission is granted, `False` otherwise.
+        """
+        if request.method in permissions.SAFE_METHODS:
+            # Check permissions for read-only request
+            return request.user.is_staff
+        else:
+            return request.user.groups.filter(name='Partnership Manager').exists()
+
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             # Check permissions for read-only request
