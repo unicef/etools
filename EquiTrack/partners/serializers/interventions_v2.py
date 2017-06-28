@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Sum
 from rest_framework import serializers
 
+from funds.serializers import FRsSerializer
 from reports.serializers.v1 import SectorLightSerializer
 from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 from locations.models import Location
@@ -23,7 +24,7 @@ from partners.models import (
 )
 from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
-from funds.models import FundsCommitmentItem
+from funds.models import FundsCommitmentItem, FundsReservationHeader
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):
@@ -267,9 +268,25 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     sector_locations = InterventionSectorLocationCUSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
 
+    frs = serializers.PrimaryKeyRelatedField(many=True, queryset=FundsReservationHeader.
+                                             objects.prefetch_related('intervention').all(), required=False)
+
     class Meta:
         model = Intervention
         fields = "__all__"
+
+    def validate_frs(self, frs):
+        for fr in frs:
+            if fr.intervention:
+                if (self.instance is None) or (not self.instance.id) or (fr.intervention.id != self.instance.id):
+                    raise ValidationError({'error': 'One or more of the FRs selected is related to a different PD/SSFA,'
+                                                    ' {}'.format(fr.fr_number)})
+            else:
+                # make sure it's not expired
+                if fr.expired:
+                    raise ValidationError({'error': 'One or more selected FRs is expired,'
+                                                    ' {}'.format(fr.fr_number)})
+        return frs
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -289,34 +306,19 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
-    fr_numbers_details = serializers.SerializerMethodField(read_only=True, required=False)
     submitted_to_prc = serializers.ReadOnlyField()
-
-    def get_fr_numbers_details(self, obj):
-        data = {}
-        if obj.fr_numbers:
-            data = {k: [] for k in obj.fr_numbers}
-            try:
-                fc_items = FundsCommitmentItem.objects.filter(
-                    fr_number__in=obj.fr_numbers).select_related('fund_commitment')
-            except FundsCommitmentItem.DoesNotExist:
-                pass
-            else:
-                for fc in fc_items:
-                    serializer = FundingCommitmentNestedSerializer(fc)
-                    data[fc.fr_number].append(serializer.data)
-        return data
+    frs_details = FRsSerializer(source='frs', read_only=True)
 
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner", "agreement", "document_type", "number", "prc_review_document_file",
+            "id", 'frs', "partner", "agreement", "document_type", "number", "prc_review_document_file", "frs_details",
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
-            "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
+            "offices", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
             "created", "modified", "planned_budget", "result_links", 'country_programme',
-            "amendments", "planned_visits", "attachments", "supplies", "distributions", "fr_numbers_details",
+            "amendments", "planned_visits", "attachments", "supplies", "distributions"
         )
 
 
@@ -434,7 +436,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return planned_budget.currency if planned_budget else ""
 
     def get_fr_numbers(self, obj):
-        return ', '.join([x for x in obj.fr_numbers]) if obj.fr_numbers else ""
+        return ', '.join([x.fr_number for x in obj.frs.all()]) if obj.frs.all().count() > 0 else ""
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
@@ -470,6 +472,7 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status", "start", "end",
+            "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
+            "start", "end",
             "offices", "sector_locations",
         )

@@ -45,7 +45,7 @@ class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
     """
     serializer_class = AgreementListSerializer
     filter_backends = (PartnerScopeFilter,)
-    permission_classes = (IsAdminUser,)
+    permission_classes = (PartneshipManagerPermission,)
     renderer_classes = (r.JSONRenderer, AgreementCvsRenderer)
 
     SERIALIZER_MAP = {

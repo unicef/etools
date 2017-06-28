@@ -26,13 +26,14 @@ class TravelActivityList(APITenantTestCase):
 
     def test_list_view(self):
         partner_id = self.travel.activities.first().partner.id
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activities',
-                                                           kwargs={"partner_organization_pk": partner_id}),
+                                                           kwargs={'partner_organization_pk': partner_id}),
                                             user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
-        expected_keys = ["primary_traveler", "travel_type", "date", "locations", "status", "reference_number"]
+        expected_keys = ['primary_traveler', 'travel_type', 'date', 'locations', 'status', 'reference_number',
+                         'trip_id']
 
         self.assertEqual(len(response_json), 1)
-        self.assertKeysIn(expected_keys, response_json[0])
+        self.assertKeysIn(expected_keys, response_json[0], exact=True)
