@@ -257,6 +257,7 @@ class PartnershipDashboardAPIView(APIView):
         if ct_pk:
             interventions = Intervention.objects.filter(agreement__country_programme=ct_pk)
 
+
         # Otherwise, use current CountryProgramme this year to filter Intervention
         else:
             currentCountryProgramme = CountryProgramme.main_active()

@@ -9,7 +9,6 @@ from .views.v1 import (
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
     InterventionsViewSet,
-    GovernmentInterventionsViewSet,
     PartnershipBudgetViewSet,
     PCASectorViewSet,
     PCAFileViewSet,

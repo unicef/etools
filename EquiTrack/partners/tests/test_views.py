@@ -18,7 +18,7 @@ from EquiTrack.factories import (
     GroupFactory,
     InterventionFactory,
     GovernmentInterventionFactory,
-)
+    FundsReservationHeaderFactory)
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector, CountryProgramme
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
@@ -375,6 +375,24 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
+
+    def test_api_partners_delete_with_agreements(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/delete/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data[0], "This partner has agreements associated to it")
+
+    def test_api_partners_delete(self):
+        partner = PartnerFactory()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/delete/{}/'.format(partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_api_partners_list_minimal(self):
         params = {"verbosity": "minimal"}
@@ -757,7 +775,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -774,6 +792,7 @@ class TestAgreementAPIView(APITenantTestCase):
             "agreement_type": "PCA",
             "partner": self.partner.id,
             "status": "draft",
+            "country_programme": self.agreement.country_programme.id,
             "start": date(today.year - 1, 1, 1),
             "end": self.country_programme.to_date,
             "signed_by": self.unicef_staff.id,
@@ -782,7 +801,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -823,6 +842,7 @@ class TestAgreementAPIView(APITenantTestCase):
         data = {
             "agreement_type": "PCA",
             "partner": self.partner.id,
+            "country_programme": self.agreement.country_programme.id,
             "status": "draft",
             "start": date(today.year - 1, 1, 1),
             "end": self.country_programme.to_date
@@ -830,7 +850,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -1009,6 +1029,7 @@ class TestAgreementAPIView(APITenantTestCase):
             "agreement_type": "PCA",
             "partner": self.partner.id,
             "status": "draft",
+            "country_programme": self.agreement.country_programme.id,
             "start": date(today.year - 1, 1, 1),
             "end": self.country_programme.to_date,
             "signed_by": self.unicef_staff.id,
@@ -1030,6 +1051,7 @@ class TestAgreementAPIView(APITenantTestCase):
         data = {
             "agreement_type": "PCA",
             "partner": self.partner.id,
+            "country_programme": self.agreement.country_programme.id,
             "status": "draft",
             "signed_by": self.unicef_staff.id,
             "partner_manager": self.partner_staff.id,
@@ -1129,6 +1151,27 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["Cannot delete an amendment type once amendment is signed"])
+
+    def test_agreement_generate_pdf_default(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/{}/generate_doc/'.format(self.agreement.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_agreement_generate_pdf_lang(self):
+        params = {
+            "lang": "arabic",
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/{}/generate_doc/'.format(self.agreement.id),
+            user=self.unicef_staff,
+            data=params
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestPartnerStaffMemberAPIView(APITenantTestCase):
@@ -1350,6 +1393,10 @@ class TestInterventionViews(APITenantTestCase):
             commitment_amount=300,
         )
 
+        self.fr_header_1 = FundsReservationHeaderFactory(fr_number=self.funding_commitment1.fr_number)
+        self.fr_header_2 = FundsReservationHeaderFactory(fr_number=self.funding_commitment2.fr_number)
+
+
         # Basic data to adjust in tests
         self.intervention_data = {
             "agreement": self.agreement2.id,
@@ -1370,10 +1417,6 @@ class TestInterventionViews(APITenantTestCase):
             "partner_focal_points": [],
             "partner_authorized_officer_signatory": self.partnerstaff.id,
             "offices": [],
-            "fr_numbers": [
-                self.funding_commitment1.fr_number,
-                self.funding_commitment2.fr_number
-            ],
             "population_focus": "Some focus",
             "planned_visits": [
                 {
@@ -1415,23 +1458,23 @@ class TestInterventionViews(APITenantTestCase):
             data=self.intervention_data
         )
         self.intervention_data = response.data
-        intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
+        self.intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         self.planned_visit = InterventionPlannedVisits.objects.create(
-            intervention=intervention_obj
+            intervention=self.intervention_obj
         )
         attachment = "attachment.pdf"
         self.attachment = InterventionAttachment.objects.create(
-            intervention=intervention_obj,
+            intervention=self.intervention_obj,
             attachment=attachment,
             type=FileType.objects.create(name="pdf")
         )
         self.result = InterventionResultLink.objects.create(
-            intervention=intervention_obj,
+            intervention=self.intervention_obj,
             cp_output=ResultFactory(),
         )
         amendment = "amendment.pdf"
         self.amendment = InterventionAmendment.objects.create(
-            intervention=intervention_obj,
+            intervention=self.intervention_obj,
             type="Change in Programme Result",
             signed_date=datetime.date.today(),
             signed_amendment=amendment
@@ -1439,13 +1482,13 @@ class TestInterventionViews(APITenantTestCase):
         self.sector = Sector.objects.create(name="Sector 2")
         self.location = LocationFactory()
         self.isll = InterventionSectorLocationLink.objects.create(
-            intervention=intervention_obj,
+            intervention=self.intervention_obj,
             sector=self.sector,
         )
         self.isll.locations.add(LocationFactory())
         self.isll.save()
-        intervention_obj.status = Intervention.DRAFT
-        intervention_obj.save()
+        self.intervention_obj.status = Intervention.DRAFT
+        self.intervention_obj.save()
 
     def test_intervention_list(self):
         response = self.forced_auth_req(
@@ -1455,7 +1498,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 4)
 
     def test_intervention_list_minimal(self):
         params = {"verbosity": "minimal"}
@@ -1492,15 +1535,20 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(model_stream(Intervention)[0].verb, 'created')
 
     def test_intervention_retrieve_fr_numbers(self):
+        self.fr_header_1.intervention = self.intervention_obj
+        self.fr_header_2.intervention = self.intervention_obj
+        self.fr_header_1.save()
+        self.fr_header_2.save()
+
         response = self.forced_auth_req(
             'get',
             '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
             user=self.unicef_staff,
         )
-
+        r_data = json.loads(response.rendered_content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["fr_numbers_details"]["12345"][0]["wbs"], "some_wbs")
-        self.assertEqual(response.data["fr_numbers_details"]["45678"][0]["wbs"], "some_wbs")
+        self.assertEqual(len(r_data["frs_details"]['frs']), 2)
+        self.assertItemsEqual(r_data["frs"], [self.fr_header_2.id, self.fr_header_1.id])
 
     def test_intervention_active_update_population_focus(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])

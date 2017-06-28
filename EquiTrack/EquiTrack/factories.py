@@ -20,7 +20,7 @@ from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
-from funds.models import Grant, Donor
+from funds.models import Grant, Donor, FundsReservationHeader
 from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
@@ -154,7 +154,7 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
         model = report_models.CountryProgramme
 
     name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
+    wbs = factory.Sequence(lambda n: '0000/A0/{:02d}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
 
@@ -373,18 +373,29 @@ class GrantFactory(factory.DjangoModelFactory):
     class Meta:
         model = Grant
 
+class FundsReservationHeaderFactory(factory.DjangoModelFactory):
+    intervention = factory.SubFactory(InterventionFactory)
+    vendor_code = fuzzy.FuzzyText(length=20)
+    fr_number = fuzzy.FuzzyText(length=20)
+    document_date = date(date.today().year, 1, 1)
+    fr_type = fuzzy.FuzzyText(length=20)
+    currency = fuzzy.FuzzyText(length=20)
+    document_text = fuzzy.FuzzyText(length=20)
 
-# class FundingCommitmentFactory(factory.django.DjangoModelFactory):
-#     class Meta:
-#         model = partner_models.FundingCommitment
-#
-#     grant = grant,
-#     intervention = factory.SubFactory(PartnershipFactory)
-#
-#
-#     fr_number = models.CharField(max_length=50)
-#     wbs = models.CharField(max_length=50)
-#     fc_type = models.CharField(max_length=50)
+    # this is the field required for validation
+    intervention_amt = fuzzy.FuzzyDecimal(1, 300)
+    # overall_amount
+    total_amt = fuzzy.FuzzyDecimal(1, 300)
+    actual_amt = fuzzy.FuzzyDecimal(1, 300)
+    outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
+
+    start_date = date(date.today().year, 1, 1)
+    end_date = date(date.today().year + 1, 1, 1)
+
+
+    class Meta:
+        model = FundsReservationHeader
+
 
 # Credit goes to http://stackoverflow.com/a/41154232/2363915
 class JSONFieldFactory(factory.DictFactory):
