@@ -5,7 +5,7 @@ from rest_framework import serializers
 from locations.models import Location
 from locations.serializers import LocationLightSerializer
 from partners.models import Intervention, InterventionResultLink
-from partners.serializers.interventions_v2 import InterventionListSerializer
+from partners.serializers.interventions_v2 import InterventionDetailSerializer
 from reports.models import Sector
 from reports.serializers.v1 import SectorLightSerializer
 from tpm.models import TPMVisit, TPMLocation, TPMVisitReport, TPMPartner, \
@@ -68,7 +68,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     tpm_sectors = TPMSectorCoveredSerializer(many=True)
 
     partnership = SeparatedReadWriteField(
-        read_field=InterventionListSerializer(read_only=True),
+        read_field=InterventionDetailSerializer(read_only=True),
     )
 
     unicef_focal_point = SeparatedReadWriteField(
@@ -79,6 +79,24 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     # class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = ['id', 'partnership', 'tpm_sectors', 'unicef_focal_point']
+
+    def validate(self, data):
+        validated_data = super(TPMActivitySerializer, self).validate(data)
+
+        tpm_sectors = validated_data.get('tpm_sectors', [])
+        if tpm_sectors:
+            sector_ids = map(lambda s: s["sector"].id, tpm_sectors)
+            partnership = self.instance if 'partnership' not in validated_data else validated_data['partnership']
+            allowed = partnership.sector_locations.values_list('sector_id', flat=True)
+            if len(set(sector_ids) - set(allowed)) > 0:
+                raise serializers.ValidationError({
+                    'tpm_sectors': '{0} not allowed for {1}'.format(
+                        ','.join(map(str, set(sector_ids) - set(allowed))),
+                        str(partnership)
+                    )
+                })
+
+        return validated_data
 
 
 class TPMReportSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
