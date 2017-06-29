@@ -1502,30 +1502,45 @@ class InterventionAmendment(TimeStampedModel):
 
     Relates to :model:`partners.Interventions`
     """
-    CPR = u'CPR'
-    CPF = u'CPF'
-    CGC = u'CGC'
-    CTBGT20 = u'CTBGT20'
-    CTBLT20 = u'CTBLT20'
-    CABLT20 = u'CABLT20'
-    CABGT20 = u'CABGT20'
-    CABGT20FACE = u'CABGT20FACE'
+    # CPR = u'CPR'
+    # CPF = u'CPF'
+    # CGC = u'CGC'
+    # CTBGT20 = u'CTBGT20'
+    # CTBLT20 = u'CTBLT20'
+    # CABLT20 = u'CABLT20'
+    # CABGT20 = u'CABGT20'
+    # CABGT20FACE = u'CABGT20FACE'
+    #
+    # AMENDMENT_TYPES = (
+    #     (CPR, 'Change in Programme Result'),
+    #     (CPF, 'Change in Population Focus'),
+    #     (CGC, 'Change in Georgraphical Coverage'),
+    #     (CTBGT20, 'Change in Total Budget >20%'),
+    #     (CTBLT20, 'Change in Total Budget <=20%'),
+    #     (CABLT20, 'Changes in Activity Budget <=20% - No Change in Total Budget'),
+    #     (CABGT20, 'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE'),
+    #     (CABGT20FACE, 'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE'),
+    # )
+    DATES = u'dates'
+    RESULTS = u'results'
+    BUDGET = u'budget'
+    OTHER = u'other'
 
-    AMENDMENT_TYPES = (
-        (CPR, 'Change in Programme Result'),
-        (CPF, 'Change in Population Focus'),
-        (CGC, 'Change in Georgraphical Coverage'),
-        (CTBGT20, 'Change in Total Budget >20%'),
-        (CTBLT20, 'Change in Total Budget <=20%'),
-        (CABLT20, 'Changes in Activity Budget <=20% - No Change in Total Budget'),
-        (CABGT20, 'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE'),
-        (CABGT20FACE, 'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE'),
+    AMENDMENT_TYPES = Choices(
+        (DATES, 'Dates'),
+        (RESULTS, 'Results'),
+        (BUDGET, 'Budget'),
+        (OTHER, 'Other')
     )
 
     intervention = models.ForeignKey(Intervention, related_name='amendments')
-    type = models.CharField(
+
+    types = ArrayField(models.CharField(
         max_length=50,
-        choices=AMENDMENT_TYPES)
+        choices=AMENDMENT_TYPES))
+
+    other_description = models.CharField(max_length=512, null=True, blank=True)
+
     signed_date = models.DateField(null=True)
     amendment_number = models.IntegerField(default=0)
     signed_amendment = models.FileField(
@@ -1566,9 +1581,8 @@ class InterventionAmendment(TimeStampedModel):
         return super(InterventionAmendment, self).save(**kwargs)
 
     def __unicode__(self):
-        return u'{}: {} - {}'.format(
+        return u'{}:- {}'.format(
             self.amendment_number,
-            self.type,
             self.signed_date
         )
 

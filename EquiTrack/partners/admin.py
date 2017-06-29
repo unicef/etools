@@ -138,13 +138,13 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
     ]
     list_display = (
         'intervention',
-        'type',
+        'types',
         'signed_date'
     )
     search_fields = ('intervention', )
     list_filter = (
         'intervention',
-        'type'
+        'types'
     )
 
     def has_delete_permission(self, request, obj=None):
