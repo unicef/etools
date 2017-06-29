@@ -43,7 +43,6 @@ from partners.views.v1 import (
     FileTypeViewSet,
 )
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
-from funds.views import DonorViewSet, GrantViewSet
 from reports.views.v1 import (
     ResultStructureViewSet,
     ResultTypeViewSet,
@@ -90,8 +89,6 @@ api = routers.SimpleRouter()
 
 # ******************  API version 1 - not used ******************************
 
-# api.register(r'funds/donors', DonorViewSet, base_name='donors')
-# api.register(r'funds/grants', GrantViewSet, base_name='grants')
 trips_api = routers.SimpleRouter()
 trips_api.register(r'trips', TripsViewSet, base_name='trips')
 tripsfiles_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
