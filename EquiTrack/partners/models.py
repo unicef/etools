@@ -1502,25 +1502,7 @@ class InterventionAmendment(TimeStampedModel):
 
     Relates to :model:`partners.Interventions`
     """
-    # CPR = u'CPR'
-    # CPF = u'CPF'
-    # CGC = u'CGC'
-    # CTBGT20 = u'CTBGT20'
-    # CTBLT20 = u'CTBLT20'
-    # CABLT20 = u'CABLT20'
-    # CABGT20 = u'CABGT20'
-    # CABGT20FACE = u'CABGT20FACE'
-    #
-    # AMENDMENT_TYPES = (
-    #     (CPR, 'Change in Programme Result'),
-    #     (CPF, 'Change in Population Focus'),
-    #     (CGC, 'Change in Georgraphical Coverage'),
-    #     (CTBGT20, 'Change in Total Budget >20%'),
-    #     (CTBLT20, 'Change in Total Budget <=20%'),
-    #     (CABLT20, 'Changes in Activity Budget <=20% - No Change in Total Budget'),
-    #     (CABGT20, 'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE'),
-    #     (CABGT20FACE, 'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE'),
-    # )
+    
     DATES = u'dates'
     RESULTS = u'results'
     BUDGET = u'budget'
