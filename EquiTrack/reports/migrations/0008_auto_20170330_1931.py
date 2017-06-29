@@ -14,10 +14,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RemoveField(
             model_name='indicator',
-            name='activity_info_indicators',
-        ),
-        migrations.RemoveField(
-            model_name='indicator',
             name='in_activity_info',
         ),
     ]
