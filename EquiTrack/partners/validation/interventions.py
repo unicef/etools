@@ -1,7 +1,6 @@
 from datetime import date
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError
-from partners.models import InterventionAmendment
 
 
 def partnership_manager_only(i, user):
@@ -139,7 +138,7 @@ def sector_location_valid(sl):
 
 def amendments_valid(i):
     for a in i.amendments.all():
-        if InterventionAmendment.OTHER in a.types and a.other_description is None:
+        if a.OTHER in a.types and a.other_description is None:
             return False
         if not a.signed_date:
             return False
