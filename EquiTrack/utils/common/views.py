@@ -92,6 +92,10 @@ class FSMTransitionActionMixin(object):
 
 
 class NestedViewSetMixin(object):
+    """
+    Allow viewsets inheritance with correct filtering depending on parents.
+    """
+
     parent = None
     parent_lookup_kwarg = None
     parent_lookup_field = None
