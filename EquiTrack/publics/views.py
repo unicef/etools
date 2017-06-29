@@ -217,17 +217,17 @@ class WBSGrantFundView(GhostDataMixin,
         parameter_serializer.is_valid(raise_exception=True)
 
         business_area = parameter_serializer.validated_data['business_area']
-        return WBS.objects.filter(business_area=business_area)
+        return WBS.objects.filter(business_area=business_area).order_by('id')
 
     @cached_property
     def grants_queryset(self):
         wbs_qs = self.wbs_queryset
-        return Grant.objects.filter(wbs__in=wbs_qs)
+        return Grant.objects.filter(wbs__in=wbs_qs).order_by('id')
 
     @cached_property
     def funds_queryset(self):
         grant_qs = self.grants_queryset
-        return Fund.objects.filter(grants__in=grant_qs).distinct()
+        return Fund.objects.filter(grants__in=grant_qs).order_by('id').distinct()
 
     def _aggregate_values(self, values, common_keys, keys_to_group):
         def make_dict(data):
@@ -245,7 +245,9 @@ class WBSGrantFundView(GhostDataMixin,
             for key in keys_to_group:
                 if val_dict[key] and val_dict[key] not in ret[val_dict['id']][key]:
                     ret[val_dict['id']][key].append(val_dict[key])
-        return ret.values()
+
+        ordered_keys = sorted(ret.keys())
+        return [ret[k] for k in ordered_keys]
 
 
 class AirlinesView(GhostDataMixin,
