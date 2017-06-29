@@ -174,7 +174,7 @@ class PmpStaticDropdownsListApiView(APIView):
         agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendmentType.AMENDMENT_TYPES))
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
-        intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
+        intervention_amendment_types = InterventionAmendment.AMENDMENT_TYPES
 
         currencies = map(lambda x: {"label": x[0], "value": x[1]},
                          Currency.objects.values_list('code', 'id').order_by('code').distinct())
