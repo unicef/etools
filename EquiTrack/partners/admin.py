@@ -646,8 +646,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                  'unicef_focal_points',
                  # ('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start', 'end'),
-                 'population_focus',
-                 'fr_numbers',),
+                 'population_focus'),
         }),
         # (_('Add sites by P Code'), {
         #     u'classes': (u'suit-tab suit-tab-locations',),
