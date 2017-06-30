@@ -11,19 +11,11 @@ class TPMVisitSubmitRequiredFieldsCheck(BaseRequiredFieldsCheck):
     ]
 
 
-class TPMVisitReportRequiredFieldsCheck(BaseRequiredFieldsCheck):
-    fields = [
-        'tpm_report',
-    ]
-
-
 class TPMVisitReportValidations(BaseTransitionCheck):
     def get_errors(self, instance, *args, **kwargs):
         errors = {}
-        report = getattr(instance, 'tpm_report', None)
-
-        if not report or report.report.all().count() <= 0:
-            errors["tpm_report"] = _('This field required')
+        if instance.report.all().count() <= 0:
+            errors["report"] = [_('This field is required.')]
         return errors
 
 
@@ -32,13 +24,13 @@ class ValidateTPMVisitActivities(BaseTransitionCheck):
         tpm_locations_errors = []
 
         if not tpm_locations:
-            return _('This field is required')
+            return [_('This field is required.')]
 
     def _get_tpm_low_results_errors(self, tpm_low_results):
         tpm_low_results_errors = []
 
         if not tpm_low_results:
-            return _('This field required')
+            return [_('This field is required.')]
 
         for tpm_low_result in tpm_low_results:
             tpm_locations_errors = self._get_tpm_locations_errors(tpm_low_result.tpm_locations.all())
@@ -54,7 +46,7 @@ class ValidateTPMVisitActivities(BaseTransitionCheck):
         sectors_errors = []
 
         if not sectors:
-            return _('This field is required')
+            return [_('This field is required.')]
 
         for sector in sectors:
             tpm_low_result_errors = self._get_tpm_low_results_errors(sector.tpm_low_results.all())
@@ -70,16 +62,22 @@ class ValidateTPMVisitActivities(BaseTransitionCheck):
         activities_errors = []
 
         if not activities:
-            return _('This field is required')
+            return [_('This field is required.')]
 
         for activity in activities:
+            errors = {}
             sectors_errors = self._get_sectors_errors(activity.tpm_sectors.all())
 
             if sectors_errors:
-                activities_errors.append({
-                    'id': activity.id,
-                    'tpm_sectors': sectors_errors,
-                })
+                errors['tpm_sectors'] = sectors_errors
+
+            if not activity.unicef_focal_points.exists():
+                errors['unicef_focal_points'] = [_('This field is required.')]
+
+            if errors:
+                errors['id'] = activity.id
+                activities_errors.append(errors)
+
         return activities_errors
 
     def get_errors(self, instance, *args, **kwargs):
