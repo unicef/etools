@@ -7,7 +7,7 @@ from cartodb import CartoDBAPIKey, CartoDBException
 from EquiTrack.celery import app
 from .models import Location
 
-logger = logging.getLogger('locations.models')
+logger = logging.getLogger(__name__)
 
 
 def create_location(pcode, carto_table, parent, parent_instance,
@@ -104,8 +104,8 @@ def update_sites_from_cartodb(carto_table):
                 carto_table.table_name)
 
         sites = client.sql(qry)
-    except CartoDBException as e:
-        logging.exception("CartoDB exception occured", exc_info=True)
+    except CartoDBException:
+        logging.exception("CartoDB exception occured")
     else:
 
         for row in sites['rows']:

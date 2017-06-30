@@ -63,14 +63,12 @@ class Location(MPTTModel):
     objects = LocationManager()
 
     def __unicode__(self):
-        #TODO: Make generic
-        return u'{} ({} {})'.format(
+        # TODO: Make generic
+        return u'{} ({} {}: {})'.format(
             self.name,
             self.gateway.name,
-            "{}: {}".format(
-                'CERD' if self.gateway.name == 'School' else 'PCode',
-                self.p_code if self.p_code else ''
-            )
+            'CERD' if self.gateway.name == 'School' else 'PCode',
+            self.p_code if self.p_code else ''
         )
 
     @property
