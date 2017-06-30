@@ -158,27 +158,7 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
         return root
 
 
-class AggregatedRiskRootSerializer(RiskRootSerializer):
-    """
-    Risk root serializer with additional aggregated data.
-    """
-
-    risk_rating = serializers.CharField(read_only=True)
-    risk_score = serializers.FloatField(read_only=True)
-    total_number_risk_points = serializers.IntegerField(read_only=True)
-    applicable_questions = serializers.IntegerField(read_only=True)
-    applicable_key_questions = serializers.IntegerField(read_only=True)
-    blueprint_count = serializers.IntegerField(read_only=True)
-
-    class Meta(RiskRootSerializer.Meta):
-        fields = RiskRootSerializer.Meta.fields + [
-            'risk_rating', 'risk_score',
-            'total_number_risk_points',
-            'applicable_questions',
-            'applicable_key_questions',
-            'blueprint_count',
-        ]
-
+class BaseAggregatedRiskRootSerializer(RiskRootSerializer):
     def to_representation(self, instance):
         """
         Processing nested categories to collect aggregates.
@@ -198,6 +178,62 @@ class AggregatedRiskRootSerializer(RiskRootSerializer):
             stack.pop()
 
         return super(RiskRootSerializer, self).to_representation(instance)
+
+    @staticmethod
+    def calculate_risk(category):
+        raise NotImplemented()
+
+
+class AggregatedRiskCountRiskRootSerializer(BaseAggregatedRiskRootSerializer):
+    hight_risk_count = serializers.IntegerField(read_only=True)
+    medium_risk_count = serializers.IntegerField(read_only=True)
+    low_risk_count = serializers.IntegerField(read_only=True)
+
+    @staticmethod
+    def _get_bluerprint_count_by_risk_value(category, field_name, risk_value):
+        category.blueprint_count = len(category.blueprints.filter())
+        setattr(category, field_name, category.blueprints.filter(risks__value=risk_value).count())
+        for child in category.children.all():
+            category.blueprint_count = getattr(category, field_name, 0) + getattr(child, field_name, 0)
+
+    @staticmethod
+    def calculate_risk(category):
+        AggregatedRiskCountRiskRootSerializer._get_bluerprint_count_by_risk_value(
+            category, 'hight_risk_count', Risk.VALUES.high
+        )
+        AggregatedRiskCountRiskRootSerializer._get_bluerprint_count_by_risk_value(
+            category, 'medium_risk_count', Risk.VALUES.medium
+        )
+        AggregatedRiskCountRiskRootSerializer._get_bluerprint_count_by_risk_value(
+            category, 'low_risk_count', Risk.VALUES.low
+        )
+
+    class Meta(BaseAggregatedRiskRootSerializer.Meta):
+        fields = BaseAggregatedRiskRootSerializer.Meta.fields + [
+            'hight_risk_count', 'medium_risk_count', 'low_risk_count',
+        ]
+
+
+class AggregatedRiskRootSerializer(BaseAggregatedRiskRootSerializer):
+    """
+    Risk root serializer with additional aggregated data.
+    """
+
+    risk_rating = serializers.CharField(read_only=True)
+    risk_score = serializers.FloatField(read_only=True)
+    total_number_risk_points = serializers.IntegerField(read_only=True)
+    applicable_questions = serializers.IntegerField(read_only=True)
+    applicable_key_questions = serializers.IntegerField(read_only=True)
+    blueprint_count = serializers.IntegerField(read_only=True)
+
+    class Meta(BaseAggregatedRiskRootSerializer.Meta):
+        fields = BaseAggregatedRiskRootSerializer.Meta.fields + [
+            'risk_rating', 'risk_score',
+            'total_number_risk_points',
+            'applicable_questions',
+            'applicable_key_questions',
+            'blueprint_count',
+        ]
 
     @staticmethod
     def calculate_risk(category):
