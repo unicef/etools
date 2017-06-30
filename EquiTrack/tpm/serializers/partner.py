@@ -20,7 +20,7 @@ class TPMPartnerLightSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number',
+            'email', 'phone_number', 'status'
         ]
 
 
