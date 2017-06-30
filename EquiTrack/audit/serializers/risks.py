@@ -185,6 +185,10 @@ class BaseAggregatedRiskRootSerializer(RiskRootSerializer):
 
 
 class AggregatedRiskCountRiskRootSerializer(BaseAggregatedRiskRootSerializer):
+    """
+    Risk root serializer with additional aggregated data for audit.
+    """
+
     hight_risk_count = serializers.IntegerField(read_only=True)
     medium_risk_count = serializers.IntegerField(read_only=True)
     low_risk_count = serializers.IntegerField(read_only=True)
