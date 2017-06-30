@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
@@ -493,7 +494,15 @@ class Audit(Engagement):
 
     audited_expenditure = models.IntegerField(_('Audited expenditure (USD)'), null=True, blank=True)
     financial_findings = models.IntegerField(_('Financial findings (USD)'), null=True, blank=True)
-    percent_of_audited_expenditure = models.IntegerField(_('% of audited expenditure'), null=True, blank=True)
+    percent_of_audited_expenditure = models.DecimalField(
+        _('% of audited expenditure'),
+        null=True, blank=True,
+        validators=[
+            MinValueValidator(0.0),
+            MaxValueValidator(100.0)
+        ],
+        max_digits=5, decimal_places=2
+    )
     audit_opinion = models.CharField(_('audit opinion'), max_length=20, choices=OPTIONS, null=True, blank=True)
     number_of_financial_findings = models.IntegerField(_('number of financial findings'), null=True, blank=True)
 
