@@ -44,6 +44,7 @@ class Command(BaseCommand):
         'engagement.start_date',
         'engagement.end_date',
         'engagement.total_value',
+        'engagement.active_pd',
     ]
 
     partner_block = [
