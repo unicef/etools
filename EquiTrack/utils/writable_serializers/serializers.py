@@ -392,7 +392,7 @@ class WritableNestedParentSerializerMixin(object):
         return instance
 
 
-class WritableNestedSerializerMixin(DeletableSerializerMixin, WritableNestedParentSerializerMixin,
-                                    WritableNestedChildSerializerMixin):
+class WritableNestedSerializerMixin(DeletableSerializerMixin, WritableNestedChildSerializerMixin,
+                                    WritableNestedParentSerializerMixin):
     class Meta(DeletableSerializerMixin.Meta, WritableNestedChildSerializerMixin.Meta):
         pass

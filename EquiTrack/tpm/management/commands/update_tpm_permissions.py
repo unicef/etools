@@ -32,13 +32,11 @@ class Command(BaseCommand):
         'tpmsectorcovered.*',
         'tpmlowresult.*',
         'tpmlocation.*',
-        'tpmvisitreport.*',
     ]
 
     visit_create = [
         'tpmvisit.tpm_partner',
-        'tpmvisit.visit_start',
-        'tpmvisit.visit_end',
+        'tpmvisit.tpm_activities',
         'tpmvisit.attachments',
         'tpmvisit.tpm_activities',
         'tpmactivity.*',
@@ -49,11 +47,11 @@ class Command(BaseCommand):
 
     new_visit = 'new'
     draft = 'draft'
-    submitted = 'submitted'
+    assigned = 'assigned'
     tpm_accepted = 'tpm_accepted'
     tpm_rejected = 'tpm_rejected'
     tpm_reported = 'tpm_reported'
-    tpm_action_required = 'tpm_action_required'
+    submitted = 'submitted'
     unicef_approved = 'unicef_approved'
 
     def __init__(self, *args, **kwargs):
@@ -103,30 +101,29 @@ class Command(BaseCommand):
         # all users can view  visit on all steps
         self.add_permissions(self.new_visit, self.everybody, 'view', self.everything)
         self.add_permissions(self.draft, self.everybody, 'view', self.everything)
+        self.add_permissions(self.assigned, self.everybody, 'view', self.everything)
         self.add_permissions(self.tpm_accepted, self.everybody, 'view', self.everything)
         self.add_permissions(self.tpm_rejected, self.everybody, 'view', self.everything)
         self.add_permissions(self.tpm_reported, self.everybody, 'view', self.everything)
-        self.add_permissions(self.tpm_action_required, self.everybody, 'view', self.everything)
+        self.add_permissions(self.submitted, self.everybody, 'view', self.everything)
+        self.add_permissions(self.unicef_approved, self.everybody, 'view', self.everything)
 
         # new status: only pme can edit
         self.add_permissions(self.new_visit, self.pme, 'edit', self.visit_create)
 
         # pme can edit visit before submit
-        self.add_permissions(self.new_visit, self.pme, 'edit', self.visit_create)
-        self.add_permissions(self.draft, self.pme, 'action', ['tpmvisit.submit'])
+        self.add_permissions(self.draft, self.pme, 'edit', self.visit_create)
+        self.add_permissions(self.draft, self.pme, 'action', ['tpmvisit.assign'])
 
         # TPM can accept or reject visit and add reject comment
-        self.add_permissions(self.submitted, self.third_party_monitor, 'action', ['tpmvisit.accept', 'tpmvisit.reject'])
-        self.add_permissions(self.tpm_rejected, self.third_party_monitor, 'edit', ['tpmvisit.reject_comment'])
+        self.add_permissions(self.assigned, self.third_party_monitor, 'action', ['tpmvisit.accept', 'tpmvisit.reject'])
 
         # TPM can add report
-        self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'edit', ['tpmvisit.tpm_report', 'tpmreport.*'])
-        self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'action', ['tpmvisit.report', ])
+        self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'edit', ['tpmvisit.report'])
+        self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'action', ['tpmvisit.send_report'])
 
         # UNICEF can approve report or ask actions
-        self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'action', ['tpmvisit.approve', ])
-        self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'action', ['tpmvisit.action_required', ])
-        self.add_permissions(self.unicef_approved, [self.pme, self.focal_point], 'edit', ['tpmvisit.tpm_report', 'tpmreport.recommendations'])
+        self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'action', ['tpmvisit.approve'])
 
         # update permissions
         all_tenants = get_tenant_model().objects.exclude(schema_name='public')
