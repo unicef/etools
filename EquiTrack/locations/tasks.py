@@ -1,5 +1,7 @@
 import logging
+
 from django.db import IntegrityError
+
 from cartodb import CartoDBAPIKey, CartoDBException
 
 from EquiTrack.celery import app
@@ -141,11 +143,12 @@ def update_sites_from_cartodb(carto_table):
                     continue
 
             # create the actual location or retrieve existing based on type and code
-            succ, sites_not_added, sites_created, sites_updated = create_location(pcode, carto_table,
-                                          parent, parent_instance,
-                                          site_name, row,
-                                          sites_not_added, sites_created,
-                                          sites_updated)
+            succ, sites_not_added, sites_created, sites_updated = create_location(
+                pcode, carto_table,
+                parent, parent_instance,
+                site_name, row,
+                sites_not_added, sites_created,
+                sites_updated)
 
     return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
                 carto_table.table_name, sites_created, sites_updated, sites_not_added

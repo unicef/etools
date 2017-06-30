@@ -1,8 +1,4 @@
-__author__ = 'jcranwellward'
-
-from django.conf.urls import patterns, url
-
-from djgeojson.views import GeoJSONLayerView
+from django.conf.urls import url
 
 from locations import views
 
