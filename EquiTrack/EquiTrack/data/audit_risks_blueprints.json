@@ -303,8 +303,8 @@
             "order": 5,
             "weight": 2,
             "is_key": true,
-            "header": "Does the IP show basic financial stability in-country (core resources; funding trend).",
-            "description": "1.6 Provide the amount of total assets, total liabilities, income and expenditure for the current and prior three fiscal years.",
+            "header": "1.6 Does the IP show basic financial stability in-country (core resources; funding trend).",
+            "description": "Provide the amount of total assets, total liabilities, income and expenditure for the current and prior three fiscal years.",
             "category": 11
         }
     },
@@ -326,8 +326,8 @@
             "order": 7,
             "weight": 1,
             "is_key": false,
-            "header": "Does the IP have any pending legal actions against it or outstanding material/significant disputes with vendors/contractors?",
-            "description": "1.8 If so, provide details and actions taken by the IP to resolve the legal action.",
+            "header": "1.8 Does the IP have any pending legal actions against it or outstanding material/significant disputes with vendors/contractors?",
+            "description": "If so, provide details and actions taken by the IP to resolve the legal action.",
             "category": 11
         }
     },
@@ -360,8 +360,8 @@
             "order": 10,
             "weight": 1,
             "is_key": false,
-            "header": "Does the IP have any key financial or operational risks that are not covered by this questionnaire? If so, please describe.",
-            "description": "1.11 Examples: foreign exchange risk; cash receipts.",
+            "header": "1.11 Does the IP have any key financial or operational risks that are not covered by this questionnaire? If so, please describe.",
+            "description": "Examples: foreign exchange risk; cash receipts.",
             "category": 11
         }
     },
