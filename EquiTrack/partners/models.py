@@ -1184,14 +1184,14 @@ class Intervention(TimeStampedModel):
     Relates to :model:`partners.PartnerStaffMember`
     """
 
-    POTENTIAL_AUTO_TRANSITIONS = {
-        'draft': [
-            {'active': []},
-        ],
-        'active': [
-            {'implemented': []},
-        ],
-    }
+    # POTENTIAL_AUTO_TRANSITIONS = {
+    #     'draft': [
+    #         {'active': []},
+    #     ],
+    #     'active': [
+    #         {'implemented': []},
+    #     ],
+    # }
 
     DRAFT = u'draft'
     ACTIVE = u'active'
@@ -1502,7 +1502,7 @@ class InterventionAmendment(TimeStampedModel):
 
     Relates to :model:`partners.Interventions`
     """
-    
+
     DATES = u'dates'
     RESULTS = u'results'
     BUDGET = u'budget'
