@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import models
 from django.db.models.functions import Concat, Value
 from django.db.models import F
+from model_utils import Choices
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -130,25 +131,20 @@ class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
 
 
 def choices_to_json_ready(choices):
-
-    if isinstance(choices, dict):
-        choice_list = [[k, v] for k, v in choices]
-        # return list(set(x.values(), ))
-    elif isinstance(choices, tuple):
-        choice_list = choices
+    if isinstance(choices, dict) or isinstance(choices, Choices):
+        choice_list = [(k, v) for k, v in choices]
     elif isinstance(choices, list):
         choice_list = []
         for c in choices:
             if isinstance(c, tuple):
-                choice_list.append([c[0], c[1]])
+                choice_list.append((c[0], c[1]))
             else:
-                choice_list.append([c, c])
+                choice_list.append((c, c))
     else:
-        choice_list = []
-    final_list = []
-    for choice in choice_list:
-        final_list.append({'label': choice[1], 'value': choice[0]})
-    return final_list
+        choice_list = choices
+
+    return [{'label': choice[1], 'value': choice[0]} for choice in choice_list]
+
 
 
 class PmpStaticDropdownsListApiView(APIView):
@@ -174,7 +170,7 @@ class PmpStaticDropdownsListApiView(APIView):
         agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendmentType.AMENDMENT_TYPES))
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
-        intervention_amendment_types = InterventionAmendment.AMENDMENT_TYPES
+        intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
 
         currencies = map(lambda x: {"label": x[0], "value": x[1]},
                          Currency.objects.values_list('code', 'id').order_by('code').distinct())
