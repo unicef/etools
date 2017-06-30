@@ -1326,6 +1326,26 @@ class Intervention(TimeStampedModel):
             self.number
         )
 
+    @classmethod
+    def permission_structure(cls):
+        # status first check, group second check, condition third check
+        return {
+            'start_date': {
+                'edit': [
+                    {
+                        'group': 'UNICEF_User',
+                        'condition': 'condition1',
+                        'status': 'draft'
+                    }],
+                'required': [
+                    {
+                        'group': 'UNICEF_User',
+                        'condition': 'condition1',
+                        'status': 'draft'
+                    }]
+            }
+        }
+
     @property
     def days_from_submission_to_signed(self):
         if not self.submission_date:
