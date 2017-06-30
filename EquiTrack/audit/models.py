@@ -103,9 +103,9 @@ class Engagement(TimeStampedModel, models.Model):
     DISPLAY_STATUSES = Choices(
         ('partner_contacted', _('Partner Contacted')),
         ('field_visit', _('Field Visit')),
-        ('draft_issued_to_partner', _('Draft Issued to Partner')),
+        ('draft_issued_to_partner', _('Draft Issued from UNICEF')),
         ('comments_received_by_partner', _('Comments Received by Partner')),
-        ('draft_issued_to_unicef', _('Draft Issued to UNICEF')),
+        ('draft_issued_to_unicef', _('Draft Issued from Partner')),
         ('comments_received_by_unicef', _('Comments Received by UNICEF')),
         ('report_submitted', _('Report Submitted')),
         ('final', _('Final Report')),
