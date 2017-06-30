@@ -1,11 +1,14 @@
 from django.core.management import BaseCommand
+from django.db import connection
 from django.utils import six
+
+from tenant_schemas import get_tenant_model
 
 from tpm.models import TPMPermission, UNICEFFocalPoint, UNICEFUser, PME, ThirdPartyMonitor
 
 
 class Command(BaseCommand):
-    help = 'Clean audit permissions'
+    help = 'Clean tpm permissions'
 
     focal_point = 'focal_point'
     unicef_user = 'unicef_user'
@@ -95,6 +98,8 @@ class Command(BaseCommand):
         return self._update_permissions(status, roles, 'disallow', perm, targets)
 
     def handle(self, *args, **options):
+        verbosity = options.get('verbosity', 1)
+
         # all users can view  visit on all steps
         self.add_permissions(self.new_visit, self.everybody, 'view', self.everything)
         self.add_permissions(self.draft, self.everybody, 'view', self.everything)
@@ -124,7 +129,27 @@ class Command(BaseCommand):
         self.add_permissions(self.unicef_approved, [self.pme, self.focal_point], 'edit', ['tpmvisit.tpm_report', 'tpmreport.recommendations'])
 
         # update permissions
-        TPMPermission.objects.all().delete()
-        print('{} objects created.'.format(
-            len(TPMPermission.objects.bulk_create(self.permissions))
-        ))
+        all_tenants = get_tenant_model().objects.exclude(schema_name='public')
+
+        for tenant in all_tenants:
+            connection.set_tenant(tenant)
+            if verbosity >= 3:
+                print('Using {} tenant'.format(tenant.name))
+
+            old_permissions = TPMPermission.objects.all()
+            for user in self.everybody:
+                if verbosity >= 3:
+                    print('Updating permissions for {}. {} -> {}'.format(
+                        user,
+                        len(filter(lambda p: p.user_type == self.user_roles[user], old_permissions)),
+                        len(filter(lambda p: p.user_type == self.user_roles[user], self.permissions)),
+                    ))
+
+            old_permissions.delete()
+            TPMPermission.objects.bulk_create(self.permissions)
+
+        if verbosity >= 1:
+            print(
+                'TPM permissions was successfully updated for {}'.format(
+                    ', '.join(map(lambda t: t.name, all_tenants)))
+            )
