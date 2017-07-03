@@ -8,11 +8,20 @@ class HDict(dict):
 class InterventionPermissions(object):
 
     def condition_group_valid(self, condition_group):
-        if self.intervention.status == condition_group['status'] and \
-                        condition_group['group'] in self.user_groups and \
-                self.condition_map[condition_group['condition']]:
-            return True
-        return False
+        if condition_group['status']:
+            if self.intervention.status != condition_group['status']:
+                print 'status failed for ', condition_group
+                return False
+        if condition_group['group']:
+            if condition_group['group'] not in self.user_groups:
+                print self.user_groups
+                print 'group failed for ', condition_group
+                return False
+        if condition_group['condition']:
+            if not self.condition_map[condition_group['condition']]:
+                print 'condition failed for ', condition_group
+                return False
+        return True
 
     def __init__(self, user, intervention, permission_structure):
         self.user = user
@@ -23,25 +32,44 @@ class InterventionPermissions(object):
             'condition1': self.user in self.intervention.unicef_focal_points.all(),
             'condition2': self.user in self.intervention.partner_focal_points.all()
         }
+        self.all_model_fields = ['start_date', 'agreement', 'end_date']
+        self.actions_default_permissions = {
+            'edit': True,
+            'required': False
+        }
         self.condition_group_valid = lru_cache(maxsize=16)(self.condition_group_valid)
-
+        self.possible_actions = ['edit', 'required']
 
     def get_field_permissions(self, action, field):
         condition_groups = field[action]
-        for condition_group in condition_groups:
-            if self.condition_group_valid(HDict(condition_group)):
-                return True
-        return False
+
+        # For a field and one action (start_date, can_view) you can't define both true conditions and false conditions
+        # because if both groups fail, we can't know what to default to
+        # this assertion should be in the ingestion script
+
+        # if the "false" conditions were defined that means that by default allowed will be "true"
+        # otherwise it means that the "true" conditions were defined and therefore default will be "false"
+        default_return = bool(len(condition_groups['false']))
+
+        for allowed in ['true', 'false']:
+            for condition_group in condition_groups[allowed]:
+                if self.condition_group_valid(HDict(condition_group)):
+                    return True if allowed == 'true' else False
+
+        #print field, action, default_return
+        return default_return
 
     def get_permissions(self):
         ps = self.permission_structure
-        actions = ['edit', 'required']
+
         my_permissions = {}
-        for action in actions:
+        for action in self.possible_actions:
             my_permissions[action] = {}
-            for field in ps:
-                print field
-                my_permissions[action][field] = self.get_field_permissions(action, ps[field])
+            for field in self.all_model_fields:
+                if field not in ps:
+                    my_permissions[action][field] = self.actions_default_permissions[action]
+                else:
+                    my_permissions[action][field] = self.get_field_permissions(action, ps[field])
         return my_permissions
 
 

@@ -23,7 +23,7 @@ from model_utils.models import (
 )
 from model_utils import Choices, FieldTracker
 
-from EquiTrack.utils import get_changeform_link, get_current_site
+from EquiTrack.utils import get_changeform_link, get_current_site, import_permissions
 from EquiTrack.mixins import AdminURLMixin
 
 from funds.models import Grant
@@ -1328,21 +1328,53 @@ class Intervention(TimeStampedModel):
 
     @classmethod
     def permission_structure(cls):
+        permissions = import_permissions()
+        print permissions
         # status first check, group second check, condition third check
         return {
             'start_date': {
-                'edit': [
-                    {
-                        'group': 'UNICEF_User',
-                        'condition': 'condition1',
-                        'status': 'draft'
-                    }],
-                'required': [
-                    {
-                        'group': 'UNICEF_User',
-                        'condition': 'condition1',
-                        'status': 'draft'
-                    }]
+                'edit': {
+                    'true': [
+                                {
+                                    'group': 'UNICEF User',
+                                    'condition': 'condition1',
+                                    'status': 'draft'
+                                }
+                    ],
+                    'false': []
+                },
+                'required': {
+                    'true': [
+                                {
+                                    'group': 'UNICEF User',
+                                    'condition': 'condition1',
+                                    'status': 'draft'
+                                }
+                    ],
+                    'false': []
+                }
+            },
+            'end_date': {
+                'edit': {
+                    'true': [
+                        {
+                            'group': 'UNICEF User',
+                            'condition': '',
+                            'status': ''
+                        }
+                    ],
+                    'false': []
+                },
+                'required': {
+                    'true': [
+                        {
+                            'group': 'UNICEF User',
+                            'condition': '',
+                            'status': 'active'
+                        }
+                    ],
+                    'false': []
+                }
             }
         }
 
