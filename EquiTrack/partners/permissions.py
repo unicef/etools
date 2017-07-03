@@ -8,9 +8,10 @@ from partners.models import Intervention
 class PMPPermissions(object):
     actions_default_permissions = {
         'edit': True,
+        'view': True,
         'required': False
     }
-    possible_actions = ['edit', 'required']
+    possible_actions = ['edit', 'required', 'view']
 
     def __init__(self, user, instance, permission_structure):
         self.user = user
