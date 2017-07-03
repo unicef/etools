@@ -88,7 +88,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         )
         self.amendment = InterventionAmendment.objects.create(
             intervention=self.intervention,
-            type="Change in Programme Result"
+            types=[InterventionAmendment.RESULTS]
         )
         self.location = InterventionSectorLocationLink.objects.create(
             intervention=self.intervention,
@@ -542,7 +542,7 @@ class TestPartnershipViews(APITenantTestCase):
         )
         self.amendment = InterventionAmendment.objects.create(
             intervention=self.intervention,
-            type="Change in Programme Result",
+            types=[InterventionAmendment.RESULTS],
         )
         self.location = InterventionSectorLocationLink.objects.create(
             intervention=self.intervention,
@@ -1475,7 +1475,7 @@ class TestInterventionViews(APITenantTestCase):
         amendment = "amendment.pdf"
         self.amendment = InterventionAmendment.objects.create(
             intervention=self.intervention_obj,
-            type="Change in Programme Result",
+            types=[InterventionAmendment.RESULTS],
             signed_date=datetime.date.today(),
             signed_amendment=amendment
         )

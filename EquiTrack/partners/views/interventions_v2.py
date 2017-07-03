@@ -327,7 +327,6 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete an amendment")
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
@@ -346,7 +345,6 @@ class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete a sector location")
-            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class InterventionListMapView(ListCreateAPIView):

@@ -138,13 +138,13 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
     ]
     list_display = (
         'intervention',
-        'type',
+        'types',
         'signed_date'
     )
     search_fields = ('intervention', )
     list_filter = (
         'intervention',
-        'type'
+        'types'
     )
 
     def has_delete_permission(self, request, obj=None):
@@ -646,8 +646,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                  'unicef_focal_points',
                  # ('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start', 'end'),
-                 'population_focus',
-                 'fr_numbers',),
+                 'population_focus'),
         }),
         # (_('Add sites by P Code'), {
         #     u'classes': (u'suit-tab suit-tab-locations',),

@@ -1,8 +1,8 @@
+from __future__ import unicode_literals
 import copy
 import logging
 from django.apps import apps
-from django.db.models import QuerySet, ObjectDoesNotExist
-
+from django.db.models import ObjectDoesNotExist
 from django.utils.functional import cached_property
 
 from django_fsm import (
@@ -26,16 +26,35 @@ def check_rigid_fields(obj, fields, old_instance=None):
     return True, None
 
 
+def check_rigid_related(obj, related):
+    current_related = list(getattr(obj, related).all())
+    old_related = list(getattr(obj.old_instance, '{}_old'.format(related), []))
+    if len(current_related) != len(old_related):
+        return False
+    if len(current_related) == 0:
+        return True
+
+    field_names = current_related[0]._meta.get_all_field_names()
+    current_related.sort(key=lambda x: x.id)
+    old_related.sort(key=lambda x: x.id)
+    comparison_map = zip(current_related, old_related)
+    # check if any field on the related model was changed
+    for i in comparison_map:
+        for field in field_names:
+            if getattr(i[0], field) != getattr(i[1], field):
+                return False
+    return True
+
 class ValidatorViewMixin(object):
 
     def _parse_data(self, request):
         dt_cp = request.data
         for k in dt_cp:
-            if dt_cp[k] in [u'', u'null']:
+            if dt_cp[k] in ['', 'null']:
                 dt_cp[k] = None
-            elif dt_cp[k] == u'true':
+            elif dt_cp[k] == 'true':
                 dt_cp[k] = True
-            elif dt_cp[k] == u'false':
+            elif dt_cp[k] == 'false':
                 dt_cp[k] = False
 
         dt = parse_multipart_data(dt_cp)
@@ -155,12 +174,13 @@ class ValidatorViewMixin(object):
                 pass
             else:
                 prop = '{}_old'.format(k)
-                if isinstance(rel_field_val, QuerySet):
-                    # This means foreign key into main object
+
+                try:
                     val = list(rel_field_val.all())
-                else:
+                except AttributeError:
                     # This means OneToOne field
                     val = rel_field_val
+
                 setattr(old_instance, prop, val)
 
         def _get_model_for_field(field):

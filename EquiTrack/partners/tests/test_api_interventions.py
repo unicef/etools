@@ -53,7 +53,7 @@ class TestInterventionsAPI(APITenantTestCase):
         )
         self.amendment = InterventionAmendment.objects.create(
             intervention=self.intervention,
-            type="Change in Programme Result",
+            types=[InterventionAmendment.RESULTS]
         )
         self.location = InterventionSectorLocationLink.objects.create(
             intervention=self.intervention,
