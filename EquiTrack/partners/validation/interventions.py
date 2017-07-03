@@ -1,7 +1,9 @@
 from datetime import date
+import logging
 
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError
+from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, check_rigid_related
 
+logger = logging.getLogger('partners.interventions.validation')
 
 def partnership_manager_only(i, user):
     # Transition cannot happen by a user that';s not a Partnership Manager
@@ -137,8 +139,20 @@ def sector_location_valid(sl):
 
 
 def amendments_valid(i):
+
+    logger.warn('add this validation once statuses are fixed')
+    # TODO: pmp-redesign add this validation
+    # if i.status not in [i.ACTIVE, i.SIGNED] and i.amendments.exists():
+    if i.status not in [i.ACTIVE] and i.amendments.exists():
+        # this prevents any changes in amendments if the status is not in Signed or Active
+        if not check_rigid_related(i, 'amendments'):
+            return False
+
+
     for a in i.amendments.all():
-        if not a.type or not a.signed_date:
+        if a.OTHER in a.types and a.other_description is None:
+            return False
+        if not a.signed_date:
             return False
     return True
 

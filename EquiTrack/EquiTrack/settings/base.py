@@ -61,8 +61,6 @@ SUIT_CONFIG = {
             {'model': 'reports.goal'},
         ]},
 
-        #{'app': 'activityinfo', 'label': 'ActivityInfo'},
-
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
         # {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
@@ -418,7 +416,6 @@ TENANT_APPS = (
     'reversion',
     'funds',
     'locations',
-    'activityinfo',
     'reports',
     'partners',
     'trips',

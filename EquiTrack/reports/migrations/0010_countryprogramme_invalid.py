@@ -4,6 +4,15 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
+def reverse(apps, schema_editor):
+    pass
+
+def migrate_CPs(apps, schema_editor):
+    CountryProgramme = apps.get_model('reports', 'CountryProgramme')
+    # use the save method to mark invalid fields
+    for cp in CountryProgramme.objects.all():
+        cp.save()
+
 
 class Migration(migrations.Migration):
 
@@ -17,4 +26,6 @@ class Migration(migrations.Migration):
             name='invalid',
             field=models.BooleanField(default=False),
         ),
+        migrations.RunPython(
+            migrate_CPs, reverse_code=reverse),
     ]
