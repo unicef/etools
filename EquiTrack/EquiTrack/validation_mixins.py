@@ -42,7 +42,6 @@ def check_rigid_related(obj, related):
     for i in comparison_map:
         for field in field_names:
             if getattr(i[0], field) != getattr(i[1], field):
-                print('comparison failed {}'.format(field))
                 return False
     return True
 
