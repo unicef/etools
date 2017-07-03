@@ -1,0 +1,6 @@
+Group,Condition,Status,Field,action,allowed
+Partnership Manager,condition1,Status,start,view,TRUE
+UNICEF User,,active,start,edit,FALSE
+UNICEF User,,active,start,required,TRUE
+UNICEF User,,,status,required,TRUE
+UNICEF User,,,status,edit,TRUE

@@ -1328,55 +1328,8 @@ class Intervention(TimeStampedModel):
 
     @classmethod
     def permission_structure(cls):
-        permissions = import_permissions()
-        print permissions
-        # status first check, group second check, condition third check
-        return {
-            'start_date': {
-                'edit': {
-                    'true': [
-                                {
-                                    'group': 'UNICEF User',
-                                    'condition': 'condition1',
-                                    'status': 'draft'
-                                }
-                    ],
-                    'false': []
-                },
-                'required': {
-                    'true': [
-                                {
-                                    'group': 'UNICEF User',
-                                    'condition': 'condition1',
-                                    'status': 'draft'
-                                }
-                    ],
-                    'false': []
-                }
-            },
-            'end_date': {
-                'edit': {
-                    'true': [
-                        {
-                            'group': 'UNICEF User',
-                            'condition': '',
-                            'status': ''
-                        }
-                    ],
-                    'false': []
-                },
-                'required': {
-                    'true': [
-                        {
-                            'group': 'UNICEF User',
-                            'condition': '',
-                            'status': 'active'
-                        }
-                    ],
-                    'false': []
-                }
-            }
-        }
+        permissions = import_permissions(cls.__name__)
+        return permissions
 
     @property
     def days_from_submission_to_signed(self):

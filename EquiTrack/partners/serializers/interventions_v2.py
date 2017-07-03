@@ -313,10 +313,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     def get_permissions(self, obj):
         user = self.context['request'].user
         ps = Intervention.permission_structure()
-        permissions = InterventionPermissions(user, self.instance, ps)
-        print permissions.get_permissions()
+        permissions = InterventionPermissions(user=user, instance=self.instance, permission_structure=ps)
         return permissions.get_permissions()
-
 
     class Meta:
         model = Intervention

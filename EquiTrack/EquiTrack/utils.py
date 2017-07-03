@@ -218,7 +218,11 @@ class Vividict(dict):
     def __missing__(self, key):
         value = self[key] = type(self)()
         return value
-from pprint import pprint
+
+class HashableDict(dict):
+    def __hash__(self):
+        return hash(frozenset(self.items()))
+
 
 def proccess_permissions(permission_dict):
     '''
@@ -251,7 +255,7 @@ def proccess_permissions(permission_dict):
                                         'group': 'PM',
                                         'status': 'Active'}]}}}
     '''
-    ps = permission_dict
+
     result = Vividict()
     possible_actions = ['edit', 'required', 'view']
 
@@ -277,13 +281,18 @@ def proccess_permissions(permission_dict):
     return result
 
 
-def import_permissions():
-    with open('intervention_permissions.csv', 'rb') as csvfile:
-        # sheet = csv.reader(csvfile, delimiter=',', quotechar='|')
-        sheet = csv.DictReader(csvfile, delimiter=',', quotechar='|')
-        result = proccess_permissions(sheet)
-        pprint(result)
-        # print sheet
-        # for row in sheet:
-        #     print row['Group'], row['Instance Fields Membership'], row['Status']
-    return result
+def import_permissions(model_name):
+    permission_file_map = {
+        'Intervention': 'EquiTrack/assets/partner/intervention_permissions.csv'
+    }
+    def process_file():
+        with open(permission_file_map[model_name], 'rb') as csvfile:
+            sheet = csv.DictReader(csvfile, delimiter=',', quotechar='|')
+            result = proccess_permissions(sheet)
+        return result
+
+    cache_key = "public-{}-permissions".format(model_name.lower())
+    # cache.delete(cache_key)
+    response = cache.get_or_set(cache_key, process_file(), 60*60*24)
+
+    return response

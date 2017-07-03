@@ -1,44 +1,39 @@
 from rest_framework import permissions
 from django.utils.lru_cache import lru_cache
 
-class HDict(dict):
-    def __hash__(self):
-        return hash(frozenset(self.items()))
+from EquiTrack.utils import HashableDict
+from partners.models import Intervention
 
-class InterventionPermissions(object):
+
+class PMPPermissions(object):
+    actions_default_permissions = {
+        'edit': True,
+        'required': False
+    }
+    possible_actions = ['edit', 'required']
+
+    def __init__(self, user, instance, permission_structure):
+        self.user = user
+        self.user_groups = self.user.groups.values_list('name', flat=True)
+        self.instance = instance
+        self.condition_group_valid = lru_cache(maxsize=16)(self.condition_group_valid)
+        self.permission_structure = permission_structure
+        self.all_model_fields = self.MODEL._meta.get_all_field_names()
 
     def condition_group_valid(self, condition_group):
         if condition_group['status']:
-            if self.intervention.status != condition_group['status']:
-                print 'status failed for ', condition_group
+            if self.instance.status != condition_group['status']:
                 return False
         if condition_group['group']:
             if condition_group['group'] not in self.user_groups:
-                print self.user_groups
-                print 'group failed for ', condition_group
                 return False
         if condition_group['condition']:
+            # use the following commented line in case we want to not use a condition mapper and interpret the
+            # condition directly from the sheet (not recommended)
+            # if not eval(condition_group['condition'], globals=globals(), locals=locals()):
             if not self.condition_map[condition_group['condition']]:
-                print 'condition failed for ', condition_group
                 return False
         return True
-
-    def __init__(self, user, intervention, permission_structure):
-        self.user = user
-        self.user_groups = self.user.groups.values_list('name', flat=True)
-        self.intervention = intervention
-        self.permission_structure = permission_structure
-        self.condition_map = {
-            'condition1': self.user in self.intervention.unicef_focal_points.all(),
-            'condition2': self.user in self.intervention.partner_focal_points.all()
-        }
-        self.all_model_fields = ['start_date', 'agreement', 'end_date']
-        self.actions_default_permissions = {
-            'edit': True,
-            'required': False
-        }
-        self.condition_group_valid = lru_cache(maxsize=16)(self.condition_group_valid)
-        self.possible_actions = ['edit', 'required']
 
     def get_field_permissions(self, action, field):
         condition_groups = field[action]
@@ -53,10 +48,9 @@ class InterventionPermissions(object):
 
         for allowed in ['true', 'false']:
             for condition_group in condition_groups[allowed]:
-                if self.condition_group_valid(HDict(condition_group)):
+                if self.condition_group_valid(HashableDict(condition_group)):
                     return True if allowed == 'true' else False
 
-        #print field, action, default_return
         return default_return
 
     def get_permissions(self):
@@ -71,6 +65,19 @@ class InterventionPermissions(object):
                 else:
                     my_permissions[action][field] = self.get_field_permissions(action, ps[field])
         return my_permissions
+
+
+class InterventionPermissions(PMPPermissions):
+
+    MODEL = Intervention
+
+    def __init__(self, **kwargs):
+        super(InterventionPermissions, self).__init__(**kwargs)
+
+        self.condition_map = {
+            'condition1': self.user in self.instance.unicef_focal_points.all(),
+            'condition2': self.user in self.instance.partner_focal_points.all()
+        }
 
 
 class PartnerPermission(permissions.BasePermission):
