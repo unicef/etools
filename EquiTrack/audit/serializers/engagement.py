@@ -135,7 +135,8 @@ class EngagementSerializer(EngagementDatesValidation,
         staff_members = validated_data.get('staff_members', [])
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
         partner = validated_data.get('partner', None) or self.instance.partner if self.instance else validated_data.get('partner', None)
-        active_pd = validated_data.get('active_pd', []) or self.instance.active_pd if self.instance else validated_data.get('active_pd', [])
+        active_pd = validated_data.get('active_pd', []) or self.instance.active_pd.all() if self.instance else validated_data.get('active_pd', [])
+        status = 'new' if not self.instance else self.instance.status
 
         if staff_members and agreement and agreement.auditor_firm:
             existed_staff_members = agreement.auditor_firm.staff_members.all()
@@ -146,7 +147,7 @@ class EngagementSerializer(EngagementDatesValidation,
                     'staff_members': [msg.format(pk_value=staff_member.pk) for staff_member in unexisted],
                 })
 
-        if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0:
+        if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0 and status == 'new':
             raise serializers.ValidationError({
                     'active_pd': [_('This field is required.'), ],
                 })
