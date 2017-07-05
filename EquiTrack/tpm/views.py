@@ -1,7 +1,10 @@
 from django.db.models import Prefetch
+from django.http import Http404
 
 from rest_framework import viewsets, mixins
+from rest_framework.decorators import list_route
 from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBackend
+from rest_framework.response import Response
 
 from partners.models import Agreement, Intervention, InterventionResultLink
 from reports.models import Result
@@ -36,6 +39,26 @@ class TPMPartnerViewSet(
     search_fields = ('vendor_number', 'name')
     ordering_fields = ('vendor_number', 'name', 'country')
     filter_fields = ('status', )
+
+    @list_route(methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
+    def sync(self, request, *args, **kwargs):
+        """
+        Fetch TPM Partner by vendor number. Load from vision if not found.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
+
+        if not instance:
+            # todo: load from VISION by number
+            pass
+
+        if not instance:
+            raise Http404
+
+        self.check_object_permissions(self.request, instance)
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
 class TPMVisitViewSet(
