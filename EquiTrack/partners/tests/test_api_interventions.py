@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import json
 import datetime
+from unittest import skip
 
 from django.core.urlresolvers import reverse
 from django.utils import timezone
@@ -27,14 +28,47 @@ from partners.models import (
 
 class TestInterventionsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
+    PM_EDITABLE_FIELDS = {
+        'draft': ['start_date', 'end_date'],
+        'signed': [],
+        'active': ['start_date']
+    }
+    EVERYONE_EDITABLE_FIELDS = {
+        'draft': ['start_date', 'end_date'],
+        'signed': [],
+        'active': ['']
+    }
+    EVERYONE_REQUIRED_FIELDS = {
+        'draft': ['status', 'end_date'],
+        'signed': [],
+        'active': ['']
+    }
+    ALL_FIELDS = Intervention._meta.get_all_field_names()
 
     def setUp(self):
+        today = datetime.date.today()
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory()
+        self.partner1 = PartnerFactory()
         self.agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
+
+        self.active_agreement = AgreementFactory(partner=self.partner1,
+                                                 status='active',
+                                                 signed_by_unicef_date=datetime.date.today(),
+                                                 signed_by_partner_date=datetime.date.today())
 
         self.intervention = InterventionFactory(agreement=self.agreement)
         self.intervention_2 = InterventionFactory(agreement=self.agreement, document_type=Intervention.PD)
+        self.active_intervention = InterventionFactory(agreement=self.active_agreement,
+                                                       document_type=Intervention.PD,
+                                                       start=today - datetime.timedelta(days=1),
+                                                       end=today + datetime.timedelta(days=90),
+                                                       status='active',
+                                                       signed_by_unicef_date=today - datetime.timedelta(days=1),
+                                                       signed_by_partner_date=today - datetime.timedelta(days=1),
+                                                       unicef_signatory=self.unicef_staff,
+                                                       partner_authorized_officer_signatory=self.partner1.
+                                                       staff_members.all().first())
 
         self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
         self.result = ResultFactory(result_type=self.result_type)
@@ -72,11 +106,12 @@ class TestInterventionsAPI(APITenantTestCase):
         )
         return response.status_code, json.loads(response.rendered_content)
 
-    def run_request(self, intervention_id, data=None, method='get'):
+    def run_request(self, intervention_id, data=None, method='get', user=None):
+        user = user or self.unicef_staff
         response = self.forced_auth_req(
             method,
             reverse('partners_api:intervention-detail', kwargs={'pk': intervention_id}),
-            user=self.unicef_staff,
+            user=user,
             data=data or {}
         )
         return response.status_code, json.loads(response.rendered_content)
@@ -231,3 +266,39 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
+
+    @skip('add test after permissions file is ready')
+    def test_permissions_for_intervention_status_draft(self):
+        # intervention is in Draft status
+        self.assertEquals(self.intervention.status, Intervention.DRAFT)
+
+        # user is UNICEF User
+        status_code, response = self.run_request(self.intervention.id, user=self.unicef_staff)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+
+        # all fields are there
+        self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
+        edit_permissions = response['permissions']['edit']
+        required_permissions = response['permissions']['required']
+        self.assertItemsEqual(self.EVERYONE_EDITABLE_FIELDS['draft'], [perm for perm in edit_permissions if
+                                                                       edit_permissions[perm]])
+        self.assertItemsEqual(self.EVERYONE_REQUIRED_FIELDS['draft'], [perm for perm in required_permissions if
+                                                                       required_permissions[perm]])
+
+    @skip('add test after permissions file is ready')
+    def test_permissions_for_intervention_status_active(self):
+        # intervention is in Draft status
+        self.assertEquals(self.active_intervention.status, Intervention.ACTIVE)
+
+        # user is UNICEF User
+        status_code, response = self.run_request(self.active_intervention.id, user=self.unicef_staff)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+
+        # all fields are there
+        self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
+        edit_permissions = response['permissions']['edit']
+        required_permissions = response['permissions']['required']
+        self.assertItemsEqual(self.EVERYONE_EDITABLE_FIELDS['signed'], [perm for perm in edit_permissions if
+                                                                        edit_permissions[perm]])
+        self.assertItemsEqual(self.EVERYONE_REQUIRED_FIELDS['signed'], [perm for perm in required_permissions if
+                                                                        required_permissions[perm]])
