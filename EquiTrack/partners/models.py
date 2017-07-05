@@ -1079,6 +1079,14 @@ class AgreementAmendment(TimeStampedModel):
     Represents an amendment to an agreement
     '''
 
+    AMENDMENT_TYPES = Choices(
+        ('Change IP name', 'Change in Legal Name of Implementing Partner'),
+        ('CP extension', 'Extension of Country Programme Cycle'),
+        ('Change authorized officer', 'Change Authorized Officer(s)'),
+        ('Change banking info', 'Banking Information'),
+        ('Change in clause', 'Change in clause'),
+    )
+
     number = models.CharField(max_length=5)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
     signed_amendment = models.FileField(
@@ -1086,6 +1094,9 @@ class AgreementAmendment(TimeStampedModel):
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
     )
+    types = ArrayField(models.CharField(
+        max_length=50,
+        choices=AMENDMENT_TYPES))
     signed_date = models.DateField(null=True, blank=True)
 
     tracker = FieldTracker()
@@ -1127,33 +1138,32 @@ class AgreementAmendment(TimeStampedModel):
         return super(AgreementAmendment, self).save(**kwargs)
 
 
-class AgreementAmendmentType(models.Model):
-
-    AMENDMENT_TYPES = Choices(
-        ('Change IP name', 'Change in Legal Name of Implementing Partner'),
-        ('CP extension', 'Extension of Country Programme Cycle'),
-        ('Change authorized officer', 'Change Authorized Officer(s)'),
-        ('Change banking info', 'Banking Information'),
-        ('Additional clause', 'Additional Clause'),
-        ('Amend existing clause', 'Amend Existing Clause'),  # previously known as Agreement Changes
-        ('Change in clause', 'Change in clause'),
-    )
-    agreement_amendment = models.ForeignKey(AgreementAmendment, related_name='amendment_types')
-    type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
-    label = models.TextField(null=True, blank=True)
-    officer = models.IntegerField(null=True, blank=True)
-    bank_info = models.TextField(null=True, blank=True)
-    legal_name_of_ip = models.CharField(null=True, blank=True, max_length=255)
-    cp_cycle_end = models.DateField(null=True, blank=True)
-    additional_clauses = models.TextField(null=True, blank=True)
-    existing_clause_amended = models.TextField(null=True, blank=True)
-
-    def __unicode__(self):
-        return "{}-{}-{}".format(
-            self.agreement_amendment.agreement.reference_number,
-            self.agreement_amendment.number,
-            self.type or ''
-        )
+# class AgreementAmendmentType(models.Model):
+#
+#     AMENDMENT_TYPES = Choices(
+#         ('Change IP name', 'Change in Legal Name of Implementing Partner'),
+#         ('CP extension', 'Extension of Country Programme Cycle'),
+#         ('Change authorized officer', 'Change Authorized Officer'),
+#         ('Change banking info', 'Banking Information'),
+#         ('Additional clause', 'Additional Clause'),
+#         ('Amend existing clause', 'Amend Existing Clause'),  # previously known as Agreement Changes
+#     )
+#     agreement_amendment = models.ForeignKey(AgreementAmendment, related_name='amendment_types')
+#     type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
+#     label = models.TextField(null=True, blank=True)
+#     officer = models.IntegerField(null=True, blank=True)
+#     bank_info = models.TextField(null=True, blank=True)
+#     legal_name_of_ip = models.CharField(null=True, blank=True, max_length=255)
+#     cp_cycle_end = models.DateField(null=True, blank=True)
+#     additional_clauses = models.TextField(null=True, blank=True)
+#     existing_clause_amended = models.TextField(null=True, blank=True)
+#
+#     def __unicode__(self):
+#         return "{}-{}-{}".format(
+#             self.agreement_amendment.agreement.reference_number,
+#             self.agreement_amendment.number,
+#             self.type or ''
+#         )
 
 
 class InterventionManager(models.Manager):

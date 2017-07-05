@@ -52,7 +52,6 @@ from .models import (
     InterventionResultLink,
     InterventionBudget,
     InterventionAttachment,
-    AgreementAmendmentType,
 
 )
 from .filters import (
@@ -858,15 +857,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         return request.user.is_superuser
 
 
-class AgreementAmendmentTypeAdmin(admin.ModelAdmin):
-    model = AgreementAmendmentType
-    list_filter = (
-        u'agreement_amendment',
-        u'agreement_amendment__agreement',
-        u'agreement_amendment__agreement__partner',
-    )
-
-
 class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = u'Amendment'
     model = AgreementAmendment
@@ -874,6 +864,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
         'signed_amendment',
         'signed_date',
         'number',
+        'types',
     )
     list_display = (
         u'agreement',
@@ -900,7 +891,6 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
 
 
 class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
-    resource_class = AgreementExport
     form = AgreementForm
     list_filter = (
         u'partner',
@@ -912,8 +902,6 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
         u'agreement_type',
         u'status',
         u'signed_by_unicef_date',
-        u'download_url',
-
     )
     fieldsets = (
         (_('Agreement Details'), {
@@ -934,23 +922,9 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
                 )
         }),
     )
-    readonly_fields = (
-        u'download_url',
-    )
     filter_horizontal = (
         u'authorized_officers',
     )
-
-    def download_url(self, obj):
-        if obj and obj.agreement_type == Agreement.PCA:
-            return u'<a class="btn btn-primary default" ' \
-                   u'href="{}" target="_blank" >Download</a>'.format(
-                       reverse('pca_pdf', args=(obj.id,))
-                   )
-        return u''
-
-    download_url.allow_tags = True
-    download_url.short_description = 'PDF Agreement'
 
     def save_model(self, request, obj, form, change):
         created = False if change else True
@@ -1021,7 +995,6 @@ admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(AgreementAmendment, AgreementAmendmentAdmin)
-admin.site.register(AgreementAmendmentType, AgreementAmendmentTypeAdmin)
 
 
 admin.site.register(Intervention, InterventionAdmin)
