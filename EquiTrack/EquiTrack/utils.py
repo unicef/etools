@@ -283,7 +283,7 @@ def proccess_permissions(permission_dict):
 
 def import_permissions(model_name):
     permission_file_map = {
-        'Intervention': 'EquiTrack/assets/partner/intervention_permissions.csv'
+        'Intervention': settings.SITE_ROOT + '/assets/partner/intervention_permissions.csv'
     }
     def process_file():
         with open(permission_file_map[model_name], 'rb') as csvfile:
