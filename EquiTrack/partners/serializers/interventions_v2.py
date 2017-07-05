@@ -443,14 +443,18 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='agreement.partner.name')
     planned_budget = serializers.SerializerMethodField()
+    actual_amount = serializers.SerializerMethodField()
 
     def get_planned_budget(self, obj):
         return obj.planned_budget.unicef_cash if obj.planned_budget else 0
 
+    def get_actual_amount(self, obj):
+        return sum([fr.actual_amt for fr in obj.frs.all()])
+
     class Meta:
         model = Intervention
         fields = (
-            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'planned_budget'
+            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'planned_budget', 'actual_amount'
         )
 
 
