@@ -62,7 +62,7 @@ class FSMTransitionActionMixin(object):
     @detail_route(methods=['post'], url_path='(?P<action>\D+)')
     def action(self, request, *args, **kwargs):
         """
-        Change status of the Engagement
+        Change status of FSM controlled object
         """
         action = kwargs.get('action', False)
         instance = self.get_object()
