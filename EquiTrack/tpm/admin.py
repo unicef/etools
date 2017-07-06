@@ -52,11 +52,12 @@ class TPMPartnerAdmin(admin.ModelAdmin):
         'vendor_number', 'name', 'email', 'phone_number', 'blocked', 'hidden',
         'country',
     ]
-    list_filter = ['blocked', 'hidden', 'country', ]
+    list_filter = ['blocked', 'hidden', 'country', 'status', ]
     search_fields = ['vendor_number', 'name', ]
     inlines = [
         TPMPartnerStaffMemberInlineAdmin,
     ]
+    readonly_fields = ['status', ]
 
 
 @admin.register(models.TPMLocation)

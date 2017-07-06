@@ -35,6 +35,7 @@ class TPMPartner(BaseFirm):
     )
 
     status = FSMField(max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
+    attachments = GenericRelation(Attachment, blank=True)
 
     @transition(status, source=[STATUSES.draft, STATUSES.cancelled], target=STATUSES.active)
     def activate(self):

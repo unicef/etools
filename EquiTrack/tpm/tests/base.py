@@ -6,6 +6,7 @@ from django.core.files import File
 from attachments.models import FileType, Attachment
 from tpm.models import UNICEFFocalPoint, PME, ThirdPartyMonitor, UNICEFUser
 from EquiTrack.factories import UserFactory
+from utils.groups.wrappers import GroupWrapper
 from .factories import TPMVisitFactory, TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
 
@@ -37,10 +38,7 @@ class TPMTestCaseMixin(object):
         super(TPMTestCaseMixin, self).setUp()
 
         # clearing groups cache
-        ThirdPartyMonitor._group = None
-        UNICEFUser._group = None
-        UNICEFFocalPoint._group = None
-        PME._group = None
+        GroupWrapper.invalidate_instances()
 
         self.tpm_partner = TPMPartnerFactory()
         self.tpm_staff = TPMPartnerStaffMemberFactory(tpm_partner=self.tpm_partner)
