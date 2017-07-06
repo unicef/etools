@@ -1,9 +1,9 @@
+from django.apps import apps
 from rest_framework import permissions
 from django.utils.lru_cache import lru_cache
 
 from EquiTrack.utils import HashableDict
 from EquiTrack.validation_mixins import check_rigid_related
-from partners.models import Intervention
 
 
 class PMPPermissions(object):
@@ -15,6 +15,7 @@ class PMPPermissions(object):
     possible_actions = ['edit', 'required', 'view']
 
     def __init__(self, user, instance, permission_structure, **kwargs):
+        self.MODEL = apps.get_model('partners.{}'.format(self.MODEL_NAME))
         self.user = user
         self.user_groups = self.user.groups.values_list('name', flat=True)
         self.instance = instance
@@ -71,7 +72,7 @@ class PMPPermissions(object):
 
 class InterventionPermissions(PMPPermissions):
 
-    MODEL = Intervention
+    MODEL_NAME = 'Intervention'
 
     def __init__(self, **kwargs):
         '''
