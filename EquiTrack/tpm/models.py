@@ -37,11 +37,14 @@ class TPMPartner(BaseFirm):
     status = FSMField(max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
     attachments = GenericRelation(Attachment, blank=True)
 
-    @transition(status, source=[STATUSES.draft, STATUSES.cancelled], target=STATUSES.active)
+    # TODO: Remove hardcode for PME permissions?
+    @transition(status, source=[STATUSES.draft, STATUSES.cancelled], target=STATUSES.active,
+                permission=lambda instance, user: PME.as_group() in user.groups.all())
     def activate(self):
         pass
 
-    @transition(status, source=[STATUSES.draft, STATUSES.active], target=STATUSES.cancelled)
+    @transition(status, source=[STATUSES.draft, STATUSES.active], target=STATUSES.cancelled,
+                permission=lambda instance, user: PME.as_group() in user.groups.all())
     def cancel(self):
         pass
 

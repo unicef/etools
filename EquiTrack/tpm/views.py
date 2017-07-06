@@ -9,10 +9,11 @@ from rest_framework.response import Response
 
 from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, ExportViewSetDataMixin
 from utils.common.pagination import DynamicPageNumberPagination
-from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer
-from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer
 from .metadata import TPMMetadata
 from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission
+from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer
+from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer
+from .permissions import IsPMEorReadonlyPermission
 
 
 class BaseTPMViewSet(
@@ -39,6 +40,7 @@ class TPMPartnerViewSet(
     serializer_action_classes = {
         'list': TPMPartnerLightSerializer
     }
+    permission_classes = (IsPMEorReadonlyPermission,)
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('vendor_number', 'name')
     ordering_fields = ('vendor_number', 'name', 'country')
