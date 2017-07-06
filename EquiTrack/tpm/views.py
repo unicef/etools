@@ -7,13 +7,14 @@ from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBac
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, ExportViewSetDataMixin
+from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, ExportViewSetDataMixin, \
+    NestedViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
 from .metadata import TPMMetadata
-from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission
-from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer
+from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember
+from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer
-from .permissions import IsPMEorReadonlyPermission
+from .permissions import IsPMEorReadonlyPermission, CanCreateStaffMembers
 
 
 class BaseTPMViewSet(
@@ -65,6 +66,29 @@ class TPMPartnerViewSet(
 
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+
+class TPMStaffMembersViewSet(
+    BaseTPMViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    NestedViewSetMixin,
+    viewsets.GenericViewSet
+):
+    queryset = TPMPartnerStaffMember.objects.all()
+    serializer_class = TPMPartnerStaffMemberSerializer
+    permission_classes = (IsAuthenticated, CanCreateStaffMembers, )
+    filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
+    ordering_fields = ('user__email', 'user__first_name', 'id', )
+    search_fields = ('user__first_name', 'user__email', 'user__last_name', )
+
+    def perform_create(self, serializer, **kwargs):
+        instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
+        instance.user.profile.country = self.request.user.profile.country
+        instance.user.profile.save()
 
 
 class TPMVisitViewSet(
