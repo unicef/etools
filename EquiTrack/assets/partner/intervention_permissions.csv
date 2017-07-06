@@ -61,9 +61,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.3,document_type,UNICEF User,,*,Required,TRUE
 3.2.4,number,UNICEF User,,*,Required,TRUE
 3.2.5,title,UNICEF User,,*,Required,TRUE
-3.2.7,partner_focal_points,UNICEF User,,*,Required,TRUE
-3.2.8,offices,UNICEF User,,*,Required,TRUE
-3.2.9,unicef_focal_points,UNICEF User,,*,Required,TRUE
+3.2.7,partner_focal_points,UNICEF User,,Draft,Required,FALSE
+3.2.8,offices,UNICEF User,,Draft,Required,FALSE
+3.2.9,unicef_focal_points,UNICEF User,,Draft,Required,FALSE
 3.3.1,country_programme,UNICEF User,,Draft,Required,FALSE
 3.3.2,start,UNICEF User,,Draft,Required,FALSE
 3.3.3,end,UNICEF User,,Draft,Required,FALSE
