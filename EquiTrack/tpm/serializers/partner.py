@@ -33,3 +33,10 @@ class TPMPartnerSerializer(WritableNestedSerializerMixin, TPMPartnerLightSeriali
         fields = TPMPartnerLightSerializer.Meta.fields + [
             'staff_members', 'attachments',
         ]
+        extra_kwargs = {
+            field: {'read_only': True}
+            for field in [
+                'vendor_number', 'name', 'status',
+                'street_address', 'city', 'postal_code', 'country',
+            ]
+        }

@@ -18,7 +18,7 @@ tpm_visits_api.register(r'visits', TPMVisitViewSet, base_name='visits')
 
 
 urlpatterns = [
-    url(r'^', include(tpm_partners_api.urls)),
     url(r'^', include(tpm_staffmember_api.urls)),
+    url(r'^', include(tpm_partners_api.urls)),
     url(r'^', include(tpm_visits_api.urls)),
 ]
