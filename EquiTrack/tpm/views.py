@@ -4,24 +4,28 @@ from django.http import Http404
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import list_route
 from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBackend
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from partners.models import Agreement, Intervention, InterventionResultLink
-from reports.models import Result
-from tpm.models import TPMLocation, TPMPartner, TPMVisit, TPMActivity, \
-                       TPMLowResult, TPMSectorCovered, ThirdPartyMonitor, TPMPermission, \
-                       UNICEFFocalPoint
-from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin
+from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, ExportViewSetDataMixin
 from utils.common.pagination import DynamicPageNumberPagination
-from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer
-from tpm.serializers.attachments import TPMAttachmentsSerializer
-from tpm.serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer
-from tpm.view_mixins import TPMMetadataClassMixin
+from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer
+from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer
+from .metadata import TPMMetadata
+from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission
+
+
+class BaseTPMViewSet(
+    ExportViewSetDataMixin,
+    MultiSerializerViewSetMixin,
+):
+    metadata_class = TPMMetadata
+    pagination_class = DynamicPageNumberPagination
+    permission_classes = (IsAuthenticated, )
 
 
 class TPMPartnerViewSet(
-    TPMMetadataClassMixin,
-    MultiSerializerViewSetMixin,
+    BaseTPMViewSet,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
@@ -62,8 +66,7 @@ class TPMPartnerViewSet(
 
 
 class TPMVisitViewSet(
-    TPMMetadataClassMixin,
-    MultiSerializerViewSetMixin,
+    BaseTPMViewSet,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
@@ -85,7 +88,6 @@ class TPMVisitViewSet(
         'attachments',
     )
     serializer_class = TPMVisitSerializer
-    pagination_class = DynamicPageNumberPagination
     serializer_action_classes = {
         'list': TPMVisitLightSerializer
     }
