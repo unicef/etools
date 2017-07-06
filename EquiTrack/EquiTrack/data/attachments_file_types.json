@@ -83,7 +83,7 @@
     {
         "pk": 10,
         "fields": {
-            "order": 3,
+            "order": 2,
             "name": "Other",
             "code": "audit_engagement"
         },
@@ -122,6 +122,33 @@
             "order": 3,
             "name": "Other",
             "code": "audit_report"
+        },
+        "model": "attachments.filetype"
+    },
+    {
+        "pk": 15,
+        "fields": {
+            "order": 3,
+            "name": "PCA",
+            "code": "audit_engagement"
+        },
+        "model": "attachments.filetype"
+    },
+    {
+        "pk": 16,
+        "fields": {
+            "order": 4,
+            "name": "PD",
+            "code": "audit_engagement"
+        },
+        "model": "attachments.filetype"
+    },
+    {
+        "pk": 17,
+        "fields": {
+            "order": 5,
+            "name": "Workplan",
+            "code": "audit_engagement"
         },
         "model": "attachments.filetype"
     }
