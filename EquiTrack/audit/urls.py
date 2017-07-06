@@ -9,12 +9,12 @@ from audit.views import (
     EngagementViewSet, MicroAssessmentViewSet, SpotCheckViewSet,
     PurchaseOrderViewSet, AuditorStaffMembersViewSet,
     EngagementPDFView)
-
+from utils.common.routers import NestedComplexRouter
 
 auditor_firms_api = routers.SimpleRouter()
 auditor_firms_api.register(r'audit-firms', AuditorFirmViewSet, base_name='audit-firms')
 
-auditor_staffmember_api = routers.NestedSimpleRouter(auditor_firms_api, r'audit-firms', lookup='firm')
+auditor_staffmember_api = NestedComplexRouter(auditor_firms_api, r'audit-firms', lookup='auditor_firm')
 auditor_staffmember_api.register(r'staff-members', AuditorStaffMembersViewSet, base_name='auditorstaffmembers')
 
 purchase_orders_api = routers.SimpleRouter()

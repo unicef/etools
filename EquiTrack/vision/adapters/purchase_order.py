@@ -45,12 +45,14 @@ class POSynchronizer(VisionDataSynchronizer):
     MODEL_MAPPING = OrderedDict({
         'donor': Donor,
         'grant': Grant,
-        'audit_firm': AuditorFirm,
+        'auditor_firm': AuditorFirm,
         'order': PurchaseOrder,
     })
     DATE_FIELDS = ['EXPIRY_DATE', 'PO_DATE', ]
 
     def _convert_records(self, records):
+        if isinstance(records, list):
+            return records
         return json.loads(records)
 
     def _filter_records(self, records):

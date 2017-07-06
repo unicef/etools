@@ -11,7 +11,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
-from utils.common.views import MultiSerializerViewSetMixin, ExportViewSetDataMixin, FSMTransitionActionMixin
+from utils.common.views import MultiSerializerViewSetMixin, ExportViewSetDataMixin, FSMTransitionActionMixin, \
+    NestedViewSetMixin
 from .models import Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, PurchaseOrder, \
     AuditorStaffMember, Auditor, AuditPermission
 from utils.common.pagination import DynamicPageNumberPagination
@@ -138,7 +139,7 @@ class EngagementViewSet(
         return serializer_class or super(EngagementViewSet, self).get_serializer_class()
 
     def get_queryset(self):
-        queryset = super(EngagementViewSet, self).get_queryset()\
+        queryset = super(EngagementViewSet, self).get_queryset()
 
         queryset = queryset.prefetch_related(
             'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
@@ -182,21 +183,18 @@ class AuditorStaffMembersViewSet(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
+    NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
+    queryset = AuditorStaffMember.objects.all()
     serializer_class = AuditorStaffMemberSerializer
     permission_classes = (IsAuthenticated, CanCreateStaffMembers, )
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
 
-    def get_queryset(self):
-        firm_pk = self.kwargs.get('firm_pk')
-        return AuditorStaffMember.objects.filter(auditor_firm=firm_pk)
-
     def perform_create(self, serializer, **kwargs):
-        firm_pk = self.kwargs.get('firm_pk')
-        instance = serializer.save(auditor_firm_id=firm_pk, **kwargs)
+        instance = serializer.save(auditor_firm=self.get_parent_object(), **kwargs)
         instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.save()
 
