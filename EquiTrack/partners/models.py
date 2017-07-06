@@ -1315,6 +1315,8 @@ class Intervention(TimeStampedModel):
         blank=True
     )
 
+    contingency_pd = models.BooleanField(default=False)
+
     offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
     population_focus = models.CharField(max_length=130, null=True, blank=True)
 

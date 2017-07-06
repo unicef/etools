@@ -260,9 +260,9 @@ def proccess_permissions(permission_dict):
     possible_actions = ['edit', 'required', 'view']
 
     for row in permission_dict:
-        field = row['Field']
-        action = row['action'].lower()
-        allowed = row['allowed'].lower()
+        field = row['Field Name']
+        action = row['Action'].lower()
+        allowed = row['Allowed'].lower()
         assert action in possible_actions
 
         if isinstance(result[field][action][allowed], dict):
@@ -276,7 +276,7 @@ def proccess_permissions(permission_dict):
         result[field][action][allowed].append({
             'group': row['Group'],
             'condition': row['Condition'],
-            'status': row['Status']
+            'status': row['Status'].lower()
         })
     return result
 

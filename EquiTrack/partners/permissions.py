@@ -2,6 +2,7 @@ from rest_framework import permissions
 from django.utils.lru_cache import lru_cache
 
 from EquiTrack.utils import HashableDict
+from EquiTrack.validation_mixins import check_rigid_related
 from partners.models import Intervention
 
 
@@ -13,7 +14,7 @@ class PMPPermissions(object):
     }
     possible_actions = ['edit', 'required', 'view']
 
-    def __init__(self, user, instance, permission_structure):
+    def __init__(self, user, instance, permission_structure, **kwargs):
         self.user = user
         self.user_groups = self.user.groups.values_list('name', flat=True)
         self.instance = instance
@@ -73,11 +74,28 @@ class InterventionPermissions(PMPPermissions):
     MODEL = Intervention
 
     def __init__(self, **kwargs):
+        '''
+        :param kwargs: user, instance, permission_structure
+        if 'inbound_check' key, is sent in, that means that instance now contains all of the fields available in the
+        validation: old_instance, old.instance.property_old in case of related fields.
+        the reason for this is so that we can check the more complex permissions that can only be checked on save.
+        for example: in this case certain field are editable only when user adds an amendment. that means that we would
+        need access to the old amendments, new amendments in order to check this.
+        '''
         super(InterventionPermissions, self).__init__(**kwargs)
+        inbound_check = kwargs.get('inbound_check', False)
+
+        def user_added_amendment(instance):
+            assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
+            #check_rigid_related checks if there were any changes from the previous
+            # amendments if there were changes it returns False
+            return not check_rigid_related(instance, 'amendments')
 
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),
-            'condition2': self.user in self.instance.partner_focal_points.all()
+            'condition2': self.user in self.instance.partner_focal_points.all(),
+            # this condition can only be checked on data save
+            'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)
         }
 
 
