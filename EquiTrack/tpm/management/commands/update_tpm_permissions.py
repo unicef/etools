@@ -38,7 +38,6 @@ class Command(BaseCommand):
         'tpmvisit.tpm_partner',
         'tpmvisit.tpm_activities',
         'tpmvisit.attachments',
-        'tpmvisit.tpm_activities',
         'tpmactivity.*',
         'tpmsectorcovered.*',
         'tpmlowresult.*',
