@@ -8,5 +8,6 @@ class AppConfig(BaseAppConfig):
     verbose_name = 'TPM'
 
     def ready(self):
+        from . import signals
         from utils.permissions import signals
         signals.prepare_permission_choices(self.get_models())
