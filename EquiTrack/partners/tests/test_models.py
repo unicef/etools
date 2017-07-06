@@ -583,20 +583,20 @@ class TestInterventionModel(TenantTestCase):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
-        cp = CountryProgramme.objects.create(
+        self.cp = CountryProgramme.objects.create(
             name="CP 1",
             wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        agreement = Agreement.objects.create(
+        self.agreement = Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
-            country_programme=cp,
+            country_programme=self.cp,
         )
         self.intervention = Intervention.objects.create(
             title="Intervention 1",
-            agreement=agreement,
+            agreement=self.agreement,
             submission_date=datetime.date(datetime.date.today().year, 1, 1),
         )
 
@@ -658,3 +658,20 @@ class TestInterventionModel(TenantTestCase):
             in_kind_amount_local=10,
         )
         self.assertEqual(int(self.intervention.planned_cash_transfers), 15000)
+
+    def test_ssfa_set_agreement_dates(self):
+        agreement1 = Agreement.objects.create(
+            agreement_type=Agreement.SSFA,
+            partner=self.partner_organization,
+            country_programme=self.cp,
+        )
+        self.intervention.agreement = agreement1
+        self.intervention.start = datetime.date(datetime.date.today().year - 1, 1, 1)
+        self.intervention.end = datetime.date(datetime.date.today().year + 1, 1, 1)
+        self.intervention.document_type = Intervention.SSFA
+        self.intervention.save()
+
+        self.assertEqual(agreement1.start, self.intervention.start)
+        self.assertEqual(agreement1.end, self.intervention.end)
+
+

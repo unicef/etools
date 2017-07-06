@@ -1484,6 +1484,11 @@ class Intervention(TimeStampedModel):
             # load from DB
             oldself = Intervention.objects.get(pk=self.pk)
 
+            if self.document_type == self.SSFA and (self.start != oldself.start or self.end != oldself.end):
+                self.agreement.start = self.start
+                self.agreement.end = self.end
+                self.agreement.save()
+
         # update reference number if needed
         amendment_number = kwargs.get('amendment_number', None)
         if amendment_number:
