@@ -94,6 +94,7 @@ class InterventionPermissions(PMPPermissions):
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
+            'contingency on': self.instance.contingency_pd is True,
             # this condition can only be checked on data save
             'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)
         }
