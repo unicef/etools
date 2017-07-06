@@ -15,7 +15,7 @@ class PMPPermissions(object):
     possible_actions = ['edit', 'required', 'view']
 
     def __init__(self, user, instance, permission_structure, **kwargs):
-        self.MODEL = apps.get_model('partners.{}'.format(self.MODEL_NAME))
+        self.MODEL = apps.get_model(self.MODEL_NAME)
         self.user = user
         self.user_groups = self.user.groups.values_list('name', flat=True)
         self.instance = instance
@@ -72,7 +72,7 @@ class PMPPermissions(object):
 
 class InterventionPermissions(PMPPermissions):
 
-    MODEL_NAME = 'Intervention'
+    MODEL_NAME = 'partners.Intervention'
 
     def __init__(self, **kwargs):
         '''

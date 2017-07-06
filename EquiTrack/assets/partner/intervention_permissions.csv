@@ -67,6 +67,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.1,country_programme,UNICEF User,,Draft,Required,FALSE
 3.3.2,start,UNICEF User,,Draft,Required,FALSE
 3.3.3,end,UNICEF User,,Draft,Required,FALSE
+3.3.2,start,UNICEF User,contingency on,Signed,Required,FALSE
+3.3.3,end,UNICEF User,contingency on,Signed,Required,FALSE
 3.3.5,sector_locations,UNICEF User,,Draft,Required,FALSE
 3.3.6,sector_locations,UNICEF User,,Draft,Required,FALSE
 3.9.11,signed_pd_document,UNICEF User,,Draft,Required,FALSE
