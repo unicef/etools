@@ -195,7 +195,7 @@ class AggregatedRiskCountRiskRootSerializer(BaseAggregatedRiskRootSerializer):
 
     @staticmethod
     def _get_bluerprint_count_by_risk_value(category, field_name, risk_value):
-        category.blueprint_count = len(category.blueprints.filter())
+        category.blueprint_count = len(category.blueprints.filter(risks__value=risk_value))
         setattr(category, field_name, category.blueprints.filter(risks__value=risk_value).count())
         for child in category.children.all():
             category.blueprint_count = getattr(category, field_name, 0) + getattr(child, field_name, 0)
