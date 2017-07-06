@@ -398,7 +398,6 @@ SHARED_APPS = (
     'analytical',
     'mptt',
     'easy_pdf',
-    'django_hstore',
 
     'vision',
     'management',
