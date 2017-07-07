@@ -195,13 +195,25 @@ class AggregatedRiskCountRiskRootSerializer(BaseAggregatedRiskRootSerializer):
 
     @staticmethod
     def _get_bluerprint_count_by_risk_value(category, field_name, risk_value):
-        category.blueprint_count = len(category.blueprints.filter(risks__value=risk_value))
-        setattr(category, field_name, category.blueprints.filter(risks__value=risk_value).count())
+        values_count = len(filter(lambda b: b._risk and b._risk.risk_point == risk_value, category.blueprints.all()))
+        setattr(category, field_name, values_count)
+
         for child in category.children.all():
-            category.blueprint_count = getattr(category, field_name, 0) + getattr(child, field_name, 0)
+            setattr(category, field_name, getattr(category, field_name, 0) + getattr(child, field_name, 0))
 
     @staticmethod
     def calculate_risk(category):
+        for blueprint in category.blueprints.all():
+            if blueprint.risks.all().exists():
+                # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer.
+                blueprint._risk = blueprint.risks.all()[0]
+                if blueprint._risk.value == 1:
+                    blueprint._risk.risk_point = blueprint._risk.value
+                else:
+                    blueprint._risk.risk_point = blueprint.weight * blueprint._risk.value
+            else:
+                blueprint._risk = None
+
         AggregatedRiskCountRiskRootSerializer._get_bluerprint_count_by_risk_value(
             category, 'hight_risk_count', Risk.VALUES.high
         )
