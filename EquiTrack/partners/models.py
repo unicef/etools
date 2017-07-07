@@ -861,28 +861,19 @@ class Agreement(TimeStampedModel):
     PCA = 'PCA'
     MOU = 'MOU'
     SSFA = 'SSFA'
-    IC = 'IC'
-    AWP = 'AWP'
     AGREEMENT_TYPES = (
         (PCA, u"Programme Cooperation Agreement"),
         (SSFA,'Small Scale Funding Agreement'),
         (MOU,'Memorandum of Understanding'),
-        # TODO Remove these two with data migration
-        (IC,'Institutional Contract'),
-        (AWP, u"Work Plan"),
     )
 
     DRAFT = u"draft"
-    CANCELLED = u"cancelled"
-    ACTIVE = u"active"
     SIGNED = u"signed"
     ENDED = u"ended"
     SUSPENDED = u"suspended"
     TERMINATED = u"terminated"
     STATUS_CHOICES = (
         (DRAFT, u"Draft"),
-        (CANCELLED, u"Cancelled"),
-        (ACTIVE, u"Active"),
         (SIGNED, u"Signed"),
         (ENDED, u"Ended"),
         (SUSPENDED, u"Suspended"),
@@ -1002,34 +993,35 @@ class Agreement(TimeStampedModel):
                 document_type__in=[Intervention.PD, Intervention.SHPD]
             )
             for item in interventions:
-                if item.status not in [Intervention.DRAFT, Intervention.CANCELLED, Intervention.IMPLEMENTED] and item.status != self.status:
+                if item.status not in [Intervention.DRAFT, Intervention.CANCELLED, Intervention.IMPLEMENTED] and\
+                        item.status != self.status:
                     item.status = self.status
                     item.save()
 
     @transition(field=status,
                 source=[DRAFT],
-                target=[ACTIVE],
+                target=[SIGNED],
                 conditions=[agreement_transition_to_active_valid])
     def transition_to_active(self):
         pass
 
     @transition(field=status,
-                source=[ACTIVE],
+                source=[SIGNED],
                 target=[ENDED],
                 conditions=[agreement_transition_to_ended_valid])
     def transition_to_ended(self):
         pass
 
     @transition(field=status,
-                source=[ACTIVE],
+                source=[SIGNED],
                 target=[SUSPENDED],
                 conditions=[])
     def transition_to_suspended(self):
         pass
 
     @transition(field=status,
-                source=[SUSPENDED, TERMINATED, ACTIVE],
-                target=[CANCELLED],
+                source=[SUSPENDED, TERMINATED, SIGNED],
+                target=[DRAFT],
                 conditions=[agreements_illegal_transition])
     def transition_to_cancelled(self):
         pass
@@ -1186,15 +1178,6 @@ class Intervention(TimeStampedModel):
     Relates to :model:`partners.PartnerStaffMember`
     """
 
-    # POTENTIAL_AUTO_TRANSITIONS = {
-    #     'draft': [
-    #         {'active': []},
-    #     ],
-    #     'active': [
-    #         {'implemented': []},
-    #     ],
-    # }
-
     DRAFT = 'draft'
     SIGNED = 'signed'
     ACTIVE = 'active'
@@ -1203,6 +1186,26 @@ class Intervention(TimeStampedModel):
     CLOSED = 'closed'
     SUSPENDED = 'suspended'
     TERMINATED = 'terminated'
+
+    POTENTIAL_AUTO_TRANSITIONS = {
+        DRAFT: [
+            {SIGNED: []},
+        ],
+        SIGNED: [
+            {ACTIVE: []},
+        ],
+        ACTIVE: [
+            {ENDED: []},
+        ],
+        ENDED: [
+            {CLOSED: []},
+        ],
+    }
+
+    # IMPLEMENTED to CLOSED
+    # ACTIVE to ACTIVE if validation is ok else DRAFT
+    # CANCELLED TO DRAFT
+
 
     CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
@@ -1228,6 +1231,10 @@ class Intervention(TimeStampedModel):
     tracker = FieldTracker()
     objects = InterventionManager()
 
+    # Flag if this has been migrated to a status that is not correct
+    # previous status
+    metadata = models.JSONField(blank=True, null=True)
+
     document_type = models.CharField(
         choices=INTERVENTION_TYPES,
         max_length=255,
@@ -1249,7 +1256,6 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True,
         verbose_name='Reference Number',
-        # TODO: write a script to insure this before merging.
         unique=True,
     )
     title = models.CharField(max_length=256)
@@ -1438,8 +1444,6 @@ class Intervention(TimeStampedModel):
                 target=[DRAFT, CANCELLED],
                 conditions=[illegal_transitions])
     def basic_transition(self):
-        # From active, ended, suspended and terminated you cannot move to draft or cancelled because yo'll
-        # mess up the reference numbers.
         pass
 
     @transition(field=status,
@@ -1448,8 +1452,9 @@ class Intervention(TimeStampedModel):
                 conditions=[intervention_validation.transition_to_active],
                 permission=intervention_validation.partnership_manager_only)
     def transition_to_active(self):
-        # From active, ended, suspended and terminated you cannot move to draft or cancelled because yo'll
-        # mess up the reference numbers.
+        if self.document_type == self.SSFA:
+            self.agreement.status = Agreement.ACTIVE
+            self.agreement.save()
         pass
 
     @transition(field=status,
@@ -1496,6 +1501,24 @@ class Intervention(TimeStampedModel):
 
         self.number = self.reference_number
 
+    def update_ssfa_properties(self):
+        if self.document_type == self.SSFA:
+            save_agreement = False
+            if self.agreement.start != self.start or self.agreement.end != self.end:
+                self.agreement.start = self.start
+                self.agreement.end = self.end
+
+            if self.status == self.ACTIVE and self.agreement.status != Agreement.SIGNED:
+                save_agreement = True
+                self.agreement.status = Agreement.SIGNED
+
+            elif self.status in [self.ENDED, self.SUSPENDED, self.TERMINATED] and self.status != self.agreement.status:
+                save_agreement = True
+                self.agreement.status = self.status
+
+            if save_agreement:
+                self.agreement.save()
+
     @transaction.atomic
     def save(self, **kwargs):
         # check status auto updates
@@ -1515,6 +1538,8 @@ class Intervention(TimeStampedModel):
             # to create a reference number we need a pk
             super(Intervention, self).save()
             self.update_reference_number()
+
+
 
         super(Intervention, self).save()
 

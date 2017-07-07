@@ -1086,7 +1086,7 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], Agreement.ACTIVE)
+        self.assertEqual(response.data["status"], Agreement.SIGNED)
 
     @skip("Test transitions")
     def test_partner_agreements_update_suspend(self):
