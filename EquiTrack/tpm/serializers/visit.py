@@ -73,6 +73,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     unicef_focal_points = SeparatedReadWriteField(
         read_field=MinimalUserSerializer(read_only=True, many=True),
+        required=False
     )
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
