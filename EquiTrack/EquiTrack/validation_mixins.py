@@ -520,6 +520,20 @@ class CompleteValidation(object):
     def map_errors(self, errors):
         return [self.VALID_ERRORS.get(error, error) for error in errors]
 
+    def _apply_current_side_effects(self):
+        # check if there was any transition so far:
+        if self.old_status == self.new_status:
+            return
+        else:
+            # get the side effects from POTENTIAL_AUTO_TRANSITIONS:
+            potential = getattr(self.new.__class__, 'POTENTIAL_AUTO_TRANSITIONS', {})
+            transition_from = potential.get(self.old_status, [])
+            transition_to = filter(lambda x: self.new_status in x, transition_from)
+            if not transition_to:
+                return
+            for side_effect_function in transition_to[self.new_status]:
+                side_effect_function()
+
     @cached_property
     def total_validation(self):
         if not self.basic_validation[0]:
@@ -534,6 +548,10 @@ class CompleteValidation(object):
             state_valid = self.state_valid()
             if not state_valid[0]:
                 return False, self.map_errors(state_valid[1])
+
+            # before checking if any further transitions can be made, if the current instance just transitioned,
+            # apply side-effects:
+            self._apply_current_side_effects()
 
             if self.make_auto_transitions():
                 self.new.save()
