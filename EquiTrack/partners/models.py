@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
-from django.db.models import Q, Sum, F
+from django.db.models import Q, Sum, F, Min, Max
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
@@ -1167,6 +1167,8 @@ class InterventionManager(models.Manager):
                                                                                 'sector_locations__sector',
                                                                                 'sector_locations__locations',
                                                                                 'unicef_focal_points',
+                                                                                'frs',
+                                                                                'attachments__type'
                                                                                 'offices',
                                                                                 'agreement__partner',
                                                                                 'planned_budget')
@@ -1406,6 +1408,17 @@ class Intervention(TimeStampedModel):
         if self.planned_budget:
             return self.planned_budget.in_kind_amount_local
         return 0
+
+    @cached_property
+    def total_frs(self):
+        return self.frs.aggregate(
+            total_frs_amt=Sum('total_amt'),
+            total_outstanding_amt=Sum('outstanding_amt'),
+            total_intervention_amt=Sum('intervention_amt'),
+            total_actual_amt=Sum('actual_amt'),
+            earliest_start_date=Min('start_date'),
+            latest_end_date=Max('end_date')
+        )
 
     @property
     def year(self):
