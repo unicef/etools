@@ -26,6 +26,16 @@ class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
         permission_class = TPMPermission
 
 
+class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
+    name = serializers.ReadOnlyField(source="cp_output.name")
+
+    class Meta:
+        model = InterventionResultLink
+        fields = [
+            'id', 'name'
+        ]
+
+
 class TPMLocationSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             serializers.ModelSerializer):
     location = SeparatedReadWriteField(
@@ -38,13 +48,15 @@ class TPMLocationSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     def validate(self, data):
         validated_data = super(TPMLocationSerializer, self).validate(data)
-        print "data: ", data
         return validated_data
 
 
 class TPMLowResultSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             serializers.ModelSerializer):
     tpm_locations = TPMLocationSerializer(many=True)
+    result = SeparatedReadWriteField(
+        read_field=InterventionResultLinkVisitSerializer(read_only=True)
+    )
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMLowResult
@@ -137,16 +149,6 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
             self._validate_tpm_low_results(sector, partnership)
 
         return validated_data
-
-
-class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(source="cp_output.name")
-
-    class Meta:
-        model = InterventionResultLink
-        fields = [
-            'id', 'name'
-        ]
 
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
