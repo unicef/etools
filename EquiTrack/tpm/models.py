@@ -103,7 +103,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             models.Max('end_date'))['end_date__max']
 
     def __str__(self):
-        return 'Visit ({}, {})'.format(self.visit_start, self.visit_end)
+        return 'Visit ({}, {})'.format(self.tpm_partner, ', '.join(self.tpm_activities.values_list('partnership__title', flat=True)))
 
     def has_action_permission(self, user=None, action=None):
         return _has_action_permission(self, user, action)
@@ -221,7 +221,7 @@ class TPMSectorCovered(models.Model):
 @python_2_unicode_compatible
 class TPMLowResult(models.Model):
     # TODO: Results is LowerResult? (TPM Spec: Low-level Results  (see PD/SSFA Output [array]0..* in Partnership Management))
-    result = models.ForeignKey('partners.InterventionResultLink', verbose_name=_('PD/SSFA Output'), blank=True)
+    result = models.ForeignKey('partners.InterventionResultLink', verbose_name=_('PD/SSFA Output'))
     tpm_sector = models.ForeignKey(TPMSectorCovered, verbose_name=_('sector'), related_name='tpm_low_results')
 
     def __str__(self):

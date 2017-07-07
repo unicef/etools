@@ -95,8 +95,12 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     def _validate_tpm_low_results(self, sector, partnership):
         result_errors = []
         for result in sector.get("tpm_low_results", []):
+            result_error = None
 
             tpm_locations = result.get("tpm_locations", [])
+
+            if result.get("result", None) and not partnership.result_links.filter(id=result.get("result").id).exists():
+                result_error = '{} not allowed for {}'.format(result.get("result"), partnership)
 
             location_errors = []
             for tpm_location in tpm_locations:
@@ -108,8 +112,13 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
                     ).exists():
                         location_errors.append('{0} not allowed for {1}'.format(location, sector["sector"]))
 
+            errors = {}
             if location_errors:
-                result_errors.append({"tpm_locations": location_errors})
+                errors["tpm_locations"] = location_errors
+            if result_error:
+                errors["result"] = result_error
+            if errors:
+                result_errors.append(errors)
 
         if result_errors:
             raise serializers.ValidationError({
