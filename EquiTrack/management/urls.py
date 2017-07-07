@@ -1,7 +1,4 @@
-__author__ = 'RobertAvram'
-
-
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from .views import (
     ActiveUsersSection,
@@ -11,8 +8,7 @@ from .views import (
     PortalDashView
 )
 
-urlpatterns = patterns(
-    '',
+urlpatterns = (
     url(r'^$', PortalDashView.as_view()),
     url(r'^api/stats/usercounts/$', ActiveUsersSection.as_view()),
     url(r'^api/stats/trips/$', TripsStatisticsView.as_view()),

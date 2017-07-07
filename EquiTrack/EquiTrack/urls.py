@@ -1,14 +1,16 @@
 from __future__ import absolute_import
 
 from django.conf import settings
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import REDIRECT_FIELD_NAME
 
 from rest_framework_swagger.views import get_swagger_view
+import rest_framework_jwt.views
 
 from rest_framework_nested import routers
+import djangosaml2.views
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -127,8 +129,7 @@ api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_p
 api.register(r'labels', LabelViewSet, base_name='labels')
 
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # TODO: overload login_required to staff_required to automatically re-route partners to the parter portal
 
     # Used for admin and dashboard pages in django
@@ -159,7 +160,7 @@ urlpatterns = patterns(
 
     # ***************  API version 2  ******************
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
-    url(r'^api/t2f/', include(t2f_patterns, namespace='t2f')),
+    url(r'^api/t2f/', include(t2f_patterns)),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2')),
     url(r'^api/v2/users/', include('users.urls_v2')),
@@ -175,8 +176,8 @@ urlpatterns = patterns(
     url(r'^accounts/', include('allauth.urls')),
     url(r'^saml2/', include('djangosaml2.urls')),
     url(r'^chaining/', include('smart_selects.urls')),
-    url(r'^login/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
-    url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),  # TODO: remove this when eTrips is deployed needed
+    url(r'^login/token-auth/', rest_framework_jwt.views.obtain_jwt_token),
+    url(r'^api-token-auth/', rest_framework_jwt.views.obtain_jwt_token),  # TODO: remove this when eTrips is deployed needed
     url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
     url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
         name='workspace-inactive'),
@@ -187,14 +188,13 @@ urlpatterns = patterns(
     url(r'^activity/(?P<model_name>\w+)/(?P<obj_id>\d+)/json/$',
         JSONActivityFeedWithCustomData.as_view(name='custom_data_model_detail_stream'), name='custom_data_model_detail_stream'),
     url('^activity/', include('actstream.urls')),
-)
+]
 
 
 if settings.DEBUG:
     import debug_toolbar
 
-    urlpatterns += patterns(
-        '',
+    urlpatterns += [
         url(r'^__debug__/', include(debug_toolbar.urls)),
-        url(r'^test/', 'djangosaml2.views.echo_attributes'),
-    )
+        url(r'^test/', djangosaml2.views.echo_attributes),
+    ]

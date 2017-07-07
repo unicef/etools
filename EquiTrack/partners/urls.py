@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from rest_framework_nested import routers
 
@@ -73,8 +73,7 @@ bulk_reports_api = routers.SimpleRouter()
 bulk_reports_api.register(r'bulk_reports', IndicatorReportViewSet, base_name='bulk-reports')
 
 
-urlpatterns = patterns(
-    '',
+urlpatterns = (
     # remove partner portal for now:
     # url(r'^$', PortalDashView.as_view()),
 
