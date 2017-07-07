@@ -16,13 +16,26 @@ from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.parsers import parse_multipart_data
 
 
-def check_rigid_fields(obj, fields, old_instance=None):
-    if not old_instance and not getattr(obj, 'old_instance', None):
-        return False, None
+def check_editable_fields(obj, fields):
+    if not getattr(obj, 'old_instance', None):
+        return False, fields
     for field in fields:
-        old_instance = old_instance or obj.old_instance
+        old_instance = obj.old_instance
         if getattr(obj, field) != getattr(old_instance, field):
             return False, field
+    return True, None
+
+
+def check_required_fields(obj, fields):
+    for f_name in fields:
+        field = getattr(obj, f_name)
+        try:
+            response = field.all().count() > 0
+        except AttributeError:
+            response = field is not None
+        if response is False:
+            return False, f_name
+
     return True, None
 
 
@@ -44,6 +57,26 @@ def check_rigid_related(obj, related):
             if getattr(i[0], field) != getattr(i[1], field):
                 return False
     return True
+
+
+def check_rigid_fields(obj, fields, old_instance=None, related=False):
+    if not old_instance and not getattr(obj, 'old_instance', None):
+        return False, None
+    for f_name in fields:
+        old_instance = old_instance or obj.old_instance
+        new_field = getattr(obj, f_name)
+        old_field = getattr(old_instance, f_name)
+        if hasattr(new_field, 'all'):
+            # this could be a related field, unfortunately i can't figure out a isinstance check
+            if related:
+                if not check_rigid_related(obj, f_name):
+                    return False, f_name
+
+        elif new_field != old_field:
+                return False, f_name
+
+    return True, None
+
 
 class ValidatorViewMixin(object):
 
@@ -196,27 +229,34 @@ class ValidatorViewMixin(object):
         return instance, old_instance, main_serializer
 
 
-class TransitionError(Exception):
+class TransitionError(BaseException):
     def __init__(self, message=[]):
         if not isinstance(message, list):
             raise TypeError('Transition exception takes a list of errors not %s' % type(message))
         super(TransitionError, self).__init__(message)
 
 
-class StateValidError(Exception):
+class StateValidError(BaseException):
     def __init__(self, message=[]):
         if not isinstance(message, list):
             raise TypeError('Transition exception takes a list of errors not %s' % type(message))
         super(StateValidError, self).__init__(message)
 
+class BasicValidationError(BaseException):
+    def __init__(self, message=''):
+        super(BasicValidationError, self).__init__(message)
 
 def error_string(function):
     def wrapper(*args, **kwargs):
-        valid = function(*args, **kwargs)
-        if valid and type(valid) is bool:
-            return (True, [])
+        try:
+            valid = function(*args, **kwargs)
+        except BasicValidationError as e:
+            return (False, [e.message])
         else:
-            return (False, [function.__name__])
+            if valid and type(valid) is bool:
+                return (True, [])
+            else:
+                return (False, [function.__name__])
     return wrapper
 
 
@@ -251,6 +291,7 @@ def update_object(obj, kwdict):
         setattr(obj, k, v)
 
 class CompleteValidation(object):
+    PERMISSIONS_CLASS = None
     def __init__(self, new, user=None, old=None, instance_class=None, stateless=False):
         if old and isinstance(old, dict):
             raise TypeError('if old is transmitted to complete validation it needs to be a model instance')
@@ -293,6 +334,20 @@ class CompleteValidation(object):
             self.old_status = self.old.status if self.old else None
         self.user = user
 
+        # permissions to be set in each function that is needed, this attribute can change values as auto-update goes through
+        # different statuses
+        self.permissions = None
+
+    def get_permissions(self, instance):
+        if self.PERMISSIONS_CLASS:
+            p = self.PERMISSIONS_CLASS(
+                user=self.user,
+                instance=instance,
+                permission_structure=self.new.permission_structure(),
+                inbound_check=True)
+            return p.get_permissions()
+        return None
+
     def check_transition_conditions(self, transition):
         if not transition:
             return True
@@ -314,9 +369,10 @@ class CompleteValidation(object):
 
         # set old instance on instance to make it available to the validation functions
         setattr(self.new, 'old_instance', self.old)
+        self.permissions = self.get_permissions(self.new)
+
 
         # check conditions and permissions
-
         conditions_check = self.check_transition_conditions(self.transition)
 
         if self.skip_permissions:
@@ -326,6 +382,7 @@ class CompleteValidation(object):
 
         # cleanup
         delattr(self.new, 'old_instance')
+        self.permissions = None
         self.new.status = self.new_status
         return conditions_check and permissions_check
 
@@ -337,6 +394,7 @@ class CompleteValidation(object):
         result = True
         # set old instance on instance to make it available to the validation functions
         setattr(self.new, 'old_instance', self.old)
+        self.permissions = self.get_permissions(self.new)
 
         funct_name = "state_{}_valid".format(self.new_status)
         logging.debug('in state_valid finding function: {}'.format(funct_name))
@@ -346,6 +404,7 @@ class CompleteValidation(object):
 
         # cleanup
         delattr(self.new, 'old_instance')
+        self.permissions = None
         logging.debug('result is: {}'.format(result))
         return result
 
@@ -447,12 +506,15 @@ class CompleteValidation(object):
         basic set of validations to make sure new state is correct
         :return: True or False
         '''
+
         setattr(self.new, 'old_instance', self.old)
+        self.permissions = self.get_permissions(self.new)
         errors = []
-        for function in self.BASIC_VALIDATIONS:
-            a = error_string(function)(self.new)
+        for validation_function in self.BASIC_VALIDATIONS:
+            a = error_string(validation_function)(self.new)
             errors += a[1]
         delattr(self.new, 'old_instance')
+        self.permissions = None
         return not len(errors), errors
 
     def map_errors(self, errors):
