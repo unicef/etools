@@ -12,7 +12,6 @@ from management.views.v1 import (
     ActiveUsersSection,
     TripsStatisticsView,
     AgreementsStatisticsView,
-    InterventionsStatisticsView,
     PortalDashView,
 )
 
@@ -24,7 +23,6 @@ urlpatterns = patterns(
     url(r'^api/stats/usercounts/$', ActiveUsersSection.as_view()),
     url(r'^api/stats/trips/$', TripsStatisticsView.as_view()),
     url(r'^api/stats/agreements/$', AgreementsStatisticsView.as_view()),
-    url(r'^api/stats/interventions/$', InterventionsStatisticsView.as_view()),
 
 )
 

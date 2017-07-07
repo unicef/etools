@@ -1231,10 +1231,6 @@ class Intervention(TimeStampedModel):
     tracker = FieldTracker()
     objects = InterventionManager()
 
-    # Flag if this has been migrated to a status that is not correct
-    # previous status
-    metadata = models.JSONField(blank=True, null=True)
-
     document_type = models.CharField(
         choices=INTERVENTION_TYPES,
         max_length=255,
@@ -1330,6 +1326,10 @@ class Intervention(TimeStampedModel):
 
     offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
     population_focus = models.CharField(max_length=130, null=True, blank=True)
+    # Flag if this has been migrated to a status that is not correct
+    # previous status
+    metadata = JSONField(blank=True, null=True, default=dict)
+
 
     class Meta:
         ordering = ['-created']
