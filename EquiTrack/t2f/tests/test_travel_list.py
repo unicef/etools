@@ -6,7 +6,7 @@ import json
 from freezegun import freeze_time
 
 from django.db import connection
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, NoReverseMatch
 from rest_framework import status
 
 from EquiTrack.factories import UserFactory, LocationFactory, ResultFactory
@@ -31,8 +31,32 @@ class TravelList(APITenantTestCase):
                                     supervisor=self.unicef_staff)
 
     def test_urls(self):
-        list_url = reverse('t2f:travels:list:index')
-        self.assertEqual(list_url, '/api/t2f/travels/')
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        # names_and_paths contains 3-tuples of (URL pattern name, variable URL portion, kwargs)
+        names_and_paths = (
+            ('index', '', {}),
+            ('state_change', 'save_and_submit/', {'transition_name': 'save_and_submit'}),
+            ('state_change', 'mark_as_completed/', {'transition_name': 'mark_as_completed'}),
+            ('activity_export', 'export/', {}),
+            ('finance_export', 'finance-export/', {}),
+            ('travel_admin_export', 'travel-admin-export/', {}),
+            ('invoice_export', 'invoice-export/', {}),
+            ('activities', 'activities/1/', {'partner_organization_pk': 1}),
+            ('dashboard', 'dashboard/2017/07/', {'year': '2017', 'month': '07'}),
+            )
+        for name, url_part, kwargs in names_and_paths:
+            actual_url = reverse('t2f:travels:list:' + name, kwargs=kwargs)
+            expected_url = '/api/t2f/travels/' + url_part
+            self.assertEqual(actual_url, expected_url)
+
+        # Exercise dashboard to ensure year and month regexes only accept 4- and 2-digit int args, respectively.
+        for invalid_year in (1, '1', '123', '12345', '123x', 'x123', 'xxxx', ):
+            with self.assertRaises(NoReverseMatch):
+                reverse('t2f:travels:list:dashboard', kwargs={'year': invalid_year, 'month': '07'})
+
+        for invalid_month in (1, '1', '007', '4x', 'x4', 'xx', ):
+            with self.assertRaises(NoReverseMatch):
+                reverse('t2f:travels:list:dashboard', kwargs={'year': '2017', 'month': invalid_month})
 
     def test_list_view(self):
         with self.assertNumQueries(5):
@@ -86,9 +110,9 @@ class TravelList(APITenantTestCase):
 
     def test_dashboard_travels_list_view_no_section(self):
         travel = TravelFactory(reference_number=make_travel_reference_number(),
-                                    traveler=self.traveler,
-                                    supervisor=self.unicef_staff,
-                                    section=None)
+                               traveler=self.traveler,
+                               supervisor=self.unicef_staff,
+                               section=None)
 
         with self.assertNumQueries(10):
             response = self.forced_auth_req(
@@ -288,12 +312,12 @@ class TravelList(APITenantTestCase):
                                 'dinner': False,
                                 'accomodation': False,
                                 'no_dsa': False},
-                                {'date': '2016-12-16',
-                                 'breakfast': False,
-                                 'lunch': False,
-                                 'dinner': False,
-                                 'accomodation': False,
-                                 'no_dsa': False}],
+                               {'date': '2016-12-16',
+                                'breakfast': False,
+                                'lunch': False,
+                                'dinner': False,
+                                'accomodation': False,
+                                'no_dsa': False}],
                 'itinerary': [{'airlines': [],
                                'overnight_travel': False,
                                'origin': 'a',
