@@ -6,7 +6,7 @@ from django.db import transaction
 from django.db.models import Sum
 from rest_framework import serializers
 
-from reports.serializers.v1 import SectorLightSerializer
+from reports.serializers.v1 import SectorLightSerializer, ResultLightSerializer
 from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 from locations.models import Location
 
@@ -216,7 +216,7 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
 
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
-    # cp_output = ResultLightSerializer()
+    cp_output = ResultLightSerializer()
     # ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)
 

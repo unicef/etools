@@ -7,7 +7,7 @@ from rest_framework import serializers
 from locations.models import Location
 from locations.serializers import LocationLightSerializer
 from partners.models import Intervention, InterventionResultLink
-from partners.serializers.interventions_v2 import InterventionDetailSerializer
+from partners.serializers.interventions_v2 import InterventionDetailSerializer, InterventionResultNestedSerializer
 from reports.models import Sector
 from reports.serializers.v1 import SectorLightSerializer
 from tpm.models import TPMVisit, TPMLocation, TPMPartner, \
@@ -55,7 +55,7 @@ class TPMLowResultSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedS
                             serializers.ModelSerializer):
     tpm_locations = TPMLocationSerializer(many=True)
     result = SeparatedReadWriteField(
-        read_field=InterventionResultLinkVisitSerializer(read_only=True)
+        read_field=InterventionResultNestedSerializer(read_only=True)
     )
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
