@@ -1168,7 +1168,7 @@ class InterventionManager(models.Manager):
                                                                                 'sector_locations__locations',
                                                                                 'unicef_focal_points',
                                                                                 'frs',
-                                                                                'attachments__type'
+                                                                                'attachments__type',
                                                                                 'offices',
                                                                                 'agreement__partner',
                                                                                 'planned_budget')
