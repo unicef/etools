@@ -81,6 +81,14 @@ class Migration(migrations.Migration):
             name='status',
             field=django_fsm.FSMField(blank=True, choices=[('draft', 'Draft'), ('signed', 'Signed'), ('ended', 'Ended'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], default='draft', max_length=32),
         ),
+        migrations.AlterField(
+            model_name='intervention',
+            name='status',
+            field=django_fsm.FSMField(blank=True,
+                                      choices=[('draft', 'Draft'), ('signed', 'Signed'), ('active', 'Active'),
+                                               ('ended', 'Ended'), ('closed', 'Closed'), ('suspended', 'Suspended'),
+                                               ('terminated', 'Terminated')], default='draft', max_length=32),
+        ),
         migrations.AlterModelManagers(
             name='agreement',
             managers=[

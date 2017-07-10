@@ -1214,10 +1214,8 @@ class Intervention(TimeStampedModel):
         (ACTIVE, "Active"),
         (ENDED, "Ended"),
         (CLOSED, "Closed"),
-        (IMPLEMENTED, "Implemented"),
         (SUSPENDED, "Suspended"),
         (TERMINATED, "Terminated"),
-        (CANCELLED, "Cancelled"),
     )
     PD = 'PD'
     SHPD = 'SHPD'
