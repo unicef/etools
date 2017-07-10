@@ -530,6 +530,20 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEqual(response.data[0]["id"], p1.id)
         self.assertEqual(response.data[1]["id"], p2.id)
 
+    def test_api_partners_update_hidden(self):
+        # make some other type to filter against
+        data = {
+            "hidden": True
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["hidden"], False)
+
 
 class TestPartnershipViews(APITenantTestCase):
     fixtures = ['initial_data.json']
