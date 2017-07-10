@@ -526,7 +526,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 intervention__agreement__partner=partner,
                 intervention__status__in=[
                     Intervention.ACTIVE,
-                    Intervention.IMPLEMENTED
+                    Intervention.ENDED,
+                    Intervention.CLOSED
                 ])
             if budget_record:
                 q = q.exclude(id=budget_record.id).values_list('unicef_cash', flat=True)
@@ -567,13 +568,13 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             if pv_intervention:
                 pv = InterventionPlannedVisits.objects.filter(
                     intervention__agreement__partner=partner, year=year,
-                    intervention__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]).exclude(
+                    intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).exclude(
                     id=pv_intervention.id).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
                 pv += pv_intervention.programmatic
             else:
                 pv = InterventionPlannedVisits.objects.filter(
                     intervention__agreement__partner=partner, year=year,
-                    intervention__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]).aggregate(
+                    intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).aggregate(
                     models.Sum('programmatic'))['programmatic__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
@@ -993,7 +994,7 @@ class Agreement(TimeStampedModel):
                 document_type__in=[Intervention.PD, Intervention.SHPD]
             )
             for item in interventions:
-                if item.status not in [Intervention.DRAFT, Intervention.CANCELLED, Intervention.IMPLEMENTED] and\
+                if item.status not in [Intervention.DRAFT, Intervention.CLOSED, Intervention.ENDED] and\
                         item.status != self.status:
                     item.status = self.status
                     item.save()
@@ -1699,7 +1700,8 @@ class InterventionBudget(TimeStampedModel):
             self.total_unicef_contribution() \
             + self.partner_contribution
 
-        if self.intervention.status in [Intervention.ACTIVE, Intervention.IMPLEMENTED]:
+        if self.intervention.status in [Intervention.ACTIVE, Intervention.SIGNED,
+                                        Intervention.CLOSED, Intervention.ENDED]:
             PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner, self)
 
         super(InterventionBudget, self).save(**kwargs)
