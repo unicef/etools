@@ -28,7 +28,10 @@ def check_editable_fields(obj, fields):
 
 def check_required_fields(obj, fields):
     for f_name in fields:
-        field = getattr(obj, f_name)
+        try:
+            field = getattr(obj, f_name)
+        except ObjectDoesNotExist:
+            return False, f_name
         try:
             response = field.all().count() > 0
         except AttributeError:
@@ -41,7 +44,10 @@ def check_required_fields(obj, fields):
 
 def check_rigid_related(obj, related):
     current_related = list(getattr(obj, related).all())
-    old_related = list(getattr(obj.old_instance, '{}_old'.format(related), []))
+    old_related = getattr(obj.old_instance, '{}_old'.format(related), None)
+    if old_related is None:
+        # if old related was not set as an attribute on the object, assuming no changes
+        return True
     if len(current_related) != len(old_related):
         return False
     if len(current_related) == 0:
@@ -54,18 +60,34 @@ def check_rigid_related(obj, related):
     # check if any field on the related model was changed
     for i in comparison_map:
         for field in field_names:
-            if getattr(i[0], field) != getattr(i[1], field):
+            try:
+                new_value = getattr(i[0], field)
+            except ObjectDoesNotExist:
+                new_value = None
+            try:
+                old_value = getattr(i[1], field)
+            except ObjectDoesNotExist:
+                old_value = None
+            if new_value != old_value:
                 return False
     return True
 
 
 def check_rigid_fields(obj, fields, old_instance=None, related=False):
     if not old_instance and not getattr(obj, 'old_instance', None):
-        return False, None
+        # since no old version of the object was passed in, we assume there were no changes
+        return True, None
     for f_name in fields:
         old_instance = old_instance or obj.old_instance
-        new_field = getattr(obj, f_name)
-        old_field = getattr(old_instance, f_name)
+        try:
+            new_field = getattr(obj, f_name)
+        except ObjectDoesNotExist:
+            new_field = None
+        try:
+            old_field = getattr(old_instance, f_name)
+        except ObjectDoesNotExist:
+            # in case it's OneToOne related field
+            old_field = None
         if hasattr(new_field, 'all'):
             # this could be a related field, unfortunately i can't figure out a isinstance check
             if related:
@@ -292,7 +314,7 @@ def update_object(obj, kwdict):
 
 class CompleteValidation(object):
     PERMISSIONS_CLASS = None
-    def __init__(self, new, user=None, old=None, instance_class=None, stateless=False):
+    def __init__(self, new, user=None, old=None, instance_class=None, stateless=False, disable_rigid_check=False):
         if old and isinstance(old, dict):
             raise TypeError('if old is transmitted to complete validation it needs to be a model instance')
 
@@ -322,6 +344,13 @@ class CompleteValidation(object):
                     update_object(new_instance, new)
             new = new_instance
             old = old_instance
+        elif hasattr(new, 'id'):
+            try:
+                instance_class = apps.get_model(getattr(self, 'VALIDATION_CLASS'))
+            except LookupError:
+                pass
+            else:
+                old = instance_class.objects.get(id=new.id)
 
         self.stateless = stateless
         self.new = new
@@ -329,6 +358,9 @@ class CompleteValidation(object):
             self.new_status = self.new.status
         self.skip_transition = not old
         self.skip_permissions = not user
+
+        # TODO: on old for related fields add the _old values in order to check for rigid fields if validator
+        # was not called through the view using the viewmixin
         self.old = old
         if not self.stateless:
             self.old_status = self.old.status if self.old else None
@@ -337,6 +369,7 @@ class CompleteValidation(object):
         # permissions to be set in each function that is needed, this attribute can change values as auto-update goes through
         # different statuses
         self.permissions = None
+        self.disable_rigid_check = disable_rigid_check
 
     def get_permissions(self, instance):
         if self.PERMISSIONS_CLASS:

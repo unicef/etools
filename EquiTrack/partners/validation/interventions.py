@@ -179,36 +179,36 @@ class InterventionValid(CompleteValidation):
         if not required_valid:
             raise StateValidError(['Required fields not completed in {}: {}'.format(intervention.status, field)])
 
+    def check_rigid_fields(self, intervention, related=False):
+        # this can be set if running in a task and old_instance is not set
+        if self.disable_rigid_check:
+            return
+        rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
+        rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=related)
+        if not rigid_valid:
+            raise StateValidError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
+
     def state_draft_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         return True
 
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
-        rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
-        rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=True)
-        if not rigid_valid:
-            raise StateValidError(['Cannot change fields while intervention is signed: {}'.format(field)])
+        self.check_rigid_fields(intervention, related=True)
 
-        today = datetime.date.today()
+        today = date.today()
         if not (intervention.start > today):
             raise StateValidError([_('Start date is in the future')])
         return True
 
     def state_suspended_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
-        rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
-        rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=True)
-        if not rigid_valid:
-            raise StateValidError(['Cannot change fields while intervention is suspended: {}'.format(field)])
+        self.check_rigid_fields(intervention, related=True)
         return True
 
     def state_active_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
-        rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
-        rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=True)
-        if not rigid_valid:
-            raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
+        self.check_rigid_fields(intervention, related=True)
 
         today = date.today()
         if not (intervention.start < today <= intervention.end):
@@ -217,10 +217,7 @@ class InterventionValid(CompleteValidation):
 
     def state_ended_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
-        rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
-        rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=True)
-        if not rigid_valid:
-            raise StateValidError(['Cannot change fields while intervention is ended: {}'.format(field)])
+        self.check_rigid_fields(intervention, related=True)
 
         today = date.today()
         if not today > intervention.end:
