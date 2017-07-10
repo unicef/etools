@@ -295,7 +295,6 @@ class TPMPermission(StatusBasePermission):
             return UNICEFFocalPoint.code
 
         user_type = super(TPMPermission, cls)._get_user_type(user)
-
         if user_type == ThirdPartyMonitor:
             if not instance:
                 return user_type

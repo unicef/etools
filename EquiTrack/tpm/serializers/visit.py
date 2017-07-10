@@ -94,7 +94,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     def _validate_sectors(self, tpm_sectors, partnership):
         if tpm_sectors:
-            sector_ids = map(lambda s: s["sector"].id, tpm_sectors)
+            sector_ids = filter(lambda x: x, map(lambda s: s["sector"].id if "sector" in s else None, tpm_sectors))
             allowed = partnership.sector_locations.values_list('sector_id', flat=True)
             if len(set(sector_ids) - set(allowed)) > 0:
                 raise serializers.ValidationError({
@@ -141,7 +141,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     def validate(self, data):
         validated_data = super(TPMActivitySerializer, self).validate(data)
 
-        partnership = self.instance if 'partnership' not in validated_data else validated_data['partnership']
+        partnership = self.root.instance.tpm_activities.get(id=validated_data['id']).partnership if 'id' in validated_data else validated_data['partnership']
         tpm_sectors = validated_data.get('tpm_sectors', [])
 
         self._validate_sectors(tpm_sectors, partnership)
