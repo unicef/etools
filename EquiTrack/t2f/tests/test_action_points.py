@@ -30,11 +30,19 @@ class ActionPoints(APITenantTestCase):
         mail.outbox = []
 
     def test_urls(self):
-        list_url = reverse('t2f:action_points:list')
-        self.assertEqual(list_url, '/api/t2f/action_points/')
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        # names_and_paths contains 3-tuples of (URL pattern name, variable URL portion, kwargs)
+        names_and_paths = (
+            ('list', '', {}),
+            ('details', '1/', {'action_point_pk': 1}),
+            ('dashboard', 'dashboard/', {}),
+            ('export', 'export/', {}),
+            )
 
-        details_url = reverse('t2f:action_points:details', kwargs={'action_point_pk': 1})
-        self.assertEqual(details_url, '/api/t2f/action_points/1/')
+        for name, url_part, kwargs in names_and_paths:
+            actual_url = reverse('t2f:action_points:' + name, kwargs=kwargs)
+            expected_url = '/api/t2f/action_points/' + url_part
+            self.assertEqual(actual_url, expected_url)
 
     def test_list_view(self):
         with self.assertNumQueries(6):
