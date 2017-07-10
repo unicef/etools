@@ -17,7 +17,6 @@ from django.contrib import admin
 
 from publics.views import StaticDataView, WBSGrantFundView
 
-admin.autodiscover()
 from django.views.generic.base import RedirectView
 from .stream_feed.feeds import JSONActivityFeedWithCustomData
 from .utils import staff_required
