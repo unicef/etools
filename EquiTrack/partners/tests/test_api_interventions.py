@@ -14,8 +14,8 @@ from EquiTrack.factories import (
     ResultFactory,
     AgreementFactory,
     InterventionFactory,
-    FundsReservationHeaderFactory
-)
+    FundsReservationHeaderFactory,
+    GroupFactory)
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector
 from partners.models import (
@@ -28,18 +28,21 @@ from partners.models import (
 
 class TestInterventionsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
-    PM_EDITABLE_FIELDS = {
-        'draft': ['start_date', 'end_date'],
-        'signed': [],
-        'active': ['start_date']
-    }
-    EVERYONE_EDITABLE_FIELDS = {
-        'draft': ['start_date', 'end_date'],
+    EDITABLE_FIELDS = {
+        'draft': ["status", "sector_locations", "attachments", "prc_review_document",
+                  "partner_authorized_officer_signatory", "partner_focal_points", "distributions", "id",
+                  "country_programme", "amendments", "unicef_focal_points", "end", "title",
+                  "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start", "supplies",
+                  "metadata", "submission_date", "action_object_actions", "agreement", "unicef_signatory_id",
+                  "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
+                  "partner_authorized_officer_signatory_id", "actor_actions", "created", "planned_visits",
+                  "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
+                  "offices", "population_focus", "country_programme_id"],
         'signed': [],
         'active': ['']
     }
-    EVERYONE_REQUIRED_FIELDS = {
-        'draft': ['status', 'end_date'],
+    REQUIRED_FIELDS = {
+        'draft': ['number', 'title', 'agreement', 'document_type'],
         'signed': [],
         'active': ['']
     }
@@ -48,6 +51,8 @@ class TestInterventionsAPI(APITenantTestCase):
     def setUp(self):
         today = datetime.date.today()
         self.unicef_staff = UserFactory(is_staff=True)
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.partnership_manager_user.groups.add(GroupFactory())
         self.partner = PartnerFactory()
         self.partner1 = PartnerFactory()
         self.agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
@@ -107,7 +112,7 @@ class TestInterventionsAPI(APITenantTestCase):
         return response.status_code, json.loads(response.rendered_content)
 
     def run_request(self, intervention_id, data=None, method='get', user=None):
-        user = user or self.unicef_staff
+        user = user or self.partnership_manager_user
         response = self.forced_auth_req(
             method,
             reverse('partners_api:intervention-detail', kwargs={'pk': intervention_id}),
@@ -234,7 +239,7 @@ class TestInterventionsAPI(APITenantTestCase):
         data = {
             "frs": frs_data
         }
-        status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
+        status_code, response = self.run_request(self.intervention_2.id, data, method='patch', user=self.unicef_staff)
 
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['frs'], ['One or more selected FRs is expired, {}'.format(self.fr_1.fr_number)])
@@ -267,22 +272,30 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
 
-    @skip('add test after permissions file is ready')
+    def test_patch_title_fail_as_unicef_user(self):
+        data = {
+            "title": 'Changed Title'
+        }
+        status_code, response = self.run_request(self.intervention_2.id, data, method='patch',
+                                                 user=self.unicef_staff)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Cannot change fields while in draft: title', response)
+
     def test_permissions_for_intervention_status_draft(self):
         # intervention is in Draft status
         self.assertEquals(self.intervention.status, Intervention.DRAFT)
 
         # user is UNICEF User
-        status_code, response = self.run_request(self.intervention.id, user=self.unicef_staff)
+        status_code, response = self.run_request(self.intervention.id, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_200_OK)
 
         # all fields are there
         self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-        self.assertItemsEqual(self.EVERYONE_EDITABLE_FIELDS['draft'], [perm for perm in edit_permissions if
+        self.assertItemsEqual(self.EDITABLE_FIELDS['draft'], [perm for perm in edit_permissions if
                                                                        edit_permissions[perm]])
-        self.assertItemsEqual(self.EVERYONE_REQUIRED_FIELDS['draft'], [perm for perm in required_permissions if
+        self.assertItemsEqual(self.REQUIRED_FIELDS['draft'], [perm for perm in required_permissions if
                                                                        required_permissions[perm]])
 
     @skip('add test after permissions file is ready')
@@ -291,14 +304,14 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEquals(self.active_intervention.status, Intervention.ACTIVE)
 
         # user is UNICEF User
-        status_code, response = self.run_request(self.active_intervention.id, user=self.unicef_staff)
+        status_code, response = self.run_request(self.active_intervention.id, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_200_OK)
 
         # all fields are there
         self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-        self.assertItemsEqual(self.EVERYONE_EDITABLE_FIELDS['signed'], [perm for perm in edit_permissions if
+        self.assertItemsEqual(self.EDITABLE_FIELDS['signed'], [perm for perm in edit_permissions if
                                                                         edit_permissions[perm]])
-        self.assertItemsEqual(self.EVERYONE_REQUIRED_FIELDS['signed'], [perm for perm in required_permissions if
+        self.assertItemsEqual(self.REQUIRED_FIELDS['signed'], [perm for perm in required_permissions if
                                                                         required_permissions[perm]])

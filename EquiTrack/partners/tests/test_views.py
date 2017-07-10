@@ -1354,6 +1354,8 @@ class TestInterventionViews(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.partnership_manager_user.groups.add(GroupFactory())
         self.agreement = AgreementFactory()
         self.agreement2 = AgreementFactory(status="draft")
         self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
@@ -1713,7 +1715,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 
