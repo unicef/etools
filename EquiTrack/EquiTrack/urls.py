@@ -1,33 +1,24 @@
 from __future__ import absolute_import
 
+# Django imports
 from django.conf import settings
 from django.conf.urls import include, url
 from django.views.generic import TemplateView
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.views.generic.base import RedirectView
+# Uncomment the line below to enable the admin:
+from django.contrib import admin
 
+# 3rd party imports
 from rest_framework_swagger.views import get_swagger_view
 import rest_framework_jwt.views
-
 from rest_framework_nested import routers
 import djangosaml2.views
 
-# Uncomment the next two lines to enable the admin:
-from django.contrib import admin
-
-from publics.views import StaticDataView, WBSGrantFundView
-
-from django.views.generic.base import RedirectView
+# Project imports
+from publics.views import StaticDataView
 from .stream_feed.feeds import JSONActivityFeedWithCustomData
-from .utils import staff_required
 from .views import (
     MainView,
-    MapView,
-    DashboardView,
-    UserDashboardView,
-    CmtDashboardView,
-    HACTDashboardView,
-    PartnershipsView,
     OutdatedBrowserView
 )
 from locations.views import (
@@ -38,15 +29,10 @@ from locations.views import (
 from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
 
 from partners.views.v1 import (
-    PartnerOrganizationsViewSet,
-    AgreementViewSet,
-    PartnerStaffMembersViewSet,
     FileTypeViewSet,
 )
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
-from funds.views import DonorViewSet, GrantViewSet
 from reports.views.v1 import (
-    ResultStructureViewSet,
     ResultTypeViewSet,
     SectorViewSet,
     # GoalViewSet,
@@ -56,19 +42,16 @@ from reports.views.v1 import (
 )
 
 from partners.urls import (
-    simple_interventions_api,
     # interventions_api,
     # results_api,
     # simple_results_api,
     # intervention_reports_api,
-    bulk_reports_api,
     # pcasectors_api,
     # pcabudgets_api,
     # pcafiles_api,
     # pcaamendments_api,
     # pcalocations_api,
     # pcagrants_api,
-    partners_api,
     staffm_api,
     # agreement_api,
     # simple_agreements_api,
@@ -91,6 +74,7 @@ api = routers.SimpleRouter()
 
 # ******************  API version 1 - not used ******************************
 
+# from funds.views import DonorViewSet, GrantViewSet
 # api.register(r'funds/donors', DonorViewSet, base_name='donors')
 # api.register(r'funds/grants', GrantViewSet, base_name='grants')
 trips_api = routers.SimpleRouter()
@@ -99,9 +83,8 @@ tripsfiles_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
 tripsfiles_api.register(r'files', TripFileViewSet, base_name='files')
 actionpoint_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
 actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='actionpoints')
+# from reports.views.v1 import ResultStructureViewSet
 # api.register(r'reports/result-structures', ResultStructureViewSet, base_name='resultstructures')
-
-
 
 # ******************  API version 1  ******************************
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
@@ -127,14 +110,14 @@ api.register(r'workplans/milestones', MilestoneViewSet, base_name='milestones')
 api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_projects')
 api.register(r'labels', LabelViewSet, base_name='labels')
 
-
+# from django.contrib.auth.decorators import login_required
+# from .utils import staff_required
 urlpatterns = [
     # TODO: overload login_required to staff_required to automatically re-route partners to the parter portal
 
     # Used for admin and dashboard pages in django
     url(r'^$', RedirectView.as_view(url='/dash/', permanent=False), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
-
 
     # url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     # url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnerships_dashboard'),
@@ -158,7 +141,9 @@ urlpatterns = [
     url(r'^api/', include(actionpoint_api.urls)),
 
     # ***************  API version 2  ******************
-    url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
+    url(r'^api/locations/pcode/(?P<p_code>\w+)/$',
+        LocationsViewSet.as_view({'get': 'retrieve'}),
+        name='locations_detail_pcode'),
     url(r'^api/t2f/', include(t2f_patterns)),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2')),
@@ -176,16 +161,19 @@ urlpatterns = [
     url(r'^saml2/', include('djangosaml2.urls')),
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^login/token-auth/', rest_framework_jwt.views.obtain_jwt_token),
-    url(r'^api-token-auth/', rest_framework_jwt.views.obtain_jwt_token),  # TODO: remove this when eTrips is deployed needed
+    # TODO: remove this when eTrips is deployed needed
+    url(r'^api-token-auth/', rest_framework_jwt.views.obtain_jwt_token),
     url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
     url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
         name='workspace-inactive'),
 
     # Activity stream
     url(r'^activity/(?P<model_name>\w+)/json/$',
-        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_stream'), name='custom_data_model_stream'),
+        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_stream'),
+        name='custom_data_model_stream'),
     url(r'^activity/(?P<model_name>\w+)/(?P<obj_id>\d+)/json/$',
-        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_detail_stream'), name='custom_data_model_detail_stream'),
+        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_detail_stream'),
+        name='custom_data_model_detail_stream'),
     url('^activity/', include('actstream.urls')),
 ]
 

@@ -1,5 +1,6 @@
 from django.conf.urls import url, include
 
+from t2f.html_views import TravelEditView
 from t2f.views.dashboard import TravelDashboardViewSet, ActionPointDashboardViewSet
 from t2f.views.exports import TravelActivityExport, FinanceExport, TravelAdminExport, InvoiceExport
 from t2f.views.generics import SettingsView, StaticDataView, PermissionMatrixView, VendorNumberListView
@@ -7,6 +8,7 @@ from t2f.views.invoices import InvoiceViewSet
 from t2f.views.travel import TravelListViewSet, TravelDetailsViewSet, TravelAttachmentViewSet, ActionPointViewSet,\
     TravelActivityViewSet
 from t2f.views.vision import VisionInvoiceExport, VisionInvoiceUpdate
+
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
@@ -59,7 +61,8 @@ travel_list_patterns = ((
     url(r'^finance-export/$', FinanceExport.as_view(), name='finance_export'),
     url(r'^travel-admin-export/$', TravelAdminExport.as_view(), name='travel_admin_export'),
     url(r'^invoice-export/$', InvoiceExport.as_view(), name='invoice_export'),
-    url(r'^activities/(?P<partner_organization_pk>[0-9]+)/', TravelActivityViewSet.as_view({'get': 'list'}), name='activities'),
+    url(r'^activities/(?P<partner_organization_pk>[0-9]+)/', TravelActivityViewSet.as_view({'get': 'list'}),
+        name='activities'),
     url(r'^dashboard/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/', travel_dashboard_list, name='dashboard'),
 ), 'list')
 
@@ -81,8 +84,6 @@ invoice_patterns = ((
     url(r'^$', invoices_list, name='list'),
     url(r'^(?P<invoice_pk>[0-9]+)/$', invoices_details, name='details'),
 ), 'invoices')
-
-from t2f.html_views import TravelEditView
 
 urlpatterns = ((
     url(r'^travels/', include(travel_patterns)),

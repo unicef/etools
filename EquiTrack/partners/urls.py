@@ -9,7 +9,6 @@ from .views.v1 import (
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
     InterventionsViewSet,
-    GovernmentInterventionsViewSet,
     PartnershipBudgetViewSet,
     PCASectorViewSet,
     PCAFileViewSet,
@@ -80,9 +79,11 @@ urlpatterns = (
     url(r'^my_interventions/', InterventionsViewSet.as_view({'get': 'retrieve'}), name='interventions'),
     # url(r'^interventions/(?P<intervention_pk>\d+)/reports/', IndicatorReportViewSet.as_view(), name='interventions'),
     #
-    # url(r'^interventions/(?P<intervention_pk>\d+)/reports/', IndicatorReportViewSet.as_view(), name='intervention-reports'),
+    # url(r'^interventions/(?P<intervention_pk>\d+)/reports/', IndicatorReportViewSet.as_view(),
+    #     name='intervention-reports'),
     #
-    # url(r'^interventions/(?P<intervention_pk>\d+)/indicator/(?P<indicator_pk>\d+)/reports/', IndicatorReportViewSet.as_view(), name='intervention-indicator-reports'),
+    # url(r'^interventions/(?P<intervention_pk>\d+)/indicator/(?P<indicator_pk>\d+)/reports/',
+    #     IndicatorReportViewSet.as_view(), name='intervention-indicator-reports'),
     # url(r'^indicators/bulk_reports/', IndicatorReportViewSet.as_view(), name='indicator-bulk-reports'),
 
     url(r'^accounts/loginfailed/(?P<email>.+)/$', PortalLoginFailedView.as_view(), name='sociallogin_notamember'),

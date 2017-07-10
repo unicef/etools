@@ -1,7 +1,5 @@
 from django.conf.urls import url
 
-from djgeojson.views import GeoJSONLayerView
-
 from locations import views
 
 
