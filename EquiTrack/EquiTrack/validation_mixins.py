@@ -3,6 +3,7 @@ import copy
 import logging
 from django.apps import apps
 from django.db.models import ObjectDoesNotExist
+from django.db.models.fields.files import FieldFile
 from django.utils.functional import cached_property
 
 from django_fsm import (
@@ -94,8 +95,10 @@ def check_rigid_fields(obj, fields, old_instance=None, related=False):
                 if not check_rigid_related(obj, f_name):
                     return False, f_name
 
+        elif isinstance(new_field, FieldFile):
+            pass
         elif new_field != old_field:
-                return False, f_name
+            return False, f_name
 
     return True, None
 
@@ -344,13 +347,6 @@ class CompleteValidation(object):
                     update_object(new_instance, new)
             new = new_instance
             old = old_instance
-        elif hasattr(new, 'id'):
-            try:
-                instance_class = apps.get_model(getattr(self, 'VALIDATION_CLASS'))
-            except LookupError:
-                pass
-            else:
-                old = instance_class.objects.get(id=new.id)
 
         self.stateless = stateless
         self.new = new

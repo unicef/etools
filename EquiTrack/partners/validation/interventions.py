@@ -186,6 +186,7 @@ class InterventionValid(CompleteValidation):
 
     def state_draft_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
+        self.check_rigid_fields(intervention, related=True)
         return True
 
     def state_signed_valid(self, intervention, user=None):
