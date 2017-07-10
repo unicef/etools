@@ -196,9 +196,6 @@ class InterventionValid(CompleteValidation):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
 
-        today = date.today()
-        if not (intervention.start > today):
-            raise StateValidError([_('Start date is in the future')])
         return True
 
     def state_suspended_valid(self, intervention, user=None):
@@ -211,7 +208,7 @@ class InterventionValid(CompleteValidation):
         self.check_rigid_fields(intervention, related=True)
 
         today = date.today()
-        if not (intervention.start < today <= intervention.end):
+        if not (intervention.start <= today <= intervention.end):
             raise StateValidError([_('Today is not within an the start and end dates')])
         return True
 

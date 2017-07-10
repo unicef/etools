@@ -1452,18 +1452,29 @@ class Intervention(TimeStampedModel):
                 conditions=[intervention_validation.transition_to_active],
                 permission=intervention_validation.partnership_manager_only)
     def transition_to_active(self):
-        if self.document_type == self.SSFA:
-            self.agreement.status = Agreement.ACTIVE
-            self.agreement.save()
+        pass
+
+    @transition(field=status,
+                source=[DRAFT, SUSPENDED],
+                target=[SIGNED],
+                conditions=[intervention_validation.transition_ok])
+    def transition_to_signed(self):
         pass
 
     @transition(field=status,
                 source=[ACTIVE],
-                target=[IMPLEMENTED],
-                conditions=[intervention_validation.transition_to_implemented])
+                target=[ENDED],
+                conditions=[intervention_validation.transition_ok])
     def transition_to_ended(self):
         # From active, ended, suspended and terminated you cannot move to draft or cancelled because yo'll
         # mess up the reference numbers.
+        pass
+
+    @transition(field=status,
+                source=[ENDED],
+                target=[CLOSED],
+                conditions=[intervention_validation.transition_ok])
+    def transition_to_closed(self):
         pass
 
     @transition(field=status,
