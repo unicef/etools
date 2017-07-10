@@ -568,7 +568,7 @@ class CompleteValidation(object):
             if not transition_to:
                 return
             for side_effect_function in transition_to[self.new_status]:
-                side_effect_function()
+                side_effect_function(self.new)
 
     @cached_property
     def total_validation(self):
@@ -587,6 +587,7 @@ class CompleteValidation(object):
 
             # before checking if any further transitions can be made, if the current instance just transitioned,
             # apply side-effects:
+            # TODO.. this needs to be re-written and have a consistent way to include side-effects on both auto-transition / manual transition
             self._apply_current_side_effects()
 
             if self.make_auto_transitions():
