@@ -42,6 +42,15 @@ def check_required_fields(obj, fields):
 
     return True, None
 
+def field_comparison(f1, f2):
+    if isinstance(f1, FieldFile):
+        new_file = getattr(f1, 'name', None)
+        old_file = getattr(f2, 'name', None)
+        if new_file != old_file:
+            return False
+    elif f1 != f2:
+        return False
+    return True
 
 def check_rigid_related(obj, related):
     current_related = list(getattr(obj, related).all())
@@ -69,7 +78,7 @@ def check_rigid_related(obj, related):
                 old_value = getattr(i[1], field)
             except ObjectDoesNotExist:
                 old_value = None
-            if new_value != old_value:
+            if not field_comparison(new_value, old_value):
                 return False
     return True
 
@@ -95,9 +104,7 @@ def check_rigid_fields(obj, fields, old_instance=None, related=False):
                 if not check_rigid_related(obj, f_name):
                     return False, f_name
 
-        elif isinstance(new_field, FieldFile):
-            pass
-        elif new_field != old_field:
+        elif not field_comparison(new_field, old_field):
             return False, f_name
 
     return True, None
