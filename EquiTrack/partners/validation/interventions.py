@@ -43,6 +43,8 @@ def transition_to_closed(i):
             raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
                                      'was attached')])
 
+    # TODO: figure out Action Point Validation once the spec is completed
+
     return True
 
 def transition_to_active(i):
@@ -53,16 +55,6 @@ def transition_to_active(i):
         raise TransitionError([
             _('PD cannot be activated if the associated Agreement is not active')
         ])
-    return True
-
-# TODO: remove after statuses are ported over
-def transition_to_implemented(i):
-    if not i.sector_locations.exists():
-        raise TransitionError(['Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
-    for sectorlocation in i.sector_locations.all():
-        if not sector_location_valid(sectorlocation):
-            raise TransitionError(
-                ['Sector and locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
     return True
 
 
