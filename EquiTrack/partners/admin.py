@@ -801,6 +801,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'email',
                  u'core_values_assessment_date',
                  u'core_values_assessment',
+                 u'hidden',
                  u'deleted_flag',
                  u'blocked',
                  )
