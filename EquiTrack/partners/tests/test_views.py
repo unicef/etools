@@ -1649,7 +1649,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["Document type must be PD or SHPD in case of agreement is PCA."])
+        self.assertIn(u'Agreement selected is not of type SSFA', response.data)
 
     def test_intervention_validation_doctype_ssfa(self):
         self.agreement.agreement_type = Agreement.SSFA
@@ -1665,7 +1665,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["Document type must be SSFA in case of agreement is SSFA."])
+        self.assertIn('Document type PD or SHPD can only be associated with a PCA agreement.', response.data)
 
     def test_intervention_validation_dates(self):
         today = datetime.date.today()

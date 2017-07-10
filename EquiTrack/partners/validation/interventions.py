@@ -79,7 +79,10 @@ def signed_date_valid(i):
 
 
 def document_type_pca_valid(i):
-    if i.agreement.agreement_type == "PCA" and i.document_type not in ["PD", "SHPD"]:
+    '''
+        Checks if pd has an agreement of type PCA
+    '''
+    if i.document_type in [i.PD, i.SHPD] and i.agreement.agreement_type != i.agreement.PCA:
         return False
     return True
 
@@ -126,6 +129,7 @@ def amendments_valid(i):
             return False
     return True
 
+
 # validation id 2
 def ssfa_agreement_has_no_other_intervention(i):
     '''
@@ -156,7 +160,7 @@ class InterventionValid(CompleteValidation):
         'start_end_dates_valid': 'Start date must precede end date',
         'signed_date_valid': 'Unicef signatory and partner signatory as well as dates required, '
                              'signatures cannot be dated in the future',
-        'document_type_pca_valid': 'Document type must be PD or SHPD in case of agreement is PCA.',
+        'document_type_pca_valid': 'Document type PD or SHPD can only be associated with a PCA agreement.',
         'amendments_valid': 'Type, signed date, and signed amendment are required in Amendments. '
                             'If you seleced Other as an amendment type, please add the description',
         'ssfa_agreement_has_no_other_intervention': 'The agreement selected has at least one '

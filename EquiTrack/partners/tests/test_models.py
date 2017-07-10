@@ -72,7 +72,7 @@ class TestRefNumberGeneration(TenantTestCase):
 
     def test_other_agreement_types(self):
 
-        for doc_type in [Agreement.MOU, Agreement.IC, Agreement.AWP, Agreement.SSFA]:
+        for doc_type in [Agreement.SSFA]:
             agreement = AgreementFactory(agreement_type=doc_type)
             # test startswith only to avoid failing tests because of mismatching last digits
             self.assertTrue(agreement.reference_number.startswith(self.text.format(doc_type)))
