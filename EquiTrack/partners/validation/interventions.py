@@ -87,36 +87,6 @@ def document_type_pca_valid(i):
     return True
 
 
-def partner_focal_points_valid(i):
-    if not i.partner_focal_points:
-        return False
-    return True
-
-
-def unicef_focal_points_valid(i):
-    if not i.unicef_focal_points:
-        return False
-    return True
-
-
-def unicef_cash_valid(b):
-    if not b.unicef_cash:
-        return False
-    return True
-
-
-def partner_contribution_valid(b):
-    if not b.partner_contribution:
-        return False
-    return True
-
-
-def sector_location_valid(sl):
-    if not sl.sector or not sl.locations.exists():
-        return False
-    return True
-
-
 def amendments_valid(i):
     if i.status not in [i.ACTIVE, i.SIGNED] and i.amendments.exists():
         # this prevents any changes in amendments if the status is not in Signed or Active
