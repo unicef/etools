@@ -1,128 +1,146 @@
 [
     {
+        "model": "attachments.filetype",
         "pk": 1,
         "fields": {
             "order": 0,
             "name": "Programme Document",
             "code": "tpm"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 2,
         "fields": {
             "order": 1,
             "name": "Supply Manual List",
             "code": "tpm"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 3,
         "fields": {
             "order": 2,
             "name": "UNICEF Trip Report/Action Point Report",
             "code": "tpm"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 4,
         "fields": {
             "order": 3,
             "name": "Partner Report",
             "code": "tpm"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 5,
         "fields": {
             "order": 4,
             "name": "Previous Trip Reports",
             "code": "tpm"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 6,
         "fields": {
             "order": 5,
             "name": "Training materials",
             "code": "tpm"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 7,
         "fields": {
             "order": 6,
             "name": "ToRs",
             "code": "tpm"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 8,
         "fields": {
             "order": 0,
             "name": "ICE form",
             "code": "audit_engagement"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 9,
         "fields": {
             "order": 1,
             "name": "FACE form",
             "code": "audit_engagement"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 10,
         "fields": {
             "order": 3,
             "name": "Other",
             "code": "audit_engagement"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 11,
         "fields": {
             "order": 2,
             "name": "Report",
             "code": "audit_report"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 12,
         "fields": {
             "order": 0,
             "name": "ICE form",
             "code": "audit_report"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 13,
         "fields": {
             "order": 1,
             "name": "FACE form",
             "code": "audit_report"
-        },
-        "model": "attachments.filetype"
+        }
     },
     {
+        "model": "attachments.filetype",
         "pk": 14,
         "fields": {
             "order": 3,
             "name": "Other",
             "code": "audit_report"
-        },
-        "model": "attachments.filetype"
+        }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 15,
+        "fields": {
+            "order": 7,
+            "name": "Other",
+            "code": "tpm"
+        }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 16,
+        "fields": {
+            "order": 8,
+            "name": "Report",
+            "code": "tpm_report"
+        }
     }
 ]
