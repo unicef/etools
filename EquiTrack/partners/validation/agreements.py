@@ -14,7 +14,7 @@ def agreement_transition_to_active_valid(agreement):
         raise TransitionError(['agreement_transition_to_active_invalid'])
     if agreement.agreement_type == agreement.PCA and \
             agreement.__class__.objects.filter(partner=agreement.partner,
-                                               status=agreement.ACTIVE,
+                                               status=agreement.SIGNED,
                                                agreement_type=agreement.PCA,
                                                country_programme=agreement.country_programme).count():
 
@@ -25,7 +25,7 @@ def agreement_transition_to_active_valid(agreement):
 def agreement_transition_to_ended_valid(agreement):
     today = date.today()
     logging.debug('I GOT CALLED to ended')
-    if agreement.status == agreement.ACTIVE and agreement.end and agreement.end < today:
+    if agreement.status == agreement.SIGNED and agreement.end and agreement.end < today:
         return True
     raise TransitionError(['agreement_transition_to_ended_invalid'])
 

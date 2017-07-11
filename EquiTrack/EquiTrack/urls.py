@@ -21,12 +21,6 @@ from .stream_feed.feeds import JSONActivityFeedWithCustomData
 from .utils import staff_required
 from .views import (
     MainView,
-    MapView,
-    DashboardView,
-    UserDashboardView,
-    CmtDashboardView,
-    HACTDashboardView,
-    PartnershipsView,
     OutdatedBrowserView
 )
 from locations.views import (
@@ -135,12 +129,6 @@ urlpatterns = patterns(
     url(r'^$', RedirectView.as_view(url='/dash/', permanent=False), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
 
-
-    # url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
-    # url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnerships_dashboard'),
-    # url(r'^map/$', login_required(MapView.as_view()), name='map'),
-    # url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
-    # url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
