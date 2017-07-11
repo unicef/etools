@@ -31,7 +31,7 @@ def migrate_amendment_types(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0039_auto_20170629_1447'),
+        ('partners', '0042_auto_20170707_2036'),
     ]
 
     operations = [
