@@ -519,10 +519,18 @@ class CompleteValidation(object):
     def make_auto_transitions(self):
         logging.debug("*************** STARTING AUTO TRANSITIONS *****************")
         any_transition_made = False
+
+        # disable rigid_check in auto-transitions as they do not apply
+        originial_rigid_check_setting = self.disable_rigid_check
+        self.disable_rigid_check = True
+
         while self._make_auto_transition():
             any_transition_made = True
 
         logging.debug("*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}".format(any_transition_made))
+
+        # reset rigid check:
+        self.disable_rigid_check = originial_rigid_check_setting
         return any_transition_made
 
     @cached_property
