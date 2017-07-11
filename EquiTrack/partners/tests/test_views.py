@@ -1100,7 +1100,7 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], Agreement.ACTIVE)
+        self.assertEqual(response.data["status"], Agreement.SIGNED)
 
     @skip("Test transitions")
     def test_partner_agreements_update_suspend(self):
@@ -1354,6 +1354,8 @@ class TestInterventionViews(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.partnership_manager_user.groups.add(GroupFactory())
         self.agreement = AgreementFactory()
         self.agreement2 = AgreementFactory(status="draft")
         self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
@@ -1663,7 +1665,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["Document type must be PD or SHPD in case of agreement is PCA."])
+        self.assertIn(u'Agreement selected is not of type SSFA', response.data)
 
     def test_intervention_validation_doctype_ssfa(self):
         self.agreement.agreement_type = Agreement.SSFA
@@ -1679,7 +1681,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["Document type must be SSFA in case of agreement is SSFA."])
+        self.assertIn('Document type PD or SHPD can only be associated with a PCA agreement.', response.data)
 
     def test_intervention_validation_dates(self):
         today = datetime.date.today()
@@ -1713,7 +1715,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 

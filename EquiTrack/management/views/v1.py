@@ -169,27 +169,4 @@ class AgreementsStatisticsView(APIView):
         return Response(results)
 
 
-class InterventionsStatisticsView(APIView):
-    """
-    Gets the list of all Interventions in all countries
-    """
-    model = PCA
-
-    def get(self, request, **kwargs):
-        # get all the countries:
-        country_list = Country.objects.exclude(schema_name='public').all()
-        results = []
-        for country in country_list:
-            # set tenant for country
-            connection.set_tenant(country)
-            # get count for agreements
-            country_interventions_count = PCA.objects.filter(
-                status=PCA.ACTIVE
-            ).count()
-
-            results.append({
-                "countryName": country.name,
-                "totalActiveInterventions": country_interventions_count
-            })
-        return Response(results)
 

@@ -54,10 +54,11 @@ class FundsReservationHeader(models.Model):
     currency = models.CharField(max_length=50, null=True, blank=True)
     document_text = models.CharField(max_length=255, null=True, blank=True)
 
-    # this is the field required for validation
+    # this is the field required for validation, this is the 'current_amount'
     intervention_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     # overall_amount
     total_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    # actual is also referred to as "disbursment"
     actual_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     outstanding_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
 
