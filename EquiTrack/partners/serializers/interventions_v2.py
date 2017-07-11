@@ -7,6 +7,7 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 from funds.serializers import FRsSerializer
+from partners.permissions import InterventionPermissions
 from reports.serializers.v1 import SectorLightSerializer
 from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 from locations.models import Location
@@ -50,7 +51,6 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "total",
             'currency'
         )
-
 
 class SupplyPlanCreateUpdateSerializer(serializers.ModelSerializer):
 
@@ -308,6 +308,13 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     submitted_to_prc = serializers.ReadOnlyField()
     frs_details = FRsSerializer(source='frs', read_only=True)
+    permissions = serializers.SerializerMethodField(read_only=True)
+
+    def get_permissions(self, obj):
+        user = self.context['request'].user
+        ps = Intervention.permission_structure()
+        permissions = InterventionPermissions(user=user, instance=self.instance, permission_structure=ps)
+        return permissions.get_permissions()
 
     class Meta:
         model = Intervention
@@ -318,7 +325,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
             "created", "modified", "planned_budget", "result_links", 'country_programme',
-            "amendments", "planned_visits", "attachments", "supplies", "distributions"
+            "amendments", "planned_visits", "attachments", "supplies", "distributions", 'permissions'
         )
 
 

@@ -160,30 +160,6 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
         return 0
 
 
-class AmendmentLogInlineAdmin(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-info'
-    verbose_name = u'Revision'
-    model = AmendmentLog
-    extra = 0
-    fields = (
-        'status',
-        'amended_at',
-        'amendment_number',
-    )
-    readonly_fields = [
-        'amendment_number',
-    ]
-
-    def get_max_num(self, request, obj=None, **kwargs):
-        """
-        Overriding here to disable adding amendments to non-active partnerships
-        """
-        if obj and obj.status == PCA.ACTIVE:
-            return self.max_num
-
-        return 0
-
-
 class PartnershipBudgetInlineAdmin(admin.TabularInline):
     model = PartnershipBudget
     form = PartnershipBudgetAdminForm
@@ -500,7 +476,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
 
     inlines = (
-        AmendmentLogInlineAdmin,
         PcaSectorInlineAdmin,
         PartnershipBudgetInlineAdmin,
         PcaGrantInlineAdmin,

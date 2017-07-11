@@ -146,7 +146,7 @@ class PartnerFactory(factory.django.DjangoModelFactory):
         model = partner_models.PartnerOrganization
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
-    staff = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):
