@@ -170,10 +170,12 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
 
 
 class TPMVisitSerializer(TPMVisitLightSerializer):
-    attachments = TPMAttachmentsSerializer(read_only=True, many=True)
+    attachments = TPMAttachmentsSerializer(many=True)
+    report = TPMAttachmentsSerializer(many=True)
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
             'reject_comment',
             'attachments',
+            'report',
         ]
