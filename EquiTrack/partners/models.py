@@ -836,9 +836,10 @@ class AgreementManager(models.Manager):
         return super(AgreementManager, self).get_queryset().select_related('partner')
 
 
-def draft_to_active_auto_changes(obj):
+def activity_to_active_side_effects(obj, user=None):
     # here we can make any updates to the object as we need as part of the auto transition change
     # obj.end = datetime.date.today()
+    # obj.old_instance.status will give you the status you're transitioning from
     pass
 
 
@@ -850,15 +851,6 @@ class Agreement(TimeStampedModel):
     """
     # POTENTIAL_AUTO_TRANSITIONS.. these are all transitions that we want to
     # make automatically if possible
-    POTENTIAL_AUTO_TRANSITIONS = {
-        'draft': [
-            {'active': [draft_to_active_auto_changes]},
-        ],
-        'active': [
-            {'ended': []},
-        ],
-    }
-
     PCA = 'PCA'
     MOU = 'MOU'
     SSFA = 'SSFA'
@@ -880,6 +872,13 @@ class Agreement(TimeStampedModel):
         (SUSPENDED, u"Suspended"),
         (TERMINATED, u"Terminated"),
     )
+    AUTO_TRANSITIONS = {
+        DRAFT: [SIGNED],
+        SIGNED: [ENDED],
+    }
+    TRANSITION_SIDE_EFFECTS = {
+        SIGNED: [activity_to_active_side_effects],
+    }
 
     partner = models.ForeignKey(PartnerOrganization, related_name="agreements")
     country_programme = models.ForeignKey('reports.CountryProgramme', related_name='agreements', blank=True, null=True)
@@ -1167,6 +1166,14 @@ class InterventionManager(models.Manager):
                                                                                 'planned_budget')
 
 
+def side_effect_one(i, user=None):
+    pass
+
+
+def side_effect_two(i, user=None):
+    pass
+
+
 class Intervention(TimeStampedModel):
     """
     Represents a partner intervention.
@@ -1188,25 +1195,20 @@ class Intervention(TimeStampedModel):
     SUSPENDED = 'suspended'
     TERMINATED = 'terminated'
 
-    POTENTIAL_AUTO_TRANSITIONS = {
-        DRAFT: [
-            {SIGNED: []},
-        ],
-        SIGNED: [
-            {ACTIVE: []},
-        ],
-        ACTIVE: [
-            {ENDED: []},
-        ],
-        ENDED: [
-            {CLOSED: []},
-        ],
+    AUTO_TRANSITIONS = {
+        DRAFT: [SIGNED],
+        SIGNED: [ACTIVE],
+        ACTIVE: [ENDED],
+        ENDED: [CLOSED]
     }
-
-    # IMPLEMENTED to CLOSED
-    # ACTIVE to ACTIVE if validation is ok else DRAFT
-    # CANCELLED TO DRAFT
-
+    TRANSITION_SIDE_EFFECTS = {
+        SIGNED: [side_effect_one, side_effect_two],
+        ACTIVE: [],
+        SUSPENDED: [],
+        ENDED: [],
+        CLOSED: [],
+        TERMINATED: []
+    }
 
     CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
