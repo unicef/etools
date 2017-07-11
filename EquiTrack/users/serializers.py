@@ -135,7 +135,7 @@ class SimpleNestedProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = (
-            'country',
+            'country', 'office', 'section'
         )
 
 
