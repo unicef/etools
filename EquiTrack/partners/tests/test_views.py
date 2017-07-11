@@ -2,6 +2,7 @@ import json
 from unittest import skip
 import datetime
 from datetime import date, timedelta
+from decimal import Decimal
 
 from rest_framework import status
 
@@ -363,7 +364,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["interventions"][0]["actual_amount"], fr_header_1.actual_amt + fr_header_2.actual_amt)
+        self.assertEqual(response.data["interventions"][0]["actual_amount"], Decimal(fr_header_1.actual_amt + fr_header_2.actual_amt))
 
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
