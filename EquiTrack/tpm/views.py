@@ -37,7 +37,7 @@ class TPMPartnerViewSet(
     viewsets.GenericViewSet
 ):
     # todo: allow access only for self organization if parner
-    queryset = TPMPartner.objects.filter(hidden=False)
+    queryset = TPMPartner.objects.all()
     serializer_class = TPMPartnerSerializer
     serializer_action_classes = {
         'list': TPMPartnerLightSerializer
