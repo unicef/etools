@@ -22,7 +22,7 @@ class DSARateTest(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_new_rate_addition(self):
-        region = DSARegionFactory()
+        region = DSARegionFactory(rates=[])
 
         rate_1 = DSARateFactory(region=region,
                                 effective_from_date=date(2017, 4, 17))
@@ -44,7 +44,7 @@ class DSARateTest(APITenantTestCase):
         business_area = BusinessAreaFactory(code=workspace.business_area_code)
         country = CountryFactory(business_area=business_area)
 
-        region = DSARegionFactory(country=country)
+        region = DSARegionFactory(country=country, rates=[])
 
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('public:dsa_regions'),
@@ -68,38 +68,6 @@ class DSARateTest(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 0)
 
-    def test_dsa_regions_in_static_view(self):
-        # TODO remove this test after static endpoint is split on frontend too
-        workspace = self.unicef_staff.profile.country
-        workspace.business_area_code = '1234'
-        workspace.save()
-
-        business_area = BusinessAreaFactory(code=workspace.business_area_code)
-        country = CountryFactory(business_area=business_area)
-
-        region = DSARegionFactory(country=country)
-
-        response = self.forced_auth_req('get', reverse('public:static'),
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json['dsa_regions']), 0)
-
-        rate = DSARateFactory(region=region)
-
-        response = self.forced_auth_req('get', reverse('public:static'),
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json['dsa_regions']), 1)
-        self.assertEqual(response_json['dsa_regions'][0]['id'], region.id)
-
-        # Expire rate - region should be excluded
-        rate.delete()
-
-        response = self.forced_auth_req('get', reverse('public:static'),
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json['dsa_regions']), 0)
-
     def test_values_history_retrieval(self):
         workspace = self.unicef_staff.profile.country
         workspace.business_area_code = '1234'
@@ -108,7 +76,8 @@ class DSARateTest(APITenantTestCase):
         business_area = BusinessAreaFactory(code=workspace.business_area_code)
         country = CountryFactory(business_area=business_area)
 
-        region = DSARegionFactory(country=country)
+        region = DSARegionFactory(country=country,
+                                  rates=[])
 
         with freeze_time('2017-04-01'):
             rate_1 = DSARateFactory(region=region,
@@ -147,7 +116,7 @@ class DSARateTest(APITenantTestCase):
         self.assertEqual(len(response_json), 0)
 
     def test_effective_from_date(self):
-        region = DSARegionFactory()
+        region = DSARegionFactory(rates=[])
 
         now_date = now().date()
         rate_1 = DSARateFactory(region=region,

@@ -2,26 +2,23 @@
 Project wide mixins for models and classes
 """
 
-
 import logging
 
-from django.conf import settings
 from django.db import connection
-from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+
 from django.core.urlresolvers import reverse
 from django.template.response import SimpleTemplateResponse
-
 from django.utils.http import urlsafe_base64_encode
 from django.http.response import HttpResponseRedirect
 
-from rest_framework.exceptions import PermissionDenied
-
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.exceptions import PermissionDenied
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
 from allauth.exceptions import ImmediateHttpResponse

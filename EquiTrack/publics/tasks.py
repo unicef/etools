@@ -1,13 +1,19 @@
 from __future__ import unicode_literals
 
-from collections import defaultdict
-from datetime import datetime
 import logging
+import csv
+import codecs
+from decimal import Decimal, InvalidOperation
+from collections import defaultdict
+from datetime import datetime, date
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.transaction import atomic
+from storages.backends.azure_storage import AzureStorage
+
 
 from publics.models import TravelAgent, Country, Currency, ExchangeRate, WBS, Grant, Fund, TravelExpenseType, \
-    BusinessArea
+    BusinessArea, DSARateUpload, Country, DSARegion, DSARate
 
 try:
     import xml.etree.cElementTree as ET
@@ -135,7 +141,7 @@ def create_grant_objects(grant_code_set):
        bulk_grant_list.append(grant)
 
    Grant.objects.bulk_create(bulk_grant_list)
-   
+
    grant_mapping = {g.name: g for g in Grant.objects.filter(name__in=grant_code_set)}
    return grant_mapping
 
@@ -151,7 +157,7 @@ def create_fund_objects(fund_code_set):
        bulk_fund_list.append(fund)
 
    Fund.objects.bulk_create(bulk_fund_list)
-   
+
    fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_code_set)}
    return fund_mapping
 
@@ -193,3 +199,165 @@ def import_cost_assignments(xml_structure):
 
     for grant, funds in grant_fund_mapping.items():
         grant.funds.set(funds)
+
+
+class DSARateUploader(object):
+    FIELDS = (
+         'Country Code',
+         'Country Name',
+         'DSA Area Name',
+         'Area Code',
+         'Unique Name',
+         'Unique ID',
+         'USD_60Plus',
+         'USD_60',
+         'Local_60',
+         'Local_60Plus',
+         'Room_Percentage',
+         'Finalization_Date',
+         'DSA_Eff_Date',
+    )
+
+    def __init__(self, dsa_rate_upload):
+        self.errors = {}
+        self.warnings = {}
+        self.dsa_rate_upload = dsa_rate_upload
+
+    def read_input_file(self, filename):
+        storage = AzureStorage()
+        with storage.open(filename) as input_file:
+            return [dict(r) for r in csv.DictReader(
+                                            input_file,
+                                            restkey='__extra_columns__',
+                                            restval='__missing_columns__')]
+
+    @atomic
+    def update_dsa_regions(self):
+        """
+         'Country Code': 'AFG',
+         'Country Name': 'Afghanistan (Afghani)',
+
+         'DSA Area Name': 'Kabul',
+         'Area Code': '301',
+
+         'Unique Name': 'AFGKabul',
+         'Unique ID': 'AFG301',
+
+         'USD_60Plus': '162',
+         'USD_60': '162',
+         'Local_60': '10,800',
+         'Local_60Plus': '10,800',
+
+         'Room_Percentage': '70',
+         'Finalization_Date': '1/2/16',
+         'DSA_Eff_Date': '1/3/17'
+        """
+        rows = self.read_input_file(self.dsa_rate_upload.dsa_file.name)
+
+        def process_number(field):
+            try:
+                raw = row[field].replace(',', '')
+                raw = raw.replace(' ', '')  # remove space delimiter
+                n = Decimal(raw)
+            except InvalidOperation as e:
+                self.errors['{} (line {})'.format(field, line+1)] = e.message
+                has_error = True
+                return None
+            else:
+                return n
+
+        def process_date(field):
+            try:
+                day, month, year = map(int, row[field].split('/'))
+                # If year is coming in a 2 digit format
+                if len(str(year)) == 2:
+                    year += 2000
+                d = date(year, month, day)
+            except ValueError as e:
+                self.errors['{} (line {})'.format(field, line+1)] = e.message
+                has_error = True
+                return None
+            else:
+                return d
+
+        missing_fields = [x for x in self.FIELDS if x not in rows[0].keys()]
+        if missing_fields:
+                self.errors['Missing fields'] = ', '.join(missing_fields)
+
+        unknown_fields = [x for x in rows[0].keys() if x not in self.FIELDS]
+        if unknown_fields:
+                self.errors['Unknown fields'] = ', '.join(unknown_fields)
+
+        if unknown_fields or missing_fields:
+            return
+
+        regions_to_delete = set(DSARegion.objects.all().values_list('id', flat=True))
+
+        for line, row in enumerate(rows):
+            has_error = False
+
+            if '__extra_columns__' in row.keys():
+                self.errors['Misaligned csv (line {})'.format(line+1)] = 'There are more fields than header columns ({}).'.format(row['__extra_columns__'])
+                continue
+
+            if '__missing_columns__' in row.values():
+                self.errors['Misaligned csv (line {})'.format(line+1)] = 'There are missing fields compared to header columns.'
+                continue
+
+            country_qs = Country.objects.filter(dsa_code=row['Country Code'])
+            if not country_qs.exists():
+                self.warnings['Country Code (line {})'.format(line+1)] = 'Cannot find country for country code {}. Skipping it.'.format(row['Country Code'])
+                continue
+
+            row['Local_60'] = process_number('Local_60')
+            row['Local_60Plus'] = process_number('Local_60Plus')
+            row['USD_60'] = process_number('USD_60')
+            row['USD_60Plus'] = process_number('USD_60Plus')
+            row['Room_Percentage'] = process_number('Room_Percentage')
+            row['DSA_Eff_Date'] = process_date('DSA_Eff_Date')
+            row['Finalization_Date'] = process_date('Finalization_Date')
+
+            if has_error:
+                continue
+
+            for country in country_qs:
+                dsa_region, created = DSARegion.objects.get_or_create(area_code=row['Area Code'],
+                                                                      country=country,
+                                                                      defaults={'area_name': row['DSA Area Name']})
+
+                if not created:
+                    regions_to_delete.discard(dsa_region.id)
+
+                if created or dsa_region.effective_from_date != row['DSA_Eff_Date']:
+                    DSARate.objects.create(region=dsa_region,
+                                           effective_from_date=row['DSA_Eff_Date'],
+                                           finalization_date=row['Finalization_Date'],
+                                           dsa_amount_usd=row['USD_60'],
+                                           dsa_amount_60plus_usd=row['USD_60Plus'],
+                                           dsa_amount_local=row['Local_60'],
+                                           dsa_amount_60plus_local=row['Local_60Plus'],
+                                           room_rate=row['Room_Percentage'])
+
+        DSARegion.objects.filter(id__in=regions_to_delete).delete()
+
+
+@app.task
+def upload_dsa_rates(dsa_rate_upload_id):
+    dsa_rate_upload = DSARateUpload.objects.get(id=dsa_rate_upload_id)
+    dsa_rate_upload.status = DSARateUpload.PROCESSING
+    dsa_rate_upload.save()
+
+    try:
+        uploader = DSARateUploader(dsa_rate_upload)
+        uploader.update_dsa_regions()
+    except Exception as e:
+        dsa_rate_upload.errors = {e.__class__.__name__: e.message}
+        dsa_rate_upload.status = DSARateUpload.FAILED
+    else:
+        if uploader.errors:
+            dsa_rate_upload.errors = uploader.errors
+            dsa_rate_upload.status = DSARateUpload.FAILED
+        else:
+            dsa_rate_upload.errors = uploader.warnings
+            dsa_rate_upload.status = DSARateUpload.DONE
+    dsa_rate_upload.save()

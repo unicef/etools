@@ -118,7 +118,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_api_partners_delete_asssessment_error(self):
         response = self.forced_auth_req(
@@ -127,14 +127,14 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Cannot delete a completed assessment"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["Cannot delete a completed assessment"])
 
     def test_api_partners_list_restricted(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
         self.assertIn("vendor_number", response.data[0].keys())
         self.assertNotIn("address", response.data[0].keys())
 
@@ -152,7 +152,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_api_partners_create_with_members(self):
         staff_members = [{
@@ -175,7 +175,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_api_partners_update_with_members(self):
         response = self.forced_auth_req(
@@ -183,9 +183,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             '/api/v2/partners/{}/'.format(self.partner.id),
             user=self.unicef_staff,
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data["staff_members"]), 1)
-        self.assertEquals(response.data["staff_members"][0]["first_name"], "Mace")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["staff_members"]), 1)
+        self.assertEqual(response.data["staff_members"][0]["first_name"], "Mace")
 
         staff_members = [{
             "title": "Some title",
@@ -207,8 +207,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data["staff_members"]), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["staff_members"]), 2)
 
     def test_api_partners_update_assessments_invalid(self):
         today = datetime.date.today()
@@ -226,8 +226,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, {"assessments":
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"assessments":
                                           {"completed_date":
                                            ["The Date of Report cannot be in the future"]}})
 
@@ -247,7 +247,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_partners_update_assessments_today(self):
         completed_date = datetime.date.today()
@@ -265,7 +265,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_partners_update_assessments_yesterday(self):
         completed_date = datetime.date.today() - timedelta(days=1)
@@ -283,7 +283,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_partners_update_with_members_null_phone(self):
         response = self.forced_auth_req(
@@ -291,9 +291,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             '/api/v2/partners/{}/'.format(self.partner.id),
             user=self.unicef_staff,
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data["staff_members"]), 1)
-        self.assertEquals(response.data["staff_members"][0]["first_name"], "Mace")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["staff_members"]), 1)
+        self.assertEqual(response.data["staff_members"][0]["first_name"], "Mace")
 
         staff_members = [{
             "title": "Some title",
@@ -313,9 +313,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["staff_members"][1]["phone"], None)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["staff_members"][1]["phone"], None)
 
     def test_api_partners_update_assessments_tomorrow(self):
         completed_date = datetime.date.today() + timedelta(days=1)
@@ -333,8 +333,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, {"assessments":
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"assessments":
                                           {"completed_date":
                                            ["The Date of Report cannot be in the future"]}})
 
@@ -345,14 +345,14 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
-        self.assertEquals(['programme_visits', 'spot_checks'], response.data["hact_min_requirements"].keys())
-        self.assertEquals(['audits_done', 'planned_visits', 'spot_checks', 'programmatic_visits', 'follow_up_flags',
+        self.assertEqual(['programme_visits', 'spot_checks'], response.data["hact_min_requirements"].keys())
+        self.assertEqual(['audits_done', 'planned_visits', 'spot_checks', 'programmatic_visits', 'follow_up_flags',
                            'planned_cash_transfer', 'micro_assessment_needed', 'audits_mr'], response.data["hact_values"].keys())
-        self.assertEquals(response.data['interventions'], [])
+        self.assertEqual(response.data['interventions'], [])
 
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
@@ -361,9 +361,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("staff_members", response.data.keys())
-        self.assertEquals(len(response.data["staff_members"]), 1)
+        self.assertEqual(len(response.data["staff_members"]), 1)
 
     def test_api_partners_update(self):
         data = {
@@ -376,7 +376,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
 
     def test_api_partners_list_minimal(self):
@@ -388,8 +388,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data[0].keys(), ["id", "name"])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0].keys(), ["id", "name"])
 
     def test_api_partners_filter_partner_type(self):
         # make some other type to filter against
@@ -402,10 +402,10 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["id"], self.partner.id)
-        self.assertEquals(response.data[0]["partner_type"], PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.partner.id)
+        self.assertEqual(response.data[0]["partner_type"], PartnerType.CIVIL_SOCIETY_ORGANIZATION)
 
     def test_api_partners_filter_cso_type(self):
         # make some other type to filter against
@@ -418,9 +418,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["id"], self.partner.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.partner.id)
 
     def test_api_partners_filter_hidden(self):
         # make some other type to filter against
@@ -433,9 +433,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
-        self.assertEquals(response.data[0]["id"], self.partner.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["id"], self.partner.id)
 
     def test_api_partners_filter_multiple(self):
         # make some other type to filter against
@@ -451,8 +451,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 0)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
 
     def test_api_partners_search_name(self):
         # make some other type to filter against
@@ -465,9 +465,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
-        self.assertEquals(response.data[0]["id"], self.partner.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["id"], self.partner.id)
 
     def test_api_partners_short_name(self):
         # make some other type to filter against
@@ -480,9 +480,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["id"], self.partner.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.partner.id)
 
     def test_api_partners_values(self):
         # make some other instance to filter against
@@ -496,10 +496,10 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
-        self.assertEquals(response.data[0]["id"], p1.id)
-        self.assertEquals(response.data[1]["id"], p2.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["id"], p1.id)
+        self.assertEqual(response.data[1]["id"], p2.id)
 
 
 class TestPartnershipViews(APITenantTestCase):
@@ -537,8 +537,8 @@ class TestPartnershipViews(APITenantTestCase):
     def test_api_partners_list(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
         self.assertIn("Partner", response.data[0]["name"])
 
     @skip("Fix this")
@@ -556,7 +556,7 @@ class TestPartnershipViews(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @skip("different endpoint")
     def test_api_agreements_list(self):
@@ -564,8 +564,8 @@ class TestPartnershipViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/partners/' + str(self.partner.id) +
                                         '/agreements/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
         self.assertIn("PCA", response.data[0]["agreement_type"])
 
     def test_api_staffmembers_list(self):
@@ -573,8 +573,8 @@ class TestPartnershipViews(APITenantTestCase):
                                         '/'.join(['/api/partners', str(self.partner.id), 'staff-members/']),
                                         user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
         self.assertIn("Jedi Master", response.data[0]["title"])
         self.assertIn("Mace", response.data[0]["first_name"])
         self.assertIn("Windu", response.data[0]["last_name"])
@@ -608,8 +608,8 @@ class TestPartnershipViews(APITenantTestCase):
                                             'sectors/'
                                         ]), user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
         self.assertIn("Sector", response.data[0]["sector_name"])
 
     @skip("skip v1 for now")
@@ -624,10 +624,10 @@ class TestPartnershipViews(APITenantTestCase):
                                             'budgets/'
                                         ]), user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["unicef_cash"], 100)
-        self.assertEquals(response.data[0]["total"], 100)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["unicef_cash"], 100)
+        self.assertEqual(response.data[0]["total"], 100)
 
     @skip("different endpoint")
     def test_api_interventions_files_list(self):
@@ -641,7 +641,7 @@ class TestPartnershipViews(APITenantTestCase):
                                             'files/'
                                         ]), user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @skip("skip v1 for now")
     def test_api_interventions_amendments_list(self):
@@ -655,9 +655,9 @@ class TestPartnershipViews(APITenantTestCase):
                                             'amendments/'
                                         ]), user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["type"], "Cost")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["type"], "Cost")
 
     @skip("skip v1 for now")
     def test_api_interventions_locations_list(self):
@@ -671,8 +671,8 @@ class TestPartnershipViews(APITenantTestCase):
                                             'locations/'
                                         ]), user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
         self.assertIn("Location", response.data[0]["location_name"])
 
 
@@ -759,12 +759,12 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Check for activity action created
-        self.assertEquals(model_stream(Agreement).count(), 1)
-        self.assertEquals(model_stream(Agreement)[0].verb, 'created')
-        self.assertEquals(model_stream(Agreement)[0].target.start, date(today.year - 1, 1, 1))
+        self.assertEqual(model_stream(Agreement).count(), 1)
+        self.assertEqual(model_stream(Agreement)[0].verb, 'created')
+        self.assertEqual(model_stream(Agreement)[0].target.start, date(today.year - 1, 1, 1))
 
     def test_agreements_create_max_signoff_single_date(self):
         today = datetime.date.today()
@@ -784,7 +784,7 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_agreements_create_max_signoff_no_date(self):
         today = datetime.date.today()
@@ -802,7 +802,7 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_agreements_list(self):
         response = self.forced_auth_req(
@@ -811,8 +811,8 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.unicef_staff
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
         self.assertIn("Partner", response.data[0]["partner_name"])
 
     def test_agreements_update(self):
@@ -826,11 +826,11 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["status"], "active")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["status"], "active")
 
         # There should not be any activity stream item created as there is no delta data
-        self.assertEquals(model_stream(Agreement).count(), 0)
+        self.assertEqual(model_stream(Agreement).count(), 0)
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -839,8 +839,8 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.unicef_staff
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["agreement_number"], self.agreement.agreement_number)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["agreement_number"], self.agreement.agreement_number)
 
     def test_agreements_retrieve_staff_members(self):
         response = self.forced_auth_req(
@@ -849,8 +849,8 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.unicef_staff
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["authorized_officers"][0]["first_name"], self.partner_staff.first_name)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["authorized_officers"][0]["first_name"], self.partner_staff.first_name)
 
     def test_agreements_update_partner_staff(self):
         data = {
@@ -866,12 +866,12 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data["authorized_officers"]), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["authorized_officers"]), 2)
 
         # Check for activity action created
-        self.assertEquals(model_stream(Agreement).count(), 1)
-        self.assertEquals(model_stream(Agreement)[0].verb, 'changed')
+        self.assertEqual(model_stream(Agreement).count(), 1)
+        self.assertEqual(model_stream(Agreement)[0].verb, 'changed')
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
@@ -880,7 +880,7 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_agreements_list_filter_type(self):
         params = {"agreement_type": "PCA"}
@@ -891,10 +891,10 @@ class TestAgreementAPIView(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["id"], self.agreement.id)
-        self.assertEquals(response.data[0]["agreement_type"], "PCA")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.agreement.id)
+        self.assertEqual(response.data[0]["agreement_type"], "PCA")
 
     def test_agreements_list_filter_status(self):
         params = {"status": "active"}
@@ -905,10 +905,10 @@ class TestAgreementAPIView(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["id"], self.agreement.id)
-        self.assertEquals(response.data[0]["status"], "active")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.agreement.id)
+        self.assertEqual(response.data[0]["status"], "active")
 
     def test_agreements_list_filter_partner_name(self):
         params = {"partner_name": self.partner.name}
@@ -919,9 +919,9 @@ class TestAgreementAPIView(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
-        self.assertEquals(self.partner.name, response.data[0]["partner_name"])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(self.partner.name, response.data[0]["partner_name"])
 
     def test_agreements_list_filter_search(self):
         params = {"search": "Partner"}
@@ -932,8 +932,8 @@ class TestAgreementAPIView(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
         self.assertIn("Partner", response.data[0]["partner_name"])
 
     def test_agreements_list_filter_search_refno(self):
@@ -945,8 +945,8 @@ class TestAgreementAPIView(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
         # self.assertEquals(response.data[1]["agreement_number"], self.agreement.agreement_number)
 
     @skip("Test transitions - checked when going active")
@@ -967,8 +967,8 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data["errors"], ["Partner manager and signed by must be provided."])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["errors"], ["Partner manager and signed by must be provided."])
 
     def test_agreements_create_start_set_to_max_signed(self):
         today = datetime.date.today()
@@ -990,8 +990,8 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
             response.data["errors"],
             ["Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date)."])
 
@@ -1012,8 +1012,8 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data["errors"], ["Partner type must be CSO for PCA or SSFA agreement types."])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["errors"], ["Partner type must be CSO for PCA or SSFA agreement types."])
 
     @skip("Test transitions")
     def test_agreements_update_set_to_active_on_save(self):
@@ -1033,8 +1033,8 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["status"], Agreement.ACTIVE)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["status"], Agreement.ACTIVE)
 
     @skip("Test transitions")
     def test_partner_agreements_update_suspend(self):
@@ -1048,9 +1048,9 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["status"], "suspended")
-        self.assertEquals(Intervention.objects.get(agreement=self.agreement).status, "suspended")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["status"], "suspended")
+        self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, "suspended")
 
     def test_partner_agreement_amendment_cp_cycle_end(self):
         amendment_type = AgreementAmendmentType.objects.create(
@@ -1058,7 +1058,7 @@ class TestAgreementAPIView(APITenantTestCase):
             type="CP extension"
         )
 
-        self.assertEquals(amendment_type.cp_cycle_end, CountryProgramme.current().to_date)
+        self.assertEqual(amendment_type.cp_cycle_end, CountryProgramme.current().to_date)
 
     @skip("signed amendment is now mandatory so we cannot delete?")
     def test_agreement_amendment_delete_valid(self):
@@ -1068,7 +1068,7 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_agreement_amendment_delete_error(self):
         response = self.forced_auth_req(
@@ -1077,8 +1077,8 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Cannot delete a signed amendment"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["Cannot delete a signed amendment"])
 
     @skip("signed amendment is now mandatory so we cannot delete?")
     def test_agreement_amendment_type_delete_valid(self):
@@ -1088,7 +1088,7 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_agreement_amendment_delete_error_signed(self):
         response = self.forced_auth_req(
@@ -1097,8 +1097,8 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Cannot delete an amendment type once amendment is signed"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["Cannot delete an amendment type once amendment is signed"])
 
 
 class TestPartnerStaffMemberAPIView(APITenantTestCase):
@@ -1120,9 +1120,9 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
             user=self.unicef_staff
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Partner", response.data["name"])
-        self.assertEquals("Mace", response.data["staff_members"][0]["first_name"])
+        self.assertEqual("Mace", response.data["staff_members"][0]["first_name"])
 
     @skip("Skip staffmembers for now")
     def test_partner_staffmember_create_non_active(self):
@@ -1140,8 +1140,8 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data["non_field_errors"],
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["non_field_errors"],
                           ["New Staff Member needs to be active at the moment of creation"])
 
     @skip("Skip staffmembers for now")
@@ -1166,7 +1166,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
             "The Partner Staff member you are trying to add is associated with a different partnership",
             response.data["non_field_errors"][0])
@@ -1188,7 +1188,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @skip("Skip staffmembers for now")
     def test_partner_staffmember_retrieve(self):
@@ -1198,8 +1198,8 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
             user=self.partner_staff_user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["first_name"], "Mace")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["first_name"], "Mace")
 
     @skip("Skip staffmembers for now")
     def test_partner_staffmember_update(self):
@@ -1218,8 +1218,8 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["title"], "foobar updated")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], "foobar updated")
 
     @skip("Skip staffmembers for now")
     def test_partner_staffmember_update_email(self):
@@ -1238,7 +1238,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("User emails cannot be changed, please remove the user and add another one",
                       response.data["non_field_errors"][0])
 
@@ -1250,7 +1250,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
             user=self.partner_staff_user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     @skip("Skip staffmembers for now")
     def test_partner_staffmember_retrieve_properties(self):
@@ -1260,7 +1260,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
             user=self.partner_staff_user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestInterventionViews(APITenantTestCase):
@@ -1437,8 +1437,8 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
     def test_intervention_list_minimal(self):
         params = {"verbosity": "minimal"}
@@ -1449,8 +1449,8 @@ class TestInterventionViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data[0].keys(), ["id", "title"])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0].keys(), ["id", "title"])
 
     def test_intervention_create(self):
         data = {
@@ -1468,11 +1468,11 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
             data=data
         )
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Check for activity action created
-        self.assertEquals(model_stream(Intervention).count(), 3)
-        self.assertEquals(model_stream(Intervention)[0].verb, 'created')
+        self.assertEqual(model_stream(Intervention).count(), 3)
+        self.assertEqual(model_stream(Intervention)[0].verb, 'created')
 
     def test_intervention_retrieve_fr_numbers(self):
         response = self.forced_auth_req(
@@ -1481,9 +1481,9 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["fr_numbers_details"]["12345"][0]["wbs"], "some_wbs")
-        self.assertEquals(response.data["fr_numbers_details"]["45678"][0]["wbs"], "some_wbs")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["fr_numbers_details"]["12345"][0]["wbs"], "some_wbs")
+        self.assertEqual(response.data["fr_numbers_details"]["45678"][0]["wbs"], "some_wbs")
 
     def test_intervention_active_update_population_focus(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1497,7 +1497,7 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
             data=self.intervention_data
         )
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_intervention_active_update_planned_budget(self):
         InterventionBudget.objects.filter(intervention=self.intervention_data.get("id")).delete()
@@ -1513,8 +1513,8 @@ class TestInterventionViews(APITenantTestCase):
             data=self.intervention_data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
             response.data,
             ["Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED."])
 
@@ -1534,8 +1534,8 @@ class TestInterventionViews(APITenantTestCase):
             data=self.intervention_data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Cannot change fields while intervention is active: unicef_cash"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["Cannot change fields while intervention is active: unicef_cash"])
 
     def test_intervention_active_update_sector_locations(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1551,8 +1551,8 @@ class TestInterventionViews(APITenantTestCase):
             data=self.intervention_data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
             response.data,
             ["Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
 
@@ -1564,8 +1564,8 @@ class TestInterventionViews(APITenantTestCase):
             data={}
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data,
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data,
                           {"document_type": ["This field is required."],
                            "agreement": ["This field is required."],
                               "title": ["This field is required."]})
@@ -1581,8 +1581,8 @@ class TestInterventionViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Document type must be PD or SHPD in case of agreement is PCA."])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["Document type must be PD or SHPD in case of agreement is PCA."])
 
     def test_intervention_validation_doctype_ssfa(self):
         self.agreement.agreement_type = Agreement.SSFA
@@ -1597,8 +1597,8 @@ class TestInterventionViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Document type must be SSFA in case of agreement is SSFA."])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["Document type must be SSFA in case of agreement is SSFA."])
 
     def test_intervention_validation_dates(self):
         today = datetime.date.today()
@@ -1613,8 +1613,8 @@ class TestInterventionViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ['Start date must precede end date'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ['Start date must precede end date'])
 
     def test_intervention_update_planned_visits(self):
         import copy
@@ -1636,7 +1636,7 @@ class TestInterventionViews(APITenantTestCase):
             data=data,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_intervention_filter(self):
         # Test filter
@@ -1656,7 +1656,7 @@ class TestInterventionViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_intervention_filter_my_partnerships(self):
         # Test filter
@@ -1670,8 +1670,8 @@ class TestInterventionViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
 
     def test_intervention_planned_budget_delete(self):
         response = self.forced_auth_req(
@@ -1680,7 +1680,7 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_intervention_planned_budget_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1692,8 +1692,8 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["You do not have permissions to delete a planned budget"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete a planned budget"])
 
     def test_intervention_planned_visits_delete(self):
         response = self.forced_auth_req(
@@ -1702,7 +1702,7 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_intervention_planned_visits_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1714,8 +1714,8 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["You do not have permissions to delete a planned visit"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete a planned visit"])
 
     def test_intervention_attachments_delete(self):
         response = self.forced_auth_req(
@@ -1724,7 +1724,7 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_intervention_attachments_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1736,8 +1736,8 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["You do not have permissions to delete an attachment"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete an attachment"])
 
     def test_intervention_results_delete(self):
         response = self.forced_auth_req(
@@ -1746,7 +1746,7 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_intervention_results_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1758,8 +1758,8 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["You do not have permissions to delete a result"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete a result"])
 
     def test_intervention_amendments_delete(self):
         response = self.forced_auth_req(
@@ -1768,7 +1768,7 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_intervention_amendments_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1780,8 +1780,8 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["You do not have permissions to delete an amendment"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete an amendment"])
 
     def test_intervention_sector_locations_delete(self):
         response = self.forced_auth_req(
@@ -1790,7 +1790,7 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_intervention_sector_locations_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1802,8 +1802,8 @@ class TestInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["You do not have permissions to delete a sector location"])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete a sector location"])
 
 
     def test_api_interventions_values(self):
@@ -1815,347 +1815,9 @@ class TestInterventionViews(APITenantTestCase):
             data=params
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["id"], self.intervention["id"])
-
-
-class TestGovernmentInterventionViews(APITenantTestCase):
-
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(partner_type="Government")
-        self.partner_non_gov = PartnerFactory(partner_type="UN Agency")
-        self.cp = CountryProgrammeFactory()
-
-        output_res_type, _ = ResultType.objects.get_or_create(name='Output')
-        self.cp_output = ResultFactory(result_type=output_res_type)
-
-        self.govint = GovernmentInterventionFactory(
-            partner=self.partner,
-            country_programme=self.cp
-        )
-
-        self.result = ResultFactory()
-        self.govint_result = GovernmentInterventionResult.objects.create(
-            intervention=self.govint,
-            result=self.result,
-            year=datetime.date.today().year,
-            planned_amount=100,
-        )
-
-    def test_govint_list(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["id"], self.govint.id)
-        self.assertEquals(response.data[0]["partner"], self.govint.partner.id)
-        self.assertEquals(response.data[0]["country_programme"], self.govint.country_programme.id)
-
-    def test_govint_list(self):
-        params = {"verbosity": "minimal"}
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=params,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data[0].keys(), ["id", "partner_name"])
-
-    def test_govint_list_filter(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data={
-                "year": datetime.date.today().year,
-                "country_programme": self.cp.id,
-                "partner": self.partner.id
-            }
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["id"], self.govint.id)
-        self.assertEquals(response.data[0]["partner"], self.govint.partner.id)
-        self.assertEquals(response.data[0]["country_programme"], self.govint.country_programme.id)
-
-    def test_govint_create(self):
-        govint_result = {
-            # "intervention": self.govint.id,
-            "result": self.cp_output.id,
-            "year": datetime.date.today().year,
-            "planned_amount": 100,
-            "sectors": [Sector.objects.create(name="Sector 1").id],
-            # TODO Figure out how to create Section on test schema
-            # "sections": [Section.objects.create(name="Section 1").id],
-        }
-        data = {
-            "partner": self.partner.id,
-            "country_programme": self.cp.id,
-            "results": [govint_result],
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-    def test_govint_create_non_gov_partner(self):
-        govint_result = {
-            "intervention": self.govint.id,
-            "result": self.result.id,
-            "year": datetime.date.today().year,
-            "planned_amount": 100,
-            "sectors": [Sector.objects.create(name="Sector 1").id],
-            # TODO Figure out how to create Section on test schema
-            # "sections": [Section.objects.create(name="Section 1").id],
-        }
-        data = {
-            "partner": self.partner_non_gov.id,
-            "country_programme": self.cp.id,
-            "results": [govint_result],
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, {"non_field_errors": ["Partner type must be Government"]})
-
-    def test_govint_create_update_amount_valid(self):
-        govint_result = {
-            "result": self.cp_output.id,
-            "year": datetime.date.today().year,
-            "planned_amount": 100,
-            "planned_visits": 5,
-            "sectors": [Sector.objects.create(name="Sector 1").id],
-            # TODO Figure out how to create Section on test schema
-            # "sections": [Section.objects.create(name="Section 1").id],
-        }
-        data = {
-            "partner": self.partner.id,
-            "country_programme": self.cp.id,
-            "results": [govint_result],
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        data = response.data
-        # Fix planned amount can change
-        # data["results"][0].update(planned_amount=90)
-        # response = self.forced_auth_req(
-        #     'patch',
-        #     '/api/v2/government_interventions/{}/'.format(data["id"]),
-        #     user=self.unicef_staff,
-        #     data=data,
-        # )
-        #
-        # self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        # self.assertEquals(response.data, {'errors': [u'Planned amount cannot be changed.']})
-
-    def test_govint_create_update_visits_valid(self):
-        govint_result = {
-            "result": self.cp_output.id,
-            "year": datetime.date.today().year,
-            "planned_amount": 100,
-            "planned_visits": 5,
-            "sectors": [Sector.objects.create(name="Sector 1").id],
-            # TODO Figure out how to create Section on test schema
-            # "sections": [SectionFactory().id],
-        }
-        data = {
-            "partner": self.partner.id,
-            "country_programme": self.cp.id,
-            "results": [govint_result],
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        data = response.data
-        data["results"][0].update(planned_visits=3)
-
-        response = self.forced_auth_req(
-            'patch',
-            '/api/v2/government_interventions/{}/'.format(data["id"]),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        # self.assertEquals(response.data, {'errors': [u'Planned visits cannot be changed.']})
-
-    def test_govint_create_update_reference_number_valid(self):
-        govint_result = {
-            "result": self.cp_output.id,
-            "year": datetime.date.today().year,
-            "planned_amount": 100,
-            "planned_visits": 5,
-            "sectors": [Sector.objects.create(name="Sector 1").id],
-        }
-        data = {
-            "partner": self.partner.id,
-            "country_programme": self.cp.id,
-            "results": [govint_result],
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        data = response.data
-        new_data = {
-            "number": data["number"]
-        }
-
-        response = self.forced_auth_req(
-            'patch',
-            '/api/v2/government_interventions/{}/'.format(data["id"] - 1),
-            user=self.unicef_staff,
-            data=new_data,
-        )
-        self.assertEquals(
-            response.data, {
-                "number": ["government intervention with this Reference Number already exists."]})
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_govint_create_validation_sectors_sections(self):
-        govint_result = {
-            "intervention": self.govint.id,
-            "result": self.cp_output.id,
-            "year": datetime.date.today().year,
-            "planned_amount": 100,
-            "sectors": [],
-            "sections": [],
-        }
-        data = {
-            "partner": self.partner.id,
-            "country_programme": self.cp.id,
-            "results": [govint_result],
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        # TODO Figure out how to create Section on test schema
-        # self.assertEquals(response.data, {"errors":["Sector is required.","Section is required."]})
-        # self.assertEquals(response.data, {"errors":["Sector is required."]})
-
-    def test_govint_create_validation_results(self):
-        govint_result = {
-            "intervention": self.govint.id,
-        }
-        data = {
-            "partner": self.partner.id,
-            "country_programme": self.cp.id,
-            "results": [govint_result],
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
-            response.data, {
-                "results": {
-                    "result": ["This field is required."], "year": ["This field is required."]}})
-
-    def test_govint_retrieve(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/government_interventions/{}/'.format(self.govint.id),
-            user=self.unicef_staff,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["id"], self.govint.id)
-
-    def test_govint_create_validation_partner(self):
-        govint_result = {
-            "intervention": self.govint.id,
-            "result": self.result.id,
-            "year": datetime.date.today().year,
-            "planned_amount": 100,
-        }
-        data = {
-            "country_programme": self.cp.id,
-            "results": [govint_result],
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, {"partner": ["This field is required."]})
-
-    def test_govint_create_validation_cp(self):
-        govint_result = {
-            "intervention": self.govint.id,
-            "result": self.result.id,
-            "year": datetime.date.today().year,
-            "planned_amount": 100,
-        }
-        data = {
-            "partner": self.partner.id,
-            "results": [govint_result],
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, {"non_field_errors": ["There is no country programme selected"]})
-
-    def test_govint_create_validation_results_required(self):
-        data = {
-            "partner": self.partner.id,
-            "country_programme": self.cp.id,
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/government_interventions/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, {'results': [u'This field is required.']})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.intervention["id"])
 
 
 class TestPartnershipDashboardView(APITenantTestCase):
@@ -2270,8 +1932,8 @@ class TestPartnershipDashboardView(APITenantTestCase):
             user=self.unicef_staff,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertNotEquals(response.data['active_value'], 0)
-        self.assertEquals(response.data['active_count'], 1)
-        self.assertEquals(response.data['active_this_year_count'], 1)
-        self.assertEquals(response.data['active_this_year_percentage'], '100%')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response.data['active_value'], 0)
+        self.assertEqual(response.data['active_count'], 1)
+        self.assertEqual(response.data['active_this_year_count'], 1)
+        self.assertEqual(response.data['active_this_year_percentage'], '100%')

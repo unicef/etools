@@ -20,7 +20,7 @@ from django_fsm import FSMField, transition
 from publics.models import TravelExpenseType
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from t2f.helpers.invoice_maker import InvoiceMaker
-from t2f.serializers.mailing import TravelMailSerializer
+from t2f.serializers.mailing import TravelMailSerializer, ActionPointMailSerializer
 from users.models import WorkspaceCounter
 
 log = logging.getLogger(__name__)
@@ -31,30 +31,6 @@ class TransitionError(RuntimeError):
     Custom exception to send proprer error messages from transitions to the frontend
     """
     pass
-
-
-class UserTypes(object):
-
-    #TODO: remove God
-    GOD = 'God'
-    ANYONE = 'Anyone'
-    TRAVELER = 'Traveler'
-    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
-    SUPERVISOR = 'Supervisor'
-    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
-    FINANCE_FOCAL_POINT = 'Finance Focal Point'
-    REPRESENTATIVE = 'Representative'
-
-    CHOICES = (
-        (GOD, 'God'),
-        (ANYONE, ugettext_lazy('Anyone')),
-        (TRAVELER, ugettext_lazy('Traveler')),
-        (TRAVEL_ADMINISTRATOR, ugettext_lazy('Travel Administrator')),
-        (SUPERVISOR, ugettext_lazy('Supervisor')),
-        (TRAVEL_FOCAL_POINT, ugettext_lazy('Travel Focal Point')),
-        (FINANCE_FOCAL_POINT, ugettext_lazy('Finance Focal Point')),
-        (REPRESENTATIVE, ugettext_lazy('Representative')),
-    )
 
 
 class TravelType(object):
@@ -289,14 +265,23 @@ class Travel(models.Model):
             raise TransitionError('Maximum 3 open travels are allowed.')
 
         end_date_limit = datetime.utcnow() - timedelta(days=15)
-        if travels.filter(end_date__lte=end_date_limit).exists():
+        if travels.filter(end_date__lte=end_date_limit).exclude(id=self.id).exists():
             raise TransitionError(ugettext('Another of your trips ended more than 15 days ago, but was not completed '
                                            'yet. Please complete that before creating a new trip.'))
 
         return True
 
+    def validate_itinerary(self):
+        if self.ta_required and self.itinerary.all().count() < 2:
+            raise TransitionError(ugettext('Travel must have at least two itinerary item'))
+
+        if self.ta_required and self.itinerary.filter(dsa_region=None).exists():
+            raise TransitionError(ugettext('All itinerary items has to have DSA region assigned'))
+
+        return True
+
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
-                conditions=[has_supervisor, check_pending_invoices, check_travel_count])
+                conditions=[validate_itinerary, has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
         self.submitted_at = now()
         if not self.first_submission_date:
@@ -447,16 +432,6 @@ class Travel(models.Model):
                                      sender, [recipient])
         msg.attach_alternative(html_content, 'text/html')
 
-        # Core mailing is broken. Multiple headers will throw an exception
-        # https://bugs.python.org/issue28881
-        # for filename in ['emails/logo-etools.png', 'emails/logo-unicef.png']:
-        #     path = finders.find(filename)
-        #     with open(path, 'rb') as fp:
-        #         msg_img = MIMEImage(fp.read())
-        #
-        #     msg_img.add_header('Content-ID', '<{}>'.format(filename))
-        #     msg.attach(msg_img)
-
         try:
             msg.send(fail_silently=False)
         except ValidationError as exc:
@@ -474,7 +449,6 @@ class TravelActivity(models.Model):
     # Partnership has to be filtered based on partner
     # TODO: assert self.partnership.agreement.partner == self.partner
     partnership = models.ForeignKey('partners.Intervention', null=True, related_name='+')
-    government_partnership = models.ForeignKey('partners.GovernmentIntervention', null=True, related_name='+')
     result = models.ForeignKey('reports.Result', null=True, related_name='+')
     locations = models.ManyToManyField('locations.Location', related_name='+')
     primary_traveler = models.ForeignKey(User)
@@ -595,36 +569,7 @@ class TravelAttachment(models.Model):
     type = models.CharField(max_length=64)
 
     name = models.CharField(max_length=255)
-    file = models.FileField(
-        upload_to=determine_file_upload_path,
-        max_length=255
-    )
-
-
-class TravelPermission(models.Model):
-    EDIT = 'edit'
-    VIEW = 'view'
-    PERMISSION_TYPE_CHOICES = (
-        (EDIT, 'Edit'),
-        (VIEW, 'View'),
-    )
-
-    TRAVEL = 'travel'
-    ACTION_POINT = 'action_point'
-    USAGE_PLACE_CHOICES = (
-        (TRAVEL, 'Travel'),
-        (ACTION_POINT, 'Action point'),
-    )
-
-    name = models.CharField(max_length=128)
-    code = models.CharField(max_length=128)
-    status = models.CharField(max_length=50)
-    usage_place = models.CharField(max_length=12, choices=USAGE_PLACE_CHOICES)
-    user_type = models.CharField(max_length=25)
-    model = models.CharField(max_length=128)
-    field = models.CharField(max_length=64)
-    permission_type = models.CharField(max_length=5, choices=PERMISSION_TYPE_CHOICES)
-    value = models.BooleanField(default=False)
+    file = models.FileField(upload_to=determine_file_upload_path, max_length=255)
 
 
 def make_action_point_number():
@@ -678,6 +623,8 @@ class ActionPoint(models.Model):
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
 
     def save(self, *args, **kwargs):
+        created = self.pk is None
+
         if self.status == ActionPoint.OPEN and self.actions_taken:
             self.status = ActionPoint.ONGOING
 
@@ -685,6 +632,35 @@ class ActionPoint(models.Model):
             self.status = ActionPoint.COMPLETED
 
         super(ActionPoint, self).save(*args, **kwargs)
+
+        if created:
+            self.send_notification_email()
+
+    def send_notification_email(self):
+        # TODO this could be async to avoid too long api calls in case of mail server issue
+        serializer = ActionPointMailSerializer(self, context={})
+
+        recipient = self.person_responsible.email
+        cc = self.assigned_by.email
+        subject = '[eTools] ACTION POINT ASSIGNED to {}'.format(self.person_responsible)
+        url = 'https://{host}/t2f/action-point/{action_point_id}/'.format(host=settings.HOST,
+                                                                          action_point_id=self.id)
+
+        context = Context({'action_point': serializer.data,
+                           'url': url})
+        html_content = render_to_string('emails/action_point_assigned.html', context)
+
+        # TODO what should be used?
+        sender = settings.DEFAULT_FROM_EMAIL
+        msg = EmailMultiAlternatives(subject, '',
+                                     sender, [recipient],
+                                     cc=[cc])
+        msg.attach_alternative(html_content, 'text/html')
+
+        try:
+            msg.send(fail_silently=False)
+        except ValidationError as exc:
+            log.error('Was not able to send the email. Exception: %s', exc.message)
 
 
 class Invoice(models.Model):
@@ -704,7 +680,7 @@ class Invoice(models.Model):
     reference_number = models.CharField(max_length=32, unique=True)
     business_area = models.CharField(max_length=32)
     vendor_number = models.CharField(max_length=32)
-    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
+    currency = models.ForeignKey('publics.Currency', related_name='+')
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
     messages = ArrayField(models.TextField(null=True, blank=True), default=[])
@@ -731,6 +707,9 @@ class Invoice(models.Model):
     @property
     def message(self):
         return '\n'.join(self.messages)
+
+    def __unicode__(self):
+        return self.reference_number
 
 
 class InvoiceItem(models.Model):

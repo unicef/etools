@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
 
 import csv
-import json
 from datetime import datetime, timedelta
-from unittest import skip
-
+from freezegun import freeze_time
+import json
+from pytz import UTC
 from StringIO import StringIO
+
+from django.core import mail
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
@@ -17,11 +19,15 @@ from t2f.tests.factories import TravelFactory, ActionPointFactory
 class ActionPoints(APITenantTestCase):
     def setUp(self):
         super(ActionPoints, self).setUp()
-        self.traveler = UserFactory()
-        self.unicef_staff = UserFactory(is_staff=True)
+        self.traveler = UserFactory(first_name='John',
+                                    last_name='Doe')
+        self.unicef_staff = UserFactory(first_name='Max',
+                                        last_name='Mustermann',
+                                        is_staff=True)
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
         self.due_date = (datetime.now() + timedelta(days=1)).isoformat()
+        mail.outbox = []
 
     def test_urls(self):
         list_url = reverse('t2f:action_points:list')
@@ -141,6 +147,8 @@ class ActionPoints(APITenantTestCase):
 
         action_points = json.loads(response.rendered_content)['action_points']
         self.assertEqual(len(action_points), 1)
+
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_conditionally_required_fields(self):
         data = {'action_points': [{'description': 'Something',
@@ -281,3 +289,30 @@ class ActionPoints(APITenantTestCase):
         self.assertFalse(rows[1][4].isdigit())
         self.assertTrue(isinstance(rows[1][9], (str, unicode)))
         self.assertFalse(rows[1][9].isdigit())
+
+    def test_mail_on_first_save(self):
+        self.assertEqual(len(mail.outbox), 0)
+
+        action_point = ActionPointFactory(travel=self.travel,
+                                          person_responsible=self.unicef_staff,
+                                          assigned_by=self.traveler)
+        self.assertEqual(len(mail.outbox), 1)
+
+        action_point.save()
+        self.assertEqual(len(mail.outbox), 1)
+
+        action_point.save()
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_due_date_validation(self):
+        action_point = ActionPointFactory(travel=self.travel,
+                                          due_date=datetime(2017, 6, 15, 12, tzinfo=UTC))
+        data = {'due_date': datetime(2017, 6, 15, 12, tzinfo=UTC),
+                'completed_at': datetime(2017, 6, 16, 11, tzinfo=UTC),
+                'actions_taken': 'stuff'}
+
+        with freeze_time(datetime(2017, 6, 16, 12, tzinfo=UTC)):
+            response = self.forced_auth_req('patch', reverse('t2f:action_points:details',
+                                                             kwargs={'action_point_pk': action_point.id}),
+                                            data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)

@@ -235,8 +235,9 @@ class TravelExports(APITenantTestCase):
                                mode_of_travel=None)
         travel_2.expenses.all().delete()
         ExpenseFactory(travel=travel_2, amount=Decimal('200'))
+        ExpenseFactory(travel=travel_2, amount=Decimal('100'), currency=None)
 
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(27):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
                                             user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
