@@ -1167,7 +1167,7 @@ class InterventionManager(models.Manager):
                                                                                 'planned_budget')
 
 
-class Intervention(TimeStampedModel):
+class Intervention(TimeStampedModel, AdminURLMixin):
     """
     Represents a partner intervention.
 
