@@ -10,3 +10,10 @@ class TPMAttachmentsSerializer(BaseAttachmentsSerializer):
 
     class Meta(BaseAttachmentsSerializer.Meta):
         pass
+
+
+class TPMReportAttachmentsSerializer(BaseAttachmentsSerializer):
+    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code="tpm_report"))
+
+    class Meta(BaseAttachmentsSerializer.Meta):
+        pass

@@ -12,7 +12,7 @@ from reports.models import Sector
 from reports.serializers.v1 import SectorLightSerializer
 from tpm.models import TPMVisit, TPMLocation, TPMPartner, \
                        TPMPermission, TPMActivity, TPMSectorCovered, TPMLowResult
-from tpm.serializers.attachments import TPMAttachmentsSerializer
+from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
 from utils.common.serializers.fields import SeparatedReadWriteField
@@ -170,10 +170,12 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
 
 
 class TPMVisitSerializer(TPMVisitLightSerializer):
-    attachments = TPMAttachmentsSerializer(read_only=True, many=True)
+    attachments = TPMAttachmentsSerializer(many=True)
+    report = TPMReportAttachmentsSerializer(many=True)
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
             'reject_comment',
             'attachments',
+            'report',
         ]

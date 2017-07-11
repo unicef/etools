@@ -10,4 +10,7 @@ class TPMMetadata(FSMTransitionActionMetadataMixin,
                   ModelChoiceFieldMixin,
                   CRUActionsMetadataMixin,
                   SimpleMetadata):
-    pass
+    def get_serializer_info(self, serializer):
+        if serializer.instance:
+            serializer.context['instance'] = serializer.instance
+        return super(TPMMetadata, self).get_serializer_info(serializer)
