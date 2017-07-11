@@ -1,6 +1,6 @@
 # Python imports
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from unittest import TestCase
@@ -37,20 +37,9 @@ def _build_country(name):
 class TestSyncTask(TestCase):
     '''Exercises the sync() task which requires a lot of mocking and some monkey patching.'''
     def setUp(self):
-        # We have to monkey patch a global constant in vision.tasks. Here we ensure it gets un-monkeyed after the
+        # We have to monkey patch a global constant in vision.tasks. Here we ensure we can un-monkey it after the
         # test completes.
         self.restore_these_sync_handlers = vision.tasks.SYNC_HANDLERS
-
-        def restore_sync_handlers():
-            vision.tasks.SYNC_HANDLERS = self.restore_these_sync_handlers
-        self.addCleanup(restore_sync_handlers)
-
-        # Some tests modify the side effects of mock tenant handler classes. Ensure they get cleaned up after
-        # every test.
-        def clean_up_mock_tenant_handler_class_side_effects():
-            for mock_handler_class in self.mock_tenant_handler_classes:
-                mock_handler_class.side_effect = None
-        self.addCleanup(clean_up_mock_tenant_handler_class_side_effects)
 
         self.public_country = _build_country('public')
         # In real life, vision_sync_enabled is not set on the public country.
@@ -70,7 +59,7 @@ class TestSyncTask(TestCase):
         self.mock_tenant_handler_classes = [mock_handler_class for mock_handler_class in mock_handler_classes
                                             if not mock_handler_class.GLOBAL_CALL]
 
-        for i, mock_handler_class in enumerate(mock_handler_classes):
+        for mock_handler_class in mock_handler_classes:
             # Each handler class should return a synchronizer instance, which we're also going to mock. We expect the
             # task to call .sync() on each synchronizer instance. Mocking the instance allows us to verify the task's
             # calls to sync() and to ensure it doesn't access any attributes on the synchronizer other than sync().
@@ -78,6 +67,14 @@ class TestSyncTask(TestCase):
 
         # Monkey patch the module's SYNC_HANDLERS.
         vision.tasks.SYNC_HANDLERS = mock_handler_classes
+
+    def tearDown(self):
+        # un-monkey patch vision.tasks.SYNC_HANDLERS
+        vision.tasks.SYNC_HANDLERS = self.restore_these_sync_handlers
+        # Some tests modify the side effects of mock tenant handler classes. Ensure they get cleaned up after
+        # every test.
+        for mock_handler_class in self.mock_tenant_handler_classes:
+            mock_handler_class.side_effect = None
 
     def _configure_country_class_mock(self, CountryMock, tenant_countries_used=None):
         '''helper function for common config of CountryMock.
@@ -191,7 +188,7 @@ class TestSyncTask(TestCase):
             # Each synchronizer (instantiated class) has a sync() method that should have been called.
             self.assertEqual(handler_class.return_value.sync.call_count, n_expected_calls)
             # Should have been called with no args and no kwargs.
-            for i, call_args in enumerate(handler_class.return_value.sync.call_args_list):
+            for call_args in handler_class.return_value.sync.call_args_list:
                 self.assertEqual(call_args, ((), {}))
 
     def _assertLoggerMessages(self, mock_logger, tenant_countries_used=None):
