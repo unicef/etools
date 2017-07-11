@@ -37,7 +37,7 @@ class TPMPartnerViewSet(
     viewsets.GenericViewSet
 ):
     # todo: allow access only for self organization if parner
-    queryset = TPMPartner.objects.filter(hidden=False)
+    queryset = TPMPartner.objects.all()
     serializer_class = TPMPartnerSerializer
     serializer_action_classes = {
         'list': TPMPartnerLightSerializer
@@ -46,7 +46,7 @@ class TPMPartnerViewSet(
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('vendor_number', 'name')
     ordering_fields = ('vendor_number', 'name', 'country')
-    filter_fields = ('status', )
+    filter_fields = ('status', 'blocked', 'hidden')
 
     @list_route(methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
