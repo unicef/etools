@@ -36,7 +36,10 @@ def check_required_fields(obj, fields):
         try:
             response = field.all().count() > 0
         except AttributeError:
-            response = field is not None
+            if isinstance(field, FieldFile):
+                response = getattr(field, 'name', None) or False
+            else:
+                response = field is not None
         if response is False:
             return False, f_name
 
