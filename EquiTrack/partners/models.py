@@ -1515,6 +1515,7 @@ class Intervention(TimeStampedModel):
         if self.document_type == self.SSFA:
             save_agreement = False
             if self.agreement.start != self.start or self.agreement.end != self.end:
+                save_agreement = True
                 self.agreement.start = self.start
                 self.agreement.end = self.end
 
