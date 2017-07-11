@@ -503,13 +503,14 @@ class CompleteValidation(object):
             logging.debug("new state  {} is valid: {}".format(self.new.status, state_valid[0]))
             if not state_valid[0]:
                 # set stuff back
+                logging.debug("state invalid because {}".format(state_valid[1]))
                 self.new.status, self.new_status = originals
                 return False
 
             # if all good run all the autoupdates on that status
             for function in auto_update_functions:
                 logging.debug("auto updating functions for transition")
-                function(self.new, self.user)
+                function(self.new, old_instance=self.old, user=self.user)
             return True
 
     def make_auto_transitions(self):
@@ -549,7 +550,7 @@ class CompleteValidation(object):
             SIDE_EFFECTS_DICT = getattr(self.new.__class__, 'TRANSITION_SIDE_EFFECTS', {})
             transition_side_effects = SIDE_EFFECTS_DICT.get(self.new_status, [])
             for side_effect_function in transition_side_effects:
-                side_effect_function(self.new)
+                side_effect_function(self.new, old_instance=self.old, user=self.user)
 
     @cached_property
     def total_validation(self):

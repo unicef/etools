@@ -836,10 +836,10 @@ class AgreementManager(models.Manager):
         return super(AgreementManager, self).get_queryset().select_related('partner')
 
 
-def activity_to_active_side_effects(obj, user=None):
+def activity_to_active_side_effects(i, old_instance=None, user=None):
     # here we can make any updates to the object as we need as part of the auto transition change
     # obj.end = datetime.date.today()
-    # obj.old_instance.status will give you the status you're transitioning from
+    # old_instance.status will give you the status you're transitioning from
     pass
 
 
@@ -1166,11 +1166,15 @@ class InterventionManager(models.Manager):
                                                                                 'planned_budget')
 
 
-def side_effect_one(i, user=None):
+def side_effect_one(i, old_instance=None, user=None):
+    logging.debug('Side effect 1 is executing for instance: {}'.format(i.id))
+    # print i.status
+    # print old_instance.status
+    # print user.get_full_name()
     pass
 
 
-def side_effect_two(i, user=None):
+def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
