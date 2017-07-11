@@ -122,7 +122,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
             # refresh the instance from the database.
             instance = self.get_object()
         return Response(
-            InterventionDetailSerializer(instance).data,
+            InterventionDetailSerializer(instance, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED,
             headers=headers
         )
@@ -251,7 +251,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             # refresh the instance from the database.
             instance = self.get_object()
 
-        return Response(InterventionDetailSerializer(instance).data)
+        return Response(InterventionDetailSerializer(instance, context=self.get_serializer_context()).data)
 
 
 class InterventionPlannedVisitsDeleteView(DestroyAPIView):

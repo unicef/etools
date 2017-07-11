@@ -101,7 +101,8 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     agreement_type = serializers.CharField(required=True)
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
-    country_programme = serializers.PrimaryKeyRelatedField(queryset=CountryProgramme.objects.all(), required=False)
+    country_programme = serializers.PrimaryKeyRelatedField(queryset=CountryProgramme.objects.all(), required=False,
+                                                           allow_null=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager', read_only=True)
     agreement_number = serializers.CharField(read_only=True)
@@ -114,7 +115,6 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         data = super(AgreementCreateUpdateSerializer, self).validate(data)
         agreement_type = data.get('agreement_type', None) or self.instance.agreement_type
-        ValidationError({'agreement_type': 'This field is required!'})
 
         if agreement_type == Agreement.PCA:
             try:

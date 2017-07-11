@@ -102,6 +102,17 @@ class TestAgreementsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertEqual(response['agreement_type'], Agreement.SSFA)
 
+    def test_add_new_SSFA_with_country_programme_null(self):
+        data = {
+            "agreement_type": Agreement.SSFA,
+            "partner": self.partner1.id,
+            "country_programme": 'null'
+        }
+        status_code, response = self.run_post_request(data)
+
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response['agreement_type'], Agreement.SSFA)
+
     def test_fail_patch_PCA_without_country_programme(self):
         # create new agreement
         data = {
