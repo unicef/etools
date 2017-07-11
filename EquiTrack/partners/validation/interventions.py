@@ -176,7 +176,7 @@ class InterventionValid(CompleteValidation):
 
         today = date.today()
         if not (intervention.start <= today <= intervention.end):
-            raise StateValidError([_('Today is not within an the start and end dates')])
+            raise StateValidError([_('Today is not within the start and end dates')])
         return True
 
     def state_ended_valid(self, intervention, user=None):
