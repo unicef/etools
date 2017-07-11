@@ -29,13 +29,13 @@ from .transitions.conditions import ValidateTPMVisitActivities, \
 
 class TPMPartner(BaseFirm):
     STATUSES = Choices(
-        ('draft', 'Draft'),
-        ('active', 'Active'),
-        ('cancelled', 'Cancelled'),
+        ('draft', _('Draft')),
+        ('active', _('Active')),
+        ('cancelled', _('Cancelled')),
     )
 
-    status = FSMField(max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
-    attachments = GenericRelation(Attachment, blank=True)
+    status = FSMField(_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
+    attachments = GenericRelation(Attachment, verbose_name=_('attachments'), blank=True)
 
     # TODO: Remove hardcode for PME permissions?
     @transition(status, source=[STATUSES.draft, STATUSES.cancelled], target=STATUSES.active,
@@ -50,9 +50,9 @@ class TPMPartner(BaseFirm):
 
 
 class TPMPartnerStaffMember(BaseStaffMember):
-    tpm_partner = models.ForeignKey(TPMPartner, related_name='staff_members')
+    tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), related_name='staff_members')
 
-    receive_tpm_notifications = models.BooleanField(default=False)
+    receive_tpm_notifications = models.BooleanField(verbose_name=_('Receive Notifications on TPM Tasks'), default=False)
 
 
 def _has_action_permission(action):
@@ -62,23 +62,23 @@ def _has_action_permission(action):
 @python_2_unicode_compatible
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     STATUSES = Choices(
-        ('draft', 'Draft'),
-        ('assigned', 'Assigned'),
-        ('tpm_accepted', 'TPM Accepted'),
-        ('tpm_rejected', 'TPM Rejected'),
-        ('tpm_reported', 'TPM Reported'),
-        ('submitted', 'Submitted'),
-        ('unicef_approved', 'Approved'),
+        ('draft', _('Draft')),
+        ('assigned', _('Assigned')),
+        ('tpm_accepted', _('TPM Accepted')),
+        ('tpm_rejected', _('TPM Rejected')),
+        ('tpm_reported', _('TPM Reported')),
+        ('submitted', _('Submitted')),
+        ('unicef_approved', _('Approved')),
     )
 
-    tpm_partner = models.ForeignKey(TPMPartner)
+    tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'))
 
-    status = FSMField(max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
+    status = FSMField(verbose_name=_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
-    reject_comment = models.TextField(blank=True)
+    reject_comment = models.TextField(verbose_name=_('Request for more information'), blank=True)
 
-    attachments = CodedGenericRelation(Attachment, code='attach', blank=True)
-    report = CodedGenericRelation(Attachment, code='report', blank=True)
+    attachments = CodedGenericRelation(Attachment, verbose_name=_('Related Documents'), code='attach', blank=True)
+    report = CodedGenericRelation(Attachment, verbose_name=_('Report'), code='report', blank=True)
 
     @property
     def reference_number(self):
@@ -103,7 +103,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             models.Max('end_date'))['end_date__max']
 
     def __str__(self):
-        return 'Visit ({}, {})'.format(self.visit_start, self.visit_end)
+        return 'Visit ({}, {})'.format(self.tpm_partner, ', '.join(self.tpm_activities.values_list('partnership__title', flat=True)))
 
     def has_action_permission(self, user=None, action=None):
         return _has_action_permission(self, user, action)
@@ -193,11 +193,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
 @python_2_unicode_compatible
 class TPMActivity(models.Model):
-    partnership = models.ForeignKey('partners.Intervention')
+    partnership = models.ForeignKey('partners.Intervention', verbose_name=_('partnership'))
 
-    tpm_visit = models.ForeignKey(TPMVisit, related_name='tpm_activities')
+    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
 
-    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='tpm_activities')
+    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Point'), related_name='tpm_activities')
 
     def __str__(self):
         return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
@@ -208,8 +208,8 @@ class TPMActivity(models.Model):
 
 @python_2_unicode_compatible
 class TPMSectorCovered(models.Model):
-    sector = models.ForeignKey('reports.Sector', blank=True)
-    tpm_activity = models.ForeignKey(TPMActivity, related_name='tpm_sectors')
+    sector = models.ForeignKey('reports.Sector', verbose_name=_('Sector covered'), blank=True)
+    tpm_activity = models.ForeignKey(TPMActivity, verbose_name=_('activity'), related_name='tpm_sectors')
 
     def __str__(self):
         return 'Sector {0} for {1}'.format(self.sector, self.tpm_activity)
@@ -221,8 +221,8 @@ class TPMSectorCovered(models.Model):
 @python_2_unicode_compatible
 class TPMLowResult(models.Model):
     # TODO: Results is LowerResult? (TPM Spec: Low-level Results  (see PD/SSFA Output [array]0..* in Partnership Management))
-    result = models.ForeignKey('partners.InterventionResultLink', blank=True)
-    tpm_sector = models.ForeignKey(TPMSectorCovered, related_name='tpm_low_results')
+    result = models.ForeignKey('partners.InterventionResultLink', verbose_name=_('PD/SSFA Output'))
+    tpm_sector = models.ForeignKey(TPMSectorCovered, verbose_name=_('sector'), related_name='tpm_low_results')
 
     def __str__(self):
         return 'Result {0} for {1}'.format(self.result, self.tpm_sector)
@@ -230,13 +230,13 @@ class TPMLowResult(models.Model):
 
 @python_2_unicode_compatible
 class TPMLocation(models.Model):
-    tpm_low_result = models.ForeignKey(TPMLowResult, null=True, blank=True, related_name='tpm_locations')
+    tpm_low_result = models.ForeignKey(TPMLowResult, verbose_name=_('low_result'), null=True, blank=True, related_name='tpm_locations')
 
-    start_date = models.DateField(null=True, blank=True)
-    end_date = models.DateField(null=True, blank=True)
+    start_date = models.DateField(verbose_name=_('Start Date'), null=True, blank=True)
+    end_date = models.DateField(verbose_name=_('End Date'), null=True, blank=True)
 
-    location = models.ForeignKey('locations.Location')
-    type_of_site = models.CharField(max_length=255, blank=True)
+    location = models.ForeignKey('locations.Location', verbose_name=_('Location'))
+    type_of_site = models.CharField(verbose_name=_('Type of site'), max_length=255, blank=True)
 
     def __str__(self):
         return '{}: {}'.format(self.tpm_low_result, self.location)
@@ -295,7 +295,6 @@ class TPMPermission(StatusBasePermission):
             return UNICEFFocalPoint.code
 
         user_type = super(TPMPermission, cls)._get_user_type(user)
-
         if user_type == ThirdPartyMonitor:
             if not instance:
                 return user_type

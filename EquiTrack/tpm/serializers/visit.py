@@ -26,6 +26,16 @@ class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
         permission_class = TPMPermission
 
 
+class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
+    name = serializers.ReadOnlyField(source="cp_output.name")
+
+    class Meta:
+        model = InterventionResultLink
+        fields = [
+            'id', 'name'
+        ]
+
+
 class TPMLocationSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             serializers.ModelSerializer):
     location = SeparatedReadWriteField(
@@ -38,13 +48,15 @@ class TPMLocationSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     def validate(self, data):
         validated_data = super(TPMLocationSerializer, self).validate(data)
-        print "data: ", data
         return validated_data
 
 
 class TPMLowResultSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             serializers.ModelSerializer):
     tpm_locations = TPMLocationSerializer(many=True)
+    result = SeparatedReadWriteField(
+        read_field=InterventionResultLinkVisitSerializer(read_only=True)
+    )
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMLowResult
@@ -73,6 +85,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     unicef_focal_points = SeparatedReadWriteField(
         read_field=MinimalUserSerializer(read_only=True, many=True),
+        required=False
     )
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
@@ -81,7 +94,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     def _validate_sectors(self, tpm_sectors, partnership):
         if tpm_sectors:
-            sector_ids = map(lambda s: s["sector"].id, tpm_sectors)
+            sector_ids = filter(lambda x: x, map(lambda s: s["sector"].id if "sector" in s else None, tpm_sectors))
             allowed = partnership.sector_locations.values_list('sector_id', flat=True)
             if len(set(sector_ids) - set(allowed)) > 0:
                 raise serializers.ValidationError({
@@ -95,8 +108,12 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     def _validate_tpm_low_results(self, sector, partnership):
         result_errors = []
         for result in sector.get("tpm_low_results", []):
+            result_error = None
 
             tpm_locations = result.get("tpm_locations", [])
+
+            if result.get("result", None) and not partnership.result_links.filter(id=result.get("result").id).exists():
+                result_error = '{} not allowed for {}'.format(result.get("result"), partnership)
 
             location_errors = []
             for tpm_location in tpm_locations:
@@ -108,8 +125,13 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
                     ).exists():
                         location_errors.append('{0} not allowed for {1}'.format(location, sector["sector"]))
 
+            errors = {}
             if location_errors:
-                result_errors.append({"tpm_locations": location_errors})
+                errors["tpm_locations"] = location_errors
+            if result_error:
+                errors["result"] = result_error
+            if errors:
+                result_errors.append(errors)
 
         if result_errors:
             raise serializers.ValidationError({
@@ -119,7 +141,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     def validate(self, data):
         validated_data = super(TPMActivitySerializer, self).validate(data)
 
-        partnership = self.instance if 'partnership' not in validated_data else validated_data['partnership']
+        partnership = self.root.instance.tpm_activities.get(id=validated_data['id']).partnership if 'id' in validated_data else validated_data['partnership']
         tpm_sectors = validated_data.get('tpm_sectors', [])
 
         self._validate_sectors(tpm_sectors, partnership)
@@ -127,16 +149,6 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
             self._validate_tpm_low_results(sector, partnership)
 
         return validated_data
-
-
-class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(source="cp_output.name")
-
-    class Meta:
-        model = InterventionResultLink
-        fields = [
-            'id', 'name'
-        ]
 
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
-from django.core.exceptions import ValidationError
+from rest_framework.serializers import ValidationError
+
 from django.utils.decorators import classonlymethod
 from django.utils.translation import ugettext as _
 
