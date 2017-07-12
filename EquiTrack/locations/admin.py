@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from django.contrib.gis import admin
 
 from leaflet.admin import LeafletGeoAdmin
@@ -37,17 +35,6 @@ class LocationAdmin(LeafletGeoAdmin, MPTTModelAdmin):
 
         return super(LocationAdmin, self).get_form(request, obj, **kwargs)
 
-    # def get_fields(self, request, obj=None):
-    #
-    #     fields = super(LocationAdmin, self).get_fields(request, obj)
-    #     if obj:
-    #         if obj.point:
-    #             fields.append('point')
-    #         if obj.geom:
-    #             fields.append('geom')
-    #
-    #     return fields
-
 
 class CartoDBTableAdmin(admin.ModelAdmin):
     form = CartoDBTableForm
@@ -66,6 +53,7 @@ class CartoDBTableAdmin(admin.ModelAdmin):
 
         for table in queryset:
             update_sites_from_cartodb.delay(table)
+
 
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.GatewayType)

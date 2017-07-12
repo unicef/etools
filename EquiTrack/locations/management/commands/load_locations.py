@@ -1,16 +1,9 @@
-__author__ = 'jcranwellward'
-
-import os
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import Point
-from django.contrib.gis.utils import LayerMapping
-from django.contrib.gis.geos import GEOSGeometry
 from django.core.management.base import BaseCommand, CommandError
 
 from locations.models import Location, GatewayType
 
 location_mapping = {
-
     'name': 'ACS_NAME_1',
     'pcode': 'CERD',
     'longitude': 'X_Location',
@@ -58,10 +51,7 @@ class Command(BaseCommand):
 
                 print "\nImporting values: {}".format(field_values)
 
-                cad_code = feat.get('CAD_CODE_1').encode('utf-8').split('.')[0]
-
                 location, created = Location.objects.get_or_create(
-                    #p_code=field_values['p_code'],
                     name=field_values['name'].encode('utf-8'),
                     gateway=gateway_type,
                 )
