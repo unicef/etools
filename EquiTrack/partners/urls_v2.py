@@ -11,7 +11,6 @@ from .views.agreements_v2 import (
     AgreementListAPIView,
     AgreementDetailAPIView,
     AgreementAmendmentDeleteView,
-    AgreementAmendmentTypeDeleteView,
 )
 from views.interventions_v2 import (
     InterventionListAPIView,
@@ -40,9 +39,6 @@ urlpatterns = (
     url(r'^agreements/amendments/(?P<pk>\d+)/$',
         view=AgreementAmendmentDeleteView.as_view(http_method_names=['delete']),
         name='agreement-amendment-del'),
-    url(r'^agreements/amendments/types/(?P<pk>\d+)/$',
-        view=AgreementAmendmentTypeDeleteView.as_view(http_method_names=['delete']),
-        name='agreement-amendment-type-del'),
     # url(r'^agreements/(?P<pk>\d+)/interventions/$',
     #     view=AgreementInterventionsListAPIView.as_view(),
     #     name='agreement-interventions-list'),

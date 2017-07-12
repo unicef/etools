@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 from unittest import TestCase
 import json
 import datetime
-
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
@@ -16,7 +15,8 @@ from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import (
     PartnerType,
     Agreement,
-    Intervention
+    Intervention,
+    AgreementAmendment
 )
 
 
@@ -29,7 +29,6 @@ class URLsTestCase(URLAssertionMixin, TestCase):
             ('agreement-detail', '1/', {'pk': 1}),
             ('pca_pdf', '1/generate_doc/', {'agr': 1}),
             ('agreement-amendment-del', 'amendments/1/', {'pk': 1}),
-            ('agreement-amendment-type-del', 'amendments/types/1/', {'pk': 1}),
             )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/agreements/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
@@ -48,6 +47,12 @@ class TestAgreementsAPI(APITenantTestCase):
         self.agreement1 = AgreementFactory(partner=self.partner1, signed_by_unicef_date=datetime.date.today())
         self.intervention = InterventionFactory(agreement=self.agreement1)
         self.intervention_2 = InterventionFactory(agreement=self.agreement1, document_type=Intervention.PD)
+        self.amendment = AgreementAmendment.objects.create(agreement=self.agreement1,
+                                                           types=[AgreementAmendment.CP_EXTENSION,
+                                                                  AgreementAmendment.CLAUSE],
+                                                           number="001",
+                                                           signed_amendment="application/pdf",
+                                                           signed_date=datetime.date.today())
 
     def run_post_request(self, data, user=None):
         response = self.forced_auth_req(
