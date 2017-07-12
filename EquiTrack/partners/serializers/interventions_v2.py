@@ -1,9 +1,7 @@
 from __future__ import unicode_literals
-import datetime
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Sum
 from rest_framework import serializers
 
 from funds.serializers import FRsSerializer
@@ -268,12 +266,20 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     sector_locations = InterventionSectorLocationCUSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
 
-    frs = serializers.PrimaryKeyRelatedField(many=True, queryset=FundsReservationHeader.
-                                             objects.prefetch_related('intervention').all(), required=False)
+    frs = serializers.PrimaryKeyRelatedField(many=True,
+                                             queryset=FundsReservationHeader.objects.prefetch_related('intervention')
+                                             .all(),
+                                             required=False)
 
     class Meta:
         model = Intervention
         fields = "__all__"
+
+    def to_internal_value(self, data):
+        if 'frs' in data:
+            if data['frs'] is None:
+                data['frs'] = []
+        return super(InterventionCreateUpdateSerializer, self).to_internal_value(data)
 
     def validate_frs(self, frs):
         for fr in frs:
