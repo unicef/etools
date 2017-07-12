@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, ExportViewSetDataMixin, \
     NestedViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
-from .metadata import TPMMetadata
+from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
@@ -21,7 +21,7 @@ class BaseTPMViewSet(
     ExportViewSetDataMixin,
     MultiSerializerViewSetMixin,
 ):
-    metadata_class = TPMMetadata
+    metadata_class = TPMBaseMetadata
     pagination_class = DynamicPageNumberPagination
     permission_classes = (IsAuthenticated, )
 
@@ -37,6 +37,7 @@ class TPMPartnerViewSet(
     viewsets.GenericViewSet
 ):
     # todo: allow access only for self organization if parner
+    metadata_class = TPMPermissionBasedMetadata
     queryset = TPMPartner.objects.all()
     serializer_class = TPMPartnerSerializer
     serializer_action_classes = {
@@ -102,6 +103,7 @@ class TPMVisitViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = TPMPermissionBasedMetadata
     queryset = TPMVisit.objects.all().prefetch_related(
         'tpm_partner',
         'tpm_activities',
