@@ -36,7 +36,10 @@ def check_required_fields(obj, fields):
         try:
             response = field.all().count() > 0
         except AttributeError:
-            response = field is not None
+            if isinstance(field, FieldFile):
+                response = getattr(field, 'name', None) or False
+            else:
+                response = field is not None
         if response is False:
             return False, f_name
 
@@ -459,31 +462,13 @@ class CompleteValidation(object):
         return result
 
     def _first_available_auto_transition(self):
-        potential = getattr(self.new.__class__, 'POTENTIAL_AUTO_TRANSITIONS', {})
 
-        # make sure that all potential transitions were labeled correctly and filter out what wasn't
-        def filter_tl(potential_transition_list, choices):
-            if not potential_transition_list:
-                return None
-
-            def my_filter(obj):
-                # object should only have one key and should be in the list of choices
-                key = next(obj.iterkeys())
-                return key in choices
-            return filter(lambda obj: my_filter(obj), potential_transition_list)
-
-        # Transition list: list of objects [{'transition_to_status': [auto_changes_function1, auto_changes_function2]}]
-        # Represents potential transitions from the current status:
-        tl = filter_tl(potential.get(self.new.status, None),
-                       [s[0] for s in self.new.__class__._meta.get_field('status').choices])
-
-        logging.debug("Potential transition from the current status: {} -> {}".format(self.new.status, tl))
-        if not tl:
-            return None, None, None
+        potential = getattr(self.new.__class__, 'AUTO_TRANSITIONS', {})
 
         # ptt: Potential Transition To List
-        pttl = [p.iterkeys().next() for p in tl]
-        logging.debug(pttl)
+        list_of_status_choices = [i[0] for i in self.new.__class__._meta.get_field('status').choices]
+        pttl = [i for i in potential.get(self.new.status, [])
+                if i in list_of_status_choices]
 
         for potential_transition_to in pttl:
             # test to see if it's a viable transition:
@@ -496,10 +481,13 @@ class CompleteValidation(object):
                     self.new.status, potential_transition_to
                 ))
             if self.auto_transition_validation(possible_fsm_transition)[0]:
-                # auto_update_functions:
-                auf = next(obj[potential_transition_to] for obj in tl if potential_transition_to in obj)
+
+                # get the side effects function if any
+                SIDE_EFFECTS_DICT = getattr(self.new.__class__, 'TRANSITION_SIDE_EFFECTS', {})
+                transition_side_effects = SIDE_EFFECTS_DICT.get(potential_transition_to, [])
                 logging.debug("transition is possible  {} -> {}".format(self.new.status, potential_transition_to))
-                return True, potential_transition_to, auf
+
+                return True, potential_transition_to, transition_side_effects
             logging.debug("transition is not possible : {} -> {}".format(self.new.status, potential_transition_to))
         return None, None, None
 
@@ -518,22 +506,31 @@ class CompleteValidation(object):
             logging.debug("new state  {} is valid: {}".format(self.new.status, state_valid[0]))
             if not state_valid[0]:
                 # set stuff back
+                logging.debug("state invalid because {}".format(state_valid[1]))
                 self.new.status, self.new_status = originals
                 return False
 
             # if all good run all the autoupdates on that status
             for function in auto_update_functions:
                 logging.debug("auto updating functions for transition")
-                function(self.new)
+                function(self.new, old_instance=self.old, user=self.user)
             return True
 
     def make_auto_transitions(self):
         logging.debug("*************** STARTING AUTO TRANSITIONS *****************")
         any_transition_made = False
+
+        # disable rigid_check in auto-transitions as they do not apply
+        originial_rigid_check_setting = self.disable_rigid_check
+        self.disable_rigid_check = True
+
         while self._make_auto_transition():
             any_transition_made = True
 
         logging.debug("*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}".format(any_transition_made))
+
+        # reset rigid check:
+        self.disable_rigid_check = originial_rigid_check_setting
         return any_transition_made
 
     @cached_property
@@ -561,14 +558,10 @@ class CompleteValidation(object):
         if self.old_status == self.new_status:
             return
         else:
-            # get the side effects from POTENTIAL_AUTO_TRANSITIONS:
-            potential = getattr(self.new.__class__, 'POTENTIAL_AUTO_TRANSITIONS', {})
-            transition_from = potential.get(self.old_status, [])
-            transition_to = filter(lambda x: self.new_status in x, transition_from)
-            if not transition_to:
-                return
-            for side_effect_function in transition_to[self.new_status]:
-                side_effect_function(self.new)
+            SIDE_EFFECTS_DICT = getattr(self.new.__class__, 'TRANSITION_SIDE_EFFECTS', {})
+            transition_side_effects = SIDE_EFFECTS_DICT.get(self.new_status, [])
+            for side_effect_function in transition_side_effects:
+                side_effect_function(self.new, old_instance=self.old, user=self.user)
 
     @cached_property
     def total_validation(self):
