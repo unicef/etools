@@ -836,9 +836,10 @@ class AgreementManager(models.Manager):
         return super(AgreementManager, self).get_queryset().select_related('partner')
 
 
-def draft_to_active_auto_changes(obj):
+def activity_to_active_side_effects(i, old_instance=None, user=None):
     # here we can make any updates to the object as we need as part of the auto transition change
     # obj.end = datetime.date.today()
+    # old_instance.status will give you the status you're transitioning from
     pass
 
 
@@ -850,15 +851,6 @@ class Agreement(TimeStampedModel):
     """
     # POTENTIAL_AUTO_TRANSITIONS.. these are all transitions that we want to
     # make automatically if possible
-    POTENTIAL_AUTO_TRANSITIONS = {
-        'draft': [
-            {'active': [draft_to_active_auto_changes]},
-        ],
-        'active': [
-            {'ended': []},
-        ],
-    }
-
     PCA = 'PCA'
     MOU = 'MOU'
     SSFA = 'SSFA'
@@ -880,6 +872,13 @@ class Agreement(TimeStampedModel):
         (SUSPENDED, u"Suspended"),
         (TERMINATED, u"Terminated"),
     )
+    AUTO_TRANSITIONS = {
+        DRAFT: [SIGNED],
+        SIGNED: [ENDED],
+    }
+    TRANSITION_SIDE_EFFECTS = {
+        SIGNED: [activity_to_active_side_effects],
+    }
 
     partner = models.ForeignKey(PartnerOrganization, related_name="agreements")
     country_programme = models.ForeignKey('reports.CountryProgramme', related_name='agreements', blank=True, null=True)
@@ -1071,6 +1070,19 @@ class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement
     '''
+    IP_NAME = u'Change IP name'
+    CP_EXTENSION = u'CP extension'
+    AUTHORIZED_OFFICER = u'Change authorized officer'
+    BANKING_INFO = u'Change banking info'
+    CLAUSE = u'Change in clause'
+
+    AMENDMENT_TYPES = Choices(
+        (IP_NAME, 'Change in Legal Name of Implementing Partner'),
+        (CP_EXTENSION, 'Extension of Country Programme Cycle'),
+        (AUTHORIZED_OFFICER, 'Change Authorized Officer(s)'),
+        (BANKING_INFO, 'Banking Information'),
+        (CLAUSE, 'Change in clause'),
+    )
 
     number = models.CharField(max_length=5)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
@@ -1079,6 +1091,9 @@ class AgreementAmendment(TimeStampedModel):
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
     )
+    types = ArrayField(models.CharField(
+        max_length=50,
+        choices=AMENDMENT_TYPES))
     signed_date = models.DateField(null=True, blank=True)
 
     tracker = FieldTracker()
@@ -1120,39 +1135,6 @@ class AgreementAmendment(TimeStampedModel):
         return super(AgreementAmendment, self).save(**kwargs)
 
 
-class AgreementAmendmentType(models.Model):
-
-    AMENDMENT_TYPES = Choices(
-        ('Change IP name', 'Change in Legal Name of Implementing Partner'),
-        ('CP extension', 'Extension of Country Programme Cycle'),
-        ('Change authorized officer', 'Change Authorized Officer'),
-        ('Change banking info', 'Banking Information'),
-        ('Additional clause', 'Additional Clause'),
-        ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
-    )
-    agreement_amendment = models.ForeignKey(AgreementAmendment, related_name='amendment_types')
-    type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
-    label = models.TextField(null=True, blank=True)
-    officer = models.IntegerField(null=True, blank=True)
-    bank_info = models.TextField(null=True, blank=True)
-    legal_name_of_ip = models.CharField(null=True, blank=True, max_length=255)
-    cp_cycle_end = models.DateField(null=True, blank=True)
-    additional_clauses = models.TextField(null=True, blank=True)
-    existing_clause_amended = models.TextField(null=True, blank=True)
-
-    def save(self, **kwargs):
-        if self.pk is None and self.type == 'CP extension':
-            self.cp_cycle_end = self.agreement_amendment.agreement.country_programme.to_date
-        return super(AgreementAmendmentType, self).save(**kwargs)
-
-    def __unicode__(self):
-        return "{}-{}-{}".format(
-            self.agreement_amendment.agreement.reference_number,
-            self.agreement_amendment.number,
-            self.type or ''
-        )
-
-
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
@@ -1165,6 +1147,18 @@ class InterventionManager(models.Manager):
                                                                                 'offices',
                                                                                 'agreement__partner',
                                                                                 'planned_budget')
+
+
+def side_effect_one(i, old_instance=None, user=None):
+    logging.debug('Side effect 1 is executing for instance: {}'.format(i.id))
+    # print i.status
+    # print old_instance.status
+    # print user.get_full_name()
+    pass
+
+
+def side_effect_two(i, old_instance=None, user=None):
+    pass
 
 
 class Intervention(TimeStampedModel):
@@ -1188,25 +1182,20 @@ class Intervention(TimeStampedModel):
     SUSPENDED = 'suspended'
     TERMINATED = 'terminated'
 
-    POTENTIAL_AUTO_TRANSITIONS = {
-        DRAFT: [
-            {SIGNED: []},
-        ],
-        SIGNED: [
-            {ACTIVE: []},
-        ],
-        ACTIVE: [
-            {ENDED: []},
-        ],
-        ENDED: [
-            {CLOSED: []},
-        ],
+    AUTO_TRANSITIONS = {
+        DRAFT: [SIGNED],
+        SIGNED: [ACTIVE],
+        ACTIVE: [ENDED],
+        ENDED: [CLOSED]
     }
-
-    # IMPLEMENTED to CLOSED
-    # ACTIVE to ACTIVE if validation is ok else DRAFT
-    # CANCELLED TO DRAFT
-
+    TRANSITION_SIDE_EFFECTS = {
+        SIGNED: [side_effect_one, side_effect_two],
+        ACTIVE: [],
+        SUSPENDED: [],
+        ENDED: [],
+        CLOSED: [],
+        TERMINATED: []
+    }
 
     CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (

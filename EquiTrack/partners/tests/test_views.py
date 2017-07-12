@@ -2,6 +2,7 @@ import json
 from unittest import skip
 import datetime
 from datetime import date, timedelta
+from decimal import Decimal
 
 from rest_framework import status
 
@@ -21,7 +22,7 @@ from EquiTrack.factories import (
     FundsReservationHeaderFactory)
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector, CountryProgramme
-from funds.models import FundsCommitmentItem, FundsCommitmentHeader
+from funds.models import FundsCommitmentItem, FundsCommitmentHeader, FundsReservationHeader
 from partners.models import (
     Agreement,
     PartnerType,
@@ -31,7 +32,6 @@ from partners.models import (
     InterventionAmendment,
     GovernmentInterventionResult,
     AgreementAmendment,
-    AgreementAmendmentType,
     Assessment,
     InterventionPlannedVisits,
     InterventionAttachment,
@@ -350,6 +350,20 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEqual(['audits_done', 'planned_visits', 'spot_checks', 'programmatic_visits', 'follow_up_flags',
                            'planned_cash_transfer', 'micro_assessment_needed', 'audits_mr'], response.data["hact_values"].keys())
         self.assertEqual(response.data['interventions'], [])
+
+    def test_api_partners_retreive_actual_fr_amounts(self):
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        fr_header_1 = FundsReservationHeaderFactory(intervention=self.intervention)
+        fr_header_2 = FundsReservationHeaderFactory(intervention=self.intervention)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["interventions"][0]["actual_amount"], Decimal(fr_header_1.actual_amt + fr_header_2.actual_amt))
 
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
@@ -743,25 +757,18 @@ class TestAgreementAPIView(APITenantTestCase):
         self.agreement.authorized_officers.add(self.partner_staff)
         self.agreement.save()
 
-
         self.amendment1 = AgreementAmendment.objects.create(
             number="001",
             agreement=self.agreement,
             signed_amendment="application/pdf",
             signed_date=datetime.date.today(),
+            types=[AgreementAmendment.CP_EXTENSION]
         )
         self.amendment2 = AgreementAmendment.objects.create(
             number="002",
             agreement=self.agreement,
             signed_amendment="application/pdf",
-        )
-        self.amendment_type1 = AgreementAmendmentType.objects.create(
-            agreement_amendment=self.amendment1,
-            type="CP extension"
-        )
-        self.amendment_type2 = AgreementAmendmentType.objects.create(
-            agreement_amendment=self.amendment2,
-            type="CP extension"
+            types=[AgreementAmendment.BANKING_INFO]
         )
         self.agreement2 = AgreementFactory(
             partner=self.partner,
@@ -1118,24 +1125,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.data["status"], "suspended")
         self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, "suspended")
 
-    def test_partner_agreement_amendment_cp_cycle_end(self):
-        amendment_type = AgreementAmendmentType.objects.create(
-            agreement_amendment=self.amendment1,
-            type="CP extension"
-        )
-
-        self.assertEqual(amendment_type.cp_cycle_end, CountryProgramme.main_active().to_date)
-
-    @skip("signed amendment is now mandatory so we cannot delete?")
-    def test_agreement_amendment_delete_valid(self):
-        response = self.forced_auth_req(
-            'delete',
-            '/api/v2/agreements/amendments/{}/'.format(self.agreement.amendments.last().id),
-            user=self.partnership_manager_user,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
     def test_agreement_amendment_delete_error(self):
         response = self.forced_auth_req(
             'delete',
@@ -1145,26 +1134,6 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["Cannot delete a signed amendment"])
-
-    @skip("signed amendment is now mandatory so we cannot delete?")
-    def test_agreement_amendment_type_delete_valid(self):
-        response = self.forced_auth_req(
-            'delete',
-            '/api/v2/agreements/amendments/types/{}/'.format(self.amendment_type2.id),
-            user=self.partnership_manager_user,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_agreement_amendment_delete_error_signed(self):
-        response = self.forced_auth_req(
-            'delete',
-            '/api/v2/agreements/amendments/types/{}/'.format(self.amendment_type1.id),
-            user=self.partnership_manager_user,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["Cannot delete an amendment type once amendment is signed"])
 
     def test_agreement_generate_pdf_default(self):
         response = self.forced_auth_req(
@@ -1186,6 +1155,26 @@ class TestAgreementAPIView(APITenantTestCase):
             data=params
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_agreement_add_amendment_type(self):
+        amd_types = self.amendment1.types
+        amd_types.append(AgreementAmendment.AUTHORIZED_OFFICER)
+        data = {
+            "amendments": [
+                {
+                    "id": self.amendment1.id,
+                    "types": amd_types
+                }
+            ]
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.partnership_manager_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data["amendments"][1]["types"]), 2)
 
 
 class TestPartnerStaffMemberAPIView(APITenantTestCase):
@@ -1985,3 +1974,6 @@ class TestPartnershipDashboardView(APITenantTestCase):
         self.assertEqual(response.data['active_count'], 1)
         self.assertEqual(response.data['active_this_year_count'], 1)
         self.assertEqual(response.data['active_this_year_percentage'], '100%')
+
+
+
