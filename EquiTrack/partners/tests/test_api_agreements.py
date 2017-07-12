@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 
 import json
 import datetime
-import mock
-from django.core.files import File
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
