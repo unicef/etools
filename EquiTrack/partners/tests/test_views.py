@@ -2,6 +2,7 @@ import json
 from unittest import skip
 import datetime
 from datetime import date, timedelta
+from decimal import Decimal
 
 from rest_framework import status
 
@@ -21,7 +22,7 @@ from EquiTrack.factories import (
     FundsReservationHeaderFactory)
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector, CountryProgramme
-from funds.models import FundsCommitmentItem, FundsCommitmentHeader
+from funds.models import FundsCommitmentItem, FundsCommitmentHeader, FundsReservationHeader
 from partners.models import (
     Agreement,
     PartnerType,
@@ -350,6 +351,20 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEqual(['audits_done', 'planned_visits', 'spot_checks', 'programmatic_visits', 'follow_up_flags',
                            'planned_cash_transfer', 'micro_assessment_needed', 'audits_mr'], response.data["hact_values"].keys())
         self.assertEqual(response.data['interventions'], [])
+
+    def test_api_partners_retreive_actual_fr_amounts(self):
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        fr_header_1 = FundsReservationHeaderFactory(intervention=self.intervention)
+        fr_header_2 = FundsReservationHeaderFactory(intervention=self.intervention)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["interventions"][0]["actual_amount"], Decimal(fr_header_1.actual_amt + fr_header_2.actual_amt))
 
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
@@ -1985,3 +2000,6 @@ class TestPartnershipDashboardView(APITenantTestCase):
         self.assertEqual(response.data['active_count'], 1)
         self.assertEqual(response.data['active_this_year_count'], 1)
         self.assertEqual(response.data['active_this_year_percentage'], '100%')
+
+
+
