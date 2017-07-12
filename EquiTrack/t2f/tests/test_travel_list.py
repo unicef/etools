@@ -3,14 +3,15 @@ from __future__ import unicode_literals
 import logging
 
 import json
-from freezegun import freeze_time
 
 from django.db import connection
 from django.core.urlresolvers import reverse, NoReverseMatch
+
 from rest_framework import status
+from freezegun import freeze_time
 
 from EquiTrack.factories import UserFactory, LocationFactory, ResultFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from publics.models import DSARegion
 from publics.tests.factories import WBSFactory
 from t2f.models import ModeOfTravel, make_travel_reference_number, Travel, TravelType
@@ -21,7 +22,7 @@ from .factories import TravelFactory
 log = logging.getLogger('__name__')
 
 
-class TravelList(APITenantTestCase):
+class TravelList(URLAssertionMixin, APITenantTestCase):
     def setUp(self):
         super(TravelList, self).setUp()
         self.traveler = UserFactory()
@@ -32,7 +33,6 @@ class TravelList(APITenantTestCase):
 
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
-        # names_and_paths contains 3-tuples of (URL pattern name, variable URL portion, kwargs)
         names_and_paths = (
             ('index', '', {}),
             ('state_change', 'save_and_submit/', {'transition_name': 'save_and_submit'}),
@@ -44,10 +44,8 @@ class TravelList(APITenantTestCase):
             ('activities', 'activities/1/', {'partner_organization_pk': 1}),
             ('dashboard', 'dashboard/2017/07/', {'year': '2017', 'month': '07'}),
             )
-        for name, url_part, kwargs in names_and_paths:
-            actual_url = reverse('t2f:travels:list:' + name, kwargs=kwargs)
-            expected_url = '/api/t2f/travels/' + url_part
-            self.assertEqual(actual_url, expected_url)
+        self.assertReversal(names_and_paths, 't2f:travels:list:', '/api/t2f/travels/')
+        self.assertIntParamRegexes(names_and_paths, 't2f:travels:list:')
 
         # Exercise dashboard to ensure year and month regexes only accept 4- and 2-digit int args, respectively.
         for invalid_year in (1, '1', '123', '12345', '123x', 'x123', 'xxxx', ):

@@ -2,15 +2,16 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 import json
-from freezegun import freeze_time
-from pytz import UTC
 from StringIO import StringIO
 from unittest import skip
 
 from django.core.urlresolvers import reverse
 
+from freezegun import freeze_time
+from pytz import UTC
+
 from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, PartnerFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import PartnerType
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
@@ -20,7 +21,7 @@ from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineComp
 from .factories import TravelFactory
 
 
-class TravelDetails(APITenantTestCase):
+class TravelDetails(URLAssertionMixin, APITenantTestCase):
     def setUp(self):
         super(TravelDetails, self).setUp()
         self.traveler = UserFactory(is_staff=True)
@@ -30,30 +31,23 @@ class TravelDetails(APITenantTestCase):
 
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
-        # names_and_paths contains 3-tuples of (URL pattern name, variable URL portion, kwargs)
-        COMMON_KWARGS = {'travel_pk': 1}
         names_and_paths = (
-            ('index', '', COMMON_KWARGS),
-            ('attachments', 'attachments/', COMMON_KWARGS),
+            ('index', '', {'travel_pk': 1}),
+            ('attachments', 'attachments/', {'travel_pk': 1}),
             ('attachment_details', 'attachments/1/', {'travel_pk': 1, 'attachment_pk': 1}),
-            ('clone_for_driver', 'add_driver/', COMMON_KWARGS),
-            ('clone_for_secondary_traveler', 'duplicate_travel/', COMMON_KWARGS),
+            ('clone_for_driver', 'add_driver/', {'travel_pk': 1}),
+            ('clone_for_secondary_traveler', 'duplicate_travel/', {'travel_pk': 1}),
             )
-        for name, url_part, kwargs in names_and_paths:
-            actual_url = reverse('t2f:travels:details:' + name, kwargs=kwargs)
-            expected_url = '/api/t2f/travels/1/' + url_part
-            self.assertEqual(actual_url, expected_url)
+        self.assertReversal(names_and_paths, 't2f:travels:details:', '/api/t2f/travels/1/')
+        self.assertIntParamRegexes(names_and_paths, 't2f:details:')
 
         # Verify the many state change URLs.
         names = ('submit_for_approval', 'approve', 'reject', 'cancel', 'plan', 'send_for_payment',
                  'submit_certificate', 'approve_certificate', 'reject_certificate', 'mark_as_certified',
-                 'mark_as_completed',)
-        kwargs = {'travel_pk': 1, 'transition_name': None}
-        for name in names:
-            kwargs['transition_name'] = name
-            actual_url = reverse('t2f:travels:details:state_change', kwargs=kwargs)
-            expected_url = '/api/t2f/travels/1/{}/'.format(name)
-            self.assertEqual(actual_url, expected_url)
+                 'mark_as_completed', )
+        names_and_paths = (('state_change', name + '/', {'travel_pk': 1, 'transition_name': name}) for name in names)
+        self.assertReversal(names_and_paths, 't2f:travels:details:', '/api/t2f/travels/1/')
+        self.assertIntParamRegexes(names_and_paths, 't2f:details:')
 
     def test_details_view(self):
         with self.assertNumQueries(25):

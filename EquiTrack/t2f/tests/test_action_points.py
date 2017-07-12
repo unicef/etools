@@ -1,22 +1,22 @@
 from __future__ import unicode_literals
-
 import csv
 from datetime import datetime, timedelta
-from freezegun import freeze_time
 import json
-from pytz import UTC
 from StringIO import StringIO
 
 from django.core import mail
 from django.core.urlresolvers import reverse
 
+from freezegun import freeze_time
+from pytz import UTC
+
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from t2f.models import ActionPoint
 from t2f.tests.factories import TravelFactory, ActionPointFactory
 
 
-class ActionPoints(APITenantTestCase):
+class ActionPoints(URLAssertionMixin, APITenantTestCase):
     def setUp(self):
         super(ActionPoints, self).setUp()
         self.traveler = UserFactory(first_name='John',
@@ -31,18 +31,14 @@ class ActionPoints(APITenantTestCase):
 
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
-        # names_and_paths contains 3-tuples of (URL pattern name, variable URL portion, kwargs)
         names_and_paths = (
             ('list', '', {}),
             ('details', '1/', {'action_point_pk': 1}),
             ('dashboard', 'dashboard/', {}),
             ('export', 'export/', {}),
             )
-
-        for name, url_part, kwargs in names_and_paths:
-            actual_url = reverse('t2f:action_points:' + name, kwargs=kwargs)
-            expected_url = '/api/t2f/action_points/' + url_part
-            self.assertEqual(actual_url, expected_url)
+        self.assertReversal(names_and_paths, 't2f:action_points:', '/api/t2f/action_points/')
+        self.assertIntParamRegexes(names_and_paths, 't2f:action_points:')
 
     def test_list_view(self):
         with self.assertNumQueries(6):
