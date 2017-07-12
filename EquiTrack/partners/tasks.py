@@ -36,6 +36,15 @@ def get_task_user():
     return user
 
 
+def get_intervention_context(i):
+    return {
+                'number': i.__unicode__(),
+                'partner': i.agreement.partner.name,
+                'start_date': str(i.start),
+                'url': 'https://{}{}'.format(get_current_site().domain, i.get_admin_url())
+           }
+
+
 @app.task
 def agreement_status_automatic_transition():
         user = get_task_user()
@@ -80,12 +89,7 @@ def intervention_notification_signed_no_frs():
                 if intervention.frs.count() == 0:
                     print(intervention.id)
                     unicef_focal_points = [focal_point.email for focal_point in intervention.unicef_focal_points.all()]
-                    email_context = {
-                        'number': intervention.__unicode__(),
-                        'partner': intervention.agreement.partner.name,
-                        'start_date': str(intervention.start),
-                        'url': 'https://{}{}'.format(get_current_site().domain, intervention.get_admin_url())
-                    }
+                    email_context = get_intervention_context(intervention)
                     notification = Notification.objects.create(
                         sender=intervention,
                         recipients=unicef_focal_points, template_name="partners/partnership/signed/frs",
@@ -107,15 +111,35 @@ def intervention_notification_ended_fr_outstanding():
                 if intervention.total_frs['total_actual_amt'] != intervention.total_frs['total_frs_amt']:
                     print(intervention.id)
                     unicef_focal_points = [focal_point.email for focal_point in intervention.unicef_focal_points.all()]
-                    email_context = {
-                        'number': intervention.__unicode__(),
-                        'partner': intervention.agreement.partner.name,
-                        'start_date': str(intervention.start),
-                        'url': 'https://{}{}'.format(get_current_site().domain, intervention.get_admin_url())
-                    }
+                    email_context = get_intervention_context(intervention)
                     notification = Notification.objects.create(
                         sender=intervention,
                         recipients=unicef_focal_points, template_name="partners/partnership/ended/frs/outstanding",
+                        template_data=email_context
+                    )
+                    notification.send_notification()
+
+
+@app.task
+def intervention_notification_ending():
+    user = get_task_user()
+
+    with every_country() as c:
+        for country in c:
+            logger.info('Starting intervention signed but no FRs notifications for country {}'.format(
+                country.name))
+            ending_in_30 = Intervention.objects.filter(document_type=Intervention.PD,
+                                                       status=Intervention.ACTIVE,
+                                                       end=datetime.datetime.today()+datetime.timedelta(days=30))
+            ending_in_15 = Intervention.objects.filter(document_type=Intervention.PD,
+                                                       status=Intervention.ACTIVE,
+                                                       end=datetime.datetime.today()+datetime.timedelta(days=15))
+            for intervention in ending_in_30:
+                    unicef_focal_points = [focal_point.email for focal_point in intervention.unicef_focal_points.all()]
+                    email_context = get_intervention_context(intervention)
+                    notification = Notification.objects.create(
+                        sender=intervention,
+                        recipients=unicef_focal_points, template_name="partners/partnership/ending/30",
                         template_data=email_context
                     )
                     notification.send_notification()
