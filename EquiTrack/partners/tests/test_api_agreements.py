@@ -2,9 +2,7 @@ from __future__ import unicode_literals
 
 import json
 import datetime
-
 from django.core.urlresolvers import reverse
-from django.utils import timezone
 from rest_framework import status
 
 from EquiTrack.factories import (
@@ -18,7 +16,8 @@ from partners.models import (
     PartnerType,
     PartnerOrganization,
     Agreement,
-    Intervention
+    Intervention,
+    AgreementAmendment
 )
 
 
@@ -35,6 +34,12 @@ class TestAgreementsAPI(APITenantTestCase):
         self.agreement1 = AgreementFactory(partner=self.partner1, signed_by_unicef_date=datetime.date.today())
         self.intervention = InterventionFactory(agreement=self.agreement1)
         self.intervention_2 = InterventionFactory(agreement=self.agreement1, document_type=Intervention.PD)
+        self.amendment = AgreementAmendment.objects.create(agreement=self.agreement1,
+                                                           types=[AgreementAmendment.CP_EXTENSION,
+                                                                  AgreementAmendment.CLAUSE],
+                                                           number="001",
+                                                           signed_amendment="application/pdf",
+                                                           signed_date=datetime.date.today())
 
     def run_post_request(self, data, user=None):
         response = self.forced_auth_req(
