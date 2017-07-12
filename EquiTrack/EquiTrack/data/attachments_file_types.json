@@ -84,7 +84,7 @@
         "model": "attachments.filetype",
         "pk": 10,
         "fields": {
-            "order": 3,
+            "order": 2,
             "name": "Other",
             "code": "audit_engagement"
         }
@@ -142,5 +142,32 @@
             "name": "Report",
             "code": "tpm_report"
         }
+    },
+    {
+        "pk": 17,
+        "fields": {
+            "order": 3,
+            "name": "PCA",
+            "code": "audit_engagement"
+        },
+        "model": "attachments.filetype"
+    },
+    {
+        "pk": 18,
+        "fields": {
+            "order": 4,
+            "name": "PD",
+            "code": "audit_engagement"
+        },
+        "model": "attachments.filetype"
+    },
+    {
+        "pk": 19,
+        "fields": {
+            "order": 5,
+            "name": "Workplan",
+            "code": "audit_engagement"
+        },
+        "model": "attachments.filetype"
     }
 ]
