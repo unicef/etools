@@ -3,7 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from model_utils import Choices
 
-from utils.permissions.models import BasePermission
+from utils.permissions.models.models import BasePermission
 
 
 class GenericChild(models.Model):

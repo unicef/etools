@@ -13,7 +13,7 @@ from utils.common.pagination import DynamicPageNumberPagination
 from .metadata import TPMMetadata
 from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
-from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer
+from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from .permissions import IsPMEorReadonlyPermission, CanCreateStaffMembers
 
 
@@ -116,7 +116,8 @@ class TPMVisitViewSet(
     )
     serializer_class = TPMVisitSerializer
     serializer_action_classes = {
-        'list': TPMVisitLightSerializer
+        'create': TPMVisitDraftSerializer,
+        'list': TPMVisitLightSerializer,
     }
 
     def get_queryset(self):
@@ -130,3 +131,8 @@ class TPMVisitViewSet(
                 tpm_partner=self.request.user.tpm_tpmpartnerstaffmember.tpm_partner
             )
         return queryset
+
+    def get_serializer_class(self):
+        if self.action == 'update' and self.get_object().status == TPMVisit.STATUSES.draft:
+            return TPMVisitDraftSerializer
+        return super(TPMVisitViewSet, self).get_serializer_class()

@@ -24,7 +24,7 @@ from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from .transitions.serializers import TPMVisitRejectSerializer
 from .transitions.conditions import ValidateTPMVisitActivities, \
-                                    TPMVisitReportValidations, TPMVisitSubmitRequiredFieldsCheck
+                                    TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
 
 
 class TPMPartner(BaseFirm):
@@ -71,7 +71,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         ('unicef_approved', _('Approved')),
     )
 
-    tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'))
+    tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), null=True)
 
     status = FSMField(verbose_name=_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
@@ -141,7 +141,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         return list(self.tpm_activities.filter(partnership__partner_focal_points__email__isnull=False).values_list('partnership__partner_focal_points__email', flat=True))
 
     @transition(status, source=[STATUSES.draft], target=STATUSES.assigned,
-                conditions=[ValidateTPMVisitActivities.as_condition()],
+                conditions=[
+                    TPMVisitAssignRequiredFieldsCheck.as_condition(),
+                    ValidateTPMVisitActivities.as_condition()
+                ],
                 permission=_has_action_permission(action='assign'))
     def assign(self):
         self._send_email(self._get_tpm_as_email_recipients(), 'tpm/visit/assign',
@@ -170,12 +173,6 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def send_report(self):
         self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/report',
                          cc=self._get_tpm_as_email_recipients())
-
-    # TODO: Do we need this transition?
-    # @transition(status, source=[STATUSES.draft, STATUSES.tpm_rejected], target=STATUSES.submitted,
-    #             permission=_has_action_permission(action='submit'))
-    # def submit(self):
-    #     pass
 
     @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
                 permission=_has_action_permission(action='approve'))

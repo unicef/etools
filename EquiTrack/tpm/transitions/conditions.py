@@ -5,7 +5,7 @@ from django.utils.translation import ugettext as _
 from audit.transitions.conditions import BaseTransitionCheck, BaseRequiredFieldsCheck
 
 
-class TPMVisitSubmitRequiredFieldsCheck(BaseRequiredFieldsCheck):
+class TPMVisitAssignRequiredFieldsCheck(BaseRequiredFieldsCheck):
     fields = [
         'tpm_partner',
     ]

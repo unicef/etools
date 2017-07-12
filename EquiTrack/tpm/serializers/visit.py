@@ -153,7 +153,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
                               serializers.ModelSerializer):
-    tpm_activities = TPMActivitySerializer(many=True)
+    tpm_activities = TPMActivitySerializer(many=True, required=False)
 
     tpm_partner = SeparatedReadWriteField(
         read_field=TPMPartnerLightSerializer(read_only=True),
@@ -170,8 +170,8 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
 
 
 class TPMVisitSerializer(TPMVisitLightSerializer):
-    attachments = TPMAttachmentsSerializer(many=True)
-    report = TPMReportAttachmentsSerializer(many=True)
+    attachments = TPMAttachmentsSerializer(many=True, required=False)
+    report = TPMReportAttachmentsSerializer(many=True, required=False)
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
@@ -179,3 +179,13 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
             'attachments',
             'report',
         ]
+        extra_kwargs = {
+            'tpm_partner': {'required': True},
+        }
+
+
+class TPMVisitDraftSerializer(TPMVisitSerializer):
+    class Meta(TPMVisitSerializer.Meta):
+        extra_kwargs = {
+            'tpm_partner': {'required': False},
+        }
