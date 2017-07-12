@@ -41,7 +41,8 @@ def get_intervention_context(i):
                 'number': i.__unicode__(),
                 'partner': i.agreement.partner.name,
                 'start_date': str(i.start),
-                'url': 'https://{}{}'.format(get_current_site().domain, i.get_admin_url())
+                'url': 'https://{}{}'.format(get_current_site().domain, i.get_admin_url()),
+                'unicef_focal_points': [focal_point.email for focal_point in i.unicef_focal_points.all()],
            }
 
 
@@ -88,11 +89,11 @@ def intervention_notification_signed_no_frs():
             for intervention in signed_interventions:
                 if intervention.frs.count() == 0:
                     print(intervention.id)
-                    unicef_focal_points = [focal_point.email for focal_point in intervention.unicef_focal_points.all()]
                     email_context = get_intervention_context(intervention)
                     notification = Notification.objects.create(
                         sender=intervention,
-                        recipients=unicef_focal_points, template_name="partners/partnership/signed/frs",
+                        recipients=email_context['unicef_focal_points'],
+                        template_name="partners/partnership/signed/frs",
                         template_data=email_context
                     )
                     notification.send_notification()
@@ -104,17 +105,16 @@ def intervention_notification_ended_fr_outstanding():
 
     with every_country() as c:
         for country in c:
-            logger.info('Starting intervention signed but no FRs notifications for country {}'.format(
-                country.name))
+            logger.info('Starting intervention signed but FRs Amount and actual '
+                        'do not match notifications for country {}'.format(country.name))
             ended_interventions = Intervention.objects.filter(document_type=Intervention.PD, status=Intervention.ENDED)
             for intervention in ended_interventions:
                 if intervention.total_frs['total_actual_amt'] != intervention.total_frs['total_frs_amt']:
                     print(intervention.id)
-                    unicef_focal_points = [focal_point.email for focal_point in intervention.unicef_focal_points.all()]
                     email_context = get_intervention_context(intervention)
                     notification = Notification.objects.create(
                         sender=intervention,
-                        recipients=unicef_focal_points, template_name="partners/partnership/ended/frs/outstanding",
+                        recipients=email_context['unicef_focal_points'], template_name="partners/partnership/ended/frs/outstanding",
                         template_data=email_context
                     )
                     notification.send_notification()
@@ -123,23 +123,31 @@ def intervention_notification_ended_fr_outstanding():
 @app.task
 def intervention_notification_ending():
     user = get_task_user()
-
+    qs_results = {}
     with every_country() as c:
         for country in c:
-            logger.info('Starting intervention signed but no FRs notifications for country {}'.format(
+            logger.info('Starting interventions almost ending notifications for country {}'.format(
                 country.name))
-            ending_in_30 = Intervention.objects.filter(document_type=Intervention.PD,
-                                                       status=Intervention.ACTIVE,
-                                                       end=datetime.datetime.today()+datetime.timedelta(days=30))
-            ending_in_15 = Intervention.objects.filter(document_type=Intervention.PD,
-                                                       status=Intervention.ACTIVE,
-                                                       end=datetime.datetime.today()+datetime.timedelta(days=15))
-            for intervention in ending_in_30:
-                    unicef_focal_points = [focal_point.email for focal_point in intervention.unicef_focal_points.all()]
+            qs_results["30"] = Intervention.objects.filter(
+                document_type=Intervention.PD,
+                status=Intervention.ACTIVE,
+                end=datetime.datetime.today()+datetime.timedelta(days=30)
+            )
+
+            qs_results["15"] = Intervention.objects.filter(
+                document_type=Intervention.PD,
+                status=Intervention.ACTIVE,
+                end=datetime.datetime.today()+datetime.timedelta(days=15)
+            )
+
+            for k, v in qs_results.items():
+                for intervention in v:
+                    print(intervention.id)
                     email_context = get_intervention_context(intervention)
+                    email_context["days"] = k
                     notification = Notification.objects.create(
                         sender=intervention,
-                        recipients=unicef_focal_points, template_name="partners/partnership/ending/30",
+                        recipients=email_context['unicef_focal_points'], template_name="partners/partnership/ending",
                         template_data=email_context
                     )
                     notification.send_notification()
