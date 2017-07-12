@@ -2,11 +2,10 @@ from __future__ import absolute_import
 import logging
 import datetime
 import json
-from dateutil.relativedelta import relativedelta
 
 from django.conf import settings
 from django.contrib.auth.models import Group
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import JSONField, ArrayField, HStoreField
 from django.db import models, connection, transaction
 from django.db.models import Q, Sum, F
 from django.db.models.signals import post_save, pre_delete
@@ -14,17 +13,16 @@ from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
 from django_fsm import FSMField, transition
-from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
 )
 from model_utils import Choices, FieldTracker
+from dateutil.relativedelta import relativedelta
 
 from EquiTrack.utils import get_changeform_link, get_current_site
 from EquiTrack.mixins import AdminURLMixin
-
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -460,7 +458,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
-            current_cycle = CountryProgramme.current()
             last_audit = partner.latest_assessment(u'Scheduled Audit report')
             if assesment:
                 if last_audit:
@@ -1011,7 +1008,8 @@ class Agreement(TimeStampedModel):
             # status__in=[self.ACTIVE, self.SUSPENDED,
             #             self.TERMINATED, self.ENDED],
             created__year=self.created.year,
-            # agreement_type=self.agreement_type #removing type: in case agreement saved and agreement_type changed after
+            # removing type: in case agreement saved and agreement_type changed after
+            # agreement_type=self.agreement_type
         ).count()
         sequence = '{0:02d}'.format(agreements_count + 1)
         number = u'{code}/{type}{year}{seq}'.format(
@@ -1057,7 +1055,8 @@ class Agreement(TimeStampedModel):
                 document_type__in=[Intervention.PD, Intervention.SHPD]
             )
             for item in interventions:
-                if item.status not in [Intervention.DRAFT, Intervention.CANCELLED, Intervention.IMPLEMENTED] and item.status != self.status:
+                if item.status not in [Intervention.DRAFT, Intervention.CANCELLED, Intervention.IMPLEMENTED] and \
+                   item.status != self.status:
                     item.status = self.status
                     item.save()
 
@@ -1402,7 +1401,8 @@ class Intervention(TimeStampedModel):
 
     @property
     def sector_names(self):
-        return u', '.join(Sector.objects.filter(intervention_locations__intervention=self).values_list('name', flat=True))
+        return u', '.join(Sector.objects.filter(intervention_locations__intervention=self).values_list('name',
+                                                                                                       flat=True))
 
     @cached_property
     def total_partner_contribution(self):
@@ -1449,7 +1449,8 @@ class Intervention(TimeStampedModel):
     def total_budget_local(self):
         # TODO: test this
         if self.planned_budget.exists():
-            return self.planned_budget.aggregate(mysum=Sum('in_kind_amount_local'))['mysum'] + self.total_unicef_cash_local + self.total_partner_contribution_local
+            return self.planned_budget.aggregate(mysum=Sum('in_kind_amount_local'))['mysum'] + \
+                   self.total_unicef_cash_local + self.total_partner_contribution_local
         return 0
 
     @property
@@ -1795,7 +1796,9 @@ class InterventionSectorLocationLink(models.Model):
 
 class GovernmentInterventionManager(models.Manager):
     def get_queryset(self):
-        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results', 'results__sectors', 'results__unicef_managers')
+        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results',
+                                                                                          'results__sectors',
+                                                                                          'results__unicef_managers')
 
 
 # TODO: check this for sanity
@@ -1891,7 +1894,7 @@ class GovernmentInterventionResult(models.Model):
         default=0,
         verbose_name='Planned Cash Transfers'
     )
-    activities = hstore.DictionaryField(
+    activities = HStoreField(
         blank=True, null=True
     )
     activity = JSONField(blank=True, null=True, default=activity_default)
@@ -1908,7 +1911,6 @@ class GovernmentInterventionResult(models.Model):
     planned_visits = models.IntegerField(default=0)
 
     tracker = FieldTracker()
-    objects = hstore.HStoreManager()
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -2365,7 +2367,8 @@ class PCA(AdminURLMixin, models.Model):
 
         if self.budget_log.exists():
             return sum([b['unicef_cash'] + b['in_kind_amount'] + b['partner_contribution'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash', 'in_kind_amount', 'partner_contribution').
+                        self.budget_log.values('created', 'year', 'unicef_cash', 'in_kind_amount',
+                                               'partner_contribution').
                         order_by('year', '-created').distinct('year').all()])
         return 0
 
@@ -2394,7 +2397,8 @@ class PCA(AdminURLMixin, models.Model):
 
         if self.budget_log.exists():
             return sum([b['unicef_cash_local'] + b['in_kind_amount_local'] + b['partner_contribution_local'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local', 'partner_contribution_local').
+                        self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local',
+                                               'partner_contribution_local').
                         order_by('year', '-created').distinct('year').all()])
         return 0
 
