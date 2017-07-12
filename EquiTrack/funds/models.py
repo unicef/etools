@@ -6,7 +6,7 @@ class Donor(models.Model):
     Represents Donor for a Grant.
     """
 
-    name = models.CharField(max_length=45L, unique=True)
+    name = models.CharField(max_length=45, unique=True)
 
     class Meta:
         ordering = ['name']
@@ -28,7 +28,7 @@ class Grant(models.Model):
     """
 
     donor = models.ForeignKey(Donor)
-    name = models.CharField(max_length=128L, unique=True)
+    name = models.CharField(max_length=128, unique=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     expiry = models.DateField(null=True, blank=True)
 
@@ -133,7 +133,3 @@ class FundsCommitmentItem(models.Model):
         if not self.fc_ref_number:
             self.fc_ref_number = '{}-{}'.format(self.fund_commitment.fc_number, self.line_item)
         return super(FundsCommitmentItem, self).save(**kwargs)
-
-
-
-
