@@ -20,8 +20,8 @@ from EquiTrack.factories import (
     GovernmentInterventionFactory,
     FundsReservationHeaderFactory)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from reports.models import ResultType, Sector, CountryProgramme
-from funds.models import FundsCommitmentItem, FundsCommitmentHeader, FundsReservationHeader
+from reports.models import ResultType, Sector
+from funds.models import FundsCommitmentItem, FundsCommitmentHeader
 from partners.models import (
     Agreement,
     PartnerType,
@@ -386,7 +386,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["interventions"][0]["actual_amount"], Decimal(fr_header_1.actual_amt + fr_header_2.actual_amt))
+        self.assertEqual(response.data["interventions"][0]["actual_amount"],
+                         Decimal(fr_header_1.actual_amt + fr_header_2.actual_amt))
 
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
@@ -1992,6 +1993,3 @@ class TestPartnershipDashboardView(APITenantTestCase):
         self.assertEqual(response.data['active_count'], 1)
         self.assertEqual(response.data['active_this_year_count'], 1)
         self.assertEqual(response.data['active_this_year_percentage'], '100%')
-
-
-
