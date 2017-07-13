@@ -4,6 +4,7 @@ import datetime
 import time
 
 from django.db import connection
+from django.db.models import F
 from celery.utils.log import get_task_logger
 from EquiTrack.celery import app, send_to_slack
 from EquiTrack.utils import get_current_site
@@ -12,9 +13,11 @@ from EquiTrack.mixins import AdminURLMixin
 from partners.models import PartnerOrganization, Agreement, Intervention
 from funds.models import FundsReservationHeader
 from partners.validation.agreements import AgreementValid
+from partners.validation.interventions import InterventionValid
 from notification.email import send_mail
 from users.models import Country, User
 from notification.models import Notification
+from t2f.models import Travel, TravelActivity, ActionPoint
 
 logger = get_task_logger(__name__)
 
@@ -74,6 +77,108 @@ def agreement_status_automatic_transition():
                     logger.error("{} Agreement Auto Transition failed, reason: {}".format(
                         country.name, e.message
                     ))
+
+
+@app.task
+def intervention_status_active_automatic_transition():
+        user = get_task_user()
+        with every_country() as c:
+            for country in c:
+                try:
+                    logger.info('Starting intervention auto status transition for country {}'.format(
+                        country.name
+                    ))
+
+                    signed = Intervention.objects.filter(status=Intervention.SIGNED, start=datetime.date.today())
+                    processed = 0
+                    for i in signed:
+                        if i.frs.count() > 0:
+                            i.status = Intervention.ACTIVE
+                            validator = InterventionValid(i, user)
+                            if validator.is_valid:
+                                i.save()
+                                processed += 1
+                            else:
+                                logger.info("Intervention ID".format(i.id), validator.errors)
+
+                    logger.info("processed {} interventions".format(processed))
+
+                except BaseException as e:
+                    logger.error("{} Intervention Auto Transition failed, reason: {}".format(
+                        country.name, e.message
+                    ))
+
+
+@app.task
+def intervention_status_ended_automatic_transition():
+        user = get_task_user()
+        with every_country() as c:
+            for country in c:
+                try:
+                    logger.info('Starting intervention auto status transition for country {}'.format(
+                        country.name
+                    ))
+
+                    active_ended = Intervention.objects.filter(status=Intervention.ACTIVE,
+                                                               end=datetime.date.today() - datetime.timedelta(days=1))
+                    processed = 0
+                    for i in active_ended:
+                        i.status = Intervention.ENDED
+                        validator = InterventionValid(i, user)
+                        if validator.is_valid:
+                            i.save()
+                            processed += 1
+                        else:
+                            logger.info("Intervention ID".format(i.id), validator.errors)
+
+                    logger.info("processed {} interventions".format(processed))
+
+                except BaseException as e:
+                    logger.error("{} Intervention Auto Transition failed, reason: {}".format(
+                        country.name, e.message
+                    ))
+
+
+@app.task
+def intervention_status_closed_automatic_transition():
+        user = get_task_user()
+        with every_country() as c:
+            for country in c:
+                try:
+                    logger.info('Starting intervention auto status transition for country {}'.format(
+                        country.name
+                    ))
+                    funds_satisfied = FundsReservationHeader.objects.filter(outstanding_amt=0,
+                                                          actual_amt=F('total_amt'),
+                                                          intervention__status=Intervention.ENDED
+                                                                            ).values_list('intervention_id', flat=True)
+
+                    # TODO test this query with actual records
+                    action_points_satisfied = ActionPoint.objects.filter(
+                        status=ActionPoint.COMPLETED,
+                        travel__activities__partnership__status=Intervention.ENDED
+                    ).values_list('travel__activities__partnership', flat=True)
+
+                    in_second_but_not_in_first = action_points_satisfied - funds_satisfied
+                    interventions = funds_satisfied + list(in_second_but_not_in_first)
+                    processed = 0
+                    for int_id in interventions:
+                        i = Intervention.objects.get(id=int_id)
+                        i.status = Intervention.closed
+                        validator = InterventionValid(i, user)
+                        if validator.is_valid:
+                            i.save()
+                            processed += 1
+                        else:
+                            logger.info("Intervention ID".format(i.id), validator.errors)
+
+                    logger.info("processed {} interventions".format(processed))
+
+                except BaseException as e:
+                    logger.error("{} Intervention Auto Transition failed, reason: {}".format(
+                        country.name, e.message
+                    ))
+
 
 @app.task
 def intervention_notification_signed_no_frs():
