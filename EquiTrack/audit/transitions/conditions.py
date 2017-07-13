@@ -56,7 +56,7 @@ class BaseRequiredFieldsCheck(BaseTransitionCheck):
                 assert not hasattr(instance, field)
             else:
                 value = getattr(instance, field)
-                if not value:
+                if not value and value != 0:
                     errors[field] = _('This field is required.')
 
         return errors
