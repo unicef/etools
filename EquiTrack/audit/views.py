@@ -12,6 +12,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from utils.common.views import MultiSerializerViewSetMixin, ExportViewSetDataMixin, FSMTransitionActionMixin
+from vision.adapters.purchase_order import POSynchronizer
 from .models import Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, PurchaseOrder, \
     AuditorStaffMember, Auditor, AuditPermission
 from utils.common.pagination import DynamicPageNumberPagination
@@ -81,8 +82,12 @@ class PurchaseOrderViewSet(
         instance = queryset.filter(order_number=kwargs.get('order_number')).first()
 
         if not instance:
-            # todo: load from VISION by number
-            pass
+            handler = POSynchronizer(
+                country=request.user.profile.country,
+                po_number=kwargs.get('order_number')
+            )
+            handler.sync()
+            instance = queryset.filter(order_number=kwargs.get('order_number')).first()
 
         if not instance:
             raise Http404
