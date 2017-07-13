@@ -42,10 +42,9 @@ from supplies.tasks import set_unisupply_distribution
 from users.models import Section, Office
 from notification.models import Notification
 from partners.validation.agreements import (
-    agreement_transition_to_active_valid,
     agreement_transition_to_ended_valid,
-    agreements_illegal_transition
-)
+    agreements_illegal_transition,
+    agreement_transition_to_signed_valid)
 from partners.validation import interventions as intervention_validation
 
 
@@ -949,6 +948,11 @@ class Agreement(TimeStampedModel):
             self.end.strftime('%d-%m-%Y') if self.end else ''
         )
 
+    @classmethod
+    def permission_structure(cls):
+        permissions = import_permissions(cls.__name__)
+        return permissions
+
     @property
     def year(self):
         if self.id:
@@ -1001,8 +1005,8 @@ class Agreement(TimeStampedModel):
     @transition(field=status,
                 source=[DRAFT],
                 target=[SIGNED],
-                conditions=[agreement_transition_to_active_valid])
-    def transition_to_active(self):
+                conditions=[agreement_transition_to_signed_valid])
+    def transition_to_signed(self):
         pass
 
     @transition(field=status,
@@ -1041,11 +1045,6 @@ class Agreement(TimeStampedModel):
             # load from DB
             oldself = Agreement.objects.get(pk=self.pk)
 
-        # update reference number if needed
-        amendment_number = kwargs.pop('amendment_number', None)
-        if amendment_number:
-            self.update_reference_number(amendment_number)
-
         if not oldself:
             # to create a ref number we need an id
             super(Agreement, self).save()
@@ -1053,7 +1052,12 @@ class Agreement(TimeStampedModel):
         else:
             self.update_related_interventions(oldself)
 
-        if self.agreement_type in [Agreement.PCA]:
+        # update reference number if needed
+        amendment_number = kwargs.pop('amendment_number', None)
+        if amendment_number:
+            self.update_reference_number(amendment_number)
+
+        if self.agreement_type == self.PCA:
             # set start date
             if self.signed_by_partner_date and self.signed_by_unicef_date:
                 self.start = self.signed_by_unicef_date \
@@ -1113,13 +1117,6 @@ class AgreementAmendment(TimeStampedModel):
 
     @transaction.atomic
     def save(self, **kwargs):
-        # TODO: make the folowing scenario work:
-        # agreement amendment and agreement are saved in the same time... avoid race conditions for reference number
-        # TODO: validation don't allow save on objects that have attached
-        # signed amendment but don't have a signed date
-
-        # check if temporary number is needed or amendment number needs to be
-        # set
         update_agreement_number_needed = False
         oldself = AgreementAmendment.objects.get(id=self.pk) if self.pk else None
         if self.signed_amendment:

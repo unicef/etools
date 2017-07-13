@@ -97,6 +97,8 @@ def amendments_valid(i):
             return False
         if not a.signed_date:
             return False
+        if not getattr(a, a.signed_amendment, 'name'):
+            return False
     return True
 
 
