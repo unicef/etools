@@ -58,17 +58,14 @@ class BaseEmail(object):
     def get_email_template(cls):
         if cls.template_name is None:
             raise NotImplemented()
-        try:
-            template = EmailTemplate.objects.get(
-                name=cls.template_name
-            )
-        except EmailTemplate.DoesNotExist:
-            template = EmailTemplate.objects.create(
-                name=cls.template_name,
-                description=cls.description,
-                subject=cls.subject,
-                content=cls.content
-            )
+        template, created = EmailTemplate.objects.get_or_create(
+            name=cls.template_name,
+            defaults={
+                'description': cls.description,
+                'subject': cls.subject,
+                'content': cls.content,
+            }
+        )
         return template
 
     def get_context(self):
