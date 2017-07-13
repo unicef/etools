@@ -166,6 +166,8 @@ class Engagement(TimeStampedModel, models.Model):
 
     cancel_comment = models.TextField(blank=True)
 
+    active_pd = models.ManyToManyField('partners.Intervention', verbose_name=_('Active PDs'))
+
     objects = InheritanceManager()
 
     class Meta:
