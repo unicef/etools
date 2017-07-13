@@ -82,11 +82,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     @property
     def reference_number(self):
-        start_year = self.visit_start.year
-        end_year = self.visit_end.year
         return '{0}/{1}/{2}'.format(
             self.created.year,
-            self.tpm_partner.vendor_number,
+            self.tpm_partner.vendor_number if self.tpm_partner else '--',
             self.id
         )
 
