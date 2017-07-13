@@ -11,7 +11,7 @@ from utils.writable_serializers.serializers import WritableNestedParentSerialize
 
 from .auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
 from .mixins import RiskCategoriesUpdateMixin, EngagementDatesValidation, AuditPermissionsBasedRootSerializerMixin
-from .risks import RiskRootSerializer, AggregatedRiskRootSerializer
+from .risks import RiskRootSerializer, AggregatedRiskRootSerializer, AggregatedRiskCountRiskRootSerializer
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -208,7 +208,7 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
 
 class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
     financial_finding_set = FinancialFindingSerializer(many=True, required=False)
-    key_internal_weakness = RiskRootSerializer(code='audit_key_weakness', required=False)
+    key_internal_weakness = AggregatedRiskCountRiskRootSerializer(code='audit_key_weakness', required=False)
 
     class Meta(EngagementSerializer.Meta):
         model = Audit
