@@ -14,10 +14,17 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
         '''Verify URL pattern names generate the URLs we expect them to.'''
         names_and_paths = (
             ('dashboard', '', {}),
-            ('load-results', 'load-results/', {}),
-            ('invalidate-cache', 'invalidate-cache/', {}),
-            ('stats-usercounts', 'api/stats/usercounts/', {}),
-            ('stats-trips', 'api/stats/trips/', {}),
-            ('stats-agreements', 'api/stats/agreements/', {}),
+            ('load_result_structure', 'load-results/', {}),
+            ('invalidate_cache', 'invalidate-cache/', {}),
+            ('stats_user_counts', 'api/stats/usercounts/', {}),
+            ('stats_trips', 'api/stats/trips/', {}),
+            ('stats_agreements', 'api/stats/agreements/', {}),
             )
         self.assertReversal(names_and_paths, 'management:', '/api/management/')
+
+    url(r'^$', PortalDashView.as_view()),
+    url(r'^load-results/$', LoadResultStructure.as_view(), name='load_result_structure'),
+    url(r'^invalidate-cache/$', InvalidateCache.as_view(), name='invalidate_cache'),
+    url(r'^api/stats/usercounts/$', ActiveUsersSection.as_view(), name='stats_user_counts'),
+    url(r'^api/stats/trips/$', TripsStatisticsView.as_view(), name='stats_trips'),
+    url(r'^api/stats/agreements/$', AgreementsStatisticsView.as_view(), name='stats_agreements'),
