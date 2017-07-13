@@ -146,7 +146,7 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
                     }
                 })
             category_dict['children'].append(nested_category_data)
-        response = self.forced_auth_req(
+        self.forced_auth_req(
             'patch',
             '/api/audit/%s/%d/' % (self.endpoint, self.engagement.id, ),
             user=not_allowed,
@@ -164,12 +164,24 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, APITenantTestCase):
     endpoint = 'micro-assessments'
 
     def test_ma_risks(self):
-        self._test_engagement_categories(category_code='ma_questionnaire', field_name='questionnaire', allowed_user=self.auditor)
-        self._test_engagement_categories(category_code='ma_subject_areas', field_name='test_subject_areas', allowed_user=self.auditor)
+        self._test_engagement_categories(
+            category_code='ma_questionnaire', field_name='questionnaire',
+            allowed_user=self.auditor
+        )
+        self._test_engagement_categories(
+            category_code='ma_subject_areas', field_name='test_subject_areas',
+            allowed_user=self.auditor
+        )
 
     def test_update_unexisted_blueprint(self):
-        self._update_unexisted_blueprint(field_name='questionnaire', category_code='ma_questionnaire', allowed_user=self.auditor)
-        self._update_unexisted_blueprint(field_name='test_subject_areas', category_code='ma_subject_areas', allowed_user=self.auditor)
+        self._update_unexisted_blueprint(
+            field_name='questionnaire', category_code='ma_questionnaire',
+            allowed_user=self.auditor
+        )
+        self._update_unexisted_blueprint(
+            field_name='test_subject_areas', category_code='ma_subject_areas',
+            allowed_user=self.auditor
+        )
 
     def test_ma_risks_update_without_perms(self):
         self._test_category_update_by_user_without_permissions(

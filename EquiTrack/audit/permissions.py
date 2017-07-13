@@ -12,8 +12,10 @@ from utils.permissions.models.models import BasePermission
 class HasCreatePermission(permissions.BasePermission):
     def has_permission(self, request, view):
         model = getattr(view, 'model', None) or view.get_queryset().model
-        model_names = [model._meta.model_name] + [parent._meta.model_name for parent in model._meta.get_parent_list()]
-        conditions = six.moves.reduce(operator.or_, [models.Q(target__startswith=model_name) for model_name in model_names])
+        model_names = [model._meta.model_name] + [parent._meta.model_name
+                                                  for parent in model._meta.get_parent_list()]
+        conditions = six.moves.reduce(operator.or_, [models.Q(target__startswith=model_name)
+                                                     for model_name in model_names])
 
         permissions = AuditPermission.objects.filter(
             conditions,

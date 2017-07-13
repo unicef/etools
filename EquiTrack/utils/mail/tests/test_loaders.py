@@ -18,7 +18,7 @@ class EmailTemplateLoaderTestCase(TestCase):
         ''')
         EmailTemplate.objects.create(name='template1', html_content='''
             {% extends "email-templates/test_base" %}
-            
+
             {% block content %}
                 <p>Template1</p>
             {% endblock %}
