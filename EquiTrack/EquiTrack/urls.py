@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from django.conf import settings
 from django.conf.urls import patterns, include, url
+from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import REDIRECT_FIELD_NAME
@@ -42,7 +43,7 @@ from partners.views.v1 import (
     PartnerStaffMembersViewSet,
     FileTypeViewSet,
 )
-from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
+from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
 from funds.views import DonorViewSet, GrantViewSet
 from reports.views.v1 import (
     ResultStructureViewSet,
@@ -132,7 +133,7 @@ urlpatterns = patterns(
     # TODO: overload login_required to staff_required to automatically re-route partners to the parter portal
 
     # Used for admin and dashboard pages in django
-    url(r'^$', RedirectView.as_view(url='/dash/', permanent=False), name='dashboard'),
+    url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
 
 
@@ -160,6 +161,7 @@ urlpatterns = patterns(
     # ***************  API version 2  ******************
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
     url(r'^api/t2f/', include(t2f_patterns, namespace='t2f')),
+    url(r'^api/audit/', include('audit.urls', namespace='audit')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2')),
     url(r'^api/v2/users/', include('users.urls_v2')),

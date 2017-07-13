@@ -24,3 +24,10 @@ class DisableMigrations(object):
 
 
 TEST_RUNNER = 'EquiTrack.tests.runners.TestRunner'
+
+TEST_NON_SERIALIZED_APPS = [
+    # This apps contains test models that haven't been created by migration.
+    # So on the serialization stage this models does not exist.
+    'utils.common',
+    'utils.writable_serializers',
+]

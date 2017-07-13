@@ -1,0 +1,84 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize %}
+
+{% block style_base %}
+    {% comment %}
+        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+        for base style.
+    {% endcomment %}
+
+    {% block layout_style %}
+        <style type="text/css">
+            @page {
+                size: {{ pagesize|default:"letter" }};
+                margin-left: 2.0cm;
+                margin-right: 2.0cm;
+                margin-top: 1.8cm;
+                margin-bottom: 1.8cm;
+
+                @frame header {
+                  -pdf-frame-content: page-header;
+                  margin-top: 0cm;
+                  margin-right: 0mm;
+                  margin-bottom: 0.3cm;
+                  margin-left: 0cm;
+                  background-color: #0099ff;
+                  height: 2cm;
+                }
+
+                @frame footer_frame {
+                  /* Static frame */
+                  -pdf-frame-content:footer_content;
+                  left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+                }
+            }
+        </style>
+    {% endblock %}
+    {% block extra_style %}
+        <style type="text/css">
+            .details div {
+                border-radius: 25px;
+                border: 2px solid #f1f1f1;
+                padding: 20px;
+                width: 200px;
+                height: 150px;
+            }
+
+            ul {
+                list-style-type: none;
+            }
+
+            #content {
+                font-family: "Times New Roman";
+                font-size: 12pt;
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+        </style>
+    {% endblock %}
+{% endblock %}
+
+{% block content %}
+  {% if error %}
+    PDF could not be generated properly: <br> {{ error }}
+  {% else %}
+    <div id="content">
+      <div id="title" style="text-align: center; padding-top: 15px">
+        <div style="text-align: right"><b><u>REF #: {{ engagement.unique_id }}</u></b></div>
+        <div style="font-size: 16pt"><b>PROGRAMME COOPERATION AGREEMENT</b></div>
+        <div><b>BETWEEN</b></div>
+        <div><b>{{ engagement.agreement.audit_organization.name|upper }}</b></div>
+        <div><b>AND THE</b></div>
+        <div><b>UNITED NATIONS CHILDREN'S FUND</b></div>
+        <div><b>FOR THE</b></div>
+        <div><b>IMPLEMENTATION of UNICEF-FUNDED PROGRAMME RELATING TO THE UNICEF COUNTRY PROGRAMME
+          FOR {{ engagement.agreement.audit_organization.country|upper }}</b></div>
+      </div>
+    </div>
+    <div id="footer_content" style="text-align: right">
+    <pdf:pagenumber> of <pdf:pagecount>
+    <div>
+  {% endif %}
+{% endblock %}

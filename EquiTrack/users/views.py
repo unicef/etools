@@ -1,6 +1,6 @@
 
 from django.db import connection
-from django.views.generic import FormView
+from django.views.generic import FormView, RedirectView
 from django.contrib.auth.models import Group
 from django.shortcuts import get_object_or_404
 
@@ -13,6 +13,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
+from audit.models import Auditor
 from users.serializers import MinimalUserSerializer
 from users.models import Office, Section
 from .forms import ProfileForm
@@ -362,3 +363,14 @@ class SectionViewSet(mixins.RetrieveModelMixin,
             else:
                 queryset = queryset.filter(id__in=ids)
         return queryset
+
+
+class ModuleRedirectView(RedirectView):
+    url = '/dash/'
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        if Auditor.as_group() in self.request.user.groups.all():
+            return '/ap/'
+
+        return super(ModuleRedirectView, self).get_redirect_url(*args, **kwargs)
