@@ -1,12 +1,10 @@
-__author__ = 'RobertAvram'
+from datetime import date
 
-
-from datetime import date, timedelta
+from django.conf import settings
 from django.db import connection
 from django.http import HttpResponse
-from django.conf import settings
-
 from django.views.generic import View
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -20,7 +18,6 @@ from trips.models import (
 )
 from partners.models import (
     Agreement,
-    PCA
 )
 
 
@@ -167,6 +164,3 @@ class AgreementsStatisticsView(APIView):
                 "totalAgreements": country_agreements_count
             })
         return Response(results)
-
-
-
