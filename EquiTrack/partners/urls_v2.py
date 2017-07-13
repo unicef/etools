@@ -5,7 +5,7 @@ from .views.v1 import PcaPDFView
 from .views.partner_organization_v2 import (
     PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView, PartnerStaffMemberListAPIVIew,
     PartnerOrganizationHactAPIView, PartnerOrganizationAssessmentDeleteView, PartnerOrganizationAddView,
-)
+    PartnerAuthorizedOfficersListAPIVIew)
 from .views.agreements_v2 import (
     AgreementListAPIView,
     AgreementDetailAPIView,
@@ -57,6 +57,7 @@ urlpatterns = (
     # url(r'^partners/(?P<partner_pk>\d+)/agreements/(?P<pk>\d+)/interventions/$', view=AgreementInterventionsListAPIView.as_view(), name='partner-agreement-interventions-list'),
 
     url(r'^partners/(?P<partner_pk>\d+)/staff-members/$', view=PartnerStaffMemberListAPIVIew.as_view(http_method_names=['get']), name='parter-staff-members-list'),
+    url(r'^partners/(?P<partner_pk>\d+)/authorized-officers/$', view=PartnerAuthorizedOfficersListAPIVIew.as_view(http_method_names=['get']), name='parter-staff-members-list'),
     # url(r'^staff-members/$', view=PartnerStaffMemberListAPIVIew.as_view(), name='staff-member-list'),
     # url(r'^staff-members/(?P<pk>\d+)/$', view=PartnerStaffMemberDetailAPIView.as_view(), name='staff-member-detail'),
     # url(r'^staff-members/(?P<pk>\d+)/properties/$', view=PartnerStaffMemberPropertiesAPIView.as_view(), name='staff-member-properties'),
