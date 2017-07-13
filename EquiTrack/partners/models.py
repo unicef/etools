@@ -1045,11 +1045,6 @@ class Agreement(TimeStampedModel):
             # load from DB
             oldself = Agreement.objects.get(pk=self.pk)
 
-        # update reference number if needed
-        amendment_number = kwargs.pop('amendment_number', None)
-        if amendment_number:
-            self.update_reference_number(amendment_number)
-
         if not oldself:
             # to create a ref number we need an id
             super(Agreement, self).save()
@@ -1057,7 +1052,12 @@ class Agreement(TimeStampedModel):
         else:
             self.update_related_interventions(oldself)
 
-        if self.agreement_type in [Agreement.PCA]:
+        # update reference number if needed
+        amendment_number = kwargs.pop('amendment_number', None)
+        if amendment_number:
+            self.update_reference_number(amendment_number)
+
+        if self.agreement_type == self.PCA:
             # set start date
             if self.signed_by_partner_date and self.signed_by_unicef_date:
                 self.start = self.signed_by_unicef_date \
@@ -1117,13 +1117,6 @@ class AgreementAmendment(TimeStampedModel):
 
     @transaction.atomic
     def save(self, **kwargs):
-        # TODO: make the folowing scenario work:
-        # agreement amendment and agreement are saved in the same time... avoid race conditions for reference number
-        # TODO: validation don't allow save on objects that have attached
-        # signed amendment but don't have a signed date
-
-        # check if temporary number is needed or amendment number needs to be
-        # set
         update_agreement_number_needed = False
         oldself = AgreementAmendment.objects.get(id=self.pk) if self.pk else None
         if self.signed_amendment:

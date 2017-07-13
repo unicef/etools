@@ -1,13 +1,15 @@
+from __future__ import unicode_literals
+
 import logging
 from datetime import date
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError, \
-    check_required_fields
+    check_required_fields, BasicValidationError
 from partners.permissions import AgreementPermissions
-from reports.models import CountryProgramme
 
 
 def agreement_transition_to_signed_valid(agreement):
+    today = date.today()
     if agreement.agreement_type == agreement.PCA and \
             agreement.__class__.objects.filter(partner=agreement.partner,
                                                status=agreement.SIGNED,
@@ -15,6 +17,12 @@ def agreement_transition_to_signed_valid(agreement):
                                                country_programme=agreement.country_programme).count():
 
         raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
+
+    if not agreement.start or agreement.start >= today:
+        raise TransitionError(['Agreement cannot transition to signed until start date greater or equal to today'])
+    if not agreement.end or agreement.end < today:
+        raise TransitionError(['Agreement cannot transition to signed end date has passed'])
+
     return True
 
 
@@ -78,6 +86,17 @@ def partner_type_valid_cso(agreement):
     return True
 
 
+def ssfa_static(agreement):
+    if agreement.agreement_type == agreement.SSFA:
+        if agreement.interventions.all().count():
+            # there should be only one.. there is a different validation that ensures this
+            intervention = agreement.interventions.all().first()
+            if intervention.start != agreement.start or intervention.end != agreement.end:
+                raise BasicValidationError(_("Start and end dates don't match the Document's start and end"))
+    return True
+
+
+
 class AgreementValid(CompleteValidation):
 
     VALIDATION_CLASS = 'partners.Agreement'
@@ -88,6 +107,7 @@ class AgreementValid(CompleteValidation):
         signatures_valid,
         partner_type_valid_cso,
         amendments_valid,
+        ssfa_static
     ]
 
     VALID_ERRORS = {
@@ -100,8 +120,8 @@ class AgreementValid(CompleteValidation):
         'agreement_transition_to_active_invalid_PCA': "You cannot have more than 1 PCA active per Partner within 1 CP",
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
         'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.',
-        'amendments_signed_amendment_valid': {'signed_amendment': ['This field is required.']},
-        'amendments_signed_date_valid': {'signed_date': ['Signed date cannot be in the future']},
+        'amendments_valid': {'signed_amendment': ['Please check that the Document is attached and'
+                                                  ' signatures are not in the future']},
     }
 
     PERMISSIONS_CLASS = AgreementPermissions
