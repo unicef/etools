@@ -37,10 +37,7 @@ class BaseAuditViewSet(
 class AuditorFirmViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
-    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
     queryset = AuditorFirm.objects.filter(hidden=False)
@@ -68,10 +65,8 @@ class AuditorFirmViewSet(
 class PurchaseOrderViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
-    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
     queryset = PurchaseOrder.objects.all()

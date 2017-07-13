@@ -3,6 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from audit.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
+from audit.serializers.mixins import AuditPermissionsBasedSerializerMixin
 from firms.serializers import BaseStaffMemberSerializer, UserSerializer as BaseUserSerializer
 from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
@@ -58,12 +59,12 @@ class AuditorFirmExportSerializer(serializers.ModelSerializer):
         ]
 
 
-class PurchaseOrderSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class PurchaseOrderSerializer(AuditPermissionsBasedSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
     auditor_firm = SeparatedReadWriteField(
         read_field=AuditorFirmLightSerializer(read_only=True),
     )
 
-    class Meta(WritableNestedSerializerMixin.Meta):
+    class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = PurchaseOrder
         fields = [
             'id', 'order_number', 'auditor_firm',

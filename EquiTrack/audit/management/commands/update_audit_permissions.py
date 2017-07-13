@@ -31,6 +31,7 @@ class Command(BaseCommand):
         'financialfinding.*',
         'finding.*',
         'partnerorganization.*',
+        'purchaseorder.*',
         'riskblueprint.*',
         'riskcategory.*',
         'profile.*',
@@ -115,6 +116,7 @@ class Command(BaseCommand):
             'engagement.engagement_attachments',
             'attachment.*',
         ])
+        self.add_permissions(self.new_engagement, self.focal_point, 'edit', ['purchaseorder.contract_end_date'])
 
         # created: auditor can edit, everybody else can view, focal point can cancel
         self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
@@ -130,6 +132,7 @@ class Command(BaseCommand):
         self.revoke_permissions(self.partner_contacted, self.auditor, 'edit', 'engagement.engagement_attachments')
         self.add_permissions(self.partner_contacted, self.auditor, 'action', ['engagement.submit'])
         self.add_permissions(self.partner_contacted, self.auditor, 'view', [
+            'purchaseorder.*',
             'partnerorganization.*',
             'engagementstaffmember.*',
             'profile.*',
