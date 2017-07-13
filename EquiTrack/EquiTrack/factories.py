@@ -166,7 +166,9 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     partner = factory.SubFactory(PartnerFactory)
     agreement_type = u'PCA'
     signed_by_unicef_date = date.today()
-    status = 'active'
+    signed_by_partner_date = date.today()
+    status = 'signed'
+    attached_agreement = factory.django.FileField(filename='test_file.pdf')
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
