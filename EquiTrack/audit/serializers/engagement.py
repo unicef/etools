@@ -215,7 +215,7 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
     class Meta(WritableNestedSerializerMixin.Meta):
         model = FinancialFinding
         fields = [
-            'id', 'title',
+            'id', 'finding_number', 'title',
             'local_amount', 'amount',
             'description', 'recommendation', 'ip_comments'
         ]

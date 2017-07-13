@@ -551,12 +551,18 @@ class Audit(Engagement):
 class FinancialFinding(models.Model):
     audit = models.ForeignKey(Audit, verbose_name=_('audit'), related_name='financial_finding_set')
 
+    finding_number = models.PositiveIntegerField(_('Finding Number'), editable=False)
     title = models.CharField(_('Title (Category)'), max_length=255)
     local_amount = models.IntegerField(_('Amount (local)'))
     amount = models.IntegerField(_('Amount (USD)'))
     description = models.TextField(_('description'))
     recommendation = models.TextField(_('recommendation'), blank=True)
     ip_comments = models.TextField(_('IP comments'), blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.finding_number = self.audit.financial_finding_set.count() + 1
+        super(FinancialFinding, self).save(*args, **kwargs)
 
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',
