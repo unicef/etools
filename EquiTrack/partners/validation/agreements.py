@@ -1,7 +1,9 @@
 import logging
 from datetime import date
 
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError
+from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError, \
+    check_required_fields
+from partners.permissions import AgreementPermissions
 from reports.models import CountryProgramme
 
 
@@ -175,36 +177,60 @@ class AgreementValid(CompleteValidation):
         'end_date_pca_validation': 'End date is not entered for PCA or end date cannot be after current Country Programme',
     }
 
+    PERMISSIONS_CLASS = AgreementPermissions
+
+    def check_required_fields(self, intervention):
+        required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f] is True]
+        required_valid, field = check_required_fields(intervention, required_fields)
+        if not required_valid:
+            raise StateValidError(['Required fields not completed in {}: {}'.format(intervention.status, field)])
+
+    def check_rigid_fields(self, intervention, related=False):
+        # this can be set if running in a task and old_instance is not set
+        if self.disable_rigid_check:
+            return
+        rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
+        rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=related)
+        if not rigid_valid:
+            raise StateValidError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
+
     def state_suspended_valid(self, agreement, user=None):
         # TODO: figure out when suspended is invalid
         # if agreement.end > date.today():
         #     raise StateValidError('suspended_invalid')
         return True
 
-    def state_active_valid(self, agreement, user=None):
-        if not agreement.old_instance:
-            raise StateValidError(['cant_create_in_active_state'])
+    def state_signed_valid(self, agreement, user=None):
+        self.check_required_fields(agreement)
+        self.check_rigid_fields(agreement, related=True)
 
-        if not signed_by_everyone_valid(agreement):
-            raise StateValidError(['signed_by_everyone_valid'])
 
-        if not signed_by_valid(agreement):
-            raise StateValidError(['signed_by_valid'])
+        # if not agreement.old_instance:
+        #     raise StateValidError(['cant_create_in_active_state'])
+        #
+        # if not signed_by_everyone_valid(agreement):
+        #     raise StateValidError(['signed_by_everyone_valid'])
+        #
+        # if not signed_by_valid(agreement):
+        #     raise StateValidError(['signed_by_valid'])
+        #
+        # if not signed_agreement_present(agreement):
+        #     raise StateValidError(['signed_agreement_present'])
 
-        if not signed_agreement_present(agreement):
-            raise StateValidError(['signed_agreement_present'])
+        # if agreement.old_instance and agreement.status == agreement.old_instance.status:
+        #     rigid_fields = []  # this males all fields editable, will remove later
+        #     # rigid_fields = ['signed_by_unicef_date', 'signed_by_partner_date', 'signed_by', 'partner_manager']
+        #     valid, changed_field = check_rigid_fields(agreement, rigid_fields)
+        #     if not valid:
+        #         raise StateValidError('rigid_field_changed: %s' % changed_field)
 
-        if agreement.old_instance and agreement.status == agreement.old_instance.status:
-            rigid_fields = []  # this males all fields editable, will remove later
-            # rigid_fields = ['signed_by_unicef_date', 'signed_by_partner_date', 'signed_by', 'partner_manager']
-            valid, changed_field = check_rigid_fields(agreement, rigid_fields)
-            if not valid:
-                raise StateValidError('rigid_field_changed: %s' % changed_field)
-
-        if not agreement.signed_by_partner_date or not agreement.signed_by_unicef_date:
-            raise StateValidError(['state_active_not_signed'])
+        # if not agreement.signed_by_partner_date or not agreement.signed_by_unicef_date:
+        #     raise StateValidError(['state_active_not_signed'])
 
         return True
 
-    def state_cancelled_valid(self, agreement, user=None):
-        return False
+    def state_ended_valid(self, agreement, user=None):
+        today = date.today()
+        if not today > agreement.end:
+            raise StateValidError([_('Today is not after the end date')])
+        return True

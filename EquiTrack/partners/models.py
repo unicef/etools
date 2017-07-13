@@ -949,6 +949,11 @@ class Agreement(TimeStampedModel):
             self.end.strftime('%d-%m-%Y') if self.end else ''
         )
 
+    @classmethod
+    def permission_structure(cls):
+        permissions = import_permissions(cls.__name__)
+        return permissions
+
     @property
     def year(self):
         if self.id:

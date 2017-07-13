@@ -1,0 +1,15 @@
+Field no,Field Name,Group,Condition,Status,Action,Allowed
+2.2.1,partner,Partnership Manager,,Draft,Edit,TRUE
+2.2.2,agreement_type,Partnership Manager,,Draft,Edit,TRUE
+2.2.3,agreement_number,Partnership Manager,,Draft,Edit,TRUE
+2.2.12,country_programme,Partnership Manager,,Draft,Edit,TRUE
+2.2.4,start,Partnership Manager,,Draft,Edit,TRUE
+2.2.5,end,Partnership Manager,,Draft,Edit,TRUE
+2.2.6,partner_manager,Partnership Manager,,Draft,Edit,TRUE
+2.2.7,signed_by_partner_date,Partnership Manager,,Draft,Edit,TRUE
+2.2.8,signed_by,Partnership Manager,,Draft,Edit,TRUE
+2.2.9,signed_by_unicef_date,Partnership Manager,,Draft,Edit,TRUE
+2.2.10,attached_agreement,Partnership Manager,,Draft,Edit,TRUE
+2.3.1,authorized_officers,Partnership Manager,user adds amendment,*,Edit,TRUE
+2.3.1,authorized_officers,Partnership Manager,,Draft,Edit,TRUE
+2.4,amendments,Partnership Manager,,Signed,Edit,TRUE
