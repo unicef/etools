@@ -42,10 +42,9 @@ from supplies.tasks import set_unisupply_distribution
 from users.models import Section, Office
 from notification.models import Notification
 from partners.validation.agreements import (
-    agreement_transition_to_active_valid,
     agreement_transition_to_ended_valid,
-    agreements_illegal_transition
-)
+    agreements_illegal_transition,
+    agreement_transition_to_signed_valid)
 from partners.validation import interventions as intervention_validation
 
 
@@ -1006,8 +1005,8 @@ class Agreement(TimeStampedModel):
     @transition(field=status,
                 source=[DRAFT],
                 target=[SIGNED],
-                conditions=[agreement_transition_to_active_valid])
-    def transition_to_active(self):
+                conditions=[agreement_transition_to_signed_valid])
+    def transition_to_signed(self):
         pass
 
     @transition(field=status,
