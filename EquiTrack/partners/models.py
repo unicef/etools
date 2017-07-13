@@ -2,11 +2,10 @@ from __future__ import absolute_import, unicode_literals
 import logging
 import datetime
 import json
-from dateutil.relativedelta import relativedelta
 
 from django.conf import settings
 from django.contrib.auth.models import Group
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import JSONField, ArrayField, HStoreField
 from django.db import models, connection, transaction
 from django.db.models import Q, Sum, F, Min, Max
 from django.db.models.signals import post_save, pre_delete
@@ -15,17 +14,16 @@ from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
 from django_fsm import FSMField, transition
-from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
 )
 from model_utils import Choices, FieldTracker
+from dateutil.relativedelta import relativedelta
 
 from EquiTrack.utils import get_changeform_link, get_current_site, import_permissions
 from EquiTrack.mixins import AdminURLMixin
-
 from funds.models import Grant
 from reports.models import (
     Indicator,
@@ -1840,7 +1838,7 @@ class GovernmentInterventionResult(models.Model):
         default=0,
         verbose_name='Planned Cash Transfers'
     )
-    activities = hstore.DictionaryField(
+    activities = HStoreField(
         blank=True, null=True
     )
     activity = JSONField(blank=True, null=True, default=activity_default)
@@ -1857,7 +1855,6 @@ class GovernmentInterventionResult(models.Model):
     planned_visits = models.IntegerField(default=0)
 
     tracker = FieldTracker()
-    objects = hstore.HStoreManager()
 
     @transaction.atomic
     def save(self, **kwargs):
