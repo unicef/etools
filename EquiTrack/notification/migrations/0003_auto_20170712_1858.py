@@ -12,14 +12,14 @@ def email_templates(apps, schema_editor):
         name='partners/partnership/signed/frs',
         defaults={
             'description': 'Partnership signed with future start date that has no Fund Reservations',
-            'subject': 'eTools Intervention {number} does not have any FRs',
+            'subject': 'eTools Intervention {{ number }} does not have any FRs',
             'content': """
             Dear Colleague,
 
-            Please note that the Partnership ref. {number} with {partner} is signed, the start date for the PD/SSFA is {start_date} and there is no FR associated with this partnership in eTools.
+            Please note that the Partnership ref. {{ number }} with {{ partner }} is signed, the start date for the PD/SSFA is {{ start_date }} and there is no FR associated with this partnership in eTools.
             Please log into eTools and add the FR number to the record, so that the programme document/SSFA status can change to active.
 
-            {url}.
+            {{ url }}.
 
             Please note that this is an automated message and any response to this email cannot be replied to.
             """
@@ -30,17 +30,17 @@ def email_templates(apps, schema_editor):
         name='partners/partnership/ended/frs/outstanding',
         defaults={
             'description': 'PD Status “ended” And FR Amount does not equal the Actual Amount.',
-            'subject': 'eTools Partnership {number} Fund Reservations',
+            'subject': 'eTools Partnership {{ number }} Fund Reservations',
             'content': """
             Dear Colleague,
 
-            Please note that the Partnership ref. {number} with {partner} has ended but the disbursement amount is less than the FR amount.
+            Please note that the Partnership ref. {{ number }} with {{ partner }} has ended but the disbursement amount is less than the FR amount.
             Please follow-up with the IP or adjust your FR.
 
-            {url}.
+            {{ url }}.
 
             Please note that this is an automated message and any response to this email cannot be replied to.
-            """
+            """,
         }
     )
 
@@ -48,13 +48,14 @@ def email_templates(apps, schema_editor):
         name='partners/partnership/ending',
         defaults={
             'description': 'PD Ending in 30 or 15 days.',
-            'subject': 'eTools Partnership {number} is ending in {days} days',
+            'subject': 'eTools Partnership {{ number }} is ending in {{ days }} days',
             'content': """
             Dear Colleague,
-            Please note that the Partnership ref {number} with {partner} will end in {days} days.
+
+            Please note that the Partnership ref {{ number }} with {{ partner }} will end in {{ days }} days.
             Please follow-up with the Implementing Partner on status of implementation, which may require an amendment.
 
-            {url}.
+            {{ url }}.
 
             Please note that this is an automated message and any response to this email cannot be replied to.
             """
