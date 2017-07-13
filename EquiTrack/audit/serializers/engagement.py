@@ -96,7 +96,7 @@ class EngagementSerializer(EngagementDatesValidation,
         read_field=AuditorStaffMemberSerializer(many=True, required=False),
     )
     active_pd = SeparatedReadWriteField(
-        read_field=InterventionListSerializer(many=True, required=False),
+        read_field=InterventionListSerializer(many=True, required=False, label='Active PD'),
     )
 
     engagement_attachments = EngagementBase64AttachmentSerializer(many=True, required=False)
