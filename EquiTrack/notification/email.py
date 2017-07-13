@@ -8,7 +8,8 @@ from post_office import mail
 from post_office.models import EmailTemplate
 
 
-def send_mail(sender, recipients, template, variables, attachments=None, cc_list=None, bcc_list=None, notification_obj=None):
+def send_mail(sender, recipients, template, variables,
+              attachments=None, cc_list=None, bcc_list=None, notification_obj=None):
     """
     Single mail send hook that is reused across the project
     """
