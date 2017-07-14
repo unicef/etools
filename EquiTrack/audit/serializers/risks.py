@@ -205,7 +205,7 @@ class AggregatedRiskCountRiskRootSerializer(BaseAggregatedRiskRootSerializer):
     def calculate_risk(category):
         for blueprint in category.blueprints.all():
             if blueprint.risks.all().exists():
-                # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer.
+                # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer
                 blueprint._risk = blueprint.risks.all()[0]
                 if blueprint._risk.value == 1:
                     blueprint._risk.risk_point = blueprint._risk.value
@@ -259,7 +259,7 @@ class AggregatedRiskRootSerializer(BaseAggregatedRiskRootSerializer):
         """
         for blueprint in category.blueprints.all():
             if blueprint.risks.all().exists():
-                # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer.
+                # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer
                 blueprint._risk = blueprint.risks.all()[0]
                 if blueprint._risk.value == 1:
                     blueprint._risk.risk_point = blueprint._risk.value
@@ -272,11 +272,19 @@ class AggregatedRiskRootSerializer(BaseAggregatedRiskRootSerializer):
         for child in category.children.all():
             category.blueprint_count += child.blueprint_count
 
-        category.applicable_questions = len(filter(lambda b: not b._risk or b._risk.risk_point, category.blueprints.all()))
+        category.applicable_questions = len(
+            filter(
+                lambda b: not b._risk or b._risk.risk_point, category.blueprints.all()
+            )
+        )
         for child in category.children.all():
             category.applicable_questions += child.applicable_questions
 
-        category.applicable_key_questions = len(filter(lambda b: b.is_key and (not b._risk or b._risk.risk_point), category.blueprints.all()))
+        category.applicable_key_questions = len(
+            filter(
+                lambda b: b.is_key and (not b._risk or b._risk.risk_point), category.blueprints.all()
+            )
+        )
         for child in category.children.all():
             category.applicable_key_questions += child.applicable_key_questions
 
@@ -289,8 +297,9 @@ class AggregatedRiskRootSerializer(BaseAggregatedRiskRootSerializer):
             category.risk_score = category.risk_points / category.applicable_questions
 
             lowest_score_possible = 1
-            highest_score_possible = (4*category.applicable_questions + 4*category.applicable_key_questions)/category.applicable_questions
-            banding_width = (highest_score_possible-lowest_score_possible)/4
+            highest_score_possible = (4 * category.applicable_questions + 4 * category.applicable_key_questions)
+            highest_score_possible = highest_score_possible / category.applicable_questions
+            banding_width = (highest_score_possible - lowest_score_possible) / 4
             low_scores_below = lowest_score_possible + banding_width
             moderate_scores_below = low_scores_below + banding_width
             significant_score_below = moderate_scores_below + banding_width

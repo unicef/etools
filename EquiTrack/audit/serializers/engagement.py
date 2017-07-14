@@ -134,8 +134,15 @@ class EngagementSerializer(EngagementDatesValidation,
         validated_data = super(EngagementSerializer, self).validate(data)
         staff_members = validated_data.get('staff_members', [])
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
-        partner = validated_data.get('partner', None) or self.instance.partner if self.instance else validated_data.get('partner', None)
-        active_pd = validated_data.get('active_pd', []) or self.instance.active_pd.all() if self.instance else validated_data.get('active_pd', [])
+
+        partner = validated_data.get('partner', None)
+        if not partner:
+            partner = self.instance.partner if self.instance else validated_data.get('partner', None)
+
+        active_pd = validated_data.get('active_pd', [])
+        if not active_pd:
+            active_pd = self.instance.active_pd.all() if self.instance else validated_data.get('active_pd', [])
+
         status = 'new' if not self.instance else self.instance.status
 
         if staff_members and agreement and agreement.auditor_firm:
