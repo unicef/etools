@@ -170,6 +170,8 @@ class UserProfileAPIView(RetrieveUpdateAPIView):
     """
     queryset = UserProfile.objects.all()
     serializer_class = ProfileRetrieveUpdateSerializer
+    lookup_field = 'user_id'
+
     permission_classes = (IsAdminUser, )
 
 
