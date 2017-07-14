@@ -1,13 +1,12 @@
 from __future__ import unicode_literals
 
 import json
-from unittest import skip
+from unittest import skip, TestCase
 import datetime
 from datetime import date, timedelta
 from decimal import Decimal
 
 from rest_framework import status
-
 from actstream.models import model_stream
 
 from EquiTrack.factories import (
@@ -22,9 +21,9 @@ from EquiTrack.factories import (
     InterventionFactory,
     GovernmentInterventionFactory,
     FundsReservationHeaderFactory)
-from EquiTrack.tests.mixins import APITenantTestCase
-from reports.models import ResultType, Sector, CountryProgramme
-from funds.models import FundsCommitmentItem, FundsCommitmentHeader, FundsReservationHeader
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from reports.models import ResultType, Sector
+from funds.models import FundsCommitmentItem, FundsCommitmentHeader
 from partners.models import (
     Agreement,
     PartnerType,
@@ -40,6 +39,31 @@ from partners.models import (
     FileType,
     InterventionResultLink,
 )
+
+
+class URLsTestCase(URLAssertionMixin, TestCase):
+    '''Simple test case to verify URL reversal'''
+    def test_urls(self):
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        names_and_paths = (
+            ('partner-list', '', {}),
+            ('partner-hact', 'hact/', {}),
+            ('partner-detail', '1/', {'pk': 1}),
+            ('partner-delete', 'delete/1/', {'pk': 1}),
+            ('partner-assessment-del', 'assessments/1/', {'pk': 1}),
+            ('partner-add', 'add/', {}),
+            ('partner-staff-members-list', '1/staff-members/', {'partner_pk': 1}),
+            )
+        self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partners/')
+        self.assertIntParamRegexes(names_and_paths, 'partners_api:')
+
+        names_and_paths = (
+            ('partnership-dash-with-ct-office', '1/3/', {'ct_pk': 1, 'office_pk': 3}),
+            ('partnership-dash-with-ct', '1/', {'ct_pk': 1}),
+            ('partnership-dash', '', {}),
+            )
+        self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partnership-dash/')
+        self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
 class TestPartnerOrganizationViews(APITenantTestCase):
@@ -227,8 +251,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"assessments":
-                                          {"completed_date":
-                                           ["The Date of Report cannot be in the future"]}})
+                                         {"completed_date": ["The Date of Report cannot be in the future"]}})
 
     def test_api_partners_update_assessments_longago(self):
         today = datetime.date.today()
@@ -334,8 +357,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"assessments":
-                                          {"completed_date":
-                                           ["The Date of Report cannot be in the future"]}})
+                                         {"completed_date": ["The Date of Report cannot be in the future"]}})
 
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
@@ -350,7 +372,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertIn("Partner", response.data["name"])
         self.assertEqual(['programme_visits', 'spot_checks'], response.data["hact_min_requirements"].keys())
         self.assertEqual(['audits_done', 'planned_visits', 'spot_checks', 'programmatic_visits', 'follow_up_flags',
-                           'planned_cash_transfer', 'micro_assessment_needed', 'audits_mr'], response.data["hact_values"].keys())
+                          'planned_cash_transfer', 'micro_assessment_needed', 'audits_mr'],
+                         response.data["hact_values"].keys())
         self.assertEqual(response.data['interventions'], [])
 
     def test_api_partners_retreive_actual_fr_amounts(self):
@@ -365,7 +388,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["interventions"][0]["actual_amount"], Decimal(fr_header_1.actual_amt + fr_header_2.actual_amt))
+        self.assertEqual(response.data["interventions"][0]["actual_amount"],
+                         Decimal(fr_header_1.actual_amt + fr_header_2.actual_amt))
 
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
@@ -833,7 +857,6 @@ class TestAgreementAPIView(APITenantTestCase):
         for r in response_json:
             self.assertEqual(r['end'], self.country_programme.to_date.isoformat())
 
-
         self.country_programme.to_date = self.country_programme.to_date + timedelta(days=1)
         self.country_programme.save()
         response = self.forced_auth_req(
@@ -846,7 +869,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         for r in response_json:
             self.assertEqual(r['end'], self.country_programme.to_date.isoformat())
-
 
     def test_agreements_create_max_signoff_no_date(self):
         today = datetime.date.today()
@@ -1064,11 +1086,10 @@ class TestAgreementAPIView(APITenantTestCase):
         data = {
             "agreement_type": "PCA",
             "partner": self.partner.id,
-            "country_programme": self.agreement.country_programme.id,
+            "country_programme": self.country_programme.id,
             "status": "draft",
             "signed_by": self.unicef_staff.id,
             "partner_manager": self.partner_staff.id,
-            "country_programme": self.country_programme.id
         }
         response = self.forced_auth_req(
             'post',
@@ -1210,7 +1231,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["non_field_errors"],
-                          ["New Staff Member needs to be active at the moment of creation"])
+                         ["New Staff Member needs to be active at the moment of creation"])
 
     @skip("Skip staffmembers for now")
     def test_partner_staffmember_create_already_partner(self):
@@ -1392,7 +1413,6 @@ class TestInterventionViews(APITenantTestCase):
 
         self.fr_header_1 = FundsReservationHeaderFactory(fr_number=self.funding_commitment1.fr_number)
         self.fr_header_2 = FundsReservationHeaderFactory(fr_number=self.funding_commitment2.fr_number)
-
 
         # Basic data to adjust in tests
         self.intervention_data = {
@@ -1630,9 +1650,9 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data,
-                          {"document_type": ["This field is required."],
-                           "agreement": ["This field is required."],
-                              "title": ["This field is required."]})
+                         {"document_type": ["This field is required."],
+                          "agreement": ["This field is required."],
+                          "title": ["This field is required."]})
 
     def test_intervention_validation_doctype_pca(self):
         data = {
@@ -1847,7 +1867,6 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["You do not have permissions to delete a sector location"])
 
-
     def test_api_interventions_values(self):
         params = {"values": "{}".format(self.intervention["id"])}
         response = self.forced_auth_req(
@@ -1966,6 +1985,3 @@ class TestPartnershipDashboardView(APITenantTestCase):
         self.assertEqual(response.data['active_count'], 1)
         self.assertEqual(response.data['active_this_year_count'], 1)
         self.assertEqual(response.data['active_this_year_percentage'], '100%')
-
-
-

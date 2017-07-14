@@ -106,3 +106,6 @@ db_dumps/*.bz2
 
 # Sphinx documentation
 docs/_build/
+
+# macOS system meta file
+.DS_Store

@@ -2,11 +2,10 @@ from __future__ import absolute_import, unicode_literals
 import logging
 import datetime
 import json
-from dateutil.relativedelta import relativedelta
 
 from django.conf import settings
 from django.contrib.auth.models import Group
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import JSONField, ArrayField, HStoreField
 from django.db import models, connection, transaction
 from django.db.models import Q, Sum, F, Min, Max
 from django.db.models.signals import post_save, pre_delete
@@ -15,17 +14,16 @@ from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
 from django_fsm import FSMField, transition
-from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
 )
 from model_utils import Choices, FieldTracker
+from dateutil.relativedelta import relativedelta
 
 from EquiTrack.utils import get_changeform_link, get_current_site, import_permissions
 from EquiTrack.mixins import AdminURLMixin
-
 from funds.models import Grant
 from reports.models import (
     Indicator,
@@ -169,10 +167,10 @@ SIGNIFICANT = 'significant'
 MEDIUM = 'medium'
 LOW = 'low'
 RISK_RATINGS = (
-    (HIGH,'High'),
-    (SIGNIFICANT,'Significant'),
-    (MEDIUM,'Medium'),
-    (LOW,'Low'),
+    (HIGH, 'High'),
+    (SIGNIFICANT, 'Significant'),
+    (MEDIUM, 'Medium'),
+    (LOW, 'Low'),
 )
 CSO_TYPES = Choices(
    'International',
@@ -459,7 +457,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
-            current_cycle = CountryProgramme.main_active()
             last_audit = partner.latest_assessment(u'Scheduled Audit report')
             if assesment:
                 if last_audit:
@@ -518,9 +515,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         """
         Planned cash transfers for the current year
         """
-        year = datetime.date.today().year
         total = 0
-        if partner.partner_type !='Government':
+        if partner.partner_type != 'Government':
             q = InterventionBudget.objects.filter(
                 intervention__agreement__partner=partner,
                 intervention__status__in=[
@@ -562,7 +558,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         # planned visits
         pv = 0
         if partner.partner_type == 'Government':
-           pass
+            pass
         else:
             if pv_intervention:
                 pv = InterventionPlannedVisits.objects.filter(
@@ -699,11 +695,11 @@ class Assessment(models.Model):
     """
 
     ASSESMENT_TYPES = (
-        ('Micro Assessment','Micro Assessment'),
-        ('Simplified Checklist','Simplified Checklist'),
-        ('Scheduled Audit report','Scheduled Audit report'),
-        ('Special Audit report','Special Audit report'),
-        ('Other','Other'),
+        ('Micro Assessment', 'Micro Assessment'),
+        ('Simplified Checklist', 'Simplified Checklist'),
+        ('Scheduled Audit report', 'Scheduled Audit report'),
+        ('Special Audit report', 'Special Audit report'),
+        ('Other', 'Other'),
     )
 
     partner = models.ForeignKey(
@@ -717,8 +713,7 @@ class Assessment(models.Model):
     names_of_other_agencies = models.CharField(
         max_length=255,
         blank=True, null=True,
-        help_text='List the names of the other '
-                 'agencies they have worked with'
+        help_text='List the names of the other agencies they have worked with'
     )
     expected_budget = models.IntegerField(
         verbose_name='Planned amount',
@@ -728,8 +723,7 @@ class Assessment(models.Model):
         max_length=255,
         blank=True, null=True,
         verbose_name='Special requests',
-        help_text='Note any special requests to be '
-                 'considered during the assessment'
+        help_text='Note any special requests to be considered during the assessment'
     )
     requested_date = models.DateField(
         auto_now_add=True
@@ -855,8 +849,8 @@ class Agreement(TimeStampedModel):
     SSFA = 'SSFA'
     AGREEMENT_TYPES = (
         (PCA, u"Programme Cooperation Agreement"),
-        (SSFA,'Small Scale Funding Agreement'),
-        (MOU,'Memorandum of Understanding'),
+        (SSFA, 'Small Scale Funding Agreement'),
+        (MOU, 'Memorandum of Understanding'),
     )
 
     DRAFT = u"draft"
@@ -1315,7 +1309,6 @@ class Intervention(TimeStampedModel):
     # previous status
     metadata = JSONField(blank=True, null=True, default=dict)
 
-
     class Meta:
         ordering = ['-created']
 
@@ -1353,7 +1346,8 @@ class Intervention(TimeStampedModel):
 
     @property
     def sector_names(self):
-        return ', '.join(Sector.objects.filter(intervention_locations__intervention=self).values_list('name', flat=True))
+        return ', '.join(Sector.objects.filter(intervention_locations__intervention=self).
+                         values_list('name', flat=True))
 
     @cached_property
     def total_partner_contribution(self):
@@ -1364,7 +1358,6 @@ class Intervention(TimeStampedModel):
     def total_unicef_cash(self):
         # TODO: test this
         return self.planned_budget.unicef_cash if self.planned_budget else 0
-
 
     @cached_property
     def total_in_kind_amount(self):
@@ -1647,6 +1640,7 @@ class InterventionResultLink(models.Model):
             self.intervention, self.cp_output
         )
 
+
 @python_2_unicode_compatible
 class InterventionBudget(TimeStampedModel):
     """
@@ -1744,7 +1738,8 @@ class InterventionSectorLocationLink(models.Model):
 
 class GovernmentInterventionManager(models.Manager):
     def get_queryset(self):
-        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results', 'results__sectors', 'results__unicef_managers')
+        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results', 'results__sectors',
+                                                                                          'results__unicef_managers')
 
 
 # TODO: check this for sanity
@@ -1777,8 +1772,7 @@ class GovernmentIntervention(models.Model):
 
     def __unicode__(self):
         return 'Number: {}'.format(self.number) if self.number else \
-            '{}: {}'.format(self.pk,
-                             self.reference_number)
+            '{}: {}'.format(self.pk, self.reference_number)
 
     # country/partner/year/#
     @property
@@ -1837,7 +1831,7 @@ class GovernmentInterventionResult(models.Model):
         default=0,
         verbose_name='Planned Cash Transfers'
     )
-    activities = hstore.DictionaryField(
+    activities = HStoreField(
         blank=True, null=True
     )
     activity = JSONField(blank=True, null=True, default=activity_default)
@@ -1854,7 +1848,6 @@ class GovernmentInterventionResult(models.Model):
     planned_visits = models.IntegerField(default=0)
 
     tracker = FieldTracker()
-    objects = hstore.HStoreManager()
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -1871,8 +1864,7 @@ class GovernmentInterventionResult(models.Model):
         super(GovernmentInterventionResult, self).save(**kwargs)
 
     def __unicode__(self):
-        return '{}, {}'.format(self.intervention.number,
-                                self.result)
+        return '{}, {}'.format(self.intervention.number, self.result)
 
 
 class GovernmentInterventionResultActivity(models.Model):
@@ -2305,7 +2297,8 @@ class PCA(AdminURLMixin, models.Model):
 
         if self.budget_log.exists():
             return sum([b['unicef_cash'] + b['in_kind_amount'] + b['partner_contribution'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash', 'in_kind_amount', 'partner_contribution').
+                        self.budget_log.values('created', 'year', 'unicef_cash',
+                                               'in_kind_amount', 'partner_contribution').
                         order_by('year', '-created').distinct('year').all()])
         return 0
 
@@ -2334,7 +2327,8 @@ class PCA(AdminURLMixin, models.Model):
 
         if self.budget_log.exists():
             return sum([b['unicef_cash_local'] + b['in_kind_amount_local'] + b['partner_contribution_local'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local', 'partner_contribution_local').
+                        self.budget_log.values('created', 'year', 'unicef_cash_local',
+                                               'in_kind_amount_local', 'partner_contribution_local').
                         order_by('year', '-created').distinct('year').all()])
         return 0
 

@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from django.contrib import admin
 
 from . import models
@@ -12,6 +10,7 @@ class GrantAdmin(admin.ModelAdmin):
 
 class FRAdmin(admin.ModelAdmin):
     search_fields = ('fr_number',)
+
 
 admin.site.register(models.Grant, GrantAdmin)
 admin.site.register(models.Donor)
