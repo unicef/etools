@@ -1698,8 +1698,22 @@ class FileType(models.Model):
     """
     Represents a file type
     """
+    FACE = 'FACE'
+    PROGRESS_REPORT = 'Progress Report'
+    PARTNERSHIP_REVIEW = 'Partnership Review'
+    CORRESPONDENCE = 'Correspondence'
+    SUPPLY_PLAN = 'Supply/Distribution Plan'
+    OTHER = 'Other'
 
-    name = models.CharField(max_length=64L, unique=True)
+    NAME_CHOICES = Choices(
+        (FACE, FACE),
+        (PROGRESS_REPORT, PROGRESS_REPORT),
+        (PARTNERSHIP_REVIEW, PARTNERSHIP_REVIEW),
+        (CORRESPONDENCE, CORRESPONDENCE),
+        (SUPPLY_PLAN, SUPPLY_PLAN),
+        (OTHER, OTHER),
+    )
+    name = models.CharField(max_length=64, choices=NAME_CHOICES, unique=True)
 
     tracker = FieldTracker()
 
