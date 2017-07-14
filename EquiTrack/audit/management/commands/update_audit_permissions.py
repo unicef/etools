@@ -50,6 +50,7 @@ class Command(BaseCommand):
 
     partner_block = [
         'engagement.partner',
+        'engagement.authorized_officers',
     ]
 
     staff_members_block = [
