@@ -1,10 +1,9 @@
-from django.db import connection
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from vision.adapters.programme import ProgrammeSynchronizer
-from management.permissions import IsSuperUser
 from users.models import Country as Workspace
+from EquiTrack.permissions import IsSuperUser
 from EquiTrack.utils import set_country
 
 
@@ -14,7 +13,7 @@ class LoadResultStructure(APIView):
     def get(self, request, format=None):
         try:
             workspace = Workspace.objects.get(name=request.query_params.get('country').title())
-        except Workspace.DoesNotExist:
+        except (Workspace.DoesNotExist, AttributeError):
             return Response(status=400, data={'error': 'Country not found'})
 
         try:

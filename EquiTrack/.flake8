@@ -7,7 +7,6 @@ exclude =
     EquiTrack,
     funds,
     manage_debug.py,
-    management,
     notification,
     partners,
     publics,
