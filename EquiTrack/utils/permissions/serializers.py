@@ -7,7 +7,7 @@ from rest_framework_recursive.fields import RecursiveField
 
 from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.common.serializers.mixins import UserContextSerializerMixin
-from . import collect_parent_models
+from .utils import collect_parent_models
 from .models.models import BasePermission
 
 

@@ -59,7 +59,9 @@ class AuditorFirmExportSerializer(serializers.ModelSerializer):
         ]
 
 
-class PurchaseOrderSerializer(AuditPermissionsBasedSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
+class PurchaseOrderSerializer(
+    AuditPermissionsBasedSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer
+):
     auditor_firm = SeparatedReadWriteField(
         read_field=AuditorFirmLightSerializer(read_only=True),
     )
