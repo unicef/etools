@@ -1,17 +1,10 @@
-from django.contrib.auth import get_user_model
-from django.db import models
-from django.utils.translation import ugettext_lazy as _
-
 from rest_framework import serializers
 
-from locations.models import Location
 from locations.serializers import LocationLightSerializer
-from partners.models import Intervention, InterventionResultLink
+from partners.models import InterventionResultLink
 from partners.serializers.interventions_v2 import InterventionDetailSerializer
-from reports.models import Sector
 from reports.serializers.v1 import SectorLightSerializer
-from tpm.models import TPMVisit, TPMLocation, TPMPartner, \
-                       TPMPermission, TPMActivity, TPMSectorCovered, TPMLowResult
+from tpm.models import TPMVisit, TPMLocation, TPMPermission, TPMActivity, TPMSectorCovered, TPMLowResult
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
@@ -52,7 +45,7 @@ class TPMLocationSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
 
 class TPMLowResultSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
-                            serializers.ModelSerializer):
+                             serializers.ModelSerializer):
     tpm_locations = TPMLocationSerializer(many=True)
     result = SeparatedReadWriteField(
         read_field=InterventionResultLinkVisitSerializer(read_only=True)
@@ -64,7 +57,7 @@ class TPMLowResultSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedS
 
 
 class TPMSectorCoveredSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
-                            serializers.ModelSerializer):
+                                 serializers.ModelSerializer):
     tpm_low_results = TPMLowResultSerializer(many=True)
     sector = SeparatedReadWriteField(
         read_field=SectorLightSerializer(read_only=True),
@@ -76,7 +69,7 @@ class TPMSectorCoveredSerializer(TPMPermissionsBasedSerializerMixin, WritableNes
 
 
 class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
-                           serializers.ModelSerializer):
+                            serializers.ModelSerializer):
     tpm_sectors = TPMSectorCoveredSerializer(many=True)
 
     partnership = SeparatedReadWriteField(
@@ -141,7 +134,8 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     def validate(self, data):
         validated_data = super(TPMActivitySerializer, self).validate(data)
 
-        partnership = self.root.instance.tpm_activities.get(id=validated_data['id']).partnership if 'id' in validated_data else validated_data['partnership']
+        instance = self.root.instance.tpm_activities.get(id=validated_data['id']) if 'id' in validated_data else None
+        partnership = instance.partnership if instance else validated_data['partnership']
         tpm_sectors = validated_data.get('tpm_sectors', [])
 
         self._validate_sectors(tpm_sectors, partnership)

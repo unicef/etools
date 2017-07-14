@@ -26,6 +26,8 @@ class ValidateTPMVisitActivities(BaseTransitionCheck):
         if not tpm_locations:
             return [_('This field is required.')]
 
+        return tpm_locations_errors
+
     def _get_tpm_low_results_errors(self, tpm_low_results):
         tpm_low_results_errors = []
 

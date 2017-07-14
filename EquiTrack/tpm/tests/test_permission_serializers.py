@@ -1,8 +1,6 @@
-import os
 from datetime import timedelta
 from unittest import skip
 
-from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
 from django.core.management import call_command

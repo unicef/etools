@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django_fsm import FSMField, transition
@@ -56,7 +54,8 @@ class TPMPartnerStaffMember(BaseStaffMember):
 
 
 def _has_action_permission(action):
-    return lambda instance=None, user=None: has_action_permission(TPMPermission, instance=instance, user=user, action=action)
+    return lambda instance=None, user=None: \
+        has_action_permission(TPMPermission, instance=instance, user=user, action=action)
 
 
 @python_2_unicode_compatible
@@ -101,7 +100,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             models.Max('end_date'))['end_date__max']
 
     def __str__(self):
-        return 'Visit ({}, {})'.format(self.tpm_partner, ', '.join(self.tpm_activities.values_list('partnership__title', flat=True)))
+        return 'Visit ({}, {})'.format(
+            self.tpm_partner, ', '.join(self.tpm_activities.values_list('partnership__title', flat=True))
+        )
 
     def has_action_permission(self, user=None, action=None):
         return _has_action_permission(self, user, action)
@@ -129,14 +130,25 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             )
 
     def _get_tpm_as_email_recipients(self):
-        return list(self.tpm_partner.staff_members.filter(receive_tpm_notifications=True, user__email__isnull=False).values_list('user__email',
-                                                                                                 flat=True))
+        return list(
+            self.tpm_partner.staff_members.filter(
+                receive_tpm_notifications=True, user__email__isnull=False
+            ).values_list('user__email', flat=True)
+        )
 
     def _get_unicef_focal_points_as_email_recipients(self):
-        return list(self.tpm_activities.filter(unicef_focal_points__email__isnull=False).values_list('unicef_focal_points__email', flat=True))
+        return list(
+            self.tpm_activities.filter(
+                unicef_focal_points__email__isnull=False
+            ).values_list('unicef_focal_points__email', flat=True)
+        )
 
     def _get_ip_focal_points_as_email_recipients(self):
-        return list(self.tpm_activities.filter(partnership__partner_focal_points__email__isnull=False).values_list('partnership__partner_focal_points__email', flat=True))
+        return list(
+            self.tpm_activities.filter(
+                partnership__partner_focal_points__email__isnull=False
+            ).values_list('partnership__partner_focal_points__email', flat=True)
+        )
 
     @transition(status, source=[STATUSES.draft], target=STATUSES.assigned,
                 conditions=[
@@ -192,7 +204,8 @@ class TPMActivity(models.Model):
 
     tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
 
-    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Point'), related_name='tpm_activities')
+    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Point'),
+                                                 related_name='tpm_activities')
 
     def __str__(self):
         return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
@@ -215,7 +228,7 @@ class TPMSectorCovered(models.Model):
 
 @python_2_unicode_compatible
 class TPMLowResult(models.Model):
-    # TODO: Results is LowerResult? (TPM Spec: Low-level Results  (see PD/SSFA Output [array]0..* in Partnership Management))
+    # TODO: Results is LowerResult? (TPM Spec: Low-level Results (see PD/SSFA Output [array]0..* in PMP))
     result = models.ForeignKey('partners.InterventionResultLink', verbose_name=_('PD/SSFA Output'))
     tpm_sector = models.ForeignKey(TPMSectorCovered, verbose_name=_('sector'), related_name='tpm_low_results')
 
@@ -225,7 +238,8 @@ class TPMLowResult(models.Model):
 
 @python_2_unicode_compatible
 class TPMLocation(models.Model):
-    tpm_low_result = models.ForeignKey(TPMLowResult, verbose_name=_('low_result'), null=True, blank=True, related_name='tpm_locations')
+    tpm_low_result = models.ForeignKey(TPMLowResult, verbose_name=_('low_result'), null=True, blank=True,
+                                       related_name='tpm_locations')
 
     start_date = models.DateField(verbose_name=_('Start Date'), null=True, blank=True)
     end_date = models.DateField(verbose_name=_('End Date'), null=True, blank=True)

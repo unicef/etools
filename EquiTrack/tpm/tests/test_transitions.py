@@ -5,7 +5,6 @@ from rest_framework import status
 from EquiTrack.tests.mixins import APITenantTestCase
 from tpm.models import TPMVisit
 from .base import TPMTestCaseMixin
-from .factories import TPMVisitFactory
 
 
 class TestTPMTransitions(TPMTestCaseMixin, APITenantTestCase):
