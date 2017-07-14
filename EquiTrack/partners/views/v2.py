@@ -168,7 +168,6 @@ class PmpStaticDropdownsListApiView(APIView):
             [typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(AgreementAmendment.AMENDMENT_TYPES)
-        intervention_attachment_types = choices_to_json_ready(FileType.NAME_CHOICES)
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
@@ -187,7 +186,6 @@ class PmpStaticDropdownsListApiView(APIView):
                 'agreement_types': agreement_types,
                 'agreement_status': agreement_status,
                 'agreement_amendment_types': agreement_amendment_types,
-                'intervention_attachment_types': intervention_attachment_types,
                 'intervention_doc_type': intervention_doc_type,
                 'intervention_status': intervention_status,
                 'intervention_amendment_types': intervention_amendment_types,
@@ -224,7 +222,8 @@ class PMPDropdownsListApiView(APIView):
                                                 'wbs',
                                                 'country_programme'))
         supply_items = list(SupplyItem.objects.all().values())
-        file_types = list(FileType.objects.all().values())
+        file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
+                          .all().values())
         donors = list(Donor.objects.all().values())
 
         return Response(
