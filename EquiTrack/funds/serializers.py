@@ -2,32 +2,7 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
-from .models import Donor, Grant, FundsReservationHeader
-
-
-class DonorSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Donor
-        fields = (
-            'id',
-            'name'
-        )
-
-
-class GrantSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Grant
-        fields = (
-            'id',
-            'name',
-            'donor'
-        )
+from .models import FundsReservationHeader
 
 
 class FRHeaderSerializer(serializers.ModelSerializer):
