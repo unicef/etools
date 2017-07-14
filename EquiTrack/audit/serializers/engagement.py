@@ -165,7 +165,7 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
     class Meta(WritableNestedSerializerMixin.Meta):
         model = Finding
         fields = [
-            'id', 'priority', 'category_of_observation',
+            'id', 'finding_number', 'priority', 'category_of_observation',
             'recommendation', 'agreed_action_by_ip', 'deadline_of_action',
         ]
 
