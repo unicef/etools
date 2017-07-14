@@ -81,7 +81,7 @@ action_points_patterns = patterns(
     '',
     url(r'^$', action_points_list, name='list'),
     url(r'^(?P<action_point_pk>[0-9]+)/$', action_points_details, name='details'),
-    url(r'^dashboard/', action_points_dashboard_list, name='dashboard'),
+    url(r'^dashboard/$', action_points_dashboard_list, name='dashboard'),
     url(r'^export/$', action_points_export, name='export')
 )
 

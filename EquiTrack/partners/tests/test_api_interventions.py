@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import json
 import datetime
-from unittest import skip
+from unittest import skip, TestCase
 
 from django.core.urlresolvers import reverse
 from django.utils import timezone
@@ -16,7 +16,7 @@ from EquiTrack.factories import (
     InterventionFactory,
     FundsReservationHeaderFactory,
     GroupFactory)
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from reports.models import ResultType, Sector
 from partners.models import (
     InterventionSectorLocationLink,
@@ -24,6 +24,25 @@ from partners.models import (
     InterventionAmendment,
     Intervention
 )
+
+
+class URLsTestCase(URLAssertionMixin, TestCase):
+    '''Simple test case to verify URL reversal'''
+    def test_urls(self):
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        names_and_paths = (
+            ('intervention-list', '', {}),
+            ('intervention-list-dash', 'dash/', {}),
+            ('intervention-detail', '1/', {'pk': 1}),
+            ('intervention-visits-del', 'planned-visits/1/', {'pk': 1}),
+            ('intervention-attachments-del', 'attachments/1/', {'pk': 1}),
+            ('intervention-results-del', 'results/1/', {'pk': 1}),
+            ('intervention-amendments-del', 'amendments/1/', {'pk': 1}),
+            ('intervention-sector-locations-del', 'sector-locations/1/', {'pk': 1}),
+            ('intervention-map', 'map/', {}),
+            )
+        self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/interventions/')
+        self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
 class TestInterventionsAPI(APITenantTestCase):
@@ -293,10 +312,10 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-        self.assertItemsEqual(self.EDITABLE_FIELDS['draft'], [perm for perm in edit_permissions if
-                                                                       edit_permissions[perm]])
-        self.assertItemsEqual(self.REQUIRED_FIELDS['draft'], [perm for perm in required_permissions if
-                                                                       required_permissions[perm]])
+        self.assertItemsEqual(self.EDITABLE_FIELDS['draft'],
+                              [perm for perm in edit_permissions if edit_permissions[perm]])
+        self.assertItemsEqual(self.REQUIRED_FIELDS['draft'],
+                              [perm for perm in required_permissions if required_permissions[perm]])
 
     @skip('add test after permissions file is ready')
     def test_permissions_for_intervention_status_active(self):
@@ -311,7 +330,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-        self.assertItemsEqual(self.EDITABLE_FIELDS['signed'], [perm for perm in edit_permissions if
-                                                                        edit_permissions[perm]])
-        self.assertItemsEqual(self.REQUIRED_FIELDS['signed'], [perm for perm in required_permissions if
-                                                                        required_permissions[perm]])
+        self.assertItemsEqual(self.EDITABLE_FIELDS['signed'],
+                              [perm for perm in edit_permissions if edit_permissions[perm]])
+        self.assertItemsEqual(self.REQUIRED_FIELDS['signed'],
+                              [perm for perm in required_permissions if required_permissions[perm]])
