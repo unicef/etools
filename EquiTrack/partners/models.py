@@ -1721,7 +1721,7 @@ class FileType(models.Model):
         return self.name
 
 
-class InterventionAttachment(models.Model):
+class InterventionAttachment(TimeStampedModel):
     """
     Represents a file for the partner intervention
 
@@ -1737,6 +1737,9 @@ class InterventionAttachment(models.Model):
     )
 
     tracker = FieldTracker()
+
+    class Meta:
+        ordering = ['-created']
 
     def __unicode__(self):
         return self.attachment.name
