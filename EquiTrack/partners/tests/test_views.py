@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import json
 from unittest import skip, TestCase
 import datetime
@@ -118,7 +120,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             intervention=self.intervention,
             sector=Sector.objects.create(name="Sector 2")
         )
-        self.cp = CountryProgrammeFactory(wbs="WBS ", __sequence=10)
+        self.cp = CountryProgrammeFactory(__sequence=10)
         self.cp_output = ResultFactory(result_type=self.output_res_type)
         self.govint = GovernmentInterventionFactory(
             partner=self.partner_gov,
@@ -575,7 +577,13 @@ class TestPartnershipViews(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory()
-        agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
+        self.partner_staff_member = PartnerStaffFactory(partner=self.partner)
+
+        agreement = AgreementFactory(partner=self.partner,
+                                     signed_by_unicef_date=datetime.date.today(),
+                                     signed_by_partner_date=datetime.date.today(),
+                                     signed_by=self.unicef_staff,
+                                     partner_manager=self.partner_staff_member)
         self.intervention = InterventionFactory(agreement=agreement)
 
         self.result_type = ResultType.objects.get(id=1)
@@ -635,33 +643,15 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertIn("PCA", response.data[0]["agreement_type"])
 
+
     def test_api_staffmembers_list(self):
         response = self.forced_auth_req('get',
                                         '/'.join(['/api/partners', str(self.partner.id), 'staff-members/']),
                                         user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertIn("Jedi Master", response.data[0]["title"])
-        self.assertIn("Mace", response.data[0]["first_name"])
-        self.assertIn("Windu", response.data[0]["last_name"])
-        self.assertEqual(True, response.data[0]["active"])
+        self.assertEqual(len(response.data), 2)
 
-    # TODO: removed intervention results until after R3
-    # def test_api_interventions_results_list(self):
-    #
-    #     response = self.forced_auth_req('get',
-    #                                     '/'.join([
-    #                                         '/api/partners',
-    #                                         str(self.intervention.partner.id),
-    #                                         'interventions',
-    #                                         str(self.intervention.id),
-    #                                         'results/'
-    #                                     ]), user=self.unicef_staff)
-    #
-    #     self.assertEquals(response.status_code, status.HTTP_200_OK)
-    #     self.assertEquals(len(response.data), 1)
-    #     self.assertIn("Result", response.data[0]["result"]["name"])
 
     @skip("skip v1 for now")
     def test_api_interventions_sectors_list(self):
@@ -762,7 +752,6 @@ class TestAgreementAPIView(APITenantTestCase):
 
         today = datetime.date.today()
         self.country_programme = CountryProgrammeFactory(
-            wbs='0000/A0/01',
             from_date=date(today.year - 1, 1, 1),
             to_date=date(today.year + 1, 1, 1))
 
@@ -792,6 +781,7 @@ class TestAgreementAPIView(APITenantTestCase):
             number="002",
             agreement=self.agreement,
             signed_amendment="application/pdf",
+            signed_date=datetime.date.today(),
             types=[AgreementAmendment.BANKING_INFO]
         )
         self.agreement2 = AgreementFactory(
@@ -962,6 +952,8 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
+        print response.data
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["authorized_officers"]), 2)
 
@@ -993,7 +985,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.data[0]["agreement_type"], "PCA")
 
     def test_agreements_list_filter_status(self):
-        params = {"status": "active"}
+        params = {"status": "signed"}
         response = self.forced_auth_req(
             'get',
             '/api/v2/agreements/'.format(self.partner.id),
@@ -1004,7 +996,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.agreement.id)
-        self.assertEqual(response.data[0]["status"], "active")
+        self.assertEqual(response.data[0]["status"], "signed")
 
     def test_agreements_list_filter_partner_name(self):
         params = {"partner_name": self.partner.name}
