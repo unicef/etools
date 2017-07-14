@@ -70,36 +70,6 @@ class CRUActionsMetadataMixin(object):
     """
     Return "GET" with readable fields as allowed method.
     """
-    def _remove_read_only(self, field_info):
-        field_info.pop('read_only', None)
-
-        if 'child' in field_info:
-            self._remove_read_only(field_info['child'])
-
-        if 'children' in field_info:
-            for field in field_info['children'].values():
-                self._remove_read_only(field)
-
-    def _filter_serializer_info(self, serializer, serializer_info, method):
-        if method in ['POST', 'PUT']:
-            writable_fields = map(lambda f: f.field_name, serializer._writable_fields)
-
-            for field_name in serializer_info.keys():
-                if field_name not in writable_fields:
-                    del serializer_info[field_name]
-
-        elif method == 'GET':
-            readable_fields = map(lambda f: f.field_name, serializer._readable_fields)
-
-            for field_name in serializer_info.keys():
-                if field_name not in readable_fields:
-                    del serializer_info[field_name]
-
-        for field in serializer_info.values():
-            self._remove_read_only(field)
-
-        return serializer_info
-
     def determine_actions(self, request, view):
         """
         For generic class based views we return information about
@@ -123,8 +93,7 @@ class CRUActionsMetadataMixin(object):
                 # If user has appropriate permissions for the view, include
                 # appropriate metadata about the fields that should be supplied.
                 serializer = view.get_serializer(instance=instance)
-                info = self.get_serializer_info(serializer)
-                actions[method] = self._filter_serializer_info(serializer, info, method)
+                actions[method] = self.get_serializer_info(serializer)
             finally:
                 view.request = request
 
