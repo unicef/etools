@@ -104,7 +104,9 @@ class TestMATransitionsTestCase(EngagementCheckTransitionsTestCaseMixin, MATrans
         self._test_submit(self.auditor, status.HTTP_200_OK)
 
 
-class TestAuditTransitionsTestCase(EngagementCheckTransitionsTestCaseMixin, AuditTransitionsTestCaseMixin, APITenantTestCase):
+class TestAuditTransitionsTestCase(
+    EngagementCheckTransitionsTestCaseMixin, AuditTransitionsTestCaseMixin, APITenantTestCase
+):
     def test_submit_for_dummy_object(self):
         errors_fields = AuditSubmitReportRequiredFieldsCheck.fields
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=errors_fields)
@@ -125,7 +127,9 @@ class TestAuditTransitionsTestCase(EngagementCheckTransitionsTestCaseMixin, Audi
         self._test_submit(self.auditor, status.HTTP_200_OK)
 
 
-class TestSCTransitionsTestCase(EngagementCheckTransitionsTestCaseMixin, SCTransitionsTestCaseMixin, APITenantTestCase):
+class TestSCTransitionsTestCase(
+    EngagementCheckTransitionsTestCaseMixin, SCTransitionsTestCaseMixin, APITenantTestCase
+):
     def test_submit_for_dummy_object(self):
         errors_fields = SPSubmitReportRequiredFieldsCheck.fields
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=errors_fields)

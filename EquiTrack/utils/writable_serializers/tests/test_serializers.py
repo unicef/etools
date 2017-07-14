@@ -302,8 +302,12 @@ class WritableSerializerGenericTestCase(TestCase):
 
         parent_content_type = ContentType.objects.get_for_model(Parent)
         self.assertEqual(GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id).count(), 2)
-        self.assertTrue(GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id, field=101).exists())
-        self.assertTrue(GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id, field=102).exists())
+        self.assertTrue(
+            GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id, field=101).exists()
+        )
+        self.assertTrue(
+            GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id, field=102).exists()
+        )
 
     def test_update(self):
         serializer = self.ParentSerializer(self.parent, data={
@@ -321,7 +325,9 @@ class WritableSerializerGenericTestCase(TestCase):
         serializer.save()
 
         parent_content_type = ContentType.objects.get_for_model(Parent)
-        self.assertEqual(GenericChild.objects.filter(content_type=parent_content_type, object_id=self.parent.id).count(), 2)
+        self.assertEqual(
+            GenericChild.objects.filter(content_type=parent_content_type, object_id=self.parent.id).count(), 2
+        )
         self.assertEqual(GenericChild.objects.get(id=self.generic_children[0].id).field, 101)
         self.assertEqual(GenericChild.objects.get(id=self.generic_children[1].id).field, 102)
 
@@ -340,9 +346,15 @@ class WritableSerializerGenericTestCase(TestCase):
         serializer.save()
 
         parent_content_type = ContentType.objects.get_for_model(Parent)
-        self.assertEqual(GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id).count(), 2)
-        self.assertTrue(GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id, field=101).exists())
-        self.assertTrue(GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id, field=102).exists())
+        self.assertEqual(
+            GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id).count(), 2
+        )
+        self.assertTrue(
+            GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id, field=101).exists()
+        )
+        self.assertTrue(
+            GenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id, field=102).exists()
+        )
 
 
 class WritableCodedGenericRelationTestCase(TestCase):
@@ -403,10 +415,18 @@ class WritableCodedGenericRelationTestCase(TestCase):
         parent = serializer.save()
 
         parent_content_type = ContentType.objects.get_for_model(Parent)
-        self.assertSequenceEqual(CodedGenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id,
-                                                                  code='code1').values_list('field', flat=True), [101, 102])
-        self.assertSequenceEqual(CodedGenericChild.objects.filter(content_type=parent_content_type, object_id=parent.id,
-                                                                  code='code2').values_list('field', flat=True), [103])
+        self.assertSequenceEqual(
+            CodedGenericChild.objects.filter(
+                content_type=parent_content_type, object_id=parent.id, code='code1'
+            ).values_list('field', flat=True),
+            [101, 102]
+        )
+        self.assertSequenceEqual(
+            CodedGenericChild.objects.filter(
+                content_type=parent_content_type, object_id=parent.id, code='code2'
+            ).values_list('field', flat=True),
+            [103]
+        )
 
 
 class WritableSerializerRequiredTestCase(TestCase):

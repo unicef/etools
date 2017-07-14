@@ -26,7 +26,7 @@ from firms.models import BaseFirm, BaseStaffMember
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
 from utils.groups.wrappers import GroupWrapper
-from utils.permissions import has_action_permission
+from utils.permissions.utils import has_action_permission
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from .transitions.conditions import AuditSubmitReportRequiredFieldsCheck, ValidateAuditRiskCategories, \
@@ -82,7 +82,10 @@ class PurchaseOrder(TimeStampedModel, models.Model):
 
 
 def _has_action_permission(action):
-    return lambda instance=None, user=None: has_action_permission(AuditPermission, instance=instance, user=user, action=action)
+    return lambda instance=None, user=None: \
+        has_action_permission(
+            AuditPermission, instance=instance, user=user, action=action
+        )
 
 
 @python_2_unicode_compatible
@@ -365,7 +368,7 @@ class Risk(models.Model):
 class SpotCheck(Engagement):
     total_amount_tested = models.IntegerField(_('Total amount tested'), null=True, blank=True)
     total_amount_of_ineligible_expenditure = models.IntegerField(_('Total amount of ineligible expenditure'),
-                                                                         null=True, blank=True)
+                                                                 null=True, blank=True)
 
     internal_controls = models.TextField(_('Internal controls'), blank=True)
 
@@ -406,31 +409,39 @@ class Finding(models.Model):
     CATEGORIES = Choices(
         ("expenditure_not_for_programme_purposes", _("Expenditure not for programme purposes")),
         ("expenditure_claimed_but_activities_not_undertaken", _("Expenditure claimed but activities not undertaken")),
-        ("expenditure_exceeds_the_approved_budget_rate_or_amount", _("Expenditure exceeds the approved budget rate or amount")),
-        ("expenditure_not_recorded_in_the_correct_period_or_face_form", _("Expenditure not recorded in the correct period or FACE form")),
+        ("expenditure_exceeds_the_approved_budget_rate_or_amount",
+         _("Expenditure exceeds the approved budget rate or amount")),
+        ("expenditure_not_recorded_in_the_correct_period_or_face_form",
+         _("Expenditure not recorded in the correct period or FACE form")),
         ("advance_claimed_as_expenditure", _("Advance claimed as expenditure")),
         ("commitments_treated_as_expenditure", _("Commitments treated as expenditure")),
-        ("signatories_on_face_forms_different_from_ip_agreement", _("Signatories on FACE forms different from those in the IP Agreement")),
+        ("signatories_on_face_forms_different_from_ip_agreement",
+         _("Signatories on FACE forms different from those in the IP Agreement")),
         ("no_supporting_documentation", _("No supporting documentation")),
         ("insufficient_supporting_documentation", _("Insufficient supporting documentation")),
         ("no_proof_of_payment", _("No proof of payment")),
         ("no_proof_of_goods_received", _("No proof of goods / services received")),
         ("poor_record_keeping", _("Poor record keeping")),
-        ("lack_of_audit_trail", _("Lack of audit trail (FACE forms do not reconcile with IPs and UNICEF’s accounting records)")),
+        ("lack_of_audit_trail",
+         _("Lack of audit trail (FACE forms do not reconcile with IPs and UNICEF’s accounting records)")),
         ("lack_of_bank_reconciliations", _("Lack of bank reconciliations")),
         ("lack_of_segregation_of_duties", _("Lack of segregation of duties")),
         ("vat_incorrectly_claimed", _("VAT incorrectly claimed")),
         ("ineligible_salary_cost", _("Ineligible salary cost")),
         ("dsa_rates_exceeded", _("DSA rates exceeded")),
         ("support_costs_incorrectly_calculated", _("Support costs incorrectly calculated")),
-        ("no_competitive_procedures_for_the_award_of_contracts", _("No competitive procedures for the award of contracts")),
+        ("no_competitive_procedures_for_the_award_of_contracts",
+         _("No competitive procedures for the award of contracts")),
         ("supplier’s_invoices_not_approved", _("Supplier’s invoices not approved")),
         ("no_evaluation_of_goods_received", _("No evaluation of goods received")),
         ("lack_of_procedures_for_verification_of_assets", _("Lack of procedures for verification of assets")),
         ("goods_/_assets_not_used_for_the_intended_purposes", _("Goods / Assets not used for the intended purposes")),
-        ("lack_of_written_agreement_between_ip_and_sub-contractee", _("Lack of written agreement between IP and sub-contractee")),
-        ("lack_of_sub-contractee_financial", _("Lack of sub-contractee financial / substantive progress reporting on file")),
-        ("failure_to_implement_prior_assurance_activity_recommendations", _("Failure to implement prior assurance activity recommendations")),
+        ("lack_of_written_agreement_between_ip_and_sub-contractee",
+         _("Lack of written agreement between IP and sub-contractee")),
+        ("lack_of_sub-contractee_financial",
+         _("Lack of sub-contractee financial / substantive progress reporting on file")),
+        ("failure_to_implement_prior_assurance_activity_recommendations",
+         _("Failure to implement prior assurance activity recommendations")),
         ("other", _("Other")),
     )
 
@@ -600,7 +611,8 @@ class AuditPermission(StatusBasePermission):
     objects = AuditPermissionQueryset.as_manager()
 
     def __str__(self):
-        return '{} can {} {} on {} engagement'.format(self.user_type, self.permission, self.target, self.engagement_status)
+        return '{} can {} {} on {} engagement'.format(self.user_type, self.permission, self.target,
+                                                      self.engagement_status)
 
     @classmethod
     def _get_user_type(cls, user, engagement=None):
