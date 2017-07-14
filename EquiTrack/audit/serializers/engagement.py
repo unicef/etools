@@ -1,9 +1,13 @@
+from django.utils.translation import ugettext as _
+
 from rest_framework import serializers
 
 from audit.models import Engagement, Finding, SpotCheck, MicroAssessment, Audit, \
     FinancialFinding, DetailedFindingInfo
 from utils.common.serializers.fields import SeparatedReadWriteField
 from partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer
+from partners.serializers.interventions_v2 import InterventionListSerializer
+from partners.models import PartnerType
 from attachments.models import FileType
 from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
@@ -11,7 +15,7 @@ from utils.writable_serializers.serializers import WritableNestedParentSerialize
 
 from .auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
 from .mixins import RiskCategoriesUpdateMixin, EngagementDatesValidation, AuditPermissionsBasedRootSerializerMixin
-from .risks import RiskRootSerializer, AggregatedRiskRootSerializer
+from .risks import RiskRootSerializer, AggregatedRiskRootSerializer, AggregatedRiskCountRiskRootSerializer
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -91,6 +95,9 @@ class EngagementSerializer(EngagementDatesValidation,
     staff_members = SeparatedReadWriteField(
         read_field=AuditorStaffMemberSerializer(many=True, required=False),
     )
+    active_pd = SeparatedReadWriteField(
+        read_field=InterventionListSerializer(many=True, required=False, label='Active PD'),
+    )
 
     engagement_attachments = EngagementBase64AttachmentSerializer(many=True, required=False)
     report_attachments = ReportBase64AttachmentSerializer(many=True, required=False)
@@ -98,7 +105,7 @@ class EngagementSerializer(EngagementDatesValidation,
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
             'engagement_attachments', 'report_attachments',
-            'total_value', 'staff_members',
+            'total_value', 'staff_members', 'active_pd',
 
             'start_date', 'end_date',
             'partner_contacted_at', 'date_of_field_visit',
@@ -128,6 +135,16 @@ class EngagementSerializer(EngagementDatesValidation,
         staff_members = validated_data.get('staff_members', [])
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
 
+        partner = validated_data.get('partner', None)
+        if not partner:
+            partner = self.instance.partner if self.instance else validated_data.get('partner', None)
+
+        active_pd = validated_data.get('active_pd', [])
+        if not active_pd:
+            active_pd = self.instance.active_pd.all() if self.instance else validated_data.get('active_pd', [])
+
+        status = 'new' if not self.instance else self.instance.status
+
         if staff_members and agreement and agreement.auditor_firm:
             existed_staff_members = agreement.auditor_firm.staff_members.all()
             unexisted = set(staff_members) - set(existed_staff_members)
@@ -135,6 +152,11 @@ class EngagementSerializer(EngagementDatesValidation,
                 msg = self.fields['staff_members'].write_field.child_relation.error_messages['does_not_exist']
                 raise serializers.ValidationError({
                     'staff_members': [msg.format(pk_value=staff_member.pk) for staff_member in unexisted],
+                })
+
+        if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0 and status == 'new':
+            raise serializers.ValidationError({
+                    'active_pd': [_('This field is required.'), ],
                 })
         return validated_data
 
@@ -208,7 +230,7 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
 
 class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
     financial_finding_set = FinancialFindingSerializer(many=True, required=False)
-    key_internal_weakness = RiskRootSerializer(code='audit_key_weakness', required=False)
+    key_internal_weakness = AggregatedRiskCountRiskRootSerializer(code='audit_key_weakness', required=False)
 
     class Meta(EngagementSerializer.Meta):
         model = Audit

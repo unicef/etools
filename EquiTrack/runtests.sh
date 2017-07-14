@@ -8,3 +8,6 @@ python manage.py makemigrations --dry-run | grep 'No changes detected' || (echo 
 coverage erase
 coverage run manage.py test --noinput --keepdb --settings=EquiTrack.settings.test "$@"
 coverage report
+
+# Check code style
+flake8 .

@@ -91,7 +91,11 @@ class ActionPointSerializer(serializers.ModelSerializer):
                   'assigned_by_name', 'person_responsible_name', 'trip_id')
 
     def validate_due_date(self, value):
-        if value.date() < datetime.utcnow().date():
+        if self.instance:
+            existing_due_date = self.instance.due_date.date()
+        else:
+            existing_due_date = None
+        if (not existing_due_date or existing_due_date != value.date()) and value.date() < datetime.utcnow().date():
             raise ValidationError('Due date cannot be earlier than today.')
         return value
 
@@ -516,16 +520,20 @@ class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
     primary_traveler = serializers.CharField(source='primary_traveler.get_full_name')
     reference_number = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
-
-    def get_status(self, obj):
-        return obj.travels.first().status
-
-    def get_reference_number(self, obj):
-        return obj.travels.first().reference_number
+    trip_id = serializers.SerializerMethodField()
 
     class Meta:
         model = TravelActivity
-        fields = ("primary_traveler", "travel_type", "date", "locations", "reference_number", "status",)
+        fields = ('primary_traveler', 'travel_type', 'date', 'locations', 'reference_number', 'status', 'trip_id')
+
+    def get_status(self, obj):
+        return obj.travels.get(traveler=obj.primary_traveler).status
+
+    def get_reference_number(self, obj):
+        return obj.travels.get(traveler=obj.primary_traveler).reference_number
+
+    def get_trip_id(self, obj):
+        return obj.travels.get(traveler=obj.primary_traveler).id
 
 
 class CloneOutputSerializer(TravelDetailsSerializer):

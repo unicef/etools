@@ -3,8 +3,8 @@ import operator
 
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import models
-from django.db.models.functions import Concat, Value
-from django.db.models import F
+from django.db.models.functions import Concat
+from django.db.models import F, Value
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -219,7 +219,8 @@ class PMPDropdownsListApiView(APIView):
         hrps = list(ResultStructure.objects.values())
         current_country_programme = CountryProgramme.current()
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False,
-                                                country_programme=current_country_programme).values('id', 'name', 'wbs'))
+                                                country_programme=current_country_programme)
+                                        .values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.all().values())
         donors = list(Donor.objects.all().values())

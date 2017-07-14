@@ -13,6 +13,7 @@ from rest_framework.response import Response
 
 from utils.common.views import MultiSerializerViewSetMixin, ExportViewSetDataMixin, FSMTransitionActionMixin, \
     NestedViewSetMixin
+from vision.adapters.purchase_order import POSynchronizer
 from .models import Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, PurchaseOrder, \
     AuditorStaffMember, Auditor, AuditPermission
 from utils.common.pagination import DynamicPageNumberPagination
@@ -38,10 +39,7 @@ class BaseAuditViewSet(
 class AuditorFirmViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
-    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
     queryset = AuditorFirm.objects.filter(hidden=False)
@@ -69,10 +67,8 @@ class AuditorFirmViewSet(
 class PurchaseOrderViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
-    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
     queryset = PurchaseOrder.objects.all()
@@ -87,8 +83,12 @@ class PurchaseOrderViewSet(
         instance = queryset.filter(order_number=kwargs.get('order_number')).first()
 
         if not instance:
-            # todo: load from VISION by number
-            pass
+            handler = POSynchronizer(
+                country=request.user.profile.country,
+                po_number=kwargs.get('order_number')
+            )
+            handler.sync()
+            instance = queryset.filter(order_number=kwargs.get('order_number')).first()
 
         if not instance:
             raise Http404

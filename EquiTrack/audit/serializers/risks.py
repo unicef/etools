@@ -158,27 +158,7 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
         return root
 
 
-class AggregatedRiskRootSerializer(RiskRootSerializer):
-    """
-    Risk root serializer with additional aggregated data.
-    """
-
-    risk_rating = serializers.CharField(read_only=True)
-    risk_score = serializers.FloatField(read_only=True)
-    total_number_risk_points = serializers.IntegerField(read_only=True)
-    applicable_questions = serializers.IntegerField(read_only=True)
-    applicable_key_questions = serializers.IntegerField(read_only=True)
-    blueprint_count = serializers.IntegerField(read_only=True)
-
-    class Meta(RiskRootSerializer.Meta):
-        fields = RiskRootSerializer.Meta.fields + [
-            'risk_rating', 'risk_score',
-            'total_number_risk_points',
-            'applicable_questions',
-            'applicable_key_questions',
-            'blueprint_count',
-        ]
-
+class BaseAggregatedRiskRootSerializer(RiskRootSerializer):
     def to_representation(self, instance):
         """
         Processing nested categories to collect aggregates.
@@ -201,13 +181,85 @@ class AggregatedRiskRootSerializer(RiskRootSerializer):
 
     @staticmethod
     def calculate_risk(category):
+        raise NotImplemented()
+
+
+class AggregatedRiskCountRiskRootSerializer(BaseAggregatedRiskRootSerializer):
+    """
+    Risk root serializer with additional aggregated data for audit.
+    """
+
+    hight_risk_count = serializers.IntegerField(read_only=True)
+    medium_risk_count = serializers.IntegerField(read_only=True)
+    low_risk_count = serializers.IntegerField(read_only=True)
+
+    @staticmethod
+    def _get_bluerprint_count_by_risk_value(category, field_name, risk_value):
+        values_count = len(filter(lambda b: b._risk and b._risk.risk_point == risk_value, category.blueprints.all()))
+        setattr(category, field_name, values_count)
+
+        for child in category.children.all():
+            setattr(category, field_name, getattr(category, field_name, 0) + getattr(child, field_name, 0))
+
+    @staticmethod
+    def calculate_risk(category):
+        for blueprint in category.blueprints.all():
+            if blueprint.risks.all().exists():
+                # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer
+                blueprint._risk = blueprint.risks.all()[0]
+                if blueprint._risk.value == 1:
+                    blueprint._risk.risk_point = blueprint._risk.value
+                else:
+                    blueprint._risk.risk_point = blueprint.weight * blueprint._risk.value
+            else:
+                blueprint._risk = None
+
+        AggregatedRiskCountRiskRootSerializer._get_bluerprint_count_by_risk_value(
+            category, 'hight_risk_count', Risk.VALUES.high
+        )
+        AggregatedRiskCountRiskRootSerializer._get_bluerprint_count_by_risk_value(
+            category, 'medium_risk_count', Risk.VALUES.medium
+        )
+        AggregatedRiskCountRiskRootSerializer._get_bluerprint_count_by_risk_value(
+            category, 'low_risk_count', Risk.VALUES.low
+        )
+
+    class Meta(BaseAggregatedRiskRootSerializer.Meta):
+        fields = BaseAggregatedRiskRootSerializer.Meta.fields + [
+            'hight_risk_count', 'medium_risk_count', 'low_risk_count',
+        ]
+
+
+class AggregatedRiskRootSerializer(BaseAggregatedRiskRootSerializer):
+    """
+    Risk root serializer with additional aggregated data.
+    """
+
+    risk_rating = serializers.CharField(read_only=True)
+    risk_score = serializers.FloatField(read_only=True)
+    total_number_risk_points = serializers.IntegerField(read_only=True)
+    applicable_questions = serializers.IntegerField(read_only=True)
+    applicable_key_questions = serializers.IntegerField(read_only=True)
+    blueprint_count = serializers.IntegerField(read_only=True)
+
+    class Meta(BaseAggregatedRiskRootSerializer.Meta):
+        fields = BaseAggregatedRiskRootSerializer.Meta.fields + [
+            'risk_rating', 'risk_score',
+            'total_number_risk_points',
+            'applicable_questions',
+            'applicable_key_questions',
+            'blueprint_count',
+        ]
+
+    @staticmethod
+    def calculate_risk(category):
         """
         Calculate aggregated values for category.
         :param category: RiskCategory instance with filtered risks by engagement.
         """
         for blueprint in category.blueprints.all():
             if blueprint.risks.all().exists():
-                # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer.
+                # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer
                 blueprint._risk = blueprint.risks.all()[0]
                 if blueprint._risk.value == 1:
                     blueprint._risk.risk_point = blueprint._risk.value
@@ -220,11 +272,19 @@ class AggregatedRiskRootSerializer(RiskRootSerializer):
         for child in category.children.all():
             category.blueprint_count += child.blueprint_count
 
-        category.applicable_questions = len(filter(lambda b: not b._risk or b._risk.risk_point, category.blueprints.all()))
+        category.applicable_questions = len(
+            filter(
+                lambda b: not b._risk or b._risk.risk_point, category.blueprints.all()
+            )
+        )
         for child in category.children.all():
             category.applicable_questions += child.applicable_questions
 
-        category.applicable_key_questions = len(filter(lambda b: b.is_key and (not b._risk or b._risk.risk_point), category.blueprints.all()))
+        category.applicable_key_questions = len(
+            filter(
+                lambda b: b.is_key and (not b._risk or b._risk.risk_point), category.blueprints.all()
+            )
+        )
         for child in category.children.all():
             category.applicable_key_questions += child.applicable_key_questions
 
@@ -237,8 +297,9 @@ class AggregatedRiskRootSerializer(RiskRootSerializer):
             category.risk_score = category.risk_points / category.applicable_questions
 
             lowest_score_possible = 1
-            highest_score_possible = (4*category.applicable_questions + 4*category.applicable_key_questions)/category.applicable_questions
-            banding_width = (highest_score_possible-lowest_score_possible)/4
+            highest_score_possible = (4 * category.applicable_questions + 4 * category.applicable_key_questions)
+            highest_score_possible = highest_score_possible / category.applicable_questions
+            banding_width = (highest_score_possible - lowest_score_possible) / 4
             low_scores_below = lowest_score_possible + banding_width
             moderate_scores_below = low_scores_below + banding_width
             significant_score_below = moderate_scores_below + banding_width

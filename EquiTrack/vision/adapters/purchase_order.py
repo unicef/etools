@@ -1,11 +1,17 @@
 import json
+import logging
 
 from collections import OrderedDict
 
-from vision.vision_data_synchronizer import VisionDataSynchronizer
+from django.db import connection
+
+from vision.vision_data_synchronizer import VisionDataSynchronizer, VisionException
 from vision.utils import wcf_json_date_as_datetime, comp_decimals
 from funds.models import Grant, Donor
 from audit.models import PurchaseOrder, AuditorFirm
+
+
+logger = logging.getLogger(__name__)
 
 
 class POSynchronizer(VisionDataSynchronizer):
@@ -50,6 +56,25 @@ class POSynchronizer(VisionDataSynchronizer):
     })
     DATE_FIELDS = ['EXPIRY_DATE', 'PO_DATE', ]
 
+    def __init__(self, country=None, po_number=None):
+        if not po_number:
+            super(POSynchronizer, self).__init__(country=country)
+        else:
+            if self.ENDPOINT is None:
+                raise VisionException(message='You must set the ENDPOINT name')
+
+            self.county = country
+            self.url = '{}/{}'.format(
+                self.URL,
+                self.ENDPOINT
+            )
+            if not self.GLOBAL_CALL:
+                self.url += '/{}'.format(po_number)
+
+            logger.info("Vision sync url:%s" % self.url)
+            connection.set_tenant(country)
+            logger.info('Country is {}'.format(country.name))
+
     def _convert_records(self, records):
         if isinstance(records, list):
             return records
@@ -60,6 +85,8 @@ class POSynchronizer(VisionDataSynchronizer):
 
         def bad_record(record):
             if not record['VENDOR_NAME']:
+                return False
+            if not record['PURCHASING_GROUP_CODE'] or record['PURCHASING_GROUP_CODE'] != self.county.business_area_code:
                 return False
             return True
 
