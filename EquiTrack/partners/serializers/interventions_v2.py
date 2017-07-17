@@ -121,6 +121,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
     cso_contribution = serializers.IntegerField(source='total_partner_contribution')
     sectors = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
+    offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
     frs_latest_end_date = serializers.DateField(source='total_frs.latest_end_date', read_only=True)
     frs_total_frs_amt = serializers.DecimalField(source='total_frs.total_frs_amt', read_only=True,
@@ -136,8 +137,8 @@ class InterventionListSerializer(serializers.ModelSerializer):
                                                     max_digits=20,
                                                     decimal_places=2)
 
-    def get_frs(self, obj):
-        return obj.total_frs
+    def get_offices_names(self, obj):
+        return [o.name for o in obj.offices.all()]
 
     def get_cp_outputs(self, obj):
         return [rl.cp_output.id for rl in obj.result_links.all()]
@@ -151,7 +152,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end', 'frs_total_frs_amt',
             'unicef_budget', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
             'sectors', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt', 'frs_total_outstanding_amt',
-            'offices', 'frs_total_actual_amt'
+            'offices', 'frs_total_actual_amt', 'offices_names'
         )
 
 
