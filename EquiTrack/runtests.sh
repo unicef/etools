@@ -6,7 +6,7 @@ python manage.py makemigrations --dry-run | grep 'No changes detected' || (echo 
 
 # Run unittests and coverage report
 coverage erase
-coverage run manage.py test --noinput --keepdb --settings=EquiTrack.settings.local "$@"
+coverage run manage.py test --noinput --keepdb "$@"
 coverage report --include "$@/*.py"
 
 # Check code style
