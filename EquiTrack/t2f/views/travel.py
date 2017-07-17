@@ -156,7 +156,7 @@ class TravelActivityViewSet(mixins.ListModelMixin,
             .distinct('id')
         qs = qs.exclude(status__in=[Travel.CANCELLED, Travel.REJECTED, Travel.PLANNED])
 
-        # qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
+        qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
         return qs
 
 
