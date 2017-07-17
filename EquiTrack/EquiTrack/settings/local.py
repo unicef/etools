@@ -1,16 +1,15 @@
-"""Development settings and globals."""
-from os.path import join, normpath
+import datetime
 
-from base import *
+from EquiTrack.settings.base import *  # noqa
 
 
-########## DEBUG CONFIGURATION
+# ######### DEBUG CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#debug
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1']
 
-########## END DEBUG CONFIGURATION
+# ######### END DEBUG CONFIGURATION
 
 CELERY_ALWAYS_EAGER = True
 
@@ -34,15 +33,15 @@ JWT_AUTH = {
    'JWT_RESPONSE_PAYLOAD_HANDLER':
    'rest_framework_jwt.utils.jwt_response_payload_handler',
 
-   #'JWT_SECRET_KEY': JWT_SECRET_KEY,
+   # 'JWT_SECRET_KEY': JWT_SECRET_KEY,
    'JWT_SECRET_KEY': 'ssdfsdfsdfsd',
-   #'JWT_ALGORITHM': 'RS256',
+   # 'JWT_ALGORITHM': 'RS256',
    'JWT_ALGORITHM': 'HS256',
    'JWT_VERIFY': True,
    'JWT_VERIFY_EXPIRATION': True,
    'JWT_LEEWAY': 30,
    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=30000),
-   #'JWT_AUDIENCE': 'https://etools-staging.unicef.org/API',
+   # 'JWT_AUDIENCE': 'https://etools-staging.unicef.org/API',
    'JWT_AUDIENCE': None,
    'JWT_ISSUER': None,
 
@@ -52,9 +51,9 @@ JWT_AUTH = {
    'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
 
-########## TOOLBAR CONFIGURATION
+# ######### TOOLBAR CONFIGURATION
 # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
-INSTALLED_APPS += (
+INSTALLED_APPS += (  # noqa
     'debug_toolbar',
     'django_extensions',
 )
@@ -63,7 +62,7 @@ INSTALLED_APPS += (
 INTERNAL_IPS = ('127.0.0.1',)
 
 # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
-MIDDLEWARE_CLASSES += (
+MIDDLEWARE_CLASSES += (  # noqa
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
@@ -72,7 +71,7 @@ DEBUG_TOOLBAR_CONFIG = {
     'INTERCEPT_REDIRECTS': False,
     'SHOW_TEMPLATE_CONTEXT': True,
 }
-########## END TOOLBAR CONFIGURATION
+# ######### END TOOLBAR CONFIGURATION
 
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now',
