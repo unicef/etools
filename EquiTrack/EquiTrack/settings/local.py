@@ -1,4 +1,5 @@
 import datetime
+import sys
 
 from EquiTrack.settings.base import *  # noqa
 
@@ -80,3 +81,15 @@ POST_OFFICE = {
         'default': 'django.core.mail.backends.console.EmailBackend'
     }
 }
+
+
+# Settings for automated tests
+if 'test' in sys.argv:
+    # All mail sent out through this backend is stored at django.core.mail.outbox
+    # https://docs.djangoproject.com/en/1.9/topics/email/#in-memory-backend
+    POST_OFFICE['BACKENDS']['default'] = 'django.core.mail.backends.locmem.EmailBackend'
+
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
+    TEST_RUNNER = 'EquiTrack.tests.runners.TestRunner'
