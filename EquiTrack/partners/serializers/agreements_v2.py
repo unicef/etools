@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from django.db import transaction
 
+from partners.permissions import AgreementPermissions
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
 from users.serializers import SimpleUserSerializer
 from partners.validation.agreements import AgreementValid
@@ -82,7 +83,7 @@ class AgreementExportSerializer(serializers.ModelSerializer):
         return 'https://{}/pmp/agreements/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
 
-class AgreementRetrieveSerializer(serializers.ModelSerializer):
+class AgreementDetailSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     authorized_officers = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
@@ -90,6 +91,14 @@ class AgreementRetrieveSerializer(serializers.ModelSerializer):
     unicef_signatory = SimpleUserSerializer(source='signed_by')
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager')
     attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
+
+    permissions = serializers.SerializerMethodField(read_only=True)
+
+    def get_permissions(self, obj):
+        user = self.context['request'].user
+        ps = Agreement.permission_structure()
+        permissions = AgreementPermissions(user=user, instance=self.instance, permission_structure=ps)
+        return permissions.get_permissions()
 
     class Meta:
         model = Agreement

@@ -20,7 +20,7 @@ from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
-from funds.models import Grant, Donor, FundsReservationHeader
+from funds.models import Grant, Donor, FundsReservationHeader, FundsCommitmentHeader
 from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
@@ -166,7 +166,9 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     partner = factory.SubFactory(PartnerFactory)
     agreement_type = u'PCA'
     signed_by_unicef_date = date.today()
-    status = 'active'
+    signed_by_partner_date = date.today()
+    status = 'signed'
+    attached_agreement = factory.django.FileField(filename='test_file.pdf')
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
@@ -397,6 +399,12 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = FundsReservationHeader
+
+
+class FundsCommitmentHeaderFactory(factory.DjangoModelFactory):
+
+    class Meta:
+        model = FundsCommitmentHeader
 
 
 # Credit goes to http://stackoverflow.com/a/41154232/2363915

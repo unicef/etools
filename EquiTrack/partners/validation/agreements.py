@@ -1,17 +1,15 @@
+from __future__ import unicode_literals
+
 import logging
 from datetime import date
 
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError
-from reports.models import CountryProgramme
+from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError, \
+    check_required_fields, BasicValidationError
+from partners.permissions import AgreementPermissions
 
 
-def agreement_transition_to_active_valid(agreement):
-
-    if not(agreement.status == agreement.DRAFT and agreement.start and agreement.end and
-            agreement.signed_by_unicef_date and agreement.signed_by_partner_date and
-            agreement.signed_by and agreement.partner_manager and agreement.country_programme):
-        logging.debug("moving to active ok")
-        raise TransitionError(['agreement_transition_to_active_invalid'])
+def agreement_transition_to_signed_valid(agreement):
+    today = date.today()
     if agreement.agreement_type == agreement.PCA and \
             agreement.__class__.objects.filter(partner=agreement.partner,
                                                status=agreement.SIGNED,
@@ -19,6 +17,12 @@ def agreement_transition_to_active_valid(agreement):
                                                country_programme=agreement.country_programme).count():
 
         raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
+
+    if not agreement.start or agreement.start >= today:
+        raise TransitionError(['Agreement cannot transition to signed until start date greater or equal to today'])
+    if not agreement.end or agreement.end < today:
+        raise TransitionError(['Agreement cannot transition to signed end date has passed'])
+
     return True
 
 
@@ -31,9 +35,6 @@ def agreement_transition_to_ended_valid(agreement):
 
 
 def agreements_illegal_transition(agreement):
-    # logging.debug(agreement.old_instance)
-    # if True:
-    #     raise TransitionError(['transitional_two'])
     return False
 
 
@@ -46,29 +47,12 @@ def agreements_illegal_transition_permissions(agreement, user):
     return True
 
 
-def amendments_ok(agreement):
-    old_instance = agreement.old_instance
-
-    # if there is no old instance
-    if not old_instance:
-        return True
-
-    # if there are no old amendments
-    # if not old_instance.amendments_old:
-    #     return True
-
-    # To be Continued
-    return True
-
-
-def amendments_signed_amendment_valid(agreement):
-    return all(agreement.amendments.values_list('signed_amendment', flat=True))
-
-
-def amendments_signed_date_valid(agreement):
+def amendments_valid(agreement):
     today = date.today()
-    for amendment in agreement.amendments.filter():
-        if amendment.signed_date and amendment.signed_date > today:
+    for a in agreement.amendments.all():
+        if not getattr(a.signed_amendment, 'name'):
+            return False
+        if not a.signed_date or a.signed_date > today:
             return False
     return True
 
@@ -79,55 +63,21 @@ def start_end_dates_valid(agreement):
     return True
 
 
-def end_date_country_programme_valid(agreement):
-    if agreement.agreement_type == agreement.PCA and agreement.start and agreement.end:
-        if agreement.country_programme.to_date != agreement.end:
-            return False
-    return True
-
-
-def start_date_equals_max_signoff(agreement):
-    # if not all dates are present no validation necessary
-    if agreement.start and agreement.signed_by_unicef_date and agreement.signed_by_partner_date \
-            and agreement.start != max(agreement.signed_by_unicef_date, agreement.signed_by_partner_date):
-        return False
-    return True
-
-
-def signed_date_valid(agreement):
-    '''
-    :param agreement:
-        agreement - > new agreement
-        agreement.old_instance -> old agreement
-        agreement.old_instance.amendments_old - > old amendments before the update in list format
-
-    :return:
-        True or False / conditions are met
-    '''
-
-    now = date.today()
-    if (agreement.signed_by_unicef_date and agreement.signed_by_unicef_date > now) or \
-            (agreement.signed_by_partner_date and agreement.signed_by_partner_date > now):
-        return False
-    return True
-
-
-def signed_by_valid(agreement):
-    if not agreement.signed_by or not agreement.partner_manager:
-        return False
-    return True
-
-
 def signed_by_everyone_valid(agreement):
     if not agreement.signed_by_partner_date and agreement.signed_by_unicef_date:
         return False
     return True
 
 
-def signed_agreement_present(agreement):
-
-    # if not agreement.attached_agreement:
-    #     return False
+def signatures_valid(agreement):
+    today = date.today()
+    unicef_signing_requirements = [agreement.signed_by_unicef_date, agreement.signed_by]
+    partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
+    if (any(unicef_signing_requirements) and not all(unicef_signing_requirements)) or \
+            (any(partner_signing_requirements) and not all(partner_signing_requirements)) or \
+            (agreement.signed_by_partner_date and agreement.signed_by_partner_date > today) or \
+            (agreement.signed_by_unicef_date and agreement.signed_by_unicef_date > today):
+        return False
     return True
 
 
@@ -138,73 +88,80 @@ def partner_type_valid_cso(agreement):
     return True
 
 
+def ssfa_static(agreement):
+    if agreement.agreement_type == agreement.SSFA:
+        if agreement.interventions.all().count():
+            # there should be only one.. there is a different validation that ensures this
+            intervention = agreement.interventions.all().first()
+            if intervention.start != agreement.start or intervention.end != agreement.end:
+                raise BasicValidationError(_("Start and end dates don't match the Document's start and end"))
+    return True
+
+def one_pca_per_cp_per_partner(agreement):
+    if agreement.agreement_type == agreement.PCA:
+        # see if there are any PCAs in the CP other than this for this partner
+        if agreement.__class__.objects.filter(partner=agreement.partner,
+                                              agreement_type=agreement.PCA,
+                                              country_programme=agreement.country_programme) \
+                                      .exclude(pk=agreement.id).count():
+            return False
+    return True
+
 class AgreementValid(CompleteValidation):
 
-    # TODO: add user on basic and state
-
     VALIDATION_CLASS = 'partners.Agreement'
+
     # validations that will be checked on every object... these functions only take the new instance
     BASIC_VALIDATIONS = [
         start_end_dates_valid,
-        signed_date_valid,
-        start_date_equals_max_signoff,
+        signatures_valid,
         partner_type_valid_cso,
-        end_date_country_programme_valid,
-        amendments_signed_amendment_valid,
-        amendments_signed_date_valid,
+        one_pca_per_cp_per_partner,
+        amendments_valid,
+        ssfa_static
     ]
 
     VALID_ERRORS = {
-        'signed_agreement_present': 'Signed agreement must be included in order to activate',
+        'one_pca_per_cp_per_partner': 'A different agreement of type PCA already exists '
+                                      'for this Partner for this Country Programme',
         'start_end_dates_valid': 'Agreement start date needs to be earlier than end date',
-        'signed_by_everyone_valid': 'Agreement needs to be signed by UNICEF and Partner',
-        'signed_date_valid': 'Signed dates cannot be greater than today',
-        'transitional_one': 'Cannot Transition to draft',
+        'signatures_valid': 'Agreement needs to be signed by UNICEF and Partner; '
+                            'None of the dates can be in the future; '
+                            'If dates are set, signatories are required',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
         'suspended_invalid': 'Cant suspend an agreement that was supposed to be ended',
-        'state_active_not_signed': 'This agreement needs to be signed in order to be active, no signed dates',
         'agreement_transition_to_active_invalid': "You can't transition to active without having the proper signatures",
         'agreement_transition_to_active_invalid_PCA': "You cannot have more than 1 PCA active per Partner within 1 CP",
-        'cant_create_in_active_state': 'When adding a new object the state needs to be "Draft"',
-        'start_date_equals_max_signoff': 'Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).',
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
-        'signed_by_valid': 'Partner manager and signed by must be provided.',
         'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.',
-        'amendments_signed_amendment_valid': {'signed_amendment': ['This field is required.']},
-        'amendments_signed_date_valid': {'signed_date': ['Signed date cannot be in the future']},
-        'end_date_pca_validation': 'End date is not entered for PCA or end date cannot be after current Country Programme',
+        'amendments_valid': {'signed_amendment': ['Please check that the Document is attached and'
+                                                  ' signatures are not in the future']},
     }
 
-    def state_suspended_valid(self, agreement, user=None):
-        # TODO: figure out when suspended is invalid
-        # if agreement.end > date.today():
-        #     raise StateValidError('suspended_invalid')
+    PERMISSIONS_CLASS = AgreementPermissions
+
+    def check_required_fields(self, intervention):
+        required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f] is True]
+        required_valid, field = check_required_fields(intervention, required_fields)
+        if not required_valid:
+            raise StateValidError(['Required fields not completed in {}: {}'.format(intervention.status, field)])
+
+    def check_rigid_fields(self, intervention, related=False):
+        # this can be set if running in a task and old_instance is not set
+        if self.disable_rigid_check:
+            return
+        rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
+        rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=related)
+        if not rigid_valid:
+            raise StateValidError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
+
+    def state_signed_valid(self, agreement, user=None):
+        self.check_required_fields(agreement)
+        self.check_rigid_fields(agreement, related=True)
         return True
 
-    def state_active_valid(self, agreement, user=None):
-        if not agreement.old_instance:
-            raise StateValidError(['cant_create_in_active_state'])
-
-        if not signed_by_everyone_valid(agreement):
-            raise StateValidError(['signed_by_everyone_valid'])
-
-        if not signed_by_valid(agreement):
-            raise StateValidError(['signed_by_valid'])
-
-        if not signed_agreement_present(agreement):
-            raise StateValidError(['signed_agreement_present'])
-
-        if agreement.old_instance and agreement.status == agreement.old_instance.status:
-            rigid_fields = []  # this males all fields editable, will remove later
-            # rigid_fields = ['signed_by_unicef_date', 'signed_by_partner_date', 'signed_by', 'partner_manager']
-            valid, changed_field = check_rigid_fields(agreement, rigid_fields)
-            if not valid:
-                raise StateValidError('rigid_field_changed: %s' % changed_field)
-
-        if not agreement.signed_by_partner_date or not agreement.signed_by_unicef_date:
-            raise StateValidError(['state_active_not_signed'])
-
+    def state_ended_valid(self, agreement, user=None):
+        today = date.today()
+        if not today > agreement.end:
+            raise StateValidError([_('Today is not after the end date')])
         return True
-
-    def state_cancelled_valid(self, agreement, user=None):
-        return False
