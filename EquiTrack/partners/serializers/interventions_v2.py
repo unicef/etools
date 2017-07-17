@@ -116,9 +116,12 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
 class InterventionListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='agreement.partner.name')
+    unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
+    cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
+                                                decimal_places=2)
+    total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
+    total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    unicef_budget = serializers.IntegerField(source='total_unicef_cash')
-    cso_contribution = serializers.IntegerField(source='total_partner_contribution')
     sectors = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
@@ -150,9 +153,9 @@ class InterventionListSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end', 'frs_total_frs_amt',
-            'unicef_budget', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
+            'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
             'sectors', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt', 'frs_total_outstanding_amt',
-            'offices', 'frs_total_actual_amt', 'offices_names'
+            'offices', 'frs_total_actual_amt', 'offices_names', 'total_unicef_budget', 'total_budget'
         )
 
 
