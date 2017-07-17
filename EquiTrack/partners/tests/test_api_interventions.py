@@ -121,11 +121,11 @@ class TestInterventionsAPI(APITenantTestCase):
         self.fr_1 = FundsReservationHeaderFactory(intervention=None)
         self.fr_2 = FundsReservationHeaderFactory(intervention=None)
 
-    def run_post_request(self, data):
+    def run_request_list_ep(self, data={}, user=None, method='post'):
         response = self.forced_auth_req(
-            'post',
+            method,
             reverse('partners_api:intervention-list'),
-            user=self.unicef_staff,
+            user=user or self.unicef_staff,
             data=data
         )
         return response.status_code, json.loads(response.rendered_content)
@@ -169,7 +169,7 @@ class TestInterventionsAPI(APITenantTestCase):
             "agreement": self.agreement.id,
             "frs": frs_data
         }
-        status_code, response = self.run_post_request(data)
+        status_code, response = self.run_request_list_ep(data)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
@@ -184,7 +184,7 @@ class TestInterventionsAPI(APITenantTestCase):
             "agreement": self.agreement.id,
             "frs": frs_data
         }
-        status_code, response = self.run_post_request(data)
+        status_code, response = self.run_request_list_ep(data)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
@@ -199,7 +199,7 @@ class TestInterventionsAPI(APITenantTestCase):
             "agreement": self.agreement.id,
             "frs": frs_data
         }
-        status_code, response = self.run_post_request(data)
+        status_code, response = self.run_request_list_ep(data)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
@@ -334,3 +334,29 @@ class TestInterventionsAPI(APITenantTestCase):
                               [perm for perm in edit_permissions if edit_permissions[perm]])
         self.assertItemsEqual(self.REQUIRED_FIELDS['signed'],
                               [perm for perm in required_permissions if required_permissions[perm]])
+
+
+    def test_list_interventions(self):
+        with self.assertNumQueries(12):
+            status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response), 3)
+
+        # add another intervention to make sure that the queries are constant
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention",
+            "start": (timezone.now().date() - datetime.timedelta(days=1)).isoformat(),
+            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
+            "agreement": self.agreement.id,
+        }
+        status_code, response = self.run_request_list_ep(data)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+
+        # even though we added a new intervention, the number of queries remained static
+        with self.assertNumQueries(12):
+            status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response), 4)
