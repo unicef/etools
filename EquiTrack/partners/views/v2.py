@@ -222,7 +222,8 @@ class PMPDropdownsListApiView(APIView):
                                                 'wbs',
                                                 'country_programme'))
         supply_items = list(SupplyItem.objects.all().values())
-        file_types = list(FileType.objects.all().values())
+        file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
+                          .all().values())
         donors = list(Donor.objects.all().values())
 
         return Response(

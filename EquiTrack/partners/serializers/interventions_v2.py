@@ -173,7 +173,7 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionAttachment
         fields = (
-            'id', 'intervention', 'type', 'attachment', "attachment_file"
+            'id', 'intervention', 'created', 'type', 'attachment', "attachment_file"
         )
 
 
