@@ -149,13 +149,14 @@ class TravelActivityViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         qs = TravelActivity.objects.prefetch_related('travels', 'primary_traveler', 'locations')
-        qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
         qs = qs\
             .annotate(status=Case(When(travels__traveler=F('primary_traveler'), then=F('travels__status')), output_field=CharField()))\
             .annotate(reference_number=Case(When(travels__traveler=F('primary_traveler'), then=F('travels__reference_number')), output_field=CharField()))\
             .annotate(trip_id=Case(When(travels__traveler=F('primary_traveler'), then=F('travels__id')), output_field=CharField()))\
             .distinct('id')
         qs = qs.exclude(status__in=[Travel.CANCELLED, Travel.REJECTED, Travel.PLANNED])
+
+        # qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
         return qs
 
 
