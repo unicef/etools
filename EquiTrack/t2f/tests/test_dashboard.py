@@ -26,7 +26,7 @@ class TravelActivityList(APITenantTestCase):
 
     def test_list_view(self):
         partner_id = self.travel.activities.first().partner.id
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activities',
                                                            kwargs={'partner_organization_pk': partner_id}),
                                             user=self.unicef_staff)
