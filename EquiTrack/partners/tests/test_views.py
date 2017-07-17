@@ -388,7 +388,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["interventions"][0]["actual_amount"],
+        self.assertEqual(Decimal(response.data["interventions"][0]["actual_amount"]),
                          Decimal(fr_header_1.actual_amt + fr_header_2.actual_amt))
 
     def test_api_partners_retrieve_staff_members(self):
