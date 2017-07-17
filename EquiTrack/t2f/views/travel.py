@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from django.db.models import F, Prefetch, Case, When, CharField
+from django.db.models.functions import Coalesce
 from django.db.transaction import atomic
 
 from rest_framework import viewsets, mixins, status
@@ -11,12 +13,12 @@ from rest_framework.response import Response
 
 from rest_framework_csv import renderers
 
-from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter
+from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter, TravelActivityInterventionFilter
 from t2f.filters import travel_list, action_points
 from t2f.renderers import ActionPointCSVRenderer
 from t2f.serializers.export import ActionPointExportSerializer
 
-from t2f.models import Travel, TravelAttachment, ActionPoint, IteneraryItem, InvoiceItem, TravelActivity
+from t2f.models import Travel, TravelAttachment, ActionPoint, IteneraryItem, InvoiceItem, TravelActivity, TravelType
 from t2f.serializers.travel import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
     CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, TravelActivityByPartnerSerializer
 from t2f.helpers.permission_matrix import PermissionMatrix, FakePermissionMatrix
@@ -139,12 +141,42 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
 
 class TravelActivityViewSet(mixins.ListModelMixin,
                             viewsets.GenericViewSet):
-    queryset = TravelActivity.objects.all()
+    # queryset = TravelActivity.objects.prefetch_related('travels').all()
     permission_classes = (IsAdminUser,)
     serializer_class = TravelActivityByPartnerSerializer
     filter_backends = (TravelActivityPartnerFilter,)
     lookup_url_kwarg = 'partner_organization_pk'
 
+    def get_queryset(self):
+        qs = TravelActivity.objects.prefetch_related('travels', 'primary_traveler', 'locations')
+        qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
+        qs = qs\
+            .annotate(status=Case(When(travels__traveler=F('primary_traveler'), then=F('travels__status')), output_field=CharField()))\
+            .annotate(reference_number=Case(When(travels__traveler=F('primary_traveler'), then=F('travels__reference_number')), output_field=CharField()))\
+            .annotate(trip_id=Case(When(travels__traveler=F('primary_traveler'), then=F('travels__id')), output_field=CharField()))\
+            .distinct('id')
+        qs = qs.exclude(status__in=[Travel.CANCELLED, Travel.REJECTED, Travel.PLANNED])
+        return qs
+
+
+class TravelActivityPerInterventionViewSet(mixins.ListModelMixin,
+                            viewsets.GenericViewSet):
+    # queryset = TravelActivity.objects.prefetch_related('travels').all()
+    permission_classes = (IsAdminUser,)
+    serializer_class = TravelActivityByPartnerSerializer
+    filter_backends = (TravelActivityInterventionFilter,)
+    lookup_url_kwarg = 'partnership_pk'
+
+    def get_queryset(self):
+        qs = TravelActivity.objects.prefetch_related('travels', 'primary_traveler', 'locations')
+        qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
+        qs = qs\
+            .annotate(status=Case(When(travels__traveler=F('primary_traveler'), then=F('travels__status')), output_field=CharField()))\
+            .annotate(reference_number=Case(When(travels__traveler=F('primary_traveler'), then=F('travels__reference_number')), output_field=CharField()))\
+            .annotate(trip_id=Case(When(travels__traveler=F('primary_traveler'), then=F('travels__id')), output_field=CharField()))\
+            .distinct('id')
+        qs = qs.exclude(status__in=[Travel.CANCELLED, Travel.REJECTED, Travel.PLANNED])
+        return qs
 
 class ActionPointViewSet(mixins.ListModelMixin,
                          mixins.RetrieveModelMixin,
