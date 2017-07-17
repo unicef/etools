@@ -520,12 +520,6 @@ class Audit(Engagement):
         max_digits=5, decimal_places=2
     )
     audit_opinion = models.CharField(_('audit opinion'), max_length=20, choices=OPTIONS, null=True, blank=True)
-    number_of_financial_findings = models.IntegerField(_('number of financial findings'), null=True, blank=True)
-
-    # Number of key control weaknessess
-    high_risk = models.IntegerField(_('high risk'), null=True, blank=True)
-    medium_risk = models.IntegerField(_('medium risk'), null=True, blank=True)
-    low_risk = models.IntegerField(_('low risk'), null=True, blank=True)
 
     recommendation = models.TextField(_('recommendation'), blank=True)
     audit_observation = models.TextField(_('audit observation'), blank=True)

@@ -15,7 +15,7 @@ from utils.writable_serializers.serializers import WritableNestedParentSerialize
 
 from .auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
 from .mixins import RiskCategoriesUpdateMixin, EngagementDatesValidation, AuditPermissionsBasedRootSerializerMixin
-from .risks import RiskRootSerializer, AggregatedRiskRootSerializer, AggregatedRiskCountRiskRootSerializer
+from .risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -230,7 +230,9 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
 
 class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
     financial_finding_set = FinancialFindingSerializer(many=True, required=False)
-    key_internal_weakness = AggregatedRiskCountRiskRootSerializer(code='audit_key_weakness', required=False)
+    key_internal_weakness = KeyInternalWeaknessSerializer(code='audit_key_weakness', required=False)
+
+    number_of_financial_findings = serializers.SerializerMethodField(label=_('Number of financial findings'))
 
     class Meta(EngagementSerializer.Meta):
         model = Audit
@@ -238,10 +240,12 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
         fields = EngagementSerializer.Meta.fields + [
             'audited_expenditure', 'financial_findings', 'financial_finding_set', 'percent_of_audited_expenditure',
             'audit_opinion', 'number_of_financial_findings',
-            'high_risk', 'medium_risk', 'low_risk',
             'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness'
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'type': {'read_only': True}
         })
+
+    def get_number_of_financial_findings(self, obj):
+        return obj.financial_finding_set.count()
