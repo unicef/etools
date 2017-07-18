@@ -5,10 +5,8 @@ exclude =
     migrations,
     # Everything below here will eventually be removed from 'exclude'
     EquiTrack,
-    funds,
     locations,
     manage_debug.py,
-    management,
     notification,
     partners,
     publics,

@@ -20,7 +20,7 @@ from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
-from funds.models import Grant, Donor
+from funds.models import Grant, Donor, FundsReservationHeader, FundsCommitmentHeader
 from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
@@ -146,7 +146,7 @@ class PartnerFactory(factory.django.DjangoModelFactory):
         model = partner_models.PartnerOrganization
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
-    staff = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):
@@ -154,7 +154,7 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
         model = report_models.CountryProgramme
 
     name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
+    wbs = factory.Sequence(lambda n: '0000/A0/{:02d}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
 
@@ -166,7 +166,9 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     partner = factory.SubFactory(PartnerFactory)
     agreement_type = u'PCA'
     signed_by_unicef_date = date.today()
-    status = 'active'
+    signed_by_partner_date = date.today()
+    status = 'signed'
+    attached_agreement = factory.django.FileField(filename='test_file.pdf')
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
@@ -202,7 +204,7 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     partner_contribution_local = 20.00
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
-    year = '2017'
+
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -211,20 +213,10 @@ class ResultTypeFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
 
 
-class ResultStructureFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.ResultStructure
-
-    name = factory.Sequence(lambda n: 'RSSP {}'.format(n))
-    from_date = date(date.today().year, 1, 1)
-    to_date = date(date.today().year, 12, 31)
-
-
 class ResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Result
 
-    result_structure = factory.SubFactory(ResultStructureFactory)
     result_type = factory.SubFactory(ResultTypeFactory)
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = date(date.today().year, 1, 1)
@@ -237,7 +229,6 @@ class GovernmentInterventionFactory(factory.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     country_programme = factory.SubFactory(CountryProgrammeFactory)
-    result_structure = factory.SubFactory(ResultStructureFactory)
     number = 'RefNumber'
 
 
@@ -384,18 +375,37 @@ class GrantFactory(factory.DjangoModelFactory):
     class Meta:
         model = Grant
 
+class FundsReservationHeaderFactory(factory.DjangoModelFactory):
+    intervention = factory.SubFactory(InterventionFactory)
+    vendor_code = fuzzy.FuzzyText(length=20)
+    fr_number = fuzzy.FuzzyText(length=20)
+    document_date = date(date.today().year, 1, 1)
+    fr_type = fuzzy.FuzzyText(length=20)
+    currency = fuzzy.FuzzyText(length=20)
+    document_text = fuzzy.FuzzyText(length=20)
 
-# class FundingCommitmentFactory(factory.django.DjangoModelFactory):
-#     class Meta:
-#         model = partner_models.FundingCommitment
-#
-#     grant = grant,
-#     intervention = factory.SubFactory(PartnershipFactory)
-#
-#
-#     fr_number = models.CharField(max_length=50)
-#     wbs = models.CharField(max_length=50)
-#     fc_type = models.CharField(max_length=50)
+    # this is the field required for validation
+    intervention_amt = fuzzy.FuzzyDecimal(1, 300)
+    # overall_amount
+    total_amt = fuzzy.FuzzyDecimal(1, 300)
+    actual_amt = fuzzy.FuzzyDecimal(1, 300)
+    outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
+
+    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1)-timedelta(days=10),
+                                 date(date.today().year, 1, 1))
+    end_date = fuzzy.FuzzyDate(date(date.today().year + 1, 1, 1),
+                               date(date.today().year + 1, 1, 1)+timedelta(days=10))
+
+
+    class Meta:
+        model = FundsReservationHeader
+
+
+class FundsCommitmentHeaderFactory(factory.DjangoModelFactory):
+
+    class Meta:
+        model = FundsCommitmentHeader
+
 
 # Credit goes to http://stackoverflow.com/a/41154232/2363915
 class JSONFieldFactory(factory.DictFactory):

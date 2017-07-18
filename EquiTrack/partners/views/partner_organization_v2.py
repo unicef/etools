@@ -38,6 +38,7 @@ from partners.serializers.partner_organization_v2 import (
     AssessmentDetailSerializer,
     MinimalPartnerOrganizationListSerializer,
 )
+from t2f.models import TravelActivity
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
@@ -197,7 +198,7 @@ class PartnerOrganizationHactAPIView(ListCreateAPIView):
     """
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.filter(
-        Q(agreements__interventions__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
+        Q(agreements__interventions__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]) |
         (Q(partner_type=u'Government') & Q(total_ct_cp__gt=0))
     ).distinct()
     serializer_class = PartnerOrganizationHactSerializer
@@ -312,3 +313,20 @@ class PartnerOrganizationAddView(CreateAPIView):
 
             headers = self.get_success_headers(po_serializer.data)
             return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class PartnerOrganizationDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            partner = PartnerOrganization.objects.get(id=int(kwargs['pk']))
+        except PartnerOrganization.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if partner.agreements.count() > 0:
+            raise ValidationError("This partner has agreements associated to it")
+        elif TravelActivity.objects.filter(partner=partner).count() > 0:
+            raise ValidationError("This partner has trips associated to it")
+        else:
+            partner.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)

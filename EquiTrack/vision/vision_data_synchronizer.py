@@ -18,6 +18,40 @@ class VisionException(Exception):
         super(VisionException, self).__init__(message)
 
 
+class VisionDataLoader(object):
+    URL = settings.VISION_URL
+    EMPTY_RESPONSE_VISION_MESSAGE = u'No Data Available'
+
+    def __init__(self, country=None, endpoint=None):
+        if endpoint is None:
+            raise VisionException(message='You must set the ENDPOINT name')
+
+        self.url = '{}/{}'.format(
+            self.URL,
+            endpoint
+        )
+        if country:
+            self.url += '/{}'.format(country.business_area_code)
+
+    def get(self):
+        response = requests.get(
+            self.url,
+            headers={'Content-Type': 'application/json'},
+            auth=(settings.VISION_USER, settings.VISION_PASSWORD),
+            verify=False
+        )
+
+        if response.status_code != 200:
+            raise VisionException(
+                message=('Load data failed! Http code: {}'.format(response.status_code))
+            )
+        json_response = response.json()
+        if json_response == self.EMPTY_RESPONSE_VISION_MESSAGE:
+            return []
+
+        return json_response
+
+
 class VisionDataSynchronizer:
 
     __metaclass__ = ABCMeta
@@ -34,7 +68,7 @@ class VisionDataSynchronizer:
         if self.ENDPOINT is None:
             raise VisionException(message='You must set the ENDPOINT name')
 
-        self.county = country
+        self.country = country
         self.url = '{}/{}'.format(
             self.URL,
             self.ENDPOINT
@@ -54,9 +88,6 @@ class VisionDataSynchronizer:
     def _save_records(self, records):
         pass
 
-    def _get_json(self, data):
-        return [] if data == self.NO_DATA_MESSAGE else data
-
     def _filter_records(self, records):
         def is_valid_record(record):
             for key in self.REQUIRED_KEYS:
@@ -66,36 +97,32 @@ class VisionDataSynchronizer:
 
         return filter(is_valid_record, records)
 
-    def _load_records(self):
-        response = requests.get(
-            self.url,
-            headers={'Content-Type': 'application/json'},
-            auth=(settings.VISION_USER, settings.VISION_PASSWORD),
-            verify=False
-        )
-
-        if response.status_code != 200:
-            raise VisionException(
-                message=('Load data failed! Http code: {}'.format(response.status_code))
-            )
-
-        return self._get_json(response.json())
-
     def sync(self):
         """
         Performs the database sync
         :return:
         """
         log = VisionSyncLog(
-            country=self.county,
+            country=self.country,
             handler_name=self.__class__.__name__
         )
         try:
-            original_records = self._load_records()
+            data_getter = VisionDataLoader(country=self.country, endpoint=self.ENDPOINT)
+            original_records = data_getter.get()
+
             converted_records = self._convert_records(original_records)
             log.total_records = len(converted_records)
             logger.info('Processing {} records'.format(len(converted_records)))
-            log.total_processed = self._save_records(converted_records)
+
+            totals = self._save_records(converted_records)
+
+            if isinstance(totals, dict):
+                log.total_processed = totals.get('processed', 0)
+                log.details = totals.get('details', None)
+                log.total_records = totals.get('total_records', log.total_records)
+            else:
+                log.total_processed = totals
+
             log.successful = True
         except Exception as e:
             log.exception_message = e.message

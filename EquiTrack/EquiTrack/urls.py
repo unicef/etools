@@ -57,6 +57,8 @@ from partners.urls import (
     # simple_agreements_api,
 )
 
+from management.urls import urlpatterns as management_urls
+
 from workplan.views import (
     CommentViewSet,
     WorkplanViewSet,
@@ -74,9 +76,6 @@ api = routers.SimpleRouter()
 
 # ******************  API version 1 - not used ******************************
 
-# from funds.views import DonorViewSet, GrantViewSet
-# api.register(r'funds/donors', DonorViewSet, base_name='donors')
-# api.register(r'funds/grants', GrantViewSet, base_name='grants')
 trips_api = routers.SimpleRouter()
 trips_api.register(r'trips', TripsViewSet, base_name='trips')
 tripsfiles_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
@@ -119,21 +118,17 @@ urlpatterns = [
     url(r'^$', RedirectView.as_view(url='/dash/', permanent=False), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
 
-    # url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
-    # url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnerships_dashboard'),
-    # url(r'^map/$', login_required(MapView.as_view()), name='map'),
-    # url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
-    # url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
-
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
     url(r'^users/', include('users.urls')),
     url(r'^supplies/', include('supplies.urls')),
+    url(r'^api/management/', include(management_urls)),
     url(r'^api/', include(api.urls)),
     url(r'^api/', include(staffm_api.urls)),
     url(r'^api/', include(publics_patterns, namespace='public')),
+
 
     # url(r'^trips/', include('trips.urls')),
     url(r'^api/', include(trips_api.urls)),
@@ -146,8 +141,9 @@ urlpatterns = [
         name='locations_detail_pcode'),
     url(r'^api/t2f/', include(t2f_patterns)),
     url(r'^api/v2/', include('reports.urls_v2')),
-    url(r'^api/v2/', include('partners.urls_v2')),
+    url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
     url(r'^api/v2/users/', include('users.urls_v2')),
+    url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
 
 
     url(r'^api/docs/', schema_view),

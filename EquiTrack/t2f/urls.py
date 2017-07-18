@@ -5,8 +5,8 @@ from t2f.views.dashboard import TravelDashboardViewSet, ActionPointDashboardView
 from t2f.views.exports import TravelActivityExport, FinanceExport, TravelAdminExport, InvoiceExport
 from t2f.views.generics import SettingsView, StaticDataView, PermissionMatrixView, VendorNumberListView
 from t2f.views.invoices import InvoiceViewSet
-from t2f.views.travel import TravelListViewSet, TravelDetailsViewSet, TravelAttachmentViewSet, ActionPointViewSet,\
-    TravelActivityViewSet
+from t2f.views.travel import TravelListViewSet, TravelDetailsViewSet, TravelAttachmentViewSet, ActionPointViewSet, \
+    TravelActivityViewSet, TravelActivityPerInterventionViewSet
 from t2f.views.vision import VisionInvoiceExport, VisionInvoiceUpdate
 
 
@@ -61,6 +61,8 @@ travel_list_patterns = ((
     url(r'^finance-export/$', FinanceExport.as_view(), name='finance_export'),
     url(r'^travel-admin-export/$', TravelAdminExport.as_view(), name='travel_admin_export'),
     url(r'^invoice-export/$', InvoiceExport.as_view(), name='invoice_export'),
+    url(r'^activities/partnership/(?P<partnership_pk>[0-9]+)/',
+        TravelActivityPerInterventionViewSet.as_view({'get': 'list'}), name='activities-intervention'),
     url(r'^activities/(?P<partner_organization_pk>[0-9]+)/', TravelActivityViewSet.as_view({'get': 'list'}),
         name='activities'),
     url(r'^dashboard/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/', travel_dashboard_list, name='dashboard'),
@@ -76,7 +78,7 @@ travel_patterns = ((
 action_points_patterns = ((
     url(r'^$', action_points_list, name='list'),
     url(r'^(?P<action_point_pk>[0-9]+)/$', action_points_details, name='details'),
-    url(r'^dashboard/', action_points_dashboard_list, name='dashboard'),
+    url(r'^dashboard/$', action_points_dashboard_list, name='dashboard'),
     url(r'^export/$', action_points_export, name='export')
 ), 'action_points')
 

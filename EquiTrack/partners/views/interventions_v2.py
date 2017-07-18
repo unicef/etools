@@ -109,14 +109,20 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
                                     nested_related_names=nested_related_names,
                                     **kwargs)
 
-        validator = InterventionValid(serializer.instance, user=request.user)
+        instance = serializer.instance
+
+        validator = InterventionValid(instance, user=request.user)
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
         headers = self.get_success_headers(serializer.data)
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            instance = self.get_object()
         return Response(
-            serializer.data,
+            InterventionDetailSerializer(instance, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED,
             headers=headers
         )
@@ -245,26 +251,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             # refresh the instance from the database.
             instance = self.get_object()
 
-        return Response(InterventionDetailSerializer(instance).data)
-
-
-class InterventionBudgetDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            intervention_budget = InterventionBudget.objects.get(id=int(kwargs['pk']))
-        except InterventionBudget.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_budget.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_budget.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_budget.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete a planned budget")
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(InterventionDetailSerializer(instance, context=self.get_serializer_context()).data)
 
 
 class InterventionPlannedVisitsDeleteView(DestroyAPIView):
@@ -340,7 +327,6 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete an amendment")
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
@@ -359,7 +345,6 @@ class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete a sector location")
-            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class InterventionListMapView(ListCreateAPIView):
