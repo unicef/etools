@@ -34,7 +34,7 @@ def check_required_fields(obj, fields):
         except ObjectDoesNotExist:
             return False, f_name
         try:
-            response = field.all().count() > 0
+            response = field.filter().count() > 0
         except AttributeError:
             if isinstance(field, FieldFile):
                 response = getattr(field, 'name', None) or False
@@ -56,7 +56,7 @@ def field_comparison(f1, f2):
     return True
 
 def check_rigid_related(obj, related):
-    current_related = list(getattr(obj, related).all())
+    current_related = list(getattr(obj, related).filter())
     old_related = getattr(obj.old_instance, '{}_old'.format(related), None)
     if old_related is None:
         # if old related was not set as an attribute on the object, assuming no changes
