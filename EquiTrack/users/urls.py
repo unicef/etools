@@ -1,5 +1,4 @@
-
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.views.generic import TemplateView
 
 from .views import (
@@ -12,9 +11,7 @@ from .views import (
 )
 
 
-urlpatterns = patterns(
-    '',
-
+urlpatterns = (
     # api
     url(r'^api/profile/$', UserAuthAPIView.as_view()),
     url(r'^api/changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post'])),

@@ -383,7 +383,6 @@ SHARED_APPS = (
     'djcelery_email',
     'datetimewidget',
     'leaflet',
-    'djgeojson',
     'paintstore',
     'corsheaders',
     'djangosaml2',
