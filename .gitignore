@@ -109,3 +109,6 @@ docs/_build/
 
 # macOS system meta file
 .DS_Store
+
+# custom settings files
+EquiTrack/EquiTrack/settings/custom.py
