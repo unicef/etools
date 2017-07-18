@@ -75,6 +75,12 @@ def signatures_valid(agreement):
     today = date.today()
     unicef_signing_requirements = [agreement.signed_by_unicef_date, agreement.signed_by]
     partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
+    if agreement.agreement_type == agreement.SSFA:
+        if any(unicef_signing_requirements + partner_signing_requirements):
+            raise BasicValidationError(_('SSFA signatures are captured at the Document (TOR) level, please clear the'
+                                         'signatures and dates and add them to the TOR'))
+    unicef_signing_requirements = [agreement.signed_by_unicef_date, agreement.signed_by]
+    partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
     if (any(unicef_signing_requirements) and not all(unicef_signing_requirements)) or \
             (any(partner_signing_requirements) and not all(partner_signing_requirements)) or \
             (agreement.signed_by_partner_date and agreement.signed_by_partner_date > today) or \
