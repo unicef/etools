@@ -3,7 +3,7 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from audit.models import Engagement, Finding, SpotCheck, MicroAssessment, Audit, \
-    FinancialFinding, DetailedFindingInfo
+    FinancialFinding, DetailedFindingInfo, EngagementActionPoint
 from utils.common.serializers.fields import SeparatedReadWriteField
 from partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer
 from partners.serializers.interventions_v2 import InterventionListSerializer
@@ -11,6 +11,7 @@ from partners.models import PartnerType
 from attachments.models import FileType
 from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
+from users.serializers import MinimalUserSerializer
 from utils.writable_serializers.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
 from .auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
@@ -37,6 +38,16 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
 
     class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
         pass
+
+
+class EngagementActionPointSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True))
+
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = EngagementActionPoint
+        fields = [
+            'id', 'description', 'due_date', 'person_responsible', 'comments',
+        ]
 
 
 class EngagementExportSerializer(serializers.ModelSerializer):
@@ -102,10 +113,13 @@ class EngagementSerializer(EngagementDatesValidation,
     engagement_attachments = EngagementBase64AttachmentSerializer(many=True, required=False)
     report_attachments = ReportBase64AttachmentSerializer(many=True, required=False)
 
+    action_points = EngagementActionPointSerializer(many=True)
+
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
             'engagement_attachments', 'report_attachments',
             'total_value', 'staff_members', 'active_pd',
+            'action_points',
 
             'start_date', 'end_date',
             'partner_contacted_at', 'date_of_field_visit',

@@ -570,6 +570,35 @@ class FinancialFinding(models.Model):
     ip_comments = models.TextField(_('IP comments'), blank=True)
 
 
+@python_2_unicode_compatible
+class EngagementActionPoint(models.Model):
+    DESCRIPTION_CHOICES = Choices(
+        _('Invoice and recieve reimbursement of ineligible expenditure'),
+        _('Change cash transfer modality (DCT, reimbursement or direct payment)'),
+        _('IP to incur and report on additional expenditure'),
+        _('Review and amend ICE or budget'),
+        _('IP to correct FACE form or Statement of Expenditure'),
+        _('Schedule a programmatic visit'),
+        _('Schedule a follow-up spot check'),
+        _('Schedule an audit'),
+        _('Block future cash transfers'),
+        _('Block or mark vendor for deletion'),
+        _('Escalate to Chief of Operations, Dep Rep, or Rep'),
+        _('Escalate to Investigation'),
+        _('Capacity building / Discussion with partner'),
+        _('Other'),
+    )
+
+    engagement = models.ForeignKey(Engagement, related_name='action_points')
+    description = models.CharField(max_length=100, choices=DESCRIPTION_CHOICES)
+    due_date = models.DateField()
+    person_responsible = models.ForeignKey(User)
+    comments = models.TextField()
+
+    def __str__(self):
+        return '{} on {}'.format(self.get_description_display(), self.engagement)
+
+
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',
                                      name='UNICEF Audit Focal Point')
 

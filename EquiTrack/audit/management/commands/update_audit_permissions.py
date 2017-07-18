@@ -158,6 +158,14 @@ class Command(BaseCommand):
         # report canceled. everybody can view
         self.add_permissions(self.report_canceled, self.everybody, 'view', self.everything)
 
+        # UNICEF Focal Point can create action points
+        self.add_permissions(self.report_submitted, self.focal_point, 'edit', ['engagement.action_points'])
+
+        # Auditor does not have access to action points
+        for status in [self.new_engagement, self.partner_contacted, self.report_submitted,
+                       self.final_report, self.report_canceled]:
+            self.revoke_permissions(status, self.auditor, 'view', ['engagement.action_points'])
+
         # update permissions
         all_tenants = get_tenant_model().objects.exclude(schema_name='public')
 
