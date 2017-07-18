@@ -51,7 +51,7 @@ def transition_to_active(i):
     # Only transitional validation
 
     # Validation id 1 -> if intervention is PD make sure the agreement is in active status
-    if i.document_type == i.PD and i.agreement.status != i.agreement.SIGNED:
+    if i.document_type in [i.PD, i.SHPD] and i.agreement.status != i.agreement.SIGNED:
         raise TransitionError([
             _('PD cannot be activated if the associated Agreement is not active')
         ])
