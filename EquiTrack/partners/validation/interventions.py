@@ -51,7 +51,7 @@ def transition_to_active(i):
     # Only transitional validation
 
     # Validation id 1 -> if intervention is PD make sure the agreement is in active status
-    if i.document_type == i.PD and i.agreement.status != i.agreement.SIGNED:
+    if i.document_type in [i.PD, i.SHPD] and i.agreement.status != i.agreement.SIGNED:
         raise TransitionError([
             _('PD cannot be activated if the associated Agreement is not active')
         ])
@@ -178,8 +178,8 @@ class InterventionValid(CompleteValidation):
         self.check_rigid_fields(intervention, related=True)
 
         today = date.today()
-        if not (intervention.start <= today <= intervention.end):
-            raise StateValidError([_('Today is not within the start and end dates')])
+        if not (intervention.start <= today):
+            raise StateValidError([_('Today is not after the start date')])
         return True
 
     def state_ended_valid(self, intervention, user=None):

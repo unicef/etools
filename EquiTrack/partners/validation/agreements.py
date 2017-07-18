@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import logging
 from datetime import date
 
+from django.utils.translation import ugettext as _
+
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError, \
     check_required_fields, BasicValidationError
 from partners.permissions import AgreementPermissions
