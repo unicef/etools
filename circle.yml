@@ -31,7 +31,7 @@ test:
      - psql -d template1 -c 'create extension hstore;' # needed for django hstore
    override:
      - export HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`;
-       docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/etools:$CIRCLE_BRANCH
+       docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" -e SECRET_KEY --add-host=docker:${HOSTIP} unicef/etools:$CIRCLE_BRANCH
        bash runtests.sh
 
 deployment:

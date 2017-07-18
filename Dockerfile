@@ -49,4 +49,5 @@ ADD EquiTrack /code/
 WORKDIR /code/
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
+ENV SECRET_KEY not-so-secret-key-just-for-collectstatic
 RUN python manage.py collectstatic --noinput
