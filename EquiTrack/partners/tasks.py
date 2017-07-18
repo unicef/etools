@@ -1,4 +1,4 @@
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 
 import datetime
 
@@ -69,9 +69,9 @@ def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
             else:
                 bad_agreements.append(agr)
 
-        # print(bad_agreements)
-        print('Bad agreements {}'.format(len(bad_agreements)))
-        print('Total agreements {}'.format(signed_ended_agrs.count()))
+        logger.error('Bad agreements {}'.format(len(bad_agreements)))
+        logger.error('Bad agreements ids: ' + ' '.join(a.id for a in bad_agreements))
+        logger.info('Total agreements {}'.format(signed_ended_agrs.count()))
         logger.info("Transitioned agreements {} ".format(processed))
 
 
@@ -114,9 +114,10 @@ def intervention_status_automatic_transition(admin=None, workspace=None, **kwarg
             else:
                 bad_interventions.append(intervention)
 
-        logger.info('Bad agreements {}'.format(len(bad_interventions)))
-        logger.info('Total agreements {}'.format(active_ended.count()))
-        logger.info("Transitioned agreements {} ".format(processed))
+        logger.error('Bad interventions {}'.format(len(bad_interventions)))
+        logger.error('Bad interventions ids: ' + ' '.join(a.id for a in bad_interventions))
+        logger.info('Total interventions {}'.format(active_ended.count() + qs.count()))
+        logger.info("Transitioned interventions {} ".format(processed))
 
 
 
