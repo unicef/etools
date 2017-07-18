@@ -1152,7 +1152,7 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
-class Intervention(TimeStampedModel, AdminURLMixin):
+class Intervention(TimeStampedModel):
     """
     Represents a partner intervention.
 
