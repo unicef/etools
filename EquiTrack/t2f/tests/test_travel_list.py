@@ -42,6 +42,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
             ('travel_admin_export', 'travel-admin-export/', {}),
             ('invoice_export', 'invoice-export/', {}),
             ('activities', 'activities/1/', {'partner_organization_pk': 1}),
+            ('activities-intervention', 'activities/partnership/1/', {'partnership_pk': 1}),
             ('dashboard', 'dashboard/2017/07/', {'year': '2017', 'month': '07'}),
             )
         self.assertReversal(names_and_paths, 't2f:travels:list:', '/api/t2f/travels/')
