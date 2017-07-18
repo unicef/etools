@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db import connection
 from django.db.models import F, Sum
 from celery.utils.log import get_task_logger
-from EquiTrack.celery import app,
+from EquiTrack.celery import app
 from partners.models import Agreement, Intervention
 from partners.validation.agreements import AgreementValid
 from partners.validation.interventions import InterventionValid
