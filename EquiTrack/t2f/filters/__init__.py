@@ -21,6 +21,14 @@ class TravelActivityPartnerFilter(BaseFilterBackend):
                 .filter(travels__traveler=F("primary_traveler"))
 
 
+class TravelActivityInterventionFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        return queryset \
+                .filter(partnership__pk=view.kwargs['partnership_pk']) \
+                .prefetch_related('travels') \
+                .filter(travels__traveler=F("primary_traveler"))
+
+
 class BaseSearchFilter(BaseFilterBackend):
     _search_fields = ()
 

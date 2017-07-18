@@ -527,13 +527,16 @@ class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
         fields = ('primary_traveler', 'travel_type', 'date', 'locations', 'reference_number', 'status', 'trip_id')
 
     def get_status(self, obj):
-        return obj.travels.get(traveler=obj.primary_traveler).status
+        return obj.status
+        # return obj.travels.get(traveler=obj.primary_traveler).status
 
     def get_reference_number(self, obj):
-        return obj.travels.get(traveler=obj.primary_traveler).reference_number
+        return obj.reference_number
+        # return obj.travels.get(traveler=obj.primary_traveler).reference_number
 
     def get_trip_id(self, obj):
-        return obj.travels.get(traveler=obj.primary_traveler).id
+        return obj.trip_id
+        # return obj.travels.get(traveler=obj.primary_traveler).id
 
 
 class CloneOutputSerializer(TravelDetailsSerializer):

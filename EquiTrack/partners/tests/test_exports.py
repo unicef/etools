@@ -212,6 +212,7 @@ class TestModelExport(APITenantTestCase):
             'URL'
         ])
 
+
         self.assertEqual(dataset[0], (
             self.agreement.agreement_number,
             unicode(self.agreement.status),
@@ -265,7 +266,8 @@ class TestModelExport(APITenantTestCase):
         deleted_flag = "Yes" if self.partner.deleted_flag else "No"
         blocked = "Yes" if self.partner.blocked else "No"
 
-        self.assertEqual(dataset[0], (
+        test_option = filter(lambda e: e[0] == self.partner.vendor_number, dataset)[0]
+        self.assertEqual(test_option, (
             self.partner.vendor_number,
             unicode(self.partner.name),
             self.partner.short_name,

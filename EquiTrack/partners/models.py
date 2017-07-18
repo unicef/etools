@@ -1395,14 +1395,28 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_frs(self):
-        return self.frs.aggregate(
-            total_frs_amt=Sum('total_amt'),
-            total_outstanding_amt=Sum('outstanding_amt'),
-            total_intervention_amt=Sum('intervention_amt'),
-            total_actual_amt=Sum('actual_amt'),
-            earliest_start_date=Min('start_date'),
-            latest_end_date=Max('end_date')
-        )
+        r = {
+            'total_frs_amt': 0,
+            'total_outstanding_amt': 0,
+            'total_intervention_amt': 0,
+            'total_actual_amt': 0,
+            'earliest_start_date': None,
+            'latest_end_date': None
+        }
+        for fr in self.frs.all():
+            r['total_frs_amt'] += fr.total_amt
+            r['total_outstanding_amt'] += fr.outstanding_amt
+            r['total_intervention_amt'] += fr.intervention_amt
+            r['total_actual_amt'] += fr.actual_amt
+            if r['earliest_start_date'] is None:
+                r['earliest_start_date'] = fr.start_date
+            elif r['earliest_start_date'] < fr.start_date:
+                r['earliest_start_date'] = fr.start_date
+            if r['latest_end_date'] is None:
+                r['latest_end_date'] = fr.end_date
+            elif r['latest_end_date'] > fr.end_date:
+                r['latest_end_date'] = fr.end_date
+        return r
 
     @property
     def year(self):
