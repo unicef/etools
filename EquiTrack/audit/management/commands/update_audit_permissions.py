@@ -159,7 +159,7 @@ class Command(BaseCommand):
         self.add_permissions(self.report_canceled, self.everybody, 'view', self.everything)
 
         # UNICEF Focal Point can create action points
-        self.add_permissions(self.report_submitted, self.focal_point, 'edit', ['engagement.action_points'])
+        self.add_permissions(self.final_report, self.focal_point, 'edit', ['engagement.action_points'])
 
         # Auditor does not have access to action points
         for status in [self.new_engagement, self.partner_contacted, self.report_submitted,
