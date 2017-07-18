@@ -1395,14 +1395,28 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_frs(self):
-        return self.frs.aggregate(
-            total_frs_amt=Sum('total_amt'),
-            total_outstanding_amt=Sum('outstanding_amt'),
-            total_intervention_amt=Sum('intervention_amt'),
-            total_actual_amt=Sum('actual_amt'),
-            earliest_start_date=Min('start_date'),
-            latest_end_date=Max('end_date')
-        )
+        r = {
+            'total_frs_amt': 0,
+            'total_outstanding_amt': 0,
+            'total_intervention_amt': 0,
+            'total_actual_amt': 0,
+            'earliest_start_date': None,
+            'latest_end_date': None
+        }
+        for fr in self.frs.all():
+            r['total_frs_amt'] += fr.total_amt
+            r['total_outstanding_amt'] += fr.outstanding_amt
+            r['total_intervention_amt'] += fr.intervention_amt
+            r['total_actual_amt'] += fr.actual_amt
+            if r['earliest_start_date'] is None:
+                r['earliest_start_date'] = fr.start_date
+            elif r['earliest_start_date'] < fr.start_date:
+                r['earliest_start_date'] = fr.start_date
+            if r['latest_end_date'] is None:
+                r['latest_end_date'] = fr.end_date
+            elif r['latest_end_date'] > fr.end_date:
+                r['latest_end_date'] = fr.end_date
+        return r
 
     @property
     def year(self):
@@ -1698,8 +1712,22 @@ class FileType(models.Model):
     """
     Represents a file type
     """
+    FACE = 'FACE'
+    PROGRESS_REPORT = 'Progress Report'
+    PARTNERSHIP_REVIEW = 'Partnership Review'
+    CORRESPONDENCE = 'Correspondence'
+    SUPPLY_PLAN = 'Supply/Distribution Plan'
+    OTHER = 'Other'
 
-    name = models.CharField(max_length=64L, unique=True)
+    NAME_CHOICES = Choices(
+        (FACE, FACE),
+        (PROGRESS_REPORT, PROGRESS_REPORT),
+        (PARTNERSHIP_REVIEW, PARTNERSHIP_REVIEW),
+        (CORRESPONDENCE, CORRESPONDENCE),
+        (SUPPLY_PLAN, SUPPLY_PLAN),
+        (OTHER, OTHER),
+    )
+    name = models.CharField(max_length=64, choices=NAME_CHOICES, unique=True)
 
     tracker = FieldTracker()
 
@@ -1707,7 +1735,7 @@ class FileType(models.Model):
         return self.name
 
 
-class InterventionAttachment(models.Model):
+class InterventionAttachment(TimeStampedModel):
     """
     Represents a file for the partner intervention
 
@@ -1723,6 +1751,9 @@ class InterventionAttachment(models.Model):
     )
 
     tracker = FieldTracker()
+
+    class Meta:
+        ordering = ['-created']
 
     def __unicode__(self):
         return self.attachment.name
