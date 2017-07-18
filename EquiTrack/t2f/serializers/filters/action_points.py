@@ -14,3 +14,6 @@ class ActionPointFilterBoxSerializer(serializers.Serializer):
     f_status = serializers.CharField(source='status', required=False)
     f_assigned_by = serializers.IntegerField(source='assigned_by__pk', required=False)
     f_person_responsible = serializers.IntegerField(source='person_responsible__pk', required=False)
+
+
+
