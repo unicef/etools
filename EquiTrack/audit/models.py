@@ -53,7 +53,8 @@ class AuditorStaffMember(BaseStaffMember):
         context = {
             'engagement_url': engagement.get_object_url(),
             'environment': get_environment(),
-            'engagement': engagement
+            'engagement': engagement,
+            'staff_member': self,
         }
 
         mail.send(
@@ -249,12 +250,18 @@ class Engagement(TimeStampedModel, models.Model):
         )
 
     def _notify_focal_points(self, template_name, context=None, **kwargs):
-        self._send_email(
-            User.objects.filter(groups=UNICEFAuditFocalPoint.as_group()).values_list('email', flat=True),
-            template_name,
-            context,
-            **kwargs
-        )
+        for focal_point in User.objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
+            ctx = {
+                'focal_point': focal_point,
+            }
+            if context:
+                ctx.update(context)
+            self._send_email(
+                [focal_point.email],
+                template_name,
+                ctx,
+                **kwargs
+            )
 
     @transition(status, source=STATUSES.partner_contacted, target=STATUSES.report_submitted,
                 permission=_has_action_permission(action='submit'))
