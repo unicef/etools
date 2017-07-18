@@ -155,12 +155,30 @@ class AgreementValid(CompleteValidation):
         if not rigid_valid:
             raise StateValidError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
 
+    def state_draft_valid(self, agreement, user=None):
+        # for SSFAs there will be no states valid since the states are forced by the Interventions
+        # Once signed, nothing will be editable on the agreement level
+        self.check_required_fields(agreement)
+        self.check_rigid_fields(agreement, related=True)
+        return True
+
     def state_signed_valid(self, agreement, user=None):
+        # for SSFAs there will be no states valid since the states are forced by the Interventions
+        # Once signed, nothing will be editable on the agreement level
+        if agreement.agreement_type == agreement.SSFA:
+            return False
         self.check_required_fields(agreement)
         self.check_rigid_fields(agreement, related=True)
         return True
 
     def state_ended_valid(self, agreement, user=None):
+        # for SSFAs there will be no states valid since the states are forced by the Interventions
+        # Once signed, nothing will be editable on the agreement level
+        if agreement.agreement_type == agreement.SSFA:
+            return False
+
+        self.check_required_fields(agreement)
+        self.check_rigid_fields(agreement, related=True)
         today = date.today()
         if not today > agreement.end:
             raise StateValidError([_('Today is not after the end date')])
