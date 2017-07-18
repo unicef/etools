@@ -15,9 +15,6 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
     def list(self, request, year, month, **kwargs):
         data = {}
         month= month.split(',')
-        if len(month)  == 1:
-            month = month[0]
-
         travels_all = Travel.objects.filter(
             start_date__year=year,
             start_date__month__in=month,

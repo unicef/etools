@@ -66,7 +66,7 @@ travel_list_patterns = patterns(
         name='travel_admin_export'),
     url(r'^invoice-export/$', InvoiceExport.as_view(), name='invoice_export'),
     url(r'^activities/(?P<partner_organization_pk>[0-9]+)/', TravelActivityViewSet.as_view({'get': 'list'}), name='activities'),
-    url(r'^dashboard/(?P<year>[0-9]{4})/(?P<month>[0-9]{2},+[0-9]{2}|[0-9]{2})/', travel_dashboard_list, name='dashboard'),
+    url(r'^dashboard/(?P<year>[0-9]{4})/(?P<month>[0-9]{2},.+|[0-9]{2})/', travel_dashboard_list, name='dashboard'),
 )
 
 
