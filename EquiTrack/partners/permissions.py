@@ -123,9 +123,7 @@ class AgreementPermissions(PMPPermissions):
             return not check_rigid_related(instance, 'amendments')
 
         self.condition_map = {
-            'is type PCA': self.instance.agreement_type == self.instance.PCA,
-            'is not type PCA': self.instance.agreement_type != self.instance.PCA,
-            'is type SSFA': self.instance.agreement_type == self.instance.SSFA,
+            'is type PCA or MOU': self.instance.agreement_type in [self.instance.PCA, self.instance.MOU],
             'is type MOU': self.instance.agreement_type == self.instance.MOU,
             # this condition can only be checked on data save
             'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)

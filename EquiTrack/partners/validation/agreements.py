@@ -71,8 +71,10 @@ def signed_by_everyone_valid(agreement):
 
 def signatures_valid(agreement):
     today = date.today()
-    if (agreement.signed_by_unicef_date and not agreement.signed_by) or \
-            (agreement.signed_by_partner_date and not agreement.partner_manager) or \
+    unicef_signing_requirements = [agreement.signed_by_unicef_date, agreement.signed_by]
+    partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
+    if (any(unicef_signing_requirements) and not all(unicef_signing_requirements)) or \
+            (any(partner_signing_requirements) and not all(partner_signing_requirements)) or \
             (agreement.signed_by_partner_date and agreement.signed_by_partner_date > today) or \
             (agreement.signed_by_unicef_date and agreement.signed_by_unicef_date > today):
         return False
@@ -95,7 +97,15 @@ def ssfa_static(agreement):
                 raise BasicValidationError(_("Start and end dates don't match the Document's start and end"))
     return True
 
-
+def one_pca_per_cp_per_partner(agreement):
+    if agreement.agreement_type == agreement.PCA:
+        # see if there are any PCAs in the CP other than this for this partner
+        if agreement.__class__.objects.filter(partner=agreement.partner,
+                                              agreement_type=agreement.PCA,
+                                              country_programme=agreement.country_programme) \
+                                      .exclude(pk=agreement.id).count():
+            return False
+    return True
 
 class AgreementValid(CompleteValidation):
 
@@ -106,14 +116,18 @@ class AgreementValid(CompleteValidation):
         start_end_dates_valid,
         signatures_valid,
         partner_type_valid_cso,
+        one_pca_per_cp_per_partner,
         amendments_valid,
         ssfa_static
     ]
 
     VALID_ERRORS = {
+        'one_pca_per_cp_per_partner': 'A different agreement of type PCA already exists '
+                                      'for this Partner for this Country Programme',
         'start_end_dates_valid': 'Agreement start date needs to be earlier than end date',
-        'signatures_valid': 'Agreement needs to be signed by UNICEF and Partner, none of the dates can be in'
-                            ' the future; if dates are set, signatories are required',
+        'signatures_valid': 'Agreement needs to be signed by UNICEF and Partner; '
+                            'None of the dates can be in the future; '
+                            'If dates are set, signatories are required',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
         'suspended_invalid': 'Cant suspend an agreement that was supposed to be ended',
         'agreement_transition_to_active_invalid': "You can't transition to active without having the proper signatures",
