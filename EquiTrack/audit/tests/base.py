@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from EquiTrack.factories import UserFactory
 from attachments.models import FileType, Attachment
-from audit.models import RiskBluePrint, UNICEFUser, UNICEFAuditFocalPoint, Auditor, PME
+from audit.models import RiskBluePrint, UNICEFUser, UNICEFAuditFocalPoint
 from utils.groups.wrappers import GroupWrapper
 from .factories import RiskFactory, AuditorStaffMemberFactory, AuditPartnerFactory
 
