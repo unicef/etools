@@ -1,14 +1,11 @@
-from EquiTrack.utils import etag_cached
-
-__author__ = 'unicef-leb-inn'
+from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 
 from dal import autocomplete
-from django.core.exceptions import ValidationError
-
-from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins, permissions
 from rest_framework.generics import ListAPIView
 
+from EquiTrack.utils import etag_cached
 from .models import CartoDBTable, GatewayType, Location
 from .serializers import (
     CartoDBTableSerializer,
