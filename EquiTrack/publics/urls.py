@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from publics.views import StaticDataView, WBSGrantFundView, CurrenciesView, DSARegionsView, BusinessAreasView,\
     ExpenseTypesView, AirlinesView
 
-urlpatterns = patterns(
-    '',
+urlpatterns = (
     url(r'^static_data/$', StaticDataView.as_view({'get': 'list'}), name='static'),
     url(r'^static_data/missing/$', StaticDataView.as_view({'get': 'missing'}), name='missing_static'),
 
