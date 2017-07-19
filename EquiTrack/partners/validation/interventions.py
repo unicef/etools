@@ -51,7 +51,7 @@ def transition_to_active(i):
     # Only transitional validation
 
     # Validation id 1 -> if intervention is PD make sure the agreement is in active status
-    if i.document_type == i.PD and i.agreement.status != i.agreement.SIGNED:
+    if i.document_type in [i.PD, i.SHPD] and i.agreement.status != i.agreement.SIGNED:
         raise TransitionError([
             _('PD cannot be activated if the associated Agreement is not active')
         ])
@@ -69,11 +69,12 @@ def start_end_dates_valid(i):
 def signed_date_valid(i):
     # i = intervention
     today = date.today()
-    if (i.signed_by_unicef_date and not i.unicef_signatory) or \
-            (i.signed_by_partner_date and not i.partner_authorized_officer_signatory) or \
+    unicef_signing_requirements = [i.signed_by_unicef_date, i.unicef_signatory]
+    partner_signing_requirements = [i.signed_by_partner_date, i.partner_authorized_officer_signatory]
+    if (any(unicef_signing_requirements) and not all(unicef_signing_requirements)) or \
+            (any(partner_signing_requirements) and not all(partner_signing_requirements)) or \
             (i.signed_by_partner_date and i.signed_by_partner_date > today) or \
             (i.signed_by_unicef_date and i.signed_by_unicef_date > today):
-
         return False
     return True
 
@@ -96,6 +97,8 @@ def amendments_valid(i):
         if a.OTHER in a.types and a.other_description is None:
             return False
         if not a.signed_date:
+            return False
+        if not getattr(a.signed_amendment, 'name'):
             return False
     return True
 
@@ -175,8 +178,8 @@ class InterventionValid(CompleteValidation):
         self.check_rigid_fields(intervention, related=True)
 
         today = date.today()
-        if not (intervention.start <= today <= intervention.end):
-            raise StateValidError([_('Today is not within the start and end dates')])
+        if not (intervention.start <= today):
+            raise StateValidError([_('Today is not after the start date')])
         return True
 
     def state_ended_valid(self, intervention, user=None):

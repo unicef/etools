@@ -3,8 +3,8 @@ import operator
 
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import models
-from django.db.models.functions import Concat, Value
-from django.db.models import F
+from django.db.models.functions import Concat
+from django.db.models import F, Value
 from model_utils import Choices
 
 from rest_framework import status
@@ -35,9 +35,9 @@ from partners.models import (
     PartnerType,
     Assessment,
     InterventionAmendment,
-    AgreementAmendmentType,
     Intervention,
     FileType,
+    AgreementAmendment,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
@@ -161,13 +161,13 @@ class PmpStaticDropdownsListApiView(APIView):
                 PartnerOrganization.objects.values_list(
                     'cso_type',
                     flat=True).order_by('cso_type').distinct('cso_type')))
-        partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
-        agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
+        partner_types = choices_to_json_ready(PartnerType.CHOICES)
+        agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
         assessment_types = choices_to_json_ready(Assessment.ASSESMENT_TYPES)
         agreement_types = choices_to_json_ready(
             [typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
-        agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendmentType.AMENDMENT_TYPES))
+        agreement_amendment_types = choices_to_json_ready(AgreementAmendment.AMENDMENT_TYPES)
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
@@ -216,12 +216,14 @@ class PMPDropdownsListApiView(APIView):
         current_country_programme = CountryProgramme.main_active()
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT,
                                                 wbs__isnull=False,
-                                                country_programme=current_country_programme).values('id',
-                                                                                                    'name',
-                                                                                                    'wbs',
-                                                                                                    'country_programme'))
+                                                country_programme=current_country_programme)
+                                        .values('id',
+                                                'name',
+                                                'wbs',
+                                                'country_programme'))
         supply_items = list(SupplyItem.objects.all().values())
-        file_types = list(FileType.objects.all().values())
+        file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
+                          .all().values())
         donors = list(Donor.objects.all().values())
 
         return Response(

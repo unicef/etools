@@ -3,74 +3,26 @@ from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from django.db import transaction
 
+from partners.permissions import AgreementPermissions
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
 from users.serializers import SimpleUserSerializer
 from partners.validation.agreements import AgreementValid
 from partners.models import (
     Agreement,
     AgreementAmendment,
-    AgreementAmendmentType,
 )
 from reports.models import CountryProgramme
-
-
-class AgreementAmendmentTypeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = AgreementAmendmentType
-        fields = "__all__"
 
 
 class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
     number = serializers.CharField(read_only=True)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
-    amendment_types = AgreementAmendmentTypeSerializer(many=True, read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
 
     class Meta:
         model = AgreementAmendment
         fields = "__all__"
-
-    @transaction.atomic
-    def create(self, validated_data):
-        amd_types = self.context.pop('amendment_types', [])
-        if not amd_types:
-            raise ValidationError('Agreement Amendment needs a type')
-
-        instance = super(AgreementAmendmentCreateUpdateSerializer, self).create(validated_data)
-
-        for a in amd_types:
-            a["agreement_amendment"] = instance.pk
-
-            agr_amd_type_serializer = AgreementAmendmentTypeSerializer(data=a)
-            if agr_amd_type_serializer.is_valid(raise_exception=True):
-                agr_amd_type_serializer.save()
-
-        return instance
-
-    @transaction.atomic
-    def update(self, instance, validated_data):
-        amd_types = self.context.pop('amendment_types', [])
-
-        for a in amd_types:
-            a["agreement_amendment"] = instance.pk
-            if a.get('id'):
-                try:
-                    agr_amd_type = AgreementAmendmentType.objects.get(id=a['id'])
-                    agr_amd_type_serializer = AgreementAmendmentTypeSerializer(instance=agr_amd_type,
-                                                                               data=a,
-                                                                               partial=True)
-                except AgreementAmendmentType.DoesNotExist:
-                    raise ValidationError('Agreement Amendment Type received an id that is not present in the db {}'.
-                                          format(a['id']))
-            else:
-                agr_amd_type_serializer = AgreementAmendmentTypeSerializer(data=a)
-
-            if agr_amd_type_serializer.is_valid(raise_exception=True):
-                agr_amd_type_serializer.save()
-
-        return super(AgreementAmendmentCreateUpdateSerializer, self).update(instance, validated_data)
 
 
 class AgreementListSerializer(serializers.ModelSerializer):
@@ -131,7 +83,7 @@ class AgreementExportSerializer(serializers.ModelSerializer):
         return 'https://{}/pmp/agreements/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
 
-class AgreementRetrieveSerializer(serializers.ModelSerializer):
+class AgreementDetailSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     authorized_officers = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
@@ -139,6 +91,14 @@ class AgreementRetrieveSerializer(serializers.ModelSerializer):
     unicef_signatory = SimpleUserSerializer(source='signed_by')
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager')
     attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
+
+    permissions = serializers.SerializerMethodField(read_only=True)
+
+    def get_permissions(self, obj):
+        user = self.context['request'].user
+        ps = Agreement.permission_structure()
+        permissions = AgreementPermissions(user=user, instance=self.instance, permission_structure=ps)
+        return permissions.get_permissions()
 
     class Meta:
         model = Agreement

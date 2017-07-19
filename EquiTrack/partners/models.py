@@ -2,11 +2,10 @@ from __future__ import absolute_import, unicode_literals
 import logging
 import datetime
 import json
-from dateutil.relativedelta import relativedelta
 
 from django.conf import settings
 from django.contrib.auth.models import Group
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import JSONField, ArrayField, HStoreField
 from django.db import models, connection, transaction
 from django.db.models import Q, Sum, F, Min, Max
 from django.db.models.signals import post_save, pre_delete
@@ -15,17 +14,16 @@ from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
 from django_fsm import FSMField, transition
-from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
 )
 from model_utils import Choices, FieldTracker
+from dateutil.relativedelta import relativedelta
 
 from EquiTrack.utils import get_changeform_link, get_current_site, import_permissions
 from EquiTrack.mixins import AdminURLMixin
-
 from funds.models import Grant
 from reports.models import (
     Indicator,
@@ -42,10 +40,9 @@ from supplies.tasks import set_unisupply_distribution
 from users.models import Section, Office
 from notification.models import Notification
 from partners.validation.agreements import (
-    agreement_transition_to_active_valid,
     agreement_transition_to_ended_valid,
-    agreements_illegal_transition
-)
+    agreements_illegal_transition,
+    agreement_transition_to_signed_valid)
 from partners.validation import interventions as intervention_validation
 
 
@@ -170,10 +167,10 @@ SIGNIFICANT = 'significant'
 MEDIUM = 'medium'
 LOW = 'low'
 RISK_RATINGS = (
-    (HIGH,'High'),
-    (SIGNIFICANT,'Significant'),
-    (MEDIUM,'Medium'),
-    (LOW,'Low'),
+    (HIGH, 'High'),
+    (SIGNIFICANT, 'Significant'),
+    (MEDIUM, 'Medium'),
+    (LOW, 'Low'),
 )
 CSO_TYPES = Choices(
    'International',
@@ -460,7 +457,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
-            current_cycle = CountryProgramme.main_active()
             last_audit = partner.latest_assessment(u'Scheduled Audit report')
             if assesment:
                 if last_audit:
@@ -519,9 +515,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         """
         Planned cash transfers for the current year
         """
-        year = datetime.date.today().year
         total = 0
-        if partner.partner_type !='Government':
+        if partner.partner_type != 'Government':
             q = InterventionBudget.objects.filter(
                 intervention__agreement__partner=partner,
                 intervention__status__in=[
@@ -563,7 +558,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         # planned visits
         pv = 0
         if partner.partner_type == 'Government':
-           pass
+            pass
         else:
             if pv_intervention:
                 pv = InterventionPlannedVisits.objects.filter(
@@ -700,11 +695,11 @@ class Assessment(models.Model):
     """
 
     ASSESMENT_TYPES = (
-        ('Micro Assessment','Micro Assessment'),
-        ('Simplified Checklist','Simplified Checklist'),
-        ('Scheduled Audit report','Scheduled Audit report'),
-        ('Special Audit report','Special Audit report'),
-        ('Other','Other'),
+        ('Micro Assessment', 'Micro Assessment'),
+        ('Simplified Checklist', 'Simplified Checklist'),
+        ('Scheduled Audit report', 'Scheduled Audit report'),
+        ('Special Audit report', 'Special Audit report'),
+        ('Other', 'Other'),
     )
 
     partner = models.ForeignKey(
@@ -718,8 +713,7 @@ class Assessment(models.Model):
     names_of_other_agencies = models.CharField(
         max_length=255,
         blank=True, null=True,
-        help_text='List the names of the other '
-                 'agencies they have worked with'
+        help_text='List the names of the other agencies they have worked with'
     )
     expected_budget = models.IntegerField(
         verbose_name='Planned amount',
@@ -729,8 +723,7 @@ class Assessment(models.Model):
         max_length=255,
         blank=True, null=True,
         verbose_name='Special requests',
-        help_text='Note any special requests to be '
-                 'considered during the assessment'
+        help_text='Note any special requests to be considered during the assessment'
     )
     requested_date = models.DateField(
         auto_now_add=True
@@ -836,9 +829,10 @@ class AgreementManager(models.Manager):
         return super(AgreementManager, self).get_queryset().select_related('partner')
 
 
-def draft_to_active_auto_changes(obj):
+def activity_to_active_side_effects(i, old_instance=None, user=None):
     # here we can make any updates to the object as we need as part of the auto transition change
     # obj.end = datetime.date.today()
+    # old_instance.status will give you the status you're transitioning from
     pass
 
 
@@ -850,36 +844,34 @@ class Agreement(TimeStampedModel):
     """
     # POTENTIAL_AUTO_TRANSITIONS.. these are all transitions that we want to
     # make automatically if possible
-    POTENTIAL_AUTO_TRANSITIONS = {
-        'draft': [
-            {'active': [draft_to_active_auto_changes]},
-        ],
-        'active': [
-            {'ended': []},
-        ],
-    }
-
     PCA = 'PCA'
     MOU = 'MOU'
     SSFA = 'SSFA'
     AGREEMENT_TYPES = (
         (PCA, u"Programme Cooperation Agreement"),
-        (SSFA,'Small Scale Funding Agreement'),
-        (MOU,'Memorandum of Understanding'),
+        (SSFA, 'Small Scale Funding Agreement'),
+        (MOU, 'Memorandum of Understanding'),
     )
 
-    DRAFT = u"draft"
-    SIGNED = u"signed"
-    ENDED = u"ended"
-    SUSPENDED = u"suspended"
-    TERMINATED = u"terminated"
+    DRAFT = "draft"
+    SIGNED = "signed"
+    ENDED = "ended"
+    SUSPENDED = "suspended"
+    TERMINATED = "terminated"
     STATUS_CHOICES = (
-        (DRAFT, u"Draft"),
-        (SIGNED, u"Signed"),
-        (ENDED, u"Ended"),
-        (SUSPENDED, u"Suspended"),
-        (TERMINATED, u"Terminated"),
+        (DRAFT, "Draft"),
+        (SIGNED, "Signed"),
+        (ENDED, "Ended"),
+        (SUSPENDED, "Suspended"),
+        (TERMINATED, "Terminated"),
     )
+    AUTO_TRANSITIONS = {
+        DRAFT: [SIGNED],
+        SIGNED: [ENDED],
+    }
+    TRANSITION_SIDE_EFFECTS = {
+        SIGNED: [activity_to_active_side_effects],
+    }
 
     partner = models.ForeignKey(PartnerOrganization, related_name="agreements")
     country_programme = models.ForeignKey('reports.CountryProgramme', related_name='agreements', blank=True, null=True)
@@ -950,6 +942,11 @@ class Agreement(TimeStampedModel):
             self.end.strftime('%d-%m-%Y') if self.end else ''
         )
 
+    @classmethod
+    def permission_structure(cls):
+        permissions = import_permissions(cls.__name__)
+        return permissions
+
     @property
     def year(self):
         if self.id:
@@ -1002,8 +999,8 @@ class Agreement(TimeStampedModel):
     @transition(field=status,
                 source=[DRAFT],
                 target=[SIGNED],
-                conditions=[agreement_transition_to_active_valid])
-    def transition_to_active(self):
+                conditions=[agreement_transition_to_signed_valid])
+    def transition_to_signed(self):
         pass
 
     @transition(field=status,
@@ -1042,11 +1039,6 @@ class Agreement(TimeStampedModel):
             # load from DB
             oldself = Agreement.objects.get(pk=self.pk)
 
-        # update reference number if needed
-        amendment_number = kwargs.pop('amendment_number', None)
-        if amendment_number:
-            self.update_reference_number(amendment_number)
-
         if not oldself:
             # to create a ref number we need an id
             super(Agreement, self).save()
@@ -1054,7 +1046,12 @@ class Agreement(TimeStampedModel):
         else:
             self.update_related_interventions(oldself)
 
-        if self.agreement_type in [Agreement.PCA]:
+        # update reference number if needed
+        amendment_number = kwargs.pop('amendment_number', None)
+        if amendment_number:
+            self.update_reference_number(amendment_number)
+
+        if self.agreement_type == self.PCA:
             # set start date
             if self.signed_by_partner_date and self.signed_by_unicef_date:
                 self.start = self.signed_by_unicef_date \
@@ -1071,6 +1068,19 @@ class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement
     '''
+    IP_NAME = u'Change IP name'
+    CP_EXTENSION = u'CP extension'
+    AUTHORIZED_OFFICER = u'Change authorized officer'
+    BANKING_INFO = u'Change banking info'
+    CLAUSE = u'Change in clause'
+
+    AMENDMENT_TYPES = Choices(
+        (IP_NAME, 'Change in Legal Name of Implementing Partner'),
+        (CP_EXTENSION, 'Extension of Country Programme Cycle'),
+        (AUTHORIZED_OFFICER, 'Change Authorized Officer(s)'),
+        (BANKING_INFO, 'Banking Information'),
+        (CLAUSE, 'Change in clause'),
+    )
 
     number = models.CharField(max_length=5)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
@@ -1079,6 +1089,9 @@ class AgreementAmendment(TimeStampedModel):
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
     )
+    types = ArrayField(models.CharField(
+        max_length=50,
+        choices=AMENDMENT_TYPES))
     signed_date = models.DateField(null=True, blank=True)
 
     tracker = FieldTracker()
@@ -1098,13 +1111,6 @@ class AgreementAmendment(TimeStampedModel):
 
     @transaction.atomic
     def save(self, **kwargs):
-        # TODO: make the folowing scenario work:
-        # agreement amendment and agreement are saved in the same time... avoid race conditions for reference number
-        # TODO: validation don't allow save on objects that have attached
-        # signed amendment but don't have a signed date
-
-        # check if temporary number is needed or amendment number needs to be
-        # set
         update_agreement_number_needed = False
         oldself = AgreementAmendment.objects.get(id=self.pk) if self.pk else None
         if self.signed_amendment:
@@ -1120,39 +1126,6 @@ class AgreementAmendment(TimeStampedModel):
         return super(AgreementAmendment, self).save(**kwargs)
 
 
-class AgreementAmendmentType(models.Model):
-
-    AMENDMENT_TYPES = Choices(
-        ('Change IP name', 'Change in Legal Name of Implementing Partner'),
-        ('CP extension', 'Extension of Country Programme Cycle'),
-        ('Change authorized officer', 'Change Authorized Officer'),
-        ('Change banking info', 'Banking Information'),
-        ('Additional clause', 'Additional Clause'),
-        ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
-    )
-    agreement_amendment = models.ForeignKey(AgreementAmendment, related_name='amendment_types')
-    type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
-    label = models.TextField(null=True, blank=True)
-    officer = models.IntegerField(null=True, blank=True)
-    bank_info = models.TextField(null=True, blank=True)
-    legal_name_of_ip = models.CharField(null=True, blank=True, max_length=255)
-    cp_cycle_end = models.DateField(null=True, blank=True)
-    additional_clauses = models.TextField(null=True, blank=True)
-    existing_clause_amended = models.TextField(null=True, blank=True)
-
-    def save(self, **kwargs):
-        if self.pk is None and self.type == 'CP extension':
-            self.cp_cycle_end = self.agreement_amendment.agreement.country_programme.to_date
-        return super(AgreementAmendmentType, self).save(**kwargs)
-
-    def __unicode__(self):
-        return "{}-{}-{}".format(
-            self.agreement_amendment.agreement.reference_number,
-            self.agreement_amendment.number,
-            self.type or ''
-        )
-
-
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
@@ -1165,6 +1138,18 @@ class InterventionManager(models.Manager):
                                                                                 'offices',
                                                                                 'agreement__partner',
                                                                                 'planned_budget')
+
+
+def side_effect_one(i, old_instance=None, user=None):
+    logging.debug('Side effect 1 is executing for instance: {}'.format(i.id))
+    # print i.status
+    # print old_instance.status
+    # print user.get_full_name()
+    pass
+
+
+def side_effect_two(i, old_instance=None, user=None):
+    pass
 
 
 class Intervention(TimeStampedModel):
@@ -1188,25 +1173,20 @@ class Intervention(TimeStampedModel):
     SUSPENDED = 'suspended'
     TERMINATED = 'terminated'
 
-    POTENTIAL_AUTO_TRANSITIONS = {
-        DRAFT: [
-            {SIGNED: []},
-        ],
-        SIGNED: [
-            {ACTIVE: []},
-        ],
-        ACTIVE: [
-            {ENDED: []},
-        ],
-        ENDED: [
-            {CLOSED: []},
-        ],
+    AUTO_TRANSITIONS = {
+        DRAFT: [SIGNED],
+        SIGNED: [ACTIVE],
+        ACTIVE: [ENDED],
+        ENDED: [CLOSED]
     }
-
-    # IMPLEMENTED to CLOSED
-    # ACTIVE to ACTIVE if validation is ok else DRAFT
-    # CANCELLED TO DRAFT
-
+    TRANSITION_SIDE_EFFECTS = {
+        SIGNED: [side_effect_one, side_effect_two],
+        ACTIVE: [],
+        SUSPENDED: [],
+        ENDED: [],
+        CLOSED: [],
+        TERMINATED: []
+    }
 
     CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
@@ -1329,7 +1309,6 @@ class Intervention(TimeStampedModel):
     # previous status
     metadata = JSONField(blank=True, null=True, default=dict)
 
-
     class Meta:
         ordering = ['-created']
 
@@ -1367,7 +1346,8 @@ class Intervention(TimeStampedModel):
 
     @property
     def sector_names(self):
-        return ', '.join(Sector.objects.filter(intervention_locations__intervention=self).values_list('name', flat=True))
+        return ', '.join(Sector.objects.filter(intervention_locations__intervention=self).
+                         values_list('name', flat=True))
 
     @cached_property
     def total_partner_contribution(self):
@@ -1378,7 +1358,6 @@ class Intervention(TimeStampedModel):
     def total_unicef_cash(self):
         # TODO: test this
         return self.planned_budget.unicef_cash if self.planned_budget else 0
-
 
     @cached_property
     def total_in_kind_amount(self):
@@ -1416,14 +1395,28 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_frs(self):
-        return self.frs.aggregate(
-            total_frs_amt=Sum('total_amt'),
-            total_outstanding_amt=Sum('outstanding_amt'),
-            total_intervention_amt=Sum('intervention_amt'),
-            total_actual_amt=Sum('actual_amt'),
-            earliest_start_date=Min('start_date'),
-            latest_end_date=Max('end_date')
-        )
+        r = {
+            'total_frs_amt': 0,
+            'total_outstanding_amt': 0,
+            'total_intervention_amt': 0,
+            'total_actual_amt': 0,
+            'earliest_start_date': None,
+            'latest_end_date': None
+        }
+        for fr in self.frs.all():
+            r['total_frs_amt'] += fr.total_amt
+            r['total_outstanding_amt'] += fr.outstanding_amt
+            r['total_intervention_amt'] += fr.intervention_amt
+            r['total_actual_amt'] += fr.actual_amt
+            if r['earliest_start_date'] is None:
+                r['earliest_start_date'] = fr.start_date
+            elif r['earliest_start_date'] < fr.start_date:
+                r['earliest_start_date'] = fr.start_date
+            if r['latest_end_date'] is None:
+                r['latest_end_date'] = fr.end_date
+            elif r['latest_end_date'] > fr.end_date:
+                r['latest_end_date'] = fr.end_date
+        return r
 
     @property
     def year(self):
@@ -1526,6 +1519,10 @@ class Intervention(TimeStampedModel):
             elif self.status in [self.ENDED, self.SUSPENDED, self.TERMINATED] and self.status != self.agreement.status:
                 save_agreement = True
                 self.agreement.status = self.status
+
+            elif self.status in [self.CLOSED] and self.agreement.status != Agreement.ENDED:
+                save_agreement = True
+                self.agreement.status = Agreement.ENDED
 
             if save_agreement:
                 self.agreement.save()
@@ -1661,6 +1658,7 @@ class InterventionResultLink(models.Model):
             self.intervention, self.cp_output
         )
 
+
 @python_2_unicode_compatible
 class InterventionBudget(TimeStampedModel):
     """
@@ -1718,8 +1716,22 @@ class FileType(models.Model):
     """
     Represents a file type
     """
+    FACE = 'FACE'
+    PROGRESS_REPORT = 'Progress Report'
+    PARTNERSHIP_REVIEW = 'Partnership Review'
+    CORRESPONDENCE = 'Correspondence'
+    SUPPLY_PLAN = 'Supply/Distribution Plan'
+    OTHER = 'Other'
 
-    name = models.CharField(max_length=64L, unique=True)
+    NAME_CHOICES = Choices(
+        (FACE, FACE),
+        (PROGRESS_REPORT, PROGRESS_REPORT),
+        (PARTNERSHIP_REVIEW, PARTNERSHIP_REVIEW),
+        (CORRESPONDENCE, CORRESPONDENCE),
+        (SUPPLY_PLAN, SUPPLY_PLAN),
+        (OTHER, OTHER),
+    )
+    name = models.CharField(max_length=64, choices=NAME_CHOICES, unique=True)
 
     tracker = FieldTracker()
 
@@ -1727,7 +1739,7 @@ class FileType(models.Model):
         return self.name
 
 
-class InterventionAttachment(models.Model):
+class InterventionAttachment(TimeStampedModel):
     """
     Represents a file for the partner intervention
 
@@ -1744,6 +1756,9 @@ class InterventionAttachment(models.Model):
 
     tracker = FieldTracker()
 
+    class Meta:
+        ordering = ['-created']
+
     def __unicode__(self):
         return self.attachment.name
 
@@ -1758,7 +1773,8 @@ class InterventionSectorLocationLink(models.Model):
 
 class GovernmentInterventionManager(models.Manager):
     def get_queryset(self):
-        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results', 'results__sectors', 'results__unicef_managers')
+        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results', 'results__sectors',
+                                                                                          'results__unicef_managers')
 
 
 # TODO: check this for sanity
@@ -1791,8 +1807,7 @@ class GovernmentIntervention(models.Model):
 
     def __unicode__(self):
         return 'Number: {}'.format(self.number) if self.number else \
-            '{}: {}'.format(self.pk,
-                             self.reference_number)
+            '{}: {}'.format(self.pk, self.reference_number)
 
     # country/partner/year/#
     @property
@@ -1851,7 +1866,7 @@ class GovernmentInterventionResult(models.Model):
         default=0,
         verbose_name='Planned Cash Transfers'
     )
-    activities = hstore.DictionaryField(
+    activities = HStoreField(
         blank=True, null=True
     )
     activity = JSONField(blank=True, null=True, default=activity_default)
@@ -1868,7 +1883,6 @@ class GovernmentInterventionResult(models.Model):
     planned_visits = models.IntegerField(default=0)
 
     tracker = FieldTracker()
-    objects = hstore.HStoreManager()
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -1885,8 +1899,7 @@ class GovernmentInterventionResult(models.Model):
         super(GovernmentInterventionResult, self).save(**kwargs)
 
     def __unicode__(self):
-        return '{}, {}'.format(self.intervention.number,
-                                self.result)
+        return '{}, {}'.format(self.intervention.number, self.result)
 
 
 class GovernmentInterventionResultActivity(models.Model):
@@ -2319,7 +2332,8 @@ class PCA(AdminURLMixin, models.Model):
 
         if self.budget_log.exists():
             return sum([b['unicef_cash'] + b['in_kind_amount'] + b['partner_contribution'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash', 'in_kind_amount', 'partner_contribution').
+                        self.budget_log.values('created', 'year', 'unicef_cash',
+                                               'in_kind_amount', 'partner_contribution').
                         order_by('year', '-created').distinct('year').all()])
         return 0
 
@@ -2348,7 +2362,8 @@ class PCA(AdminURLMixin, models.Model):
 
         if self.budget_log.exists():
             return sum([b['unicef_cash_local'] + b['in_kind_amount_local'] + b['partner_contribution_local'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local', 'partner_contribution_local').
+                        self.budget_log.values('created', 'year', 'unicef_cash_local',
+                                               'in_kind_amount_local', 'partner_contribution_local').
                         order_by('year', '-created').distinct('year').all()])
         return 0
 

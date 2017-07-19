@@ -283,8 +283,10 @@ def proccess_permissions(permission_dict):
 
 def import_permissions(model_name):
     permission_file_map = {
-        'Intervention': settings.SITE_ROOT + '/assets/partner/intervention_permissions.csv'
+        'Intervention': settings.SITE_ROOT + '/assets/partner/intervention_permissions.csv',
+        'Agreement': settings.SITE_ROOT + '/assets/partner/agreement_permissions.csv'
     }
+
     def process_file():
         with open(permission_file_map[model_name], 'rb') as csvfile:
             sheet = csv.DictReader(csvfile, delimiter=',', quotechar='|')
@@ -293,6 +295,6 @@ def import_permissions(model_name):
 
     cache_key = "public-{}-permissions".format(model_name.lower())
     # cache.delete(cache_key)
-    response = cache.get_or_set(cache_key, process_file(), 60*60*24)
+    response = cache.get_or_set(cache_key, process_file, 60*60*24)
 
     return response

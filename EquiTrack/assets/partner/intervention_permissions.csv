@@ -19,7 +19,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,end,Partnership Manager,,Draft,Edit,TRUE
 3.3.3,end,Partnership Manager,,Signed,Edit,TRUE
 3.3.5,sector_locations,Partnership Manager,,Draft,Edit,TRUE
-3.4.1,result_link,Partnership Manager,,Draft,Edit,TRUE
+3.4.1,result_links,Partnership Manager,,Draft,Edit,TRUE
 3.5,planned_budget,Partnership Manager,,Draft,Edit,TRUE
 3.5,planned_budget,Partnership Manager,,Signed,Edit,TRUE
 3.6,planned_visits,Partnership Manager,,Draft,Edit,TRUE
@@ -53,7 +53,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.2,start,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.3.3,end,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.3.5,sector_locations,Partnership Manager,user adds amendment,*,Edit,TRUE
-3.4.1,result_link,Partnership Manager,user adds amendment,*,Edit,TRUE
+3.4.1,result_links,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.5,planned_budget,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.5,planned_budget,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.6,planned_visits,Partnership Manager,user adds amendment,*,Edit,TRUE

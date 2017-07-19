@@ -2,15 +2,16 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 import json
-from freezegun import freeze_time
-from pytz import UTC
 from StringIO import StringIO
 from unittest import skip
 
 from django.core.urlresolvers import reverse
 
+from freezegun import freeze_time
+from pytz import UTC
+
 from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, PartnerFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import PartnerType
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
@@ -20,7 +21,7 @@ from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineComp
 from .factories import TravelFactory
 
 
-class TravelDetails(APITenantTestCase):
+class TravelDetails(URLAssertionMixin, APITenantTestCase):
     def setUp(self):
         super(TravelDetails, self).setUp()
         self.traveler = UserFactory(is_staff=True)
@@ -29,21 +30,24 @@ class TravelDetails(APITenantTestCase):
                                     supervisor=self.unicef_staff)
 
     def test_urls(self):
-        details_url = reverse('t2f:travels:details:index', kwargs={'travel_pk': 1})
-        self.assertEqual(details_url, '/api/t2f/travels/1/')
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        names_and_paths = (
+            ('index', '', {'travel_pk': 1}),
+            ('attachments', 'attachments/', {'travel_pk': 1}),
+            ('attachment_details', 'attachments/1/', {'travel_pk': 1, 'attachment_pk': 1}),
+            ('clone_for_driver', 'add_driver/', {'travel_pk': 1}),
+            ('clone_for_secondary_traveler', 'duplicate_travel/', {'travel_pk': 1}),
+            )
+        self.assertReversal(names_and_paths, 't2f:travels:details:', '/api/t2f/travels/1/')
+        self.assertIntParamRegexes(names_and_paths, 't2f:details:')
 
-        attachments_url = reverse('t2f:travels:details:attachments', kwargs={'travel_pk': 1})
-        self.assertEqual(attachments_url, '/api/t2f/travels/1/attachments/')
-
-        attachment_details_url = reverse('t2f:travels:details:attachment_details',
-                                         kwargs={'travel_pk': 1, 'attachment_pk': 1})
-        self.assertEqual(attachment_details_url, '/api/t2f/travels/1/attachments/1/')
-
-        add_driver_url = reverse('t2f:travels:details:clone_for_driver', kwargs={'travel_pk': 1})
-        self.assertEqual(add_driver_url, '/api/t2f/travels/1/add_driver/')
-
-        duplicate_travel_url = reverse('t2f:travels:details:clone_for_secondary_traveler', kwargs={'travel_pk': 1})
-        self.assertEqual(duplicate_travel_url, '/api/t2f/travels/1/duplicate_travel/')
+        # Verify the many state change URLs.
+        names = ('submit_for_approval', 'approve', 'reject', 'cancel', 'plan', 'send_for_payment',
+                 'submit_certificate', 'approve_certificate', 'reject_certificate', 'mark_as_certified',
+                 'mark_as_completed', )
+        names_and_paths = (('state_change', name + '/', {'travel_pk': 1, 'transition_name': name}) for name in names)
+        self.assertReversal(names_and_paths, 't2f:travels:details:', '/api/t2f/travels/1/')
+        self.assertIntParamRegexes(names_and_paths, 't2f:details:')
 
     def test_details_view(self):
         with self.assertNumQueries(25):
@@ -498,8 +502,8 @@ class TravelDetails(APITenantTestCase):
         travel_id = response_json['id']
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                         kwargs={'travel_pk': travel_id,
-                                                                 'transition_name': 'submit_for_approval'}),
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'non_field_errors': ['All itinerary items has to have DSA region assigned']})
@@ -533,8 +537,8 @@ class TravelDetails(APITenantTestCase):
         travel_id = response_json['id']
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
-                                                         kwargs={'travel_pk': travel_id,
-                                                                 'transition_name': 'submit_for_approval'}),
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
 
@@ -643,8 +647,7 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        itinerary_origin_destination_expectation = [u'Origin should match with'
-                                                     ' the previous destination',]
+        itinerary_origin_destination_expectation = [u'Origin should match with the previous destination']
         self.assertEqual(response_json['itinerary'], itinerary_origin_destination_expectation)
 
     def test_ta_not_required(self):
