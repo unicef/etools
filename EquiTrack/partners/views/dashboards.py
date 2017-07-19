@@ -1,48 +1,19 @@
-import operator
-import functools
-import datetime
-from decimal import Decimal
+from __future__ import unicode_literals
 
-from django.db import transaction
-from django.db.models import Q
+from datetime import datetime
+from django.db.models import Case, When, F, Max, DateTimeField, DurationField, ExpressionWrapper
 
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
-from rest_framework_csv import renderers as r
 from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
-    DestroyAPIView,
-    CreateAPIView
+    ListCreateAPIView
 )
-
-from EquiTrack.utils import get_data_from_insight
-from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import (
-    PartnerStaffMember,
     Intervention,
-    PartnerOrganization,
-    Assessment,
 )
 from partners.serializers.dashboards import InterventionDashSerializer
-from partners.serializers.partner_organization_v2 import (
-    PartnerOrganizationExportSerializer,
-    PartnerOrganizationListSerializer,
-    PartnerOrganizationDetailSerializer,
-    PartnerOrganizationCreateUpdateSerializer,
-    PartnerStaffMemberCreateUpdateSerializer,
-    PartnerStaffMemberDetailSerializer,
-    PartnerOrganizationHactSerializer,
-    AssessmentDetailSerializer,
-    MinimalPartnerOrganizationListSerializer,
-)
-from t2f.models import TravelActivity
-from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
-from partners.filters import PartnerScopeFilter
-from partners.exports_v2 import PartnerOrganizationCsvRenderer
+from t2f.models import Travel, TravelType
+
 
 class InterventionPartnershipDashView(ListCreateAPIView):
     """InterventionDashView
@@ -52,5 +23,19 @@ class InterventionPartnershipDashView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        q = Intervention.objects.all()
-        return q
+        today = datetime.now()
+        delta = ExpressionWrapper(today - F('last_pv_date'), output_field=DurationField())
+
+        qs = Intervention.objects
+
+        qs = qs \
+            .annotate(last_pv_date=Max(Case(When(travel_activities__travel_type=TravelType.PROGRAMME_MONITORING,
+                                                 travel_activities__travels__traveler=F(
+                                                     'travel_activities__primary_traveler'),
+                                                 travel_activities__travels__status=Travel.COMPLETED,
+                                                 then=F('travel_activities__date')),
+                                            output_field=DateTimeField())))
+
+        qs = qs.annotate(days_since_last_pv=delta)
+        return qs
+

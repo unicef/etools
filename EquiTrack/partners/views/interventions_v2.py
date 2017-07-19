@@ -128,7 +128,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
         )
 
     def get_queryset(self, format=None):
-        q = Intervention.objects.all()
+        q = Intervention.objects.detail_qs().all()
         query_params = self.request.query_params
 
         if query_params:
@@ -140,7 +140,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
                 except ValueError:
                     raise ValidationError("ID values must be integers")
                 else:
-                    return Intervention.objects.filter(id__in=ids)
+                    return Intervention.objects.detail_qs().filter(id__in=ids)
             if query_params.get("my_partnerships", "").lower() == "true":
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
@@ -199,16 +199,16 @@ class InterventionListDashView(ValidatorViewMixin, ListCreateAPIView):
     def get_queryset(self):
         # if Partnership Manager get all
         if self.request.user.groups.filter(name='Partnership Manager').exists():
-            return Intervention.objects.all()
+            return Intervention.objects.detail_qs().all()
 
-        return Intervention.objects.filter(unicef_focal_points__in=[self.request.user])
+        return Intervention.objects.detail_qs().filter(unicef_focal_points__in=[self.request.user])
 
 
 class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
     """
-    queryset = Intervention.objects.all()
+    queryset = Intervention.objects.detail_qs().all()
     serializer_class = InterventionDetailSerializer
     permission_classes = (IsAdminUser,)
 
@@ -356,7 +356,7 @@ class InterventionListMapView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        q = Intervention.objects.filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)
+        q = Intervention.objects.detail_qs().filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)
         query_params = self.request.query_params
 
         if query_params:
