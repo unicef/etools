@@ -4,7 +4,7 @@ import tempfile
 from django.core.files import File
 
 from attachments.models import FileType, Attachment
-from tpm.models import UNICEFFocalPoint, PME, ThirdPartyMonitor, UNICEFUser
+from tpm.models import PME, ThirdPartyMonitor, UNICEFUser
 from EquiTrack.factories import UserFactory
 from utils.groups.wrappers import GroupWrapper
 from .factories import TPMVisitFactory, TPMPartnerFactory, TPMPartnerStaffMemberFactory
@@ -60,9 +60,6 @@ class TPMTestCaseMixin(object):
         ]
 
         self.unicef_focal_point = UserFactory(first_name='UNICEF Focal Point')
-        self.unicef_focal_point.groups = [
-            UNICEFFocalPoint.as_group()
-        ]
 
         activity = self.tpm_visit.tpm_activities.first()
         activity.save()

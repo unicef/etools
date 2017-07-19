@@ -4,7 +4,7 @@ from django.utils import six
 
 from tenant_schemas import get_tenant_model
 
-from tpm.models import TPMPermission, UNICEFFocalPoint, UNICEFUser, PME, ThirdPartyMonitor
+from tpm.models import TPMPermission, UNICEFUser, PME, ThirdPartyMonitor
 
 
 class Command(BaseCommand):
@@ -15,7 +15,7 @@ class Command(BaseCommand):
     pme = 'pme'
     third_party_monitor = 'third_party_monitor'
     user_roles = {
-        focal_point: UNICEFFocalPoint.code,
+        focal_point: TPMPermission.USER_TYPES.unicef_focal_point,
         unicef_user: UNICEFUser.code,
         pme: PME.code,
         third_party_monitor: ThirdPartyMonitor.code,

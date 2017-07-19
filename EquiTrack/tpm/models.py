@@ -251,9 +251,6 @@ class TPMLocation(models.Model):
         return '{}: {}'.format(self.tpm_low_result, self.location)
 
 
-UNICEFFocalPoint = GroupWrapper(code='unicef_focal_point',
-                                name='UNICEF Focal Point')
-
 PME = GroupWrapper(code='pme',
                    name='PME')
 
@@ -273,8 +270,8 @@ class TPMPermissionsQueryset(StatusBasePermissionQueryset):
         if 'user' in kwargs and 'instance__in' in kwargs:
             user_type = self.model._get_user_type(kwargs.pop('user'))
             if user_type == UNICEFUser:
-                return self.filter(models.Q(user_type=UNICEFUser.code) | models.Q(user_type=UNICEFFocalPoint.code)) \
-                    .filter(**kwargs)
+                return self.filter(models.Q(user_type=UNICEFUser.code) \
+                                   | models.Q(user_type=self.model.USER_TYPES.unicef_focal_point)).filter(**kwargs)
 
             kwargs['user_type'] = user_type
             return self.filter(**kwargs)
@@ -287,7 +284,7 @@ class TPMPermission(StatusBasePermission):
     STATUSES = StatusBasePermission.STATUSES + TPMVisit.STATUSES
 
     USER_TYPES = Choices(
-        UNICEFFocalPoint.as_choice(),
+        ('unicef_focal_point', 'UNICEF Focal Point'),
         PME.as_choice(),
         ThirdPartyMonitor.as_choice(),
         UNICEFUser.as_choice(),
@@ -301,7 +298,7 @@ class TPMPermission(StatusBasePermission):
     @classmethod
     def _get_user_type(cls, user, instance=None):
         if instance and instance.tpm_activities.filter(unicef_focal_points=user).exists():
-            return UNICEFFocalPoint.code
+            return cls.USER_TYPES.unicef_focal_point
 
         user_type = super(TPMPermission, cls)._get_user_type(user)
         if user_type == ThirdPartyMonitor:
