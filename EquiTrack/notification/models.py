@@ -37,6 +37,7 @@ class Notification(models.Model):
         ('trips/action/created/updated/closed', 'trips/action/created/updated/closed'),
         ('trips/trip/summary', 'trips/trip/summary'),
         ('partners/partnership/created/updated', 'partners/partnership/created/updated'),
+        ('partners/partnership/signed/frs', 'partners/partnership/signed/frs')
     )
 
     type = models.CharField(max_length=255, default='Email')

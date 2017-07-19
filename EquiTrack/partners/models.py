@@ -853,17 +853,17 @@ class Agreement(TimeStampedModel):
         (MOU, 'Memorandum of Understanding'),
     )
 
-    DRAFT = u"draft"
-    SIGNED = u"signed"
-    ENDED = u"ended"
-    SUSPENDED = u"suspended"
-    TERMINATED = u"terminated"
+    DRAFT = "draft"
+    SIGNED = "signed"
+    ENDED = "ended"
+    SUSPENDED = "suspended"
+    TERMINATED = "terminated"
     STATUS_CHOICES = (
-        (DRAFT, u"Draft"),
-        (SIGNED, u"Signed"),
-        (ENDED, u"Ended"),
-        (SUSPENDED, u"Suspended"),
-        (TERMINATED, u"Terminated"),
+        (DRAFT, "Draft"),
+        (SIGNED, "Signed"),
+        (ENDED, "Ended"),
+        (SUSPENDED, "Suspended"),
+        (TERMINATED, "Terminated"),
     )
     AUTO_TRANSITIONS = {
         DRAFT: [SIGNED],
@@ -1519,6 +1519,10 @@ class Intervention(TimeStampedModel):
             elif self.status in [self.ENDED, self.SUSPENDED, self.TERMINATED] and self.status != self.agreement.status:
                 save_agreement = True
                 self.agreement.status = self.status
+
+            elif self.status in [self.CLOSED] and self.agreement.status != Agreement.ENDED:
+                save_agreement = True
+                self.agreement.status = Agreement.ENDED
 
             if save_agreement:
                 self.agreement.save()

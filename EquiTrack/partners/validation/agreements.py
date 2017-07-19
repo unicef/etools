@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import logging
 from datetime import date
 
+from django.utils.translation import ugettext as _
+
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError, \
     check_required_fields, BasicValidationError
 from partners.permissions import AgreementPermissions
@@ -71,6 +73,12 @@ def signed_by_everyone_valid(agreement):
 
 def signatures_valid(agreement):
     today = date.today()
+    unicef_signing_requirements = [agreement.signed_by_unicef_date, agreement.signed_by]
+    partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
+    if agreement.agreement_type == agreement.SSFA:
+        if any(unicef_signing_requirements + partner_signing_requirements):
+            raise BasicValidationError(_('SSFA signatures are captured at the Document (TOR) level, please clear the'
+                                         'signatures and dates and add them to the TOR'))
     unicef_signing_requirements = [agreement.signed_by_unicef_date, agreement.signed_by]
     partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
     if (any(unicef_signing_requirements) and not all(unicef_signing_requirements)) or \
@@ -155,12 +163,30 @@ class AgreementValid(CompleteValidation):
         if not rigid_valid:
             raise StateValidError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
 
+    def state_draft_valid(self, agreement, user=None):
+        # for SSFAs there will be no states valid since the states are forced by the Interventions
+        # Once signed, nothing will be editable on the agreement level
+        self.check_required_fields(agreement)
+        self.check_rigid_fields(agreement, related=True)
+        return True
+
     def state_signed_valid(self, agreement, user=None):
+        # for SSFAs there will be no states valid since the states are forced by the Interventions
+        # Once signed, nothing will be editable on the agreement level
+        if agreement.agreement_type == agreement.SSFA:
+            return False
         self.check_required_fields(agreement)
         self.check_rigid_fields(agreement, related=True)
         return True
 
     def state_ended_valid(self, agreement, user=None):
+        # for SSFAs there will be no states valid since the states are forced by the Interventions
+        # Once signed, nothing will be editable on the agreement level
+        if agreement.agreement_type == agreement.SSFA:
+            return False
+
+        self.check_required_fields(agreement)
+        self.check_rigid_fields(agreement, related=True)
         today = date.today()
         if not today > agreement.end:
             raise StateValidError([_('Today is not after the end date')])
