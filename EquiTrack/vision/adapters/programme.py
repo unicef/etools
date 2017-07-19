@@ -1,10 +1,14 @@
 import json
 import datetime
+
+import logging
 from django.db import transaction
 
 from reports.models import ResultType, Result, Indicator, CountryProgramme
 from vision.utils import wcf_json_date_as_datetime, wcf_json_date_as_date
 from vision.vision_data_synchronizer import VisionDataSynchronizer
+
+logger = logging.getLogger(__name__)
 
 
 class ResultStructureSynchronizer(object):
@@ -320,12 +324,6 @@ class RAMSynchronizer(VisionDataSynchronizer):
         "BASELINE",
         "TARGET",
     )
-    MAPPING = {
-        'name': 'INDICATOR_DESCRIPTION',
-        'baseline': 'BASELINE',
-        'target': 'TARGET',
-        'code': 'INDICATOR_CODE',
-    }
 
     def _convert_records(self, records):
         return json.loads(records)
@@ -341,34 +339,109 @@ class RAMSynchronizer(VisionDataSynchronizer):
 
     def _save_records(self, records):
 
-        results = Result.objects.filter(result_type__name='Output')
-        lookup = {}
-        for result in results:
-            if result.wbs:
-                lookup[result.wbs.replace('/', '') + '000'] = result
-
-        processed = 0
-        filtered_records = self._filter_records(records)
-        for ram_indicator in filtered_records:
-            try:
-                result = lookup[ram_indicator['WBS_ELEMENT_CODE']]
-            except KeyError:
-                print 'No result found for WBS: {}'.format(ram_indicator['WBS_ELEMENT_CODE'])
-            else:
-                indicator, created = Indicator.objects.get_or_create(
-                    code=ram_indicator['INDICATOR_CODE'],
-                    result=result,
-                    ram_indicator=True,
-                )
-                if created or self._changed_fields(['name', 'baseline', 'target'], indicator, ram_indicator):
-                    indicator.name = ram_indicator['INDICATOR_DESCRIPTION'][:1024]
-                    indicator.baseline = ram_indicator['BASELINE'][:255]
-                    indicator.target = ram_indicator['TARGET'][:255]
-                    indicator.save()
-
-                if not result.ram:
-                    result.ram = True
-                    result.save()
-                processed += 1
+        processed = self.process_indicators(records)
 
         return processed
+
+    def _clean_records(self, records):
+        records = self._filter_records(records)
+        wbss = []
+        mapped_records = {}
+        for r in records:
+            a = r['WBS_ELEMENT_CODE']
+            code = unicode(r['INDICATOR_CODE'])
+            mapped_records[code] = {
+                'name': r['INDICATOR_DESCRIPTION'][:1024],
+                'baseline': r['BASELINE'][:255],
+                'code': code,
+                'target': r['TARGET'][:255],
+                'ram_indicator': True,
+                'result__wbs': '/'.join([a[0:4], a[4:6], a[6:8], a[8:11], a[11:14]])
+            }
+            wbss.append(mapped_records[code]['result__wbs'])
+        return mapped_records, wbss
+
+    def process_indicators(self, records):
+        updated = 0
+        skipped_update = 0
+        skipped_creation = 0
+
+        fields_that_can_change = ['name', 'baseline', 'target', 'result__wbs']
+        # get all the indicators that are present in our db:
+        records, wbss = self._clean_records(records)
+
+        results = Result.objects.filter(result_type__name='Output', wbs__in=wbss).all()
+        result_map = dict([(r.wbs, r) for r in results])
+
+        existing_records = Indicator.objects.filter(code__in=records.keys()).prefetch_related('result').all()
+
+        for er in existing_records:
+            # remote record:
+            rr = records[er.code]
+            record_needs_saving = False
+            for field in fields_that_can_change:
+                if field == 'result__wbs':
+                    if not er.result:
+                        try:
+                            missing_result = Result.objects.get(wbs=rr[field])
+                        except Result.DoesNotExist:
+                            logger.error('Indicator missing result {}'.format(er.id))
+                            break
+                        else:
+                            er.result = missing_result
+                            record_needs_saving = True
+                            continue
+                    if er.result.wbs != rr[field]:
+                        try:
+                            er.result = result_map[rr[field]]
+                        except KeyError:
+                            skipped_update += 1
+                            logger.error('Result not found for wbs {} for indicator with code {}'.format(rr[field],
+                                                                                                         er.code))
+                        else:
+                            record_needs_saving = True
+                elif getattr(er, field) != rr[field]:
+                        setattr(er, field, rr[field])
+                        record_needs_saving = True
+            if record_needs_saving:
+                updated += 1
+                er.save()
+
+        list_of_existing_codes = [er.code for er in existing_records]
+
+        records_to_create = []
+        for r in records.items():
+            if r[0] in list_of_existing_codes:
+                continue
+            try:
+                r[1]['result'] = result_map[r[1].pop('result__wbs', None)]
+            except KeyError:
+                skipped_creation += 1
+                logger.error('Result not found for non-existent indicator with code {}'.format(r[1]['code']))
+            else:
+                records_to_create.append(r[1])
+
+        created = Indicator.objects.bulk_create([Indicator(**r) for r in records_to_create])
+
+        # print('Total Remote', len(wbss))
+        # print('Created, ', len(created))
+        # print('Updated, ', updated)
+        # print('Created Skipped, ', skipped_creation)
+        # print('Updated Skipped, ', skipped_update)
+
+        indicators_activated = Indicator.objects.filter(code__in=records.keys()).filter(active=False).update(active=True)
+
+        indicators_deactivated = Indicator.objects.exclude(code__in=records.keys()).exclude(active=False).update(active=False)
+
+        return {
+            'details': '\n'.join([
+                'Created Skipped {}'.format(skipped_creation),
+                'Updated Skipped {}'.format(skipped_update),
+                'Created {}'.format(len(created)),
+                'Indicators Updated to Active {}'.format(indicators_activated),
+                'Indicators Updated to Inactive {}'.format(indicators_deactivated),
+                'Updated {}'.format(updated)
+            ]),
+            'total_records': len(wbss),
+            'processed': len(created) + updated
+        }

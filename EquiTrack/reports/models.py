@@ -432,7 +432,8 @@ class Indicator(models.Model):
         unique_together = (("name", "result", "sector"),)
 
     def __unicode__(self):
-        return u'{} {} {}'.format(
+        return u'{}{} {} {}'.format(
+            u'' if self.active else u'[Inactive] ',
             self.name,
             u'Baseline: {}'.format(self.baseline) if self.baseline else u'',
             u'Target: {}'.format(self.target) if self.target else u''
