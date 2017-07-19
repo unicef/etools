@@ -424,7 +424,7 @@ class Indicator(models.Model):
     target = models.CharField(max_length=255, null=True, blank=True)
     baseline = models.CharField(max_length=255, null=True, blank=True)
     ram_indicator = models.BooleanField(default=False)
-
+    active = models.BooleanField(default=True)
     view_on_dashboard = models.BooleanField(default=False)
 
     class Meta:
