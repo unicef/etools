@@ -47,7 +47,7 @@ class DisplayStatusFilter(BaseFilterBackend):
 
 class UniqueIDOrderingFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        ordering = request.query_params.get('ordering')
+        ordering = request.query_params.get('ordering', '')
         if not ordering.lstrip('-') == 'unique_id':
             return queryset
 
