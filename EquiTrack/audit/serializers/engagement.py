@@ -41,7 +41,9 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
         pass
 
 
-class EngagementActionPointSerializer(UserContextSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
+class EngagementActionPointSerializer(UserContextSerializerMixin,
+                                      WritableNestedSerializerMixin,
+                                      serializers.ModelSerializer):
     person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True))
 
     class Meta(WritableNestedSerializerMixin.Meta):
