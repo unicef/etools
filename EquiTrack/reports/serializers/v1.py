@@ -45,6 +45,10 @@ class SectorLightSerializer(serializers.ModelSerializer):
 
 
 class IndicatorSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        return '{}{}'.format('[Inactive] ' if not obj.active else '', obj.name)
 
     class Meta:
         model = Indicator

@@ -424,7 +424,7 @@ class Indicator(models.Model):
     target = models.CharField(max_length=255, null=True, blank=True)
     baseline = models.CharField(max_length=255, null=True, blank=True)
     ram_indicator = models.BooleanField(default=False)
-
+    active = models.BooleanField(default=True)
     view_on_dashboard = models.BooleanField(default=False)
 
     class Meta:
@@ -432,7 +432,8 @@ class Indicator(models.Model):
         unique_together = (("name", "result", "sector"),)
 
     def __unicode__(self):
-        return u'{} {} {}'.format(
+        return u'{}{} {} {}'.format(
+            u'' if self.active else u'[Inactive] ',
             self.name,
             u'Baseline: {}'.format(self.baseline) if self.baseline else u'',
             u'Target: {}'.format(self.target) if self.target else u''
