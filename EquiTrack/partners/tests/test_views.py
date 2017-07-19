@@ -57,14 +57,6 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partners/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
-        names_and_paths = (
-            # ('partnership-dash-with-ct-office', '1/3/', {'ct_pk': 1, 'office_pk': 3}),
-            # ('partnership-dash-with-ct', '1/', {'ct_pk': 1}),
-            ('partnership-dash', '', {}),
-            )
-        self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partnership-dash/')
-        self.assertIntParamRegexes(names_and_paths, 'partners_api:')
-
 
 class TestPartnerOrganizationViews(APITenantTestCase):
 
