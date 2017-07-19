@@ -39,7 +39,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
             ('clone_for_secondary_traveler', 'duplicate_travel/', {'travel_pk': 1}),
             )
         self.assertReversal(names_and_paths, 't2f:travels:details:', '/api/t2f/travels/1/')
-        self.assertIntParamRegexes(names_and_paths, 't2f:details:')
+        self.assertIntParamRegexes(names_and_paths, 't2f:travels:details:')
 
         # Verify the many state change URLs.
         names = ('submit_for_approval', 'approve', 'reject', 'cancel', 'plan', 'send_for_payment',
@@ -47,7 +47,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                  'mark_as_completed', )
         names_and_paths = (('state_change', name + '/', {'travel_pk': 1, 'transition_name': name}) for name in names)
         self.assertReversal(names_and_paths, 't2f:travels:details:', '/api/t2f/travels/1/')
-        self.assertIntParamRegexes(names_and_paths, 't2f:details:')
+        self.assertIntParamRegexes(names_and_paths, 't2f:travels:details:')
 
     def test_details_view(self):
         with self.assertNumQueries(25):
