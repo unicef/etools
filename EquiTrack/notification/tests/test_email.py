@@ -1,5 +1,4 @@
 import datetime
-from unittest import skip
 
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import NotificationFactory

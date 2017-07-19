@@ -7,7 +7,6 @@ exclude =
     EquiTrack,
     locations,
     manage_debug.py,
-    notification,
     partners,
     publics,
     reports,
