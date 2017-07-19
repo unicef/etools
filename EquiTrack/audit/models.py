@@ -592,11 +592,33 @@ class EngagementActionPoint(models.Model):
     engagement = models.ForeignKey(Engagement, related_name='action_points')
     description = models.CharField(max_length=100, choices=DESCRIPTION_CHOICES)
     due_date = models.DateField()
-    person_responsible = models.ForeignKey(User)
+    author = models.ForeignKey(User, related_name='created_engagement_action_points')
+    person_responsible = models.ForeignKey(User, related_name='engagement_action_points')
     comments = models.TextField()
 
     def __str__(self):
         return '{} on {}'.format(self.get_description_display(), self.engagement)
+
+    def save(self, *args, **kwargs):
+        super(EngagementActionPoint, self).save(*args, **kwargs)
+
+        self._notify_person_responsible('audit/engagement/action_point_assigned')
+
+    def _notify_person_responsible(self, template_name):
+        context = {
+            'engagement_url': self.engagement.get_object_url(),
+            'environment': get_environment(),
+            'engagement': self.engagement,
+            'action_point': self,
+        }
+
+        mail.send(
+            self.person_responsible.email,
+            settings.DEFAULT_FROM_EMAIL,
+            cc=[self.author.email],
+            template=template_name,
+            context=context,
+        )
 
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',

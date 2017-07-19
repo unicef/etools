@@ -58,5 +58,20 @@
             "language": "",
             "default_template": null
         }
+    },
+    {
+        "model": "post_office.emailtemplate",
+        "pk": 22,
+        "fields": {
+            "name": "audit/engagement/action_point_assigned",
+            "description": "",
+            "created": "2017-07-19T10:08:23.360Z",
+            "last_updated": "2017-07-19T10:40:35.831Z",
+            "subject": "[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}",
+            "content": "Dear {{ action_point.person_responsible }},\r\n\r\n{{ action_point.author }} has assigned you an action point. \r\n\r\nEngagement ID: {{ engagement.unique_id }}\r\nDescription: {{ action_point.description }}\r\nDue Date: {{ action_point.due_date}}\r\nLink: {{ engagement.get_object_url }} \r\n\r\nThank you.",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ action_point.person_responsible }},\r\n\r\n{{ action_point.author }} has assigned you an action point. \r\n\r\nEngagement ID: {{ engagement.unique_id }}\r\nDescription: {{ action_point.description }}\r\nDue Date: {{ action_point.due_date}}\r\nLink: {{ engagement.get_object_url }} \r\n\r\nThank you.\r\n{% endblock %}",
+            "language": "",
+            "default_template": null
+        }
     }
 ]

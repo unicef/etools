@@ -12,6 +12,7 @@ from attachments.models import FileType
 from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
 from users.serializers import MinimalUserSerializer
+from utils.common.serializers.mixins import UserContextSerializerMixin
 from utils.writable_serializers.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
 from .auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
@@ -40,7 +41,7 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
         pass
 
 
-class EngagementActionPointSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class EngagementActionPointSerializer(UserContextSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
     person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True))
 
     class Meta(WritableNestedSerializerMixin.Meta):
@@ -48,6 +49,10 @@ class EngagementActionPointSerializer(WritableNestedSerializerMixin, serializers
         fields = [
             'id', 'description', 'due_date', 'person_responsible', 'comments',
         ]
+
+    def create(self, validated_data):
+        validated_data['author'] = self.get_user()
+        return super(EngagementActionPointSerializer, self).create(validated_data)
 
 
 class EngagementExportSerializer(serializers.ModelSerializer):
