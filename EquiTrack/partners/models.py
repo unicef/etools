@@ -1135,9 +1135,7 @@ class InterventionManager(models.Manager):
                                                                                 'offices',
                                                                                 'planned_budget')
     def detail_qs(self):
-        return self.get_queryset().prefetch_related('result_links',
-                                                    'sector_locations__locations',
-                                                    'attachments__type',
+        return self.get_queryset().prefetch_related('result_links__cp_output',
                                                     'unicef_focal_points')
 
 

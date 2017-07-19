@@ -356,7 +356,9 @@ class InterventionListMapView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        q = Intervention.objects.detail_qs().filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)
+        q = Intervention.objects.detail_qs()\
+            .filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)\
+            .prefetch_related('sector_locations__locations')
         query_params = self.request.query_params
 
         if query_params:
