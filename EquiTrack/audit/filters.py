@@ -43,3 +43,15 @@ class DisplayStatusFilter(BaseFilterBackend):
             )
 
         return queryset
+
+
+class UniqueIDOrderingFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        ordering = request.query_params.get('ordering')
+        if not ordering.lstrip('-') == 'unique_id':
+            return queryset
+
+        ordering_params = ['partner__name', 'type', 'created_year', 'id']
+
+        return queryset.extra(select={'created_year': 'EXTRACT(year FROM created)'})\
+            .order_by(*map(lambda param: ('' if ordering == 'unique_id' else '-') + param, ordering_params))
