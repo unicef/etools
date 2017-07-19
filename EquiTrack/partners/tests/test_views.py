@@ -58,8 +58,8 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
         names_and_paths = (
-            ('partnership-dash-with-ct-office', '1/3/', {'ct_pk': 1, 'office_pk': 3}),
-            ('partnership-dash-with-ct', '1/', {'ct_pk': 1}),
+            # ('partnership-dash-with-ct-office', '1/3/', {'ct_pk': 1, 'office_pk': 3}),
+            # ('partnership-dash-with-ct', '1/', {'ct_pk': 1}),
             ('partnership-dash', '', {}),
             )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partnership-dash/')
@@ -1974,6 +1974,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
         )
         self.intervention_data = response.data
 
+    @skip('endpoint deprecated')
     def test_with_ct_pk(self):
         intervention = Intervention.objects.get(id=self.intervention_data['id'])
         intervention.status = Intervention.ACTIVE
