@@ -8,7 +8,8 @@ from post_office import mail
 from post_office.models import EmailTemplate
 
 
-def send_mail(sender, recipients, template, variables, attachments=None, cc_list=None, bcc_list=None, notification_obj=None):
+def send_mail(sender, recipients, template, variables,
+              attachments=None, cc_list=None, bcc_list=None, notification_obj=None):
     """
     Single mail send hook that is reused across the project
     """
@@ -57,17 +58,14 @@ class BaseEmail(object):
     def get_email_template(cls):
         if cls.template_name is None:
             raise NotImplemented()
-        try:
-            template = EmailTemplate.objects.get(
-                name=cls.template_name
-            )
-        except EmailTemplate.DoesNotExist:
-            template = EmailTemplate.objects.create(
-                name=cls.template_name,
-                description=cls.description,
-                subject=cls.subject,
-                content=cls.content
-            )
+        template, created = EmailTemplate.objects.get_or_create(
+            name=cls.template_name,
+            defaults={
+                'description': cls.description,
+                'subject': cls.subject,
+                'content': cls.content,
+            }
+        )
         return template
 
     def get_context(self):
