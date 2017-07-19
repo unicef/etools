@@ -26,7 +26,7 @@ class InterventionPartnershipDashView(ListCreateAPIView):
         today = datetime.now()
         delta = ExpressionWrapper(today - F('last_pv_date'), output_field=DurationField())
 
-        qs = Intervention.objects
+        qs = Intervention.objects.exclude(status=Intervention.DRAFT)
 
         qs = qs \
             .annotate(last_pv_date=Max(Case(When(travel_activities__travel_type=TravelType.PROGRAMME_MONITORING,
