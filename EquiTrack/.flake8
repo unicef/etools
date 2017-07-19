@@ -6,7 +6,6 @@ exclude =
     # Everything below here will eventually be removed from 'exclude'
     EquiTrack,
     manage_debug.py,
-    notification,
     partners,
     publics,
     reports,
