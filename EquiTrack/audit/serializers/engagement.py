@@ -173,11 +173,14 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
 class SpotCheckSerializer(EngagementSerializer):
     findings = FindingSerializer(many=True, required=False)
 
+    face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', read_only=True, source='start_date')
+    face_form_end_date = serializers.DateField(label='FACE Form(s) End Date', read_only=True, source='end_date')
+
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
         fields = EngagementSerializer.Meta.fields + [
             'total_amount_tested', 'total_amount_of_ineligible_expenditure',
-            'internal_controls', 'findings',
+            'internal_controls', 'findings', 'face_form_start_date', 'face_form_end_date',
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
