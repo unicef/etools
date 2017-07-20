@@ -270,7 +270,7 @@ class TPMPermissionsQueryset(StatusBasePermissionQueryset):
         if 'user' in kwargs and 'instance__in' in kwargs:
             user_type = self.model._get_user_type(kwargs.pop('user'))
             if user_type == UNICEFUser:
-                return self.filter(models.Q(user_type=UNICEFUser.code) \
+                return self.filter(models.Q(user_type=UNICEFUser.code)
                                    | models.Q(user_type=self.model.USER_TYPES.unicef_focal_point)).filter(**kwargs)
 
             kwargs['user_type'] = user_type
