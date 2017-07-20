@@ -154,13 +154,15 @@ class Engagement(TimeStampedModel, models.Model):
     date_of_final_report = models.DateField(_('date report finalized'), null=True, blank=True)
     date_of_cancel = models.DateField(_('date report canceled'), null=True, blank=True)
 
-    amount_refunded = models.IntegerField(_('amount refunded'), null=True, blank=True)
-    additional_supporting_documentation_provided = models.IntegerField(
-        _('additional supporting documentation provided'), null=True, blank=True)
-    justification_provided_and_accepted = models.IntegerField(_('justification provided and accepted'), null=True,
-                                                              blank=True)
-    write_off_required = models.IntegerField(_('write off required'), null=True, blank=True)
-    pending_unsupported_amount = models.IntegerField(_('pending unsupported amount'), null=True, blank=True)
+    amount_refunded = models.DecimalField(_('amount refunded'), null=True, blank=True, decimal_places=2, max_digits=20)
+    additional_supporting_documentation_provided = models.DecimalField(
+        _('additional supporting documentation provided'), null=True, blank=True, decimal_places=2, max_digits=20)
+    justification_provided_and_accepted = models.DecimalField(_('justification provided and accepted'), null=True,
+                                                              blank=True, decimal_places=2, max_digits=20)
+    write_off_required = models.DecimalField(_('write off required'), null=True, blank=True,
+                                             decimal_places=2, max_digits=20)
+    pending_unsupported_amount = models.DecimalField(_('pending unsupported amount'), null=True, blank=True,
+                                                     decimal_places=2, max_digits=20)
     explanation_for_additional_information = models.TextField(
         _('Provide explanation for additional information received from the IP or add attachments'), blank=True
     )
@@ -366,9 +368,11 @@ class Risk(models.Model):
 
 @python_2_unicode_compatible
 class SpotCheck(Engagement):
-    total_amount_tested = models.IntegerField(_('Total amount tested'), null=True, blank=True)
-    total_amount_of_ineligible_expenditure = models.IntegerField(_('Total amount of ineligible expenditure'),
-                                                                 null=True, blank=True)
+    total_amount_tested = models.DecimalField(_('Total amount tested'), null=True, blank=True,
+                                              decimal_places=2, max_digits=20)
+    total_amount_of_ineligible_expenditure = models.DecimalField(_('Total amount of ineligible expenditure'),
+                                                                 null=True, blank=True,
+                                                                 decimal_places=2, max_digits=20)
 
     internal_controls = models.TextField(_('Internal controls'), blank=True)
 
@@ -508,8 +512,10 @@ class Audit(Engagement):
         ("adverse_opinion", _("Adverse opinion")),
     )
 
-    audited_expenditure = models.IntegerField(_('Audited expenditure (USD)'), null=True, blank=True)
-    financial_findings = models.IntegerField(_('Financial findings (USD)'), null=True, blank=True)
+    audited_expenditure = models.DecimalField(_('Audited expenditure (USD)'), null=True, blank=True,
+                                              decimal_places=2, max_digits=20)
+    financial_findings = models.DecimalField(_('Financial findings (USD)'), null=True, blank=True,
+                                             decimal_places=2, max_digits=20)
     percent_of_audited_expenditure = models.DecimalField(
         _('% of audited expenditure'),
         null=True, blank=True,
@@ -563,8 +569,8 @@ class FinancialFinding(models.Model):
     audit = models.ForeignKey(Audit, verbose_name=_('audit'), related_name='financial_finding_set')
 
     title = models.CharField(_('Title (Category)'), max_length=255)
-    local_amount = models.IntegerField(_('Amount (local)'))
-    amount = models.IntegerField(_('Amount (USD)'))
+    local_amount = models.DecimalField(_('Amount (local)'), decimal_places=2, max_digits=20)
+    amount = models.DecimalField(_('Amount (USD)'), decimal_places=2, max_digits=20)
     description = models.TextField(_('description'))
     recommendation = models.TextField(_('recommendation'), blank=True)
     ip_comments = models.TextField(_('IP comments'), blank=True)
