@@ -89,14 +89,15 @@ def cost_assignment_sync(country_name=None):
 
 
 @app.task
-def sync(country_name=None):
+def sync(country_name=None, synchronizers=None):
+    synchronizers = synchronizers or SYNC_HANDLERS
     processed = []
     countries = Country.objects.filter(vision_sync_enabled=True)
     if country_name is not None:
         countries = countries.filter(name=country_name)
 
-    global_handlers = [handler for handler in SYNC_HANDLERS if handler.GLOBAL_CALL]
-    tenant_handlers = [handler for handler in SYNC_HANDLERS if not handler.GLOBAL_CALL]
+    global_handlers = [handler for handler in synchronizers if handler.GLOBAL_CALL]
+    tenant_handlers = [handler for handler in synchronizers if not handler.GLOBAL_CALL]
 
     public_tenant = Country.objects.get(schema_name='public')
     for handler in global_handlers:

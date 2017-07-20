@@ -48,7 +48,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 class TestInterventionsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
     EDITABLE_FIELDS = {
-        'draft': ["status", "sector_locations", "attachments", "prc_review_document",
+        'draft': ["status", "sector_locations", "attachments", "prc_review_document", 'travel_activities',
                   "partner_authorized_officer_signatory", "partner_focal_points", "distributions", "id",
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
                   "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start", "supplies",
@@ -337,7 +337,7 @@ class TestInterventionsAPI(APITenantTestCase):
 
 
     def test_list_interventions(self):
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(10):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
@@ -355,7 +355,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
         # even though we added a new intervention, the number of queries remained static
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(10):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
