@@ -160,7 +160,6 @@ class Engagement(TimeStampedModel, models.Model):
     justification_provided_and_accepted = models.IntegerField(_('justification provided and accepted'), null=True,
                                                               blank=True)
     write_off_required = models.IntegerField(_('write off required'), null=True, blank=True)
-    pending_unsupported_amount = models.IntegerField(_('pending unsupported amount'), null=True, blank=True)
     explanation_for_additional_information = models.TextField(
         _('Provide explanation for additional information received from the IP or add attachments'), blank=True
     )
@@ -376,6 +375,14 @@ class SpotCheck(Engagement):
         verbose_name = _('Spot Check')
         verbose_name_plural = _('Spot Checks')
 
+    @property
+    def pending_unsupported_amount(self):
+        try:
+            return self.total_amount_of_ineligible_expenditure - self.additional_supporting_documentation_provided \
+                - self.justification_provided_and_accepted - self.write_off_required
+        except TypeError:
+            return None
+
     def save(self, *args, **kwars):
         self.type = Engagement.TYPES.sc
         return super(SpotCheck, self).save(*args, **kwars)
@@ -538,6 +545,15 @@ class Audit(Engagement):
     def save(self, *args, **kwars):
         self.type = Engagement.TYPES.audit
         return super(Audit, self).save(*args, **kwars)
+
+    @property
+    def pending_unsupported_amount(self):
+        try:
+            return self.financial_findings - self.amount_refunded \
+                - self.additional_supporting_documentation_provided \
+                - self.justification_provided_and_accepted - self.write_off_required
+        except TypeError:
+            return None
 
     @transition(
         'status',

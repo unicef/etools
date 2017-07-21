@@ -134,9 +134,6 @@ class EngagementSerializer(EngagementDatesValidation,
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
             'cancel_comment',
-
-            'amount_refunded', 'additional_supporting_documentation_provided',
-            'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
@@ -194,11 +191,16 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
 class SpotCheckSerializer(EngagementSerializer):
     findings = FindingSerializer(many=True, required=False)
 
+    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
         fields = EngagementSerializer.Meta.fields + [
             'total_amount_tested', 'total_amount_of_ineligible_expenditure',
             'internal_controls', 'findings',
+
+            'amount_refunded', 'additional_supporting_documentation_provided',
+            'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
@@ -253,6 +255,8 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
     financial_finding_set = FinancialFindingSerializer(many=True, required=False)
     key_internal_weakness = AggregatedRiskCountRiskRootSerializer(code='audit_key_weakness', required=False)
 
+    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+
     class Meta(EngagementSerializer.Meta):
         model = Audit
         risk_categories_fields = ('key_internal_weakness', )
@@ -261,6 +265,9 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
             'audit_opinion', 'number_of_financial_findings',
             'high_risk', 'medium_risk', 'low_risk',
             'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness'
+
+            'amount_refunded', 'additional_supporting_documentation_provided',
+            'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({

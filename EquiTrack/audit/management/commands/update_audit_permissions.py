@@ -160,11 +160,26 @@ class Command(BaseCommand):
 
         # UNICEF Focal Point can create action points
         self.add_permissions(self.final_report, self.focal_point, 'edit', ['engagement.action_points'])
+        self.add_permissions(self.final_report, self.focal_point, 'edit', [
+            'engagement.amount_refunded',
+            'engagement.additional_supporting_documentation_provided',
+            'engagement.justification_provided_and_accepted',
+            'engagement.write_off_required',
+        ])
+
+        # Follow-Up fields available in finalized engagements.
+        for status in [self.new_engagement, self.partner_contacted, self.report_submitted, self.report_canceled]:
+            self.revoke_permissions(status, self.everybody, 'view', ['engagement.action_points'])
+            self.revoke_permissions(status, self.everybody, 'view', [
+                'engagement.amount_refunded',
+                'engagement.additional_supporting_documentation_provided',
+                'engagement.justification_provided_and_accepted',
+                'engagement.write_off_required',
+                'engagement.pending_unsupported_amount',
+            ])
 
         # Auditor does not have access to action points
-        for status in [self.new_engagement, self.partner_contacted, self.report_submitted,
-                       self.final_report, self.report_canceled]:
-            self.revoke_permissions(status, self.auditor, 'view', ['engagement.action_points'])
+        self.revoke_permissions(self.final_report, self.auditor, 'view', ['engagemnet.action_points'])
 
         # update permissions
         all_tenants = get_tenant_model().objects.exclude(schema_name='public')
