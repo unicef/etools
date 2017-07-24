@@ -141,7 +141,16 @@ class Command(BaseCommand):
         ])
 
         self.add_permissions(self.partner_contacted, self.all_unicef_users, 'view', self.everything)
-        self.add_permissions(self.partner_contacted, self.focal_point, 'edit', self.staff_members_block)
+        self.add_permissions(
+            self.partner_contacted, self.focal_point, 'edit', self.staff_members_block + [
+                'engagement.partner',
+                'engagement.partner_contacted_at',
+                'engagement.authorized_officers',
+                'engagement.active_pd',
+                'engagement.engagement_attachments',
+                'attachment.*',
+            ]
+        )
         self.add_permissions(self.partner_contacted, self.focal_point, 'action', 'engagement.cancel')
 
         # report submitted. focal point can finalize. all can view
