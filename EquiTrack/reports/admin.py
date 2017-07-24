@@ -4,7 +4,6 @@ from import_export.admin import ImportExportModelAdmin
 from mptt.admin import MPTTModelAdmin
 
 from EquiTrack.forms import AutoSizeTextForm
-
 from reports.models import (
     Sector,
     Goal,
@@ -16,7 +15,7 @@ from reports.models import (
     IndicatorBlueprint,
     AppliedIndicator
 )
-from .forms import IndicatorAdminForm
+from reports.forms import IndicatorAdminForm
 
 
 class SectorListFilter(admin.SimpleListFilter):

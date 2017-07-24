@@ -8,7 +8,6 @@ exclude =
     manage_debug.py,
     partners,
     publics,
-    reports,
     supplies,
     t2f,
     tpm,
