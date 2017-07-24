@@ -172,7 +172,7 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
     class Meta(WritableNestedSerializerMixin.Meta):
         model = Finding
         fields = [
-            'id', 'priority', 'category_of_observation',
+            'id', 'finding_number', 'priority', 'category_of_observation',
             'recommendation', 'agreed_action_by_ip', 'deadline_of_action',
         ]
 
@@ -232,7 +232,7 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
     class Meta(WritableNestedSerializerMixin.Meta):
         model = FinancialFinding
         fields = [
-            'id', 'title',
+            'id', 'finding_number', 'title',
             'local_amount', 'amount',
             'description', 'recommendation', 'ip_comments'
         ]

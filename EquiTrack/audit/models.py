@@ -464,6 +464,7 @@ class Finding(models.Model):
     )
 
     spot_check = models.ForeignKey(SpotCheck, verbose_name=_('spot check'), related_name='findings')
+    finding_number = models.PositiveIntegerField(_('Finding number'), editable=False)
 
     priority = models.CharField(_('priority'), max_length=4, choices=PRIORITIES)
 
@@ -472,8 +473,18 @@ class Finding(models.Model):
     agreed_action_by_ip = models.TextField(_('agreed action by IP'), blank=True)
     deadline_of_action = models.DateField(_('deadline of action'), null=True, blank=True)
 
+    class Meta:
+        unique_together = ['spot_check', 'finding_number']
+
     def __str__(self):
         return 'Finding for {}'.format(self.spot_check)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.finding_number = (self.spot_check.findings.aggregate(
+                max_fn=models.Max('finding_number')
+            )['max_fn'] or 0) + 1
+        super(Finding, self).save(*args, **kwargs)
 
 
 @python_2_unicode_compatible
@@ -582,12 +593,24 @@ class Audit(Engagement):
 class FinancialFinding(models.Model):
     audit = models.ForeignKey(Audit, verbose_name=_('audit'), related_name='financial_finding_set')
 
+    finding_number = models.PositiveIntegerField(_('Finding Number'), editable=False)
     title = models.CharField(_('Title (Category)'), max_length=255)
     local_amount = models.DecimalField(_('Amount (local)'), decimal_places=2, max_digits=20)
     amount = models.DecimalField(_('Amount (USD)'), decimal_places=2, max_digits=20)
     description = models.TextField(_('description'))
     recommendation = models.TextField(_('recommendation'), blank=True)
     ip_comments = models.TextField(_('IP comments'), blank=True)
+
+    class Meta:
+        unique_together = ['audit', 'finding_number']
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.finding_number = (self.audit.financial_finding_set.aggregate(
+                max_fn=models.Max('finding_number')
+            )['max_fn'] or 0) + 1
+
+        super(FinancialFinding, self).save(*args, **kwargs)
 
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',
