@@ -1,8 +1,5 @@
-__author__ = 'jcranwellward'
-
-
 from EquiTrack.utils import BaseExportResource
-from .models import TPMVisit
+from tpm.models import TPMVisit
 
 
 class TPMResource(BaseExportResource):
@@ -27,5 +24,3 @@ class TPMResource(BaseExportResource):
     def fill_row(self, tpm, row):
 
         self.fill_tpm_row(row, tpm)
-
-
