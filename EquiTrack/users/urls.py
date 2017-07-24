@@ -19,9 +19,6 @@ urlpatterns = (
     url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view(http_method_names=['get'])),
     url(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
 
-    # url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view()),
-
-
     # user profile
     url(r'^profile_view/$', ProfileEdit.as_view(), name='user_profile'),
 

@@ -13,6 +13,5 @@ exclude =
     t2f,
     tpm,
     trips,
-    users,
     vision,
     workplan

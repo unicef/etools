@@ -1,10 +1,7 @@
-
-__author__ = 'jcranwellward'
-
 from rest_framework import serializers
 
 from t2f.serializers.user_data import T2FUserDataSerializer
-from .models import User, UserProfile, Group, Office, Section, Country
+from users.models import User, UserProfile, Group, Office, Section, Country
 
 
 class SimpleCountrySerializer(serializers.ModelSerializer):
