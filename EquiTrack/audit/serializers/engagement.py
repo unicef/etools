@@ -41,6 +41,7 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
 
 class EngagementExportSerializer(serializers.ModelSerializer):
     agreement_number = serializers.ReadOnlyField(source='agreement.order_number')
+    type = serializers.ReadOnlyField(source='get_type_display')
     partner_name = serializers.ReadOnlyField(source='partner.name')
     auditor_firm_vendor_number = serializers.ReadOnlyField(source='agreement.auditor_firm.vendor_number')
     auditor_firm_name = serializers.ReadOnlyField(source='agreement.auditor_firm.name')
@@ -56,6 +57,7 @@ class EngagementExportSerializer(serializers.ModelSerializer):
         model = Engagement
         fields = (
             'id',
+            'type',
             'partner_name',
             'agreement_number',
             'auditor_firm_vendor_number',
