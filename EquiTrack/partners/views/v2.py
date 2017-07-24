@@ -50,7 +50,7 @@ from partners.filters import PartnerScopeFilter
 
 
 class PartnerInterventionListAPIView(ListAPIView):
-    queryset = Intervention.objects.all()
+    queryset = Intervention.objects.detail_qs().all()
     serializer_class = InterventionSerializer
     permission_classes = (PartnerPermission,)
 
@@ -58,7 +58,7 @@ class PartnerInterventionListAPIView(ListAPIView):
         """
         Return All Interventions for Partner
         """
-        interventions = Intervention.objects.filter(partner_id=pk)
+        interventions = Intervention.objects.detail_qs().filter(partner_id=pk)
         serializer = InterventionSerializer(interventions, many=True)
         return Response(
             serializer.data,
@@ -253,14 +253,14 @@ class PartnershipDashboardAPIView(APIView):
 
         # Use given CountryProgramme pk to filter Intervention
         if ct_pk:
-            interventions = Intervention.objects.filter(agreement__country_programme=ct_pk)
+            interventions = Intervention.objects.detail_qs().filter(agreement__country_programme=ct_pk)
 
 
         # Otherwise, use current CountryProgramme this year to filter Intervention
         else:
             currentCountryProgramme = CountryProgramme.main_active()
 
-            interventions = Intervention.objects.filter(
+            interventions = Intervention.objects.detail_qs().filter(
                 agreement__country_programme=currentCountryProgramme)
 
         # If Office pk is given, filter even more

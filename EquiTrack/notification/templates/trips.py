@@ -132,7 +132,7 @@ class TripTAEmail(TripCreatedEmail):
 
     template_name = 'trips/trip/TA_request'
     description = ("This email is sent to the relevant programme assistant to create "
-                    "the TA for the staff in concern after the approval of the supervisor.")
+                   "the TA for the staff in concern after the approval of the supervisor.")
     subject = "eTools {{environment}} - Travel Authorization request for {{owner_name}}"
     content = """
     Dear {{pa_assistant}},

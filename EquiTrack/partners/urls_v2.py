@@ -1,6 +1,7 @@
 from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 
+from partners.views.dashboards import InterventionPartnershipDashView
 from .views.v1 import PcaPDFView
 from .views.partner_organization_v2 import (
     PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView, PartnerStaffMemberListAPIVIew,
@@ -77,21 +78,23 @@ urlpatterns = (
     # url(r'^staff-members/(?P<pk>\d+)/$', view=PartnerStaffMemberDetailAPIView.as_view(), name='staff-member-detail'),
     # url(r'^staff-members/(?P<pk>\d+)/properties/$',
     #     view=PartnerStaffMemberPropertiesAPIView.as_view(),
-    #     name='staff-member-properties'),
-    url(r'^partnership-dash/(?P<ct_pk>\d+)/(?P<office_pk>\d+)/$',
-        view=PartnershipDashboardAPIView.as_view(),
-        name='partnership-dash-with-ct-office'),
-    url(r'^partnership-dash/(?P<ct_pk>\d+)/$',
-        view=PartnershipDashboardAPIView.as_view(),
-        name='partnership-dash-with-ct'),
-    url(r'^partnership-dash/$', view=PartnershipDashboardAPIView.as_view(), name='partnership-dash'),
+    # #     name='staff-member-properties'),
+    # url(r'^partnership-dash/(?P<ct_pk>\d+)/(?P<office_pk>\d+)/$',
+    #     view=PartnershipDashboardAPIView.as_view(),
+    #     name='partnership-dash-with-ct-office'),
+    # url(r'^partnership-dash/(?P<ct_pk>\d+)/$',
+    #     view=PartnershipDashboardAPIView.as_view(),
+    #     name='partnership-dash-with-ct'),
+    # url(r'^partnership-dash/$', view=PartnershipDashboardAPIView.as_view(), name='partnership-dash'),
 
     url(r'^interventions/$',
         view=InterventionListAPIView.as_view(http_method_names=['get', 'post']),
         name='intervention-list'),
+
     url(r'^interventions/dash/$',
         view=InterventionListDashView.as_view(http_method_names=['get', 'post']),
         name='intervention-list-dash'),
+
     url(r'^interventions/(?P<pk>\d+)/$',
         view=InterventionDetailAPIView.as_view(http_method_names=['get', 'patch']),
         name='intervention-detail'),
@@ -113,7 +116,9 @@ urlpatterns = (
     url(r'^interventions/map/$',
         view=InterventionListMapView.as_view(http_method_names=['get', ]),
         name='intervention-map'),
-    # url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(), name='intervention-detail'),
+    url(r'^interventions/partnership-dash/$',
+        view=InterventionPartnershipDashView.as_view(http_method_names=['get', ]),
+        name='interventions-partnership-dash'),
 
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
