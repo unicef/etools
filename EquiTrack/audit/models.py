@@ -610,9 +610,6 @@ class FinancialFinding(models.Model):
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',
                                      name='UNICEF Audit Focal Point')
 
-PME = GroupWrapper(code='pme',
-                   name='PME')
-
 Auditor = GroupWrapper(code='auditor',
                        name='Auditor')
 
@@ -634,7 +631,6 @@ class AuditPermission(StatusBasePermission):
 
     USER_TYPES = Choices(
         UNICEFAuditFocalPoint.as_choice(),
-        PME.as_choice(),
         Auditor.as_choice(),
         UNICEFUser.as_choice(),
     )

@@ -3,7 +3,7 @@ from django.db import connection
 from django.utils import six
 from tenant_schemas import get_tenant_model
 
-from audit.models import AuditPermission, UNICEFAuditFocalPoint, UNICEFUser, PME, Auditor
+from audit.models import AuditPermission, UNICEFAuditFocalPoint, UNICEFUser, Auditor
 
 
 class Command(BaseCommand):
@@ -11,16 +11,14 @@ class Command(BaseCommand):
 
     focal_point = 'focal_point'
     unicef_user = 'unicef_user'
-    pme = 'pme'
     auditor = 'auditor'
     user_roles = {
         focal_point: UNICEFAuditFocalPoint.code,
         unicef_user: UNICEFUser.code,
-        pme: PME.code,
         auditor: Auditor.code,
     }
 
-    all_unicef_users = [pme, focal_point, unicef_user]
+    all_unicef_users = [focal_point, unicef_user]
     everybody = all_unicef_users + [auditor, ]
 
     everything = [
