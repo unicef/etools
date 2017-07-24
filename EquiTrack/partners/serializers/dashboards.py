@@ -9,7 +9,9 @@ from partners.models import (
 
 
 class InterventionDashSerializer(serializers.ModelSerializer):
+    intervention_id = serializers.CharField(source='id', read_only=True)
     partner_name = serializers.CharField(source='agreement.partner.name', read_only=True)
+    partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     sectors = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
 
@@ -49,7 +51,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Intervention
-        fields = ('partner_name', 'number', 'status', 'start', 'end',
+        fields = ('intervention_id', 'partner_id', 'partner_name', 'number', 'status', 'start', 'end',
                   'sectors', 'offices_names',
                   'total_budget', 'cso_contribution', 'unicef_cash', 'unicef_supplies',
                   'frs_total_frs_amt', 'disbursement',
