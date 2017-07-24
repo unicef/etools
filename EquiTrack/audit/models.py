@@ -100,7 +100,7 @@ class Engagement(TimeStampedModel, models.Model):
         ('partner_contacted', _('Partner Contacted')),
         ('report_submitted', _('Report Submitted')),
         ('final', _('Final Report')),
-        ('canceled', _('Canceled')),
+        ('canceled', _('Cancelled')),
     )
 
     DISPLAY_STATUSES = Choices(
@@ -112,7 +112,7 @@ class Engagement(TimeStampedModel, models.Model):
         ('comments_received_by_unicef', _('Comments Received by UNICEF')),
         ('report_submitted', _('Report Submitted')),
         ('final', _('Final Report')),
-        ('canceled', _('Canceled')),
+        ('canceled', _('Cancelled')),
     )
     DISPLAY_STATUSES_DATES = {
         DISPLAY_STATUSES.partner_contacted: 'partner_contacted_at',
@@ -152,7 +152,7 @@ class Engagement(TimeStampedModel, models.Model):
 
     date_of_report_submit = models.DateField(_('date report submitted'), null=True, blank=True)
     date_of_final_report = models.DateField(_('date report finalized'), null=True, blank=True)
-    date_of_cancel = models.DateField(_('date report canceled'), null=True, blank=True)
+    date_of_cancel = models.DateField(_('date report cancelled'), null=True, blank=True)
 
     amount_refunded = models.IntegerField(_('amount refunded'), null=True, blank=True)
     additional_supporting_documentation_provided = models.IntegerField(
