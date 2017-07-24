@@ -3,7 +3,7 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from audit.models import Engagement, Finding, SpotCheck, MicroAssessment, Audit, \
-    FinancialFinding, DetailedFindingInfo
+    FinancialFinding, DetailedFindingInfo, EngagementActionPoint
 from utils.common.serializers.fields import SeparatedReadWriteField
 from partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer, \
     PartnerStaffMemberNestedSerializer
@@ -12,6 +12,8 @@ from partners.models import PartnerType
 from attachments.models import FileType
 from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
+from users.serializers import MinimalUserSerializer
+from utils.common.serializers.mixins import UserContextSerializerMixin
 from utils.writable_serializers.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
 from .auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
@@ -38,6 +40,22 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
 
     class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
         pass
+
+
+class EngagementActionPointSerializer(UserContextSerializerMixin,
+                                      WritableNestedSerializerMixin,
+                                      serializers.ModelSerializer):
+    person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True))
+
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = EngagementActionPoint
+        fields = [
+            'id', 'description', 'due_date', 'person_responsible', 'comments',
+        ]
+
+    def create(self, validated_data):
+        validated_data['author'] = self.get_user()
+        return super(EngagementActionPointSerializer, self).create(validated_data)
 
 
 class EngagementExportSerializer(serializers.ModelSerializer):
@@ -108,11 +126,13 @@ class EngagementSerializer(EngagementDatesValidation,
     engagement_attachments = EngagementBase64AttachmentSerializer(many=True, required=False)
     report_attachments = ReportBase64AttachmentSerializer(many=True, required=False)
 
+    action_points = EngagementActionPointSerializer(many=True)
+
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
             'engagement_attachments', 'report_attachments',
             'total_value', 'staff_members', 'active_pd',
-            'authorized_officers',
+            'authorized_officers', 'action_points',
 
             'start_date', 'end_date',
             'partner_contacted_at', 'date_of_field_visit',
@@ -120,9 +140,6 @@ class EngagementSerializer(EngagementDatesValidation,
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
             'cancel_comment',
-
-            'amount_refunded', 'additional_supporting_documentation_provided',
-            'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
@@ -183,11 +200,16 @@ class SpotCheckSerializer(EngagementSerializer):
     face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', read_only=True, source='start_date')
     face_form_end_date = serializers.DateField(label='FACE Form(s) End Date', read_only=True, source='end_date')
 
+    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
         fields = EngagementSerializer.Meta.fields + [
             'total_amount_tested', 'total_amount_of_ineligible_expenditure',
             'internal_controls', 'findings', 'face_form_start_date', 'face_form_end_date',
+
+            'amount_refunded', 'additional_supporting_documentation_provided',
+            'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
@@ -244,13 +266,18 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
 
     number_of_financial_findings = serializers.SerializerMethodField(label=_('Number of financial findings'))
 
+    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+
     class Meta(EngagementSerializer.Meta):
         model = Audit
         risk_categories_fields = ('key_internal_weakness', )
         fields = EngagementSerializer.Meta.fields + [
             'audited_expenditure', 'financial_findings', 'financial_finding_set', 'percent_of_audited_expenditure',
             'audit_opinion', 'number_of_financial_findings',
-            'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness'
+            'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness',
+
+            'amount_refunded', 'additional_supporting_documentation_provided',
+            'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({

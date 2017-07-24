@@ -163,8 +163,6 @@ class Engagement(TimeStampedModel, models.Model):
                                                               blank=True, decimal_places=2, max_digits=20)
     write_off_required = models.DecimalField(_('write off required'), null=True, blank=True,
                                              decimal_places=2, max_digits=20)
-    pending_unsupported_amount = models.DecimalField(_('pending unsupported amount'), null=True, blank=True,
-                                                     decimal_places=2, max_digits=20)
     explanation_for_additional_information = models.TextField(
         _('Provide explanation for additional information received from the IP or add attachments'), blank=True
     )
@@ -394,6 +392,14 @@ class SpotCheck(Engagement):
         verbose_name = _('Spot Check')
         verbose_name_plural = _('Spot Checks')
 
+    @property
+    def pending_unsupported_amount(self):
+        try:
+            return self.total_amount_of_ineligible_expenditure - self.additional_supporting_documentation_provided \
+                - self.justification_provided_and_accepted - self.write_off_required
+        except TypeError:
+            return None
+
     def save(self, *args, **kwars):
         self.type = Engagement.TYPES.sc
         return super(SpotCheck, self).save(*args, **kwars)
@@ -564,6 +570,15 @@ class Audit(Engagement):
         self.type = Engagement.TYPES.audit
         return super(Audit, self).save(*args, **kwars)
 
+    @property
+    def pending_unsupported_amount(self):
+        try:
+            return self.financial_findings - self.amount_refunded \
+                - self.additional_supporting_documentation_provided \
+                - self.justification_provided_and_accepted - self.write_off_required
+        except TypeError:
+            return None
+
     @transition(
         'status',
         source=Engagement.STATUSES.partner_contacted, target=Engagement.STATUSES.report_submitted,
@@ -605,6 +620,57 @@ class FinancialFinding(models.Model):
             )['max_fn'] or 0) + 1
 
         super(FinancialFinding, self).save(*args, **kwargs)
+
+
+@python_2_unicode_compatible
+class EngagementActionPoint(models.Model):
+    DESCRIPTION_CHOICES = Choices(
+        _('Invoice and recieve reimbursement of ineligible expenditure'),
+        _('Change cash transfer modality (DCT, reimbursement or direct payment)'),
+        _('IP to incur and report on additional expenditure'),
+        _('Review and amend ICE or budget'),
+        _('IP to correct FACE form or Statement of Expenditure'),
+        _('Schedule a programmatic visit'),
+        _('Schedule a follow-up spot check'),
+        _('Schedule an audit'),
+        _('Block future cash transfers'),
+        _('Block or mark vendor for deletion'),
+        _('Escalate to Chief of Operations, Dep Rep, or Rep'),
+        _('Escalate to Investigation'),
+        _('Capacity building / Discussion with partner'),
+        _('Other'),
+    )
+
+    engagement = models.ForeignKey(Engagement, related_name='action_points')
+    description = models.CharField(max_length=100, choices=DESCRIPTION_CHOICES)
+    due_date = models.DateField()
+    author = models.ForeignKey(User, related_name='created_engagement_action_points')
+    person_responsible = models.ForeignKey(User, related_name='engagement_action_points')
+    comments = models.TextField()
+
+    def __str__(self):
+        return '{} on {}'.format(self.get_description_display(), self.engagement)
+
+    def save(self, *args, **kwargs):
+        super(EngagementActionPoint, self).save(*args, **kwargs)
+
+        self._notify_person_responsible('audit/engagement/action_point_assigned')
+
+    def _notify_person_responsible(self, template_name):
+        context = {
+            'engagement_url': self.engagement.get_object_url(),
+            'environment': get_environment(),
+            'engagement': self.engagement,
+            'action_point': self,
+        }
+
+        mail.send(
+            self.person_responsible.email,
+            settings.DEFAULT_FROM_EMAIL,
+            cc=[self.author.email],
+            template=template_name,
+            context=context,
+        )
 
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',
