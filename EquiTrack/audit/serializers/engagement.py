@@ -264,7 +264,7 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
             'audited_expenditure', 'financial_findings', 'financial_finding_set', 'percent_of_audited_expenditure',
             'audit_opinion', 'number_of_financial_findings',
             'high_risk', 'medium_risk', 'low_risk',
-            'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness'
+            'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness',
 
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
