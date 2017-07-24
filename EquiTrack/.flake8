@@ -12,7 +12,6 @@ exclude =
     supplies,
     t2f,
     tpm,
-    trips,
     users,
     vision,
     workplan
