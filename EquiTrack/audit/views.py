@@ -24,7 +24,7 @@ from .serializers.engagement import EngagementSerializer, MicroAssessmentSeriali
     SpotCheckSerializer, EngagementLightSerializer, EngagementExportSerializer
 from .metadata import AuditBaseMetadata, EngagementMetadata
 from .exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
-from .filters import DisplayStatusFilter
+from .filters import DisplayStatusFilter, UniqueIDOrderingFilter
 
 
 class BaseAuditViewSet(
@@ -117,7 +117,10 @@ class EngagementViewSet(
     export_filename = 'engagements'
     renderer_classes = [JSONRenderer, EngagementCSVRenderer]
 
-    filter_backends = (SearchFilter, OrderingFilter, DisplayStatusFilter, DjangoFilterBackend)
+    filter_backends = (
+        SearchFilter, DisplayStatusFilter, DjangoFilterBackend,
+        UniqueIDOrderingFilter, OrderingFilter,
+    )
     search_fields = ('partner__name', 'agreement__order_number', 'agreement__auditor_firm__name')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'type', 'status')
