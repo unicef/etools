@@ -23,6 +23,7 @@ from post_office import mail
 from EquiTrack.utils import get_environment
 from attachments.models import Attachment
 from firms.models import BaseFirm, BaseStaffMember
+from partners.models import PartnerStaffMember
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
 from utils.groups.wrappers import GroupWrapper
@@ -175,6 +176,12 @@ class Engagement(TimeStampedModel, models.Model):
     active_pd = models.ManyToManyField(
         'partners.Intervention',
         verbose_name=_('Active PDs'),
+    )
+
+    authorized_officers = models.ManyToManyField(
+        PartnerStaffMember,
+        blank=True,
+        related_name="engagement_authorizations"
     )
 
     objects = InheritanceManager()

@@ -5,7 +5,8 @@ from rest_framework import serializers
 from audit.models import Engagement, Finding, SpotCheck, MicroAssessment, Audit, \
     FinancialFinding, DetailedFindingInfo
 from utils.common.serializers.fields import SeparatedReadWriteField
-from partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer
+from partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer, \
+    PartnerStaffMemberNestedSerializer
 from partners.serializers.interventions_v2 import InterventionListSerializer
 from partners.models import PartnerType
 from attachments.models import FileType
@@ -100,6 +101,9 @@ class EngagementSerializer(EngagementDatesValidation,
     active_pd = SeparatedReadWriteField(
         read_field=InterventionListSerializer(many=True, required=False, label='Active PD'),
     )
+    authorized_officers = SeparatedReadWriteField(
+        read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    )
 
     engagement_attachments = EngagementBase64AttachmentSerializer(many=True, required=False)
     report_attachments = ReportBase64AttachmentSerializer(many=True, required=False)
@@ -108,6 +112,7 @@ class EngagementSerializer(EngagementDatesValidation,
         fields = EngagementLightSerializer.Meta.fields + [
             'engagement_attachments', 'report_attachments',
             'total_value', 'staff_members', 'active_pd',
+            'authorized_officers',
 
             'start_date', 'end_date',
             'partner_contacted_at', 'date_of_field_visit',
