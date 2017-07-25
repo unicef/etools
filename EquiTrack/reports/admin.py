@@ -10,7 +10,6 @@ from reports.models import (
     Goal,
     Unit,
     Indicator,
-    ResultStructure,
     Result,
     CountryProgramme,
     LowerResult,
@@ -111,7 +110,6 @@ class IndicatorAdmin(admin.ModelAdmin):
     )
     list_filter = (
         SectorListFilter,
-        'result__result_structure',
         'result__result_type',
         'ram_indicator',
     )
@@ -240,7 +238,6 @@ class AppliedIndicatorAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Result, ResultAdmin)
-admin.site.register(ResultStructure)
 admin.site.register(CountryProgramme)
 admin.site.register(Sector, SectorAdmin)
 admin.site.register(Goal, GoalAdmin)

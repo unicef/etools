@@ -7,8 +7,8 @@ from partners.models import PartnerOrganization
 
 type_mapping = {
     "BILATERAL / MULTILATERAL": u'Bilateral / Multilateral',
-    "CIVIL SOCIETY ORGANIZATION": u'Civil Society Organization',
-    "GOVERNMENT": u'Government',
+    "Civil Society Organization": u'Civil Society Organization',
+    "Government": u'Government',
     "UN AGENCY": u'UN Agency',
 }
 

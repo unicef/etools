@@ -237,6 +237,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
+    hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -253,11 +254,13 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+
 class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values

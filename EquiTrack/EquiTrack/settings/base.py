@@ -55,14 +55,11 @@ SUIT_CONFIG = {
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
         {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign', 'models': [
-            {'model': 'reports.resultstructure'},
             {'model': 'reports.sector'},
             {'model': 'reports.result'},
             {'model': 'reports.indicator'},
             {'model': 'reports.goal'},
         ]},
-
-        #{'app': 'activityinfo', 'label': 'ActivityInfo'},
 
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
@@ -75,6 +72,7 @@ LOGIN_REDIRECT_URL = '/dash/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
+TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
@@ -385,7 +383,6 @@ SHARED_APPS = (
     'djcelery_email',
     'datetimewidget',
     'leaflet',
-    'djgeojson',
     'paintstore',
     'corsheaders',
     'djangosaml2',
@@ -400,7 +397,6 @@ SHARED_APPS = (
     'analytical',
     'mptt',
     'easy_pdf',
-    'django_hstore',
 
     'vision',
     'management',
@@ -419,7 +415,6 @@ TENANT_APPS = (
     'reversion',
     'funds',
     'locations',
-    'activityinfo',
     'reports',
     'partners',
     'trips',

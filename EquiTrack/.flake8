@@ -4,13 +4,8 @@ exclude =
     # don't worry about auto-generated code
     migrations,
     # Everything below here will eventually be removed from 'exclude'
-    activityinfo,
     EquiTrack,
-    funds,
-    locations,
     manage_debug.py,
-    management,
-    notification,
     partners,
     publics,
     reports,

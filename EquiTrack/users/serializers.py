@@ -1,5 +1,6 @@
 
-from __future__ import unicode_literals
+__author__ = 'jcranwellward'
+
 from rest_framework import serializers
 
 from t2f.serializers.user_data import T2FUserDataSerializer
@@ -12,7 +13,21 @@ class SimpleCountrySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'business_area_code')
 
 
-# used for user detail view
+class UserProfileSerializer(serializers.ModelSerializer):
+
+    office = serializers.CharField(source='office.name')
+    section = serializers.CharField(source='section.name')
+    country_name = serializers.CharField(source='country.name')
+    countries_available = SimpleCountrySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = UserProfile
+        exclude = (
+            'id',
+            'user',
+        )
+
+
 class SimpleProfileSerializer(serializers.ModelSerializer):
 
     user_id = serializers.CharField(source="user.id")
@@ -32,45 +47,10 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
         )
 
 
-# used for user list view
-class MinimalUserSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='get_full_name', read_only=True)
-
-    class Meta:
-        model = User
-        fields = ('id', 'name', 'first_name', 'last_name', 'username', 'email', )
-
-
-# used for user detail view
-class MinimalUserDetailSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='get_full_name', read_only=True)
-    job_title = serializers.CharField(source='profile.job_title')
-    vendor_number = serializers.CharField(source='profile.vendor_number')
-
-    class Meta:
-        model = User
-        fields = ('name', 'first_name', 'last_name', 'username', 'email', 'job_title', 'vendor_number',)
-
-
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ('id', 'name')
-
-
-class CountrySerializer(serializers.ModelSerializer):
-    local_currency = serializers.CharField(source='local_currency.name')
-
-    class Meta:
-        model = Country
-        fields = (
-            'id',
-            'name',
-            'latitude',
-            'longitude',
-            'initial_zoom',
-            'local_currency',
-        )
 
 
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
@@ -79,26 +59,18 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
     supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
     name = serializers.CharField(source='user.get_full_name', read_only=True)
-    t2f = T2FUserDataSerializer(source='user')
-    last_login = serializers.CharField(source='user.last_login', read_only=True)
-    is_superuser = serializers.CharField(source='user.is_superuser', read_only=True)
-    username = serializers.CharField(source='user.username', read_only=True)
-    first_name = serializers.CharField(source='user.first_name', read_only=True)
-    last_name = serializers.CharField(source='user.last_name', read_only=True)
-    email = serializers.CharField(source='user.email', read_only=True)
-    is_staff = serializers.CharField(source='user.is_staff', read_only=True)
-    is_active = serializers.CharField(source='user.is_active', read_only=True)
-    country = CountrySerializer(read_only=True)
-
 
     class Meta:
         model = UserProfile
-        exclude = ('id', )
+        fields = ('name', 'office', 'section', 'supervisor', 'countries_available',
+                  'oic', 'groups', 'supervisees', 'job_title', 'phone_number')
 
 
-# used for user list
 class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(read_only=True)
     full_name = serializers.CharField(source='get_full_name')
+    t2f = T2FUserDataSerializer(source='*')
+    groups = GroupSerializer(many=True)
 
     class Meta:
         model = User
@@ -114,6 +86,16 @@ class SectionSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name'
+        )
+
+
+class UserProfileCreationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserProfile
+        exclude = (
+            'id',
+            'user',
         )
 
 
@@ -149,9 +131,16 @@ class GroupSerializer(serializers.ModelSerializer):
         )
 
 
-# used in agreements
+class SimpleNestedProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = (
+            'country',
+        )
+
+
 class SimpleUserSerializer(serializers.ModelSerializer):
-    country = serializers.CharField(source='profile.country', read_only=True)
+    profile = SimpleNestedProfileSerializer()
 
     class Meta:
         model = User
@@ -164,5 +153,91 @@ class SimpleUserSerializer(serializers.ModelSerializer):
             'last_name',
             'is_staff',
             'is_active',
-            'country'
+            'profile'
+        )
+
+
+class MinimalUserSerializer(SimpleUserSerializer):
+    name = serializers.CharField(source='get_full_name', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'name', 'first_name', 'last_name')
+
+
+class UserCreationSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+    groups = serializers.SerializerMethodField()
+    user_permissions = serializers.SerializerMethodField()
+    profile = UserProfileCreationSerializer()
+    t2f = T2FUserDataSerializer(source='*', read_only=True)
+
+    def get_groups(self, user):
+        return [grp.id for grp in user.groups.all()]
+
+    def get_user_permissions(self, user):
+        return [perm.id for perm in user.user_permissions.all()]
+
+    def create(self, validated_data):
+        try:
+            user_profile = validated_data.pop('profile')
+        except KeyError:
+            user_profile = {}
+
+        try:
+            countries = user_profile.pop('countries_available')
+        except KeyError:
+            countries = []
+
+        try:
+            user = User.objects.create(**validated_data)
+            user.profile.country = user_profile['country']
+            user.profile.office = user_profile['office']
+            user.profile.section = user_profile['section']
+            user.profile.partner_staff_member = 0
+            user.profile.job_title = user_profile['job_title']
+            user.profile.phone_number = user_profile['phone_number']
+            user.profile.country_override = user_profile['country_override']
+            user.profile.installation_id = user_profile['installation_id']
+            for country in countries:
+                user.profile.countries_available.add(country)
+
+            user.save()
+            user.profile.save()
+
+        except Exception as ex:
+            raise serializers.ValidationError({'user': ex.message})
+
+        return user
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'email',
+            'is_superuser',
+            'first_name',
+            'last_name',
+            'is_staff',
+            'is_active',
+            'groups',
+            'user_permissions',
+            'profile',
+            't2f',
+        )
+
+
+class CountrySerializer(SimpleUserSerializer):
+    local_currency_id = serializers.IntegerField(source='local_currency.id', read_only=True)
+
+    class Meta:
+        model = Country
+        fields = (
+                'name',
+                'latitude',
+                'longitude',
+                'initial_zoom',
+                'local_currency_id'
         )

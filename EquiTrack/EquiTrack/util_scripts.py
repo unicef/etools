@@ -10,7 +10,7 @@ from django.db.models import Count
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User, Group
 from users.models import Country, UserProfile
-from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
+from reports.models import ResultType, Result, CountryProgramme, Indicator, LowerResult
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, RAMIndicator, \
     InterventionResultLink, PartnershipBudget, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
@@ -20,8 +20,8 @@ from t2f.models import TravelActivity
 
 def printtf(*args):
     print([arg for arg in args])
-    f = open('mylogs.txt','a')
-    print('\n'.join([arg for arg in args]), file=f)
+    f = open('mylogs.txt', 'a')
+    print([arg for arg in args], file=f)
     f.close()
 
 def log_to_file(file_name='fail_logs.txt', *args):
@@ -275,70 +275,6 @@ def clean_result_types(country_name):
 
     # get all duplicates that have the same wbs
     dupes = ResultType.objects.values('name').annotate(Count('name')).order_by().filter(name__count__gt=1).all()
-    _run_clean(dupes)
-
-def clean_result_structures(country_name):
-    if not country_name:
-        printtf("country name required /n")
-        set_country(country_name)
-    if not country_name:
-        printtf("country name required /n")
-
-    set_country(country_name)
-    printtf("Fixing duplicate Result Structures for {}".format(country_name))
-    fattrs = ["result_set",
-              "indicator_set",
-              "goal_set",
-              "pca_set",
-              "governmentintervention_set", ]
-
-    def relates_to_anything(cobj):
-        for a in fattrs:
-            if getattr(cobj, a).count():
-                printtf(cobj.id, cobj, "relates to ", a)
-                return True
-        return False
-
-    def update_relationships(dpres, keep):
-        for a in fattrs:
-            objs = getattr(dpres, a).all()
-            if len(objs):
-                for obj in objs:
-                    obj.result_structure = keep
-                    obj.save()
-                    printtf("saved obj.id={} obj {} with keepid{} keep {}".format(obj.id, obj, keep.id, keep))
-
-    def _run_clean(dupes):
-        printtf(len(dupes), dupes)
-        for dup in dupes:
-            dupresults = ResultStructure.objects.filter(name=dup['name']).all()
-            delq = []
-            keep = None
-            for dpres in dupresults:
-                if not keep:
-                    keep = dpres
-                    continue
-                else:
-                    error = False
-                    if relates_to_anything(dpres):
-                        try:
-                            update_relationships(dpres, keep)
-                        except Exception as exp:
-                            printtf('Cannot remove Object {}, id={}'.format(dpres, dpres.id))
-                            error = True
-                    if error:
-                        printtf("ERROR OCCURED ON RECORD", dpres.id, dpres)
-                        continue
-                    delq.append(dpres)
-            if not len(delq):
-                printtf("Nothing is getting removed for {}".format(dupes))
-            else:
-                # delete everyting in the queue
-                [i.delete() for i in delq]
-                printtf("deleting: ", delq)
-
-    # get all duplicates that have the same name
-    dupes = ResultStructure.objects.values('name', 'from_date', 'to_date').order_by('name', 'from_date', 'to_date').annotate(Count('pk')).filter(pk__count__gt=1).all()
     _run_clean(dupes)
 
 
@@ -925,44 +861,82 @@ def create_test_user(email, password):
     userp.save()
     logging.info("user {} created".format(u.email))
 
+class every_country:
+    def __enter__(self):
+        for c in Country.objects.exclude(name='Global').all():
+            connection.set_tenant(c)
+            yield c
+    def __exit__(self, type, value, traceback):
+        connection.set_tenant(Country.objects.get(name='Global'))
 
-def stats():
-    for c in Country.objects.exclude(name='Global').all():
-        set_country(c.name)
-        printtf(c.name)
-        # Total Number of PDs per workspace (for active status only)
-        int_active_count = Intervention.objects.filter(status=Intervention.ACTIVE).count()
-        printtf("Total Number of PDs: {}".format(int_active_count))
+def run(function):
+    with every_country() as c:
+        for country in c:
+            print(country.name)
+            function()
 
-        # Total Number of PCA (agreement) amendments per workspace (for active status only)
-        agr_amd_active_count = AgreementAmendment.objects.filter(agreement__status=Agreement.ACTIVE).count()
-        printtf("Total Number of PCA (agreement) amendments: {}".format(agr_amd_active_count))
+def remediation_intervention_migration():
+    from django.db import transaction
+    from partners.validation.interventions import InterventionValid
+    master_user = User.objects.get(username='etools_task_admin')
+    active_interventions = Intervention.objects.filter(status='active')
+    for intervention in active_interventions.all():
+        validator = InterventionValid(intervention, user=master_user, disable_rigid_check=True)
+        if not validator.is_valid:
+            print('active intervention {} of type {} is invalid'.format(intervention.id, intervention.document_type))
+            print(validator.errors)
+            intervention.status = Intervention.DRAFT
+            intervention.metadata = {'migrated': True,
+                                     'old_status': Intervention.ACTIVE}
+            intervention.save()
+            # let it run through validation again, maybe it will auto-transition to signed
+            with transaction.atomic():
+                new_validator = InterventionValid(intervention, master_user, disable_rigid_check=True)
+                if new_validator.is_valid:
+                    if intervention.status == 'signed':
+                        print('intervention moved to signed {}'.format(intervention.status))
+                        intervention.save()
+                else:
+                    print('draft invalid')
+        else:
+            print('intervention {} of type {} successfully ported as active'.
+                  format(intervention.id, intervention.document_type))
 
-        # total Number of PD (intervention) amendments per workspace (for active status only)
-        int_amd_active_count = InterventionAmendment.objects.filter(intervention__status=Intervention.ACTIVE).count()
-        printtf("total Number of PD (intervention) amendments {}:".format(int_amd_active_count))
 
-        # Total number of PDs per workspace that have multi-currency budgets (for active status only)
-        int_budgets = InterventionBudget.objects.filter(intervention__status=Intervention.ACTIVE,
-                                                        unicef_cash__gt=0,
-                                                        unicef_cash_local__gt=0).distinct('intervention').count()
-        printtf("Total number of PDs per workspace that have multi-currency budgets {}:".format(int_budgets))
+def make_all_drafts_active():
+    Intervention.objects.filter(status='draft').update(status='active')
 
-        # Total number of PDs per workspace that have only USD budgets
-        int_budgets_usd = InterventionBudget.objects.filter(intervention__status=Intervention.ACTIVE,
-                                                            unicef_cash__gt=0,
-                                                            unicef_cash_local=0).distinct('intervention').count()
-        printtf("Total number of PDs per workspace that have only USD budgets {}:".format(int_budgets_usd))
+def assert_interventions_valid():
+    ints = Intervention.objects.prefetch_related('agreement').all()
+    for i in ints:
+        if i.document_type == i.SSFA:
+            if not i.agreement.agreement_type == i.agreement.SSFA:
+                print('NO WAY')
+        elif i.document_type in [Intervention.PD, Intervention.SHPD]:
+            if not i.agreement.agreement_type == i.agreement.PCA:
+                print('NO WAY PCA')
 
-        # Total number of PDs per workspace that have only local currency budgets
-        int_budgets_local = InterventionBudget.objects.filter(intervention__status=Intervention.ACTIVE, unicef_cash=0, unicef_cash_local__gt=0).distinct('intervention').count()
-        printtf("Total number of PDs per workspace that have only local currency budgets {}:".format(int_budgets_local))
 
-        # Total number of PDs per workspace that have no budgets
-        int_budgets_zero = InterventionBudget.objects.filter(intervention__status=Intervention.ACTIVE, unicef_cash=0, unicef_cash_local=0).distinct('intervention').count()
-        printtf("Total number of PDs per workspace that have no budgets {}:".format(int_budgets_zero))
+def wow():
+    c = Intervention.objects.filter(status='active').count()
+    if c>0:
+        print(c)
 
-        # Total number of PDs that contain an FR per workspace
-        int_frs = Intervention.objects.filter(status=Intervention.ACTIVE, fr_numbers__isnull=False).count()
-        printtf("Total number of PDs that contain an FR {}:".format(int_frs))
 
+
+def intervention_update_task():
+    from django.db import transaction
+    from partners.validation.interventions import InterventionValid
+    master_user = User.objects.get(username='etools_task_admin')
+    all_interventions = Intervention.objects.filter(status__in=['draft', 'signed', 'active', 'ended'])
+    for intervention in all_interventions.all():
+        old_status = intervention.status
+        validator = InterventionValid(intervention, master_user)
+        if not validator.is_valid:
+            print('intervention {} of type {} is invalid: (Status:{})'.format(intervention.id, intervention.document_type, intervention.status))
+            print(validator.errors)
+        else:
+            if old_status != intervention.status:
+                intervention.save()
+                print('intervention {} of type {} successfully updated from {} to {}'.
+                      format(intervention.id, intervention.document_type, old_status, intervention.status))
