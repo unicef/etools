@@ -19,7 +19,7 @@ echo
 # Cache dir must match the one configured in circle.yml
 CACHE_DIR="$( readlink -f ~/docker )"
 
-IMAGE_ARCHIVE="${CACHE_DIR}/myapp-${VERSION_TAG}.tar"
+IMAGE_ARCHIVE="${CACHE_DIR}/etools-${VERSION_TAG}.tar"
 
 echo "=====> Locating image archive: ${IMAGE_ARCHIVE}"
 
@@ -38,7 +38,7 @@ fi
 # Tag the image as being the correct one for this commit.
 # This is used in circle.yml to pick the correct image.
 echo "=====> Tagging image with branch-name: ${CIRCLE_BRANCH}"
-docker tag "$IMAGE_FULL_NAME" myorg/myapp:"$CIRCLE_BRANCH"
+docker tag "$IMAGE_FULL_NAME" unicef/etools:"$CIRCLE_BRANCH"
 
 # Save to cache for later reuse
 echo "=====> Saving image to cache: ${IMAGE_ARCHIVE}"
