@@ -16,6 +16,7 @@ dependencies:
     - docker pull unicef/etools:circle-latest || true
     - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
     # - mkdir -p ~/docker; docker save unicef/etools:$CIRCLE_BRANCH > ~/docker/image.tar
+    - docker tag unicef/etools:$CIRCLE_BRANCH unicef/etools:circle-latest
     - docker push unicef/etools:circle-latest
 
 test:
