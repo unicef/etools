@@ -1,0 +1,214 @@
+
+mozambique
+
+sri_lanka
+
+zambia
+
+malawi
+
+haiti
+
+bolivia
+
+liberia
+active, 04000474809 FR not found for Intervention 22
+implemented, 400047441 FR not found for Intervention 11
+implemented, 400043418 FR not found for Intervention 12
+active, 400047264 FR not found for Intervention 13
+
+southafrica
+
+uat
+implemented, 9000012800 FR not found for Intervention 3
+implemented, 0012345 FR not found for Intervention 8
+active, 000654321 FR not found for Intervention 13
+
+kazakhstan
+
+cambodia
+
+lebanon
+implemented, 400042499 FR not found for Intervention 139
+implemented, 0400038654-4 FR not found for Intervention 164
+implemented, 0400041564-2 FR not found for Intervention 188
+
+sierra_leone
+
+cote_divoire
+
+palestine
+active, 400049110 FR not found for Intervention 25
+implemented, 400041601 FR not found for Intervention 11
+implemented, 400049944 FR not found for Intervention 11
+active, 400044947 FR not found for Intervention 3
+active, 400044409 FR not found for Intervention 5
+implemented, 400044223 FR not found for Intervention 7
+implemented, 100203977 FR not found for Intervention 9
+
+sudan
+implemented, 400044046 FR not found for Intervention 21
+active, 400046395 FR not found for Intervention 26
+implemented, 400045589 FR not found for Intervention 27
+active, 400036505 FR not found for Intervention 28
+implemented, 400046285 FR not found for Intervention 40
+implemented, 400043345 FR not found for Intervention 56
+implemented, 400035951 FR not found for Intervention 93
+implemented, 400034964 FR not found for Intervention 103
+implemented, 400029292 FR not found for Intervention 109
+implemented, 400041119 FR not found for Intervention 114
+
+syria
+active, 400050125 FR not found for Intervention 209
+active, 400047008 FR not found for Intervention 170
+active, 400047008 FR not found for Intervention 169
+active, 400046967 FR not found for Intervention 168
+active, 400046974 FR not found for Intervention 168
+active, #400046124 FR not found for Intervention 8
+active, #400045955 FR not found for Intervention 11
+implemented, #400045432 FR not found for Intervention 13
+active, 400046441 FR not found for Intervention 17
+active, #400044558 FR not found for Intervention 19
+active, #400043969 FR not found for Intervention 30
+implemented, #400045129 FR not found for Intervention 41
+active, #400045081 FR not found for Intervention 42
+active, #400041255 FR not found for Intervention 43
+active, #400045107 FR not found for Intervention 44
+active, #400045117 FR not found for Intervention 49
+active, #400045083 FR not found for Intervention 52
+active, #400044854 FR not found for Intervention 53
+implemented, #400037869 FR not found for Intervention 58
+active, 400045484 FR not found for Intervention 70
+active, #0400044326 FR not found for Intervention 72
+active, #0400043554 FR not found for Intervention 80
+active, #0400044977 FR not found for Intervention 85
+active, #0400044976 FR not found for Intervention 88
+active, #0400044521 FR not found for Intervention 91
+implemented, 400042623 FR not found for Intervention 101
+active, 400043450 FR not found for Intervention 107
+active,  400043536 FR not found for Intervention 107
+active,  400043490 FR not found for Intervention 107
+
+myanmar
+implemented, 400040162 FR not found for Intervention 4
+
+burkina_faso
+
+nepal
+implemented, 400046781 FR not found for Intervention 1
+implemented, 400043887 FR not found for Intervention 2
+active, 400043904 FR not found for Intervention 3
+implemented, 400033936 FR not found for Intervention 4
+implemented, 400040264 FR not found for Intervention 4
+implemented, 400043758 FR not found for Intervention 5
+implemented, 400043390 FR not found for Intervention 7
+cancelled, 400040659 FR not found for Intervention 8
+active, 400043888 FR not found for Intervention 10
+implemented, 400043389 FR not found for Intervention 11
+implemented, 400042922 FR not found for Intervention 12
+
+kenya
+active, 010027845 FR not found for Intervention 6
+
+south_sudan
+
+china
+
+indonesia
+
+drc
+
+uganda
+active, 400046992 FR not found for Intervention 34
+implemented, 400041625 FR not found for Intervention 32
+active, 400043568 FR not found for Intervention 31
+active, 400047303 FR not found for Intervention 30
+active, 400042331 FR not found for Intervention 26
+implemented, 400044094 FR not found for Intervention 25
+active, 400040883 FR not found for Intervention 23
+implemented, 400043513 FR not found for Intervention 18
+active, 400047400 FR not found for Intervention 17
+active, 400045835 FR not found for Intervention 15
+active, 400044492 FR not found for Intervention 1
+active, 400044825 FR not found for Intervention 1
+implemented, 400043498 FR not found for Intervention 4
+active, 400038917 FR not found for Intervention 11
+
+yemen
+
+geneva_pfp
+
+guinea
+
+nigeria
+
+turkey
+active, SM150573 FR not found for Intervention 18
+active, SC150774 FR not found for Intervention 18
+active, SM150573 FR not found for Intervention 17
+active, SM160047 FR not found for Intervention 17
+active, SC150774 FR not found for Intervention 9
+active, SM160047 FR not found for Intervention 9
+active, SM150573 FR not found for Intervention 8
+active, SC150774 FR not found for Intervention 8
+active, SM160047 FR not found for Intervention 7
+active, SC150774 FR not found for Intervention 7
+
+bangladesh
+
+india
+
+ethiopia
+#### draft, FR 0400043092 connected to a different Intervention 1... current Intervention 10
+#### implemented, FR 0400043092 connected to a different Intervention 1... current Intervention 11
+#### active, FR 0400043092 connected to a different Intervention 1... current Intervention 13
+
+rwanda
+implemented, 0100223872-1 FR not found for Intervention 5
+active, 0100201834-1 FR not found for Intervention 6
+
+somalia
+
+jordan
+
+new_york
+
+kyrgyzstan
+implemented, 9000012542 FR not found for Intervention 3
+
+libya
+
+pakistan
+
+afghanistan
+
+menaro
+
+philippines
+
+iraq
+active, 0400045015 FR not found for Intervention 130
+implemented, 400047885 FR not found for Intervention 102
+implemented, 400045755 FR not found for Intervention 8
+implemented, 01000012015 FR not found for Intervention 11
+implemented, 01000012090 FR not found for Intervention 13
+active, 01000011864 FR not found for Intervention 14
+implemented, 01000011858 FR not found for Intervention 32
+#### implemented, FR 0400038373 connected to a different Intervention 88... current Intervention 89
+
+lacro
+
+wcaro
+
+esaro
+
+rosa
+
+syria_xb
+implemented, 400047113 FR not found for Intervention 4
+active, 400046475 FR not found for Intervention 9
+active, 400045543 FR not found for Intervention 25
+active, 400045897 FR not found for Intervention 32
+implemented, 400032581 FR not found for Intervention 69
+implemented, 400028672 FR not found for Intervention 70
+#### implemented, FR 0400036928 connected to a different Intervention 66... current Intervention 84
