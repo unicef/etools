@@ -12,10 +12,8 @@ dependencies:
     - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
 
   override:
-    # - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
     - docker pull unicef/etools:circle-latest || true
     - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
-    # - mkdir -p ~/docker; docker save unicef/etools:$CIRCLE_BRANCH > ~/docker/image.tar
     - docker tag unicef/etools:$CIRCLE_BRANCH unicef/etools:circle-latest
     - docker push unicef/etools:circle-latest
 
