@@ -67,14 +67,8 @@
     <div id="content">
       <div id="title" style="text-align: center; padding-top: 15px">
         <div style="text-align: right"><b><u>REF #: {{ engagement.unique_id }}</u></b></div>
-        <div style="font-size: 16pt"><b>PROGRAMME COOPERATION AGREEMENT</b></div>
-        <div><b>BETWEEN</b></div>
-        <div><b>{{ engagement.agreement.audit_organization.name|upper }}</b></div>
-        <div><b>AND THE</b></div>
-        <div><b>UNITED NATIONS CHILDREN'S FUND</b></div>
-        <div><b>FOR THE</b></div>
-        <div><b>IMPLEMENTATION of UNICEF-FUNDED PROGRAMME RELATING TO THE UNICEF COUNTRY PROGRAMME
-          FOR {{ engagement.agreement.audit_organization.country|upper }}</b></div>
+        <div style="font-size: 16pt"><b>{{ engagement.get_display_type }} of {{ engagement.partner.name }}</b></div>
+        <div><b>By {{ engagement.agreement.audit_organization.name }}</b></div>
       </div>
     </div>
     <div id="footer_content" style="text-align: right">
