@@ -58,6 +58,15 @@ class Command(BaseCommand):
         'user.*',
     ]
 
+    follow_up_page = [
+        'engagement.action_points',
+        'engagement.amount_refunded',
+        'engagement.additional_supporting_documentation_provided',
+        'engagement.justification_provided_and_accepted',
+        'engagement.write_off_required',
+        'engagement.pending_unsupported_amount',
+    ]
+
     engagement_overview_page = engagement_overview_block + partner_block + staff_members_block
 
     new_engagement = 'new'
@@ -163,31 +172,16 @@ class Command(BaseCommand):
         # final report. everybody can view. focal point can add action points
         self.add_permissions(self.final_report, self.everybody, 'view', self.everything)
 
+        # UNICEF Focal Point can create action points
+        self.add_permissions(self.final_report, self.focal_point, 'edit', self.follow_up_page)
+        self.revoke_permissions(self.final_report, self.auditor, 'view', self.follow_up_page)
+
         # report canceled. everybody can view
         self.add_permissions(self.report_canceled, self.everybody, 'view', self.everything)
 
-        # UNICEF Focal Point can create action points
-        self.add_permissions(self.final_report, self.focal_point, 'edit', ['engagement.action_points'])
-        self.add_permissions(self.final_report, self.focal_point, 'edit', [
-            'engagement.amount_refunded',
-            'engagement.additional_supporting_documentation_provided',
-            'engagement.justification_provided_and_accepted',
-            'engagement.write_off_required',
-        ])
-
         # Follow-Up fields available in finalized engagements.
         for status in [self.new_engagement, self.partner_contacted, self.report_submitted, self.report_canceled]:
-            self.revoke_permissions(status, self.everybody, 'view', ['engagement.action_points'])
-            self.revoke_permissions(status, self.everybody, 'view', [
-                'engagement.amount_refunded',
-                'engagement.additional_supporting_documentation_provided',
-                'engagement.justification_provided_and_accepted',
-                'engagement.write_off_required',
-                'engagement.pending_unsupported_amount',
-            ])
-
-        # Auditor does not have access to action points
-        self.revoke_permissions(self.final_report, self.auditor, 'view', ['engagemnet.action_points'])
+            self.revoke_permissions(status, self.everybody, 'view', self.follow_up_page)
 
         # update permissions
         all_tenants = get_tenant_model().objects.exclude(schema_name='public')
