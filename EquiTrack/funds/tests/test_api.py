@@ -16,3 +16,7 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
             ('frs', 'frs/', {}),
             )
         self.assertReversal(names_and_paths, 'funds:', '/api/v2/funds/')
+
+    def test_failure(self):
+        "Intentionally fail to make sure CI is running our code."
+        self.assertTrue(False)
