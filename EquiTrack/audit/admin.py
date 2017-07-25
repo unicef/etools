@@ -109,6 +109,6 @@ class FindingAdmin(admin.ModelAdmin):
 @admin.register(models.FinancialFinding)
 class FinancialFindingAdmin(admin.ModelAdmin):
     list_display = [
-        'title', 'finding_number', 'audit', 'description', 'amount', 'local_amount',
+        'title', 'audit', 'description', 'amount', 'local_amount',
     ]
-    search_fields = ['finding_number', 'title', ]
+    search_fields = ['title', ]

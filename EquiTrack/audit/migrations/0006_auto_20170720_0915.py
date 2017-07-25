@@ -39,11 +39,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='engagement',
-            name='pending_unsupported_amount',
-            field=models.DecimalField(blank=True, decimal_places=2, max_digits=20, null=True, verbose_name='pending unsupported amount'),
-        ),
-        migrations.AlterField(
-            model_name='engagement',
             name='write_off_required',
             field=models.DecimalField(blank=True, decimal_places=2, max_digits=20, null=True, verbose_name='write off required'),
         ),
