@@ -210,6 +210,7 @@ class SpotCheckSerializer(EngagementSerializer):
 
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
+            'explanation_for_additional_information',
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
@@ -278,6 +279,7 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
 
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
+            'explanation_for_additional_information',
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({

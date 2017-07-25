@@ -62,6 +62,7 @@ class Command(BaseCommand):
         'engagement.action_points',
         'engagement.amount_refunded',
         'engagement.additional_supporting_documentation_provided',
+        'engagement.explanation_for_additional_information',
         'engagement.justification_provided_and_accepted',
         'engagement.write_off_required',
         'engagement.pending_unsupported_amount',
