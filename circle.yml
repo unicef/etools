@@ -8,10 +8,15 @@ dependencies:
   cache_directories:
     - "~/docker"
 
+  pre:
+    - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+
   override:
-    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
+    # - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
+    - docker pull unicef/etools:circle-latest || true
     - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
-    - mkdir -p ~/docker; docker save unicef/etools:$CIRCLE_BRANCH > ~/docker/image.tar
+    # - mkdir -p ~/docker; docker save unicef/etools:$CIRCLE_BRANCH > ~/docker/image.tar
+    - docker push unicef/etools:circle-latest
 
 test:
    pre: # bootstrap postgres to accept connections from our container
