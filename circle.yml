@@ -14,7 +14,7 @@ dependencies:
 test:
    pre: # bootstrap postgres to accept connections from our container
      - sudo bash -c "echo \"listen_addresses = '*'\" >>
-       /etc/postgresql/9.5/main/postgresql.conf"  # 9.4 works only on CI Ubuntu 12.04
+       /etc/postgresql/9.5/main/postgresql.conf"
      - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
        /etc/postgresql/9.5/main/pg_hba.conf"
      - sudo /etc/init.d/postgresql restart

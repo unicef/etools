@@ -32,7 +32,7 @@ if [[ -e "$IMAGE_ARCHIVE" ]]; then
     docker load -i "$IMAGE_ARCHIVE"
 else
     echo "=====> Building image: ${IMAGE_FULL_NAME}"
-    docker build -t "$IMAGE_FULL_NAME" .
+    docker build --rm=false -t "$IMAGE_FULL_NAME" .
 fi
 
 # Tag the image as being the correct one for this commit.
