@@ -66,14 +66,10 @@ class TravelList(APITenantTestCase):
             response = self.forced_auth_req(
                 'get',
                 reverse(
-                    't2f:travels:list:dashboard',
-                    kwargs={
-                        "year": self.travel.start_date.year,
-                        "month": '{month:02d}'.format(month=self.travel.start_date.month),
-                    }
+                    't2f:travels:list:dashboard'
                 ),
                 user=self.unicef_staff,
-                data={"office_id": self.travel.office.id}
+                data={"office_id": self.travel.office.id, "year": self.travel.start_date.year, "month": self.travel.start_date.month }
             )
 
         response_json = json.loads(response.rendered_content)
