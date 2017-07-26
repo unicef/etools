@@ -1,10 +1,10 @@
 machine:
-  services:
-    - docker
-    - postgresql
-    - redis
-  environment:
-    - DJANGO_SETTINGS_MODULE: EquiTrack.settings.production
+   services:
+     - docker
+     - postgresql
+     - redis
+   environment:
+     - DJANGO_SETTINGS_MODULE: EquiTrack.settings.production
 
 dependencies:
   cache_directories:
