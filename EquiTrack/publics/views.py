@@ -53,9 +53,9 @@ class StaticDataView(GhostDataMixin,
         expense_type_q |= Q(travel_agent__country__business_area__code=country.business_area_code)
         expense_types = TravelExpenseType.objects.select_related('travel_agent').filter(expense_type_q)
 
-        data = {'currencies': currencies, # Moved
-                'business_areas': business_areas, # Moved
-                'expense_types': expense_types, # Moved
+        data = {'currencies': currencies,  # Moved
+                'business_areas': business_areas,  # Moved
+                'expense_types': expense_types,  # Moved
 
                 # These should stay here since all of them are 'static'
                 'airlines': self.get_airlines_queryset(),
@@ -247,6 +247,7 @@ class WBSGrantFundView(GhostDataMixin,
                 if val_dict[key] not in ret[val_dict['id']][key]:
                     ret[val_dict['id']][key].append(val_dict[key])
         return ret.values()
+
 
 class AirlinesView(GhostDataMixin,
                    viewsets.GenericViewSet):
