@@ -7,6 +7,9 @@ machine:
     - DJANGO_SETTINGS_MODULE: EquiTrack.settings.production
 
 dependencies:
+  cache_directories:
+    - "~/docker"
+
   override:
     - pip install -U pip
     - pip install -r EquiTrack/requirements/base.txt
