@@ -5,9 +5,12 @@ machine:
     - redis
   environment:
     DJANGO_SETTINGS_MODULE: EquiTrack.settings.production
+    CPLUS_INCLUDE_PATH: /usr/include/gdal
+    C_INCLUDE_PATH: /usr/include/gdal
 
 dependencies:
   override:
+    - apt-get install -y libgdal-dev
     - pip install -U pip
     - pip install -r EquiTrack/requirements/base.txt
 
