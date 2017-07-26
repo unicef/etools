@@ -10,7 +10,7 @@ machine:
 
 dependencies:
   override:
-    - apt-get install -y libgdal-dev
+    - sudo apt-get install -y libgdal-dev libpq-dev python-dev
     - pip install -U pip
     - pip install -r EquiTrack/requirements/base.txt
 
@@ -27,25 +27,3 @@ deployment:
        - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
        - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
        - docker push unicef/etools:$CIRCLE_BRANCH
-
-# dependencies:
-#   cache_directories:
-#     - "~/docker"
-
-#   override:
-#     - pip install -U pip
-#     - pip install -r EquiTrack/requirements/base.txt
-
-# test:
-#    pre:
-#      - psql -d template1 -c 'create extension hstore;' # needed for django hstore
-#    override:
-#      - bash EquiTrack/runtests.sh
-
-# deployment:
-#    hub:
-#      branch: [develop, staging, master, pmp-redesign]
-#      commands:
-#        - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
-#        - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-#        - docker push unicef/etools:$CIRCLE_BRANCH
