@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import json
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
