@@ -13,24 +13,27 @@ from rest_framework import status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from users.serializers import MinimalUserSerializer, MinimalUserDetailSerializer
+from users.serializers import MinimalUserSerializer
 from users.models import Office, Section
 from .forms import ProfileForm
 from .models import User, UserProfile, Country
 from .serializers import (
+    UserSerializer,
     GroupSerializer,
     OfficeSerializer,
     SectionSerializer,
+    UserCreationSerializer,
     SimpleProfileSerializer,
+    SimpleUserSerializer,
     ProfileRetrieveUpdateSerializer,
+    CountrySerializer
 )
 
 
-# not used anymore
-class UserAuthAPIView(RetrieveUpdateAPIView):
+class UserAuthAPIView(RetrieveAPIView):
     # TODO: Consider removing now use JWT
     model = User
-    serializer_class = MinimalUserSerializer
+    serializer_class = UserSerializer
 
     def get_object(self, queryset=None, **kwargs):
         user = self.request.user
@@ -67,7 +70,6 @@ class ChangeUserCountryView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# not used anymore
 class UsersView(ListAPIView):
     """
     Gets a list of Unicef Staff users in the current country.
@@ -76,7 +78,7 @@ class UsersView(ListAPIView):
     model = UserProfile
     serializer_class = SimpleProfileSerializer
 
-    def get_queryset(self, pk=None):
+    def get_queryset(self):
         user = self.request.user
         user_ids = self.request.query_params.get("values", None)
         if user_ids:
@@ -94,6 +96,21 @@ class UsersView(ListAPIView):
             country=user.profile.country,
             user__is_staff=True
         ).order_by('user__first_name')
+
+
+class CountryView(ListAPIView):
+    """
+    Gets a list of Unicef Staff users in the current country.
+    Country is determined by the currently logged in user.
+    """
+    model = Country
+    serializer_class = CountrySerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.model.objects.filter(
+            name=user.profile.country.name,
+        )
 
 
 class MyProfileAPIView(RetrieveUpdateAPIView):
@@ -124,8 +141,8 @@ class UsersDetailAPIView(RetrieveAPIView):
     """
     Retrieve a User in the current country
     """
-    queryset = User.objects.all()
-    serializer_class = MinimalUserDetailSerializer
+    queryset = UserProfile.objects.all()
+    serializer_class = SimpleProfileSerializer
 
     def retrieve(self, request, pk=None):
         """
@@ -133,10 +150,10 @@ class UsersDetailAPIView(RetrieveAPIView):
         """
         data = None
         try:
-            queryset = self.queryset.get(id=pk)
+            queryset = self.queryset.get(user__id=pk)
             serializer = self.serializer_class(queryset)
             data = serializer.data
-        except User.DoesNotExist:
+        except UserProfile.DoesNotExist:
             data = {}
         return Response(
             data,
@@ -211,6 +228,87 @@ class GroupViewSet(mixins.RetrieveModelMixin,
         try:
             for perm in permissions:
                 serializer.instance.permissions.add(perm)
+            serializer.save()
+        except Exception:
+            pass
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(data, status=status.HTTP_201_CREATED,
+                        headers=headers)
+
+
+class UserViewSet(mixins.RetrieveModelMixin,
+                  mixins.ListModelMixin,
+                  mixins.CreateModelMixin,
+                  viewsets.GenericViewSet):
+    """
+    Returns a list of all Users
+    """
+    queryset = User.objects.all()
+    serializer_class = UserCreationSerializer
+    permission_classes = (IsAdminUser,)
+
+    def get_queryset(self):
+        # we should only return workspace users.
+        queryset = super(UserViewSet, self).get_queryset()
+        queryset = queryset.prefetch_related('profile', 'groups', 'user_permissions')
+        # Filter for Partnership Managers only
+        driver_qps = self.request.query_params.get("drivers", "")
+        if driver_qps.lower() == "true":
+            queryset = queryset.filter(groups__name='Driver')
+
+        filter_param = self.request.query_params.get("partnership_managers", "")
+        if filter_param.lower() == "true":
+            queryset = queryset.filter(groups__name="Partnership Manager")
+
+        if "values" in self.request.query_params.keys():
+            # Used for ghost data - filter in all(), and return straight away.
+            try:
+                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
+            except ValueError:
+                raise ValidationError("ID values must be integers")
+            else:
+                queryset = queryset.filter(id__in=ids)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        queryset = queryset.filter(groups__name="UNICEF User")
+        filter_param = self.request.query_params.get("all", "")
+        if filter_param.lower() != "true":
+            queryset = queryset.filter(profile__country=self.request.user.profile.country)
+
+        def get_serializer(*args, **kwargs):
+            if request.GET.get('verbosity') == 'minimal':
+                serializer_cls = MinimalUserSerializer
+            else:
+                serializer_cls = SimpleUserSerializer
+
+            return serializer_cls(*args, **kwargs)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = get_serializer(page, many=True, context=self.get_serializer_context())
+            return self.get_paginated_response(serializer.data)
+
+        serializer = get_serializer(queryset, many=True, context=self.get_serializer_context())
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        groups = request.data['groups']
+
+        serializer.instance = serializer.save()
+        data = serializer.data
+
+        try:
+            for grp in groups:
+                serializer.instance.groups.add(grp)
+
             serializer.save()
         except Exception:
             pass
