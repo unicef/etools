@@ -1,42 +1,31 @@
 machine:
-   services:
-     - docker
-     - postgresql
-     - redis
+  python:
+    version: 2.7.11
+  services:
+    - docker
+    - postgresql
+  environment:
+    DJANGO_SETTINGS_MODULE: EquiTrack.settings.production
+    CPLUS_INCLUDE_PATH: /usr/include/gdal
+    C_INCLUDE_PATH: /usr/include/gdal
+    DATABASE_URL: postgis:///circle_test
 
 dependencies:
-  cache_directories:
-    - "~/docker"
-
   override:
-    # https://discuss.circleci.com/t/request-postgres-9-5/2611/2
-    # Just to be 100% certian you are using 9.5, and save a bit of memory.
-#    - sudo service postgresql stop 9.4
-#
-#    # The 9.4 instance has been configured to work with Docker. Just
-#    # copy that over to 9.5 and restart.
-#    - sudo cp -v /etc/postgresql/9.{4,5}/main/pg_hba.conf && sudo service postgresql restart 9.5
-
-    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
-    - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
-    - mkdir -p ~/docker; docker save unicef/etools > ~/docker/image.tar
+    - sudo apt-get install -y libgdal-dev python-dev
+    - pip install -U pip
+    - pip install -r EquiTrack/requirements/production.txt
 
 test:
-   pre: # bootstrap postgres to accept connections from our container
-     - sudo bash -c "echo \"listen_addresses = '*'\" >>
-       /etc/postgresql/9.5/main/postgresql.conf"  # 9.4 works only on CI Ubuntu 12.04
-     - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
-       /etc/postgresql/9.5/main/pg_hba.conf"
-     - sudo /etc/init.d/postgresql restart
-     - psql -d template1 -c 'create extension hstore;' # needed for django hstore
-   override:
-     - export HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`;
-       docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/etools:$CIRCLE_BRANCH
-       bash runtests.sh
+  pre:
+    - psql -d template1 -c 'create extension hstore;' # needed for django hstore
+  override:
+    - cd EquiTrack && bash runtests.sh
 
 deployment:
    hub:
-     branch: [develop, staging, master, pmp-redesign]
+     branch: [develop, staging, master]
      commands:
+       - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
        - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
        - docker push unicef/etools:$CIRCLE_BRANCH
