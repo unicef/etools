@@ -11,9 +11,7 @@ exclude =
     manage_debug.py,
     partners,
     reports,
-    supplies,
     t2f,
     tpm,
-    trips,
     vision,
     workplan
