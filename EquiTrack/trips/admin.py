@@ -1,7 +1,4 @@
-__author__ = 'jcranwellward'
-
 from django.contrib import admin
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import models, connection
 from django.db.models import Q
@@ -10,13 +7,12 @@ from django.forms import Textarea
 from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
-from users.models import UserProfile
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import CountryUsersAdminMixin
-from EquiTrack.forms import AutoSizeTextForm, RequireOneFormSet
-from users.models import Office, Section
-from .models import (
+from EquiTrack.forms import AutoSizeTextForm
+from users.models import Office, Section, UserProfile
+from trips.models import (
     Trip,
     LinkedPartner,
     LinkedGovernmentPartner,
@@ -26,24 +22,20 @@ from .models import (
     FileAttachment,
     TripLocation,
 )
-from .forms import (
+from trips.forms import (
     TripForm,
     TripFundsForm,
     TripLocationForm,
     TravelRoutesForm,
     RequireOneLocationFormSet
 )
-from .filters import (
+from trips.filters import (
     TripReportFilter,
     PartnerFilter,
-    SupervisorFilter,
-    OwnerFilter
 )
 from reports.models import Result
-from partners.models import PartnerOrganization, GovernmentIntervention
-from .exports import TripResource, ActionPointResource
-
-User = get_user_model()
+from partners.models import PartnerOrganization
+from trips.exports import TripResource, ActionPointResource
 
 
 class LinkedPartnerInlineAdmin(admin.TabularInline):
@@ -69,10 +61,10 @@ class LinkedGovernmentPartnerInlineAdmin(admin.TabularInline):
         if db_field.name == u'partner':
             kwargs['queryset'] = PartnerOrganization.objects.filter(partner_type=u'Government', hidden=False)
 
-
         return super(LinkedGovernmentPartnerInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
+
 
 class TravelRoutesInlineAdmin(admin.TabularInline):
     model = TravelRoutes
@@ -301,7 +293,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         Override here to check if the itinerary has changed
         """
         for form in formset.forms:
-            if form.has_changed():  #TODO: Test this
+            if form.has_changed():  # TODO: Test this
                 if type(form.instance) is TravelRoutes and form.instance.trip.status == Trip.APPROVED:
                     trip = Trip.objects.get(pk=form.instance.trip.pk)
                     trip.status = Trip.SUBMITTED
@@ -432,7 +424,7 @@ class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
         u'status'
     )
     list_filter = (
-        #(u'trip__owner', admin.RelatedOnlyFieldListFilter),
+        # (u'trip__owner', admin.RelatedOnlyFieldListFilter),
         (u'person_responsible', admin.RelatedOnlyFieldListFilter),
         u'status',
     )
@@ -473,6 +465,7 @@ class TripLocationAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
         return request.user.is_superuser
+
 
 admin.site.register(Trip, TripReportAdmin)
 admin.site.register(ActionPoint, ActionPointsAdmin)
