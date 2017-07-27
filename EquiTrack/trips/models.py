@@ -28,7 +28,6 @@ from partners.models import (
     GovernmentIntervention,
     GovernmentInterventionResult
 )
-from notification.templates import trips as emails
 from notification.models import Notification
 
 User = settings.AUTH_USER_MODEL
