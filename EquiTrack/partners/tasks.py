@@ -42,8 +42,8 @@ def task_decorator(funct):
     return wrapper
 
 
-@app.task
 @task_decorator
+@app.task
 def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
 
         logger.info('Starting agreement auto status transition for country {}'.format(workspace.name))
@@ -75,8 +75,8 @@ def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
         logger.info("Transitioned agreements {} ".format(processed))
 
 
-@app.task
 @task_decorator
+@app.task
 def intervention_status_automatic_transition(admin=None, workspace=None, **kwargs):
 
         logger.info('Starting agreement auto status transition for country {}'.format(workspace.name))
@@ -121,8 +121,8 @@ def intervention_status_automatic_transition(admin=None, workspace=None, **kwarg
 
 
 
-@app.task
 @task_decorator
+@app.task
 def intervention_notification_signed_no_frs(admin=None, workspace=None, **kwargs):
     '''This should only run once a week'''
     logger.info('Starting intervention signed but no FRs notifications for country {}'.format(workspace.name))
@@ -142,8 +142,8 @@ def intervention_notification_signed_no_frs(admin=None, workspace=None, **kwargs
         notification.send_notification()
 
 
-@app.task
 @task_decorator
+@app.task
 def intervention_notification_ended_fr_outstanding(admin=None, workspace=None, **kwargs):
     '''This will run every 2 weeks'''
     logger.info('Starting intervention signed but FRs Amount and actual '
@@ -162,8 +162,8 @@ def intervention_notification_ended_fr_outstanding(admin=None, workspace=None, *
             notification.send_notification()
 
 
-@app.task
 @task_decorator
+@app.task
 def intervention_notification_ending(admin=None, workspace=None, **kwargs):
     '''This will run every 24 hours'''
     qs_results = {}
