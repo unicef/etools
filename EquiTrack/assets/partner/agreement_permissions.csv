@@ -15,7 +15,7 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 2.3.1,Authorized Officer,authorized_officers,Partnership Manager,user adds amendment,*,Edit,TRUE
 2.2.1,Partner Name,partner,UNICEF User,,*,Required,TRUE
 2.2.2,Agreement Type,agreement_type,UNICEF User,,*,Required,TRUE
-2.2.12,CP Structure,agreement_number,UNICEF User,,*,Required,TRUE
+2.2.12,CP Structure,country_programme,UNICEF User,,*,Required,TRUE
 2.2.4,Start Date,start,Partnership Manager,,Signed,Required,TRUE
 2.2.5,End Date,end,Partnership Manager,,Signed,Required,TRUE
 2.2.6,Signed By Partner,partner_manager,Partnership Manager,,Signed,Required,TRUE
