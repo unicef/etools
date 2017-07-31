@@ -70,11 +70,11 @@ class InterventionCvsRenderer(r.CSVRenderer):
     header = [
         "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
         "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
-        "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
+        "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
         "planned_budget_local", "unicef_budget", "cso_contribution",
         "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
-        "unicef_signatory", "signed_by_unicef_date", "metadata", "days_from_submission_to_signed", "days_from_review_to_signed",
+        "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
         "url", "migration_error_msg"
     ]
 
@@ -98,7 +98,6 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "cp_outputs": "CP Outputs",
         "ram_indicators": "RAM Indicators",
         "fr_numbers": "FR Number(s)",
-        "local_currency": "Local Currency of Planned Budget",
         "planned_budget_local": "Total UNICEF Budget (Local)",
         "unicef_budget": "Total UNICEF Budget (USD)",
         "cso_contribution": "Total CSO Budget (USD)",
