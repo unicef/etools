@@ -880,14 +880,15 @@ def remediation_intervention_migration():
     from partners.validation.interventions import InterventionValid
     master_user = User.objects.get(username='etools_task_admin')
     active_interventions = Intervention.objects.filter(status='active')
-    for intervention in active_interventions.all():
+    for intervention in Intervention.objects.all():
         validator = InterventionValid(intervention, user=master_user, disable_rigid_check=True)
         if not validator.is_valid:
             print('active intervention {} of type {} is invalid'.format(intervention.id, intervention.document_type))
             print(validator.errors)
             intervention.status = Intervention.DRAFT
             intervention.metadata = {'migrated': True,
-                                     'old_status': Intervention.ACTIVE}
+                                     'old_status': Intervention.ACTIVE,
+                                     'error_msg': validator.errors}
             intervention.save()
             # let it run through validation again, maybe it will auto-transition to signed
             with transaction.atomic():
@@ -895,6 +896,10 @@ def remediation_intervention_migration():
                 if new_validator.is_valid:
                     if intervention.status == 'signed':
                         print('intervention moved to signed {}'.format(intervention.status))
+                        intervention.metadata = {
+                            'migrated': True,
+                            'old_status': Intervention.DRAFT,
+                        }
                         intervention.save()
                 else:
                     print('draft invalid')
@@ -940,3 +945,17 @@ def intervention_update_task():
                 intervention.save()
                 print('intervention {} of type {} successfully updated from {} to {}'.
                       format(intervention.id, intervention.document_type, old_status, intervention.status))
+
+
+def interventions_associated_ssfa():
+    for c in Country.objects.exclude(name='Global').all():
+        set_country(c.name)
+        print(c.name)
+        intervention_pds_ssfa = Intervention.objects.filter(agreement__agreement_type=Agreement.SSFA, document_type=Intervention.PD)
+        intervention_ssfa_pca = Intervention.objects.filter(agreement__agreement_type=Agreement.PCA,
+                                                            document_type=Intervention.SSFA)
+        interventions = intervention_pds_ssfa | intervention_ssfa_pca
+        for i in interventions:
+            print('intervention {} type {} has agreement type {}'.format(i.id, i.document_type, i.agreement.agreement_type))
+
+
