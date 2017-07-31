@@ -286,7 +286,6 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     sector_locations = InterventionSectorLocationCUSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
-
     frs = serializers.PrimaryKeyRelatedField(many=True,
                                              queryset=FundsReservationHeader.objects.prefetch_related('intervention')
                                              .all(),
@@ -352,8 +351,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
-            "created", "modified", "planned_budget", "result_links", 'country_programme',
-            "amendments", "planned_visits", "attachments", "supplies", "distributions", 'permissions', 'partner_id'
+            "created", "modified", "planned_budget", "result_links", 'country_programme', 'metadata',
+            "amendments", "planned_visits", "attachments", "supplies", "distributions", 'permissions', 'partner_id',
         )
 
 
