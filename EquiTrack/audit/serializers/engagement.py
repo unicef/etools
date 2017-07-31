@@ -24,7 +24,7 @@ from .risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternal
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
     class Meta(PartnerOrganizationListSerializer.Meta):
         fields = PartnerOrganizationListSerializer.Meta.fields + (
-            'street_address', 'country', 'city', 'postal_code',
+            'address', 'street_address', 'country', 'city', 'postal_code',
         )
 
 
@@ -92,7 +92,7 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
         read_field=PurchaseOrderSerializer(read_only=True),
     )
     partner = SeparatedReadWriteField(
-        read_field=PartnerOrganizationListSerializer(read_only=True),
+        read_field=PartnerOrganizationLightSerializer(read_only=True),
     )
 
     status = serializers.ChoiceField(
