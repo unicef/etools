@@ -74,8 +74,8 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "planned_budget_local", "unicef_budget", "cso_contribution",
         "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
-        "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
-        "url",
+        "unicef_signatory", "signed_by_unicef_date", "metadata", "days_from_submission_to_signed", "days_from_review_to_signed",
+        "url", "migration_error_msg"
     ]
 
     labels = {
@@ -116,4 +116,5 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "days_from_submission_to_signed": "Days from Submission to Signed",
         "days_from_review_to_signed": "Days from Review to Signed",
         "url": "URL",
+        "migration_error_msg": "Migration messages"
     }
