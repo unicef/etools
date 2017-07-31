@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import json
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -155,7 +156,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end', 'frs_total_frs_amt',
             'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
             'sectors', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt', 'frs_total_outstanding_amt',
-            'offices', 'actual_amount', 'offices_names', 'total_unicef_budget', 'total_budget'
+            'offices', 'actual_amount', 'offices_names', 'total_unicef_budget', 'total_budget', 'metadata',
         )
 
 
@@ -368,7 +369,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     sectors = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
     fr_numbers = serializers.SerializerMethodField()
-    local_currency = serializers.SerializerMethodField()
     planned_budget_local = serializers.DecimalField(
         source='total_unicef_cash_local',
         read_only=True,
@@ -402,16 +402,17 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
     days_from_submission_to_signed = serializers.SerializerMethodField()
     days_from_review_to_signed = serializers.SerializerMethodField()
+    migration_error_msg = serializers.SerializerMethodField()
 
     class Meta:
         model = Intervention
         fields = (
             "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
             "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
-            "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
+            "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
             "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
-            "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
+            "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date", "migration_error_msg",
             "signed_by_partner_date", "url", "days_from_submission_to_signed", "days_from_review_to_signed"
         )
 
@@ -465,12 +466,11 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_days_from_review_to_signed(self, obj):
         return obj.days_from_review_to_signed
 
-    def get_local_currency(self, obj):
-        planned_budget = obj.planned_budget
-        return planned_budget.currency if planned_budget else ""
-
     def get_fr_numbers(self, obj):
         return ', '.join([x.fr_number for x in obj.frs.all()]) if obj.frs.all().count() > 0 else ""
+
+    def get_migration_error_msg(self, obj):
+        return ', '.join([a for a in obj.metadata['error_msg']]) if 'error_msg' in obj.metadata.keys() else ''
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
