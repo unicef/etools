@@ -85,7 +85,7 @@ def intervention_status_automatic_transition(admin=None, workspace=None, **kwarg
         # compiling a list of them to send to an admin or save somewhere in the future
         bad_interventions = []
 
-        active_ended = Intervention.objects.filter(status__in=Intervention.ACTIVE,
+        active_ended = Intervention.objects.filter(status=Intervention.ACTIVE,
                                                    end=datetime.date.today() - datetime.timedelta(days=1))
 
         # get all the interventions for which their status is endend and total otustanding_amt is 0 and
