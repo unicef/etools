@@ -26,13 +26,13 @@ def migrate_frs(apps, schema_editor):
             except FundsReservationHeader.DoesNotExist:
                 if i.status != 'draft':
                     # workaround in the local db until records are fixed in production
-                    # printtf('{}, {} FR not found for Intervention {}'.format(i.status, fr, i.id))
-                    # i.fr_numbers = None
-                    # i.save()
-                    raise BaseException('No FR found')
+                    printtf('{}, {} FR not found for Intervention {}'.format(i.status, fr, i.id))
+                    i.fr_numbers = None
+                    i.save()
+                    # raise BaseException('No FR found')
                 else:
                     # if intervention is in Draft, we don't care.. we're removing FRs, let the users re-add
-                    #printtf('{}, {} FR not found for Intervention {}'.format(i.status, fr, i.id))
+                    printtf('{}, {} FR not found for Intervention {}'.format(i.status, fr, i.id))
                     i.fr_numbers = None
                     i.save()
             else:
@@ -40,9 +40,9 @@ def migrate_frs(apps, schema_editor):
                     printtf('#### {}, FR {} connected to a different Intervention {}... current Intervention {}'.
                             format(i.status, fr_obj.fr_number, fr_obj.intervention.id, i.id))
                     # workaround in the local db until records are fixed in production
-                    # i.fr_numbers = None
-                    # i.save()
-                    raise BaseException('FR Has been used')
+                    i.fr_numbers = None
+                    i.save()
+                    # raise BaseException('FR Has been used')
                 else:
                     fr_obj.intervention = i
                     fr_obj.save()
