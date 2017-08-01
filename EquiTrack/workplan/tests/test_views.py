@@ -2,8 +2,7 @@ from django.core import mail
 from rest_framework import status
 
 from EquiTrack.factories import UserFactory, CommentFactory, WorkplanFactory, \
-    ResultWorkplanPropertyFactory, WorkplanProjectFactory, LabelFactory, ResultFactory, \
-    ResultStructureFactory
+    ResultWorkplanPropertyFactory, WorkplanProjectFactory, LabelFactory, ResultFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType
 from workplan.tasks import notify_comment_tagged_users
@@ -23,7 +22,7 @@ class TestWorkplanViews(APITenantTestCase):
         self.workplan_project = WorkplanProjectFactory(workplan=self.workplan)
         self.labels = [LabelFactory() for x in xrange(3)]
         self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
-        self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
+        self.result = ResultFactory(result_type=self.result_type)
 
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(
                                             workplan=self.workplan,

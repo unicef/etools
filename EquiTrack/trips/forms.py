@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from datetime import datetime
 
 from django.forms import ModelForm, fields, Form
@@ -12,8 +10,7 @@ from datetimewidget.widgets import DateTimeWidget, DateWidget
 
 from dal import autocomplete
 
-from partners.models import PCA
-from .models import Trip, TravelRoutes, TripLocation
+from trips.models import Trip, TravelRoutes, TripLocation
 
 
 class TravelRoutesForm(ModelForm):
@@ -70,6 +67,7 @@ class TripLocationForm(ModelForm):
             )
         }
 
+
 class TripForm(ModelForm):
 
     # cannot change the following fields: (if other fields are rigid add them in the list)
@@ -113,10 +111,7 @@ class TripForm(ModelForm):
         owner = cleaned_data.get(u'owner')
         supervisor = cleaned_data.get(u'supervisor')
         travel_assistant = cleaned_data.get(u'travel_assistant')
-        budget_owner = cleaned_data.get(u'budget_owner')
         ta_required = cleaned_data.get(u'ta_required')
-        pcas = cleaned_data.get(u'pcas')
-        no_pca = cleaned_data.get(u'no_pca')
         international_travel = cleaned_data.get(u'international_travel')
         representative = cleaned_data.get(u'representative')
         ta_drafted = cleaned_data.get(u'ta_drafted')
@@ -126,9 +121,7 @@ class TripForm(ModelForm):
         date_supervisor_approved = cleaned_data.get(u'date_supervisor_approved')
         approved_by_budget_owner = cleaned_data.get(u'approved_by_budget_owner')
         date_budget_owner_approved = cleaned_data.get(u'date_budget_owner_approved')
-        approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         trip_report = cleaned_data.get(u'main_observations')
-        ta_trip_took_place_as_planned = cleaned_data.get(u'ta_trip_took_place_as_planned')
         pending_ta_amendment = cleaned_data.get(u'pending_ta_amendment')
         driver = cleaned_data.get(u'driver')
         driver_supervisor = cleaned_data.get(u'driver_supervisor')
