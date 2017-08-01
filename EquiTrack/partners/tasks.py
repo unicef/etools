@@ -29,6 +29,7 @@ def get_intervention_context(i):
 
 def task_decorator(funct):
     admin = User.objects.get(username=settings.TASK_ADMIN_USER)
+
     def wrapper(*args, **kwargs):
         for c in Country.objects.exclude(name='Global').all():
             connection.set_tenant(c)
@@ -120,7 +121,6 @@ def intervention_status_automatic_transition(admin=None, workspace=None, **kwarg
         logger.info("Transitioned interventions {} ".format(processed))
 
 
-
 @task_decorator
 @app.task
 def intervention_notification_signed_no_frs(admin=None, workspace=None, **kwargs):
@@ -191,5 +191,3 @@ def intervention_notification_ending(admin=None, workspace=None, **kwargs):
                 template_data=email_context
             )
             notification.send_notification()
-
-
