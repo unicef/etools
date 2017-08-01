@@ -38,6 +38,7 @@ class Command(BaseCommand):
 
     engagement_overview_block = [
         'engagement.agreement',
+        'engagement.related_agreement',
         'engagement.partner_contacted_at',
         'engagement.type',
         'engagement.start_date',
@@ -126,7 +127,10 @@ class Command(BaseCommand):
             'engagement.engagement_attachments',
             'attachment.*',
         ])
-        self.add_permissions(self.new_engagement, self.focal_point, 'edit', ['purchaseorder.contract_end_date'])
+        self.add_permissions(self.new_engagement, self.focal_point, 'edit', [
+            'engagement.related_agreement',
+            'purchaseorder.contract_end_date',
+        ])
 
         # created: auditor can edit, everybody else can view, focal point can cancel
         self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
@@ -161,6 +165,10 @@ class Command(BaseCommand):
             ]
         )
         self.add_permissions(self.partner_contacted, self.focal_point, 'action', 'engagement.cancel')
+        self.add_permissions(self.partner_contacted, self.focal_point, 'edit', [
+            'engagement.related_agreement',
+            'purchaseorder.contract_end_date',
+        ])
 
         # report submitted. focal point can finalize. all can view
         self.add_permissions(self.report_submitted, self.everybody, 'view', self.everything)

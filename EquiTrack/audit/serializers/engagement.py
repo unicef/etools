@@ -91,6 +91,7 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
     agreement = SeparatedReadWriteField(
         read_field=PurchaseOrderSerializer(read_only=True),
     )
+    related_agreement = PurchaseOrderSerializer(write_only=True, required=False)
     partner = SeparatedReadWriteField(
         read_field=PartnerOrganizationLightSerializer(read_only=True),
     )
@@ -106,7 +107,7 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
     class Meta(AuditPermissionsBasedRootSerializerMixin.Meta):
         model = Engagement
         fields = [
-            'id', 'unique_id', 'agreement', 'partner', 'type', 'status', 'status_date',
+            'id', 'unique_id', 'agreement', 'related_agreement', 'partner', 'type', 'status', 'status_date',
         ]
 
 
@@ -157,6 +158,7 @@ class EngagementSerializer(EngagementDatesValidation,
     def validate(self, data):
         validated_data = super(EngagementSerializer, self).validate(data)
         staff_members = validated_data.get('staff_members', [])
+        validated_data.pop('related_agreement', None)
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
 
         partner = validated_data.get('partner', None)
