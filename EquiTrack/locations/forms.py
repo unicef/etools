@@ -1,6 +1,5 @@
-__author__ = 'jcranwellward'
-
 import logging
+
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -8,7 +7,7 @@ from cartodb import CartoDBAPIKey, CartoDBException
 
 from .models import CartoDBTable
 
-logger = logging.getLogger('locations.models')
+logger = logging.getLogger(__name__)
 
 
 class CartoDBTableForm(forms.ModelForm):
@@ -31,9 +30,9 @@ class CartoDBTableForm(forms.ModelForm):
             sites = client.sql(
                 'select * from {} limit 1'.format(table_name)
             )
-        except CartoDBException as e:
-            logging.exception("CartoDB exception occured", exc_info=True)
-            raise ValidationError("Couldn't connect to CartoDB table: "+table_name)
+        except CartoDBException:
+            logger.exception("CartoDB exception occured")
+            raise ValidationError("Couldn't connect to CartoDB table: {}".format(table_name))
         else:
             row = sites['rows'][0]
             if name_col not in row:
