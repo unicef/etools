@@ -144,9 +144,10 @@ class InterventionValid(CompleteValidation):
 
     def check_required_fields(self, intervention):
         required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f] is True]
-        required_valid, field = check_required_fields(intervention, required_fields)
+        required_valid, fields = check_required_fields(intervention, required_fields)
         if not required_valid:
-            raise StateValidError(['Required fields not completed in {}: {}'.format(intervention.status, field)])
+            raise StateValidError(['Required fields not completed in {}: {}'.format(
+                intervention.status, ', '.join(f for f in fields))])
 
     def check_rigid_fields(self, intervention, related=False):
         # this can be set if running in a task and old_instance is not set
