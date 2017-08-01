@@ -880,7 +880,7 @@ def remediation_intervention_migration():
     from partners.validation.interventions import InterventionValid
     master_user = User.objects.get(username='etools_task_admin')
     active_interventions = Intervention.objects.filter(status='active')
-    for intervention in Intervention.objects.exclude(status__in=['ended', 'closed', 'suspended', 'terminated']):
+    for intervention in active_interventions:
         validator = InterventionValid(intervention, user=master_user, disable_rigid_check=True)
         if not validator.is_valid:
             print('active intervention {} of type {} is invalid'.format(intervention.id, intervention.document_type))
