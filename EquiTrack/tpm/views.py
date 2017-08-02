@@ -10,10 +10,12 @@ from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionM
     NestedViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember
+from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMLocation
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from .permissions import IsPMEorReadonlyPermission, CanCreateStaffMembers
+from .export.serializers import TPMVisitExportSerializer
+from .export.renderers import TPMVisitRenderer
 
 
 class BaseTPMViewSet(
@@ -137,3 +139,11 @@ class TPMVisitViewSet(
         if self.action == 'update' and self.get_object().status == TPMVisit.STATUSES.draft:
             return TPMVisitDraftSerializer
         return super(TPMVisitViewSet, self).get_serializer_class()
+
+    @list_route(methods=['get'], renderer_classes=(TPMVisitRenderer,))
+    def export(self, request, *args, **kwargs):
+        locations = TPMLocation.objects.filter(
+            tpm_low_result__tpm_sector__tpm_activity__tpm_visit__in=self.get_queryset(),
+        )
+        serializer = TPMVisitExportSerializer(locations, many=True)
+        return Response(serializer.data)
