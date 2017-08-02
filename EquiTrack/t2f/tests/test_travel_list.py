@@ -43,7 +43,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
             ('invoice_export', 'invoice-export/', {}),
             ('activities', 'activities/1/', {'partner_organization_pk': 1}),
             ('activities-intervention', 'activities/partnership/1/', {'partnership_pk': 1}),
-            ('dashboard', 'dashboard/2017/07/', {'year': '2017', 'month': '07'}),
+            ('dashboard', 'dashboard', {}),
             )
         self.assertReversal(names_and_paths, 't2f:travels:list:', '/api/t2f/travels/')
         self.assertIntParamRegexes(names_and_paths, 't2f:travels:list:')
@@ -51,11 +51,11 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
         # Exercise dashboard to ensure year and month regexes only accept 4- and 2-digit int args, respectively.
         for invalid_year in (1, '1', '123', '12345', '123x', 'x123', 'xxxx', ):
             with self.assertRaises(NoReverseMatch):
-                reverse('t2f:travels:list:dashboard', kwargs={'year': invalid_year, 'month': '07'})
+                reverse('t2f:travels:list:dashboard?year={}'.format(invalid_year), kwargs={})
 
         for invalid_month in (1, '1', '007', '4x', 'x4', 'xx', ):
             with self.assertRaises(NoReverseMatch):
-                reverse('t2f:travels:list:dashboard', kwargs={'year': '2017', 'month': invalid_month})
+                reverse('t2f:travels:list:dashboard?year=2017&months={}'.format(invalid_month), kwargs={})
 
     def test_list_view(self):
         with self.assertNumQueries(5):
@@ -90,13 +90,9 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
                 'get',
                 reverse(
                     't2f:travels:list:dashboard',
-                    kwargs={
-                        "year": self.travel.start_date.year,
-                        "month": '{month:02d}'.format(month=self.travel.start_date.month),
-                    }
                 ),
                 user=self.unicef_staff,
-                data={"office_id": self.travel.office.id}
+                data={"office_id": self.travel.office.id ,"year": self.travel.start_date.year, "months": '{month:02d}'.format(month=self.travel.start_date.month)}
             )
 
         response_json = json.loads(response.rendered_content)
@@ -118,13 +114,10 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
                 'get',
                 reverse(
                     't2f:travels:list:dashboard',
-                    kwargs={
-                        "year": travel.start_date.year,
-                        "month": '{month:02d}'.format(month=travel.start_date.month),
-                    }
+
                 ),
                 user=self.unicef_staff,
-                data={"office_id": travel.office.id}
+                data={"office_id": travel.office.id ,"year": travel.start_date.year, "months": '{month:02d}'.format(month=travel.start_date.month)}
             )
 
         response_json = json.loads(response.rendered_content)
