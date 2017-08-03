@@ -12,7 +12,7 @@ exclude =
     partners,
     reports,
     t2f,
-    trips,
+    tpm,
     users,
     vision,
     workplan

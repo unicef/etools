@@ -19,7 +19,7 @@ def migrate_planned_budget(apps, schema_editor):
     local_currency = current_workspace.local_currency
     interventions = Intervention.objects.all()
     print("Total interventions {}".format(interventions.count()))
-    uped = 0
+    count = 0
     for i in interventions:
         if i.planned_budget.exists():
             pb = i.planned_budget.aggregate(
@@ -33,20 +33,19 @@ def migrate_planned_budget(apps, schema_editor):
             currency = i.planned_budget.first().currency or local_currency
             i.planned_budget.all().delete()
 
-            if pb['total_unicef_cash'] > 0 or pb['total_unicef_cash_local'] > 0:
-                uped += 1
-                new_planned_budget = InterventionBudget(
-                    intervention=i,
-                    partner_contribution=pb['total_partner_contribution'],
-                    unicef_cash=pb['total_unicef_cash'],
-                    in_kind_amount=pb['total_in_kind_amount'],
-                    partner_contribution_local=pb['total_partner_contribution_local'],
-                    unicef_cash_local=pb['total_unicef_cash_local'],
-                    in_kind_amount_local=pb['total_in_kind_amount_local'],
-                    total=pb['total_partner_contribution'] + pb['total_in_kind_amount'] + pb['total_unicef_cash'],
-                    currency=currency,
-                )
-                new_planned_budget.save()
+            new_planned_budget = InterventionBudget(
+                intervention=i,
+                partner_contribution=pb['total_partner_contribution'],
+                unicef_cash=pb['total_unicef_cash'],
+                in_kind_amount=pb['total_in_kind_amount'],
+                partner_contribution_local=pb['total_partner_contribution_local'],
+                unicef_cash_local=pb['total_unicef_cash_local'],
+                in_kind_amount_local=pb['total_in_kind_amount_local'],
+                total=pb['total_partner_contribution'] + pb['total_in_kind_amount'] + pb['total_unicef_cash'],
+                currency=currency,
+            )
+            new_planned_budget.save()
+            count += 1
         else:
             new_planned_budget = InterventionBudget(
                 intervention=i,
@@ -57,10 +56,11 @@ def migrate_planned_budget(apps, schema_editor):
                 unicef_cash_local=0,
                 in_kind_amount_local=0,
                 currency=local_currency,
-                total = 0
+                total=0
             )
             new_planned_budget.save()
-        print('Updated automatically {}'.format(uped))
+
+        print('Updated automatically {}'.format(count))
 
 
 class Migration(migrations.Migration):

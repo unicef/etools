@@ -3,7 +3,7 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 2.2.2,Agreement Type,agreement_type,Partnership Manager,,Draft,Edit,TRUE
 2.2.3,Reference Number,agreement_number,UNICEF User,,*,Edit,FALSE
 2.2.12,CP Structure,country_programme,Partnership Manager,is type PCA or MOU,Draft,Edit,TRUE
-2.2.4,Start Date,start,Partnership Manager,is type MOU,Draft,Edit,TRUE
+2.2.4,Start Date,start,Partnership Manager,,Draft,Edit,TRUE
 2.2.5,End Date,end,Partnership Manager,is type MOU,Draft,Edit,TRUE
 2.2.6,Signed By Partner,partner_manager,Partnership Manager,is type PCA or MOU,Draft,Edit,TRUE
 2.2.7,Signed By Partner Date,signed_by_partner_date,Partnership Manager,is type PCA or MOU,Draft,Edit,TRUE
