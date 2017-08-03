@@ -250,7 +250,6 @@ class WBSGrantFundView(GhostDataMixin,
         return [ret[k] for k in ordered_keys]
 
 
-
 class AirlinesView(GhostDataMixin,
                    viewsets.GenericViewSet):
     queryset = AirlineCompany.objects.all()

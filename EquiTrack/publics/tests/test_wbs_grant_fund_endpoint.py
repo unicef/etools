@@ -63,7 +63,7 @@ class WBSGrantFundEndpoint(APITenantTestCase):
         self.assertFalse('public-wbs_grant_fund-etag' in cache)
 
         self.forced_auth_req('get', reverse('public:wbs_grants_funds'),
-                                            user=self.unicef_staff)
+                             user=self.unicef_staff)
         self.assertTrue('public-wbs_grant_fund-etag' in cache)
 
         WBSGrantFundView.list.invalidate()
