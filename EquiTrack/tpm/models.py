@@ -15,7 +15,7 @@ from attachments.models import Attachment
 from firms.models import BaseFirm, BaseStaffMember
 from publics.models import SoftDeleteMixin
 from utils.common.models.fields import CodedGenericRelation
-from utils.common.urlresolvers import site_url
+from utils.common.urlresolvers import site_url, build_frontend_url
 from utils.groups.wrappers import GroupWrapper
 from utils.permissions.utils import has_action_permission
 from utils.permissions.models.models import StatusBasePermission
@@ -195,7 +195,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self._send_email(self._get_ip_focal_points_as_email_recipients(), 'tpm/visit/report_for_ip')
 
     def get_object_url(self):
-        return ''
+        return build_frontend_url('tpm', 'visits', self.id, 'details')
 
 
 @python_2_unicode_compatible
