@@ -1,5 +1,3 @@
-
-
 from rest_framework import serializers
 
 from workplan.serializers import ResultWorkplanPropertySerializer
