@@ -3,11 +3,10 @@ from rest_framework import serializers
 from firms.serializers import BaseStaffMemberSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from ..models import TPMPartner, TPMPartnerStaffMember
-from .base import SetStaffMemberCountryMixin
 from .attachments import TPMAttachmentsSerializer
 
 
-class TPMPartnerStaffMemberSerializer(SetStaffMemberCountryMixin, BaseStaffMemberSerializer):
+class TPMPartnerStaffMemberSerializer(BaseStaffMemberSerializer):
     class Meta(BaseStaffMemberSerializer.Meta):
         model = TPMPartnerStaffMember
         fields = BaseStaffMemberSerializer.Meta.fields + [
