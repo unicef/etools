@@ -4,13 +4,8 @@ import sys
 from EquiTrack.settings.base import *  # noqa
 
 
-# ######### DEBUG CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#debug
-DEBUG = True
-
 ALLOWED_HOSTS = ['127.0.0.1']
-
-# ######### END DEBUG CONFIGURATION
+DEBUG = True
 
 CELERY_ALWAYS_EAGER = True
 
@@ -55,7 +50,7 @@ JWT_AUTH = {
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now',
     'BACKENDS': {
-        # Will ensure email is sent async
+        # Send email to console for local dev
         'default': 'django.core.mail.backends.console.EmailBackend'
     }
 }
@@ -71,28 +66,19 @@ if 'test' in sys.argv:
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
-    TEST_RUNNER = 'EquiTrack.tests.runners.TestRunner'
 else:
     # Settings which should NOT be active during automated tests
 
-    # ######### TOOLBAR CONFIGURATION
-    # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
+    # django-debug-toolbar: https://django-debug-toolbar.readthedocs.io/en/stable/configuration.html
     INSTALLED_APPS += (  # noqa
         'debug_toolbar',
         'django_extensions',
     )
-
-    # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
     INTERNAL_IPS = ('127.0.0.1',)
-
-    # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
     MIDDLEWARE_CLASSES += (  # noqa
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
-
-    # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
     DEBUG_TOOLBAR_CONFIG = {
         'INTERCEPT_REDIRECTS': False,
         'SHOW_TEMPLATE_CONTEXT': True,
     }
-    # ######### END TOOLBAR CONFIGURATION
