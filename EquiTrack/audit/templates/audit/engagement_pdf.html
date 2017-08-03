@@ -225,12 +225,12 @@
             <td class="head" style="width: 60pt">No. of OFs</td>
           </tr>
           <tr>
-            <td class="text-left">{{ object.partner.name }}</td>
-            <td class="text-right">{{ object.audited_expenditure }}</td>
-            <td class="text-right">{{ object.financial_findings }}</td>
-            <td class="text-right">{{ object.percent_of_audited_expenditure }}</td>
-            <td class="text-right">{{ object.audit_opinion }}</td>
-            <td>{{ object.financial_finding_set.count }}</td>
+            <td class="text-left">{{ object.partner.name|default_if_none:"-" }}</td>
+            <td class="text-right">{{ object.audited_expenditure|default_if_none:"-" }}</td>
+            <td class="text-right">{{ object.financial_findings|default_if_none:"-" }}</td>
+            <td class="text-right">{{ object.percent_of_audited_expenditure|default_if_none:"-" }}</td>
+            <td class="text-right">{{ object.audit_opinion|default_if_none:"-" }}</td>
+            <td>{{ object.financial_finding_set.count|default_if_none:"-" }}</td>
             <td>-</td>
             <td>-</td>
             <td>-</td>
