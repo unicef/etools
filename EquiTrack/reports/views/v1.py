@@ -1,7 +1,7 @@
-
 from rest_framework import viewsets, mixins
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework.permissions import IsAdminUser
+
 from reports.models import (
     ResultType,
     Result,
