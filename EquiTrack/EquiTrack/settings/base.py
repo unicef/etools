@@ -55,7 +55,6 @@ SUIT_CONFIG = {
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
         {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign', 'models': [
-            {'model': 'reports.resultstructure'},
             {'model': 'reports.sector'},
             {'model': 'reports.result'},
             {'model': 'reports.indicator'},
@@ -69,10 +68,11 @@ SUIT_CONFIG = {
 }
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/dash/'
+LOGIN_REDIRECT_URL = '/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
+TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
@@ -111,7 +111,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework_csv.renderers.CSVRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
-    )
+    ),
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -301,9 +301,14 @@ TEMPLATES = [
             normpath(join(SITE_ROOT, 'templates')),
             normpath(join(SITE_ROOT, 'templates', 'frontend'))
         ],
-        'APP_DIRS': True,
+        # 'APP_DIRS': True,
         'OPTIONS': {
             'debug': DEBUG,  # TEMPLATE_DEBUG was deprecated
+            'loaders': [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+                'utils.mail.loaders.EmailTemplateLoader',
+            ],
             'context_processors': [
                 # Already defined Django-related contexts here
 
@@ -383,7 +388,6 @@ SHARED_APPS = (
     'djcelery_email',
     'datetimewidget',
     'leaflet',
-    'djgeojson',
     'paintstore',
     'corsheaders',
     'djangosaml2',
@@ -398,7 +402,7 @@ SHARED_APPS = (
     'analytical',
     'mptt',
     'easy_pdf',
-    'django_hstore',
+    'ordered_model',
 
     'vision',
     'management',
@@ -406,6 +410,11 @@ SHARED_APPS = (
     # you must list the app where your tenant model resides in
     'users',
     'notification',
+    'django_filters',
+    'utils.common',
+    'utils.mail',
+    'utils.writable_serializers',
+    'utils.permissions',
 )
 
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -420,11 +429,14 @@ TENANT_APPS = (
     'reports',
     'partners',
     'trips',
-    'tpm',
     'supplies',
     't2f',
     'workplan',
     'actstream',
+    'attachments',
+    'tpm',
+    'audit',
+    'firms',
 )
 
 

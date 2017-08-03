@@ -59,7 +59,7 @@ class TestUserViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
-    def test_api_users_list_values(self):
+    def test_users_api_list_values(self):
         response = self.forced_auth_req(
             'get',
             '/users/api/',

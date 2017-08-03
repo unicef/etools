@@ -9,7 +9,6 @@ django-logentry-admin==1.0.2
 djrill==2.1.0
 django-autocomplete-light==3.2.1
 django-smart-selects==1.3.1
-django-hstore==1.4.2
 django-redis-cache==1.7.1
 django-datetime-widget==0.9.3
 django-leaflet==0.19.0
@@ -44,6 +43,7 @@ djangorestframework-xml==1.0.1
 django-mptt==0.8.6
 drf-nested-routers==0.11.1
 django-rest-swagger==2.1.0
+djangorestframework-recursive==0.1.1
 
 # Other Python packages
 logutils==0.3.3
@@ -66,6 +66,8 @@ flower==0.9.1
 easy-thumbnails==2.3
 django-debug-toolbar==1.6 # add debug-toolbar to be able to test in dev while we have the current docker build
 pyyaml==3.12
+django-ordered-model==1.3.0
+django-filter==1.0.2
 
 # Testing packages
 coverage==4.2

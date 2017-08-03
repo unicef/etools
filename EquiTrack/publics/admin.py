@@ -1,11 +1,10 @@
 from __future__ import unicode_literals
 
-import json
-
 from django.contrib import admin
 
 from publics import models
 from publics.models import EPOCH_ZERO
+from publics.views import WBSGrantFundView
 
 
 class AdminListMixin(object):
@@ -116,15 +115,21 @@ class BusinessAreaAdmin(AdminListMixin, admin.ModelAdmin):
 
 
 class WBSAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
+    def save_model(self, *args, **kwargs):
+        super(WBSAdmin, self).save_model(*args, **kwargs)
+        WBSGrantFundView.list.invalidate()
 
 
 class GrantAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
+    def save_model(self, *args, **kwargs):
+        super(GrantAdmin, self).save_model(*args, **kwargs)
+        WBSGrantFundView.list.invalidate()
 
 
 class FundAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
+    def save_model(self, *args, **kwargs):
+        super(FundAdmin, self).save_model(*args, **kwargs)
+        WBSGrantFundView.list.invalidate()
 
 
 class CountryAdmin(AdminListMixin, admin.ModelAdmin):

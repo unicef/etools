@@ -2,7 +2,6 @@ import datetime
 import logging
 
 from django.db.models import Q
-from django.contrib.auth import get_user_model
 from django.views.generic import FormView, TemplateView, View
 from django.http import HttpResponse
 from django.conf import settings
@@ -21,12 +20,10 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from users.models import UserProfile, Office, Section
 from locations.models import get_random_color
 from partners.models import FileType
-from .models import Trip, FileAttachment, ActionPoint
-from .serializers import TripSerializer, FileAttachmentSerializer, ActionPointSerializer
-from .forms import TripFilterByDateForm
+from trips.models import Trip, FileAttachment, ActionPoint
+from trips.serializers import TripSerializer, FileAttachmentSerializer, ActionPointSerializer
+from trips.forms import TripFilterByDateForm
 from rest_framework import status
-
-User = get_user_model()
 
 
 def get_trip_months():
@@ -62,7 +59,7 @@ class AppsIOSPlistView(View):
         with open(settings.SITE_ROOT + '/templates/trips/apps/etrips.plist', 'r') as my_f:
             result = my_f.read()
         etrips_version = settings.ETRIPS_VERSION or "2.9.7"
-        
+
         result = result.format(request.get_host(), etrips_version)
 
         return HttpResponse(result, content_type="application/octet-stream")
@@ -268,7 +265,8 @@ class TripsViewSet(mixins.RetrieveModelMixin,
             partnerships = []
 
         serializer.instance = serializer.save()
-        serializer.instance.created_date = datetime.datetime.strptime(request.data['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.created_date = datetime.datetime.strptime(
+            request.data['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
         serializer.instance.save()
         data = serializer.data
 
@@ -308,7 +306,8 @@ class TripsViewSet(mixins.RetrieveModelMixin,
 
         # some more hard-coded validation:
         if current_user.id not in [trip.owner.id, trip.supervisor.id]:
-            raise PermissionDenied(detail="You must be the traveller or the supervisor to change the status of the trip")
+            raise PermissionDenied(
+                detail="You must be the traveller or the supervisor to change the status of the trip")
 
         if action == 'approved':
             # make sure the current user is the supervisor:
@@ -331,7 +330,7 @@ class TripsViewSet(mixins.RetrieveModelMixin,
                     detail='You must provide a narrative report before the trip can be completed'
                 )
 
-            if trip.ta_required and trip.ta_trip_took_place_as_planned is False and current_user != trip.programme_assistant:
+            if trip.ta_required and not trip.ta_trip_took_place_as_planned and current_user != trip.programme_assistant:
                 raise ParseError(
                     detail='Only the TA travel assistant can complete the trip'
                 )
@@ -490,10 +489,10 @@ class TripsDashboard(FormView):
 
 
 class TripActionPointViewSet(mixins.RetrieveModelMixin,
-                            mixins.ListModelMixin,
-                            mixins.CreateModelMixin,
-                            mixins.UpdateModelMixin,
-                            viewsets.GenericViewSet):
+                             mixins.ListModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.UpdateModelMixin,
+                             viewsets.GenericViewSet):
     """
     Returns a list of Action point for a Trip
     """

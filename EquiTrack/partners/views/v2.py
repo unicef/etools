@@ -3,8 +3,9 @@ import operator
 
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import models
-from django.db.models.functions import Concat, Value
-from django.db.models import F
+from django.db.models.functions import Concat
+from django.db.models import F, Value
+from model_utils import Choices
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -19,7 +20,6 @@ from rest_framework.views import APIView
 from publics.models import Currency
 
 from reports.models import (
-    ResultStructure,
     CountryProgramme,
     Result,
     ResultType,
@@ -35,9 +35,9 @@ from partners.models import (
     PartnerType,
     Assessment,
     InterventionAmendment,
-    AgreementAmendmentType,
     Intervention,
     FileType,
+    AgreementAmendment,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
@@ -50,7 +50,7 @@ from partners.filters import PartnerScopeFilter
 
 
 class PartnerInterventionListAPIView(ListAPIView):
-    queryset = Intervention.objects.all()
+    queryset = Intervention.objects.detail_qs().all()
     serializer_class = InterventionSerializer
     permission_classes = (PartnerPermission,)
 
@@ -58,7 +58,7 @@ class PartnerInterventionListAPIView(ListAPIView):
         """
         Return All Interventions for Partner
         """
-        interventions = Intervention.objects.filter(partner_id=pk)
+        interventions = Intervention.objects.detail_qs().filter(partner_id=pk)
         serializer = InterventionSerializer(interventions, many=True)
         return Response(
             serializer.data,
@@ -131,25 +131,20 @@ class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
 
 
 def choices_to_json_ready(choices):
-
-    if isinstance(choices, dict):
-        choice_list = [[k, v] for k, v in choices]
-        # return list(set(x.values(), ))
-    elif isinstance(choices, tuple):
-        choice_list = choices
+    if isinstance(choices, dict) or isinstance(choices, Choices):
+        choice_list = [(k, v) for k, v in choices]
     elif isinstance(choices, list):
         choice_list = []
         for c in choices:
             if isinstance(c, tuple):
-                choice_list.append([c[0], c[1]])
+                choice_list.append((c[0], c[1]))
             else:
-                choice_list.append([c, c])
+                choice_list.append((c, c))
     else:
-        choice_list = []
-    final_list = []
-    for choice in choice_list:
-        final_list.append({'label': choice[1], 'value': choice[0]})
-    return final_list
+        choice_list = choices
+
+    return [{'label': choice[1], 'value': choice[0]} for choice in choice_list]
+
 
 
 class PmpStaticDropdownsListApiView(APIView):
@@ -166,13 +161,13 @@ class PmpStaticDropdownsListApiView(APIView):
                 PartnerOrganization.objects.values_list(
                     'cso_type',
                     flat=True).order_by('cso_type').distinct('cso_type')))
-        partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
-        agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
+        partner_types = choices_to_json_ready(PartnerType.CHOICES)
+        agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
         assessment_types = choices_to_json_ready(Assessment.ASSESMENT_TYPES)
         agreement_types = choices_to_json_ready(
             [typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
-        agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendmentType.AMENDMENT_TYPES))
+        agreement_amendment_types = choices_to_json_ready(AgreementAmendment.AMENDMENT_TYPES)
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
@@ -216,18 +211,25 @@ class PMPDropdownsListApiView(APIView):
                 full_name=Concat('first_name', Value(' '), 'last_name'), user_id=F('id')
         ).values('user_id', 'full_name', 'username', 'email'))
 
-        hrps = list(ResultStructure.objects.values())
-        current_country_programme = CountryProgramme.current()
-        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False,
-                                                country_programme=current_country_programme).values('id', 'name', 'wbs'))
+        country_programmes = list(CountryProgramme.objects.all_active_and_future.values('id', 'wbs', 'name',
+                                                                                        'from_date', 'to_date'))
+        current_country_programme = CountryProgramme.main_active()
+        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT,
+                                                wbs__isnull=False,
+                                                country_programme=current_country_programme)
+                                        .values('id',
+                                                'name',
+                                                'wbs',
+                                                'country_programme'))
         supply_items = list(SupplyItem.objects.all().values())
-        file_types = list(FileType.objects.all().values())
+        file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
+                          .all().values())
         donors = list(Donor.objects.all().values())
 
         return Response(
             {
                 'signed_by_unicef_users': signed_by_unicef,
-                'hrps': hrps,
+                'country_programmes': country_programmes,
                 'cp_outputs': cp_outputs,
                 'supply_items': supply_items,
                 'file_types': file_types,
@@ -251,13 +253,14 @@ class PartnershipDashboardAPIView(APIView):
 
         # Use given CountryProgramme pk to filter Intervention
         if ct_pk:
-            interventions = Intervention.objects.filter(agreement__country_programme=ct_pk)
+            interventions = Intervention.objects.detail_qs().filter(agreement__country_programme=ct_pk)
+
 
         # Otherwise, use current CountryProgramme this year to filter Intervention
         else:
-            currentCountryProgramme = CountryProgramme.current()
+            currentCountryProgramme = CountryProgramme.main_active()
 
-            interventions = Intervention.objects.filter(
+            interventions = Intervention.objects.detail_qs().filter(
                 agreement__country_programme=currentCountryProgramme)
 
         # If Office pk is given, filter even more

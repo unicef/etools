@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.sites.models import Site
@@ -35,7 +33,7 @@ class TPMVisit(AdminURLMixin, models.Model):
 
     pca = models.ForeignKey('partners.PCA')
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         choices=TPM_STATUS,
         default=PLANNED,
     )

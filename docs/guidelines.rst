@@ -45,14 +45,21 @@ E.g.::
 Per PEP-8, "You should put a blank line between each group of imports.".
 
 
+Author annotations
+~~~~~~~~~~~~~~~~~~
+
+Some editors add author annotations to files when they are created: ``__author__ = 'vkurup'`` We
+prefer that those not be added to new files, and they can be removed from existing files.
+
+
 Python 3 Prep
 -------------
 
 To make your code easier to port to Python 3, add the following to the top of
 all new files::
 
-	from __future__ import division
 	from __future__ import absolute_import
+	from __future__ import division
 	from __future__ import print_function
 	from __future__ import unicode_literals
 
@@ -84,3 +91,47 @@ Remember that code coverage is just one metric. It is possible to have 100% code
 have bugs because the tests are not asserting all of the various decisions that the code is making.
 An unfortunately common example is a test for a REST API endpoint that merely checks that the
 response code is 200. Don’t aim for coverage, aim for quality.
+
+
+Commented-out code
+------------------
+
+We prefer to avoid commenting out code. Keeping commented code lying around is often an attempt to
+do homemade version control, and it's better to use git for this. There are a few cases where it is
+reasonable to keep commented code in the codebase.
+
+1. To make it easy for developers to turn on rarely used development features. For example:
+   'Uncomment the next 4 lines to temporarily turn on local caching'
+2. To keep code that you know will be coming back soon. In this case, there should be a clear
+   comment at the top of the block indicating at what point the code will be uncommented. For
+   example: 'The following is commented out until issue #42 is resolved'.
+
+Even those cases are weak. There's often ways to implement developer switches using
+environment variables for case #1, and it is not guaranteed that the person who fixes issue #42 will
+remember to look for the commented-out code and uncomment it. It's usually better to remove the code
+and make it clear in issue #42 what steps need to be taken before the issue is marked done.
+
+
+Exception Handling
+------------------
+
+* Minimize what you ``try``
+* Minimize what you catch
+* Minimize what you ``except``
+* Don't forget the ``else``
+
+Code in ``try`` blocks should be limited to the code you suspect will raise an exception. Usually that's
+just one line of code. Limiting the code in a ``try`` block ensures that unexpected
+exceptions won't get mishandled. It also clarifies the intent of the ``try`` block to anyone reading
+the code.
+
+You should only catch the exceptions you expect will be raised. This can almost always be limited
+to one or two exceptions. Catching all exceptions can be the right thing to do, but that's rare.
+Catch-all handlers are misused far more often than they're used appropriately.
+
+Code in ``except`` blocks should be limited to the minimum required to handle the exception.
+Complicated ``except`` blocks run the risk of raising errors of their own.
+
+Exception handlers have an underused ``else`` clause that executes if no exception is raised. It's
+the appropriate place for the code you might be tempted to put in the ``try`` block after the
+suspect code.

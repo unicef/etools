@@ -12,6 +12,7 @@ from vision.adapters.publics_adapter import CurrencySyncronizer, TravelAgenciesS
 from vision_data_synchronizer import VisionException
 from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
+from vision.adapters.purchase_order import POSynchronizer
 from vision.adapters.funding import (
     FundingSynchronizer,
     FundReservationsSynchronizer,
@@ -32,7 +33,8 @@ SYNC_HANDLERS = [
     TravelAgenciesSyncronizer,
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
-    # DCTSynchronizer
+    # DCTSynchronizer,
+    POSynchronizer
 ]
 
 
@@ -89,14 +91,15 @@ def cost_assignment_sync(country_name=None):
 
 
 @app.task
-def sync(country_name=None):
+def sync(country_name=None, synchronizers=None):
+    synchronizers = synchronizers or SYNC_HANDLERS
     processed = []
     countries = Country.objects.filter(vision_sync_enabled=True)
     if country_name is not None:
         countries = countries.filter(name=country_name)
 
-    global_handlers = [handler for handler in SYNC_HANDLERS if handler.GLOBAL_CALL]
-    tenant_handlers = [handler for handler in SYNC_HANDLERS if not handler.GLOBAL_CALL]
+    global_handlers = [handler for handler in synchronizers if handler.GLOBAL_CALL]
+    tenant_handlers = [handler for handler in synchronizers if not handler.GLOBAL_CALL]
 
     public_tenant = Country.objects.get(schema_name='public')
     for handler in global_handlers:
@@ -183,3 +186,23 @@ def update_all_partners(country_name=None):
                 print partner.name
                 print partner.hact_values
                 print e.message
+
+
+@app.task
+def update_purchase_orders(country_name=None):
+    print ('Starting update values for purcase order')
+    countries = Country.objects.filter(vision_sync_enabled=True)
+    if country_name is not None:
+        countries = countries.filter(name=country_name)
+    for country in countries:
+        connection.set_tenant(country)
+        try:
+            logger.info('Starting purchase order update for country {}'.format(
+                country.name
+            ))
+            POSynchronizer(country).sync()
+            logger.info("Update finished successfully for {}".format(country.name))
+        except VisionException as e:
+                logger.error("{} sync failed, Reason: {}".format(
+                    POSynchronizer.__name__, e.message
+                ))
