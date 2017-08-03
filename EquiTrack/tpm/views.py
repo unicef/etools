@@ -142,6 +142,8 @@ class TPMVisitViewSet(
         return queryset
 
     def get_serializer_class(self):
-        if self.action in ['update', 'partial_update'] and 'pk' in self.kwargs and self.get_object().status == TPMVisit.STATUSES.draft:
+        if self.action in ['update', 'partial_update'] and \
+                'pk' in self.kwargs and \
+                self.get_object().status == TPMVisit.STATUSES.draft:
             return TPMVisitDraftSerializer
         return super(TPMVisitViewSet, self).get_serializer_class()
