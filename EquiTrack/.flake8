@@ -10,9 +10,7 @@ exclude =
     EquiTrack,
     manage_debug.py,
     partners,
-    reports,
     t2f,
     tpm,
-    users,
     vision,
     workplan

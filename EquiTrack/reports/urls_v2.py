@@ -14,6 +14,7 @@ urlpatterns = (
         name='country-programme-list'),
     url(r'^reports/countryprogramme/(?P<pk>\d+)/$',
         view=CountryProgrammeRetrieveView.as_view(http_method_names=['get']), name='country-programme-retrieve'),
-    url(r'^reports/results/(?P<pk>\d+)/indicators/$', view=ResultIndicatorListAPIView.as_view(http_method_names=['get']),
+    url(r'^reports/results/(?P<pk>\d+)/indicators/$',
+        view=ResultIndicatorListAPIView.as_view(http_method_names=['get']),
         name='result-indicator-list'),
 )

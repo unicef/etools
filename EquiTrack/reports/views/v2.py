@@ -1,7 +1,8 @@
-import operator
 import functools
+import operator
 
 from django.db.models import Q
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -11,7 +12,6 @@ from reports.models import Result, CountryProgramme, Indicator, LowerResult
 from reports.serializers.v2 import OutputListSerializer,  MinimalOutputListSerializer
 from reports.serializers.v1 import IndicatorSerializer
 from partners.models import Intervention
-from rest_framework.exceptions import ValidationError
 from partners.permissions import PartneshipManagerRepPermission
 
 

@@ -29,6 +29,7 @@ def get_intervention_context(i):
 
 def task_decorator(funct):
     admin = User.objects.get(username=settings.TASK_ADMIN_USER)
+
     def wrapper(*args, **kwargs):
         for c in Country.objects.exclude(name='Global').all():
             connection.set_tenant(c)
@@ -85,7 +86,7 @@ def intervention_status_automatic_transition(admin=None, workspace=None, **kwarg
         # compiling a list of them to send to an admin or save somewhere in the future
         bad_interventions = []
 
-        active_ended = Intervention.objects.filter(status__in=Intervention.ACTIVE,
+        active_ended = Intervention.objects.filter(status=Intervention.ACTIVE,
                                                    end=datetime.date.today() - datetime.timedelta(days=1))
 
         # get all the interventions for which their status is endend and total otustanding_amt is 0 and
@@ -118,7 +119,6 @@ def intervention_status_automatic_transition(admin=None, workspace=None, **kwarg
         logger.error('Bad interventions ids: ' + ' '.join(a.id for a in bad_interventions))
         logger.info('Total interventions {}'.format(active_ended.count() + qs.count()))
         logger.info("Transitioned interventions {} ".format(processed))
-
 
 
 @task_decorator
@@ -191,5 +191,3 @@ def intervention_notification_ending(admin=None, workspace=None, **kwargs):
                 template_data=email_context
             )
             notification.send_notification()
-
-
