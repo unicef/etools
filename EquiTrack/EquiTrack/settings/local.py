@@ -76,6 +76,13 @@ if 'test' in sys.argv:
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
     TEST_RUNNER = 'EquiTrack.tests.runners.TestRunner'
+
+    TEST_NON_SERIALIZED_APPS = [
+        # These apps contains test models that haven't been created by migration.
+        # So on the serialization stage these models do not exist.
+        'utils.common',
+        'utils.writable_serializers',
+    ]
 else:
     # Settings which should NOT be active during automated tests
 
