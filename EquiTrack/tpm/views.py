@@ -35,18 +35,26 @@ class TPMPartnerViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-    # todo: allow access only for self organization if parner
     metadata_class = TPMPermissionBasedMetadata
     queryset = TPMPartner.objects.all()
     serializer_class = TPMPartnerSerializer
     serializer_action_classes = {
         'list': TPMPartnerLightSerializer
     }
-    permission_classes = (IsPMEorReadonlyPermission,)
+    permission_classes = (IsAuthenticated, IsPMEorReadonlyPermission,)
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('vendor_number', 'name')
     ordering_fields = ('vendor_number', 'name', 'country')
     filter_fields = ('status', 'blocked', 'hidden')
+
+    def get_queryset(self):
+        queryset = super(TPMPartnerViewSet, self).get_queryset()
+
+        user_type = TPMPermission._get_user_type(self.request.user)
+        if not user_type or user_type == ThirdPartyMonitor:
+            queryset = queryset.filter(staff_members__user=self.request.user)
+
+        return queryset
 
     @list_route(methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
