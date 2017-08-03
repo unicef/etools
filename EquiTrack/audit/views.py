@@ -212,3 +212,15 @@ class EngagementPDFView(SingleObjectMixin, PDFTemplateView):
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
         return super(EngagementPDFView, self).dispatch(request, *args, **kwargs)
+
+
+class AuditPDFView(EngagementPDFView):
+    model = Audit
+
+
+class SpotCheckPDFView(EngagementPDFView):
+    model = SpotCheck
+
+
+class MicroAssessmentPDFView(EngagementPDFView):
+    model = MicroAssessment
