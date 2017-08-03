@@ -1,16 +1,12 @@
-__author__ = 'jcranwellward'
-
 from django.contrib import admin
-from django.contrib.contenttypes.admin import GenericTabularInline
 
 from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin
 
-from trips.models import FileAttachment
 from reports.models import Sector
-from partners.models import PCA, PartnerOrganization, GwPCALocation
-from .models import TPMVisit
-from .exports import TPMResource
+from partners.models import PartnerOrganization
+from tpm.models import TPMVisit
+from tpm.exports import TPMResource
 
 
 class SectorListFilter(admin.SimpleListFilter):
@@ -101,55 +97,5 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
     def has_module_permission(self, request):
         return request.user.is_superuser
 
-class TPMLocationsAdmin(admin.ModelAdmin):
-    list_display = (
-        u'pca',
-        u'sectors',
-        u'location',
-        u'view_location',
-        u'tpm_visit',
-    )
-    list_filter = (
-        u'pca',
-        SectorListFilter,
-        TPMPartnerFilter,
-        u'location',
-    )
-    search_fields = (
-        u'pca__number',
-        u'location__name',
-        u'location__gateway__name',
-    )
-    readonly_fields = (
-        u'view_location',
-        u'tpm_visit',
-    )
-    actions = ['create_tpm_visits']
-
-    def sectors(self, obj):
-        return obj.pca.sector_names
-
-    def get_queryset(self, request):
-        return PCALocation.objects.filter(
-            pca__status=PCA.ACTIVE
-        )
-
-    def create_tpm_visits(self, request, queryset):
-        for pca_location in queryset:
-            TPMVisit.objects.create(
-                pca=pca_location.pca,
-                pca_location=pca_location,
-                assigned_by=request.user
-            )
-            pca_location.tpm_visit = True
-            pca_location.save()
-        self.message_user(
-            request,
-            u'{} TPM visits created'.format(
-                queryset.count()
-            )
-        )
-
 
 admin.site.register(TPMVisit, TPMVisitAdmin)
-#admin.site.register(PCALocation, TPMLocationsAdmin)

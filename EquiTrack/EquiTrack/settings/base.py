@@ -55,7 +55,6 @@ SUIT_CONFIG = {
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
         {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign', 'models': [
-            {'model': 'reports.resultstructure'},
             {'model': 'reports.sector'},
             {'model': 'reports.result'},
             {'model': 'reports.indicator'},
@@ -73,6 +72,7 @@ LOGIN_REDIRECT_URL = '/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
+TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
@@ -388,7 +388,6 @@ SHARED_APPS = (
     'djcelery_email',
     'datetimewidget',
     'leaflet',
-    'djgeojson',
     'paintstore',
     'corsheaders',
     'djangosaml2',
@@ -403,7 +402,6 @@ SHARED_APPS = (
     'analytical',
     'mptt',
     'easy_pdf',
-    'django_hstore',
     'ordered_model',
 
     'vision',

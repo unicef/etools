@@ -20,8 +20,8 @@ _FUZZY_START_DATE = TZ.localize(datetime.now() - timedelta(days=5))
 _FUZZY_END_DATE = TZ.localize(datetime.now() + timedelta(days=5))
 
 
-class TravelActivityFactory(factory.DjangoModelFactory):
-    travel_type = TravelType.ADVOCACY
+class TravelActivityFactory(factory.django.DjangoModelFactory):
+    travel_type = TravelType.PROGRAMME_MONITORING
     partner = factory.SelfAttribute('partnership.agreement.partner')
     partnership = factory.SubFactory(InterventionFactory)
     result = factory.SubFactory(ResultFactory)
