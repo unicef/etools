@@ -1,18 +1,16 @@
 import csv
 import json
 import logging
+
 from django.conf import settings
-from EquiTrack.celery import app
-
-import requests
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
-from django.db import IntegrityError
-from django.db.models import Q
-
-from .models import User, UserProfile, Country, Section
 from django.contrib.auth.models import Group
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction, IntegrityError
+from django.db.models import Q
+import requests
 
+from EquiTrack.celery import app
+from users.models import User, UserProfile, Country, Section
 from vision.vision_data_synchronizer import VisionException
 from vision.models import VisionSyncLog
 
