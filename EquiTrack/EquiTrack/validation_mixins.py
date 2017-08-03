@@ -28,6 +28,7 @@ def check_editable_fields(obj, fields):
 
 
 def check_required_fields(obj, fields):
+    error_fields = []
     for f_name in fields:
         try:
             field = getattr(obj, f_name)
@@ -41,8 +42,10 @@ def check_required_fields(obj, fields):
             else:
                 response = field is not None
         if response is False:
-            return False, f_name
+            error_fields.append(f_name)
 
+    if error_fields:
+        return False, error_fields
     return True, None
 
 def field_comparison(f1, f2):

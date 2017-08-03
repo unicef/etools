@@ -29,6 +29,7 @@ def get_intervention_context(i):
 
 def task_decorator(funct):
     admin = User.objects.get(username=settings.TASK_ADMIN_USER)
+
     def wrapper(*args, **kwargs):
         for c in Country.objects.exclude(name='Global').all():
             connection.set_tenant(c)
@@ -42,8 +43,8 @@ def task_decorator(funct):
     return wrapper
 
 
-@app.task
 @task_decorator
+@app.task
 def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
 
         logger.info('Starting agreement auto status transition for country {}'.format(workspace.name))
@@ -75,8 +76,8 @@ def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
         logger.info("Transitioned agreements {} ".format(processed))
 
 
-@app.task
 @task_decorator
+@app.task
 def intervention_status_automatic_transition(admin=None, workspace=None, **kwargs):
 
         logger.info('Starting agreement auto status transition for country {}'.format(workspace.name))
@@ -85,7 +86,7 @@ def intervention_status_automatic_transition(admin=None, workspace=None, **kwarg
         # compiling a list of them to send to an admin or save somewhere in the future
         bad_interventions = []
 
-        active_ended = Intervention.objects.filter(status__in=Intervention.ACTIVE,
+        active_ended = Intervention.objects.filter(status=Intervention.ACTIVE,
                                                    end=datetime.date.today() - datetime.timedelta(days=1))
 
         # get all the interventions for which their status is endend and total otustanding_amt is 0 and
@@ -120,9 +121,8 @@ def intervention_status_automatic_transition(admin=None, workspace=None, **kwarg
         logger.info("Transitioned interventions {} ".format(processed))
 
 
-
-@app.task
 @task_decorator
+@app.task
 def intervention_notification_signed_no_frs(admin=None, workspace=None, **kwargs):
     '''This should only run once a week'''
     logger.info('Starting intervention signed but no FRs notifications for country {}'.format(workspace.name))
@@ -142,8 +142,8 @@ def intervention_notification_signed_no_frs(admin=None, workspace=None, **kwargs
         notification.send_notification()
 
 
-@app.task
 @task_decorator
+@app.task
 def intervention_notification_ended_fr_outstanding(admin=None, workspace=None, **kwargs):
     '''This will run every 2 weeks'''
     logger.info('Starting intervention signed but FRs Amount and actual '
@@ -162,8 +162,8 @@ def intervention_notification_ended_fr_outstanding(admin=None, workspace=None, *
             notification.send_notification()
 
 
-@app.task
 @task_decorator
+@app.task
 def intervention_notification_ending(admin=None, workspace=None, **kwargs):
     '''This will run every 24 hours'''
     qs_results = {}
@@ -191,5 +191,3 @@ def intervention_notification_ending(admin=None, workspace=None, **kwargs):
                 template_data=email_context
             )
             notification.send_notification()
-
-
