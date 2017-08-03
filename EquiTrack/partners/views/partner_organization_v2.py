@@ -15,8 +15,8 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
-    CreateAPIView
-)
+    CreateAPIView,
+    ListAPIView)
 
 from EquiTrack.utils import get_data_from_insight
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -211,6 +211,16 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
+
+
+class PartnerAuthorizedOfficersListAPIVIew(ListAPIView):
+    """
+    Returns a list of all signed officers for Partner
+    """
+    queryset = PartnerStaffMember.objects.filter(signed_interventions__isnull=False).distinct()
+    serializer_class = PartnerStaffMemberDetailSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter, )
 
 
 class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):

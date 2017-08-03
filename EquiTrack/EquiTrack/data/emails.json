@@ -37,9 +37,9 @@
             "description": "Email that send to auditor when engagement have been created.",
             "created": "2017-05-05T13:47:34.937Z",
             "last_updated": "2017-05-06T10:56:17.261Z",
-            "subject": "eTools {% if environment %}{{ environment }} {% endif %}- {{ engagement }}",
-            "content": "Hello Colleague,\r\n\r\nThere are new engagement {{ engagement }}.\r\n\r\neTools Team",
-            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nHello Colleague,\r\n\r\nThere is new engagement <a href='{{ engagement_url }}'><i>{{ engagement }}</i></a>.\r\n\r\neTools Team\r\n{% endblock %}",
+            "subject": "[Auditor Portal] ACCESS GRANTED for {{ engagement.get_type_display }}, {{ engagement.unique_id }}",
+            "content": "Dear {{ staff_member.user.get_full_name }},\r\n\r\nUNICEF is granting access to the auditor portal for a {{ engagement.get_type_display }}. Please refer below for additional information.\r\n\r\nEngagement Type: {{ engagement.get_type_display }}\r\nPartner: {{ engagement.partner }}\r\n\r\nPlease click this link to complete the report: {{ engagement_url }}\r\n\r\nThank you.",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ staff_member.user.get_full_name }},<br/><br/>\r\n\r\nUNICEF is granting access to the auditor portal for a {{ engagement.get_type_display }}. Please refer below for additional information.<br/><br/>\r\n\r\nEngagement Type: {{ engagement.get_type_display }}<br/>\r\nPartner: {{ engagement.partner }}<br/><br/>\r\n\r\nPlease click this link to complete the report: {{ engagement_url }}<br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
             "language": "",
             "default_template": null
         }
@@ -52,9 +52,24 @@
             "description": "Email that send when auditor fill engagement's report.",
             "created": "2017-05-05T13:47:34.945Z",
             "last_updated": "2017-05-06T10:56:04.170Z",
-            "subject": "eTools {% if environment %}{{ environment }} {% endif %}- {{ engagement }}",
-            "content": "Hello, Colleague\r\n\r\nAuditor finish report for engagement {{ engagement }}.\r\n\r\neTools Team",
-            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nHello, Colleague\r\n\r\nAuditor finish report for engagement <i>{{ engagement }}</i>.\r\n\r\neTools Team\r\n{% endblock %}",
+            "subject": "{{ engagement.agreement.auditor_firm }} has completed the final report for {{ engagement.get_type_display }}, {{ engagement.unique_id }}",
+            "content": "Dear {{ focal_point.get_full_name }},\r\n\r\n{{ engagement.agreement.auditor_firm }} has completed the final report for {{ engagement.get_type_display }}. Please refer below for additional information.\r\n\r\nEngagement Type: {{ engagement.get_type_display }}\r\nPartner: {{ engagement.partner }}\r\n\r\nPlease click this link to view the final report: {{ engagement.get_object_url }}\r\n\r\nThank you.",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ focal_point.get_full_name }},<br/><br/>\r\n\r\n{{ engagement.agreement.auditor_firm }} has completed the final report for {{ engagement.get_type_display }}. Please refer below for additional information.<br/><br/>\r\n\r\nEngagement Type: {{ engagement.get_type_display }}<br/>\r\nPartner: {{ engagement.partner }}<br/><br/>\r\n\r\nPlease click this link to view the final report: {{ engagement.get_object_url }}<br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
+            "language": "",
+            "default_template": null
+        }
+    },
+    {
+        "model": "post_office.emailtemplate",
+        "pk": 22,
+        "fields": {
+            "name": "audit/engagement/action_point_assigned",
+            "description": "",
+            "created": "2017-07-19T10:08:23.360Z",
+            "last_updated": "2017-07-19T10:40:35.831Z",
+            "subject": "[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}",
+            "content": "Dear {{ action_point.person_responsible }},\r\n\r\n{{ action_point.author }} has assigned you an action point. \r\n\r\nEngagement ID: {{ engagement.unique_id }}\r\nDescription: {{ action_point.description }}\r\nDue Date: {{ action_point.due_date}}\r\nLink: {{ engagement.get_object_url }} \r\n\r\nThank you.",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ action_point.person_responsible }},<br/><br/>\r\n\r\n{{ action_point.author }} has assigned you an action point. <br/><br/>\r\n\r\nEngagement ID: {{ engagement.unique_id }}<br/>\r\nDescription: {{ action_point.description }}<br/>\r\nDue Date: {{ action_point.due_date}}<br/>\r\nLink: {{ engagement.get_object_url }} <br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
             "language": "",
             "default_template": null
         }

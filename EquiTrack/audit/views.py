@@ -24,7 +24,7 @@ from .serializers.engagement import EngagementSerializer, MicroAssessmentSeriali
     SpotCheckSerializer, EngagementLightSerializer, EngagementExportSerializer
 from .metadata import AuditBaseMetadata, EngagementMetadata
 from .exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
-from .filters import DisplayStatusFilter
+from .filters import DisplayStatusFilter, UniqueIDOrderingFilter
 
 
 class BaseAuditViewSet(
@@ -117,7 +117,10 @@ class EngagementViewSet(
     export_filename = 'engagements'
     renderer_classes = [JSONRenderer, EngagementCSVRenderer]
 
-    filter_backends = (SearchFilter, OrderingFilter, DisplayStatusFilter, DjangoFilterBackend)
+    filter_backends = (
+        SearchFilter, DisplayStatusFilter, DjangoFilterBackend,
+        UniqueIDOrderingFilter, OrderingFilter,
+    )
     search_fields = ('partner__name', 'agreement__order_number', 'agreement__auditor_firm__name')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'type', 'status')
@@ -204,8 +207,8 @@ class EngagementPDFView(SingleObjectMixin, PDFTemplateView):
     model = Engagement
 
     def get_pdf_filename(self):
-        return 'engagement_{}.pdf'.format(self.obj.unique_id)
+        return 'engagement_{}.pdf'.format(self.object.unique_id)
 
     def dispatch(self, request, *args, **kwargs):
-        self.obj = self.get_object()
+        self.object = self.get_object()
         return super(EngagementPDFView, self).dispatch(request, *args, **kwargs)
