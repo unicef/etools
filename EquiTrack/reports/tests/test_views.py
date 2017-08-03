@@ -1,4 +1,3 @@
-from unittest import skip
 import datetime
 
 from rest_framework import status
@@ -26,7 +25,6 @@ class TestReportViews(APITenantTestCase):
             wbs='0000/A0/01',
             from_date=datetime.date(today.year - 1, 1, 1),
             to_date=datetime.date(today.year + 1, 1, 1))
-
 
         self.result1 = ResultFactory(
             result_type=self.result_type,

@@ -1,13 +1,11 @@
-from datetime import datetime, date
+from datetime import date
+
 from django.db import models, transaction
 from django.contrib.postgres.fields import JSONField
-
 from django.utils.functional import cached_property
-
+from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
-
-from model_utils.models import TimeStampedModel
 
 
 class Quarter(models.Model):
@@ -32,8 +30,6 @@ class Quarter(models.Model):
     def __repr__(self):
         return '{}-{}'.format(self.name, self.year)
 
-    def save(self, *args, **kwargs):
-        super(Quarter, self).save(*args, **kwargs)
 
 class CountryProgrammeManager(models.Manager):
     def get_queryset(self):
@@ -53,6 +49,7 @@ class CountryProgrammeManager(models.Manager):
     def all_active(self):
         today = date.today()
         return self.get_queryset().filter(from_date__lte=today, to_date__gt=today)
+
 
 class CountryProgramme(models.Model):
     """
@@ -175,6 +172,7 @@ class OutputManager(models.Manager):
         return super(OutputManager, self).get_queryset().filter(result_type__name=ResultType.OUTPUT).select_related(
             'country_programme', 'result_type')
 
+
 class Result(MPTTModel):
     """
     Represents a result, wbs is unique
@@ -231,7 +229,6 @@ class Result(MPTTModel):
         assert self.result_type.name == ResultType.OUTPUT
 
         return u'{}{}{}'.format(
-            #self.status if self.status else u'Active',
             '[Expired] ' if self.expired else '',
             'Special- ' if self.special else '',
             self.name
