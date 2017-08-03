@@ -74,10 +74,11 @@ class PcaPDFView(PDFTemplateView):
         "arabic": "partners/pca/arabic_pdf.html",
         "english": "partners/pca/english_pdf.html",
         "french": "partners/pca/french_pdf.html",
-        "portugese": "partners/pca/portugese_pdf.html",
+        "portuguese": "partners/pca/portuguese_pdf.html",
         "russian": "partners/pca/russian_pdf.html",
         "spanish": "partners/pca/spanish_pdf.html",
-        "ifrc": "partners/pca/ifrc_pdf.html"
+        "ifrc_english": "partners/pca/ifrc_english_pdf.html",
+        "ifrc_french": "partners/pca/ifrc_french_pdf.html"
     }
 
     def get_context_data(self, **kwargs):
