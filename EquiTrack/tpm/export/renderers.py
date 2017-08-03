@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework_csv.renderers import CSVRenderer
 
 
-class TPMVisitRenderer(CSVRenderer):
+class TPMVisitCSVRenderer(CSVRenderer):
     header = ['ref', 'visit', 'activity', 'sector', 'output',
               'location', 'start_date', 'end_date', 'unicef_focal_points']
     labels = {
