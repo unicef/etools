@@ -33,6 +33,7 @@ def _build_country(name):
 
     return country
 
+
 def _make_decimal(n):
     '''Return a Decimal based on the param n with a trailing .00'''
     return Decimal('{}.00'.format(n))
@@ -97,13 +98,6 @@ class PartnersTestBaseClass(FastTenantTestCase):
         for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
             self.assertEqual(actual_call_args, expected_call_args)
 
-
-@mock.patch('partners.tasks.logger', spec=['info', 'error'])
-@mock.patch('partners.tasks.connection', spec=['set_tenant'])
-class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
-    '''Exercises the agreement_status_automatic_transition() task, including the task itself and its core function
-    _make_agreement_status_automatic_transitions().
-    '''
     def setUp(self):
         try:
             self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
@@ -114,12 +108,13 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
         self.global_country = _build_country('Global')
         self.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
 
-    # ----------
-    # ----------
-    # ----------    Test cases start here
-    # ----------
-    # ----------
 
+@mock.patch('partners.tasks.logger', spec=['info', 'error'])
+@mock.patch('partners.tasks.connection', spec=['set_tenant'])
+class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
+    '''Exercises the agreement_status_automatic_transition() task, including the task itself and its core function
+    _make_agreement_status_automatic_transitions().
+    '''
     @mock.patch('partners.tasks._make_agreement_status_automatic_transitions')
     @mock.patch('partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_make_agreement_status_automatic_transitions, mock_db_connection, mock_logger):
@@ -279,22 +274,6 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
     '''Exercises the agreement_status_automatic_transition() task, including the task itself and its core function
     _make_agreement_status_automatic_transitions().
     '''
-    def setUp(self):
-        try:
-            self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
-        except User.DoesNotExist:
-            self.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
-
-        # The global "country" should be excluded from processing. Create it to ensure it's ignored during this test.
-        self.global_country = _build_country('Global')
-        self.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
-
-    # ----------
-    # ----------
-    # ----------    Test cases start here
-    # ----------
-    # ----------
-
     @mock.patch('partners.tasks._make_intervention_status_automatic_transitions')
     @mock.patch('partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_make_intervention_status_automatic_transitions, mock_db_connection,
@@ -500,22 +479,6 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
     '''Exercises the intervention_notification_signed_no_frs() task, including the task itself and its core function
     _notify_of_signed_interventions_with_no_frs().
     '''
-    def setUp(self):
-        try:
-            self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
-        except User.DoesNotExist:
-            self.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
-
-        # The global "country" should be excluded from processing. Create it to ensure it's ignored during this test.
-        self.global_country = _build_country('Global')
-        self.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
-
-    # ----------
-    # ----------
-    # ----------    Test cases start here
-    # ----------
-    # ----------
-
     @mock.patch('partners.tasks._notify_of_signed_interventions_with_no_frs')
     @mock.patch('partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_notify_of_signed_interventions_with_no_frs, mock_db_connection, mock_logger):
@@ -608,22 +571,6 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
     '''Exercises the intervention_notification_ended_fr_outstanding() task, including the task itself and its core
     function _notify_of_ended_interventions_with_mismatched_frs().
     '''
-    def setUp(self):
-        try:
-            self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
-        except User.DoesNotExist:
-            self.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
-
-        # The global "country" should be excluded from processing. Create it to ensure it's ignored during this test.
-        self.global_country = _build_country('Global')
-        self.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
-
-    # ----------
-    # ----------
-    # ----------    Test cases start here
-    # ----------
-    # ----------
-
     @mock.patch('partners.tasks._notify_of_ended_interventions_with_mismatched_frs')
     @mock.patch('partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_notify_of_ended_interventions_with_mismatched_frs, mock_db_connection,
@@ -724,21 +671,6 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
     '''Exercises the intervention_notification_ending() task, including the task itself and its core
     function _notify_interventions_ending_soon().
     '''
-    def setUp(self):
-        try:
-            self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
-        except User.DoesNotExist:
-            self.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
-
-        # The global "country" should be excluded from processing. Create it to ensure it's ignored during this test.
-        self.global_country = _build_country('Global')
-        self.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
-
-    # ----------
-    # ----------
-    # ----------    Test cases start here
-    # ----------
-    # ----------
     @mock.patch('partners.tasks._notify_interventions_ending_soon')
     @mock.patch('partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_notify_interventions_ending_soon, mock_db_connection, mock_logger):
