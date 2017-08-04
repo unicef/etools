@@ -99,7 +99,7 @@ class PartnersTestBaseClass(FastTenantTestCase):
             self.assertEqual(actual_call_args, expected_call_args)
 
     def _configure_mock_country(self, MockCountry):
-        '''helper to perform common configuration of the MockCountry that every test uses.'''
+        '''helper to perform common configuration of the MockCountry that every task test uses.'''
         # We have to mock the Country model because we can't save instances to the database without creating
         # new schemas, so instead we mock the call we expect the task to make and return the value we want the
         # task to get.
@@ -131,8 +131,6 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
     def test_task(self, MockCountry, mock_make_agreement_status_automatic_transitions, mock_db_connection, mock_logger):
         '''Verify that the task executes once for each tenant country'''
         self._configure_mock_country(MockCountry)
-
-        mock_db_connection.set_tenant = mock.Mock()
 
         # I'm done mocking, it's time to call the task.
         partners.tasks.agreement_status_automatic_transition()
@@ -284,8 +282,6 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
                   mock_logger):
         '''Verify that the task executes once for each tenant country'''
         self._configure_mock_country(MockCountry)
-
-        mock_db_connection.set_tenant = mock.Mock()
 
         # I'm done mocking, it's time to call the task.
         partners.tasks.intervention_status_automatic_transition()
@@ -482,8 +478,6 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
         '''Verify that the task executes once for each tenant country'''
         self._configure_mock_country(MockCountry)
 
-        mock_db_connection.set_tenant = mock.Mock()
-
         # I'm done mocking, it's time to call the task.
         partners.tasks.intervention_notification_signed_no_frs()
 
@@ -567,8 +561,6 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
                   mock_logger):
         '''Verify that the task executes once for each tenant country'''
         self._configure_mock_country(MockCountry)
-
-        mock_db_connection.set_tenant = mock.Mock()
 
         # I'm done mocking, it's time to call the task.
         partners.tasks.intervention_notification_ended_fr_outstanding()
@@ -659,8 +651,6 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
     def test_task(self, MockCountry, mock_notify_interventions_ending_soon, mock_db_connection, mock_logger):
         '''Verify that the task executes once for each tenant country'''
         self._configure_mock_country(MockCountry)
-
-        mock_db_connection.set_tenant = mock.Mock()
 
         # I'm done mocking, it's time to call the task.
         partners.tasks.intervention_notification_ending()
