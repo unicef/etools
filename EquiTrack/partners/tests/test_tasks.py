@@ -517,3 +517,64 @@ class TestNotifyOfNoFrsSignedInterventionsTask(FastTenantTestCase):
 
         self._assertCalls(mock_notify_of_signed_interventions_with_no_frs,
                           [((country.name, ), {}) for country in self.tenant_countries])
+
+    def test_notify_of_signed_interventions_no_interventions(self, mock_db_connection, mock_logger):
+        '''Exercise _notify_of_signed_interventions_with_no_frs() for the simple case when there's no interventions.'''
+        country_name = self.tenant_countries[0].name
+        # Don't need to mock anything extra, just call the function.
+        partners.tasks._notify_of_signed_interventions_with_no_frs(country_name)
+
+        # Verify logged messages.
+        expected_call_args = [
+            (('Starting intervention signed but no FRs notifications for country {}'.format(country_name), ), {}),
+            ]
+        self._assertCalls(mock_logger.info, expected_call_args)
+
+    @mock.patch('partners.tasks.Notification.objects', spec=['create'])
+    def test_notify_of_signed_interventions_with_some_interventions(
+            self,
+            mock_notification_objects,
+            mock_db_connection,
+            mock_logger):
+        '''Exercise _notify_of_signed_interventions_with_no_frs() when it has some interventions to work on'''
+        country_name = self.tenant_countries[0].name
+        # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
+        # ordered in the same way as they'll be pulled out of the database.
+        make_created = lambda i: datetime.date.today() - datetime.timedelta(days=i)
+        start_on = datetime.date.today() + datetime.timedelta(days=5)
+        interventions = [InterventionFactory(status=Intervention.SIGNED, start=start_on, created=make_created(i))
+                         for i in range(3)]
+
+        # Create a few items that should be ignored. If they're not ignored, this test will fail.
+        # Should be ignored because of status
+        InterventionFactory(status=Intervention.DRAFT, start=start_on)
+        # Should be ignored because of start_date
+        InterventionFactory(status=Intervention.SIGNED, start=datetime.date.today() - datetime.timedelta(days=5))
+        # Should be ignored because of frs
+        intervention = InterventionFactory(status=Intervention.SIGNED, start=start_on)
+        make_decimal = lambda i: Decimal('{}.00'.format(i))
+        for i in range(3):
+            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(i),
+                                          actual_amt=make_decimal(i), total_amt=make_decimal(i))
+
+        # Mock Notifications.objects.create() to return a Mock. In order to *truly* mimic create(), my
+        # mock_notification_objects.create() should return a new (mock) object every time, but the lazy way or
+        # returning the same object is good enough and still allows me to count calls to .send_notification().
+        mock_notification = mock.Mock(spec=['send_notification'])
+        mock_notification_objects.create = mock.Mock(return_value=mock_notification)
+
+        # I'm done mocking, it's time to call the function.
+        partners.tasks._notify_of_signed_interventions_with_no_frs(country_name)
+
+        # Verify that Notification.objects.create() was called as expected.
+        expected_call_args = [((), {'sender': intervention_,
+                                    'recipients': [],
+                                    'template_name': 'partners/partnership/signed/frs',
+                                    'template_data': partners.tasks.get_intervention_context(intervention_)
+                                    })
+                              for intervention_ in interventions]
+        self._assertCalls(mock_notification_objects.create, expected_call_args)
+
+        # Verify that each created notification object had send_notification() called.
+        expected_call_args = [((), {})] * len(interventions)
+        self._assertCalls(mock_notification.send_notification, expected_call_args)
