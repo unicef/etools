@@ -32,25 +32,8 @@ def get_intervention_context(i):
     }
 
 
-def task_decorator(funct):
-    admin = User.objects.get(username=settings.TASK_ADMIN_USER)
-
-    def wrapper(*args, **kwargs):
-        for c in Country.objects.exclude(name='Global').all():
-            connection.set_tenant(c)
-            kwargs['workspace'] = c
-            kwargs['admin'] = admin
-            try:
-                funct(*args, **kwargs)
-            except BaseException:
-                raise
-
-    return wrapper
-
-
-#@task_decorator
 @app.task
-def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
+def agreement_status_automatic_transition():
     '''Check validity and save changed status (if any) for agreements that meet all of the following criteria --
         - signed
         - end date is after today
@@ -94,9 +77,8 @@ def _make_agreement_status_automatic_transitions(country_name):
     logger.info("Transitioned agreements {} ".format(processed))
 
 
-#@task_decorator
 @app.task
-def intervention_status_automatic_transition(admin=None, workspace=None, **kwargs):
+def intervention_status_automatic_transition():
     '''Check validity and save changed status (if any) for interventions that meet all of the following criteria --
         - active
         - end date is yesterday
@@ -156,9 +138,8 @@ def _make_intervention_status_automatic_transitions(country_name):
     logger.info("Transitioned interventions {} ".format(processed))
 
 
-#@task_decorator
 @app.task
-def intervention_notification_signed_no_frs(admin=None, workspace=None, **kwargs):
+def intervention_notification_signed_no_frs():
     '''Send notifications for interventions that meet all of the following criteria --
         - signed
         - ending today or in the future
@@ -190,9 +171,8 @@ def _notify_of_signed_interventions_with_no_frs(country_name):
         notification.send_notification()
 
 
-#@task_decorator
 @app.task
-def intervention_notification_ended_fr_outstanding(admin=None, workspace=None, **kwargs):
+def intervention_notification_ended_fr_outstanding():
     '''Send notifications for interventions that meet all of the following criteria --
         - ended
         - total_frs['total_actual_amt'] != total_frs['total_frs_amt']
@@ -222,9 +202,8 @@ def _notify_of_ended_interventions_with_mismatched_frs(country_name):
             notification.send_notification()
 
 
-#@task_decorator
 @app.task
-def intervention_notification_ending(admin=None, workspace=None, **kwargs):
+def intervention_notification_ending():
     '''Send notifications for interventions that will end soon, where "soon" are the # of days from today defined
     in _INTERVENTION_ENDING_SOON_DELTAS.
 
