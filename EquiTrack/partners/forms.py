@@ -21,9 +21,6 @@ from EquiTrack.forms import (
     UserGroupForm,
 )
 
-from reports.models import (
-    ResultStructure,
-)
 from locations.models import Location
 from reports.models import Sector
 from .models import (
@@ -38,7 +35,6 @@ from .models import (
     SupplyItem,
     DistributionPlan,
     PartnershipBudget,
-    GovernmentIntervention,
     Intervention,
     InterventionSectorLocationLink,
 )
@@ -135,25 +131,6 @@ class AssessmentAdminForm(AutoSizeTextForm):
                 )
 
         return cleaned_data
-
-
-class GovernmentInterventionAdminForm(forms.ModelForm):
-
-    class Meta:
-        model = GovernmentIntervention
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        super(GovernmentInterventionAdminForm, self).__init__(*args, **kwargs)
-
-        # by default add the previous 1 years and the next 2 years
-        current_year = date.today().year
-        years = range(current_year - 1, current_year + 2)
-
-        self.fields['year'] = forms.ChoiceField(
-            choices=[(year, year) for year in years]
-        )
-        self.fields['year'].empty_label = u'Select year'
 
 
 class AmendmentForm(forms.ModelForm):
@@ -355,19 +332,6 @@ class AgreementForm(UserGroupForm):
                 if start < partner.get_last_pca.end:
                     err = u'This partner can only have one active {} agreement'.format(agreement_type)
                     raise ValidationError({'agreement_type': err})
-
-            # PCAs last as long as the most recent CPD
-            result_structure = ResultStructure.current()
-            if result_structure and end and end > result_structure.to_date:
-                raise ValidationError(
-                    {'end': u'This agreement cannot last longer than the current {} which ends on {}'.format(
-                        result_structure.name, result_structure.to_date
-                    )}
-                )
-
-            # set end date to result structure end date
-            if end is None:
-                self.cleaned_data[u'end'] = ResultStructure.current().to_date
 
             #  set start date to one of the signed dates
             if start is None:

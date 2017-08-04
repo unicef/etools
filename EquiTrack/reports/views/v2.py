@@ -1,22 +1,22 @@
-import operator
 import functools
+import operator
 
 from django.db.models import Q
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 
 from reports.models import Result, CountryProgramme, Indicator, LowerResult
-from reports.serializers.v2 import ResultListSerializer, MinimalResultListSerializer
+from reports.serializers.v2 import OutputListSerializer,  MinimalOutputListSerializer
 from reports.serializers.v1 import IndicatorSerializer
 from partners.models import Intervention
-from rest_framework.exceptions import ValidationError
 from partners.permissions import PartneshipManagerRepPermission
 
 
-class ResultListAPIView(ListAPIView):
-    serializer_class = ResultListSerializer
+class OutputListAPIView(ListAPIView):
+    serializer_class = OutputListSerializer
     permission_classes = (IsAdminUser,)
 
     def get_serializer_class(self):
@@ -25,11 +25,11 @@ class ResultListAPIView(ListAPIView):
         """
         if self.request.method == "GET":
             if self.request.query_params.get("verbosity", "") == 'minimal':
-                return MinimalResultListSerializer
-        return super(ResultListAPIView, self).get_serializer_class()
+                return MinimalOutputListSerializer
+        return super(OutputListAPIView, self).get_serializer_class()
 
     def get_queryset(self):
-        q = Result.objects.all()
+        q = Result.outputs.all()
         query_params = self.request.query_params
         queries = []
         result_ids = []
@@ -62,7 +62,7 @@ class ResultListAPIView(ListAPIView):
         if any(x in ['year', 'country_programme', 'values'] for x in query_params.keys()):
             return q
         else:
-            current_cp = CountryProgramme.current()
+            current_cp = CountryProgramme.main_active()
             return q.filter(country_programme=current_cp)
 
     def list(self, request):
@@ -80,9 +80,9 @@ class ResultListAPIView(ListAPIView):
         )
 
 
-class ResultDetailAPIView(RetrieveAPIView):
-    queryset = Result.objects.all()
-    serializer_class = ResultListSerializer
+class OutputDetailAPIView(RetrieveAPIView):
+    queryset = Result.outputs.all()
+    serializer_class = OutputListSerializer
     permission_classes = (IsAdminUser,)
 
 

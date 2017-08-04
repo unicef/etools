@@ -1,12 +1,7 @@
-__author__ = 'jcranwellward'
-
 from django import forms
 from django.db import connection
-from django.contrib.auth import get_user_model
 
 from .models import UserProfile, Section, Office
-
-User = get_user_model()
 
 
 class ProfileForm(forms.ModelForm):

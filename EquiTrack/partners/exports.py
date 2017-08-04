@@ -1,4 +1,3 @@
-from partners.models import GovernmentIntervention
 
 __author__ = 'jcranwellward'
 
@@ -317,7 +316,7 @@ class InterventionExport(resources.ModelResource):
         #   FR Numbers (comma separated)
         #   Number of Active Action Points
         fields = ('title', 'reference_number', 'status', 'partner__name', 'partnership_type', 'sectors', 'start_date',
-                  'end_date', 'result_structure__name', 'locations', 'initiation_date', 'submission_date',
+                  'end_date', 'locations', 'initiation_date', 'submission_date',
                   'review_date', 'days_from_submission_to_signed', 'days_from_review_to_signed',
                   'signed_by_partner_date', 'partner_manager_name', 'signed_by_unicef_date', 'unicef_manager_name',
                   'total_unicef_cash', 'supplies', 'total_budget', 'planned_visits')
@@ -359,23 +358,3 @@ class InterventionExport(resources.ModelResource):
     def dehydrate_total_budget(self, intervention):
         return intervention.total_budget
 
-
-class GovernmentExport(resources.ModelResource):
-    sectors = resources.Field()
-    cash_transfer = resources.Field()
-    year = resources.Field()
-
-    class Meta:
-        model = GovernmentIntervention
-        fields = ('number', 'partner__name', 'result_structure__name', 'sectors', 'cash_transfer',
-                  'year')
-        export_order = fields
-
-    def dehydrate_sectors(self, government):
-        return ''
-
-    def dehydrate_cash_transfer(self, government):
-        return sum([r.planned_amount for r in government.results.all()])
-
-    def dehydrate_year(self, government):
-        return government.result_structure.to_date.year

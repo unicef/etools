@@ -14,8 +14,6 @@ class PartnersAppConfig(AppConfig):
         registry.register(self.get_model('AuthorizedOfficer'))
         registry.register(self.get_model('PCA'))
         registry.register(self.get_model('Intervention'))
-        registry.register(self.get_model('GovernmentIntervention'))
-        registry.register(self.get_model('GovernmentInterventionResult'))
         registry.register(self.get_model('AmendmentLog'))
         registry.register(self.get_model('AgreementAmendmentLog'))
         registry.register(self.get_model('PartnershipBudget'))

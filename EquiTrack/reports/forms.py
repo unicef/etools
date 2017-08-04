@@ -1,9 +1,7 @@
-__author__ = 'jcranwellward'
-
 from django import forms
 from suit.widgets import AutosizedTextarea
 
-from .models import Indicator, Result
+from reports.models import Indicator, Result
 
 
 class IndicatorAdminForm(forms.ModelForm):

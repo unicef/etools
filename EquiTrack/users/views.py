@@ -1,4 +1,3 @@
-
 from django.db import connection
 from django.views.generic import FormView, RedirectView
 from django.contrib.auth.models import Group
@@ -15,9 +14,8 @@ from rest_framework.exceptions import ValidationError
 
 from audit.models import Auditor
 from users.serializers import MinimalUserSerializer
-from users.models import Office, Section
-from .forms import ProfileForm
-from .models import User, UserProfile, Country
+from users.forms import ProfileForm
+from users.models import User, UserProfile, Country, Office, Section
 from .serializers import (
     UserSerializer,
     GroupSerializer,
