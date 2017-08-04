@@ -296,8 +296,8 @@ class Engagement(TimeStampedModel, models.Model):
 @python_2_unicode_compatible
 class RiskCategory(OrderedModel, models.Model):
     TYPES = Choices(
-        ('default', 'Default'),
-        ('primary', 'Primary'),
+        ('default', _('Default')),
+        ('primary', _('Primary')),
     )
 
     header = models.CharField(max_length=255)
@@ -323,10 +323,10 @@ class RiskCategory(OrderedModel, models.Model):
     def clean(self):
         if not self.parent:
             if not self.code:
-                raise ValidationError({'code': 'Code is required for root nodes.'})
+                raise ValidationError({'code': _('Code is required for root nodes.')})
 
             if self._default_manager.filter(parent__isnull=True, code=self.code).exists():
-                raise ValidationError({'code': 'Code is already used.'})
+                raise ValidationError({'code': _('Code is already used.')})
 
     @atomic
     def save(self, **kwargs):
@@ -358,11 +358,11 @@ class RiskBluePrint(OrderedModel, models.Model):
 @python_2_unicode_compatible
 class Risk(models.Model):
     VALUES = Choices(
-        (0, 'na', 'N/A'),
-        (1, 'low', 'Low'),
-        (2, 'medium', 'Medium'),
-        (3, 'significant', 'Significant'),
-        (4, 'high', 'High'),
+        (0, 'na', _('N/A')),
+        (1, 'low', _('Low')),
+        (2, 'medium', _('Medium')),
+        (3, 'significant', _('Significant')),
+        (4, 'high', _('High')),
     )
 
     engagement = models.ForeignKey(Engagement, related_name='risks')
