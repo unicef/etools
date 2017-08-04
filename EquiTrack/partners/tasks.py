@@ -43,7 +43,7 @@ def task_decorator(funct):
     return wrapper
 
 
-@task_decorator
+#@task_decorator
 @app.task
 def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
 
@@ -76,7 +76,7 @@ def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
         logger.info("Transitioned agreements {} ".format(processed))
 
 
-@task_decorator
+#@task_decorator
 @app.task
 def intervention_status_automatic_transition(admin=None, workspace=None, **kwargs):
 
@@ -121,7 +121,7 @@ def intervention_status_automatic_transition(admin=None, workspace=None, **kwarg
         logger.info("Transitioned interventions {} ".format(processed))
 
 
-@task_decorator
+#@task_decorator
 @app.task
 def intervention_notification_signed_no_frs(admin=None, workspace=None, **kwargs):
     '''This should only run once a week'''
@@ -142,7 +142,7 @@ def intervention_notification_signed_no_frs(admin=None, workspace=None, **kwargs
         notification.send_notification()
 
 
-@task_decorator
+#@task_decorator
 @app.task
 def intervention_notification_ended_fr_outstanding(admin=None, workspace=None, **kwargs):
     '''This will run every 2 weeks'''
@@ -162,7 +162,7 @@ def intervention_notification_ended_fr_outstanding(admin=None, workspace=None, *
             notification.send_notification()
 
 
-@task_decorator
+#@task_decorator
 @app.task
 def intervention_notification_ending(admin=None, workspace=None, **kwargs):
     '''This will run every 24 hours'''
