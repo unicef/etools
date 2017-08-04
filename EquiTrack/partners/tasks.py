@@ -22,13 +22,17 @@ logger = get_task_logger(__name__)
 _INTERVENTION_ENDING_SOON_DELTAS = (15, 30)
 
 
-def get_intervention_context(i):
+def get_intervention_context(intervention):
+    '''Return a dict formatting some details about the intervention.
+
+    Helper function for some of the notification tasks in this file.
+    '''
     return {
-        'number': i.__unicode__(),
-        'partner': i.agreement.partner.name,
-        'start_date': str(i.start),
-        'url': 'https://{}/pmp/partners/{}/details'.format(settings.HOST, i.id),
-        'unicef_focal_points': [focal_point.email for focal_point in i.unicef_focal_points.all()]
+        'number': unicode(intervention),
+        'partner': intervention.agreement.partner.name,
+        'start_date': str(intervention.start),
+        'url': 'https://{}/pmp/interventions/{}/details'.format(settings.HOST, intervention.id),
+        'unicef_focal_points': [focal_point.email for focal_point in intervention.unicef_focal_points.all()]
     }
 
 

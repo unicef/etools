@@ -34,6 +34,47 @@ def _build_country(name):
     return country
 
 
+class TestGetInterventionContext(FastTenantTestCase):
+    '''Exercise the tasks' helper function get_intervention_context()'''
+    def setUp(self):
+        self.intervention = InterventionFactory()
+
+    def test_simple_intervention(self):
+        '''Exercise get_intervention_context() with a very simple intervention'''
+        result = partners.tasks.get_intervention_context(self.intervention)
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual(sorted(result.keys()),
+                         sorted(['number', 'partner', 'start_date', 'url', 'unicef_focal_points']))
+        self.assertEqual(result['number'], unicode(self.intervention))
+        self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
+        self.assertEqual(result['start_date'], 'None')
+        # FIXME can replace with reverse()?
+        self.assertEqual(result['url'], 'https://{}/pmp/partners/{}/details'.format(settings.HOST, self.intervention.id))
+        self.assertEqual(result['unicef_focal_points'], [])
+
+
+    def test_non_trivial_intervention(self):
+        '''Exercise get_intervention_context() with an intervention that has some interesting detail'''
+        focal_point_user = User.objects.all()[0]
+        self.intervention.unicef_focal_points.add(focal_point_user)
+
+        self.intervention.start = datetime.date(2017, 8, 1)
+        self.intervention.save()
+
+        result = partners.tasks.get_intervention_context(self.intervention)
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual(sorted(result.keys()),
+                         sorted(['number', 'partner', 'start_date', 'url', 'unicef_focal_points']))
+        self.assertEqual(result['number'], unicode(self.intervention))
+        self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
+        self.assertEqual(result['start_date'], '2017-08-01')
+        # FIXME can replace with reverse()?
+        self.assertEqual(result['url'], 'https://{}/pmp/partners/{}/details'.format(settings.HOST, self.intervention.id))
+        self.assertEqual(result['unicef_focal_points'], [focal_point_user.email])
+
+
 @mock.patch('partners.tasks.logger', spec=['info', 'error'])
 @mock.patch('partners.tasks.connection', spec=['set_tenant'])
 class TestAgreementStatusAutomaticTransitionTask(FastTenantTestCase):
