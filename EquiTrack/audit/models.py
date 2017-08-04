@@ -506,7 +506,9 @@ class MicroAssessment(Engagement):
         return super(MicroAssessment, self).submit(*args, **kwargs)
 
     def __str__(self):
-        return 'MicroAssessment ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
+        return 'MicroAssessment ({}: {}, {})'.format(
+            self.engagement_type, self.agreement.order_number, self.partner.name
+        )
 
     def get_object_url(self):
         return build_frontend_url('ap', 'micro-assessments', self.id, 'overview')
