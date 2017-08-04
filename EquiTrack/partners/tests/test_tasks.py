@@ -34,6 +34,11 @@ def _build_country(name):
     return country
 
 
+def _make_past_date(n_days):
+    '''Return a datetime.date() that refers to n_days in the past'''
+    return datetime.date.today() - datetime.timedelta(days=n_days)
+
+
 class TestGetInterventionContext(FastTenantTestCase):
     '''Exercise the tasks' helper function get_intervention_context()'''
     def setUp(self):
@@ -52,7 +57,6 @@ class TestGetInterventionContext(FastTenantTestCase):
         # FIXME can replace with reverse()?
         self.assertEqual(result['url'], 'https://{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
         self.assertEqual(result['unicef_focal_points'], [])
-
 
     def test_non_trivial_intervention(self):
         '''Exercise get_intervention_context() with an intervention that has some interesting detail'''
@@ -75,12 +79,8 @@ class TestGetInterventionContext(FastTenantTestCase):
         self.assertEqual(result['unicef_focal_points'], [focal_point_user.email])
 
 
-@mock.patch('partners.tasks.logger', spec=['info', 'error'])
-@mock.patch('partners.tasks.connection', spec=['set_tenant'])
-class TestAgreementStatusAutomaticTransitionTask(FastTenantTestCase):
-    '''Exercises the agreement_status_automatic_transition() task, including the task itself and its core function
-    _make_agreement_status_automatic_transitions().
-    '''
+class PartnersTestBaseClass(FastTenantTestCase):
+    '''Common elements for most of the tests in this file.'''
     def _assertCalls(self, mocked_function, all_expected_call_args):
         '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was
         called once for each set of call args, and with the args specified.
@@ -93,6 +93,13 @@ class TestAgreementStatusAutomaticTransitionTask(FastTenantTestCase):
         for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
             self.assertEqual(actual_call_args, expected_call_args)
 
+
+@mock.patch('partners.tasks.logger', spec=['info', 'error'])
+@mock.patch('partners.tasks.connection', spec=['set_tenant'])
+class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
+    '''Exercises the agreement_status_automatic_transition() task, including the task itself and its core function
+    _make_agreement_status_automatic_transitions().
+    '''
     def setUp(self):
         try:
             self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
@@ -264,22 +271,10 @@ class TestAgreementStatusAutomaticTransitionTask(FastTenantTestCase):
 
 @mock.patch('partners.tasks.logger', spec=['info', 'error'])
 @mock.patch('partners.tasks.connection', spec=['set_tenant'])
-class TestInterventionStatusAutomaticTransitionTask(FastTenantTestCase):
+class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
     '''Exercises the agreement_status_automatic_transition() task, including the task itself and its core function
     _make_agreement_status_automatic_transitions().
     '''
-    def _assertCalls(self, mocked_function, all_expected_call_args):
-        '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was
-        called once for each set of call args, and with the args specified.
-        all_expected_call_args should be a list of 2-tuples representing mock call_args. Each 2-tuple looks like --
-            ((args), {kwargs})
-        https://docs.python.org/3/library/unittest.mock.html#unittest.mock.Mock.call_args
-        '''
-        self.assertEqual(mocked_function.call_count, len(all_expected_call_args))
-
-        for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
-            self.assertEqual(actual_call_args, expected_call_args)
-
     def setUp(self):
         try:
             self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
@@ -357,8 +352,7 @@ class TestInterventionStatusAutomaticTransitionTask(FastTenantTestCase):
         end_date = datetime.date.today() - datetime.timedelta(days=1)
         # Interventions sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
         # pulled out of the database.
-        make_created = lambda i: datetime.date.today() - datetime.timedelta(days=i)
-        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_date, created=make_created(i))
+        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_date, created=_make_past_date(i))
                          for i in range(3)]
 
         # Make an intervention with some associated funds reservation headers that the task should find.
@@ -426,8 +420,7 @@ class TestInterventionStatusAutomaticTransitionTask(FastTenantTestCase):
         end_date = datetime.date.today() - datetime.timedelta(days=1)
         # Interventions sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
         # pulled out of the database.
-        make_created = lambda i: datetime.date.today() - datetime.timedelta(days=i)
-        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_date, created=make_created(i))
+        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_date, created=_make_past_date(i))
                          for i in range(3)]
 
         # Make an intervention with some associated funds reservation headers that the task should find.
@@ -501,22 +494,10 @@ class TestInterventionStatusAutomaticTransitionTask(FastTenantTestCase):
 
 @mock.patch('partners.tasks.logger', spec=['info'])
 @mock.patch('partners.tasks.connection', spec=['set_tenant'])
-class TestNotifyOfNoFrsSignedInterventionsTask(FastTenantTestCase):
+class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
     '''Exercises the intervention_notification_signed_no_frs() task, including the task itself and its core function
     _notify_of_signed_interventions_with_no_frs().
     '''
-    def _assertCalls(self, mocked_function, all_expected_call_args):
-        '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was
-        called once for each set of call args, and with the args specified.
-        all_expected_call_args should be a list of 2-tuples representing mock call_args. Each 2-tuple looks like --
-            ((args), {kwargs})
-        https://docs.python.org/3/library/unittest.mock.html#unittest.mock.Mock.call_args
-        '''
-        self.assertEqual(mocked_function.call_count, len(all_expected_call_args))
-
-        for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
-            self.assertEqual(actual_call_args, expected_call_args)
-
     def setUp(self):
         try:
             self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
@@ -581,9 +562,8 @@ class TestNotifyOfNoFrsSignedInterventionsTask(FastTenantTestCase):
         country_name = self.tenant_countries[0].name
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
         # ordered in the same way as they'll be pulled out of the database.
-        make_created = lambda i: datetime.date.today() - datetime.timedelta(days=i)
         start_on = datetime.date.today() + datetime.timedelta(days=5)
-        interventions = [InterventionFactory(status=Intervention.SIGNED, start=start_on, created=make_created(i))
+        interventions = [InterventionFactory(status=Intervention.SIGNED, start=start_on, created=_make_past_date(i))
                          for i in range(3)]
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
@@ -623,22 +603,10 @@ class TestNotifyOfNoFrsSignedInterventionsTask(FastTenantTestCase):
 
 @mock.patch('partners.tasks.logger', spec=['info'])
 @mock.patch('partners.tasks.connection', spec=['set_tenant'])
-class TestNotifyOfMismatchedEndedInterventionsTask(FastTenantTestCase):
+class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
     '''Exercises the intervention_notification_ended_fr_outstanding() task, including the task itself and its core
     function _notify_of_ended_interventions_with_mismatched_frs().
     '''
-    def _assertCalls(self, mocked_function, all_expected_call_args):
-        '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was
-        called once for each set of call args, and with the args specified.
-        all_expected_call_args should be a list of 2-tuples representing mock call_args. Each 2-tuple looks like --
-            ((args), {kwargs})
-        https://docs.python.org/3/library/unittest.mock.html#unittest.mock.Mock.call_args
-        '''
-        self.assertEqual(mocked_function.call_count, len(all_expected_call_args))
-
-        for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
-            self.assertEqual(actual_call_args, expected_call_args)
-
     def setUp(self):
         try:
             self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
@@ -703,8 +671,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(FastTenantTestCase):
         country_name = self.tenant_countries[0].name
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
         # ordered in the same way as they'll be pulled out of the database.
-        make_created = lambda i: datetime.date.today() - datetime.timedelta(days=i)
-        interventions = [InterventionFactory(status=Intervention.ENDED, created=make_created(i))
+        interventions = [InterventionFactory(status=Intervention.ENDED, created=_make_past_date(i))
                          for i in range(3)]
 
         make_decimal = lambda i: Decimal('{}.00'.format(i))
@@ -753,22 +720,10 @@ class TestNotifyOfMismatchedEndedInterventionsTask(FastTenantTestCase):
 
 @mock.patch('partners.tasks.logger', spec=['info'])
 @mock.patch('partners.tasks.connection', spec=['set_tenant'])
-class TestNotifyOfInterventionsEndingSoon(FastTenantTestCase):
+class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
     '''Exercises the intervention_notification_ending() task, including the task itself and its core
     function _notify_interventions_ending_soon().
     '''
-    def _assertCalls(self, mocked_function, all_expected_call_args):
-        '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was
-        called once for each set of call args, and with the args specified.
-        all_expected_call_args should be a list of 2-tuples representing mock call_args. Each 2-tuple looks like --
-            ((args), {kwargs})
-        https://docs.python.org/3/library/unittest.mock.html#unittest.mock.Mock.call_args
-        '''
-        self.assertEqual(mocked_function.call_count, len(all_expected_call_args))
-
-        for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
-            self.assertEqual(actual_call_args, expected_call_args)
-
     def setUp(self):
         try:
             self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
@@ -836,14 +791,13 @@ class TestNotifyOfInterventionsEndingSoon(FastTenantTestCase):
 
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
         # ordered in the same way as they'll be pulled out of the database.
-        make_created = lambda i: datetime.date.today() - datetime.timedelta(days=i)
         end_on = datetime.date.today() + datetime.timedelta(days=15)
-        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_on, created=make_created(i))
+        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_on, created=_make_past_date(i))
                          for i in range(3)]
 
         # Create some interventions that will end in 30 days (in addition to the ones ending in 15, above)
         end_on = datetime.date.today() + datetime.timedelta(days=30)
-        interventions += [InterventionFactory(status=Intervention.ACTIVE, end=end_on, created=make_created(i + 5))
+        interventions += [InterventionFactory(status=Intervention.ACTIVE, end=end_on, created=_make_past_date(i + 5))
                           for i in range(3)]
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
