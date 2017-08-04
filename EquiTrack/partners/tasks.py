@@ -189,9 +189,21 @@ def _notify_of_signed_interventions_with_no_frs(country_name):
 #@task_decorator
 @app.task
 def intervention_notification_ended_fr_outstanding(admin=None, workspace=None, **kwargs):
-    '''This will run every 2 weeks'''
+    '''Send notifications for interventions that meet all of the following criteria --
+        - ended
+        - total_frs['total_actual_amt'] != total_frs['total_frs_amt']
+
+    This will run every 2 weeks
+    '''
+    for country in Country.objects.exclude(name='Global').all():
+        connection.set_tenant(country)
+        _notify_of_ended_interventions_with_mismatched_frs(country.name)
+
+
+def _notify_of_ended_interventions_with_mismatched_frs(country_name):
+    '''Implementation core of intervention_notification_ended_fr_outstanding() (q.v.)'''
     logger.info('Starting intervention signed but FRs Amount and actual '
-                'do not match notifications for country {}'.format(workspace.name))
+                'do not match notifications for country {}'.format(country_name))
 
     ended_interventions = Intervention.objects.filter(status=Intervention.ENDED)
     for intervention in ended_interventions:
