@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
-
 import datetime
-
 import itertools
+
 from django.conf import settings
 from django.db import connection
 from django.db.models import F, Sum
+
 from celery.utils.log import get_task_logger
+
 from EquiTrack.celery import app
 from partners.models import Agreement, Intervention
 from partners.validation.agreements import AgreementValid
@@ -46,7 +47,19 @@ def task_decorator(funct):
 #@task_decorator
 @app.task
 def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
+    '''Check validity and save changed status (if any) for agreements that meet all of the following criteria --
+        - signed
+        - end date is after today
+        - type != SSFA
+    '''
+    for country in Country.objects.exclude(name='Global').all():
+        connection.set_tenant(country)
+        _make_agreement_status_automatic_transitions(country.name)
 
+
+def _make_agreement_status_automatic_transitions(country_name):
+    '''Implementation core of agreement_status_automatic_transition() (q.v.)'''
+    if True:
         logger.info('Starting agreement auto status transition for country {}'.format(workspace.name))
 
         # these are agreements that are not even valid within their own status
