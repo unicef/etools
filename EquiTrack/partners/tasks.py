@@ -59,34 +59,33 @@ def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
 
 def _make_agreement_status_automatic_transitions(country_name):
     '''Implementation core of agreement_status_automatic_transition() (q.v.)'''
-    if True:
-        logger.info('Starting agreement auto status transition for country {}'.format(workspace.name))
+    logger.info('Starting agreement auto status transition for country {}'.format(workspace.name))
 
-        # these are agreements that are not even valid within their own status
-        # compiling a list of them to send to an admin or save somewhere in the future
-        bad_agreements = []
+    # these are agreements that are not even valid within their own status
+    # compiling a list of them to send to an admin or save somewhere in the future
+    bad_agreements = []
 
-        # SSFAs don't transition automatically unless they transition based on the intervention.
-        signed_ended_agrs = Agreement.objects.filter(status=Agreement.SIGNED, end__gt=datetime.date.today())\
-            .exclude(agreement_type=Agreement.SSFA)
-        processed = 0
+    # SSFAs don't transition automatically unless they transition based on the intervention.
+    signed_ended_agrs = Agreement.objects.filter(status=Agreement.SIGNED, end__gt=datetime.date.today())\
+        .exclude(agreement_type=Agreement.SSFA)
+    processed = 0
 
-        for agr in signed_ended_agrs:
-            old_status = agr.status
-            # this function mutates agreement
-            validator = AgreementValid(agr, user=admin, disable_rigid_check=True)
-            if validator.is_valid:
-                if agr.status != old_status:
-                    # this one transitioned forward
-                    agr.save()
-                    processed += 1
-            else:
-                bad_agreements.append(agr)
+    for agr in signed_ended_agrs:
+        old_status = agr.status
+        # this function mutates agreement
+        validator = AgreementValid(agr, user=admin, disable_rigid_check=True)
+        if validator.is_valid:
+            if agr.status != old_status:
+                # this one transitioned forward
+                agr.save()
+                processed += 1
+        else:
+            bad_agreements.append(agr)
 
-        logger.error('Bad agreements {}'.format(len(bad_agreements)))
-        logger.error('Bad agreements ids: ' + ' '.join(a.id for a in bad_agreements))
-        logger.info('Total agreements {}'.format(signed_ended_agrs.count()))
-        logger.info("Transitioned agreements {} ".format(processed))
+    logger.error('Bad agreements {}'.format(len(bad_agreements)))
+    logger.error('Bad agreements ids: ' + ' '.join(a.id for a in bad_agreements))
+    logger.info('Total agreements {}'.format(signed_ended_agrs.count()))
+    logger.info("Transitioned agreements {} ".format(processed))
 
 
 #@task_decorator
