@@ -221,10 +221,21 @@ def _notify_of_ended_interventions_with_mismatched_frs(country_name):
 #@task_decorator
 @app.task
 def intervention_notification_ending(admin=None, workspace=None, **kwargs):
-    '''This will run every 24 hours'''
+    '''Send notifications for interventions that will end soon, where "soon" are the # of days from today defined
+    in _INTERVENTION_ENDING_SOON_DELTAS.
+
+    This will run every 24 hours.
+    '''
+    for country in Country.objects.exclude(name='Global').all():
+        connection.set_tenant(country)
+        _notify_interventions_ending_soon(country.name)
+
+
+def _notify_interventions_ending_soon(country_name):
+    '''Implementation core of intervention_notification_ending() (q.v.)'''
     qs_results = {}
 
-    logger.info('Starting interventions almost ending notifications for country {}'.format(workspace.name))
+    logger.info('Starting interventions almost ending notifications for country {}'.format(country_name))
 
     qs_results["30"] = Intervention.objects.filter(
         status=Intervention.ACTIVE,
