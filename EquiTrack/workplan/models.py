@@ -90,10 +90,10 @@ class ResultWorkplanProperty(models.Model):
     result = models.ForeignKey(Result, related_name='workplan_properties')
     assumptions = models.TextField(null=True, blank=True)
     STATUS = (
-        ("On Track","On Track"),
-        ("Constrained","Constrained"),
-        ("No Progress","No Progress"),
-        ("Target Met","Target Met"),
+        ("On Track", "On Track"),
+        ("Constrained", "Constrained"),
+        ("No Progress", "No Progress"),
+        ("Target Met", "Target Met"),
     )
     status = models.CharField(max_length=255, null=True, blank=True, choices=STATUS)
     prioritized = models.BooleanField(default=False)
@@ -142,6 +142,7 @@ class Milestone(models.Model):
     result_wp_property = models.ForeignKey(ResultWorkplanProperty, related_name="milestones")
     description = models.TextField()
     assumptions = models.TextField(null=True, blank=True)
+
 
 class CoverPage(models.Model):
     """
