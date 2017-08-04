@@ -708,3 +708,134 @@ class TestNotifyOfMismatchedEndedInterventionsTask(FastTenantTestCase):
         # Verify that each created notification object had send_notification() called.
         expected_call_args = [((), {})] * len(interventions)
         self._assertCalls(mock_notification.send_notification, expected_call_args)
+
+
+@mock.patch('partners.tasks.logger', spec=['info'])
+@mock.patch('partners.tasks.connection', spec=['set_tenant'])
+class TestNotifyOfInterventionsEndingSoon(FastTenantTestCase):
+    '''Exercises the intervention_notification_ending() task, including the task itself and its core
+    function _notify_interventions_ending_soon().
+    '''
+    def _assertCalls(self, mocked_function, all_expected_call_args):
+        '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was
+        called once for each set of call args, and with the args specified.
+        all_expected_call_args should be a list of 2-tuples representing mock call_args. Each 2-tuple looks like --
+            ((args), {kwargs})
+        https://docs.python.org/3/library/unittest.mock.html#unittest.mock.Mock.call_args
+        '''
+        self.assertEqual(mocked_function.call_count, len(all_expected_call_args))
+
+        for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
+            self.assertEqual(actual_call_args, expected_call_args)
+
+    def setUp(self):
+        try:
+            self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
+        except User.DoesNotExist:
+            self.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
+
+        # The global "country" should be excluded from processing. Create it to ensure it's ignored during this test.
+        self.global_country = _build_country('Global')
+        self.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
+
+    # ----------
+    # ----------
+    # ----------    Test cases start here
+    # ----------
+    # ----------
+    @mock.patch('partners.tasks._notify_interventions_ending_soon')
+    @mock.patch('partners.tasks.Country', spec='objects')
+    def test_task(self, MockCountry, mock_notify_interventions_ending_soon, mock_db_connection, mock_logger):
+        '''Verify that the task executes once for each tenant country'''
+        # We have to mock the Country model because we can't save instances to the database without creating
+        # new schemas, so instead we mock the call we expect the task to make and return the value we want the
+        # task to get.
+        MockCountry.objects = mock.Mock(spec=['exclude'])
+        MockCountry.objects.exclude = mock.Mock()
+        mock_country_objects_exclude_queryset = mock.Mock(spec=['all'])
+        MockCountry.objects.exclude.return_value = mock_country_objects_exclude_queryset
+        mock_country_objects_exclude_queryset.all = mock.Mock(return_value=self.tenant_countries)
+
+        mock_db_connection.set_tenant = mock.Mock()
+
+        # I'm done mocking, it's time to call the task.
+        partners.tasks.intervention_notification_ending()
+
+        self._assertCalls(MockCountry.objects.exclude, [((), {'name': 'Global'})])
+
+        # These should have been called once for each tenant country
+        self._assertCalls(mock_db_connection.set_tenant, [((country, ), {}) for country in self.tenant_countries])
+
+        self._assertCalls(mock_notify_interventions_ending_soon,
+                          [((country.name, ), {}) for country in self.tenant_countries])
+
+    def test_notify_interventions_ending_soon_no_interventions(self, mock_db_connection, mock_logger):
+        '''Exercise _notify_interventions_ending_soon() for the simple case of no interventions.'''
+        country_name = self.tenant_countries[0].name
+        # Don't need to mock anything extra, just call the function.
+        partners.tasks._notify_interventions_ending_soon(country_name)
+
+        # Verify logged messages.
+        template = 'Starting interventions almost ending notifications for country {}'
+        expected_call_args = [((template.format(country_name), ), {})]
+        self._assertCalls(mock_logger.info, expected_call_args)
+
+    @mock.patch('partners.tasks.Notification.objects', spec=['create'])
+    def test_notify_interventions_ending_soon_with_some_interventions(
+            self,
+            mock_notification_objects,
+            mock_db_connection,
+            mock_logger):
+        '''Exercise _notify_interventions_ending_soon() when there are interventions for it to work on.
+
+        That task specifically works on interventions that will end in 15 and 30 days.
+        '''
+        country_name = self.tenant_countries[0].name
+        today = datetime.date.today()
+
+        # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
+        # ordered in the same way as they'll be pulled out of the database.
+        make_created = lambda i: datetime.date.today() - datetime.timedelta(days=i)
+        end_on = datetime.date.today() + datetime.timedelta(days=15)
+        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_on, created=make_created(i))
+                         for i in range(3)]
+
+        # Create some interventions that will end in 30 days (in addition to the ones ending in 15, above)
+        end_on = datetime.date.today() + datetime.timedelta(days=30)
+        interventions += [InterventionFactory(status=Intervention.ACTIVE, end=end_on, created=make_created(i + 5))
+                          for i in range(3)]
+
+        # Create a few items that should be ignored. If they're not ignored, this test will fail.
+        # Should be ignored because of status
+        InterventionFactory(status=Intervention.DRAFT, end=end_on)
+        InterventionFactory(status=Intervention.IMPLEMENTED, end=end_on)
+        InterventionFactory(status=Intervention.TERMINATED, end=end_on)
+        # All of these should be ignored because of end date
+        for delta in range(max(partners.tasks._INTERVENTION_ENDING_SOON_DELTAS) + 5):
+            if delta not in partners.tasks._INTERVENTION_ENDING_SOON_DELTAS:
+                InterventionFactory(status=Intervention.ACTIVE, end=today + datetime.timedelta(days=delta))
+
+        # Mock Notifications.objects.create() to return a Mock. In order to *truly* mimic create(), my
+        # mock_notification_objects.create() should return a new (mock) object every time, but the lazy way or
+        # returning the same object is good enough and still allows me to count calls to .send_notification().
+        mock_notification = mock.Mock(spec=['send_notification'])
+        mock_notification_objects.create = mock.Mock(return_value=mock_notification)
+
+        # I'm done mocking, it's time to call the function.
+        partners.tasks._notify_interventions_ending_soon(country_name)
+
+        # Verify that Notification.objects.create() was called as expected.
+        expected_call_args = []
+        for intervention in interventions:
+            template_data = partners.tasks.get_intervention_context(intervention)
+            template_data['days'] = str((intervention.end - today).days)
+            expected_call_args.append(((), {'sender': intervention,
+                                            'recipients': [],
+                                            'template_name': 'partners/partnership/ending',
+                                            'template_data': template_data
+                                            }))
+        self._assertCalls(mock_notification_objects.create, expected_call_args)
+
+        # Verify that each created notification object had send_notification() called.
+        expected_call_args = [((), {}) for intervention in interventions]
+        self._assertCalls(mock_notification.send_notification, expected_call_args)

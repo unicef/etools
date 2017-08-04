@@ -17,6 +17,10 @@ from notification.models import Notification
 
 logger = get_task_logger(__name__)
 
+# _INTERVENTION_ENDING_SOON_DELTAS is used by intervention_notification_ending(). Notifications will be sent
+# about each interventions ending {delta} days from now.
+_INTERVENTION_ENDING_SOON_DELTAS = (15, 30)
+
 
 def get_intervention_context(i):
     return {
@@ -233,28 +237,22 @@ def intervention_notification_ending(admin=None, workspace=None, **kwargs):
 
 def _notify_interventions_ending_soon(country_name):
     '''Implementation core of intervention_notification_ending() (q.v.)'''
-    qs_results = {}
-
     logger.info('Starting interventions almost ending notifications for country {}'.format(country_name))
 
-    qs_results["30"] = Intervention.objects.filter(
-        status=Intervention.ACTIVE,
-        end=datetime.datetime.today()+datetime.timedelta(days=30)
-    ).prefetch_related('unicef_focal_points', 'agreement', 'agreement__partner')
+    today = datetime.date.today()
 
-    qs_results["15"] = Intervention.objects.filter(
-        status=Intervention.ACTIVE,
-        end=datetime.datetime.today()+datetime.timedelta(days=15)
-    ).prefetch_related('unicef_focal_points', 'agreement', 'agreement__partner')
+    notify_end_dates = [today + datetime.timedelta(days=delta) for delta in (_INTERVENTION_ENDING_SOON_DELTAS)]
 
-    for k in qs_results:
-        for intervention in qs_results[k]:
-            email_context = get_intervention_context(intervention)
-            email_context["days"] = k
-            notification = Notification.objects.create(
-                sender=intervention,
-                recipients=email_context['unicef_focal_points'],
-                template_name="partners/partnership/ending",
-                template_data=email_context
-            )
-            notification.send_notification()
+    interventions = Intervention.objects.filter(status=Intervention.ACTIVE, end__in=notify_end_dates)
+    interventions = interventions.prefetch_related('unicef_focal_points', 'agreement', 'agreement__partner')
+
+    for intervention in interventions:
+        email_context = get_intervention_context(intervention)
+        email_context["days"] = str((intervention.end - today).days)
+        notification = Notification.objects.create(
+            sender=intervention,
+            recipients=email_context['unicef_focal_points'],
+            template_name="partners/partnership/ending",
+            template_data=email_context
+        )
+        notification.send_notification()
