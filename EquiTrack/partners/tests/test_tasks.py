@@ -119,6 +119,8 @@ class PartnersTestBaseClass(FastTenantTestCase):
         self.global_country = _build_country('Global')
         self.tenant_countries = [_build_country('test{}'.format(i)) for i in range(3)]
 
+        self.country_name = self.tenant_countries[0].name
+
 
 @mock.patch('partners.tasks.logger', spec=['info', 'error'])
 @mock.patch('partners.tasks.connection', spec=['set_tenant'])
@@ -146,11 +148,11 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
     def test_make_agreement_status_automatic_transitions_no_agreements(self, mock_db_connection, mock_logger):
         '''Exercise _make_agreement_status_automatic_transitions() for the simple case when there's no agreements.'''
         # Don't need to mock anything extra, just call the function.
-        partners.tasks._make_agreement_status_automatic_transitions(self.tenant_countries[0].name)
+        partners.tasks._make_agreement_status_automatic_transitions(self.country_name)
 
         # Verify logged messages.
         expected_call_args = [
-            (('Starting agreement auto status transition for country {}'.format(self.tenant_countries[0].name), ), {}),
+            (('Starting agreement auto status transition for country {}'.format(self.country_name), ), {}),
             (('Total agreements 0', ), {}),
             (('Transitioned agreements 0 ', ), {}),
             ]
@@ -174,19 +176,22 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
                       for i in range(3)]
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
+        # Ignored because of status.
         AgreementFactory(status=Agreement.SUSPENDED, end=end_date, agreement_type=Agreement.MOU)
+        # Ignored because of end date.
         AgreementFactory(status=Agreement.SIGNED,
                          end=datetime.date.today() - datetime.timedelta(days=2),
                          agreement_type=Agreement.MOU)
+        # Ignored because of type.
         AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.SSFA)
 
-        # Mock AgreementValid() to always return True.
+        # Mock AgreementValid() so that it always returns True.
         mock_validator = mock.Mock(spec=['is_valid'])
         mock_validator.is_valid = True
         MockAgreementValid.return_value = mock_validator
 
         # I'm done mocking, it's time to call the function.
-        partners.tasks._make_agreement_status_automatic_transitions(self.tenant_countries[0].name)
+        partners.tasks._make_agreement_status_automatic_transitions(self.country_name)
 
         expected_call_args = [((agreement, ), {'user': self.admin_user, 'disable_rigid_check': True})
                               for agreement in agreements]
@@ -194,7 +199,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
         # Verify logged messages.
         expected_call_args = [
-            (('Starting agreement auto status transition for country {}'.format(self.tenant_countries[0].name), ), {}),
+            (('Starting agreement auto status transition for country {}'.format(self.country_name), ), {}),
             (('Total agreements 3', ), {}),
             (('Transitioned agreements 0 ', ), {}),
             ]
@@ -218,10 +223,13 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
                       for i in range(3)]
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
+        # Ignored because of status.
         AgreementFactory(status=Agreement.SUSPENDED, end=end_date, agreement_type=Agreement.MOU)
+        # Ignored because of end date.
         AgreementFactory(status=Agreement.SIGNED,
                          end=datetime.date.today() - datetime.timedelta(days=2),
                          agreement_type=Agreement.MOU)
+        # Ignored because of type.
         AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.SSFA)
 
         def mock_agreement_valid_class_side_effect(*args, **kwargs):
@@ -249,7 +257,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
         MockAgreementValid.return_value = mock_validator
 
         # I'm done mocking, it's time to call the function.
-        partners.tasks._make_agreement_status_automatic_transitions(self.tenant_countries[0].name)
+        partners.tasks._make_agreement_status_automatic_transitions(self.country_name)
 
         expected_call_args = [((agreement, ), {'user': self.admin_user, 'disable_rigid_check': True})
                               for agreement in agreements]
@@ -257,7 +265,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
         # Verify logged messages.
         expected_call_args = [
-            (('Starting agreement auto status transition for country {}'.format(self.tenant_countries[0].name), ), {}),
+            (('Starting agreement auto status transition for country {}'.format(self.country_name), ), {}),
             (('Total agreements 3', ), {}),
             (('Transitioned agreements 1 ', ), {}),
             ]
@@ -298,12 +306,11 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         '''Exercise _make_intervention_status_automatic_transitions() for the simple case when there's no
         interventions.'''
         # Don't need to mock anything extra, just call the function.
-        partners.tasks._make_intervention_status_automatic_transitions(self.tenant_countries[0].name)
+        partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
 
         # Verify logged messages.
-        country_name = self.tenant_countries[0].name
         expected_call_args = [
-            (('Starting intervention auto status transition for country {}'.format(country_name), ), {}),
+            (('Starting intervention auto status transition for country {}'.format(self.country_name), ), {}),
             (('Total interventions 0', ), {}),
             (('Transitioned interventions 0 ', ), {}),
             ]
@@ -322,8 +329,6 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             mock_db_connection,
             mock_logger):
         '''Exercise _make_intervention_status_automatic_transitions() when all interventions are valid'''
-        country_name = self.tenant_countries[0].name
-
         # Make some interventions that are active that ended yesterday. (The task looks for such interventions.)
         end_date = datetime.date.today() - datetime.timedelta(days=1)
         # Interventions sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
@@ -361,7 +366,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         MockInterventionValid.return_value = mock_validator
 
         # I'm done mocking, it's time to call the function.
-        partners.tasks._make_intervention_status_automatic_transitions(country_name)
+        partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
 
         expected_call_args = [((intervention_, ), {'user': self.admin_user, 'disable_rigid_check': True})
                               for intervention_ in interventions]
@@ -369,7 +374,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
         # Verify logged messages.
         expected_call_args = [
-            (('Starting intervention auto status transition for country {}'.format(country_name), ), {}),
+            (('Starting intervention auto status transition for country {}'.format(self.country_name), ), {}),
             (('Total interventions 4', ), {}),
             (('Transitioned interventions 0 ', ), {})]
         self._assertCalls(mock_logger.info, expected_call_args)
@@ -389,8 +394,6 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         '''Exercise _make_intervention_status_automatic_transitions() when only some interventions are valid, but
         not all of them.
         '''
-        country_name = self.tenant_countries[0].name
-
         # Make some interventions that are active that ended yesterday. (The task looks for such interventions.)
         end_date = datetime.date.today() - datetime.timedelta(days=1)
         # Interventions sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
@@ -446,7 +449,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         MockInterventionValid.return_value = mock_validator
 
         # I'm done mocking, it's time to call the function.
-        partners.tasks._make_intervention_status_automatic_transitions(self.tenant_countries[0].name)
+        partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
 
         expected_call_args = [((intervention_, ), {'user': self.admin_user, 'disable_rigid_check': True})
                               for intervention_ in interventions]
@@ -454,7 +457,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
         # Verify logged messages.
         expected_call_args = [
-            (('Starting intervention auto status transition for country {}'.format(country_name), ), {}),
+            (('Starting intervention auto status transition for country {}'.format(self.country_name), ), {}),
             (('Total interventions 4', ), {}),
             (('Transitioned interventions 1 ', ), {})]
         self._assertCalls(mock_logger.info, expected_call_args)
@@ -491,13 +494,12 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
 
     def test_notify_of_signed_interventions_no_interventions(self, mock_db_connection, mock_logger):
         '''Exercise _notify_of_signed_interventions_with_no_frs() for the simple case when there's no interventions.'''
-        country_name = self.tenant_countries[0].name
         # Don't need to mock anything extra, just call the function.
-        partners.tasks._notify_of_signed_interventions_with_no_frs(country_name)
+        partners.tasks._notify_of_signed_interventions_with_no_frs(self.country_name)
 
         # Verify logged messages.
         expected_call_args = [
-            (('Starting intervention signed but no FRs notifications for country {}'.format(country_name), ), {}),
+            (('Starting intervention signed but no FRs notifications for country {}'.format(self.country_name), ), {}),
             ]
         self._assertCalls(mock_logger.info, expected_call_args)
 
@@ -508,7 +510,6 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
             mock_db_connection,
             mock_logger):
         '''Exercise _notify_of_signed_interventions_with_no_frs() when it has some interventions to work on'''
-        country_name = self.tenant_countries[0].name
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
         # ordered in the same way as they'll be pulled out of the database.
         start_on = datetime.date.today() + datetime.timedelta(days=5)
@@ -533,7 +534,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
         mock_notification_objects.create = mock.Mock(return_value=mock_notification)
 
         # I'm done mocking, it's time to call the function.
-        partners.tasks._notify_of_signed_interventions_with_no_frs(country_name)
+        partners.tasks._notify_of_signed_interventions_with_no_frs(self.country_name)
 
         # Verify that Notification.objects.create() was called as expected.
         expected_call_args = [((), {'sender': intervention_,
@@ -575,13 +576,12 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
 
     def test_notify_of_ended_interventions_no_interventions(self, mock_db_connection, mock_logger):
         '''Exercise _notify_of_ended_interventions_with_mismatched_frs() for the simple case of no interventions.'''
-        country_name = self.tenant_countries[0].name
         # Don't need to mock anything extra, just call the function.
-        partners.tasks._notify_of_ended_interventions_with_mismatched_frs(country_name)
+        partners.tasks._notify_of_ended_interventions_with_mismatched_frs(self.country_name)
 
         # Verify logged messages.
         template = 'Starting intervention signed but FRs Amount and actual do not match notifications for country {}'
-        expected_call_args = [((template.format(country_name), ), {})]
+        expected_call_args = [((template.format(self.country_name), ), {})]
         self._assertCalls(mock_logger.info, expected_call_args)
 
     @mock.patch('partners.tasks.Notification.objects', spec=['create'])
@@ -591,7 +591,6 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
             mock_db_connection,
             mock_logger):
         '''Exercise _notify_of_ended_interventions_with_mismatched_frs() when it has some interventions to work on'''
-        country_name = self.tenant_countries[0].name
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
         # ordered in the same way as they'll be pulled out of the database.
         interventions = [InterventionFactory(status=Intervention.ENDED, created=_make_past_date(i))
@@ -624,7 +623,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
         mock_notification_objects.create = mock.Mock(return_value=mock_notification)
 
         # I'm done mocking, it's time to call the function.
-        partners.tasks._notify_of_ended_interventions_with_mismatched_frs(country_name)
+        partners.tasks._notify_of_ended_interventions_with_mismatched_frs(self.country_name)
 
         # Verify that Notification.objects.create() was called as expected.
         expected_call_args = [((), {'sender': intervention_,
@@ -665,13 +664,12 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
 
     def test_notify_interventions_ending_soon_no_interventions(self, mock_db_connection, mock_logger):
         '''Exercise _notify_interventions_ending_soon() for the simple case of no interventions.'''
-        country_name = self.tenant_countries[0].name
         # Don't need to mock anything extra, just call the function.
-        partners.tasks._notify_interventions_ending_soon(country_name)
+        partners.tasks._notify_interventions_ending_soon(self.country_name)
 
         # Verify logged messages.
         template = 'Starting interventions almost ending notifications for country {}'
-        expected_call_args = [((template.format(country_name), ), {})]
+        expected_call_args = [((template.format(self.country_name), ), {})]
         self._assertCalls(mock_logger.info, expected_call_args)
 
     @mock.patch('partners.tasks.Notification.objects', spec=['create'])
@@ -684,7 +682,6 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
 
         That task specifically works on interventions that will end in 15 and 30 days.
         '''
-        country_name = self.tenant_countries[0].name
         today = datetime.date.today()
 
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
@@ -715,7 +712,7 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
         mock_notification_objects.create = mock.Mock(return_value=mock_notification)
 
         # I'm done mocking, it's time to call the function.
-        partners.tasks._notify_interventions_ending_soon(country_name)
+        partners.tasks._notify_interventions_ending_soon(self.country_name)
 
         # Verify that Notification.objects.create() was called as expected.
         expected_call_args = []
