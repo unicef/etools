@@ -528,7 +528,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
                                           actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
 
         # Mock Notifications.objects.create() to return a Mock. In order to *truly* mimic create(), my
-        # mock_notification_objects.create() should return a new (mock) object every time, but the lazy way or
+        # mock_notification_objects.create() should return a new (mock) object every time, but this lazy way of
         # returning the same object is good enough and still allows me to count calls to .send_notification().
         mock_notification = mock.Mock(spec=['send_notification'])
         mock_notification_objects.create = mock.Mock(return_value=mock_notification)
@@ -545,7 +545,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
                               for intervention_ in interventions]
         self._assertCalls(mock_notification_objects.create, expected_call_args)
 
-        # Verify that each created notification object had send_notification() called.
+        # Verify that each notification object that was created had send_notification() called.
         expected_call_args = [((), {})] * len(interventions)
         self._assertCalls(mock_notification.send_notification, expected_call_args)
 
@@ -686,14 +686,12 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
 
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
         # ordered in the same way as they'll be pulled out of the database.
-        end_on = datetime.date.today() + datetime.timedelta(days=15)
-        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_on, created=_make_past_date(i))
-                         for i in range(3)]
-
-        # Create some interventions that will end in 30 days (in addition to the ones ending in 15, above)
-        end_on = datetime.date.today() + datetime.timedelta(days=30)
-        interventions += [InterventionFactory(status=Intervention.ACTIVE, end=end_on, created=_make_past_date(i + 5))
-                          for i in range(3)]
+        interventions = []
+        for delta in partners.tasks._INTERVENTION_ENDING_SOON_DELTAS:
+            end_on = datetime.date.today() + datetime.timedelta(days=delta)
+            interventions += [InterventionFactory(status=Intervention.ACTIVE, end=end_on,
+                                                  created=_make_past_date(i + delta))
+                              for i in range(3)]
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
         # Should be ignored because of status
