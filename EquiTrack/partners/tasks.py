@@ -59,7 +59,9 @@ def agreement_status_automatic_transition(admin=None, workspace=None, **kwargs):
 
 def _make_agreement_status_automatic_transitions(country_name):
     '''Implementation core of agreement_status_automatic_transition() (q.v.)'''
-    logger.info('Starting agreement auto status transition for country {}'.format(workspace.name))
+    logger.info('Starting agreement auto status transition for country {}'.format(country_name))
+
+    admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
 
     # these are agreements that are not even valid within their own status
     # compiling a list of them to send to an admin or save somewhere in the future
@@ -73,7 +75,7 @@ def _make_agreement_status_automatic_transitions(country_name):
     for agr in signed_ended_agrs:
         old_status = agr.status
         # this function mutates agreement
-        validator = AgreementValid(agr, user=admin, disable_rigid_check=True)
+        validator = AgreementValid(agr, user=admin_user, disable_rigid_check=True)
         if validator.is_valid:
             if agr.status != old_status:
                 # this one transitioned forward
@@ -83,7 +85,7 @@ def _make_agreement_status_automatic_transitions(country_name):
             bad_agreements.append(agr)
 
     logger.error('Bad agreements {}'.format(len(bad_agreements)))
-    logger.error('Bad agreements ids: ' + ' '.join(a.id for a in bad_agreements))
+    logger.error('Bad agreements ids: ' + ' '.join(str(a.id) for a in bad_agreements))
     logger.info('Total agreements {}'.format(signed_ended_agrs.count()))
     logger.info("Transitioned agreements {} ".format(processed))
 

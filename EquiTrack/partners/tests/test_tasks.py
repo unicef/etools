@@ -93,3 +93,129 @@ class TestAgreementStatusAutomaticTransitionTask(FastTenantTestCase):
 
         self._assertCalls(mock_make_agreement_status_automatic_transitions,
                           [((country.name, ), {}) for country in self.tenant_countries])
+
+    def test_make_agreement_status_automatic_transitions_no_agreements(self, mock_db_connection, mock_logger):
+        '''Exercise _make_agreement_status_automatic_transitions() for the simple case when there's no agreements.'''
+        # Don't need to mock anything extra, just call the function.
+        partners.tasks._make_agreement_status_automatic_transitions(self.tenant_countries[0].name)
+
+        # Verify logged messages.
+        expected_call_args = [
+            (('Starting agreement auto status transition for country {}'.format(self.tenant_countries[0].name), ), {}),
+            (('Total agreements 0', ), {}),
+            (('Transitioned agreements 0 ', ), {}),
+            ]
+        self._assertCalls(mock_logger.info, expected_call_args)
+
+        expected_call_args = [
+            (('Bad agreements 0', ), {}),
+            (('Bad agreements ids: ', ), {}),
+            ]
+        self._assertCalls(mock_logger.error, expected_call_args)
+
+    @mock.patch('partners.tasks.AgreementValid')
+    def test_make_agreement_status_automatic_transitions_with_valid_agreements(
+            self,
+            MockAgreementValid,
+            mock_db_connection,
+            mock_logger):
+        '''Exercise _make_agreement_status_automatic_transitions() when all agreements are valid.'''
+        end_date = datetime.date.today() + datetime.timedelta(days=2)
+        agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.MOU)
+                      for i in range(3)]
+
+        # Create a few items that should be ignored. If they're not ignored, this test will fail.
+        AgreementFactory(status=Agreement.SUSPENDED, end=end_date, agreement_type=Agreement.MOU)
+        AgreementFactory(status=Agreement.SIGNED,
+                         end=datetime.date.today() - datetime.timedelta(days=2),
+                         agreement_type=Agreement.MOU)
+        AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.SSFA)
+
+        # Mock AgreementValid() to always return True.
+        mock_validator = mock.Mock(spec=['is_valid'])
+        mock_validator.is_valid = True
+        MockAgreementValid.return_value = mock_validator
+
+        # I'm done mocking, it's time to call the function.
+        partners.tasks._make_agreement_status_automatic_transitions(self.tenant_countries[0].name)
+
+        expected_call_args = [((agreement, ), {'user': self.admin_user, 'disable_rigid_check': True})
+                              for agreement in agreements]
+        self._assertCalls(MockAgreementValid, expected_call_args)
+
+        # Verify logged messages.
+        expected_call_args = [
+            (('Starting agreement auto status transition for country {}'.format(self.tenant_countries[0].name), ), {}),
+            (('Total agreements 3', ), {}),
+            (('Transitioned agreements 0 ', ), {}),
+            ]
+        self._assertCalls(mock_logger.info, expected_call_args)
+
+        expected_call_args = [
+            (('Bad agreements 0', ), {}),
+            (('Bad agreements ids: ', ), {}),
+            ]
+        self._assertCalls(mock_logger.error, expected_call_args)
+
+    @mock.patch('partners.tasks.AgreementValid')
+    def test_make_agreement_status_automatic_transitions_with_mixed_agreements(
+            self,
+            MockAgreementValid,
+            mock_db_connection,
+            mock_logger):
+        '''Exercise _make_agreement_status_automatic_transitions() when some agreements are valid and some aren't.'''
+        end_date = datetime.date.today() + datetime.timedelta(days=2)
+        agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.MOU)
+                      for i in range(3)]
+
+        # Create a few items that should be ignored. If they're not ignored, this test will fail.
+        AgreementFactory(status=Agreement.SUSPENDED, end=end_date, agreement_type=Agreement.MOU)
+        AgreementFactory(status=Agreement.SIGNED,
+                         end=datetime.date.today() - datetime.timedelta(days=2),
+                         agreement_type=Agreement.MOU)
+        AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.SSFA)
+
+        def mock_agreement_valid_class_side_effect(*args, **kwargs):
+            '''Side effect for my mock AgreementValid() that gets called each time my mock AgreementValid() class
+            is instantiated. It gives me the opportunity to modify one of the agreements passed.
+            '''
+            if args and hasattr(args[0], 'id'):
+                if args[0].id == agreements[1].id:
+                    # We'll pretend the second agreement made a status transition
+                    args[0].status = Agreement.ENDED
+                    args[0].save()
+            # else:
+                # This is a test failure; we always expect (mock) AgreementValid to be called (instantiated) with
+                # an agreement passed as the first arg. However the args with which AgreementValid is called are
+                # explicitly checked in this test so we don't need to react here.
+
+            return mock.DEFAULT
+
+        # (Mock) AgreementValid() returns a (mock) validator; set up is_valid to return False for the first agreement
+        # and True for the other two.
+        mock_validator = mock.Mock(spec=['is_valid'], name='mock_validator')
+        type(mock_validator).is_valid = mock.PropertyMock(side_effect=[False, True, True])
+
+        MockAgreementValid.side_effect = mock_agreement_valid_class_side_effect
+        MockAgreementValid.return_value = mock_validator
+
+        # I'm done mocking, it's time to call the function.
+        partners.tasks._make_agreement_status_automatic_transitions(self.tenant_countries[0].name)
+
+        expected_call_args = [((agreement, ), {'user': self.admin_user, 'disable_rigid_check': True})
+                              for agreement in agreements]
+        self._assertCalls(MockAgreementValid, expected_call_args)
+
+        # Verify logged messages.
+        expected_call_args = [
+            (('Starting agreement auto status transition for country {}'.format(self.tenant_countries[0].name), ), {}),
+            (('Total agreements 3', ), {}),
+            (('Transitioned agreements 1 ', ), {}),
+            ]
+        self._assertCalls(mock_logger.info, expected_call_args)
+
+        expected_call_args = [
+            (('Bad agreements 1', ), {}),
+            (('Bad agreements ids: {}'.format(agreements[0].id), ), {}),
+            ]
+        self._assertCalls(mock_logger.error, expected_call_args)
