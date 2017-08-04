@@ -123,14 +123,14 @@ class EngagementViewSet(
     )
     search_fields = ('partner__name', 'agreement__order_number', 'agreement__auditor_firm__name')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
-                       'partner__name', 'type', 'status')
-    filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'type')
+                       'partner__name', 'engagement_type', 'status')
+    filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'engagement_type')
 
     def get_serializer_class(self):
         serializer_class = None
 
         if self.action == 'create':
-            engagement_type = self.request.data.get('type', None)
+            engagement_type = self.request.data.get('engagement_type', None)
 
             if engagement_type == Engagement.TYPES.audit:
                 serializer_class = AuditSerializer

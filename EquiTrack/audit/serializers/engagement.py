@@ -60,7 +60,7 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
 
 class EngagementExportSerializer(serializers.ModelSerializer):
     agreement_number = serializers.ReadOnlyField(source='agreement.order_number')
-    type = serializers.ReadOnlyField(source='get_type_display')
+    engagement_type = serializers.ReadOnlyField(source='get_engagement_type_display')
     partner_name = serializers.ReadOnlyField(source='partner.name')
     auditor_firm_vendor_number = serializers.ReadOnlyField(source='agreement.auditor_firm.vendor_number')
     auditor_firm_name = serializers.ReadOnlyField(source='agreement.auditor_firm.name')
@@ -76,7 +76,7 @@ class EngagementExportSerializer(serializers.ModelSerializer):
         model = Engagement
         fields = (
             'id',
-            'type',
+            'engagement_type',
             'partner_name',
             'agreement_number',
             'auditor_firm_vendor_number',
@@ -107,7 +107,7 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
     class Meta(AuditPermissionsBasedRootSerializerMixin.Meta):
         model = Engagement
         fields = [
-            'id', 'unique_id', 'agreement', 'related_agreement', 'partner', 'type', 'status', 'status_date',
+            'id', 'unique_id', 'agreement', 'related_agreement', 'partner', 'engagement_type', 'status', 'status_date',
         ]
 
 
@@ -216,7 +216,7 @@ class SpotCheckSerializer(EngagementSerializer):
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
-            'type': {'read_only': True}
+            'engagement_type': {'read_only': True}
         })
         extra_kwargs.update({
             field: {'required': True} for field in [
@@ -246,7 +246,7 @@ class MicroAssessmentSerializer(RiskCategoriesUpdateMixin, EngagementSerializer)
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
-            'type': {'read_only': True},
+            'engagement_type': {'read_only': True},
             'start_date': {'required': False},
             'end_date': {'required': False},
             'total_value': {'required': False},
@@ -285,7 +285,7 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
-            'type': {'read_only': True}
+            'engagement_type': {'read_only': True}
         })
 
     def get_number_of_financial_findings(self, obj):

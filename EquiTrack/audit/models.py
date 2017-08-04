@@ -135,7 +135,7 @@ class Engagement(TimeStampedModel, models.Model):
 
     partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('partner'))
     partner_contacted_at = models.DateField(_('date partner was contacted'), blank=True, null=True)
-    type = models.CharField(_('engagement type'), max_length=10, choices=TYPES)
+    engagement_type = models.CharField(_('Engagement type'), max_length=10, choices=TYPES)
     start_date = models.DateField(_('period start date'), blank=True, null=True)
     end_date = models.DateField(_('period end date'), blank=True, null=True)
     total_value = models.DecimalField(_('Total value of selected FACE form(s)'), blank=True, null=True,
@@ -189,7 +189,7 @@ class Engagement(TimeStampedModel, models.Model):
         verbose_name_plural = _('Engagements')
 
     def __str__(self):
-        return '{}: {}, {}'.format(self.type, self.agreement.order_number, self.partner.name)
+        return '{}: {}, {}'.format(self.engagment_type, self.agreement.order_number, self.partner.name)
 
     @property
     def displayed_status(self):
@@ -217,7 +217,7 @@ class Engagement(TimeStampedModel, models.Model):
 
     @property
     def unique_id(self):
-        engagement_code = 'a' if self.type == self.TYPES.audit else self.type
+        engagement_code = 'a' if self.engagement_type == self.TYPES.audit else self.engagement_type
         return '{0}/{1}/{2}/{3}'.format(
             self.partner.name[:5],
             engagement_code.upper(),
@@ -307,7 +307,7 @@ class RiskCategory(OrderedModel, models.Model):
         related_name='children',
         db_index=True
     )
-    type = models.CharField(max_length=20, choices=TYPES, default=TYPES.default)
+    category_type = models.CharField(max_length=20, choices=TYPES, default=TYPES.default)
     code = models.CharField(max_length=20, blank=True)
 
     code_tracker = FieldTracker()
@@ -401,7 +401,7 @@ class SpotCheck(Engagement):
             return None
 
     def save(self, *args, **kwars):
-        self.type = Engagement.TYPES.sc
+        self.engagement_type = Engagement.TYPES.sc
         return super(SpotCheck, self).save(*args, **kwars)
 
     @transition(
@@ -417,7 +417,7 @@ class SpotCheck(Engagement):
         return super(SpotCheck, self).submit(*args, **kwargs)
 
     def __str__(self):
-        return 'SpotCheck ({}: {}, {})'.format(self.type, self.agreement.order_number, self.partner.name)
+        return 'SpotCheck ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     def get_object_url(self):
         return build_frontend_url('ap', 'spot-checks', self.id, 'overview')
@@ -489,7 +489,7 @@ class MicroAssessment(Engagement):
         verbose_name_plural = _('Micro Assessments')
 
     def save(self, *args, **kwars):
-        self.type = Engagement.TYPES.ma
+        self.engagement_type = Engagement.TYPES.ma
         return super(MicroAssessment, self).save(*args, **kwars)
 
     @transition(
@@ -506,7 +506,7 @@ class MicroAssessment(Engagement):
         return super(MicroAssessment, self).submit(*args, **kwargs)
 
     def __str__(self):
-        return 'MicroAssessment ({}: {}, {})'.format(self.type, self.agreement.order_number, self.partner.name)
+        return 'MicroAssessment ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     def get_object_url(self):
         return build_frontend_url('ap', 'micro-assessments', self.id, 'overview')
@@ -556,7 +556,7 @@ class Audit(Engagement):
         verbose_name_plural = _('Audits')
 
     def save(self, *args, **kwars):
-        self.type = Engagement.TYPES.audit
+        self.engagement_type = Engagement.TYPES.audit
         return super(Audit, self).save(*args, **kwars)
 
     @property
@@ -582,7 +582,7 @@ class Audit(Engagement):
         return super(Audit, self).submit(*args, **kwargs)
 
     def __str__(self):
-        return 'Audit ({}: {}, {})'.format(self.type, self.agreement.order_number, self.partner.name)
+        return 'Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     def get_object_url(self):
         return build_frontend_url('ap', 'audits', self.id, 'overview')

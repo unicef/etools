@@ -45,10 +45,10 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
 class EngagementAdmin(admin.ModelAdmin):
     list_display = [
         '__str__', 'status', 'partner', 'date_of_field_visit',
-        'type', 'start_date', 'end_date',
+        'engagement_type', 'start_date', 'end_date',
     ]
     list_filter = [
-        'status', 'start_date', 'end_date', 'status', 'type',
+        'status', 'start_date', 'end_date', 'status', 'engagement_type',
     ]
     readonly_fields = ('status', )
     search_fields = ['partner__name', 'auditor_firm__name', ]
@@ -57,9 +57,9 @@ class EngagementAdmin(admin.ModelAdmin):
 @admin.register(models.RiskCategory)
 class RiskCategoryAdmin(OrderedModelAdmin):
     list_display = [
-        '__str__', 'type', 'code', 'header', 'parent', 'move_up_down_links',
+        '__str__', 'category_type', 'code', 'header', 'parent', 'move_up_down_links',
     ]
-    list_filter = ['type', ]
+    list_filter = ['category_type', ]
     search_fields = ['code', 'header', ]
     readonly_fields = ['code', ]
 

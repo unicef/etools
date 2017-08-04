@@ -40,7 +40,7 @@ class Command(BaseCommand):
         'engagement.agreement',
         'engagement.related_agreement',
         'engagement.partner_contacted_at',
-        'engagement.type',
+        'engagement.engagement_type',
         'engagement.start_date',
         'engagement.end_date',
         'engagement.total_value',
