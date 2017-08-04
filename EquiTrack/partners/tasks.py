@@ -155,8 +155,21 @@ def _make_intervention_status_automatic_transitions(country_name):
 #@task_decorator
 @app.task
 def intervention_notification_signed_no_frs(admin=None, workspace=None, **kwargs):
-    '''This should only run once a week'''
-    logger.info('Starting intervention signed but no FRs notifications for country {}'.format(workspace.name))
+    '''Send notifications for interventions that meet all of the following criteria --
+        - signed
+        - ending today or in the future
+        - have no related FRS
+
+    This should only run once a week.
+    '''
+    for country in Country.objects.exclude(name='Global').all():
+        connection.set_tenant(country)
+        _notify_of_signed_interventions_with_no_frs(country.name)
+
+
+def _notify_of_signed_interventions_with_no_frs(country_name):
+    '''Implementation core of intervention_notification_signed_no_frs() (q.v.)'''
+    logger.info('Starting intervention signed but no FRs notifications for country {}'.format(country_name))
 
     signed_interventions = Intervention.objects.filter(status=Intervention.SIGNED,
                                                        start__gte=datetime.date.today(),
