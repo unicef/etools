@@ -102,7 +102,7 @@ class Engagement(TimeStampedModel, models.Model):
         ('partner_contacted', _('Partner Contacted')),
         ('report_submitted', _('Report Submitted')),
         ('final', _('Final Report')),
-        ('canceled', _('Cancelled')),
+        ('cancelled', _('Cancelled')),
     )
 
     DISPLAY_STATUSES = Choices(
@@ -114,7 +114,7 @@ class Engagement(TimeStampedModel, models.Model):
         ('comments_received_by_unicef', _('Comments Received from UNICEF')),
         ('report_submitted', _('Report Submitted')),
         ('final', _('Final Report')),
-        ('canceled', _('Cancelled')),
+        ('cancelled', _('Cancelled')),
     )
     DISPLAY_STATUSES_DATES = {
         DISPLAY_STATUSES.partner_contacted: 'partner_contacted_at',
@@ -125,7 +125,7 @@ class Engagement(TimeStampedModel, models.Model):
         DISPLAY_STATUSES.comments_received_by_unicef: 'date_of_comments_by_unicef',
         DISPLAY_STATUSES.report_submitted: 'date_of_report_submit',
         DISPLAY_STATUSES.final: 'date_of_final_report',
-        DISPLAY_STATUSES.canceled: 'date_of_cancel'
+        DISPLAY_STATUSES.cancelled: 'date_of_cancel'
     }
 
     status = FSMField(_('status'), max_length=30, choices=STATUSES, default=STATUSES.partner_contacted, protected=True)
@@ -277,7 +277,7 @@ class Engagement(TimeStampedModel, models.Model):
 
         self._notify_focal_points('audit/engagement/reported_by_auditor')
 
-    @transition(status, source=[STATUSES.partner_contacted, STATUSES.report_submitted], target=STATUSES.canceled,
+    @transition(status, source=[STATUSES.partner_contacted, STATUSES.report_submitted], target=STATUSES.cancelled,
                 permission=_has_action_permission(action='cancel'),
                 custom={'serializer': EngagementCancelSerializer})
     def cancel(self, cancel_comment):

@@ -16,7 +16,7 @@ class DisplayStatusFilter(BaseFilterBackend):
         if status in [
             Engagement.STATUSES.report_submitted,
             Engagement.STATUSES.final,
-            Engagement.STATUSES.canceled
+            Engagement.STATUSES.cancelled
         ]:
             return queryset.filter(status=status)
 

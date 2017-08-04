@@ -208,10 +208,10 @@ class TestSCTransitionsMetadataTestCase(
         self._init_finalized_engagement()
         self._test_allowed_actions(self.unicef_focal_point, [])
 
-    def test_canceled_auditor(self):
+    def test_cancelled_auditor(self):
         self._init_cancelled_engagement()
         self._test_allowed_actions(self.auditor, [])
 
-    def test_canceled_focal_point(self):
+    def test_cancelled_focal_point(self):
         self._init_cancelled_engagement()
         self._test_allowed_actions(self.unicef_focal_point, [])

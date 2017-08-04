@@ -75,7 +75,7 @@ class Command(BaseCommand):
     partner_contacted = 'partner_contacted'
     report_submitted = 'report_submitted'
     final_report = 'final'
-    report_canceled = 'canceled'
+    report_cancelled = 'cancelled'
 
     def __init__(self, *args, **kwargs):
         super(Command, self).__init__(*args, **kwargs)
@@ -185,11 +185,11 @@ class Command(BaseCommand):
         self.add_permissions(self.final_report, self.focal_point, 'edit', self.follow_up_page)
         self.revoke_permissions(self.final_report, self.auditor, 'view', self.follow_up_page)
 
-        # report canceled. everybody can view
-        self.add_permissions(self.report_canceled, self.everybody, 'view', self.everything)
+        # report cancelled. everybody can view
+        self.add_permissions(self.report_cancelled, self.everybody, 'view', self.everything)
 
         # Follow-Up fields available in finalized engagements.
-        for status in [self.new_engagement, self.partner_contacted, self.report_submitted, self.report_canceled]:
+        for status in [self.new_engagement, self.partner_contacted, self.report_submitted, self.report_cancelled]:
             self.revoke_permissions(status, self.everybody, 'view', self.follow_up_page)
 
         # update permissions
