@@ -93,8 +93,26 @@ def _make_agreement_status_automatic_transitions(country_name):
 #@task_decorator
 @app.task
 def intervention_status_automatic_transition(admin=None, workspace=None, **kwargs):
+    '''Check validity and save changed status (if any) for interventions that meet all of the following criteria --
+        - active
+        - end date is yesterday
 
-        logger.info('Starting agreement auto status transition for country {}'.format(workspace.name))
+    Also for interventions that meet all of the following criteria --
+        - ended
+        - total outstanding_amt == 0
+        - total_amt == actual_amt
+    '''
+    for country in Country.objects.exclude(name='Global').all():
+        connection.set_tenant(country)
+        _make_intervention_status_automatic_transitions(country.name)
+
+
+def _make_intervention_status_automatic_transitions(country_name):
+    '''Implementation core of intervention_status_automatic_transition() (q.v.)'''
+    if True:
+        logger.info('Starting intervention auto status transition for country {}'.format(country_name))
+
+        admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
 
         # these are agreements that are not even valid within their own status
         # compiling a list of them to send to an admin or save somewhere in the future
@@ -120,7 +138,7 @@ def intervention_status_automatic_transition(admin=None, workspace=None, **kwarg
             old_status = intervention.status
 
             # this function mutates the intervention
-            validator = InterventionValid(intervention, user=admin, disable_rigid_check=True)
+            validator = InterventionValid(intervention, user=admin_user, disable_rigid_check=True)
             if validator.is_valid:
                 if intervention.status != old_status:
                     # this one transitioned forward
