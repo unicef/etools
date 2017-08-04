@@ -24,7 +24,7 @@ from .risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternal
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
     class Meta(PartnerOrganizationListSerializer.Meta):
         fields = PartnerOrganizationListSerializer.Meta.fields + (
-            'address', 'street_address', 'country', 'city', 'postal_code',
+            'street_address', 'country', 'city', 'postal_code',
         )
 
 
