@@ -98,6 +98,17 @@ class PartnersTestBaseClass(FastTenantTestCase):
         for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
             self.assertEqual(actual_call_args, expected_call_args)
 
+    def _configure_mock_country(self, MockCountry):
+        '''helper to perform common configuration of the MockCountry that every test uses.'''
+        # We have to mock the Country model because we can't save instances to the database without creating
+        # new schemas, so instead we mock the call we expect the task to make and return the value we want the
+        # task to get.
+        MockCountry.objects = mock.Mock(spec=['exclude'])
+        MockCountry.objects.exclude = mock.Mock()
+        mock_country_objects_exclude_queryset = mock.Mock(spec=['all'])
+        MockCountry.objects.exclude.return_value = mock_country_objects_exclude_queryset
+        mock_country_objects_exclude_queryset.all = mock.Mock(return_value=self.tenant_countries)
+
     def setUp(self):
         try:
             self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
@@ -119,14 +130,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
     @mock.patch('partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_make_agreement_status_automatic_transitions, mock_db_connection, mock_logger):
         '''Verify that the task executes once for each tenant country'''
-        # We have to mock the Country model because we can't save instances to the database without creating
-        # new schemas, so instead we mock the call we expect the task to make and return the value we want the
-        # task to get.
-        MockCountry.objects = mock.Mock(spec=['exclude'])
-        MockCountry.objects.exclude = mock.Mock()
-        mock_country_objects_exclude_queryset = mock.Mock(spec=['all'])
-        MockCountry.objects.exclude.return_value = mock_country_objects_exclude_queryset
-        mock_country_objects_exclude_queryset.all = mock.Mock(return_value=self.tenant_countries)
+        self._configure_mock_country(MockCountry)
 
         mock_db_connection.set_tenant = mock.Mock()
 
@@ -279,14 +283,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
     def test_task(self, MockCountry, mock_make_intervention_status_automatic_transitions, mock_db_connection,
                   mock_logger):
         '''Verify that the task executes once for each tenant country'''
-        # We have to mock the Country model because we can't save instances to the database without creating
-        # new schemas, so instead we mock the call we expect the task to make and return the value we want the
-        # task to get.
-        MockCountry.objects = mock.Mock(spec=['exclude'])
-        MockCountry.objects.exclude = mock.Mock()
-        mock_country_objects_exclude_queryset = mock.Mock(spec=['all'])
-        MockCountry.objects.exclude.return_value = mock_country_objects_exclude_queryset
-        mock_country_objects_exclude_queryset.all = mock.Mock(return_value=self.tenant_countries)
+        self._configure_mock_country(MockCountry)
 
         mock_db_connection.set_tenant = mock.Mock()
 
@@ -483,14 +480,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
     @mock.patch('partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_notify_of_signed_interventions_with_no_frs, mock_db_connection, mock_logger):
         '''Verify that the task executes once for each tenant country'''
-        # We have to mock the Country model because we can't save instances to the database without creating
-        # new schemas, so instead we mock the call we expect the task to make and return the value we want the
-        # task to get.
-        MockCountry.objects = mock.Mock(spec=['exclude'])
-        MockCountry.objects.exclude = mock.Mock()
-        mock_country_objects_exclude_queryset = mock.Mock(spec=['all'])
-        MockCountry.objects.exclude.return_value = mock_country_objects_exclude_queryset
-        mock_country_objects_exclude_queryset.all = mock.Mock(return_value=self.tenant_countries)
+        self._configure_mock_country(MockCountry)
 
         mock_db_connection.set_tenant = mock.Mock()
 
@@ -576,14 +566,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
     def test_task(self, MockCountry, mock_notify_of_ended_interventions_with_mismatched_frs, mock_db_connection,
                   mock_logger):
         '''Verify that the task executes once for each tenant country'''
-        # We have to mock the Country model because we can't save instances to the database without creating
-        # new schemas, so instead we mock the call we expect the task to make and return the value we want the
-        # task to get.
-        MockCountry.objects = mock.Mock(spec=['exclude'])
-        MockCountry.objects.exclude = mock.Mock()
-        mock_country_objects_exclude_queryset = mock.Mock(spec=['all'])
-        MockCountry.objects.exclude.return_value = mock_country_objects_exclude_queryset
-        mock_country_objects_exclude_queryset.all = mock.Mock(return_value=self.tenant_countries)
+        self._configure_mock_country(MockCountry)
 
         mock_db_connection.set_tenant = mock.Mock()
 
@@ -675,14 +658,7 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
     @mock.patch('partners.tasks.Country', spec='objects')
     def test_task(self, MockCountry, mock_notify_interventions_ending_soon, mock_db_connection, mock_logger):
         '''Verify that the task executes once for each tenant country'''
-        # We have to mock the Country model because we can't save instances to the database without creating
-        # new schemas, so instead we mock the call we expect the task to make and return the value we want the
-        # task to get.
-        MockCountry.objects = mock.Mock(spec=['exclude'])
-        MockCountry.objects.exclude = mock.Mock()
-        mock_country_objects_exclude_queryset = mock.Mock(spec=['all'])
-        MockCountry.objects.exclude.return_value = mock_country_objects_exclude_queryset
-        mock_country_objects_exclude_queryset.all = mock.Mock(return_value=self.tenant_countries)
+        self._configure_mock_country(MockCountry)
 
         mock_db_connection.set_tenant = mock.Mock()
 
