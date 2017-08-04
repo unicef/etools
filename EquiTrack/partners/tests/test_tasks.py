@@ -33,6 +33,10 @@ def _build_country(name):
 
     return country
 
+def _make_decimal(n):
+    '''Return a Decimal based on the param n with a trailing .00'''
+    return Decimal('{}.00'.format(n))
+
 
 def _make_past_date(n_days):
     '''Return a datetime.date() that refers to n_days in the past'''
@@ -357,10 +361,9 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
         # Make an intervention with some associated funds reservation headers that the task should find.
         intervention = InterventionFactory(status=Intervention.ENDED)
-        make_decimal = lambda i: Decimal('{}.00'.format(i))
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
-                                          actual_amt=make_decimal(i), total_amt=make_decimal(i))
+                                          actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
         interventions.append(intervention)
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
@@ -372,13 +375,13 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(i),
-                                          actual_amt=make_decimal(i), total_amt=make_decimal(i))
+                                          actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
 
         # Ignored because funds totals don't match
         intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
-                                          actual_amt=make_decimal(i + 1), total_amt=make_decimal(i))
+                                          actual_amt=_make_decimal(i + 1), total_amt=_make_decimal(i))
 
         # Mock InterventionValid() to always return True.
         mock_validator = mock.Mock(spec=['is_valid'])
@@ -425,10 +428,9 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
         # Make an intervention with some associated funds reservation headers that the task should find.
         intervention = InterventionFactory(status=Intervention.ENDED)
-        make_decimal = lambda i: Decimal('{}.00'.format(i))
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
-                                          actual_amt=make_decimal(i), total_amt=make_decimal(i))
+                                          actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
         interventions.append(intervention)
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
@@ -440,12 +442,12 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(i),
-                                          actual_amt=make_decimal(i), total_amt=make_decimal(i))
+                                          actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
         # Ignored because funds totals don't match
         intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
-                                          actual_amt=make_decimal(i + 1), total_amt=make_decimal(i))
+                                          actual_amt=_make_decimal(i + 1), total_amt=_make_decimal(i))
 
         def mock_intervention_valid_class_side_effect(*args, **kwargs):
             '''Side effect for my mock InterventionValid() that gets called each time my mock InterventionValid() class
@@ -573,10 +575,9 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
         InterventionFactory(status=Intervention.SIGNED, start=datetime.date.today() - datetime.timedelta(days=5))
         # Should be ignored because of frs
         intervention = InterventionFactory(status=Intervention.SIGNED, start=start_on)
-        make_decimal = lambda i: Decimal('{}.00'.format(i))
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(i),
-                                          actual_amt=make_decimal(i), total_amt=make_decimal(i))
+                                          actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
 
         # Mock Notifications.objects.create() to return a Mock. In order to *truly* mimic create(), my
         # mock_notification_objects.create() should return a new (mock) object every time, but the lazy way or
@@ -674,26 +675,25 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
         interventions = [InterventionFactory(status=Intervention.ENDED, created=_make_past_date(i))
                          for i in range(3)]
 
-        make_decimal = lambda i: Decimal('{}.00'.format(i))
         # Add mismatched funds values to each intervention.
         for intervention in interventions:
             for i in range(3):
                 FundsReservationHeaderFactory(intervention=intervention,
-                                              actual_amt=make_decimal(i + 1),
-                                              total_amt=make_decimal(i))
+                                              actual_amt=_make_decimal(i + 1),
+                                              total_amt=_make_decimal(i))
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
         # Should be ignored because of status even though FRS values are mismatched
         intervention = InterventionFactory(status=Intervention.DRAFT)
         for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, actual_amt=make_decimal(i + 1),
-                                          total_amt=make_decimal(i))
+            FundsReservationHeaderFactory(intervention=intervention, actual_amt=_make_decimal(i + 1),
+                                          total_amt=_make_decimal(i))
 
         # Should be ignored because FRS values are not mismatched
         intervention = InterventionFactory(status=Intervention.ENDED)
         for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, actual_amt=make_decimal(i),
-                                          total_amt=make_decimal(i))
+            FundsReservationHeaderFactory(intervention=intervention, actual_amt=_make_decimal(i),
+                                          total_amt=_make_decimal(i))
 
         # Mock Notifications.objects.create() to return a Mock. In order to *truly* mimic create(), my
         # mock_notification_objects.create() should return a new (mock) object every time, but the lazy way or
