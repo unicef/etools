@@ -281,3 +281,179 @@ class TestInterventionStatusAutomaticTransitionTask(FastTenantTestCase):
 
         self._assertCalls(mock_make_intervention_status_automatic_transitions,
                           [((country.name, ), {}) for country in self.tenant_countries])
+
+    def test_make_intervention_status_automatic_transitions_no_interventions(self, mock_db_connection, mock_logger):
+        '''Exercise _make_intervention_status_automatic_transitions() for the simple case when there's no
+        interventions.'''
+        # Don't need to mock anything extra, just call the function.
+        partners.tasks._make_intervention_status_automatic_transitions(self.tenant_countries[0].name)
+
+        # Verify logged messages.
+        country_name = self.tenant_countries[0].name
+        expected_call_args = [
+            (('Starting intervention auto status transition for country {}'.format(country_name), ), {}),
+            (('Total interventions 0', ), {}),
+            (('Transitioned interventions 0 ', ), {}),
+            ]
+        self._assertCalls(mock_logger.info, expected_call_args)
+
+        expected_call_args = [
+            (('Bad interventions 0', ), {}),
+            (('Bad interventions ids: ', ), {}),
+            ]
+        self._assertCalls(mock_logger.error, expected_call_args)
+
+    @mock.patch('partners.tasks.InterventionValid')
+    def test_make_intervention_status_automatic_transitions_with_valid_interventions(
+            self,
+            MockInterventionValid,
+            mock_db_connection,
+            mock_logger):
+        '''Exercise _make_intervention_status_automatic_transitions() when all interventions are valid'''
+        country_name = self.tenant_countries[0].name
+
+        # Make some interventions that are active that ended yesterday. (The task looks for such interventions.)
+        end_date = datetime.date.today() - datetime.timedelta(days=1)
+        # Interventions sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
+        # pulled out of the database.
+        make_created = lambda i: datetime.date.today() - datetime.timedelta(days=i)
+        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_date, created=make_created(i))
+                         for i in range(3)]
+
+        # Make an intervention with some associated funds reservation headers that the task should find.
+        intervention = InterventionFactory(status=Intervention.ENDED)
+        make_decimal = lambda i: Decimal('{}.00'.format(i))
+        for i in range(3):
+            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
+                                          actual_amt=make_decimal(i), total_amt=make_decimal(i))
+        interventions.append(intervention)
+
+        # Create a few items that should be ignored. If they're not ignored, this test will fail.
+        # Ignored because of end date
+        InterventionFactory(status=Intervention.ACTIVE, end=datetime.date.today() - datetime.timedelta(days=2))
+        # Ignored because of status
+        InterventionFactory(status=Intervention.IMPLEMENTED, end=end_date)
+        # Ignored because funds total outstanding != 0
+        intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
+        for i in range(3):
+            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(i),
+                                          actual_amt=make_decimal(i), total_amt=make_decimal(i))
+
+        # Ignored because funds totals don't match
+        intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
+        for i in range(3):
+            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
+                                          actual_amt=make_decimal(i + 1), total_amt=make_decimal(i))
+
+        # Mock InterventionValid() to always return True.
+        mock_validator = mock.Mock(spec=['is_valid'])
+        mock_validator.is_valid = True
+        MockInterventionValid.return_value = mock_validator
+
+        # I'm done mocking, it's time to call the function.
+        partners.tasks._make_intervention_status_automatic_transitions(country_name)
+
+        expected_call_args = [((intervention_, ), {'user': self.admin_user, 'disable_rigid_check': True})
+                              for intervention_ in interventions]
+        self._assertCalls(MockInterventionValid, expected_call_args)
+
+        # Verify logged messages.
+        expected_call_args = [
+            (('Starting intervention auto status transition for country {}'.format(country_name), ), {}),
+            (('Total interventions 4', ), {}),
+            (('Transitioned interventions 0 ', ), {})]
+        self._assertCalls(mock_logger.info, expected_call_args)
+
+        expected_call_args = [
+            (('Bad interventions 0', ), {}),
+            (('Bad interventions ids: ', ), {}),
+            ]
+        self._assertCalls(mock_logger.error, expected_call_args)
+
+
+    @mock.patch('partners.tasks.InterventionValid')
+    def test_make_intervention_status_automatic_transitions_with_mixed_interventions(
+            self,
+            MockInterventionValid,
+            mock_db_connection,
+            mock_logger):
+        '''Exercise _make_intervention_status_automatic_transitions() when only some interventions are valid, but
+        not all of them.
+        '''
+        country_name = self.tenant_countries[0].name
+
+        # Make some interventions that are active that ended yesterday. (The task looks for such interventions.)
+        end_date = datetime.date.today() - datetime.timedelta(days=1)
+        # Interventions sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
+        # pulled out of the database.
+        make_created = lambda i: datetime.date.today() - datetime.timedelta(days=i)
+        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_date, created=make_created(i))
+                         for i in range(3)]
+
+        # Make an intervention with some associated funds reservation headers that the task should find.
+        intervention = InterventionFactory(status=Intervention.ENDED)
+        make_decimal = lambda i: Decimal('{}.00'.format(i))
+        for i in range(3):
+            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
+                                          actual_amt=make_decimal(i), total_amt=make_decimal(i))
+        interventions.append(intervention)
+
+        # Create a few items that should be ignored. If they're not ignored, this test will fail.
+        # Ignored because of end date
+        InterventionFactory(status=Intervention.ACTIVE, end=datetime.date.today() - datetime.timedelta(days=2))
+        # Ignored because of status
+        InterventionFactory(status=Intervention.IMPLEMENTED, end=end_date)
+        # Ignored because funds total outstanding != 0
+        intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
+        for i in range(3):
+            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(i),
+                                          actual_amt=make_decimal(i), total_amt=make_decimal(i))
+        # Ignored because funds totals don't match
+        intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
+        for i in range(3):
+            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
+                                          actual_amt=make_decimal(i + 1), total_amt=make_decimal(i))
+
+        def mock_intervention_valid_class_side_effect(*args, **kwargs):
+            '''Side effect for my mock InterventionValid() that gets called each time my mock InterventionValid() class
+            is instantiated. It gives me the opportunity to modify one of the agreements passed.
+            '''
+            if args and hasattr(args[0], 'id'):
+                if args[0].id == interventions[1].id:
+                    # We'll pretend the second intervention made a status transition
+                    args[0].status = Intervention.CLOSED
+                    args[0].save()
+            # else:
+                # This is a test failure; we always expect (mock) InterventionValid to be called (instantiated) with
+                # an agreement passed as the first arg. However the args with which InterventionValid is called are
+                # explicitly checked in this test so we don't need to react here.
+
+            return mock.DEFAULT
+
+        # (Mock) InterventionValid() returns a (mock) validator; set up is_valid to return False for the first
+        # intervention and True for the others.
+        mock_validator = mock.Mock(spec=['is_valid'], name='mock_validator')
+        type(mock_validator).is_valid = mock.PropertyMock(side_effect=[False, True, True, True])
+
+        MockInterventionValid.side_effect = mock_intervention_valid_class_side_effect
+        MockInterventionValid.return_value = mock_validator
+
+        # I'm done mocking, it's time to call the function.
+        partners.tasks._make_intervention_status_automatic_transitions(self.tenant_countries[0].name)
+
+        expected_call_args = [((intervention_, ), {'user': self.admin_user, 'disable_rigid_check': True})
+                              for intervention_ in interventions]
+        self._assertCalls(MockInterventionValid, expected_call_args)
+
+        # Verify logged messages.
+        expected_call_args = [
+            (('Starting intervention auto status transition for country {}'.format(country_name), ), {}),
+            (('Total interventions 4', ), {}),
+            (('Transitioned interventions 1 ', ), {})]
+        self._assertCalls(mock_logger.info, expected_call_args)
+
+        expected_call_args = [
+            (('Bad interventions 1', ), {}),
+            (('Bad interventions ids: {}'.format(interventions[0].id), ), {}),
+            ]
+        self._assertCalls(mock_logger.error, expected_call_args)

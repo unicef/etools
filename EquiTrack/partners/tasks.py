@@ -148,7 +148,7 @@ def _make_intervention_status_automatic_transitions(country_name):
                 bad_interventions.append(intervention)
 
         logger.error('Bad interventions {}'.format(len(bad_interventions)))
-        logger.error('Bad interventions ids: ' + ' '.join(a.id for a in bad_interventions))
+        logger.error('Bad interventions ids: ' + ' '.join(str(a.id) for a in bad_interventions))
         logger.info('Total interventions {}'.format(active_ended.count() + qs.count()))
         logger.info("Transitioned interventions {} ".format(processed))
 
