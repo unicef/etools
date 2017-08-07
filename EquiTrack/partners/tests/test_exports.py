@@ -212,8 +212,9 @@ class TestModelExport(APITenantTestCase):
             'URL'
         ])
 
-
-        self.assertEqual(dataset[0], (
+        # we're interested in the first agreement, so it will be last in the exported list
+        exported_agreement = dataset[-1]
+        self.assertEqual(exported_agreement, (
             self.agreement.agreement_number,
             unicode(self.agreement.status),
             unicode(self.agreement.partner.name),
