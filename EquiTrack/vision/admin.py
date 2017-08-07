@@ -1,7 +1,6 @@
-
 from django.contrib import admin
 
-from .models import VisionSyncLog
+from vision.models import VisionSyncLog
 
 
 class VisionSyncLogAdmin(admin.ModelAdmin):

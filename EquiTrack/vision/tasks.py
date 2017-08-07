@@ -18,7 +18,7 @@ from vision.adapters.funding import (
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
 )
-from .models import VisionSyncLog
+from vision.models import VisionSyncLog
 
 
 PUBLIC_SYNC_HANDLERS = []

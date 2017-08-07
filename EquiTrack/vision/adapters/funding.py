@@ -3,14 +3,14 @@ import datetime
 import logging
 from decimal import Decimal
 
-from vision.vision_data_synchronizer import VisionDataSynchronizer
-from vision.utils import wcf_json_date_as_datetime, comp_decimals
 from django.utils import timezone
 
 from funds.models import (
     Grant, FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 )
 from partners.models import FundingCommitment, DirectCashTransfer
+from vision.vision_data_synchronizer import VisionDataSynchronizer
+from vision.utils import wcf_json_date_as_datetime, comp_decimals
 
 
 class FundingSynchronizer(VisionDataSynchronizer):
@@ -448,7 +448,8 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                      'EXCHANGE_RATE', 'RESP_PERSON']
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'WBS_ELEMENT', 'GRANT_NBR', 'FC_NUMBER', 'FR_NUMBER',
-                        'FUND', 'DUE_DATE', 'COMMITMENT_AMOUNT_USD', 'COMMITMENT_AMOUNT_DC', 'AMOUNT_CHANGED', 'FC_LINE_ITEM_TEXT']
+                        'FUND', 'DUE_DATE', 'COMMITMENT_AMOUNT_USD', 'COMMITMENT_AMOUNT_DC', 'AMOUNT_CHANGED',
+                        'FC_LINE_ITEM_TEXT']
 
     def __init__(self, *args, **kwargs):
         self.header_records = {}
