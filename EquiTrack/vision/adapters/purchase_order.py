@@ -6,7 +6,7 @@ from collections import OrderedDict
 from django.db import connection
 
 from vision.vision_data_synchronizer import VisionDataSynchronizer, VisionException
-from vision.utils import wcf_json_date_as_datetime, comp_decimals
+from vision.utils import wcf_json_date_as_datetime
 from funds.models import Grant, Donor
 from audit.models import PurchaseOrder, AuditorFirm
 
@@ -113,15 +113,15 @@ class POSynchronizer(VisionDataSynchronizer):
             try:
                 for model_name, model in self.MODEL_MAPPING.items():
                     mapped_item = dict(
-                        [(field_name, _get_field_value(field_name, field_json_code, json_item, model)) \
+                        [(field_name, _get_field_value(field_name, field_json_code, json_item, model))
                          for field_name, field_json_code in self.MAPPING[model_name].items()]
                     )
                     kwargs = dict(
-                        [(field_name, value) for field_name, value in mapped_item.items() \
+                        [(field_name, value) for field_name, value in mapped_item.items()
                          if model._meta.get_field(field_name).unique]
                     )
                     defaults = dict(
-                        [(field_name, value) for field_name, value in mapped_item.items() \
+                        [(field_name, value) for field_name, value in mapped_item.items()
                          if field_name not in kwargs.keys()]
                     )
                     obj, created = model.objects.update_or_create(
