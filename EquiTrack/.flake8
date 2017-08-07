@@ -11,5 +11,3 @@ exclude =
     manage_debug.py,
     partners,
     t2f,
-    tpm,
-    vision,

@@ -5,7 +5,7 @@ import logging
 from django.db import transaction
 
 from reports.models import ResultType, Result, Indicator, CountryProgramme
-from vision.utils import wcf_json_date_as_datetime, wcf_json_date_as_date
+from vision.utils import wcf_json_date_as_date
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 
 logger = logging.getLogger(__name__)
@@ -129,7 +129,7 @@ class ResultStructureSynchronizer(object):
         total_updated = 0
 
         loc_activities = dict([(r.wbs, r) for r in Result.objects.filter(wbs__in=list(rem_activities.keys()),
-                                                                      result_type__name=ResultType.ACTIVITY)])
+                                                                         result_type__name=ResultType.ACTIVITY)])
 
         for loc_activity in loc_activities.values():
             if self._update_changes(loc_activity, rem_activities[loc_activity.wbs]):
@@ -253,10 +253,9 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         ("ACTIVITY_FOCUS_CODE", "activity_focus_code"),
         ("ACTIVITY_FOCUS_NAME", "activity_focus_name"),
         ("HUMANITARIAN_TAG", "humanitarian_tag"),
-        #("PROGRAMME_AREA_CODE", "code"),
-        #("PROGRAMME_AREA_NAME", ""),
+        # ("PROGRAMME_AREA_CODE", "code"),
+        # ("PROGRAMME_AREA_NAME", ""),
     )
-
 
     def _get_json(self, data):
         return [] if data == self.NO_DATA_MESSAGE else data
@@ -294,7 +293,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
             if not activities.get(r['ACTIVITY_WBS'], None):
                 activities[r['ACTIVITY_WBS']] = dict([(i[1], r[i[0]]) for i in self.ACTIVITY_MAP])
 
-        return {'cps':cps, 'outcomes':outcomes, 'outputs':outputs, 'activities':activities}
+        return {'cps': cps, 'outcomes': outcomes, 'outputs': outputs, 'activities': activities}
 
     def _convert_records(self, records):
         records = json.loads(records.get('GetProgrammeStructureList_JSONResult', []))
@@ -306,13 +305,12 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         return self._clean_records(records)
 
     def _save_records(self, records):
-        #print records[0]
+        # print records[0]
         # TODO maybe ? save to file in azure somewhere at this point.. have a separate task to read from file and update
 
         synchronizer = ResultStructureSynchronizer(records)
 
         return synchronizer.update()
-
 
 
 class RAMSynchronizer(VisionDataSynchronizer):
@@ -429,9 +427,11 @@ class RAMSynchronizer(VisionDataSynchronizer):
         # print('Created Skipped, ', skipped_creation)
         # print('Updated Skipped, ', skipped_update)
 
-        indicators_activated = Indicator.objects.filter(code__in=records.keys()).filter(active=False).update(active=True)
+        indicators_activated = Indicator.objects.filter(code__in=records.keys()).filter(active=False).update(
+            active=True)
 
-        indicators_deactivated = Indicator.objects.exclude(code__in=records.keys()).exclude(active=False).update(active=False)
+        indicators_deactivated = Indicator.objects.exclude(code__in=records.keys()).exclude(active=False).update(
+            active=False)
 
         return {
             'details': '\n'.join([
