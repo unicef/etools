@@ -1,4 +1,3 @@
-from unittest import skip
 import datetime
 
 from rest_framework import status
@@ -9,7 +8,6 @@ from EquiTrack.factories import (
     ResultFactory,
     SectionFactory,
     LocationFactory,
-    ResultStructureFactory,
     CountryProgrammeFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -21,16 +19,21 @@ class TestReportViews(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
+
+        today = datetime.date.today()
+        self.country_programme = CountryProgrammeFactory(
+            wbs='0000/A0/01',
+            from_date=datetime.date(today.year - 1, 1, 1),
+            to_date=datetime.date(today.year + 1, 1, 1))
+
         self.result1 = ResultFactory(
             result_type=self.result_type,
-            result_structure=ResultStructureFactory(),
-            country_programme=CountryProgrammeFactory(wbs="/A0/"),
+            country_programme=self.country_programme,
         )
 
         self.result2 = ResultFactory(
             result_type=self.result_type,
-            result_structure=self.result1.result_structure,
-            country_programme=self.result1.country_programme,
+            country_programme=self.country_programme
         )
 
         # Additional data to use in tests
@@ -38,12 +41,6 @@ class TestReportViews(APITenantTestCase):
         self.location3 = LocationFactory()
         self.section1 = SectionFactory()
         self.section3 = SectionFactory()
-
-    @skip("rename to hrp")
-    def test_api_resultstructures_list(self):
-        response = self.forced_auth_req('get', '/api/reports/result-structures/', user=self.unicef_staff)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_resulttypes_list(self):
         response = self.forced_auth_req('get', '/api/reports/result-types/', user=self.unicef_staff)
@@ -118,7 +115,7 @@ class TestReportViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["country_programme"]), CountryProgramme.current().id)
+        self.assertEqual(int(response.data[0]["country_programme"]), CountryProgramme.objects.all_active.first().id)
 
     def test_apiv2_results_list_filter_year(self):
         param = {
@@ -196,6 +193,5 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff,
             data=param,
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])

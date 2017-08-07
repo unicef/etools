@@ -102,7 +102,7 @@ class Engagement(TimeStampedModel, models.Model):
         ('partner_contacted', _('Partner Contacted')),
         ('report_submitted', _('Report Submitted')),
         ('final', _('Final Report')),
-        ('canceled', _('Cancelled')),
+        ('cancelled', _('Cancelled')),
     )
 
     DISPLAY_STATUSES = Choices(
@@ -114,7 +114,7 @@ class Engagement(TimeStampedModel, models.Model):
         ('comments_received_by_unicef', _('Comments Received from UNICEF')),
         ('report_submitted', _('Report Submitted')),
         ('final', _('Final Report')),
-        ('canceled', _('Cancelled')),
+        ('cancelled', _('Cancelled')),
     )
     DISPLAY_STATUSES_DATES = {
         DISPLAY_STATUSES.partner_contacted: 'partner_contacted_at',
@@ -125,7 +125,7 @@ class Engagement(TimeStampedModel, models.Model):
         DISPLAY_STATUSES.comments_received_by_unicef: 'date_of_comments_by_unicef',
         DISPLAY_STATUSES.report_submitted: 'date_of_report_submit',
         DISPLAY_STATUSES.final: 'date_of_final_report',
-        DISPLAY_STATUSES.canceled: 'date_of_cancel'
+        DISPLAY_STATUSES.cancelled: 'date_of_cancel'
     }
 
     status = FSMField(_('status'), max_length=30, choices=STATUSES, default=STATUSES.partner_contacted, protected=True)
@@ -135,7 +135,7 @@ class Engagement(TimeStampedModel, models.Model):
 
     partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('partner'))
     partner_contacted_at = models.DateField(_('date partner was contacted'), blank=True, null=True)
-    type = models.CharField(_('engagement type'), max_length=10, choices=TYPES)
+    engagement_type = models.CharField(_('Engagement type'), max_length=10, choices=TYPES)
     start_date = models.DateField(_('period start date'), blank=True, null=True)
     end_date = models.DateField(_('period end date'), blank=True, null=True)
     total_value = models.DecimalField(_('Total value of selected FACE form(s)'), blank=True, null=True,
@@ -189,7 +189,7 @@ class Engagement(TimeStampedModel, models.Model):
         verbose_name_plural = _('Engagements')
 
     def __str__(self):
-        return '{}: {}, {}'.format(self.type, self.agreement.order_number, self.partner.name)
+        return '{}: {}, {}'.format(self.engagment_type, self.agreement.order_number, self.partner.name)
 
     @property
     def displayed_status(self):
@@ -217,7 +217,7 @@ class Engagement(TimeStampedModel, models.Model):
 
     @property
     def unique_id(self):
-        engagement_code = 'a' if self.type == self.TYPES.audit else self.type
+        engagement_code = 'a' if self.engagement_type == self.TYPES.audit else self.engagement_type
         return '{0}/{1}/{2}/{3}'.format(
             self.partner.name[:5],
             engagement_code.upper(),
@@ -277,7 +277,7 @@ class Engagement(TimeStampedModel, models.Model):
 
         self._notify_focal_points('audit/engagement/reported_by_auditor')
 
-    @transition(status, source=[STATUSES.partner_contacted, STATUSES.report_submitted], target=STATUSES.canceled,
+    @transition(status, source=[STATUSES.partner_contacted, STATUSES.report_submitted], target=STATUSES.cancelled,
                 permission=_has_action_permission(action='cancel'),
                 custom={'serializer': EngagementCancelSerializer})
     def cancel(self, cancel_comment):
@@ -296,8 +296,8 @@ class Engagement(TimeStampedModel, models.Model):
 @python_2_unicode_compatible
 class RiskCategory(OrderedModel, models.Model):
     TYPES = Choices(
-        ('default', 'Default'),
-        ('primary', 'Primary'),
+        ('default', _('Default')),
+        ('primary', _('Primary')),
     )
 
     header = models.CharField(max_length=255)
@@ -307,7 +307,7 @@ class RiskCategory(OrderedModel, models.Model):
         related_name='children',
         db_index=True
     )
-    type = models.CharField(max_length=20, choices=TYPES, default=TYPES.default)
+    category_type = models.CharField(max_length=20, choices=TYPES, default=TYPES.default)
     code = models.CharField(max_length=20, blank=True)
 
     code_tracker = FieldTracker()
@@ -323,10 +323,10 @@ class RiskCategory(OrderedModel, models.Model):
     def clean(self):
         if not self.parent:
             if not self.code:
-                raise ValidationError({'code': 'Code is required for root nodes.'})
+                raise ValidationError({'code': _('Code is required for root nodes.')})
 
             if self._default_manager.filter(parent__isnull=True, code=self.code).exists():
-                raise ValidationError({'code': 'Code is already used.'})
+                raise ValidationError({'code': _('Code is already used.')})
 
     @atomic
     def save(self, **kwargs):
@@ -358,11 +358,11 @@ class RiskBluePrint(OrderedModel, models.Model):
 @python_2_unicode_compatible
 class Risk(models.Model):
     VALUES = Choices(
-        (0, 'na', 'N/A'),
-        (1, 'low', 'Low'),
-        (2, 'medium', 'Medium'),
-        (3, 'significant', 'Significant'),
-        (4, 'high', 'High'),
+        (0, 'na', _('N/A')),
+        (1, 'low', _('Low')),
+        (2, 'medium', _('Medium')),
+        (3, 'significant', _('Significant')),
+        (4, 'high', _('High')),
     )
 
     engagement = models.ForeignKey(Engagement, related_name='risks')
@@ -401,7 +401,7 @@ class SpotCheck(Engagement):
             return None
 
     def save(self, *args, **kwars):
-        self.type = Engagement.TYPES.sc
+        self.engagement_type = Engagement.TYPES.sc
         return super(SpotCheck, self).save(*args, **kwars)
 
     @transition(
@@ -417,7 +417,7 @@ class SpotCheck(Engagement):
         return super(SpotCheck, self).submit(*args, **kwargs)
 
     def __str__(self):
-        return 'SpotCheck ({}: {}, {})'.format(self.type, self.agreement.order_number, self.partner.name)
+        return 'SpotCheck ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     def get_object_url(self):
         return build_frontend_url('ap', 'spot-checks', self.id, 'overview')
@@ -489,7 +489,7 @@ class MicroAssessment(Engagement):
         verbose_name_plural = _('Micro Assessments')
 
     def save(self, *args, **kwars):
-        self.type = Engagement.TYPES.ma
+        self.engagement_type = Engagement.TYPES.ma
         return super(MicroAssessment, self).save(*args, **kwars)
 
     @transition(
@@ -506,7 +506,9 @@ class MicroAssessment(Engagement):
         return super(MicroAssessment, self).submit(*args, **kwargs)
 
     def __str__(self):
-        return 'MicroAssessment ({}: {}, {})'.format(self.type, self.agreement.order_number, self.partner.name)
+        return 'MicroAssessment ({}: {}, {})'.format(
+            self.engagement_type, self.agreement.order_number, self.partner.name
+        )
 
     def get_object_url(self):
         return build_frontend_url('ap', 'micro-assessments', self.id, 'overview')
@@ -556,7 +558,7 @@ class Audit(Engagement):
         verbose_name_plural = _('Audits')
 
     def save(self, *args, **kwars):
-        self.type = Engagement.TYPES.audit
+        self.engagement_type = Engagement.TYPES.audit
         return super(Audit, self).save(*args, **kwars)
 
     @property
@@ -582,7 +584,7 @@ class Audit(Engagement):
         return super(Audit, self).submit(*args, **kwargs)
 
     def __str__(self):
-        return 'Audit ({}: {}, {})'.format(self.type, self.agreement.order_number, self.partner.name)
+        return 'Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     def get_object_url(self):
         return build_frontend_url('ap', 'audits', self.id, 'overview')

@@ -1,13 +1,13 @@
 from __future__ import unicode_literals
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
-from freezegun import freeze_time
 import json
-from pytz import UTC
 
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
+from freezegun import freeze_time
+from pytz import UTC
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase

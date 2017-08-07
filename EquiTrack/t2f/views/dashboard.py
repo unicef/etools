@@ -12,13 +12,22 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
     queryset = Travel.objects.all()
     permission_classes = (IsAdminUser,)
 
-    def list(self, request, year, month, **kwargs):
+    def list(self, request, **kwargs):
         data = {}
-
-        travels_all = Travel.objects.filter(
-            start_date__year=year,
-            start_date__month=month,
-        )
+        months = request.query_params.get("months", None)
+        if months != None:
+            months = map(lambda x: int(x), months.split(','))
+        year = request.query_params.get("year", None)
+        office_id = request.query_params.get("office_id", None)
+        try:
+            travels_all = Travel.objects.filter(
+                start_date__year = year,
+                start_date__month__in = months,
+            )
+        except ValueError:
+            travels_all = Travel.objects.filter(
+                start_date__year=year,
+            )
 
         office_id = request.query_params.get("office_id", None)
         if office_id:

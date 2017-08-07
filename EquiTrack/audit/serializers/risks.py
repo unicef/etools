@@ -86,7 +86,7 @@ class RiskCategoryNestedSerializer(WritableNestedSerializerMixin, serializers.Mo
     class Meta(WritableNestedSerializerMixin.Meta):
         model = RiskCategory
         fields = [
-            'id', 'header', 'type', 'code',
+            'id', 'header', 'category_type', 'code',
             'risk_rating', 'risk_score',
             'total_number_risk_points',
             'applicable_questions',
@@ -95,7 +95,7 @@ class RiskCategoryNestedSerializer(WritableNestedSerializerMixin, serializers.Mo
             'blueprints', 'children', 'parent',
         ]
         read_only_fields = [
-            'header', 'code', 'type', 'parent',
+            'header', 'code', 'category_type', 'parent',
         ]
 
 
@@ -110,10 +110,10 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
     class Meta(WritableNestedSerializerMixin.Meta):
         model = RiskCategory
         fields = [
-            'id', 'header', 'type', 'code',
+            'id', 'header', 'category_type', 'code',
             'blueprints', 'children', 'parent',
         ]
-        read_only_fields = ['header', 'code', 'type', 'parent']
+        read_only_fields = ['header', 'code', 'category_type', 'parent']
 
     def __init__(self, code, *args, **kwargs):
         self.code = code

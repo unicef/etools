@@ -106,7 +106,32 @@ reasonable to keep commented code in the codebase.
    comment at the top of the block indicating at what point the code will be uncommented. For
    example: 'The following is commented out until issue #42 is resolved'.
 
-Even both of those cases are weak cases. There's often ways to implement developer switches using
+Even those cases are weak. There's often ways to implement developer switches using
 environment variables for case #1, and it is not guaranteed that the person who fixes issue #42 will
 remember to look for the commented-out code and uncomment it. It's usually better to remove the code
 and make it clear in issue #42 what steps need to be taken before the issue is marked done.
+
+
+Exception Handling
+------------------
+
+* Minimize what you ``try``
+* Minimize what you catch
+* Minimize what you ``except``
+* Don't forget the ``else``
+
+Code in ``try`` blocks should be limited to the code you suspect will raise an exception. Usually that's
+just one line of code. Limiting the code in a ``try`` block ensures that unexpected
+exceptions won't get mishandled. It also clarifies the intent of the ``try`` block to anyone reading
+the code.
+
+You should only catch the exceptions you expect will be raised. This can almost always be limited
+to one or two exceptions. Catching all exceptions can be the right thing to do, but that's rare.
+Catch-all handlers are misused far more often than they're used appropriately.
+
+Code in ``except`` blocks should be limited to the minimum required to handle the exception.
+Complicated ``except`` blocks run the risk of raising errors of their own.
+
+Exception handlers have an underused ``else`` clause that executes if no exception is raised. It's
+the appropriate place for the code you might be tempted to put in the ``try`` block after the
+suspect code.

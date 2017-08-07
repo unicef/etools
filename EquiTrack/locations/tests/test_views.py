@@ -26,7 +26,8 @@ class TestLocationViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
-        self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
+        self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(
+            self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
 
     def test_api_location_heavy_list(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
@@ -36,7 +37,7 @@ class TestLocationViews(APITenantTestCase):
         self.assertIn("Location", response.data[0]["name"])
 
     def test_api_location_values(self):
-        params = {"values": "{},{}".format(self.locations[0].id,self.locations[1].id)}
+        params = {"values": "{},{}".format(self.locations[0].id, self.locations[1].id)}
         response = self.forced_auth_req(
             'get',
             reverse('locations-list'),
@@ -74,7 +75,8 @@ class TestLocationViews(APITenantTestCase):
         self.assertEqual(len(response.data), 5)
         etag = response["ETag"]
 
-        response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
+        response = self.forced_auth_req('get', reverse('locations-list'),
+                                        user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
         self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
 
     def test_api_location_list_modified(self):
@@ -85,7 +87,8 @@ class TestLocationViews(APITenantTestCase):
 
         LocationFactory()
 
-        response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
+        response = self.forced_auth_req('get', reverse('locations-list'),
+                                        user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 6)
 
@@ -99,7 +102,8 @@ class TestLocationViews(APITenantTestCase):
         assert etag_before != etag_after
 
     def test_api_location_autocomplete(self):
-        response = self.forced_auth_req('get', reverse('locations_autocomplete'), user=self.unicef_staff, data={"q": "Loc"})
+        response = self.forced_auth_req('get', reverse('locations_autocomplete'),
+                                        user=self.unicef_staff, data={"q": "Loc"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 5)

@@ -1,10 +1,7 @@
-
-__author__ = 'jcranwellward'
-
 from rest_framework import serializers
 
 from t2f.serializers.user_data import T2FUserDataSerializer
-from .models import User, UserProfile, Group, Office, Section, Country
+from users.models import User, UserProfile, Group, Office, Section, Country
 
 
 class SimpleCountrySerializer(serializers.ModelSerializer):
@@ -230,6 +227,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
 
 
 class CountrySerializer(SimpleUserSerializer):
+    local_currency_id = serializers.IntegerField(source='local_currency.id', read_only=True)
 
     class Meta:
         model = Country
@@ -238,4 +236,5 @@ class CountrySerializer(SimpleUserSerializer):
                 'latitude',
                 'longitude',
                 'initial_zoom',
+                'local_currency_id'
         )

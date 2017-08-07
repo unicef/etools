@@ -1,21 +1,15 @@
 [flake8]
 max-line-length = 120
 exclude =
-    # don't worry about auto-generated code
+    # ignore auto-generated code
     migrations,
+    # ignore data files
+    load_initial_data.py,
+    publics/management/commands/xml,
     # Everything below here will eventually be removed from 'exclude'
     EquiTrack,
-    funds,
-    locations,
     manage_debug.py,
-    management,
-    notification,
     partners,
-    publics,
-    reports,
-    supplies,
     t2f,
-    trips,
-    users,
     vision,
     workplan

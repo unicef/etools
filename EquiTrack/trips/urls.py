@@ -1,6 +1,4 @@
-__author__ = 'jcranwellward'
-
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 
 from .views import (
@@ -13,8 +11,7 @@ from .views import (
     TripUploadPictureView
 )
 
-urlpatterns = patterns(
-    '',
+urlpatterns = (
     url(r'^apps/$', AppsTemplateView.as_view(), name="etrips_apps"),
     url(r'^apps/ios/$', AppsIOSTemplateView.as_view()),
     url(r'^apps/android/$', AppsAndroidTemplateView.as_view()),

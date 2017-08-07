@@ -40,7 +40,7 @@ class Command(BaseCommand):
         'engagement.agreement',
         'engagement.related_agreement',
         'engagement.partner_contacted_at',
-        'engagement.type',
+        'engagement.engagement_type',
         'engagement.start_date',
         'engagement.end_date',
         'engagement.total_value',
@@ -75,7 +75,7 @@ class Command(BaseCommand):
     partner_contacted = 'partner_contacted'
     report_submitted = 'report_submitted'
     final_report = 'final'
-    report_canceled = 'canceled'
+    report_cancelled = 'cancelled'
 
     def __init__(self, *args, **kwargs):
         super(Command, self).__init__(*args, **kwargs)
@@ -100,10 +100,10 @@ class Command(BaseCommand):
         for role in roles:
             for target in targets:
                 existing = filter(
-                    lambda p: p.instance_status == status and
-                              p.target == target and
-                              p.user_type == self.user_roles[role] and
-                              p.permission_type == perm_type,
+                    lambda p: (p.instance_status == status and
+                               p.target == target and
+                               p.user_type == self.user_roles[role] and
+                               p.permission_type == perm_type),
                     self.permissions
                 )
                 if not existing:
@@ -185,11 +185,11 @@ class Command(BaseCommand):
         self.add_permissions(self.final_report, self.focal_point, 'edit', self.follow_up_page)
         self.revoke_permissions(self.final_report, self.auditor, 'view', self.follow_up_page)
 
-        # report canceled. everybody can view
-        self.add_permissions(self.report_canceled, self.everybody, 'view', self.everything)
+        # report cancelled. everybody can view
+        self.add_permissions(self.report_cancelled, self.everybody, 'view', self.everything)
 
         # Follow-Up fields available in finalized engagements.
-        for status in [self.new_engagement, self.partner_contacted, self.report_submitted, self.report_canceled]:
+        for status in [self.new_engagement, self.partner_contacted, self.report_submitted, self.report_cancelled]:
             self.revoke_permissions(status, self.everybody, 'view', self.follow_up_page)
 
         # update permissions

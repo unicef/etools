@@ -14,7 +14,7 @@ from partners.models import (
     # IndicatorProgress,
 )
 from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
-    InterventionExportFilterSerializer, GovernmentInterventionExportFilterSerializer
+    InterventionExportFilterSerializer
 from reports.admin import SectorListFilter
 from reports.models import Indicator
 
@@ -278,30 +278,3 @@ class InterventionExportFilter(BaseFilterBackend):
 
         return queryset.filter(q)
 
-
-class GovernmentInterventionExportFilter(BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        parameter_serializer = GovernmentInterventionExportFilterSerializer(data=request.GET)
-        parameter_serializer.is_valid(raise_exception=True)
-
-        parameters = parameter_serializer.data
-
-        q = Q()
-        search_str = parameters.get('search')
-        if search_str:
-            search_q = Q(Q(partner__name__istartswith=search_str) | Q(short_name__istartswith=search_str))
-            q &= search_q
-
-        result_structure = parameters.get('result_structure')
-        if result_structure:
-            q &= Q(result_structure__name__istartswith=result_structure)
-
-        country_programme = parameters.get('country_programme')
-        if country_programme:
-            q &= Q(result_structure__country_programme__name__istartswith=country_programme)
-
-        year = parameters.get('unicef_focal_point')
-        if year:
-            q &= Q(government__result_structure__to_date__year=year)
-
-        return queryset.filter(q)

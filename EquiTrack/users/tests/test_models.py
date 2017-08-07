@@ -1,7 +1,4 @@
-__author__ = 'jcranwellward'
-
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-
 from EquiTrack.factories import UserFactory
 
 

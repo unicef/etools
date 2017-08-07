@@ -16,7 +16,7 @@ class DisplayStatusFilter(BaseFilterBackend):
         if status in [
             Engagement.STATUSES.report_submitted,
             Engagement.STATUSES.final,
-            Engagement.STATUSES.canceled
+            Engagement.STATUSES.cancelled
         ]:
             return queryset.filter(status=status)
 
@@ -51,7 +51,7 @@ class UniqueIDOrderingFilter(BaseFilterBackend):
         if not ordering.lstrip('-') == 'unique_id':
             return queryset
 
-        ordering_params = ['partner__name', 'type', 'created_year', 'id']
+        ordering_params = ['partner__name', 'engagement_type', 'created_year', 'id']
 
         return queryset.extra(select={'created_year': 'EXTRACT(year FROM created)'})\
             .order_by(*map(lambda param: ('' if ordering == 'unique_id' else '-') + param, ordering_params))

@@ -6,7 +6,7 @@
             "order": 0,
             "header": "Micro Assesment Questionarie",
             "parent": null,
-            "type": "primary",
+            "category_type": "primary",
             "code": "ma_questionnaire"
         }
     },
@@ -17,7 +17,7 @@
             "order": 1,
             "header": "Tested Subject Areas",
             "parent": null,
-            "type": "primary",
+            "category_type": "primary",
             "code": "ma_subject_areas"
         }
     },
@@ -28,7 +28,7 @@
             "order": 0,
             "header": "1. Implementing Partner",
             "parent": 1,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -39,7 +39,7 @@
             "order": 1,
             "header": "2. Programme Management",
             "parent": 1,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -50,7 +50,7 @@
             "order": 2,
             "header": "3. Organizational Structure and Staffing",
             "parent": 1,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -61,7 +61,7 @@
             "order": 3,
             "header": "4. Accounting Policies and Procedures",
             "parent": 1,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -72,7 +72,7 @@
             "order": 4,
             "header": "5. Fixed Assets and Inventory",
             "parent": 1,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -83,7 +83,7 @@
             "order": 5,
             "header": "6. Financial Reporting and Monitoring",
             "parent": 1,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -94,7 +94,7 @@
             "order": 6,
             "header": "7. Procurement and Contract Administration",
             "parent": 1,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -105,7 +105,7 @@
             "order": 0,
             "header": "4a. General",
             "parent": 14,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -116,7 +116,7 @@
             "order": 1,
             "header": "4b. Segregation of duties",
             "parent": 14,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -127,7 +127,7 @@
             "order": 2,
             "header": "4c. Budgeting system",
             "parent": 14,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -138,7 +138,7 @@
             "order": 3,
             "header": "4d. Payments",
             "parent": 14,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -149,7 +149,7 @@
             "order": 4,
             "header": "4e. Policies and procedures",
             "parent": 14,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -160,7 +160,7 @@
             "order": 5,
             "header": "4f. Cash and bank",
             "parent": 14,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -171,7 +171,7 @@
             "order": 6,
             "header": "4g. Other offices or entities",
             "parent": 14,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -182,7 +182,7 @@
             "order": 7,
             "header": "4h. Internal audit",
             "parent": 14,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -193,7 +193,7 @@
             "order": 0,
             "header": "5a. Safeguards over assets",
             "parent": 15,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -204,7 +204,7 @@
             "order": 1,
             "header": "5b. Warehousing and inventory management",
             "parent": 15,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -215,7 +215,7 @@
             "order": 0,
             "header": "7a. Procurement",
             "parent": 17,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -226,7 +226,7 @@
             "order": 1,
             "header": "7b. Contract Management - <span class='light-text'>To be completed only for the IPs  managing contracts as part of programme implementation. </span><span class='red-text'>Otherwise select N/A for risk assessment</span>",
             "parent": 17,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_questionnaire"
         }
     },
@@ -237,7 +237,7 @@
             "order": 2,
             "header": "Key Internal Controls Weaknesses",
             "parent": null,
-            "type": "primary",
+            "category_type": "primary",
             "code": "audit_key_weakness"
         }
     },
@@ -1424,7 +1424,7 @@
             "order": 0,
             "header": "Overall Risk Assessment",
             "parent": 2,
-            "type": "primary",
+            "category_type": "primary",
             "code": "ma_subject_areas"
         }
     },
@@ -1444,7 +1444,7 @@
             "order": 1,
             "header": "Implementing partner",
             "parent": 2,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_subject_areas"
         }
     },
@@ -1464,7 +1464,7 @@
             "order": 2,
             "header": "Programme Management",
             "parent": 2,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_subject_areas"
         }
     },
@@ -1484,7 +1484,7 @@
             "order": 3,
             "header": "Organizational structure and staffing",
             "parent": 2,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_subject_areas"
         }
     },
@@ -1504,7 +1504,7 @@
             "order": 4,
             "header": "Accounting policies and procedures",
             "parent": 2,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_subject_areas"
         }
     },
@@ -1524,7 +1524,7 @@
             "order": 5,
             "header": "Fixed Assets and Inventory",
             "parent": 2,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_subject_areas"
         }
     },
@@ -1544,7 +1544,7 @@
             "order": 6,
             "header": "Financial Reporting and Monitoring",
             "parent": 2,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_subject_areas"
         }
     },
@@ -1564,7 +1564,7 @@
             "order": 7,
             "header": "Procurement",
             "parent": 2,
-            "type": "default",
+            "category_type": "default",
             "code": "ma_subject_areas"
         }
     },
