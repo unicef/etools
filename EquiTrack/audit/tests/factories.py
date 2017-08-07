@@ -92,5 +92,5 @@ class RiskCategoryFactory(factory.DjangoModelFactory):
         model = RiskCategory
 
     header = factory.Sequence(lambda n: 'category_%d' % n)
-    type = fuzzy.FuzzyChoice(choices=dict(RiskCategory.TYPES).keys())
+    category_type = fuzzy.FuzzyChoice(choices=dict(RiskCategory.TYPES).keys())
     code = fuzzy.FuzzyText(length=20)
