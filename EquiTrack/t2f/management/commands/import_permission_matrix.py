@@ -1,12 +1,9 @@
 from __future__ import unicode_literals
 
-import json
-
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 
-from t2f.models import TravelPermission
 from users.models import Country
 
 
@@ -26,7 +23,7 @@ class Command(BaseCommand):
     @atomic
     def handle(self, *args, **options):
         country_name = options['country_name'][0]
-        import_file_path = options['import_file_path'][0]
+        # import_file_path = options['import_file_path'][0]
 
         self.stdout.write(country_name)
         country = Country.objects.get(name=country_name)
@@ -65,6 +62,3 @@ class Command(BaseCommand):
             for k in permissions[user_type]:
                 permissions[user_type][k] = {'edit': False,
                                              'view': True}
-
-
-        a = 12

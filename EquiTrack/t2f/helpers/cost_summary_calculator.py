@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 from datetime import timedelta
 from decimal import Decimal
 from itertools import chain
@@ -331,7 +331,6 @@ class DSACalculator(object):
                                                                 departure_date__month=last_dto.date.month,
                                                                 departure_date__day=last_dto.date.day).count()
 
-
         itinerary = self.travel.itinerary.order_by('-departure_date')
         if last_day_departure_count and itinerary.count() > last_day_departure_count:
             first_departure = itinerary[last_day_departure_count]
@@ -361,7 +360,7 @@ class DSACalculator(object):
                                 'end_date': dto.date,
                                 'dsa_region': dto.region.id,
                                 'dsa_region_name': dto.region.label,
-                                'night_count': -1, # -1 because nights are always days-1
+                                'night_count': -1,  # -1 because nights are always days-1
                                 'daily_rate': self.get_dsa_amount(dto.region, over_60),
                                 'paid_to_traveler': Decimal(0),
                                 'total_amount': Decimal(0),

@@ -23,15 +23,15 @@ class TestDSACalculations(APITenantTestCase):
         germany = CountryFactory(name='Germany', long_name='Germany')
 
         self.amsterdam = DSARegionFactory(country=netherlands,
-                                            area_name='Amsterdam',
-                                            area_code='ds1')
+                                          area_name='Amsterdam',
+                                          area_code='ds1')
         DSARateFactory(region=self.amsterdam,
                        dsa_amount_usd=100,
                        dsa_amount_60plus_usd=60)
 
         self.budapest = DSARegionFactory(country=hungary,
-                                           area_name='Budapest',
-                                           area_code='ds2')
+                                         area_name='Budapest',
+                                         area_code='ds2')
         DSARateFactory(region=self.budapest,
                        dsa_amount_usd=200,
                        dsa_amount_60plus_usd=120)
@@ -51,8 +51,8 @@ class TestDSACalculations(APITenantTestCase):
                        dsa_amount_60plus_usd=240)
 
         self.essen = DSARegionFactory(country=germany,
-                                        area_name='Essen',
-                                        area_code='ds5')
+                                      area_name='Essen',
+                                      area_code='ds5')
         DSARateFactory(region=self.essen,
                        dsa_amount_usd=500,
                        dsa_amount_60plus_usd=300)
