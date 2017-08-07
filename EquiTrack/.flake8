@@ -8,8 +8,6 @@ exclude =
     publics/management/commands/xml,
     # Everything below here will eventually be removed from 'exclude'
     EquiTrack,
-    manage_debug.py,
-    partners,
     t2f,
     tpm,
     vision,

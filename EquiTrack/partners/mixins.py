@@ -1,6 +1,3 @@
-
-__author__ = 'jcranwellward'
-
 import re
 
 from django.contrib.admin.options import flatten_fieldsets

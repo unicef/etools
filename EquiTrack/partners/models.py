@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField, ArrayField, HStoreField
 from django.db import models, connection, transaction
-from django.db.models import Q, Sum, F, Min, Max
+from django.db.models import Q, F
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
@@ -45,8 +45,6 @@ from partners.validation.agreements import (
     agreement_transition_to_signed_valid)
 from partners.validation import interventions as intervention_validation
 
-
-# test waffle
 
 # TODO: streamline this ...
 def get_agreement_path(instance, filename):
@@ -1134,6 +1132,7 @@ class InterventionManager(models.Manager):
                                                                                 'frs',
                                                                                 'offices',
                                                                                 'planned_budget')
+
     def detail_qs(self):
         return self.get_queryset().prefetch_related('result_links__cp_output',
                                                     'unicef_focal_points')

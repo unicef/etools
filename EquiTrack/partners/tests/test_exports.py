@@ -212,7 +212,6 @@ class TestModelExport(APITenantTestCase):
             'URL'
         ])
 
-
         self.assertEqual(dataset[0], (
             self.agreement.agreement_number,
             unicode(self.agreement.status),

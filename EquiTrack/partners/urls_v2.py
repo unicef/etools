@@ -2,18 +2,18 @@ from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from partners.views.dashboards import InterventionPartnershipDashView
-from .views.v1 import PcaPDFView
-from .views.partner_organization_v2 import (
+from partners.views.v1 import PcaPDFView
+from partners.views.partner_organization_v2 import (
     PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView, PartnerStaffMemberListAPIVIew,
     PartnerOrganizationHactAPIView, PartnerOrganizationAssessmentDeleteView, PartnerOrganizationAddView,
     PartnerOrganizationDeleteView,
 )
-from .views.agreements_v2 import (
+from partners.views.agreements_v2 import (
     AgreementListAPIView,
     AgreementDetailAPIView,
     AgreementAmendmentDeleteView,
 )
-from views.interventions_v2 import (
+from partners.views.interventions_v2 import (
     InterventionListAPIView,
     InterventionListDashView,
     InterventionDetailAPIView,
@@ -25,8 +25,8 @@ from views.interventions_v2 import (
     InterventionListMapView,
 )
 
-from views.v2 import (
-    PmpStaticDropdownsListApiView, PMPDropdownsListApiView, PartnershipDashboardAPIView
+from partners.views.v2 import (
+    PmpStaticDropdownsListApiView, PMPDropdownsListApiView,
 )
 
 
