@@ -935,7 +935,7 @@ class Agreement(TimeStampedModel):
     objects = models.Manager()
 
     class Meta:
-        ordering = ['created']
+        ordering = ['-created']
 
     def __unicode__(self):
         return'{} for {} ({} - {})'.format(
