@@ -11,4 +11,3 @@ exclude =
     EquiTrack,
     manage_debug.py,
     partners,
-    vision,

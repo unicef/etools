@@ -2,62 +2,153 @@
 {% load humanize %}
 
 {% block style_base %}
-    {% comment %}
-        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
-        for base style.
-    {% endcomment %}
+  {% comment %}
+    See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+    for base style.
+  {% endcomment %}
 
-    {% block layout_style %}
-        <style type="text/css">
-            @page {
-                size: {{ pagesize|default:"letter" }};
-                margin-left: 2.0cm;
-                margin-right: 2.0cm;
-                margin-top: 1.8cm;
-                margin-bottom: 1.8cm;
+  {% block layout_style %}
+    <style type="text/css">
+      @page {
+        size: letter;
+        margin-left: 2.0cm;
+        margin-right: 2.0cm;
+        margin-top: 1.8cm;
+        margin-bottom: 1.8cm;
 
-                @frame header {
-                  -pdf-frame-content: page-header;
-                  margin-top: 0cm;
-                  margin-right: 0mm;
-                  margin-bottom: 0.3cm;
-                  margin-left: 0cm;
-                  background-color: #0099ff;
-                  height: 2cm;
-                }
+        @frame header {
+          -pdf-frame-content: page-header;
+          margin-top: 0cm;
+          margin-right: 0mm;
+          margin-bottom: 0.3cm;
+          margin-left: 0cm;
+          background-color: #0099ff;
+          height: 2cm;
+        }
 
-                @frame footer_frame {
-                  /* Static frame */
-                  -pdf-frame-content:footer_content;
-                  left: 50pt; width: 512pt; top: 772pt; height: 20pt;
-                }
-            }
-        </style>
-    {% endblock %}
-    {% block extra_style %}
-        <style type="text/css">
-            .details div {
-                border-radius: 25px;
-                border: 2px solid #f1f1f1;
-                padding: 20px;
-                width: 200px;
-                height: 150px;
-            }
+        @frame footer_frame {
+          /* Static frame */
+          -pdf-frame-content:footer_content;
+          left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+        }
+      }
 
-            ul {
-                list-style-type: none;
-            }
+      @page landscape {
+        size: letter landscape;
+        margin-left: 2.0cm;
+        margin-right: 2.0cm;
+        margin-top: 1.8cm;
+        margin-bottom: 1.8cm;
 
-            #content {
-                font-family: "Times New Roman";
-                font-size: 12pt;
-            }
+        @frame header {
+          -pdf-frame-content: page-header;
+          margin-top: 0cm;
+          margin-right: 0mm;
+          margin-bottom: 0.3cm;
+          margin-left: 0cm;
+          background-color: #0099ff;
+          height: 2cm;
+        }
 
-            .page-break {
-                page-break-after: always;
-            }
-        </style>
-    {% endblock %}
+        @frame footer_frame {
+          /* Static frame */
+          -pdf-frame-content:footer_content;
+          left: 50pt; width: 680pt; top: 590pt; height: 20pt;
+        }
+      }
+    </style>
+  {% endblock %}
+  {% block extra_style %}
+    <style type="text/css">
+      ul {
+        list-style-type: none;
+      }
+
+      #content {
+        font-family: "Helvetica";
+        font-size: 12pt;
+        background-color: #ffffff;
+      }
+
+      #title {
+        font-size: 14pt;
+      }
+
+      #title.main-title {
+        font-size: 20pt;
+      }
+
+      .text-blue {
+        color: #0070c0;
+      }
+
+      .page-break {
+        page-break-after: always;
+      }
+
+      .text-left {
+        text-align: left;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      .text-right {
+        text-align: right;
+      }
+
+      .text-justify {
+        text-align: justify;
+      }
+
+      .text-bordered {
+        border: 1pt solid #0070c0;
+      }
+
+      .head_table {
+        border: 1pt solid #0070c0;
+        background-color: rgb(210, 217, 229);
+      }
+
+      .head_table td {
+        padding: 3pt;
+        line-height: 1;
+      }
+
+      .common_table {
+        border: 1pt solid #75b2dd;
+        text-align: center;
+      }
+
+      .common_table td {
+        padding: 3pt;
+        line-height: 1;
+        min-width: 20pt;
+      }
+
+      .common_table td.head {
+        background-color: #0070c0;
+        color: white;
+        padding: 5pt 3pt;
+        font-weight: bold;
+      }
+
+      pdftoc {
+        color: #0070c0;
+      }
+
+      pdftoc.pdftoclevel0 {
+        font-weight: bold;
+        margin-top: 0.5em;
+      }
+
+      pdftoc.pdftoclevel1 {
+        margin-left: 1em;
+      }
+
+    </style>
+  {% endblock %}
 {% endblock %}
 
 {% block content %}
@@ -65,20 +156,95 @@
     PDF could not be generated properly: <br> {{ error }}
   {% else %}
     <div id="content">
-      <div id="title" style="text-align: center; padding-top: 15px">
-        <div style="text-align: right"><b><u>REF #: {{ engagement.unique_id }}</u></b></div>
-        <div style="font-size: 16pt"><b>PROGRAMME COOPERATION AGREEMENT</b></div>
-        <div><b>BETWEEN</b></div>
-        <div><b>{{ engagement.agreement.audit_organization.name|upper }}</b></div>
-        <div><b>AND THE</b></div>
-        <div><b>UNITED NATIONS CHILDREN'S FUND</b></div>
-        <div><b>FOR THE</b></div>
-        <div><b>IMPLEMENTATION of UNICEF-FUNDED PROGRAMME RELATING TO THE UNICEF COUNTRY PROGRAMME
-          FOR {{ engagement.agreement.audit_organization.country|upper }}</b></div>
+      <div id="title" class="text-blue">
+        <div class="text-right"><b><u>REF #: {{ object.unique_id }}</u></b></div>
+        <div class="text-center">
+          <p class="main-title" style="margin-top: 50pt;">
+            <b>UNITED NATIONS CHILDREN’S FUND<br/>(UNICEF)</b>
+          </p>
+          <p class="main-title">AUDIT REPORT AND MANAGEMENT LETTER</p>
+          <p>
+            Financial {{ object.get_type_display|lower }} of the implementing partner:<br/>
+            {{ object.partner.name }}<br/>
+            {{ object.visit_date }}
+          </p>
+        </div>
       </div>
+      <div>
+        <table class="head_table" style="margin-top: 200pt; margin-bottom: 40pt;">
+          <tr>
+            <td>Country:</td>
+            <td>{{ object.agreement.auditor_firm.country|default:"Unknown" }}</td>
+          </tr>
+          <tr>
+            <td>Auditor:</td>
+            <td>{{ object.agreement.auditor_firm.name }}</td>
+          </tr>
+          <tr>
+            <td>Period subject to audit</td>
+            <td>{{ object.start_date }} to {{ object.end_date }}</td>
+          </tr>
+        </table>
+        <p class="text-justify text-bordered" style="margin: 0; padding: 5pt 3pt;">
+          This report is established by request of UNICEF. The views expressed in this report are those of the
+          external auditor and in no way reflect the official opinion of UNICEF. This report has been prepared solely
+          for use of UNICEF for the purpose of the control of the use of funds by the implementing partner concerned
+          by the audit. It may be disclosed to those official authorities having regulatory right of access to it.
+          This report should not be used by any other party or for other than its intended purpose.
+        </p>
+      </div>
+      <div class="page-break"></div>
+
+      <div>
+        <h1>Contents</h1>
+        <pdf:toc />
+      </div>
+
+      <pdf:nexttemplate name="landscape"/>
+      <div class="page-break"></div>
+
+      <div id="executive-summary">
+        <h1 class="main-title text-blue">1. EXECUTIVE SUMMARY</h1>
+        <p>The present audit has been conducted as per the terms of reference for a financial audit under the
+          Harmonised Approach to Cash Transfer (HACT) Framework and concerns the expenditure reported by the
+          implementing partner for the period {{ object.start_date }} to {{ object.end_date }}.</p>
+        <p>The audit opinion in respect of the expenditure reported by the implementing partner is qualified. A
+          summary of the audit findings that have been raised is presented in the table below:</p>
+
+        <span class="text-blue"><b>Table 1.1 - Summary of audit fundings</b></span>
+        <table class="common_table">
+          <tr>
+            <td class="head text-left" style="width: 180pt">Implementing partner</td>
+            <td class="head text-right" style="width: 100pt">Audited expenditure US$</td>
+            <td class="head text-right" style="width: 90pt">Financial findings US$</td>
+            <td class="head text-right" style="width: 90pt">% of audited expedinture</td>
+            <td class="head" style="width: 70pt">Audit opinion</td>
+            <td class="head" style="width: 60pt">No. of FFs</td>
+            <td class="head" style="width: 60pt">No. of MCFs</td>
+            <td class="head" style="width: 60pt">No. of CFs</td>
+            <td class="head" style="width: 60pt">No. of OFs</td>
+          </tr>
+          <tr>
+            <td class="text-left">{{ object.partner.name|default_if_none:"-" }}</td>
+            <td class="text-right">{{ object.audited_expenditure|default_if_none:"-" }}</td>
+            <td class="text-right">{{ object.financial_findings|default_if_none:"-" }}</td>
+            <td class="text-right">{{ object.percent_of_audited_expenditure|default_if_none:"-" }}</td>
+            <td class="text-right">{{ object.audit_opinion|default_if_none:"-" }}</td>
+            <td>{{ object.financial_finding_set.count|default_if_none:"-" }}</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+        </table>
+        <span style="font-size: medium">FF = Financial finding; MCF = Management control finding; CF = Compliance finding; OF = Other finding</span>
+      </div>
+
+      <pdf:nexttemplate/>
+      <div class="page-break"></div>
     </div>
     <div id="footer_content" style="text-align: right">
-    <pdf:pagenumber> of <pdf:pagecount>
+    <pdf:pagenumber> of
+    <pdf:pagecount>
     <div>
   {% endif %}
 {% endblock %}
