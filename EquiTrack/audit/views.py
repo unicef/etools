@@ -205,6 +205,7 @@ class AuditorStaffMembersViewSet(
 class EngagementPDFView(SingleObjectMixin, PDFTemplateView):
     template_name = "audit/engagement_pdf.html"
     model = Engagement
+    permission_classes = (IsAuthenticated, HasCreatePermission, )
 
     def get_pdf_filename(self):
         return 'engagement_{}.pdf'.format(self.object.unique_id)
