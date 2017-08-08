@@ -2,8 +2,9 @@ from django.db.models import Prefetch
 from django.http import Http404
 from django.views.generic.detail import SingleObjectMixin
 from django_filters.rest_framework import DjangoFilterBackend
+from django.utils.translation import ugettext_lazy as _
 from easy_pdf.views import PDFTemplateView
-from rest_framework import mixins
+from rest_framework import mixins, views
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -202,13 +203,24 @@ class AuditorStaffMembersViewSet(
         instance.user.profile.save()
 
 
-class EngagementPDFView(SingleObjectMixin, PDFTemplateView):
+class EngagementPDFView(
+    SingleObjectMixin,
+    PDFTemplateView,
+    views.APIView
+):
     template_name = "audit/engagement_pdf.html"
     model = Engagement
-    permission_classes = (IsAuthenticated, HasCreatePermission, )
+    permission_classes = (IsAuthenticated, )
 
     def get_pdf_filename(self):
         return 'engagement_{}.pdf'.format(self.object.unique_id)
+
+    def check_permissions(self, request):
+        super(EngagementPDFView, self).check_permissions(request)
+        if not AuditPermission.objects.filter(instance=self.object, user=request.user).exists():
+            self.permission_denied(
+                request, message=_('You have no access to this engagement.')
+            )
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
