@@ -3,7 +3,7 @@ from django.db import connection
 from django.utils import six
 from tenant_schemas import get_tenant_model
 
-from audit.models import AuditPermission, UNICEFAuditFocalPoint, UNICEFUser, PME, Auditor
+from audit.models import AuditPermission, UNICEFAuditFocalPoint, UNICEFUser, Auditor
 
 
 class Command(BaseCommand):
@@ -11,16 +11,14 @@ class Command(BaseCommand):
 
     focal_point = 'focal_point'
     unicef_user = 'unicef_user'
-    pme = 'pme'
     auditor = 'auditor'
     user_roles = {
         focal_point: UNICEFAuditFocalPoint.code,
         unicef_user: UNICEFUser.code,
-        pme: PME.code,
         auditor: Auditor.code,
     }
 
-    all_unicef_users = [pme, focal_point, unicef_user]
+    all_unicef_users = [focal_point, unicef_user]
     everybody = all_unicef_users + [auditor, ]
 
     everything = [
@@ -40,8 +38,9 @@ class Command(BaseCommand):
 
     engagement_overview_block = [
         'engagement.agreement',
+        'engagement.related_agreement',
         'engagement.partner_contacted_at',
-        'engagement.type',
+        'engagement.engagement_type',
         'engagement.start_date',
         'engagement.end_date',
         'engagement.total_value',
@@ -50,6 +49,7 @@ class Command(BaseCommand):
 
     partner_block = [
         'engagement.partner',
+        'engagement.authorized_officers',
     ]
 
     staff_members_block = [
@@ -59,13 +59,23 @@ class Command(BaseCommand):
         'user.*',
     ]
 
+    follow_up_page = [
+        'engagement.action_points',
+        'engagement.amount_refunded',
+        'engagement.additional_supporting_documentation_provided',
+        'engagement.explanation_for_additional_information',
+        'engagement.justification_provided_and_accepted',
+        'engagement.write_off_required',
+        'engagement.pending_unsupported_amount',
+    ]
+
     engagement_overview_page = engagement_overview_block + partner_block + staff_members_block
 
     new_engagement = 'new'
     partner_contacted = 'partner_contacted'
     report_submitted = 'report_submitted'
     final_report = 'final'
-    report_canceled = 'canceled'
+    report_cancelled = 'cancelled'
 
     def __init__(self, *args, **kwargs):
         super(Command, self).__init__(*args, **kwargs)
@@ -117,7 +127,10 @@ class Command(BaseCommand):
             'engagement.engagement_attachments',
             'attachment.*',
         ])
-        self.add_permissions(self.new_engagement, self.focal_point, 'edit', ['purchaseorder.contract_end_date'])
+        self.add_permissions(self.new_engagement, self.focal_point, 'edit', [
+            'engagement.related_agreement',
+            'purchaseorder.contract_end_date',
+        ])
 
         # created: auditor can edit, everybody else can view, focal point can cancel
         self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
@@ -141,8 +154,21 @@ class Command(BaseCommand):
         ])
 
         self.add_permissions(self.partner_contacted, self.all_unicef_users, 'view', self.everything)
-        self.add_permissions(self.partner_contacted, self.focal_point, 'edit', self.staff_members_block)
+        self.add_permissions(
+            self.partner_contacted, self.focal_point, 'edit', self.staff_members_block + [
+                'engagement.partner',
+                'engagement.partner_contacted_at',
+                'engagement.authorized_officers',
+                'engagement.active_pd',
+                'engagement.engagement_attachments',
+                'attachment.*',
+            ]
+        )
         self.add_permissions(self.partner_contacted, self.focal_point, 'action', 'engagement.cancel')
+        self.add_permissions(self.partner_contacted, self.focal_point, 'edit', [
+            'engagement.related_agreement',
+            'purchaseorder.contract_end_date',
+        ])
 
         # report submitted. focal point can finalize. all can view
         self.add_permissions(self.report_submitted, self.everybody, 'view', self.everything)
@@ -155,8 +181,16 @@ class Command(BaseCommand):
         # final report. everybody can view. focal point can add action points
         self.add_permissions(self.final_report, self.everybody, 'view', self.everything)
 
-        # report canceled. everybody can view
-        self.add_permissions(self.report_canceled, self.everybody, 'view', self.everything)
+        # UNICEF Focal Point can create action points
+        self.add_permissions(self.final_report, self.focal_point, 'edit', self.follow_up_page)
+        self.revoke_permissions(self.final_report, self.auditor, 'view', self.follow_up_page)
+
+        # report cancelled. everybody can view
+        self.add_permissions(self.report_cancelled, self.everybody, 'view', self.everything)
+
+        # Follow-Up fields available in finalized engagements.
+        for status in [self.new_engagement, self.partner_contacted, self.report_submitted, self.report_cancelled]:
+            self.revoke_permissions(status, self.everybody, 'view', self.follow_up_page)
 
         # update permissions
         all_tenants = get_tenant_model().objects.exclude(schema_name='public')

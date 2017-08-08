@@ -1,6 +1,8 @@
 from __future__ import division
 
 from django.db import models
+from django.utils import six
+from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
@@ -84,7 +86,7 @@ class RiskCategoryNestedSerializer(WritableNestedSerializerMixin, serializers.Mo
     class Meta(WritableNestedSerializerMixin.Meta):
         model = RiskCategory
         fields = [
-            'id', 'header', 'type', 'code',
+            'id', 'header', 'category_type', 'code',
             'risk_rating', 'risk_score',
             'total_number_risk_points',
             'applicable_questions',
@@ -93,7 +95,7 @@ class RiskCategoryNestedSerializer(WritableNestedSerializerMixin, serializers.Mo
             'blueprints', 'children', 'parent',
         ]
         read_only_fields = [
-            'header', 'code', 'type', 'parent',
+            'header', 'code', 'category_type', 'parent',
         ]
 
 
@@ -108,10 +110,10 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
     class Meta(WritableNestedSerializerMixin.Meta):
         model = RiskCategory
         fields = [
-            'id', 'header', 'type', 'code',
+            'id', 'header', 'category_type', 'code',
             'blueprints', 'children', 'parent',
         ]
-        read_only_fields = ['header', 'code', 'type', 'parent']
+        read_only_fields = ['header', 'code', 'category_type', 'parent']
 
     def __init__(self, code, *args, **kwargs):
         self.code = code
@@ -184,18 +186,28 @@ class BaseAggregatedRiskRootSerializer(RiskRootSerializer):
         raise NotImplemented()
 
 
-class AggregatedRiskCountRiskRootSerializer(BaseAggregatedRiskRootSerializer):
+class KeyInternalWeaknessSerializer(BaseAggregatedRiskRootSerializer):
     """
     Risk root serializer with additional aggregated data for audit.
     """
 
-    hight_risk_count = serializers.IntegerField(read_only=True)
-    medium_risk_count = serializers.IntegerField(read_only=True)
-    low_risk_count = serializers.IntegerField(read_only=True)
+    high_risk_count = serializers.IntegerField(label=_('High risk'), read_only=True)
+    medium_risk_count = serializers.IntegerField(label=_('Medium risk'), read_only=True)
+    low_risk_count = serializers.IntegerField(label=_('Low risk'), read_only=True)
+
+    def __init__(self, *args, **kwagrs):
+        super(KeyInternalWeaknessSerializer, self).__init__(*args, **kwagrs)
+
+        risk_value_fields = [self.fields['blueprints'].child.fields['risk'].fields['value'],
+                             self.fields['children'].child.fields['blueprints'].child.fields['risk'].fields['value']]
+        for risk_value_field in risk_value_fields:
+            del risk_value_field.choices[Risk.VALUES.significant]
+            del risk_value_field.choice_strings_to_values[six.text_type(Risk.VALUES.significant)]
+            risk_value_field.choices[Risk.VALUES.na] = 'None'
 
     @staticmethod
     def _get_bluerprint_count_by_risk_value(category, field_name, risk_value):
-        values_count = len(filter(lambda b: b._risk and b._risk.risk_point == risk_value, category.blueprints.all()))
+        values_count = len(filter(lambda b: b._risk and b._risk.value == risk_value, category.blueprints.all()))
         setattr(category, field_name, values_count)
 
         for child in category.children.all():
@@ -207,26 +219,22 @@ class AggregatedRiskCountRiskRootSerializer(BaseAggregatedRiskRootSerializer):
             if blueprint.risks.all().exists():
                 # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer
                 blueprint._risk = blueprint.risks.all()[0]
-                if blueprint._risk.value == 1:
-                    blueprint._risk.risk_point = blueprint._risk.value
-                else:
-                    blueprint._risk.risk_point = blueprint.weight * blueprint._risk.value
             else:
                 blueprint._risk = None
 
-        AggregatedRiskCountRiskRootSerializer._get_bluerprint_count_by_risk_value(
-            category, 'hight_risk_count', Risk.VALUES.high
+        KeyInternalWeaknessSerializer._get_bluerprint_count_by_risk_value(
+            category, 'high_risk_count', Risk.VALUES.high
         )
-        AggregatedRiskCountRiskRootSerializer._get_bluerprint_count_by_risk_value(
+        KeyInternalWeaknessSerializer._get_bluerprint_count_by_risk_value(
             category, 'medium_risk_count', Risk.VALUES.medium
         )
-        AggregatedRiskCountRiskRootSerializer._get_bluerprint_count_by_risk_value(
+        KeyInternalWeaknessSerializer._get_bluerprint_count_by_risk_value(
             category, 'low_risk_count', Risk.VALUES.low
         )
 
     class Meta(BaseAggregatedRiskRootSerializer.Meta):
         fields = BaseAggregatedRiskRootSerializer.Meta.fields + [
-            'hight_risk_count', 'medium_risk_count', 'low_risk_count',
+            'high_risk_count', 'medium_risk_count', 'low_risk_count',
         ]
 
 
