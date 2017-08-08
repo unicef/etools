@@ -13,7 +13,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from utils.common.views import MultiSerializerViewSetMixin, ExportViewSetDataMixin, FSMTransitionActionMixin, \
-    NestedViewSetMixin
+    NestedViewSetMixin, SafeTenantViewSetMixin
 from vision.adapters.purchase_order import POSynchronizer
 from .models import Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, PurchaseOrder, \
     AuditorStaffMember, Auditor, AuditPermission
@@ -29,6 +29,7 @@ from .filters import DisplayStatusFilter, UniqueIDOrderingFilter
 
 
 class BaseAuditViewSet(
+    SafeTenantViewSetMixin,
     ExportViewSetDataMixin,
     MultiSerializerViewSetMixin,
 ):
@@ -204,6 +205,7 @@ class AuditorStaffMembersViewSet(
 
 
 class EngagementPDFView(
+    SafeTenantViewSetMixin,
     SingleObjectMixin,
     PDFTemplateView,
     views.APIView
@@ -217,14 +219,14 @@ class EngagementPDFView(
 
     def check_permissions(self, request):
         super(EngagementPDFView, self).check_permissions(request)
-        if not AuditPermission.objects.filter(instance=self.object, user=request.user).exists():
+        if not AuditPermission.objects.filter(instance=self.get_object(), user=request.user).exists():
             self.permission_denied(
                 request, message=_('You have no access to this engagement.')
             )
 
-    def dispatch(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return super(EngagementPDFView, self).dispatch(request, *args, **kwargs)
+        return super(EngagementPDFView, self).get(request, *args, **kwargs)
 
 
 class AuditPDFView(EngagementPDFView):
