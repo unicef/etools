@@ -2,7 +2,7 @@ from django.core import mail
 from django.contrib.auth.models import User
 
 from EquiTrack.celery import app
-from .models import Comment
+from workplan.models import Comment
 
 
 @app.task

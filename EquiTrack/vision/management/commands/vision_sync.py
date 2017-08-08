@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from django.core.management.base import BaseCommand
 
 from vision.tasks import sync
