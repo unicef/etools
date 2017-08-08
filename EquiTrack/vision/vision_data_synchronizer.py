@@ -8,7 +8,7 @@ from abc import ABCMeta, abstractmethod
 import requests
 from celery.utils.log import get_task_logger
 
-from .models import VisionSyncLog
+from vision.models import VisionSyncLog
 
 logger = get_task_logger('vision.synchronize')
 
