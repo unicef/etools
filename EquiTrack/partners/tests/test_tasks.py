@@ -172,7 +172,10 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             mock_logger):
         '''Exercise _make_agreement_status_automatic_transitions() when all agreements are valid.'''
         end_date = datetime.date.today() + datetime.timedelta(days=2)
-        agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.MOU)
+        # Agreements sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
+        # pulled out of the database.
+        agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, created=_make_past_date(i),
+                                       agreement_type=Agreement.MOU)
                       for i in range(3)]
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
@@ -219,7 +222,10 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             mock_logger):
         '''Exercise _make_agreement_status_automatic_transitions() when some agreements are valid and some aren't.'''
         end_date = datetime.date.today() + datetime.timedelta(days=2)
-        agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.MOU)
+        # Agreements sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
+        # pulled out of the database.
+        agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, created=_make_past_date(i),
+                                       agreement_type=Agreement.MOU)
                       for i in range(3)]
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
