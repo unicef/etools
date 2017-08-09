@@ -34,14 +34,18 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
 
 
 class EngagementBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
-    file_type = FileTypeModelChoiceField(label=_('Document Type'), queryset=FileType.objects.filter(code='audit_engagement'))
+    file_type = FileTypeModelChoiceField(
+        label=_('Document Type'), queryset=FileType.objects.filter(code='audit_engagement')
+    )
 
     class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
         pass
 
 
 class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
-    file_type = FileTypeModelChoiceField(label=_('Document Type'), queryset=FileType.objects.filter(code='audit_report'))
+    file_type = FileTypeModelChoiceField(
+        label=_('Document Type'), queryset=FileType.objects.filter(code='audit_report')
+    )
 
     class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
         pass
