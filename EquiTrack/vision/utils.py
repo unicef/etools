@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 import datetime
 
 
@@ -19,6 +17,7 @@ def wcf_json_date_as_datetime(jd):
     return datetime.datetime(1970, 1, 1) \
         + datetime.timedelta(microseconds=millisecs * 1000)
 
+
 def wcf_json_date_as_date(jd):
     if jd is None:
         return None
@@ -34,6 +33,7 @@ def wcf_json_date_as_date(jd):
         millisecs += (hh * 60 + mm) * 60000
     my_date = datetime.datetime(1970, 1, 1) + datetime.timedelta(microseconds=millisecs * 1000)
     return my_date.date()
+
 
 def comp_decimals(y, x):
     def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
