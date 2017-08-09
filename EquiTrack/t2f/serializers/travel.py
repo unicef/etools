@@ -31,7 +31,7 @@ def order_iteneraryitems(instance, items):
     # ensure iteneraryitems are ordered by `departure_date`
     if (items is not None) and (len(items) > 1):
         instance.set_iteneraryitem_order([i.pk for i in
-            sorted(items, key=iteneraryItemSortKey)])
+                                          sorted(items, key=iteneraryItemSortKey)])
 
 
 class LowerTitleField(serializers.CharField):
@@ -422,8 +422,8 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         model_serializer = model_serializer or self
 
         related_attributes = {}
-        related_fields = {n:f for n, f in model_serializer.get_fields().items()
-                          if isinstance(f, serializers.BaseSerializer) and f.read_only == False}
+        related_fields = {n: f for n, f in model_serializer.get_fields().items()
+                          if isinstance(f, serializers.BaseSerializer) and f.read_only is False}
         for attr_name in related_fields:
             if model_serializer.partial and attr_name not in validated_data:
                 continue
