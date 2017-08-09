@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from __future__ import absolute_import
 import copy
 import logging
 from django.apps import apps
@@ -15,7 +16,7 @@ from rest_framework.exceptions import ValidationError
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.parsers import parse_multipart_data
-
+from utils.common.utils import get_all_field_names
 
 def check_editable_fields(obj, fields):
     if not getattr(obj, 'old_instance', None):
@@ -69,7 +70,7 @@ def check_rigid_related(obj, related):
     if len(current_related) == 0:
         return True
 
-    field_names = current_related[0]._meta.get_all_field_names()
+    field_names = get_all_field_names(current_related[0])
     current_related.sort(key=lambda x: x.id)
     old_related.sort(key=lambda x: x.id)
     comparison_map = zip(current_related, old_related)
