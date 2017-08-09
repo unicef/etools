@@ -124,7 +124,6 @@ class TestModelExport(APITenantTestCase):
             'CP Outputs',
             'RAM Indicators',
             'FR Number(s)',
-            'Local Currency of Planned Budget',
             'Total UNICEF Budget (Local)',
             'Total UNICEF Budget (USD)',
             'Total CSO Budget (USD)',
@@ -141,7 +140,8 @@ class TestModelExport(APITenantTestCase):
             'Signed by UNICEF Date',
             'Days from Submission to Signed',
             'Days from Review to Signed',
-            'URL'
+            'URL',
+            'Migration messages',
         ])
 
         self.assertEqual(dataset[0], (
@@ -164,7 +164,6 @@ class TestModelExport(APITenantTestCase):
             u'',
             u'',
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
-            '{}'.format(self.intervention.planned_budget.currency),
             u'{:.2f}'.format(self.intervention.total_unicef_cash_local),
             u'{:.2f}'.format(self.intervention.total_unicef_budget),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
@@ -181,7 +180,8 @@ class TestModelExport(APITenantTestCase):
             '{}'.format(self.intervention.signed_by_partner_date),
             '{}'.format(self.intervention.days_from_submission_to_signed),
             '{}'.format(self.intervention.days_from_review_to_signed),
-            u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id)
+            u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
+            u'',
         )
         )
 
@@ -212,8 +212,9 @@ class TestModelExport(APITenantTestCase):
             'URL'
         ])
 
-
-        self.assertEqual(dataset[0], (
+        # we're interested in the first agreement, so it will be last in the exported list
+        exported_agreement = dataset[-1]
+        self.assertEqual(exported_agreement, (
             self.agreement.agreement_number,
             unicode(self.agreement.status),
             unicode(self.agreement.partner.name),

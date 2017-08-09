@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
 import json
+import logging
+import six
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -11,9 +13,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.template.base import Template, VariableNode
 
 from model_utils import Choices
+from post_office import mail
 from post_office.models import EmailTemplate
 
-from notification.email import send_mail
+
+logger = logging.getLogger(__name__)
 
 
 class Notification(models.Model):
@@ -58,23 +62,39 @@ class Notification(models.Model):
         return "{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
 
     def send_notification(self):
+        """
+        Dispatch notification based on type.
+        """
         if self.type == 'Email':
-            if isinstance(self.sender, User):
-                sender = self.sender.email
-            elif isinstance(self.sender, str):
-                sender = self.sender
-            else:
-                sender = settings.DEFAULT_FROM_EMAIL
-
-            if isinstance(self.template_data, str):
-                template_data = json.loads(self.template_data)
-            else:
-                template_data = self.template_data
-
-            send_mail(sender, self.recipients, self.template_name, template_data, notification_obj=self)
-
+            self.send_mail()
         else:
+            # for future notification methods
             pass
+
+    def send_mail(self):
+        if isinstance(self.sender, User):
+            sender = self.sender.email
+        else:
+            sender = settings.DEFAULT_FROM_EMAIL
+
+        if isinstance(self.template_data, six.string_types):
+            template_data = json.loads(self.template_data)
+        else:
+            template_data = self.template_data
+
+        try:
+            mail.send(
+                recipients=self.recipients,
+                sender=sender,
+                template=self.template_name,
+                context=template_data,
+            )
+        except Exception:
+            # log an exception, with traceback
+            logger.exception('Failed to send mail.')
+        else:
+            self.sent_recipients = self.recipients
+            self.save()
 
     @classmethod
     def get_template_html_content(cls, template_name):

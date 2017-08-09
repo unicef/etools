@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from collections import OrderedDict
+
 from django.db.models.query_utils import Q
 from django.utils.functional import cached_property
 from rest_framework import viewsets, mixins, status
@@ -43,9 +45,6 @@ class StaticDataView(GhostDataMixin,
 
     def list(self, request):
         country = request.user.profile.country
-        dsa_regions = DSARegion.objects.filter(country__business_area__code=country.business_area_code).active()
-        dsa_regions = dsa_regions.select_related('country')
-
         currencies = Currency.objects.all().prefetch_related('exchange_rates')
         business_areas = BusinessArea.objects.all().select_related('region')
 
@@ -53,9 +52,9 @@ class StaticDataView(GhostDataMixin,
         expense_type_q |= Q(travel_agent__country__business_area__code=country.business_area_code)
         expense_types = TravelExpenseType.objects.select_related('travel_agent').filter(expense_type_q)
 
-        data = {'currencies': currencies, # Moved
-                'business_areas': business_areas, # Moved
-                'expense_types': expense_types, # Moved
+        data = {'currencies': currencies,  # Moved
+                'business_areas': business_areas,  # Moved
+                'expense_types': expense_types,  # Moved
 
                 # These should stay here since all of them are 'static'
                 'airlines': self.get_airlines_queryset(),
@@ -218,21 +217,21 @@ class WBSGrantFundView(GhostDataMixin,
         parameter_serializer.is_valid(raise_exception=True)
 
         business_area = parameter_serializer.validated_data['business_area']
-        return WBS.objects.filter(business_area=business_area)
+        return WBS.objects.filter(business_area=business_area).order_by('id')
 
     @cached_property
     def grants_queryset(self):
         wbs_qs = self.wbs_queryset
-        return Grant.objects.filter(wbs__in=wbs_qs)
+        return Grant.objects.filter(wbs__in=wbs_qs).order_by('id')
 
     @cached_property
     def funds_queryset(self):
         grant_qs = self.grants_queryset
-        return Fund.objects.filter(grants__in=grant_qs)
+        return Fund.objects.filter(grants__in=grant_qs).order_by('id').distinct()
 
     def _aggregate_values(self, values, common_keys, keys_to_group):
         def make_dict(data):
-            ret = {}
+            ret = OrderedDict()
             for key in common_keys:
                 ret[key] = data[key]
             for key in keys_to_group:
@@ -244,9 +243,12 @@ class WBSGrantFundView(GhostDataMixin,
             if val_dict['id'] not in ret:
                 ret[val_dict['id']] = make_dict(val_dict)
             for key in keys_to_group:
-                if val_dict[key] not in ret[val_dict['id']][key]:
+                if val_dict[key] and val_dict[key] not in ret[val_dict['id']][key]:
                     ret[val_dict['id']][key].append(val_dict[key])
-        return ret.values()
+
+        ordered_keys = sorted(ret.keys())
+        return [ret[k] for k in ordered_keys]
+
 
 class AirlinesView(GhostDataMixin,
                    viewsets.GenericViewSet):

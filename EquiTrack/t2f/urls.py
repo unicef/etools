@@ -65,8 +65,8 @@ travel_list_patterns = ((
         TravelActivityPerInterventionViewSet.as_view({'get': 'list'}), name='activities-intervention'),
     url(r'^activities/(?P<partner_organization_pk>[0-9]+)/', TravelActivityViewSet.as_view({'get': 'list'}),
         name='activities'),
-    url(r'^dashboard/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/', travel_dashboard_list, name='dashboard'),
-), 'list')
+    url(r'^dashboard', travel_dashboard_list, name='dashboard'),
+ ), 'list')
 
 
 travel_patterns = ((

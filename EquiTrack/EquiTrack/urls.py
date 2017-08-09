@@ -3,6 +3,7 @@ from __future__ import absolute_import
 # Django imports
 from django.conf import settings
 from django.conf.urls import include, url
+from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 # Uncomment the line below to enable the admin:
@@ -31,7 +32,7 @@ from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
 from partners.views.v1 import (
     FileTypeViewSet,
 )
-from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
+from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
 from reports.views.v1 import (
     ResultTypeViewSet,
     SectorViewSet,
@@ -115,7 +116,7 @@ urlpatterns = [
     # TODO: overload login_required to staff_required to automatically re-route partners to the parter portal
 
     # Used for admin and dashboard pages in django
-    url(r'^$', RedirectView.as_view(url='/dash/', permanent=False), name='dashboard'),
+    url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
@@ -140,6 +141,7 @@ urlpatterns = [
         LocationsViewSet.as_view({'get': 'retrieve'}),
         name='locations_detail_pcode'),
     url(r'^api/t2f/', include(t2f_patterns)),
+    url(r'^api/audit/', include('audit.urls', namespace='audit')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
     url(r'^api/v2/users/', include('users.urls_v2')),

@@ -68,7 +68,7 @@ SUIT_CONFIG = {
 }
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/dash/'
+LOGIN_REDIRECT_URL = '/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
@@ -111,7 +111,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework_csv.renderers.CSVRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
-    )
+    ),
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -301,9 +301,14 @@ TEMPLATES = [
             normpath(join(SITE_ROOT, 'templates')),
             normpath(join(SITE_ROOT, 'templates', 'frontend'))
         ],
-        'APP_DIRS': True,
+        # 'APP_DIRS': True,
         'OPTIONS': {
             'debug': DEBUG,  # TEMPLATE_DEBUG was deprecated
+            'loaders': [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+                'utils.mail.loaders.EmailTemplateLoader',
+            ],
             'context_processors': [
                 # Already defined Django-related contexts here
 
@@ -397,6 +402,7 @@ SHARED_APPS = (
     'analytical',
     'mptt',
     'easy_pdf',
+    'ordered_model',
 
     'vision',
     'management',
@@ -404,6 +410,11 @@ SHARED_APPS = (
     # you must list the app where your tenant model resides in
     'users',
     'notification',
+    'django_filters',
+    'utils.common',
+    'utils.mail',
+    'utils.writable_serializers',
+    'utils.permissions',
 )
 
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -418,11 +429,14 @@ TENANT_APPS = (
     'reports',
     'partners',
     'trips',
-    'tpm',
     'supplies',
     't2f',
     'workplan',
     'actstream',
+    'attachments',
+    'tpm',
+    'audit',
+    'firms',
 )
 
 

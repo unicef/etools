@@ -186,14 +186,19 @@ def etag_cached(cache_key, public_cache=False):
     """
     assert isinstance(cache_key, (str, unicode)), 'Cache key has to be a string'
 
+    def make_cache_key():
+        if public_cache:
+            schema_name = 'public'
+        else:
+            schema_name = connection.schema_name
+
+        return '{}-{}-etag'.format(schema_name, cache_key)
+
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            if public_cache:
-                schema_name = 'public'
-            else:
-                schema_name = connection.schema_name
-            cache_etag = cache.get("{}-{}-etag".format(schema_name, cache_key))
+
+            cache_etag = cache.get(make_cache_key())
             request_etag = self.request.META.get("HTTP_IF_NONE_MATCH", None)
 
             local_etag = cache_etag if cache_etag else '"{}"'.format(uuid.uuid4().hex)
@@ -205,11 +210,15 @@ def etag_cached(cache_key, public_cache=False):
                 response["ETag"] = local_etag
 
             if not cache_etag:
-                cache.set("{}-locations-etag".format(schema_name), local_etag)
+                cache.set(make_cache_key(), local_etag)
 
             patch_cache_control(response, private=True, must_revalidate=True)
             return response
 
+        def invalidate():
+            cache.delete(make_cache_key())
+
+        wrapper.invalidate = invalidate
         return wrapper
     return decorator
 
