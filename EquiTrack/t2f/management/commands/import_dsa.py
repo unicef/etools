@@ -55,7 +55,8 @@ class Command(BaseCommand):
             if not line or not all(line):
                 continue
 
-            country, region, amount_usd, amount_local, amount_60plus_local, room_rate, eff_date, finalization_date = line  # noqa: E501
+            (country, region, amount_usd, amount_local, amount_60plus_local,
+             room_rate, eff_date, finalization_date) = line
 
             amount_usd = Decimal(amount_usd.replace(',', ''))
             amount_local = Decimal(amount_local.replace(',', ''))
