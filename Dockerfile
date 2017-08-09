@@ -43,9 +43,6 @@ ADD ./EquiTrack/requirements/*.txt /pip/
 ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
 RUN pip install -f /pip -r /pip/app_requirements.txt
 
-# Add a bad requirement so that docker build fails, even after tests pass
-RUN pip install i-dont-exist
-
 ENV PYTHONUNBUFFERED 1
 ADD EquiTrack /code/
 
