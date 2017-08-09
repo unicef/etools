@@ -59,8 +59,8 @@ class TestGetInterventionContext(FastTenantTestCase):
         self.assertEqual(result['number'], unicode(self.intervention))
         self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
         self.assertEqual(result['start_date'], 'None')
-        # FIXME can replace with reverse()?
-        self.assertEqual(result['url'], 'https://{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
+        self.assertEqual(result['url'],
+                         'https://{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
         self.assertEqual(result['unicef_focal_points'], [])
 
     def test_non_trivial_intervention(self):
@@ -79,8 +79,8 @@ class TestGetInterventionContext(FastTenantTestCase):
         self.assertEqual(result['number'], unicode(self.intervention))
         self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
         self.assertEqual(result['start_date'], '2017-08-01')
-        # FIXME can replace with reverse()?
-        self.assertEqual(result['url'], 'https://{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
+        self.assertEqual(result['url'],
+                         'https://{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
         self.assertEqual(result['unicef_focal_points'], [focal_point_user.email])
 
 
