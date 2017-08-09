@@ -15,14 +15,14 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
     def list(self, request, **kwargs):
         data = {}
         months = request.query_params.get("months", None)
-        if months != None:
+        if months is not None:
             months = map(lambda x: int(x), months.split(','))
         year = request.query_params.get("year", None)
         office_id = request.query_params.get("office_id", None)
         try:
             travels_all = Travel.objects.filter(
-                start_date__year = year,
-                start_date__month__in = months,
+                start_date__year=year,
+                start_date__month__in=months,
             )
         except ValueError:
             travels_all = Travel.objects.filter(
