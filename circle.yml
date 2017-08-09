@@ -24,7 +24,7 @@ test:
 
 deployment:
    hub:
-     branch: [develop, staging, master]
+     branch: [develop, staging, master, ci-cache-docker-image]
      commands:
        - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
        - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
