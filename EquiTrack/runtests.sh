@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -ex
 
+TEST_SETTINGS="EquiTrack.settings.local"
 # Use DJANGO_SETTINGS_MODULE from environment, except that we never want to use production settings
 # for tests. In that case, fall back to local settings.
-if [ "$DJANGO_SETTINGS_MODULE" = "EquiTrack.settings.production" ]; then
-    TEST_SETTINGS="EquiTrack.settings.local"
-else
+if [ "$DJANGO_SETTINGS_MODULE" != "EquiTrack.settings.production" ]; then
     TEST_SETTINGS=$DJANGO_SETTINGS_MODULE
 fi
 
