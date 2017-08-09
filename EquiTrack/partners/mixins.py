@@ -47,30 +47,6 @@ class ReadOnlyMixin(object):
         return self.readonly_fields
 
 
-class SectorMixin(object):
-    """
-    Mixin class to get the sector from the admin URL
-    """
-    model_admin_re = re.compile(r'^/admin/(?P<app>\w*)/(?P<model>\w*)/(?P<id>\w+)/$')
-
-    def get_sector_from_request(self, request):
-        results = self.model_admin_re.search(request.path)
-        if results:
-            pca_sector_id = results.group('id')
-            return PCASector.objects.get(id=pca_sector_id)
-        return None
-
-    def get_sector(self, request):
-        if not getattr(self, '_sector', False):
-            self._sector = self.get_sector_from_request(request).sector
-        return self._sector
-
-    def get_pca(self, request):
-        if not getattr(self, '_pca', False):
-            self._pca = self.get_sector_from_request(request).pca
-        return self._pca
-
-
 class HiddenPartnerMixin(object):
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
