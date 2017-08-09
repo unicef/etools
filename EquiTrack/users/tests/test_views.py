@@ -145,7 +145,8 @@ class TestUserViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_minimal_verbosity(self):
-        response = self.forced_auth_req('get', '/api/v3/users/', data={'verbosity': 'minimal'}, user=self.unicef_superuser)
+        response = self.forced_auth_req('get', '/api/v3/users/',
+                                        data={'verbosity': 'minimal'}, user=self.unicef_superuser)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 2)
 
