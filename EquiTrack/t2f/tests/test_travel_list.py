@@ -92,7 +92,11 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
                     't2f:travels:list:dashboard',
                 ),
                 user=self.unicef_staff,
-                data={"office_id": self.travel.office.id ,"year": self.travel.start_date.year, "months": '{month:02d}'.format(month=self.travel.start_date.month)}
+                data={
+                    "office_id": self.travel.office.id,
+                    "year": self.travel.start_date.year,
+                    "months": '{month:02d}'.format(month=self.travel.start_date.month)
+                }
             )
 
         response_json = json.loads(response.rendered_content)
@@ -117,7 +121,11 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
 
                 ),
                 user=self.unicef_staff,
-                data={"office_id": travel.office.id ,"year": travel.start_date.year, "months": '{month:02d}'.format(month=travel.start_date.month)}
+                data={
+                    "office_id": travel.office.id,
+                    "year": travel.start_date.year,
+                    "months": '{month:02d}'.format(month=travel.start_date.month)
+                }
             )
 
         response_json = json.loads(response.rendered_content)

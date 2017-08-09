@@ -1,9 +1,7 @@
-import re
-
 from django.contrib.admin.options import flatten_fieldsets
 from django.contrib.auth.models import Group
 
-from partners.models import PCASector, PartnerOrganization
+from partners.models import PartnerOrganization
 
 
 class ReadOnlyMixin(object):
