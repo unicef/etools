@@ -383,3 +383,34 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
             user=self.usual_user
         )
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
+    engagement_factory = AuditFactory
+
+    def _test_pdf_view(self, user, status_code=status.HTTP_200_OK):
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/audits/{}/pdf/'.format(self.engagement.id),
+            user=user
+        )
+
+        self.assertEquals(response.status_code, status_code)
+        if status_code == status.HTTP_200_OK:
+            self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
+
+    def test_guest(self):
+        self.user = None
+        self._test_pdf_view(None, status.HTTP_403_FORBIDDEN)
+
+    def test_common_user(self):
+        self._test_pdf_view(self.usual_user, status.HTTP_403_FORBIDDEN)
+
+    def test_unicef_user(self):
+        self._test_pdf_view(self.unicef_user)
+
+    def test_auditor(self):
+        self._test_pdf_view(self.auditor)
+
+    def test_focal_point(self):
+        self._test_pdf_view(self.unicef_focal_point)
