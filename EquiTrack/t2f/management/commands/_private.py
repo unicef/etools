@@ -102,7 +102,7 @@ def generate_all_permissions(command):
                                              'follow_up': None,
                                              'person_responsible': None,
                                              'id': None},
-                            'report':None}
+                           'report': None}
 
     command.stdout.write('Regenerating permission matrix')
     new_permissions = []

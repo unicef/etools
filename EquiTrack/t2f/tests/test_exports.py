@@ -229,10 +229,10 @@ class TravelExports(APITenantTestCase):
         ExpenseFactory(travel=travel, amount=Decimal('500'))
 
         travel_2 = TravelFactory(traveler=self.traveler,
-                               supervisor=self.unicef_staff,
-                               start_date=datetime(2016, 11, 20, tzinfo=UTC),
-                               end_date=datetime(2016, 12, 5, tzinfo=UTC),
-                               mode_of_travel=None)
+                                 supervisor=self.unicef_staff,
+                                 start_date=datetime(2016, 11, 20, tzinfo=UTC),
+                                 end_date=datetime(2016, 12, 5, tzinfo=UTC),
+                                 mode_of_travel=None)
         travel_2.expenses.all().delete()
         ExpenseFactory(travel=travel_2, amount=Decimal('200'))
         ExpenseFactory(travel=travel_2, amount=Decimal('100'), currency=None)

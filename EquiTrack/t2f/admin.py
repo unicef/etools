@@ -117,7 +117,6 @@ class InvoiceItemAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
 
-
 admin.site.register(models.TravelActivity, TravelActivityAdmin)
 admin.site.register(models.Travel, TravelAdmin)
 admin.site.register(models.IteneraryItem, ItineraryItemAdmin)
