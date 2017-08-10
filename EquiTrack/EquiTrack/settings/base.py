@@ -16,7 +16,6 @@ from __future__ import absolute_import
 
 import os
 from os.path import abspath, basename, dirname, join, normpath
-from sys import path
 import datetime
 from cryptography.x509 import load_pem_x509_certificate
 from cryptography.hazmat.backends import default_backend
@@ -28,10 +27,6 @@ from kombu import Exchange, Queue
 
 # Absolute filesystem path to the Django project directory:
 DJANGO_ROOT = dirname(dirname(abspath(__file__)))
-
-# Add our project to our pythonpath, this way we don't need to type our project
-# name in our dotted import paths:
-path.append(DJANGO_ROOT)
 
 # Absolute filesystem path to the top-level project folder:
 SITE_ROOT = dirname(DJANGO_ROOT)
