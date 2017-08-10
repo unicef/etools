@@ -11,9 +11,6 @@ INSTALLED_APPS += (  # noqa
     'raven.contrib.django.raven_compat',
 )
 
-# eTools settings
-ETRIPS_VERSION = environ.get('ETRIPS_VERSION', None)
-
 # Azure settings
 AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME', None)
 AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY', None)

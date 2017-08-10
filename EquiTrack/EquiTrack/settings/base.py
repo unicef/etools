@@ -438,7 +438,7 @@ COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
 DISABLE_INVOICING = str2bool(os.getenv('DISABLE_INVOICING'))
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
-HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
+ETRIPS_VERSION = os.environ.get('ETRIPS_VERSION')
 
 INACTIVE_BUSINESS_AREAS = os.environ.get('INACTIVE_BUSINESS_AREAS', '').split(',')
 
