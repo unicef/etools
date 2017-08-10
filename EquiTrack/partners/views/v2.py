@@ -146,7 +146,6 @@ def choices_to_json_ready(choices):
     return [{'label': choice[1], 'value': choice[0]} for choice in choice_list]
 
 
-
 class PmpStaticDropdownsListApiView(APIView):
     permission_classes = (IsAdminUser,)
 
@@ -254,7 +253,6 @@ class PartnershipDashboardAPIView(APIView):
         # Use given CountryProgramme pk to filter Intervention
         if ct_pk:
             interventions = Intervention.objects.detail_qs().filter(agreement__country_programme=ct_pk)
-
 
         # Otherwise, use current CountryProgramme this year to filter Intervention
         else:
