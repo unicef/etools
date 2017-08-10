@@ -2,6 +2,7 @@ import os
 import tempfile
 from datetime import timedelta
 
+from django.conf import settings
 from django.core.files import File
 from django.core.management import call_command
 from django.utils import timezone
@@ -55,7 +56,8 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
         self.engagement.save()
 
     def _add_attachment(self, code):
-        with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=".trash") as temporary_file:
+        with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=".trash",
+                                         dir=settings.MEDIA_ROOT) as temporary_file:
             try:
                 temporary_file.write(b'\x04\x02')
                 temporary_file.seek(0)
