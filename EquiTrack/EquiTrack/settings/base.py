@@ -49,7 +49,8 @@ SITE_NAME = basename(DJANGO_ROOT)
 # DJANGO: CACHE
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'redis_cache.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
     }
 }
 
