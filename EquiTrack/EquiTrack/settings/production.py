@@ -3,10 +3,6 @@
 from os import environ
 from base import *
 
-ALLOWED_HOSTS = [
-    os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
-]
-
 # raven (Sentry): https://github.com/getsentry/raven-python
 RAVEN_CONFIG = {
     'dsn': environ.get('SENTRY_DSN', None),

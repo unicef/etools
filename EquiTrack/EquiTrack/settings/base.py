@@ -212,6 +212,9 @@ TENANT_APPS = (
 INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
 
 # DJANGO: SECURITY
+ALLOWED_HOSTS = [
+    os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
+]
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"  # only used locally
 
 # DJANGO: SERIALIZATION

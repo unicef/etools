@@ -4,7 +4,6 @@ import sys
 from EquiTrack.settings.base import *  # noqa
 
 
-ALLOWED_HOSTS = ['127.0.0.1']
 DEBUG = True
 
 CELERY_ALWAYS_EAGER = True
