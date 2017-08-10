@@ -1,7 +1,6 @@
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
-from django.db import transaction
 
 from partners.permissions import AgreementPermissions
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer

@@ -414,7 +414,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_planned_cash_transfers_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
-        cp = CountryProgramme.objects.create(
+        CountryProgramme.objects.create(
             name="CP 1",
             wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
@@ -467,7 +467,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
-        cp = CountryProgramme.objects.create(
+        CountryProgramme.objects.create(
             name="CP 1",
             wbs="/A0/",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
