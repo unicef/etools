@@ -393,6 +393,7 @@ USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 # django-allauth: https://github.com/pennersr/django-allauth
 ACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomAccountAdapter'
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "none"  # "optional", "mandatory" or "none"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/login"

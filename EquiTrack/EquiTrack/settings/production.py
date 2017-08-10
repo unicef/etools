@@ -11,14 +11,6 @@ INSTALLED_APPS += (  # noqa
     'raven.contrib.django.raven_compat',
 )
 
-# django-allauth: https://github.com/pennersr/django-allauth
-SOCIALACCOUNT_PROVIDERS = \
-    {'google':
-        {'SCOPE': ['profile', 'email'],
-         'AUTH_PARAMS': {'access_type': 'online'}}}
-SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
-
 # eTools settings
 ETRIPS_VERSION = environ.get('ETRIPS_VERSION', None)
 

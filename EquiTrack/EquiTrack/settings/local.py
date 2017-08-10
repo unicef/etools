@@ -67,6 +67,9 @@ CACHES = {
     }
 }
 
+# django-allauth: https://github.com/pennersr/django-allauth
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
+
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers
 CORS_ORIGIN_ALLOW_ALL = True
 
