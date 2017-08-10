@@ -130,7 +130,7 @@ LOGGING = {
 
 # DJANGO: MODELS
 FIXTURE_DIRS = (
-    normpath(join(SITE_ROOT, 'EquiTrack/data')),
+    normpath(join(DJANGO_ROOT, 'data')),
 )
 SHARED_APPS = (
     'django.contrib.auth',
