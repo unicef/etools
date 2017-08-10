@@ -25,6 +25,17 @@ import saml2
 from saml2 import saml
 from kombu import Exchange, Queue
 
+
+# Helper function to convert strings (i.e. environment variable values) to a Boolean
+def str2bool(value):
+    """
+    Given a string 'value', return a Boolean which that string represents.
+
+    This assumes that 'value' is one of a list of some common possible Truthy string values.
+    """
+    return str(value).lower() in ("yes", "true", "t", "1")
+
+
 # Absolute filesystem path to the Django project directory:
 DJANGO_ROOT = dirname(dirname(abspath(__file__)))
 
@@ -58,13 +69,7 @@ DATABASE_ROUTERS = (
 )
 
 # DJANGO: DEBUGGING
-DEBUG = os.environ.get('DJANGO_DEBUG', False)
-
-if isinstance(DEBUG, str):
-    if DEBUG.lower() == "true":
-        DEBUG = True
-    else:
-        DEBUG = False
+DEBUG = str2bool(os.environ.get('DJANGO_DEBUG'))
 
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
@@ -73,7 +78,7 @@ EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_PORT = os.environ.get('EMAIL_HOST_PORT', 587)
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', False)  # set True if using TLS
+EMAIL_USE_TLS = str2bool(os.environ.get('EMAIL_USE_TLS'))  # set True if using TLS
 
 # DJANGO: ERROR REPORTING
 
@@ -420,7 +425,7 @@ COUCHBASE_URL = os.environ.get('COUCHBASE_URL')
 COUCHBASE_USER = os.environ.get('COUCHBASE_USER')
 COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
 
-DISABLE_INVOICING = True if os.getenv('DISABLE_INVOICING', False) in ['1', 'True', 'true'] else False
+DISABLE_INVOICING = str2bool(os.getenv('DISABLE_INVOICING'))
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
