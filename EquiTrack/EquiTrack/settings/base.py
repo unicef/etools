@@ -439,10 +439,3 @@ TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
 VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
-
-# Deprecated. I think all of these can be removed
-BASE_DIR = dirname(SITE_ROOT)  # not used
-AUTH_PROFILE_MODULE = 'users.UserProfile'  # no longer needed
-MONGODB_URL = os.environ.get('MONGODB_URL', 'mongodb://localhost:27017')  # I don't see mongo being used
-MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
-RAPIDPRO_TOKEN = os.environ.get('RAPIDPRO_TOKEN') # I don't see RapidPro installed
