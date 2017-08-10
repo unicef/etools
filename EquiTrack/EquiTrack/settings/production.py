@@ -19,9 +19,6 @@ SOCIALACCOUNT_PROVIDERS = \
 SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
-# django-cors-headers: https://github.com/ottoyiu/django-cors-headers
-CORS_ORIGIN_ALLOW_ALL = False
-
 # eTools settings
 ETRIPS_VERSION = environ.get('ETRIPS_VERSION', None)
 

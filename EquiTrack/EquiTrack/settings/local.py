@@ -67,6 +67,9 @@ CACHES = {
     }
 }
 
+# django-cors-headers: https://github.com/ottoyiu/django-cors-headers
+CORS_ORIGIN_ALLOW_ALL = True
+
 if 'test' in sys.argv:
     # Settings for automated tests
 

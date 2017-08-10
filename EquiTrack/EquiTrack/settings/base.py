@@ -379,7 +379,7 @@ REST_FRAMEWORK = {
 }
 
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = False
 
 # django-rest-swagger: http://django-rest-swagger.readthedocs.io/en/latest/settings/
 SWAGGER_SETTINGS = {
