@@ -72,11 +72,6 @@ SAML_ATTRIBUTE_MAPPING = {
 }
 SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
 SAML_CREATE_UNKNOWN_USER = True
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-    'djangosaml2.backends.Saml2Backend',
-    'allauth.account.auth_backends.AuthenticationBackend',
-)
 SAML_CONFIG = {
     # full path to the xmlsec1 binary programm
     'xmlsec_binary': '/usr/bin/xmlsec1',

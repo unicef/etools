@@ -262,6 +262,11 @@ ROOT_URLCONF = '%s.urls' % SITE_NAME
 # Django Contrib Settings ################################
 
 # CONTRIB: AUTH
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'djangosaml2.backends.Saml2Backend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
 AUTH_USER_MODEL = 'auth.User'
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'

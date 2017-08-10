@@ -54,6 +54,7 @@ POST_OFFICE = {
     }
 }
 
+# No SAML for local dev
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
