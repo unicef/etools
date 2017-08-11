@@ -54,7 +54,7 @@ class RequireOneFormSet(ParentInlineAdminFormSet):
 
         if completed < 1 and self.required:
             raise forms.ValidationError("At least one %s is required." %
-                self.model._meta.object_name.lower())
+                                        self.model._meta.object_name.lower())
 
 
 class UserGroupForm(forms.ModelForm):

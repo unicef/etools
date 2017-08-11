@@ -3,9 +3,7 @@ from __future__ import absolute_import
 # Django imports
 from django.conf import settings
 from django.conf.urls import include, url
-from django.conf.urls.static import static
 from django.views.generic import TemplateView
-from django.views.generic.base import RedirectView
 # Uncomment the line below to enable the admin:
 from django.contrib import admin
 

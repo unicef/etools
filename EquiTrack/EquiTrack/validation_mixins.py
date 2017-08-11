@@ -48,6 +48,7 @@ def check_required_fields(obj, fields):
         return False, error_fields
     return True, None
 
+
 def field_comparison(f1, f2):
     if isinstance(f1, FieldFile):
         new_file = getattr(f1, 'name', None)
@@ -57,6 +58,7 @@ def field_comparison(f1, f2):
     elif f1 != f2:
         return False
     return True
+
 
 def check_rigid_related(obj, related):
     current_related = list(getattr(obj, related).filter())
@@ -280,9 +282,11 @@ class StateValidError(BaseException):
             raise TypeError('Transition exception takes a list of errors not {}'.format(type(message)))
         super(StateValidError, self).__init__(message)
 
+
 class BasicValidationError(BaseException):
     def __init__(self, message=''):
         super(BasicValidationError, self).__init__(message)
+
 
 def error_string(function):
     def wrapper(*args, **kwargs):
@@ -311,6 +315,7 @@ def transition_error_string(function):
             return (False, ['generic_transition_fail'])
     return wrapper
 
+
 def state_error_string(function):
     def wrapper(*args, **kwargs):
         try:
@@ -324,12 +329,15 @@ def state_error_string(function):
             return (False, ['generic_state_validation_fail'])
     return wrapper
 
+
 def update_object(obj, kwdict):
     for k, v in kwdict.iteritems():
         setattr(obj, k, v)
 
+
 class CompleteValidation(object):
     PERMISSIONS_CLASS = None
+
     def __init__(self, new, user=None, old=None, instance_class=None, stateless=False, disable_rigid_check=False):
         if old and isinstance(old, dict):
             raise TypeError('if old is transmitted to complete validation it needs to be a model instance')
@@ -341,7 +349,8 @@ class CompleteValidation(object):
                 try:
                     instance_class = apps.get_model(getattr(self, 'VALIDATION_CLASS'))
                 except LookupError:
-                    raise TypeError('Object Transimitted for validation cannot be dict if instance_class is not defined')
+                    raise TypeError('Object Transimitted for validation cannot be dict if instance_class '
+                                    'is not defined')
             new_id = new.get('id', None) or new.get('pk', None)
             if new_id:
                 # logging.debug('newid')
@@ -375,8 +384,8 @@ class CompleteValidation(object):
             self.old_status = self.old.status if self.old else None
         self.user = user
 
-        # permissions to be set in each function that is needed, this attribute can change values as auto-update goes through
-        # different statuses
+        # permissions to be set in each function that is needed, this attribute can change values as
+        # auto-update goes through different statuses
         self.permissions = None
         self.disable_rigid_check = disable_rigid_check
 
@@ -412,7 +421,6 @@ class CompleteValidation(object):
         # set old instance on instance to make it available to the validation functions
         setattr(self.new, 'old_instance', self.old)
         self.permissions = self.get_permissions(self.new)
-
 
         # check conditions and permissions
         conditions_check = self.check_transition_conditions(self.transition)
@@ -475,14 +483,14 @@ class CompleteValidation(object):
 
         for potential_transition_to in pttl:
             # test to see if it's a viable transition:
-            # logging.debug("test to see if transition is possible : {} -> {}".format(self.new.status, potential_transition_to))
+            # logging.debug("test to see if transition is possible : {} -> {}".format(
+            #     self.new.status, potential_transition_to))
             # try to find a possible transition... if no possible transition (transition was not defined on the model
             # it will always validate
             possible_fsm_transition = self._get_fsm_defined_transitions(self.new.status, potential_transition_to)
             if not possible_fsm_transition:
-                logging.debug("transition: {} -> {} is possible since there was no transition defined on the model".format(
-                    self.new.status, potential_transition_to
-                ))
+                logging.debug("transition: {} -> {} is possible since there was no transition defined "
+                              "on the model".format(self.new.status, potential_transition_to))
             if self.auto_transition_validation(possible_fsm_transition)[0]:
 
                 # get the side effects function if any
@@ -530,7 +538,8 @@ class CompleteValidation(object):
         while self._make_auto_transition():
             any_transition_made = True
 
-        # logging.debug("*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}".format(any_transition_made))
+        # logging.debug("*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}".format(
+        #     any_transition_made))
 
         # reset rigid check:
         self.disable_rigid_check = originial_rigid_check_setting
@@ -583,7 +592,8 @@ class CompleteValidation(object):
 
             # before checking if any further transitions can be made, if the current instance just transitioned,
             # apply side-effects:
-            # TODO.. this needs to be re-written and have a consistent way to include side-effects on both auto-transition / manual transition
+            # TODO.. this needs to be re-written and have a consistent way to include side-effects
+            # on both auto-transition / manual transition
             self._apply_current_side_effects()
 
             if self.make_auto_transitions():

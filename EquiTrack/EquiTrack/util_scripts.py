@@ -1,5 +1,4 @@
 from __future__ import print_function
-from string import translate
 import json
 import logging
 import time
@@ -10,13 +9,14 @@ from django.db.models import Count
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User, Group
 from users.models import Country, UserProfile
-from reports.models import ResultType, Result, CountryProgramme, Indicator, LowerResult
+from reports.models import ResultType, Result, CountryProgramme, Indicator
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
-    AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, RAMIndicator, \
-    InterventionResultLink, PartnershipBudget, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
+    AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, \
+    InterventionResultLink, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
     InterventionSectorLocationLink, SupplyPlan, DistributionPlan, Agreement, PartnerOrganization, PartnerStaffMember, \
     Assessment
 from t2f.models import TravelActivity
+
 
 def printtf(*args):
     print([arg for arg in args])
@@ -24,11 +24,13 @@ def printtf(*args):
     print([arg for arg in args], file=f)
     f.close()
 
+
 def log_to_file(file_name='fail_logs.txt', *args):
     print([arg for arg in args])
     f = open(file_name, 'a')
     print([arg for arg in args], file=f)
     f.close()
+
 
 def set_country(name):
     connection.set_tenant(Country.objects.get(name=name))
@@ -50,13 +52,13 @@ def fix_duplicate_indicators(country_name):
         time.sleep(3)
     fix_indicator_code()
 
-
     def relates_to_anything(cobj):
         for a in fattrs:
             if getattr(cobj, a).count():
                 printtf(cobj.id, cobj, "relates to ", a)
                 return True
         return False
+
     def update_relationships(dpres, keep):
         for a in fattrs:
             objs = getattr(dpres, a).all()
@@ -81,7 +83,7 @@ def fix_duplicate_indicators(country_name):
                     if relates_to_anything(dpres):
                         try:
                             update_relationships(dpres, keep)
-                        except Exception as exp:
+                        except Exception:
                             printtf('Cannot remove Object {}, id={}'.format(dpres, dpres.id))
                             error = True
                     if error:
@@ -95,8 +97,10 @@ def fix_duplicate_indicators(country_name):
                 [i.delete() for i in delq]
                 printtf("deleting: ", delq)
 
-    dupes = Indicator.objects.values('code', 'result').order_by('code', 'result').annotate(Count('pk')).filter(pk__count__gt=1, ram_indicator=True).all()
+    dupes = Indicator.objects.values('code', 'result').order_by('code', 'result').annotate(Count('pk')).filter(
+        pk__count__gt=1, ram_indicator=True).all()
     _run_clean(dupes)
+
 
 def fix_duplicate_results(country_name):
 
@@ -106,17 +110,11 @@ def fix_duplicate_results(country_name):
     printtf("Fixing duplicate Results for {}".format(country_name))
     # foreign attributes
     fattrs = ["governmentinterventionresult_set",
-            "indicator_set",
-            "ramindicator_set",
-            "resultchain_set",
-            "tripfunds_set"]
-    fattrs_mapping = {
-        "governmentinterventionresult_set": "result",
-        "indicator_set" : "result",
-        "ramindicator_set": "result",
-        "resultchain_set": "result",
-        "tripfunds_set": "wbs"
-    }
+              "indicator_set",
+              "ramindicator_set",
+              "resultchain_set",
+              "tripfunds_set"]
+
     def fix_string_wbs():
         results = Result.objects.filter(wbs__exact='').all()
         for res in results:
@@ -127,14 +125,16 @@ def fix_duplicate_results(country_name):
     def reparent_children(current_object, new_parent):
         for child in current_object.get_children():
             child.parent = new_parent
-            printtf( "reparenting child", child.id, child, new_parent.id, new_parent)
+            printtf("reparenting child", child.id, child, new_parent.id, new_parent)
             child.save()
+
     def relates_to_anything(cobj):
         for a in fattrs:
             if getattr(cobj, a).count():
                 printtf(cobj.id, cobj, "relates to ", a)
                 return True
         return False
+
     def update_relationships(dpres, keep):
         for a in fattrs:
             objs = getattr(dpres, a).all()
@@ -146,6 +146,7 @@ def fix_duplicate_results(country_name):
                         obj.result = keep
                     obj.save()
                     printtf("saved obj.id={} obj {} with keepid{} keep {}".format(obj.id, obj, keep.id, keep))
+
     def _run_clean(prop, dupes):
         printtf(len(dupes), dupes)
         search_string = prop + '__exact'
@@ -162,13 +163,13 @@ def fix_duplicate_results(country_name):
                     if dpres.get_children():
                         try:
                             reparent_children(dpres, keep)
-                        except Exception as exp:
+                        except Exception:
                             printtf('Cannot reparent from Object {}, id={}'.format(dpres, dpres.id))
                             error = True
                     if relates_to_anything(dpres):
                         try:
                             update_relationships(dpres, keep)
-                        except Exception as exp:
+                        except Exception:
                             printtf('Cannot remove Object {}, id={}'.format(dpres, dpres.id))
                             error = True
                     if error:
@@ -183,15 +184,18 @@ def fix_duplicate_results(country_name):
                 [i.delete() for i in delq]
                 printtf("deleting: ", delq)
     # get all duplicates that have the same wbs
-    dupes = Result.objects.values('wbs').annotate(Count('wbs')).order_by().filter(wbs__count__gt=1, wbs__isnull=False).exclude(wbs__exact='').all()
+    dupes = Result.objects.values('wbs').annotate(Count('wbs')).order_by().filter(
+        wbs__count__gt=1, wbs__isnull=False).exclude(wbs__exact='').all()
     dupes = sorted(dupes, key=lambda x: x['wbs'].count('/'), reverse=True)
     _run_clean('wbs', dupes)
+
 
 def cp_fix(country_name):
     if not country_name:
         printtf("country name required /n")
     set_country(country_name)
     printtf("Fixing Country Programme for {}".format(country_name))
+
     def get_cpwbs(wbs):
         grp = wbs.split('/')
         return '/'.join(grp[:3])
@@ -207,7 +211,8 @@ def cp_fix(country_name):
     for i in range(len(locpwbs)):
         today = today + timedelta(days=i)
         tomorrow = today + timedelta(days=365)
-        cp, created = CountryProgramme.objects.get_or_create(wbs=locpwbs[i], name='Country Programme '+str(i), from_date=today, to_date=tomorrow)
+        cp, created = CountryProgramme.objects.get_or_create(
+            wbs=locpwbs[i], name='Country Programme '+str(i), from_date=today, to_date=tomorrow)
 
     time.sleep(5)
 
@@ -216,6 +221,7 @@ def cp_fix(country_name):
         res.country_programme = cp
         res.save()
         print(res.name)
+
 
 def clean_result_types(country_name):
     if not country_name:
@@ -259,7 +265,7 @@ def clean_result_types(country_name):
                     if relates_to_anything(dpres):
                         try:
                             update_relationships(dpres, keep)
-                        except Exception as exp:
+                        except Exception:
                             printtf('Cannot remove Object {}, id={}'.format(dpres, dpres.id))
                             error = True
                     if error:
@@ -286,6 +292,7 @@ def delete_all_fcs(country_name):
     fcs = FundingCommitment.objects.all()
     fcs.delete()
 
+
 def dissasociate_result_structures(country_name):
     if not country_name:
         printtf("country name required /n")
@@ -310,9 +317,6 @@ def before_code_merge():
     # Clean results
     all_countries_do(fix_duplicate_results, 'Result Cleaning')
 
-    # Clean results structure
-    all_countries_do(clean_result_structures, 'Result Structure Cleaning')
-
     # clean result types
     all_countries_do(clean_result_types, 'Result Types Cleaning')
 
@@ -325,7 +329,7 @@ def before_code_merge():
     print('FINISHED WITH BEFORE MERGE')
 
 
-def after_code_merge(): #and after migrations
+def after_code_merge():  # and after migrations
 
     # set up country programme
     all_countries_do(cp_fix, 'Country Programme setup')
@@ -352,6 +356,7 @@ def populate_reference_numbers():
             agr.agreement_number = agr.reference_number
             agr.save()
 
+
 # run this before migration partners_0005
 def agreement_unique_reference_number():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
@@ -363,13 +368,15 @@ def agreement_unique_reference_number():
                 print(agr)
                 agr.agreement_number = 'blk:{}'.format(agr.id)
                 agr.save()
-        dupes = Agreement.objects.values('agreement_number').annotate(Count('agreement_number')).order_by().filter(agreement_number__count__gt=1).all()
+        dupes = Agreement.objects.values('agreement_number').annotate(
+            Count('agreement_number')).order_by().filter(agreement_number__count__gt=1).all()
         for dup in dupes:
             cdupes = Agreement.objects.filter(agreement_number=dup['agreement_number'])
             for cdup in cdupes:
                 cdup.agreement_number = '{}|{}'.format(cdup.agreement_number, cdup.id)
                 print(cdup)
                 cdup.save()
+
 
 def pca_unique_reference_number():
     from django.db.models import signals
@@ -395,7 +402,8 @@ def pca_unique_reference_number():
                 cdup.save()
     signals.post_save.connect(receiver=PCA.send_changes, sender=PCA)
 
-#run this after migration partners_0006
+
+# run this after migration partners_0006
 def bank_details_to_partner():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
@@ -424,7 +432,8 @@ def bank_details_to_partner():
         #         if created:
         #             print(bd.partner_organization)
 
-#run this after migration partners_0007
+
+# run this after migration partners_0007
 def agreement_amendments_copy():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
@@ -445,7 +454,7 @@ def agreement_amendments_copy():
                                                                         agreement=amd.agreement,
                                                                         type=amd_type,
                                                                         signed_amendment=amd.signed_document,
-                                                                        signed_date=amd.amended_at )
+                                                                        signed_date=amd.amended_at)
             if created:
                 print('{}-{}'.format(agr_amd.number, agr_amd.agreement))
 
@@ -469,9 +478,6 @@ def copy_pca_fields_to_intervention():
         'result_structure': 'hrp',
         'partner_manager': 'partner_authorized_officer_signatory',
         'unicef_manager': 'unicef_signatory',
-    }
-    status_map = {
-        'in_proccess': 'Draft'
     }
     pca_attrs = ['created_at', 'updated_at', 'partnership_type', 'number', 'title', 'status', 'start_date', 'end_date',
                  'initiation_date', 'submission_date', 'review_date', 'signed_by_unicef_date', 'signed_by_partner_date',
@@ -498,7 +504,8 @@ def copy_pca_fields_to_intervention():
                 continue
             try:
                 if intervention.status in \
-                        [intervention.ACTIVE, intervention.SUSPENDED, intervention.TERMINATED, intervention.IMPLEMENTED] \
+                        [intervention.ACTIVE, intervention.SUSPENDED,
+                         intervention.TERMINATED, intervention.IMPLEMENTED] \
                         and \
                         not intervention.signed_by_unicef_date:
                     if intervention.start:
@@ -517,6 +524,7 @@ def copy_pca_fields_to_intervention():
                 raise e
             print('after', intervention, intervention.status, intervention.document_type)
         Intervention.objects.bulk_create(interventions_to_save)
+
 
 def clean_interventions():
     for country in Country.objects.exclude(name='Global'):
@@ -546,9 +554,9 @@ def copy_pca_amendments_to_intervention():
                 continue
 
             intr_amd, created = InterventionAmendment.objects.get_or_create(signed_date=amendment.amended_at,
-                                                                        intervention=intervention,
-                                                                        type=amd_type,
-                                                                        amendment_number=amendment.amendment_number)
+                                                                            intervention=intervention,
+                                                                            type=amd_type,
+                                                                            amendment_number=amendment.amendment_number)
             if created:
                 print('{}-{}'.format(intr_amd.amendment_number, intr_amd.intervention))
 
@@ -588,8 +596,9 @@ def import_planned_visits():
                         continue
                     if intervention.planned_visits > 0 and intervention.start:
                         InterventionPlannedVisits.objects.get_or_create(intervention=intervention,
-                                                            year=intervention.start.year,
-                                                            programmatic=row['planned_visits'])
+                                                                        year=intervention.start.year,
+                                                                        programmatic=row['planned_visits'])
+
 
 def import_fr_numbers():
     with open('pca_numbers.json') as data_file:
@@ -646,10 +655,11 @@ def copy_pca_budgets_to_intervention():
                 if pb_year:
                     pb = pca.budget_log.filter(year=pb_year).order_by('-created').first()
                     InterventionBudget.objects.get_or_create(intervention=intervention,
-                                                            partner_contribution=pb.partner_contribution,
-                                                            unicef_cash=pb.unicef_cash,
-                                                            in_kind_amount=pb.in_kind_amount,
-                                                            year=pb.year)
+                                                             partner_contribution=pb.partner_contribution,
+                                                             unicef_cash=pb.unicef_cash,
+                                                             in_kind_amount=pb.in_kind_amount,
+                                                             year=pb.year)
+
 
 def copy_pca_attachments_to_intervention():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
@@ -664,6 +674,7 @@ def copy_pca_attachments_to_intervention():
             InterventionAttachment.objects.get_or_create(intervention=intervention,
                                                          type=pca_file.type,
                                                          attachment=pca_file.attachment)
+
 
 def copy_pca_sector_locations_to_intervention():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
@@ -683,11 +694,13 @@ def copy_pca_sector_locations_to_intervention():
                 try:
                     intervention = Intervention.objects.get(number=pca.number)
                 except Intervention.DoesNotExist:
-                    log_to_file('copy_pca_sector_locations_to_intervention: Indervention.DoesNotExist', pca.id, pca.number)
+                    log_to_file('copy_pca_sector_locations_to_intervention: Indervention.DoesNotExist',
+                                pca.id, pca.number)
                     continue
                 isl, created = InterventionSectorLocationLink.objects.get_or_create(intervention=intervention,
                                                                                     sector=sector)
                 isl.locations.add(*locations)
+
 
 def copy_pca_supply_plan_to_intervention():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
@@ -697,10 +710,12 @@ def copy_pca_supply_plan_to_intervention():
             try:
                 intervention = Intervention.objects.get(number=sp.partnership.number)
             except Intervention.DoesNotExist:
-                log_to_file('copy_pca_supply_plan_to_intervention: Indervention.DoesNotExist', sp.partnership.id, sp.partnership.number)
+                log_to_file('copy_pca_supply_plan_to_intervention: Indervention.DoesNotExist',
+                            sp.partnership.id, sp.partnership.number)
                 continue
             sp.intervention = intervention
             sp.save()
+
 
 def copy_pca_distribution_plan_to_intervention():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
@@ -711,7 +726,8 @@ def copy_pca_distribution_plan_to_intervention():
                 try:
                     intervention = Intervention.objects.get(number=dp.partnership.number)
                 except Intervention.DoesNotExist:
-                    log_to_file('copy_pca_distribution_plan_to_intervention: Indervention.DoesNotExist', dp.partnership.id,
+                    log_to_file('copy_pca_distribution_plan_to_intervention: Indervention.DoesNotExist',
+                                dp.partnership.id,
                                 dp.partnership.number)
 
                     continue
@@ -724,7 +740,7 @@ def local_country_keep():
     keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border']
     Country.objects.exclude(name__in=keeping).all().delete()
 
-          
+
 def migrate_authorized_officers(country_name):
     """
     Migrates AuthorizedOfficer from schema  , cntryinstances back to the Agreement as a M2M field
@@ -740,6 +756,7 @@ def migrate_authorized_officers(country_name):
         officer = item.officer
         agreement.authorized_officers.add(officer)
         agreement.save()
+
 
 def change_partner_shared_women(country_name):
     if not country_name:
@@ -769,6 +786,7 @@ def change_partner_cso_type(country_name):
             partner.cso_type = 'Community Based Organization'
         partner.save()
 
+
 def after_partner_migration():
     copy_pca_fields_to_intervention()
     agreement_amendments_copy()
@@ -781,10 +799,10 @@ def after_partner_migration():
     # copy_pca_supply_plan_to_intervention()
     # copy_pca_distribution_plan_to_intervention()
 
-
     # TODO:
     # all_countries_do(pca_intervention_fr_numbers)
     # planned_visits
+
 
 def release_3_migrations():
     all_countries_do(migrate_authorized_officers, 'migrate authorized officers')
@@ -805,28 +823,28 @@ def migrate_to_good_partner(country_name, partner_list):
         partner_new = PartnerOrganization.objects.get(id=partner_tuple[1])
         logging.info("old partner: {} --- new partner: {}".format(partner_old, partner_new))
 
-        #agreements
+        # agreements
         agreements = Agreement.objects.filter(partner=partner_old)
         for agreement in agreements:
             agreement.partner = partner_new
             agreement.save()
             logging.info("agreement: {}".format(agreement.reference_number))
 
-        #staff members
+        # staff members
         staff_members = PartnerStaffMember.objects.filter(partner=partner_old)
         for staff_member in staff_members:
             staff_member.partner = partner_new
             staff_member.save()
             logging.info("staff_member name: {}".format(staff_member.get_full_name()))
 
-        #assesments
+        # assesments
         assesments = Assessment.objects.filter(partner=partner_old)
         for assesment in assesments:
             assesment.partner = partner_new
             assesment.save()
             logging.info("assessment id: {}".format(assesment.id))
 
-        #travel activities
+        # travel activities
         travel_activities = TravelActivity.objects.filter(partner=partner_old)
         for travel_activity in travel_activities:
             travel_activity.partner = partner_new
@@ -861,19 +879,23 @@ def create_test_user(email, password):
     userp.save()
     logging.info("user {} created".format(u.email))
 
+
 class every_country:
     def __enter__(self):
         for c in Country.objects.exclude(name='Global').all():
             connection.set_tenant(c)
             yield c
+
     def __exit__(self, type, value, traceback):
         connection.set_tenant(Country.objects.get(name='Global'))
+
 
 def run(function):
     with every_country() as c:
         for country in c:
             print(country.name)
             function()
+
 
 def remediation_intervention_migration():
     from django.db import transaction
@@ -911,6 +933,7 @@ def remediation_intervention_migration():
 def make_all_drafts_active():
     Intervention.objects.filter(status='draft').update(status='active')
 
+
 def assert_interventions_valid():
     ints = Intervention.objects.prefetch_related('agreement').all()
     for i in ints:
@@ -924,13 +947,11 @@ def assert_interventions_valid():
 
 def wow():
     c = Intervention.objects.filter(status='active').count()
-    if c>0:
+    if c > 0:
         print(c)
 
 
-
 def intervention_update_task():
-    from django.db import transaction
     from partners.validation.interventions import InterventionValid
     master_user = User.objects.get(username='etools_task_admin')
     all_interventions = Intervention.objects.filter(status__in=['draft', 'signed', 'active', 'ended'])
@@ -938,7 +959,8 @@ def intervention_update_task():
         old_status = intervention.status
         validator = InterventionValid(intervention, master_user)
         if not validator.is_valid:
-            print('intervention {} of type {} is invalid: (Status:{})'.format(intervention.id, intervention.document_type, intervention.status))
+            print('intervention {} of type {} is invalid: (Status:{})'.format(
+                intervention.id, intervention.document_type, intervention.status))
             print(validator.errors)
         else:
             if old_status != intervention.status:
@@ -951,11 +973,11 @@ def interventions_associated_ssfa():
     for c in Country.objects.exclude(name='Global').all():
         set_country(c.name)
         print(c.name)
-        intervention_pds_ssfa = Intervention.objects.filter(agreement__agreement_type=Agreement.SSFA, document_type=Intervention.PD)
+        intervention_pds_ssfa = Intervention.objects.filter(
+            agreement__agreement_type=Agreement.SSFA, document_type=Intervention.PD)
         intervention_ssfa_pca = Intervention.objects.filter(agreement__agreement_type=Agreement.PCA,
                                                             document_type=Intervention.SSFA)
         interventions = intervention_pds_ssfa | intervention_ssfa_pca
         for i in interventions:
-            print('intervention {} type {} has agreement type {}'.format(i.id, i.document_type, i.agreement.agreement_type))
-
-
+            print('intervention {} type {} has agreement type {}'.format(
+                i.id, i.document_type, i.agreement.agreement_type))
