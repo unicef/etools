@@ -10,6 +10,7 @@ from django.test import TestCase
 
 from utils.common.utils import get_all_field_names
 
+
 class CommonUtilsTest(TestCase):
     '''Tests for utils.common.utils'''
     def test_get_all_field_names(self):
