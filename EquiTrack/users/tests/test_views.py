@@ -83,13 +83,13 @@ class TestUserViews(APITenantTestCase):
     def test_api_users_list_managers(self):
         response = self.forced_auth_req(
             'get',
-            '/users/api/',
+            '/api/users/',
             user=self.unicef_staff,
             data={"partnership_managers": True}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 1)
 
     def test_api_groups_list(self):
         response = self.forced_auth_req('get', '/api/groups/', user=self.unicef_staff)
