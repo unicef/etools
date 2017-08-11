@@ -18,10 +18,10 @@ import os
 from os.path import abspath, basename, dirname, join, normpath
 import datetime
 
+import djcelery
 import dj_database_url
 import saml2
 from saml2 import saml
-from kombu import Exchange, Queue
 
 
 # Helper function to convert strings (i.e. environment variable values) to a Boolean
@@ -323,7 +323,6 @@ POST_OFFICE = {
 }
 
 # django-celery: https://github.com/celery/django-celery
-import djcelery
 djcelery.setup_loader()
 
 # celery: http://docs.celeryproject.org/en/3.1/configuration.html

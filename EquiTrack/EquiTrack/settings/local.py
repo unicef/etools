@@ -1,13 +1,9 @@
-import datetime
 import sys
 
-from EquiTrack.settings.base import *  # noqa
-
+from EquiTrack.settings.base import *  # noqa: F403
 
 DEBUG = True
-
 CELERY_ALWAYS_EAGER = True
-
 
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now',
@@ -30,10 +26,10 @@ CACHES = {
     }
 }
 
-# django-allauth: https://github.com/pennersr/django-allauth
+# local override for django-allauth
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
 
-# django-cors-headers: https://github.com/ottoyiu/django-cors-headers
+# local override for django-cors-headers
 CORS_ORIGIN_ALLOW_ALL = True
 
 if 'test' in sys.argv:
