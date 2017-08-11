@@ -4,7 +4,6 @@ from __future__ import absolute_import
 from django.conf import settings
 from django.conf.urls import include, url
 from django.views.generic import TemplateView
-# Uncomment the line below to enable the admin:
 from django.contrib import admin
 
 # 3rd party imports
@@ -14,9 +13,8 @@ from rest_framework_nested import routers
 import djangosaml2.views
 
 # Project imports
-from publics.views import StaticDataView
-from .stream_feed.feeds import JSONActivityFeedWithCustomData
-from .views import (
+from EquiTrack.stream_feed.feeds import JSONActivityFeedWithCustomData
+from EquiTrack.views import (
     MainView,
     OutdatedBrowserView
 )
@@ -25,39 +23,25 @@ from locations.views import (
     LocationsViewSet,
     LocationsLightViewSet,
 )
-from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
-
+from management.urls import urlpatterns as management_urls
+from partners.urls import (
+    staffm_api,
+)
 from partners.views.v1 import (
     FileTypeViewSet,
 )
-from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
+from publics import urls as publics_patterns
+from publics.views import StaticDataView
 from reports.views.v1 import (
     ResultTypeViewSet,
     SectorViewSet,
-    # GoalViewSet,
     IndicatorViewSet,
     ResultViewSet,
     UnitViewSet
 )
-
-from partners.urls import (
-    # interventions_api,
-    # results_api,
-    # simple_results_api,
-    # intervention_reports_api,
-    # pcasectors_api,
-    # pcabudgets_api,
-    # pcafiles_api,
-    # pcaamendments_api,
-    # pcalocations_api,
-    # pcagrants_api,
-    staffm_api,
-    # agreement_api,
-    # simple_agreements_api,
-)
-
-from management.urls import urlpatterns as management_urls
-
+from t2f.urls import urlpatterns as t2f_patterns
+from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
+from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
 from workplan.views import (
     CommentViewSet,
     WorkplanViewSet,
@@ -66,8 +50,6 @@ from workplan.views import (
     MilestoneViewSet
 )
 
-from t2f.urls import urlpatterns as t2f_patterns
-from publics import urls as publics_patterns
 
 schema_view = get_swagger_view(title='eTools API')
 
@@ -81,8 +63,6 @@ tripsfiles_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
 tripsfiles_api.register(r'files', TripFileViewSet, base_name='files')
 actionpoint_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
 actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='actionpoints')
-# from reports.views.v1 import ResultStructureViewSet
-# api.register(r'reports/result-structures', ResultStructureViewSet, base_name='resultstructures')
 
 # ******************  API version 1  ******************************
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
@@ -108,8 +88,6 @@ api.register(r'workplans/milestones', MilestoneViewSet, base_name='milestones')
 api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_projects')
 api.register(r'labels', LabelViewSet, base_name='labels')
 
-# from django.contrib.auth.decorators import login_required
-# from .utils import staff_required
 urlpatterns = [
     # TODO: overload login_required to staff_required to automatically re-route partners to the parter portal
 
@@ -147,10 +125,7 @@ urlpatterns = [
 
 
     url(r'^api/docs/', schema_view),
-    # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # helper urls
     url(r'^accounts/', include('allauth.urls')),

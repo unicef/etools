@@ -4,8 +4,6 @@ Project wide base classes and utility functions for apps
 import csv
 from collections import OrderedDict as SortedDict
 from functools import wraps
-
-from import_export.resources import ModelResource
 import json
 import requests
 import tablib
@@ -19,7 +17,7 @@ from django.contrib.sites.models import Site
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import connection
 from django.utils.cache import patch_cache_control
-
+from import_export.resources import ModelResource
 from rest_framework import status
 from rest_framework.response import Response
 

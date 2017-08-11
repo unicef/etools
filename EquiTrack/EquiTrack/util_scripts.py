@@ -1,4 +1,6 @@
 from __future__ import print_function
+
+from datetime import datetime, timedelta
 import json
 import logging
 import time
@@ -6,8 +8,8 @@ import re
 
 from django.db import connection
 from django.db.models import Count
-from datetime import datetime, timedelta
 from django.contrib.auth.models import User, Group
+
 from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \

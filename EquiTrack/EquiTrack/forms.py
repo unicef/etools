@@ -1,11 +1,8 @@
 from __future__ import absolute_import
 
-from django.db.models import Q
-
-__author__ = 'unicef-leb-inn'
-
 from django import forms
 from django.db import connection
+from django.db.models import Q
 from django.contrib.auth.models import Group
 from suit.widgets import AutosizedTextarea
 from django.forms.models import BaseInlineFormSet

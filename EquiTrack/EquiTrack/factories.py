@@ -1,13 +1,12 @@
 """
 Model factories used for generating models dynamically for tests
 """
+from datetime import datetime, timedelta, date
 import json
 
-from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
-
 import factory
 from factory import fuzzy
 

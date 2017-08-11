@@ -8,7 +8,6 @@ from django.db import connection
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-
 from django.core.urlresolvers import reverse
 from django.template.response import SimpleTemplateResponse
 from django.utils.http import urlsafe_base64_encode
@@ -29,7 +28,7 @@ from allauth.account.utils import perform_login
 from EquiTrack.utils import set_country
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
-logger = logging.getLogger('etools.mixins')
+logger = logging.getLogger(__name__)
 
 
 class AdminURLMixin(object):
