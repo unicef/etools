@@ -153,13 +153,15 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
         read_field=TPMPartnerLightSerializer(read_only=True),
     )
 
+    status_date = serializers.ReadOnlyField()
+
     class Meta(StatusPermissionsBasedRootSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMVisit
         permission_class = TPMPermission
         fields = [
             'id', 'start_date', 'end_date',
             'tpm_activities', 'tpm_partner',
-            'status', 'reference_number',
+            'status', 'status_date', 'reference_number',
         ]
 
 

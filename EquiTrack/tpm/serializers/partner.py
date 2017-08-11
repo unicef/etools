@@ -15,12 +15,15 @@ class TPMPartnerStaffMemberSerializer(BaseStaffMemberSerializer):
 
 
 class TPMPartnerLightSerializer(serializers.ModelSerializer):
+    status_date = serializers.ReadOnlyField()
+
     class Meta:
         model = TPMPartner
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number', 'status', 'hidden', 'blocked'
+            'email', 'phone_number', 'status', 'status_date',
+            'hidden', 'blocked'
         ]
 
 

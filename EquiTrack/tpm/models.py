@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django_fsm import FSMField, transition
 from django.utils.translation import ugettext_lazy as _
@@ -32,19 +33,32 @@ class TPMPartner(BaseFirm):
         ('cancelled', _('Cancelled')),
     )
 
+    STATUSES_DATES = {
+        STATUSES.draft: 'created',
+        STATUSES.active: 'date_of_active',
+        STATUSES.cancelled: 'date_of_cancel',
+    }
+
     status = FSMField(_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
     attachments = GenericRelation(Attachment, verbose_name=_('attachments'), blank=True)
+
+    date_of_active = models.DateTimeField(blank=True, null=True)
+    date_of_cancel = models.DateTimeField(blank=True, null=True)
+
+    @property
+    def status_date(self):
+        return getattr(self, self.STATUSES_DATES[self.status])
 
     # TODO: Remove hardcode for PME permissions?
     @transition(status, source=[STATUSES.draft, STATUSES.cancelled], target=STATUSES.active,
                 permission=lambda instance, user: PME.as_group() in user.groups.all())
     def activate(self):
-        pass
+        self.date_of_active = timezone.now()
 
     @transition(status, source=[STATUSES.draft, STATUSES.active], target=STATUSES.cancelled,
                 permission=lambda instance, user: PME.as_group() in user.groups.all())
     def cancel(self):
-        pass
+        self.date_of_cancel = timezone.now()
 
 
 class TPMPartnerStaffMember(BaseStaffMember):
@@ -66,9 +80,17 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         ('tpm_accepted', _('TPM Accepted')),
         ('tpm_rejected', _('TPM Rejected')),
         ('tpm_reported', _('TPM Reported')),
-        ('submitted', _('Submitted')),
-        ('unicef_approved', _('Approved')),
+        ('unicef_approved', _('UNICEF Approved')),
     )
+
+    STATUSES_DATES = {
+        STATUSES.draft: 'created',
+        STATUSES.assigned: 'date_of_assigned',
+        STATUSES.tpm_accepted: 'date_of_tpm_accepted',
+        STATUSES.tpm_rejected: 'date_of_tpm_rejected',
+        STATUSES.tpm_reported: 'date_of_tpm_reported',
+        STATUSES.unicef_approved: 'date_of_unicef_approved',
+    }
 
     tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), null=True)
 
@@ -78,6 +100,16 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     attachments = CodedGenericRelation(Attachment, verbose_name=_('Related Documents'), code='attach', blank=True)
     report = CodedGenericRelation(Attachment, verbose_name=_('Report'), code='report', blank=True)
+
+    date_of_assigned = models.DateTimeField(blank=True, null=True)
+    date_of_tpm_accepted = models.DateTimeField(blank=True, null=True)
+    date_of_tpm_rejected = models.DateTimeField(blank=True, null=True)
+    date_of_tpm_reported = models.DateTimeField(blank=True, null=True)
+    date_of_unicef_approved = models.DateTimeField(blank=True, null=True)
+
+    @property
+    def status_date(self):
+        return getattr(self, self.STATUSES_DATES[self.status])
 
     @property
     def reference_number(self):
@@ -157,6 +189,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 ],
                 permission=_has_action_permission(action='assign'))
     def assign(self):
+        self.date_of_assigned = timezone.now()
         self._send_email(self._get_tpm_as_email_recipients(), 'tpm/visit/assign',
                          cc=self._get_unicef_focal_points_as_email_recipients())
 
@@ -164,6 +197,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 permission=_has_action_permission(action='reject'),
                 custom={'serializer': TPMVisitRejectSerializer})
     def reject(self, reject_comment):
+        self.date_of_tpm_rejected = timezone.now()
         self.reject_comment = reject_comment
 
         self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/reject',
@@ -172,6 +206,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     @transition(status, source=[STATUSES.assigned], target=STATUSES.tpm_accepted,
                 permission=_has_action_permission(action='accept'))
     def accept(self):
+        self.date_of_tpm_accepted = timezone.now()
         self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/accept',
                          cc=self._get_tpm_as_email_recipients())
 
@@ -181,12 +216,14 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 ],
                 permission=_has_action_permission(action='send_report'))
     def send_report(self):
+        self.date_of_tpm_reported = timezone.now()
         self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/report',
                          cc=self._get_tpm_as_email_recipients())
 
     @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
                 permission=_has_action_permission(action='approve'))
     def approve(self, mark_as_programmatic_visit=True, notify_focal_point=True, notify_partner=True):
+        self.date_of_unicef_approved = timezone.now()
         if notify_focal_point:
             self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/approve')
 
