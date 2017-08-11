@@ -17,8 +17,6 @@ from __future__ import absolute_import
 import os
 from os.path import abspath, basename, dirname, join, normpath
 import datetime
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.backends import default_backend
 
 import dj_database_url
 import saml2
@@ -538,6 +536,41 @@ SAML_CONFIG = {
     'valid_for': 24,  # how long is our metadata valid
 }
 SAML_SIGNED_LOGOUT = True
+
+# django-rest-framework-jwt: http://getblimp.github.io/django-rest-framework-jwt/
+JWT_AUTH = {
+   'JWT_ENCODE_HANDLER':
+   'rest_framework_jwt.utils.jwt_encode_handler',
+
+   'JWT_DECODE_HANDLER':
+   'rest_framework_jwt.utils.jwt_decode_handler',
+
+   'JWT_PAYLOAD_HANDLER':
+   'rest_framework_jwt.utils.jwt_payload_handler',
+
+   'JWT_PAYLOAD_GET_USER_ID_HANDLER':
+   'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
+
+   'JWT_PAYLOAD_GET_USERNAME_HANDLER':
+   'rest_framework_jwt.utils.jwt_get_username_from_payload_handler',
+
+   'JWT_RESPONSE_PAYLOAD_HANDLER':
+   'rest_framework_jwt.utils.jwt_response_payload_handler',
+
+   'JWT_ALGORITHM': 'HS256',
+   'JWT_VERIFY': True,
+   'JWT_VERIFY_EXPIRATION': True,
+   'JWT_LEEWAY': 30,
+   'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=30000),
+   'JWT_AUDIENCE': None,
+   'JWT_ISSUER': None,
+
+   'JWT_ALLOW_REFRESH': False,
+   'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
+
+   'JWT_AUTH_HEADER_PREFIX': 'JWT',
+}
+
 
 # eTools settings ################################
 
