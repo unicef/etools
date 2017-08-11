@@ -243,8 +243,8 @@ class OverlappingTravelsTest(APITenantTestCase):
         ]
 
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:state_change',
-                                                        kwargs={'travel_pk': response_json['id'],
-                                                                'transition_name': 'submit_for_approval'}),
+                                                         kwargs={'travel_pk': response_json['id'],
+                                                                 'transition_name': 'submit_for_approval'}),
                                         data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json,

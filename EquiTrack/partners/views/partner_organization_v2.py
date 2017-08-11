@@ -23,7 +23,6 @@ from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import (
     PartnerStaffMember,
-    Intervention,
     PartnerOrganization,
     Assessment,
 )

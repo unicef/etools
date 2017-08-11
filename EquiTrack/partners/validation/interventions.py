@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from datetime import date, datetime
+from datetime import date
 import logging
 
 from django.utils.translation import ugettext as _
@@ -46,6 +46,7 @@ def transition_to_closed(i):
     # TODO: figure out Action Point Validation once the spec is completed
 
     return True
+
 
 def transition_to_active(i):
     # Only transitional validation
@@ -191,4 +192,3 @@ class InterventionValid(CompleteValidation):
         if not today > intervention.end:
             raise StateValidError([_('Today is not after the end date')])
         return True
-
