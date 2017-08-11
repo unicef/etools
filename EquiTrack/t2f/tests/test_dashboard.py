@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.models import make_travel_reference_number, TravelType, Travel
+from t2f.models import make_travel_reference_number, Travel
 
 from .factories import TravelFactory, TravelActivityFactory
 
@@ -44,9 +44,9 @@ class TravelActivityList(APITenantTestCase):
 
         # add a new travel activity and make sure the number of queries remain the same
         travel2 = TravelFactory(reference_number=make_travel_reference_number(),
-                                    traveler=self.traveler1,
-                                    status=Travel.APPROVED,
-                                    supervisor=self.unicef_staff)
+                                traveler=self.traveler1,
+                                status=Travel.APPROVED,
+                                supervisor=self.unicef_staff)
         act = travel2.activities.first()
         act.partner = partner
         act.save()

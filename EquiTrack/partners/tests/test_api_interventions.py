@@ -336,7 +336,6 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertItemsEqual(self.REQUIRED_FIELDS['signed'],
                               [perm for perm in required_permissions if required_permissions[perm]])
 
-
     def test_list_interventions(self):
         with self.assertNumQueries(10):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')

@@ -113,7 +113,6 @@ def mark_as_certified_or_completed_threshold_decorator(func):
     return wrapper
 
 
-
 class Travel(models.Model):
     PLANNED = 'planned'
     SUBMITTED = 'submitted'
@@ -561,7 +560,7 @@ def determine_file_upload_path(instance, filename):
     #          filename]
     #     )
     country_name = connection.schema_name or 'Uncategorized'
-    return 'travels/{}/{}/{}'.format(connection.schema_name, instance.travel.id, filename)
+    return 'travels/{}/{}/{}'.format(country_name, instance.travel.id, filename)
 
 
 class TravelAttachment(models.Model):

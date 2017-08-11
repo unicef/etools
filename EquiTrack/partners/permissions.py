@@ -89,7 +89,7 @@ class InterventionPermissions(PMPPermissions):
 
         def user_added_amendment(instance):
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
-            #check_rigid_related checks if there were any changes from the previous
+            # check_rigid_related checks if there were any changes from the previous
             # amendments if there were changes it returns False
             return not check_rigid_related(instance, 'amendments')
 
@@ -100,6 +100,7 @@ class InterventionPermissions(PMPPermissions):
             # this condition can only be checked on data save
             'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)
         }
+
 
 class AgreementPermissions(PMPPermissions):
 
@@ -119,7 +120,7 @@ class AgreementPermissions(PMPPermissions):
 
         def user_added_amendment(instance):
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
-            #check_rigid_related checks if there were any changes from the previous
+            # check_rigid_related checks if there were any changes from the previous
             # amendments if there were changes it returns False
             return not check_rigid_related(instance, 'amendments')
 

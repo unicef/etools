@@ -105,6 +105,7 @@ def ssfa_static(agreement):
                 raise BasicValidationError(_("Start and end dates don't match the Document's start and end"))
     return True
 
+
 def one_pca_per_cp_per_partner(agreement):
     if agreement.agreement_type == agreement.PCA:
         # see if there are any PCAs in the CP other than this for this partner
@@ -114,6 +115,7 @@ def one_pca_per_cp_per_partner(agreement):
                                       .exclude(pk=agreement.id).count():
             return False
     return True
+
 
 class AgreementValid(CompleteValidation):
 

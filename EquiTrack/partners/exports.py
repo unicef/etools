@@ -1,12 +1,9 @@
-
-__author__ = 'jcranwellward'
-
 from collections import OrderedDict
 
 from import_export import resources
 
 from EquiTrack.utils import BaseExportResource
-from .models import (
+from partners.models import (
     PCA,
     PartnerOrganization,
     PartnershipBudget,
@@ -357,4 +354,3 @@ class InterventionExport(resources.ModelResource):
 
     def dehydrate_total_budget(self, intervention):
         return intervention.total_budget
-

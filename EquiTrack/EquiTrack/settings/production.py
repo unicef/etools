@@ -3,37 +3,35 @@
 from os import environ
 from base import *
 
-########## HOST CONFIGURATION
-# See: https://docs.djangoproject.com/en/1.5/releases/1.5/#allowed-hosts-required-in-production
 ALLOWED_HOSTS = [
     os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
 ]
-########## END HOST CONFIGURATION
 
-ETRIPS_VERSION = environ.get('ETRIPS_VERSION', None)
-
-#Sentry config
+# raven (Sentry): https://github.com/getsentry/raven-python
 RAVEN_CONFIG = {
     'dsn': environ.get('SENTRY_DSN', None),
 }
-
-INSTALLED_APPS = INSTALLED_APPS + (
+INSTALLED_APPS += (  # noqa
     'raven.contrib.django.raven_compat',
 )
 
-# MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
-#     'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
-# )
+SENTRY_CLIENT = 'utils.sentry.client.EToolsSentryClient'
 
+# django-allauth: https://github.com/pennersr/django-allauth
 SOCIALACCOUNT_PROVIDERS = \
-    { 'google':
-        { 'SCOPE': ['profile', 'email'],
-          'AUTH_PARAMS': { 'access_type': 'online' } }}
-
+    {'google':
+        {'SCOPE': ['profile', 'email'],
+         'AUTH_PARAMS': {'access_type': 'online'}}}
 SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
+# django-cors-headers: https://github.com/ottoyiu/django-cors-headers
+CORS_ORIGIN_ALLOW_ALL = False
 
+# eTools settings
+ETRIPS_VERSION = environ.get('ETRIPS_VERSION', None)
+
+# Azure settings
 AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME', None)
 AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY', None)
 AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER', None)
@@ -41,8 +39,6 @@ AZURE_SSL = True
 AZURE_AUTO_SIGN = True  # flag for automatically signing urls
 AZURE_ACCESS_POLICY_EXPIRY = 120  # length of time before signature expires in seconds
 AZURE_ACCESS_POLICY_PERMISSION = 'r'  # read permission
-
-CORS_ORIGIN_ALLOW_ALL = False
 
 if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
 
