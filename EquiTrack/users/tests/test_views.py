@@ -237,7 +237,6 @@ class TestUserViewsV3(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
 
-
     def test_api_users_retrieve_myprofile(self):
         response = self.forced_auth_req(
             'get',
