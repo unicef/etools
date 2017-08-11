@@ -257,6 +257,7 @@ TEST_RUNNER = 'EquiTrack.tests.runners.TestRunner'
 # DJANGO: URLS
 ROOT_URLCONF = '%s.urls' % SITE_NAME
 
+
 # Django Contrib Settings ################################
 
 # CONTRIB: AUTH
@@ -327,8 +328,8 @@ djcelery.setup_loader()
 
 # celery: http://docs.celeryproject.org/en/3.1/configuration.html
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)
-BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(BROKER_VISIBILITY_VAR)}  # 5 hours
+BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(BROKER_VISIBILITY_VAR)}
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 # Sensible settings for celery
@@ -342,12 +343,7 @@ CELERY_DISABLE_RATE_LIMITS = False
 CELERY_IGNORE_RESULT = True
 CELERY_SEND_TASK_ERROR_EMAILS = False
 CELERY_TASK_RESULT_EXPIRES = 600
-# Don't use pickle as serializer, json is much safer
-# CELERY_TASK_SERIALIZER = "json"
-# CELERY_ACCEPT_CONTENT = ['application/json']
-# CELERYD_HIJACK_ROOT_LOGGER = False
 CELERYD_PREFETCH_MULTIPLIER = 1
-# CELERYD_MAX_TASKS_PER_CHILD = 1000
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
 CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
@@ -500,12 +496,6 @@ SAML_CONFIG = {
     # where the remote metadata is stored
     'metadata': {
         "local": [join(DJANGO_ROOT, 'saml/federationmetadata.xml')],
-        # "remote": [
-        #     {
-        #         "url": "http://sts.unicef.org/federationmetadata/2007-06/federationmetadata.xml",
-        #         "cert": join(DJANGO_ROOT, 'saml/certs/sts.unicef.org.cer')
-        #     }
-        # ],
     },
 
     # set to 1 to output debugging information
