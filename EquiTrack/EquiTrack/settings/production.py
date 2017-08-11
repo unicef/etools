@@ -19,10 +19,6 @@ SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
-SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
-
-
-LOGIN_URL = '/login/'
 
 # production overrides for django-rest-framework-jwt
 certificate_text = open(join(DJANGO_ROOT, 'saml/etripspub.cer'), 'r').read()
