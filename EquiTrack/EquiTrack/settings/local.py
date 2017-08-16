@@ -1,4 +1,5 @@
 import datetime
+import logging
 import sys
 
 from EquiTrack.settings.base import *  # noqa
@@ -77,6 +78,9 @@ if 'test' in sys.argv:
         'utils.common',
         'utils.writable_serializers',
     ]
+
+    # Disable logging output during tests
+    logging.disable(logging.CRITICAL)
 else:
     # Settings which should NOT be active during automated tests
 
