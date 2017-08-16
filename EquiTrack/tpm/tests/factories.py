@@ -2,12 +2,9 @@ import datetime
 
 import factory
 import factory.fuzzy
-from factory import fuzzy
 
 from EquiTrack.factories import InterventionFactory, LocationFactory, PartnerStaffFactory, \
                                 ResultFactory, SectionFactory
-from partners.models import IndicatorReport, InterventionResultLink, InterventionSectorLocationLink
-from reports.models import AppliedIndicator, LowerResult, IndicatorBlueprint, Sector
 from tpm.models import TPMPartner, TPMPartnerStaffMember, TPMVisit, TPMActivity
 from firms.factories import BaseStaffMemberFactory, BaseFirmFactory
 
