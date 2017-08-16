@@ -107,6 +107,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     date_of_tpm_reported = models.DateTimeField(blank=True, null=True)
     date_of_unicef_approved = models.DateTimeField(blank=True, null=True)
 
+    sections = models.ManyToManyField('users.Section', related_name='tpm_visits')
+
+    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Point'),
+                                                 related_name='tpm_visits')
+
     @property
     def status_date(self):
         return getattr(self, self.STATUSES_DATES[self.status])
@@ -122,14 +127,14 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     @property
     def start_date(self):
         # TODO: Rewrite to reduce number of SQL queries.
-        return TPMLocation.objects.filter(tpm_low_result__tpm_sector__tpm_activity__tpm_visit=self).aggregate(
-            models.Min('start_date'))['start_date__min']
+        return self.tpm_activities.aggregate(
+            models.Min('date'))['date__min']
 
     @property
     def end_date(self):
         # TODO: Rewrite to reduce number of SQL queries.
-        return TPMLocation.objects.filter(tpm_low_result__tpm_sector__tpm_activity__tpm_visit=self).aggregate(
-            models.Max('end_date'))['end_date__max']
+        return self.tpm_activities.aggregate(
+            models.Max('date'))['date__max']
 
     def __str__(self):
         return 'Visit ({}, {})'.format(
@@ -239,53 +244,16 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 class TPMActivity(models.Model):
     partnership = models.ForeignKey('partners.Intervention', verbose_name=_('partnership'))
 
-    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
+    result = models.ForeignKey('partners.InterventionResultLink', verbose_name=_('PD/SSFA Output'), null=True, blank=True)
 
-    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Point'),
-                                                 related_name='tpm_activities')
+    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
+    locations = models.ManyToManyField('locations.Location', verbose_name=_('Locations'), related_name='tpm_activities')
 
     def __str__(self):
         return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
 
     class Meta:
         verbose_name_plural = _('TPM Activities')
-
-
-@python_2_unicode_compatible
-class TPMSectorCovered(models.Model):
-    sector = models.ForeignKey('reports.Sector', verbose_name=_('Sector covered'), blank=True)
-    tpm_activity = models.ForeignKey(TPMActivity, verbose_name=_('activity'), related_name='tpm_sectors')
-
-    def __str__(self):
-        return 'Sector {0} for {1}'.format(self.sector, self.tpm_activity)
-
-    class Meta:
-        verbose_name_plural = _('TPM Sectors Covered')
-
-
-@python_2_unicode_compatible
-class TPMLowResult(models.Model):
-    # TODO: Results is LowerResult? (TPM Spec: Low-level Results (see PD/SSFA Output [array]0..* in PMP))
-    result = models.ForeignKey('partners.InterventionResultLink', verbose_name=_('PD/SSFA Output'))
-    tpm_sector = models.ForeignKey(TPMSectorCovered, verbose_name=_('sector'), related_name='tpm_low_results')
-
-    def __str__(self):
-        return 'Result {0} for {1}'.format(self.result, self.tpm_sector)
-
-
-@python_2_unicode_compatible
-class TPMLocation(models.Model):
-    tpm_low_result = models.ForeignKey(TPMLowResult, verbose_name=_('low_result'), null=True, blank=True,
-                                       related_name='tpm_locations')
-
-    start_date = models.DateField(verbose_name=_('Start Date'), null=True, blank=True)
-    end_date = models.DateField(verbose_name=_('End Date'), null=True, blank=True)
-
-    location = models.ForeignKey('locations.Location', verbose_name=_('Location'))
-    type_of_site = models.CharField(verbose_name=_('Type of site'), max_length=255, blank=True)
-
-    def __str__(self):
-        return '{}: {}'.format(self.tpm_low_result, self.location)
 
 
 PME = GroupWrapper(code='pme',

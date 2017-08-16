@@ -4,20 +4,6 @@ from publics.admin import AdminListMixin
 from . import models
 
 
-@admin.register(models.TPMLowResult)
-class TPMLowResultAdmin(admin.ModelAdmin):
-    list_display = (
-        '__str__',
-    )
-
-
-@admin.register(models.TPMSectorCovered)
-class TPMSectorCoveredAdmin(admin.ModelAdmin):
-    list_display = (
-        '__str__',
-    )
-
-
 @admin.register(models.TPMActivity)
 class TPMActivityInline(admin.ModelAdmin):
     list_display = (
@@ -58,16 +44,6 @@ class TPMPartnerAdmin(admin.ModelAdmin):
         TPMPartnerStaffMemberInlineAdmin,
     ]
     readonly_fields = ['status', ]
-
-
-@admin.register(models.TPMLocation)
-class TPMLocationAdmin(admin.ModelAdmin):
-    list_display = [
-        '__str__', 'start_date', 'end_date', 'location', 'type_of_site',
-    ]
-    list_filter = (
-        'start_date', 'end_date',
-    )
 
 
 @admin.register(models.TPMPartnerStaffMember)

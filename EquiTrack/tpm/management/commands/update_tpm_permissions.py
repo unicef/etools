@@ -29,19 +29,15 @@ class Command(BaseCommand):
         'tpmpartnerstaffmember.*',
         'tpmvisit.*',
         'tpmactivity.*',
-        'tpmsectorcovered.*',
-        'tpmlowresult.*',
-        'tpmlocation.*',
     ]
 
     visit_create = [
         'tpmvisit.tpm_partner',
         'tpmvisit.tpm_activities',
         'tpmvisit.attachments',
+        'tpmvisit.unicef_focal_points',
+        'tpmvisit.sections',
         'tpmactivity.*',
-        'tpmsectorcovered.*',
-        'tpmlowresult.*',
-        'tpmlocation.*',
     ]
 
     new_visit = 'new'

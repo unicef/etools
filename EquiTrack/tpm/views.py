@@ -11,7 +11,7 @@ from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionM
     NestedViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMLocation
+from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from .permissions import IsPMEorReadonlyPermission, CanCreateStaffMembers
@@ -119,11 +119,6 @@ class TPMVisitViewSet(
         'tpm_activities',
         'tpm_activities__unicef_focal_points',
         'tpm_activities__partnership',
-        'tpm_activities__tpm_sectors',
-        'tpm_activities__tpm_sectors__sector',
-        'tpm_activities__tpm_sectors__tpm_low_results',
-        'tpm_activities__tpm_sectors__tpm_low_results__result',
-        'tpm_activities__tpm_sectors__tpm_low_results__tpm_locations',
         'attachments',
     )
     serializer_class = TPMVisitSerializer
@@ -153,10 +148,12 @@ class TPMVisitViewSet(
 
     @list_route(methods=['get'], renderer_classes=(TPMVisitCSVRenderer,))
     def export(self, request, *args, **kwargs):
-        locations = TPMLocation.objects.filter(
-            tpm_low_result__tpm_sector__tpm_activity__tpm_visit__in=self.get_queryset(),
-        )
-        serializer = TPMVisitExportSerializer(locations, many=True)
-        return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now())
-        })
+        # TODO: Update export
+        raise NotImplemented()
+        # locations = TPMLocation.objects.filter(
+        #     tpm_low_result__tpm_sector__tpm_activity__tpm_visit__in=self.get_queryset(),
+        # )
+        # serializer = TPMVisitExportSerializer(locations, many=True)
+        # return Response(serializer.data, headers={
+        #     'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now())
+        # })
