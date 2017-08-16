@@ -7,7 +7,7 @@ from attachments.models import FileType, Attachment
 from tpm.models import PME, ThirdPartyMonitor, UNICEFUser
 from EquiTrack.factories import UserFactory
 from utils.groups.wrappers import GroupWrapper
-from .factories import TPMVisitFactory, TPMPartnerFactory, TPMPartnerStaffMemberFactory
+from .factories import TPMVisitFactory, TPMPartnerFactory, TPMPartnerStaffMemberFactory, SectionFactory, LocationFactory
 
 
 class TPMTestCaseMixin(object):
@@ -43,7 +43,11 @@ class TPMTestCaseMixin(object):
         self.tpm_partner = TPMPartnerFactory()
         self.tpm_staff = TPMPartnerStaffMemberFactory(tpm_partner=self.tpm_partner)
 
-        self.tpm_visit = TPMVisitFactory(tpm_partner=self.tpm_partner)
+        self.sections = [SectionFactory() for x in xrange(3)]
+        for section in self.sections:
+            section.sections.add(self.tenant)
+
+        self.tpm_visit = TPMVisitFactory(tpm_partner=self.tpm_partner, sections=self.sections)
 
         self.unicef_user = UserFactory()
         self.unicef_user.groups = [
@@ -62,6 +66,9 @@ class TPMTestCaseMixin(object):
         self.unicef_focal_point = UserFactory(first_name='UNICEF Focal Point')
 
         self.tpm_visit.unicef_focal_points.add(self.unicef_focal_point)
+
+        for activity in self.tpm_visit.tpm_activities.all():
+            activity.locations.add(*[LocationFactory() for x in xrange(3)])
 
         activity = self.tpm_visit.tpm_activities.first()
         activity.save()

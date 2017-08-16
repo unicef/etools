@@ -5,7 +5,7 @@ import factory.fuzzy
 from factory import fuzzy
 
 from EquiTrack.factories import InterventionFactory, LocationFactory, PartnerStaffFactory, \
-                                ResultFactory
+                                ResultFactory, SectionFactory
 from partners.models import IndicatorReport, InterventionResultLink, InterventionSectorLocationLink
 from reports.models import AppliedIndicator, LowerResult, IndicatorBlueprint, Sector
 from tpm.models import TPMPartner, TPMPartnerStaffMember, TPMVisit, TPMActivity
@@ -31,8 +31,15 @@ class TPMActivityFactory(factory.DjangoModelFactory):
         model = TPMActivity
 
     partnership = factory.SubFactory(InterventionFactory)
-    locations = factory.RelatedFactory(LocationFactory)
     cp_output = factory.SubFactory(ResultFactory)
+
+    @factory.post_generation
+    def locations(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            self.locations.add(*extracted)
 
 
 class TPMVisitFactory(factory.DjangoModelFactory):
@@ -46,9 +53,9 @@ class TPMVisitFactory(factory.DjangoModelFactory):
     tpm_activities = factory.RelatedFactory(TPMActivityFactory, 'tpm_visit')
 
     @factory.post_generation
-    def results(self, create, extracted, **kwargs):
+    def sections(self, create, extracted, **kwargs):
         if not create:
             return
 
         if extracted:
-            self.results.add(*extracted)
+            self.sections.add(*extracted)

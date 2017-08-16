@@ -22,7 +22,8 @@ from utils.permissions.utils import has_action_permission
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from .transitions.serializers import TPMVisitRejectSerializer
-from .transitions.conditions import TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
+from .transitions.conditions import ValidateTPMVisitActivities, \
+                                    TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
 
 
 class TPMPartner(BaseFirm):
@@ -107,10 +108,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     date_of_tpm_reported = models.DateTimeField(blank=True, null=True)
     date_of_unicef_approved = models.DateTimeField(blank=True, null=True)
 
-    sections = models.ManyToManyField('users.Section', related_name='tpm_visits')
+    sections = models.ManyToManyField('users.Section', related_name='tpm_visits', null=True, blank=True)
 
     unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Point'),
-                                                 related_name='tpm_visits')
+                                                 related_name='tpm_visits', null=True, blank=True)
 
     @property
     def status_date(self):
@@ -190,6 +191,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     @transition(status, source=[STATUSES.draft], target=STATUSES.assigned,
                 conditions=[
                     TPMVisitAssignRequiredFieldsCheck.as_condition(),
+                    ValidateTPMVisitActivities.as_condition(),
                 ],
                 permission=_has_action_permission(action='assign'))
     def assign(self):

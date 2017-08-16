@@ -48,7 +48,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     cp_output = SeparatedReadWriteField(
         read_field=ResultSerializer(read_only=True),
-        required=True
+        required=False
     )
 
     locations = SeparatedReadWriteField(
@@ -86,7 +86,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 
     unicef_focal_points = SeparatedReadWriteField(
         read_field=MinimalUserSerializer(read_only=True, many=True),
-        required=False
+        required=True
     )
 
     sections = SeparatedReadWriteField(

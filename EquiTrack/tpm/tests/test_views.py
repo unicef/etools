@@ -54,6 +54,7 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
             user=self.pme_user,
             data={}
         )
+        print "create_response: ", create_response.content
         self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
 
         assign_response = self.forced_auth_req(
@@ -73,23 +74,16 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
             user=self.pme_user,
             data={
                 'tpm_partner': self.tpm_visit.tpm_partner_id,
+                'unicef_focal_points': self.tpm_visit.unicef_focal_points.values_list('id', flat=True),
+                'sections': self.tpm_visit.sections.values_list('id', flat=True),
                 'tpm_activities': [{
                     'partnership': activity.partnership_id,
-                    'unicef_focal_points': activity.unicef_focal_points.values_list('id', flat=True),
-                    'tpm_sectors': [{
-                        'sector': sector.sector_id,
-                        'tpm_low_results': [{
-                            'result': low_result.result_id,
-                            'tpm_locations': [{
-                                'location': tpm_location.location_id,
-                                'start_date': tpm_location.start_date.isoformat(),
-                                'end_date': tpm_location.end_date.isoformat(),
-                            } for tpm_location in low_result.tpm_locations.all()]
-                        } for low_result in sector.tpm_low_results.all()]
-                    } for sector in activity.tpm_sectors.all()]
+                    'cp_output': activity.cp_output_id,
+                    'locations': activity.locations.values_list('id', flat=True),
                 } for activity in self.tpm_visit.tpm_activities.all()]
             }
         )
+        print create_response.content
         self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
 
         self.assertEqual(create_response.data['start_date'], self.tpm_visit.start_date)
