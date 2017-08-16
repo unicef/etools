@@ -16,6 +16,7 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
         data = {}
         months = request.query_params.get("months", None)
         if months is not None:
+            print('monnttthhhhsss', type(months))
             months = map(lambda x: int(x), months.split(','))
         year = request.query_params.get("year", None)
         office_id = request.query_params.get("office_id", None)
