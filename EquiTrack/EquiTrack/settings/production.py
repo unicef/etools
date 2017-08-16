@@ -15,6 +15,8 @@ INSTALLED_APPS += (  # noqa
     'raven.contrib.django.raven_compat',
 )
 
+SENTRY_CLIENT = 'utils.sentry.client.EToolsSentryClient'
+
 # django-allauth: https://github.com/pennersr/django-allauth
 SOCIALACCOUNT_PROVIDERS = \
     {'google':

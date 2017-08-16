@@ -9,7 +9,6 @@ from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
-from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListCreateAPIView,

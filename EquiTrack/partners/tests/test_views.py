@@ -635,7 +635,6 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertIn("PCA", response.data[0]["agreement_type"])
 
-
     def test_api_staffmembers_list(self):
         response = self.forced_auth_req('get',
                                         '/'.join(['/api/partners', str(self.partner.id), 'staff-members/']),
@@ -643,7 +642,6 @@ class TestPartnershipViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
-
 
     @skip("skip v1 for now")
     def test_api_interventions_sectors_list(self):

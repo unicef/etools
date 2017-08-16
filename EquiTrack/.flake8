@@ -9,5 +9,3 @@ exclude =
     t2f/management/commands/et2f_init.py,
     # Everything below here will eventually be removed from 'exclude'
     EquiTrack,
-    manage_debug.py,
-    partners,

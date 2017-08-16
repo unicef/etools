@@ -96,8 +96,8 @@ class AgreementCvsRenderer(r.CSVRenderer):
 
 class InterventionCvsRenderer(r.CSVRenderer):
     header = [
-        "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
-        "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
+        "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
+        "title", "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
         "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
         "planned_budget_local", "unicef_budget", "cso_contribution",
         "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",

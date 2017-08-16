@@ -24,8 +24,8 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
     disbursement = serializers.DecimalField(source='total_frs.total_actual_amt', read_only=True,
-                                             max_digits=20,
-                                             decimal_places=2)
+                                            max_digits=20,
+                                            decimal_places=2)
 
     frs_total_frs_amt = serializers.DecimalField(source='total_frs.total_frs_amt', read_only=True,
                                                  max_digits=20,
@@ -42,7 +42,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
 
     def get_offices_names(self, obj):
         return [o.name for o in obj.offices.all()]
-    #
+
     def get_sectors(self, obj):
         return [l.sector.name for l in obj.sector_locations.all()]
 
