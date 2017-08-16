@@ -54,7 +54,7 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
             user=self.pme_user,
             data={}
         )
-        print "create_response: ", create_response.content
+
         self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
 
         assign_response = self.forced_auth_req(
@@ -83,7 +83,6 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
                 } for activity in self.tpm_visit.tpm_activities.all()]
             }
         )
-        print create_response.content
         self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
 
         self.assertEqual(create_response.data['start_date'], self.tpm_visit.start_date)
