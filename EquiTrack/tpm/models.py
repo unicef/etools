@@ -268,7 +268,7 @@ class TPMVisitReportRejectComment(models.Model):
 class TPMActivity(models.Model):
     partnership = models.ForeignKey('partners.Intervention', verbose_name=_('partnership'))
 
-    cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), null=True, blank=True)
+    cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'))
 
     tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
     locations = models.ManyToManyField('locations.Location', verbose_name=_('Locations'), related_name='tpm_activities')

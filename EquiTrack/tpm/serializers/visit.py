@@ -48,6 +48,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     cp_output = SeparatedReadWriteField(
         read_field=ResultSerializer(read_only=True),
+        required=True
     )
 
     locations = SeparatedReadWriteField(
@@ -90,7 +91,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 
     sections = SeparatedReadWriteField(
         read_field=SectionSerializer(read_only=True, many=True),
-        required=False
+        required=True
     )
 
     report_reject_comments = SeparatedReadWriteField(
