@@ -61,9 +61,10 @@ class TPMTestCaseMixin(object):
 
         self.unicef_focal_point = UserFactory(first_name='UNICEF Focal Point')
 
+        self.tpm_visit.unicef_focal_points.add(self.unicef_focal_point)
+
         activity = self.tpm_visit.tpm_activities.first()
         activity.save()
-        activity.unicef_focal_points.add(self.unicef_focal_point)
 
         self.usual_user = UserFactory(first_name='Unknown user')
         self.usual_user.groups = []
