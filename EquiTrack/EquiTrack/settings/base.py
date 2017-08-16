@@ -102,7 +102,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
-    'EquiTrack.mixins.CSRFExemptMiddleware',
 )
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 
