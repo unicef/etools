@@ -67,14 +67,15 @@ class ActionPointDashboardViewSet(mixins.ListModelMixin,
 
     def list(self, request, **kwargs):
         data = {}
-
         office_id = request.query_params.get("office_id", None)
+        if office_id:
+            office_id = office_id.split(',')
         section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
         action_points_by_section = []
         for section_id in section_ids:
             travels = Travel.objects.filter(section=section_id)
             if office_id:
-                travels = travels.filter(office_id=office_id)
+                travels = travels.filter(office_id__in = office_id)
             if travels.exists():
                 action_points = ActionPoint.objects.filter(travel__in=travels)
                 total = action_points.count()
