@@ -48,7 +48,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     cp_output = SeparatedReadWriteField(
         read_field=ResultSerializer(read_only=True),
-        required=False
+        required=True
     )
 
     locations = SeparatedReadWriteField(
