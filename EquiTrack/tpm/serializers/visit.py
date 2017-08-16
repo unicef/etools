@@ -13,6 +13,7 @@ from tpm.serializers.partner import TPMPartnerLightSerializer
 from users.serializers import MinimalUserSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from users.serializers import SectionSerializer
+from locations.serializers import LocationSerializer
 
 
 class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
@@ -38,6 +39,10 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     result = SeparatedReadWriteField(
         read_field=InterventionResultLinkVisitSerializer(read_only=True),
+    )
+
+    locations = SeparatedReadWriteField(
+        read_field=LocationSerializer(many=True, read_only=True),
     )
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
