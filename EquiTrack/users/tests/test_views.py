@@ -69,16 +69,6 @@ class TestUserViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    def test_api_users_list_values(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/users/',
-            user=self.unicef_staff,
-            data={"values": "{},{}".format(self.partnership_manager_user.id, self.unicef_superuser.id)}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-
     def test_api_users_list_values_bad(self):
         response = self.forced_auth_req(
             'get',
@@ -199,3 +189,66 @@ class TestUserViews(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
 
         self.assertEqual(response_json['t2f']['business_area'], None)
+
+
+class TestUserViewsV3(APITenantTestCase):
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.unicef_superuser = UserFactory(is_superuser=True)
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.group = GroupFactory()
+        self.partnership_manager_user.groups.add(self.group)
+
+    def test_api_users_list(self):
+        response = self.forced_auth_req('get', '/api/v3/users/', user=self.unicef_staff)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
+
+    def test_users_api_list_values(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v3/users/',
+            user=self.unicef_staff,
+            data={"values": "{},{}".format(self.partnership_manager_user.id, self.unicef_superuser.id)}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_api_users_list_values_bad(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v3/users/',
+            user=self.unicef_staff,
+            data={"values": '1],2fg'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, [u'Query parameter values are not integers'])
+
+    def test_api_users_list_managers(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v3/users/',
+            user=self.unicef_staff,
+            data={"partnership_managers": True}
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
+
+    def test_api_users_retrieve_myprofile(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v3/users/profile/',
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], self.unicef_staff.get_full_name())
+
+    def test_minimal_verbosity(self):
+        response = self.forced_auth_req('get', '/api/v3/users/',
+                                        data={'verbosity': 'minimal'}, user=self.unicef_superuser)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json), 2)
