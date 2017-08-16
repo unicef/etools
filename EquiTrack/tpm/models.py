@@ -22,8 +22,7 @@ from utils.permissions.utils import has_action_permission
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from .transitions.serializers import TPMVisitRejectSerializer
-from .transitions.conditions import ValidateTPMVisitActivities, \
-                                    TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
+from .transitions.conditions import TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
 
 
 class TPMPartner(BaseFirm):
@@ -191,7 +190,6 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     @transition(status, source=[STATUSES.draft], target=STATUSES.assigned,
                 conditions=[
                     TPMVisitAssignRequiredFieldsCheck.as_condition(),
-                    ValidateTPMVisitActivities.as_condition()
                 ],
                 permission=_has_action_permission(action='assign'))
     def assign(self):

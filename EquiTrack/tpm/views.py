@@ -117,8 +117,8 @@ class TPMVisitViewSet(
     queryset = TPMVisit.objects.all().prefetch_related(
         'tpm_partner',
         'tpm_activities',
-        'tpm_activities__unicef_focal_points',
         'tpm_activities__partnership',
+        'unicef_focal_points',
         'attachments',
     )
     serializer_class = TPMVisitSerializer
