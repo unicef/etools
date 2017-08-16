@@ -1,9 +1,7 @@
 from rest_framework import serializers
 
-from locations.serializers import LocationLightSerializer
 from partners.models import InterventionResultLink
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
-from reports.serializers.v1 import SectorLightSerializer
 from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \

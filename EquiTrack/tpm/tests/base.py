@@ -5,9 +5,9 @@ from django.core.files import File
 
 from attachments.models import FileType, Attachment
 from tpm.models import PME, ThirdPartyMonitor, UNICEFUser
-from EquiTrack.factories import UserFactory
+from EquiTrack.factories import UserFactory, LocationFactory, SectionFactory
 from utils.groups.wrappers import GroupWrapper
-from .factories import TPMVisitFactory, TPMPartnerFactory, TPMPartnerStaffMemberFactory, SectionFactory, LocationFactory
+from .factories import TPMVisitFactory, TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
 
 class TPMTestCaseMixin(object):

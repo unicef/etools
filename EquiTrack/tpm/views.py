@@ -1,5 +1,4 @@
 from django.http import Http404
-from django.utils import timezone
 
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import list_route
@@ -15,7 +14,6 @@ from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMP
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from .permissions import IsPMEorReadonlyPermission, CanCreateStaffMembers
-from .export.serializers import TPMVisitExportSerializer
 from .export.renderers import TPMVisitCSVRenderer
 
 
@@ -150,10 +148,3 @@ class TPMVisitViewSet(
     def export(self, request, *args, **kwargs):
         # TODO: Update export
         raise NotImplemented()
-        # locations = TPMLocation.objects.filter(
-        #     tpm_low_result__tpm_sector__tpm_activity__tpm_visit__in=self.get_queryset(),
-        # )
-        # serializer = TPMVisitExportSerializer(locations, many=True)
-        # return Response(serializer.data, headers={
-        #     'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now())
-        # })
