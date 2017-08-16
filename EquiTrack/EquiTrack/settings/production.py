@@ -34,3 +34,26 @@ JWT_AUTH.update({  # noqa: F405
     # TODO: FIX THIS, NEEDS SETUP WITH ADFS
     'JWT_AUDIENCE': 'https://etools.unicef.org/API',
 })
+
+# django-storages: https://django-storages.readthedocs.io/en/latest/backends/azure.html
+AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME')
+AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY')
+AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER')
+AZURE_SSL = True
+AZURE_AUTO_SIGN = True  # flag for automatically signing urls
+AZURE_ACCESS_POLICY_EXPIRY = 120  # length of time before signature expires in seconds
+AZURE_ACCESS_POLICY_PERMISSION = 'r'  # read permission
+
+if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
+    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+    from storages.backends.azure_storage import AzureStorage
+    storage = AzureStorage()
+    with storage.open('saml/certs/saml.key') as key, \
+            storage.open('saml/certs/sp.crt') as crt, \
+            storage.open('saml/federationmetadata.xml') as meta:
+        with open('EquiTrack/saml/certs/saml.key', 'w+') as new_key, \
+                open('EquiTrack/saml/certs/sp.crt', 'w+') as new_crt, \
+                open('EquiTrack/saml/federationmetadata.xml', 'w+') as new_meta:
+            new_key.write(key.read())
+            new_crt.write(crt.read())
+            new_meta.write(meta.read())
