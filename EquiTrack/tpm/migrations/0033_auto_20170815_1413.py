@@ -75,4 +75,14 @@ class Migration(migrations.Migration):
         migrations.DeleteModel(
             name='TPMSectorCovered',
         ),
+        migrations.AddField(
+            model_name='tpmactivity',
+            name='date',
+            field=models.DateField(blank=True, null=True),
+        ),
+        migrations.AlterField(
+            model_name='tpmactivity',
+            name='result',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='partners.InterventionResultLink', verbose_name='PD/SSFA Output'),
+        ),
     ]

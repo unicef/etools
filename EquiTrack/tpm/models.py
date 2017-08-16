@@ -249,6 +249,8 @@ class TPMActivity(models.Model):
     tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
     locations = models.ManyToManyField('locations.Location', verbose_name=_('Locations'), related_name='tpm_activities')
 
+    date = models.DateField(blank=True, null=True)
+
     def __str__(self):
         return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
 
@@ -302,7 +304,7 @@ class TPMPermission(StatusBasePermission):
 
     @classmethod
     def _get_user_type(cls, user, instance=None):
-        if instance and instance.tpm_activities.filter(unicef_focal_points=user).exists():
+        if instance and instance.unicef_focal_points.filter(id=user.id).exists():
             return cls.USER_TYPES.unicef_focal_point
 
         user_type = super(TPMPermission, cls)._get_user_type(user)
