@@ -12,11 +12,12 @@ class TestTPMTransitions(TPMTestCaseMixin, APITenantTestCase):
         super(TestTPMTransitions, self).setUp()
         call_command('update_tpm_permissions')
 
-    def _do_transition(self, visit, action, user):
+    def _do_transition(self, visit, action, user, data={}):
         return self.forced_auth_req(
             'post',
             '/api/tpm/visits/{0}/{1}/'.format(visit.id, action),
-            user=user
+            user=user,
+            data=data
         )
 
     def _refresh_tpm_visit_instace(self, visit):
@@ -95,3 +96,15 @@ class TestTPMTransitions(TPMTestCaseMixin, APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.tpm_visit = self._refresh_tpm_visit_instace(self.tpm_visit)
         self.assertEquals(self.tpm_visit.status, 'tpm_reported')
+
+    def test_tpm_report_reject(self):
+        self.test_tpm_report_success()
+        self.assertEquals(self.tpm_visit.status, 'tpm_reported')
+        self.assertEquals(self.tpm_visit.report_reject_comments.count(), 0)
+        response = self._do_transition(self.tpm_visit, 'reject_report', self.pme_user, data={
+            "reject_comment": 'Just because'
+        })
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.tpm_visit = self._refresh_tpm_visit_instace(self.tpm_visit)
+        self.assertEquals(self.tpm_visit.status, 'tpm_report_rejected')
+        self.assertEquals(self.tpm_visit.report_reject_comments.count(), 1)

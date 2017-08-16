@@ -230,7 +230,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 custom={'serializer': TPMVisitRejectSerializer},
                 permission=_has_action_permission(action='reject_report'))
     def reject_report(self, reject_comment):
-        TPMVisitReportRejectComment.objects.create(reject_reason=reject_comment, tpm_visit=serlf.id)
+        TPMVisitReportRejectComment.objects.create(reject_reason=reject_comment, tpm_visit=self)
         self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/report_rejected',
                          cc=self._get_tpm_as_email_recipients())
 
