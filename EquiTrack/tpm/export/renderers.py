@@ -4,15 +4,14 @@ from rest_framework_csv.renderers import CSVRenderer
 
 
 class TPMVisitCSVRenderer(CSVRenderer):
-    header = ['ref', 'visit', 'activity', 'sector', 'output',
-              'location', 'start_date', 'end_date', 'unicef_focal_points']
+    header = ['ref', 'activity', 'sections', 'output',
+              'locations', 'start_date', 'end_date', 'unicef_focal_points']
     labels = {
         'ref': _('Visit Ref. #'),
-        'visit': _('Visit'),
         'activity': _('Activity'),
-        'sector': _('Sector'),
+        'sections': _('Sections'),
         'output': _('PD/SSFA output'),
-        'location': _('Location'),
+        'locations': _('Locations'),
         'start_date': _('Start Date'),
         'end_date': _('End Date'),
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
