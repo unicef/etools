@@ -14,6 +14,7 @@ from users.serializers import MinimalUserSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from users.serializers import SectionSerializer
 from locations.serializers import LocationSerializer
+from reports.serializers.v1 import ResultSerializer
 
 
 class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
@@ -45,8 +46,8 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         read_field=InterventionCreateUpdateSerializer(read_only=True),
     )
 
-    result = SeparatedReadWriteField(
-        read_field=InterventionResultLinkVisitSerializer(read_only=True),
+    cp_output = SeparatedReadWriteField(
+        read_field=ResultSerializer(read_only=True),
     )
 
     locations = SeparatedReadWriteField(
@@ -55,7 +56,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
-        fields = ['id', 'partnership', 'result', 'locations', ]
+        fields = ['id', 'partnership', 'cp_output', 'locations', ]
 
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
