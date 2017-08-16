@@ -24,6 +24,7 @@ from partners.models import (
     InterventionAmendment,
     Intervention
 )
+from utils.common.utils import get_all_field_names
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -65,7 +66,7 @@ class TestInterventionsAPI(APITenantTestCase):
         'signed': [],
         'active': ['']
     }
-    ALL_FIELDS = Intervention._meta.get_all_field_names()
+    ALL_FIELDS = get_all_field_names(Intervention)
 
     def setUp(self):
         today = datetime.date.today()

@@ -404,7 +404,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         for data in related_data:
             data = dict(data)
             m2m_fields = {k: data.pop(k, []) for k in data.keys()
-                          if isinstance(model._meta.get_field_by_name(k)[0], ManyToManyField)}
+                          if isinstance(model._meta.get_field(k), ManyToManyField)}
             data.update(kwargs)
 
             # TODO: remove this ugly stuff from here
@@ -445,7 +445,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
 
     def update_object(self, obj, data):
         m2m_fields = {k: data.pop(k, []) for k in data.keys()
-                      if isinstance(obj._meta.get_field_by_name(k)[0], ManyToManyField)}
+                      if isinstance(obj._meta.get_field(k), ManyToManyField)}
         for attr, value in data.items():
             setattr(obj, attr, value)
         obj.save()
