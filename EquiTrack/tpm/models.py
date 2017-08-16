@@ -175,9 +175,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     def _get_unicef_focal_points_as_email_recipients(self):
         return list(
-            self.tpm_activities.filter(
-                unicef_focal_points__email__isnull=False
-            ).values_list('unicef_focal_points__email', flat=True)
+            self.unicef_focal_points.filter(
+                email__isnull=False
+            ).values_list('email', flat=True)
         )
 
     def _get_ip_focal_points_as_email_recipients(self):
