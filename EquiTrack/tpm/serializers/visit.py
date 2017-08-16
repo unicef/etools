@@ -12,6 +12,7 @@ from utils.common.serializers.fields import SeparatedReadWriteField
 from tpm.serializers.partner import TPMPartnerLightSerializer
 from users.serializers import MinimalUserSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
+from users.serializers import SectionSerializer
 
 
 class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
@@ -41,7 +42,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
-        fields = ['id', 'partnership', 'result', ]
+        fields = ['id', 'partnership', 'result', 'locations', ]
 
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
@@ -73,12 +74,18 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
         required=False
     )
 
+    sections = SeparatedReadWriteField(
+        read_field=SectionSerializer(read_only=True, many=True),
+        required=False
+    )
+
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
             'reject_comment',
             'attachments',
             'report',
             'unicef_focal_points',
+            'sections',
         ]
         extra_kwargs = {
             'tpm_partner': {'required': True},
