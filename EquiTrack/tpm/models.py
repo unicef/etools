@@ -80,6 +80,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         ('tpm_accepted', _('TPM Accepted')),
         ('tpm_rejected', _('TPM Rejected')),
         ('tpm_reported', _('TPM Reported')),
+        ('tpm_report_rejected', _('TPM Report Rejected')),
         ('unicef_approved', _('UNICEF Approved')),
     )
 
@@ -215,7 +216,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/accept',
                          cc=self._get_tpm_as_email_recipients())
 
-    @transition(status, source=[STATUSES.tpm_accepted], target=STATUSES.tpm_reported,
+    @transition(status, source=[STATUSES.tpm_accepted, STATUSES.tpm_report_rejected], target=STATUSES.tpm_reported,
                 conditions=[
                     TPMVisitReportValidations.as_condition(),
                 ],
@@ -223,6 +224,14 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def send_report(self):
         self.date_of_tpm_reported = timezone.now()
         self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/report',
+                         cc=self._get_tpm_as_email_recipients())
+
+    @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.tpm_report_rejected,
+                custom={'serializer': TPMVisitRejectSerializer},
+                permission=_has_action_permission(action='reject_report'))
+    def reject_report(self, reject_comment):
+        TPMVisitReportRejectComment.objects.create(reject_reason=reject_comment, tpm_visit=serlf.id)
+        self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/report_rejected',
                          cc=self._get_tpm_as_email_recipients())
 
     @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
@@ -238,6 +247,21 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     def get_object_url(self):
         return build_frontend_url('tpm', 'visits', self.id, 'details')
+
+
+@python_2_unicode_compatible
+class TPMVisitReportRejectComment(models.Model):
+    rejected_at = models.DateTimeField(auto_now=True)
+
+    reject_reason = models.TextField()
+
+    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='report_reject_comments')
+
+    def __str__(self):
+        return 'Reject Comment #{0} for {1}'.format(self.id, self.tpm_visit)
+
+    class Meta:
+        verbose_name_plural = _('Report Reject Comments')
 
 
 @python_2_unicode_compatible

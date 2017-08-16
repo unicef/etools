@@ -48,6 +48,7 @@ class Command(BaseCommand):
     tpm_reported = 'tpm_reported'
     submitted = 'submitted'
     unicef_approved = 'unicef_approved'
+    tpm_report_rejected = 'tpm_report_rejected'
 
     def __init__(self, *args, **kwargs):
         super(Command, self).__init__(*args, **kwargs)
@@ -117,6 +118,11 @@ class Command(BaseCommand):
         # TPM can add report
         self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'edit', ['tpmvisit.report'])
         self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'action', ['tpmvisit.send_report'])
+        self.add_permissions(self.tpm_report_rejected, self.third_party_monitor, 'edit', ['tpmvisit.report'])
+        self.add_permissions(self.tpm_report_rejected, self.third_party_monitor, 'action', ['tpmvisit.send_report'])
+
+        # UNICEF can reject report or ask actions
+        self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'action', ['tpmvisit.reject_report'])
 
         # UNICEF can approve report or ask actions
         self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'action', ['tpmvisit.approve'])

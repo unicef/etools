@@ -4,7 +4,7 @@ from locations.serializers import LocationLightSerializer
 from partners.models import InterventionResultLink
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from reports.serializers.v1 import SectorLightSerializer
-from tpm.models import TPMVisit, TPMPermission, TPMActivity
+from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
@@ -29,6 +29,14 @@ class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name'
         ]
+
+
+class TPMVisitReportRejectCommentSerializer(TPMPermissionsBasedSerializerMixin,
+                                            WritableNestedSerializerMixin,
+                                            serializers.ModelSerializer):
+    class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+        model = TPMVisitReportRejectComment
+        fields = ['id', 'rejected_at', 'reject_reason', ]
 
 
 class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
@@ -84,6 +92,10 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
         required=False
     )
 
+    report_reject_comments = SeparatedReadWriteField(
+        read_field=TPMVisitReportRejectCommentSerializer(many=True, read_only=True),
+    )
+
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
             'reject_comment',
@@ -91,6 +103,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
             'report',
             'unicef_focal_points',
             'sections',
+            'report_reject_comments',
         ]
         extra_kwargs = {
             'tpm_partner': {'required': True},
