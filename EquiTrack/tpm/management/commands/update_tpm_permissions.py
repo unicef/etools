@@ -29,6 +29,7 @@ class Command(BaseCommand):
         'tpmpartnerstaffmember.*',
         'tpmvisit.*',
         'tpmactivity.*',
+        'tpmvisitreportrejectcomment.*'
     ]
 
     visit_create = [
@@ -49,6 +50,7 @@ class Command(BaseCommand):
     submitted = 'submitted'
     unicef_approved = 'unicef_approved'
     tpm_report_rejected = 'tpm_report_rejected'
+    cancelled = 'cancelled'
 
     def __init__(self, *args, **kwargs):
         super(Command, self).__init__(*args, **kwargs)
@@ -111,6 +113,7 @@ class Command(BaseCommand):
         # pme can edit visit before submit
         self.add_permissions(self.draft, self.pme, 'edit', self.visit_create)
         self.add_permissions(self.draft, self.pme, 'action', ['tpmvisit.assign'])
+        self.add_permissions(self.draft, self.pme, 'action', ['tpmvisit.cancel'])
 
         # TPM can accept or reject visit and add reject comment
         self.add_permissions(self.assigned, self.third_party_monitor, 'action', ['tpmvisit.accept', 'tpmvisit.reject'])

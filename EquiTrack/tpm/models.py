@@ -76,6 +76,7 @@ def _has_action_permission(action):
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     STATUSES = Choices(
         ('draft', _('Draft')),
+        ('cancelled', _('Cancelled')),
         ('assigned', _('Assigned')),
         ('tpm_accepted', _('TPM Accepted')),
         ('tpm_rejected', _('TPM Rejected')),
@@ -86,7 +87,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     STATUSES_DATES = {
         STATUSES.draft: 'created',
+        STATUSES.draft: 'created',
         STATUSES.assigned: 'date_of_assigned',
+        STATUSES.cancelled: 'date_of_cancelled',
         STATUSES.tpm_accepted: 'date_of_tpm_accepted',
         STATUSES.tpm_rejected: 'date_of_tpm_rejected',
         STATUSES.tpm_reported: 'date_of_tpm_reported',
@@ -103,6 +106,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     report = CodedGenericRelation(Attachment, verbose_name=_('Report'), code='report', blank=True)
 
     date_of_assigned = models.DateTimeField(blank=True, null=True)
+    date_of_cancelled = models.DateTimeField(blank=True, null=True)
     date_of_tpm_accepted = models.DateTimeField(blank=True, null=True)
     date_of_tpm_rejected = models.DateTimeField(blank=True, null=True)
     date_of_tpm_reported = models.DateTimeField(blank=True, null=True)
@@ -198,6 +202,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self.date_of_assigned = timezone.now()
         self._send_email(self._get_tpm_as_email_recipients(), 'tpm/visit/assign',
                          cc=self._get_unicef_focal_points_as_email_recipients())
+
+    @transition(status, source=[STATUSES.draft], target=STATUSES.cancelled,
+                permission=_has_action_permission(action='cancel'))
+    def cancel(self):
+        self.date_of_cancelled = timezone.now()
 
     @transition(status, source=[STATUSES.assigned], target=STATUSES.tpm_rejected,
                 permission=_has_action_permission(action='reject'),

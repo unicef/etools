@@ -52,6 +52,14 @@ class TestTPMTransitions(TPMTestCaseMixin, APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(self.tpm_visit.status, 'assigned')
 
+    def test_success_cancel(self):
+        self.assertEquals(self.tpm_visit.status, 'draft')
+        response = self._do_transition(self.tpm_visit, 'cancel', self.pme_user)
+        self.tpm_visit = self._refresh_tpm_visit_instace(self.tpm_visit)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(self.tpm_visit.status, 'cancelled')
+
     def test_tpm_accept_fails(self):
         self.test_success_assign()
 
