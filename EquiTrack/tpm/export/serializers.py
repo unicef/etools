@@ -23,8 +23,7 @@ class TPMVisitExportSerializer(serializers.Serializer):
     sections = CommaSeparatedExportField(source='tpm_visit.sections', export_attr='name')
     output = serializers.CharField(source='cp_output.name')
     locations = CommaSeparatedExportField(export_attr='name')
-    start_date = serializers.DateField(source='tpm_visit.start_date')
-    end_date = serializers.DateField(source='tpm_visit.end_date')
+    date = serializers.DateField(format='%d/%m/%Y')
     unicef_focal_points = UsersExportField(source='tpm_visit.unicef_focal_points')
 
     def get_activity(self, obj):
