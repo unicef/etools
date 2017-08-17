@@ -8,6 +8,7 @@ from decimal import Decimal
 
 # Django imports
 from django.conf import settings
+from django.utils import timezone
 
 # 3rd party imports
 import mock
@@ -39,9 +40,9 @@ def _make_decimal(n):
     return Decimal('{}.00'.format(n))
 
 
-def _make_past_date(n_days):
-    '''Return a datetime.date() that refers to n_days in the past'''
-    return datetime.date.today() - datetime.timedelta(days=n_days)
+def _make_past_datetime(n_days):
+    '''Return a datetime.datetime() that refers to n_days in the past'''
+    return timezone.now() - datetime.timedelta(days=n_days)
 
 
 class TestGetInterventionContext(FastTenantTestCase):
@@ -174,7 +175,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
         end_date = datetime.date.today() + datetime.timedelta(days=2)
         # Agreements sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
         # pulled out of the database.
-        agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, created=_make_past_date(i),
+        agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, created=_make_past_datetime(i),
                                        agreement_type=Agreement.MOU)
                       for i in range(3)]
 
@@ -224,7 +225,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
         end_date = datetime.date.today() + datetime.timedelta(days=2)
         # Agreements sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
         # pulled out of the database.
-        agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, created=_make_past_date(i),
+        agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, created=_make_past_datetime(i),
                                        agreement_type=Agreement.MOU)
                       for i in range(3)]
 
@@ -339,7 +340,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         end_date = datetime.date.today() - datetime.timedelta(days=1)
         # Interventions sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
         # pulled out of the database.
-        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_date, created=_make_past_date(i))
+        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_date, created=_make_past_datetime(i))
                          for i in range(3)]
 
         # Make an intervention with some associated funds reservation headers that the task should find.
@@ -404,7 +405,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         end_date = datetime.date.today() - datetime.timedelta(days=1)
         # Interventions sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
         # pulled out of the database.
-        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_date, created=_make_past_date(i))
+        interventions = [InterventionFactory(status=Intervention.ACTIVE, end=end_date, created=_make_past_datetime(i))
                          for i in range(3)]
 
         # Make an intervention with some associated funds reservation headers that the task should find.
@@ -519,7 +520,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
         # ordered in the same way as they'll be pulled out of the database.
         start_on = datetime.date.today() + datetime.timedelta(days=5)
-        interventions = [InterventionFactory(status=Intervention.SIGNED, start=start_on, created=_make_past_date(i))
+        interventions = [InterventionFactory(status=Intervention.SIGNED, start=start_on, created=_make_past_datetime(i))
                          for i in range(3)]
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
@@ -599,7 +600,7 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
         '''Exercise _notify_of_ended_interventions_with_mismatched_frs() when it has some interventions to work on'''
         # Create some interventions to work with. Interventions sort by oldest last, so I make sure my list here is
         # ordered in the same way as they'll be pulled out of the database.
-        interventions = [InterventionFactory(status=Intervention.ENDED, created=_make_past_date(i))
+        interventions = [InterventionFactory(status=Intervention.ENDED, created=_make_past_datetime(i))
                          for i in range(3)]
 
         # Add mismatched funds values to each intervention.
@@ -696,7 +697,7 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
         for delta in partners.tasks._INTERVENTION_ENDING_SOON_DELTAS:
             end_on = datetime.date.today() + datetime.timedelta(days=delta)
             interventions += [InterventionFactory(status=Intervention.ACTIVE, end=end_on,
-                                                  created=_make_past_date(i + delta))
+                                                  created=_make_past_datetime(i + delta))
                               for i in range(3)]
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
