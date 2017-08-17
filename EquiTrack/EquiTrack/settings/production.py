@@ -15,6 +15,14 @@ INSTALLED_APPS += (  # noqa: F405
 )
 
 # Security settings for production
+ALLOWED_HOSTS = [
+    # Nope, regular expressions are not supported for this setting
+    'etools.unicef.org',
+    'etools-demo.unicef.org',
+    'etools-dev.unicef.org',
+    'etools-staging.unicef.org',
+    'etools-test.unicef.org',
+]
 SECRET_KEY = os.environ["SECRET_KEY"]  # noqa: F405
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = True
