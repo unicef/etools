@@ -1,4 +1,5 @@
 from django.http import Http404
+from django.utils import timezone
 
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import list_route
@@ -10,11 +11,12 @@ from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionM
     NestedViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember
+from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from .permissions import IsPMEorReadonlyPermission, CanCreateStaffMembers
 from .export.renderers import TPMVisitCSVRenderer
+from .export.serializers import TPMVisitExportSerializer
 
 
 class BaseTPMViewSet(
@@ -146,5 +148,10 @@ class TPMVisitViewSet(
 
     @list_route(methods=['get'], renderer_classes=(TPMVisitCSVRenderer,))
     def export(self, request, *args, **kwargs):
-        # TODO: Update export
-        raise NotImplemented()
+        tpm_activities = TPMActivity.objects.filter(
+            tpm_visit__in=self.get_queryset(),
+        )
+        serializer = TPMVisitExportSerializer(tpm_activities, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now())
+        })
