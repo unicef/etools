@@ -76,8 +76,8 @@ def _has_action_permission(action):
 class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     STATUSES = Choices(
         ('draft', _('Draft')),
-        ('cancelled', _('Cancelled')),
         ('assigned', _('Assigned')),
+        ('cancelled', _('Cancelled')),
         ('tpm_accepted', _('TPM Accepted')),
         ('tpm_rejected', _('TPM Rejected')),
         ('tpm_reported', _('TPM Reported')),
@@ -87,12 +87,12 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     STATUSES_DATES = {
         STATUSES.draft: 'created',
-        STATUSES.draft: 'created',
         STATUSES.assigned: 'date_of_assigned',
         STATUSES.cancelled: 'date_of_cancelled',
         STATUSES.tpm_accepted: 'date_of_tpm_accepted',
         STATUSES.tpm_rejected: 'date_of_tpm_rejected',
         STATUSES.tpm_reported: 'date_of_tpm_reported',
+        STATUSES.tpm_report_rejected: 'date_of_tpm_report_rejected',
         STATUSES.unicef_approved: 'date_of_unicef_approved',
     }
 
@@ -110,6 +110,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     date_of_tpm_accepted = models.DateTimeField(blank=True, null=True)
     date_of_tpm_rejected = models.DateTimeField(blank=True, null=True)
     date_of_tpm_reported = models.DateTimeField(blank=True, null=True)
+    date_of_tpm_report_rejected = models.DateTimeField(blank=True, null=True)
     date_of_unicef_approved = models.DateTimeField(blank=True, null=True)
 
     sections = models.ManyToManyField('users.Section', related_name='tpm_visits', blank=True)
@@ -239,6 +240,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 custom={'serializer': TPMVisitRejectSerializer},
                 permission=_has_action_permission(action='reject_report'))
     def reject_report(self, reject_comment):
+        self.date_of_tpm_report_rejected = timezone.now()
         TPMVisitReportRejectComment.objects.create(reject_reason=reject_comment, tpm_visit=self)
         self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/report_rejected',
                          cc=self._get_tpm_as_email_recipients())
