@@ -5,6 +5,7 @@ import logging
 from django.apps import apps
 from django.db.models import ObjectDoesNotExist
 from django.db.models.fields.files import FieldFile
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 
 from django_fsm import (
@@ -268,18 +269,35 @@ class ValidatorViewMixin(object):
         return instance, old_instance, main_serializer
 
 
-class TransitionError(BaseException):
-    def __init__(self, message=[]):
-        if not isinstance(message, list):
-            raise TypeError('Transition exception takes a list of errors not {}'.format(type(message)))
-        super(TransitionError, self).__init__(message)
+def _unicode_if(s):
+    '''Given a string (str or unicode), always returns a unicode version of that string, converting it if necessary.
+
+    This function is Python 2- and 3-compatible.
+    '''
+    # Under Python 2, we can use isinstance(s, unicode), but that syntax doesn't work under Python 3 because the
+    # unicode type doesn't exist (only str which is Unicode by default). Instead I rely on the quirk that Python 2
+    # str instances lack a method (.isnumeric()) that exists on Python 2 unicode instances and Python 3 str instances.
+    return s if hasattr(s, 'isnumeric') else s.decode('utf-8')
 
 
-class StateValidError(BaseException):
+@python_2_unicode_compatible
+class _BaseStateError(BaseException):
+    '''Base class for state-related exceptions. Accepts only one param which must be a list of strings.'''
     def __init__(self, message=[]):
         if not isinstance(message, list):
-            raise TypeError('Transition exception takes a list of errors not {}'.format(type(message)))
-        super(StateValidError, self).__init__(message)
+            raise TypeError('{} takes a list of errors not {}'.format(self.__class__, type(message)))
+        super(_BaseStateError, self).__init__(message)
+
+    def __str__(self):
+        # There's only 1 arg, and it must be a list of messages. Under Python 2, that list might be a mix of unicode
+        # and str instances, so we have to combine them carefully to avoid encode/decode errors.
+        return u'\n'.join([_unicode_if(msg) for msg in self.args[0]])
+
+class TransitionError(_BaseStateError):
+    pass
+
+class StateValidError(_BaseStateError):
+    pass
 
 class BasicValidationError(BaseException):
     def __init__(self, message=''):
@@ -290,7 +308,7 @@ def error_string(function):
         try:
             valid = function(*args, **kwargs)
         except BasicValidationError as e:
-            return (False, [e.message])
+            return (False, [str(e)])
         else:
             if valid and type(valid) is bool:
                 return (True, [])
@@ -304,7 +322,7 @@ def transition_error_string(function):
         try:
             valid = function(*args, **kwargs)
         except TransitionError as e:
-            return (False, e.message)
+            return (False, [str(e)])
 
         if valid and type(valid) is bool:
             return (True, [])
@@ -317,7 +335,7 @@ def state_error_string(function):
         try:
             valid = function(*args, **kwargs)
         except StateValidError as e:
-            return (False, e.message)
+            return (False, [str(e)])
 
         if valid and type(valid) is bool:
             return (True, [])
@@ -342,7 +360,7 @@ class CompleteValidation(object):
                 try:
                     instance_class = apps.get_model(getattr(self, 'VALIDATION_CLASS'))
                 except LookupError:
-                    raise TypeError('Object Transimitted for validation cannot be dict if instance_class is not defined')
+                    raise TypeError('Object transmitted for validation cannot be dict if instance_class is not defined')
             new_id = new.get('id', None) or new.get('pk', None)
             if new_id:
                 # logging.debug('newid')
