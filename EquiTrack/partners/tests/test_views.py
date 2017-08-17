@@ -945,8 +945,6 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        print response.data
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["authorized_officers"]), 2)
 
