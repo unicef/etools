@@ -2,18 +2,19 @@ from __future__ import absolute_import
 
 from attachments.serializers_fields import FileTypeModelChoiceField
 from attachments.models import FileType
-from attachments.serializers import BaseAttachmentsSerializer
+from attachments.serializers import Base64AttachmentSerializer
+from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
-class TPMAttachmentsSerializer(BaseAttachmentsSerializer):
+class TPMAttachmentsSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
     file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code="tpm"))
 
-    class Meta(BaseAttachmentsSerializer.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
         pass
 
 
-class TPMReportAttachmentsSerializer(BaseAttachmentsSerializer):
+class TPMReportAttachmentsSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
     file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code="tpm_report"))
 
-    class Meta(BaseAttachmentsSerializer.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
         pass
