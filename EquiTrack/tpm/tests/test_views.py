@@ -6,6 +6,7 @@ from django.utils.translation import ugettext as _
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.factories import SectionFactory
 from .base import TPMTestCaseMixin
 from .factories import TPMVisitFactory, TPMPartnerFactory
 
@@ -101,7 +102,7 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
 
         self.assertEquals(assign_response.status_code, status.HTTP_200_OK)
 
-    def test_action_points(self):
+    def _approve_visit(self):
         self._do_transition(self.tpm_visit, 'assign', self.pme_user)
         self._do_transition(self.tpm_visit, 'accept', self.tpm_user)
         self._add_attachment('report', self.tpm_visit)
@@ -109,6 +110,10 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
         self._do_transition(self.tpm_visit, 'approve', self.unicef_focal_point)
         self.tpm_visit = self._refresh_tpm_visit_instace(self.tpm_visit)
         self.assertEquals(self.tpm_visit.status, 'unicef_approved')
+        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
+
+    def test_action_points(self):
+        self._approve_visit()
         self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
 
         response = self.forced_auth_req(
@@ -120,11 +125,12 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
                     'id': activity.id,
                     'action_points': [
                         {
-                            "sections": self.tpm_visit.sections.values_list('id', flat=True),
+                            "section": self.tpm_visit.sections.values_list('id', flat=True)[0],
                             "locations": activity.locations.values_list('id', flat=True),
                             "person_responsible": self.tpm_visit.tpm_partner.staff_members.first().user.id,
                             "cp_outputs": [activity.cp_output.id, ],
                             "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
+                            "description": "Description",
                         }
                     ]
                 } for activity in self.tpm_visit.tpm_activities.all()]
@@ -132,6 +138,33 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertNotEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
+
+    def test_action_point_with_not_related_section(self):
+        self._approve_visit()
+        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
+
+        response = self.forced_auth_req(
+            'patch',
+            '/api/tpm/visits/{}/'.format(self.tpm_visit.id),
+            user=self.unicef_focal_point,
+            data={
+                'tpm_activities': [{
+                    'id': activity.id,
+                    'action_points': [
+                        {
+                            "section": SectionFactory().id,
+                            "locations": activity.locations.values_list('id', flat=True),
+                            "person_responsible": self.tpm_visit.tpm_partner.staff_members.first().user.id,
+                            "cp_outputs": [activity.cp_output.id, ],
+                            "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
+                            "description": "Description",
+                        }
+                    ]
+                } for activity in self.tpm_visit.tpm_activities.all()]
+            }
+        )
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
 
 
 class TestTPMFirmViewSet(TPMTestCaseMixin, APITenantTestCase):

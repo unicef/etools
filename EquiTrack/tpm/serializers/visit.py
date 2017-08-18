@@ -57,7 +57,7 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
     )
 
     person_responsible = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True, many=True),
+        read_field=MinimalUserSerializer(read_only=True),
         required=True
     )
 
@@ -78,11 +78,14 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
 
         tpm_visit = self.context['instance']
 
-        section = validated_data.get('section', None) or self.instance.section
-        if section not in tpm_visit.sections.all():
-            raise serializers.ValidationError({
-                "section": "Section doesn't connected with visit"
-            })
+        instance = TPMActivityActionPoint.objects.get(id=validated_data['id']) if 'id' in validated_data else None
+
+        section = validated_data.get('section', None)
+        if section or instance:
+            if (section or instance.section) not in tpm_visit.sections.all():
+                raise serializers.ValidationError({
+                    "section": "Section doesn't connected with visit"
+                })
 
         return validated_data
 
