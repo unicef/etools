@@ -322,7 +322,7 @@ class TPMActivityActionPoint(models.Model):
     locations = models.ManyToManyField('locations.Location')
     cp_outputs = models.ManyToManyField('reports.Result', verbose_name=_('CP Output'))
 
-    due_date = models.DateTimeField()
+    due_date = models.DateField()
     status = models.CharField(choices=STATUSES, max_length=9, null=True, verbose_name='Status')
     description = models.TextField()
     completed_at = models.DateTimeField(blank=True, null=True)

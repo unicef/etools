@@ -9,6 +9,8 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from .base import TPMTestCaseMixin
 from .factories import TPMVisitFactory, TPMPartnerFactory
 
+from ..models import TPMActivityActionPoint
+
 
 class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
     def setUp(self):
@@ -107,26 +109,29 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
         self._do_transition(self.tpm_visit, 'approve', self.unicef_focal_point)
         self.tpm_visit = self._refresh_tpm_visit_instace(self.tpm_visit)
         self.assertEquals(self.tpm_visit.status, 'unicef_approved')
+        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
 
         response = self.forced_auth_req(
-            'post',
+            'patch',
             '/api/tpm/visits/{}/'.format(self.tpm_visit.id),
             user=self.unicef_focal_point,
             data={
                 'tpm_activities': [{
                     'id': activity.id,
-                    'action_popints': [
+                    'action_points': [
                         {
                             "sections": self.tpm_visit.sections.values_list('id', flat=True),
                             "locations": activity.locations.values_list('id', flat=True),
-                            "person_responsible": self.tpm_visit.tpm_partner.staff_members.first().id,
+                            "person_responsible": self.tpm_visit.tpm_partner.staff_members.first().user.id,
                             "cp_outputs": [activity.cp_output.id, ],
-                            "due_date": datetime.now().date() + timedelta(days=5),
+                            "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
                         }
                     ]
                 } for activity in self.tpm_visit.tpm_activities.all()]
             }
         )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertNotEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
 
 
 class TestTPMFirmViewSet(TPMTestCaseMixin, APITenantTestCase):

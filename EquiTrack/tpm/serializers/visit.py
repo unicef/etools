@@ -71,7 +71,20 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
 
     def create(self, validated_data):
         validated_data['author'] = self.get_user()
-        return super(EngagementActionPointSerializer, self).create(validated_data)
+        return super(TPMActivityActionPointSerializer, self).create(validated_data)
+
+    def validate(self, data):
+        validated_data = super(TPMActivityActionPointSerializer, self).validate(data)
+
+        tpm_visit = self.context['instance']
+
+        section = validated_data.get('section', None) or self.instance.section
+        if section not in tpm_visit.sections.all():
+            raise serializers.ValidationError({
+                "section": "Section doesn't connected with visit"
+            })
+
+        return validated_data
 
 
 class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,

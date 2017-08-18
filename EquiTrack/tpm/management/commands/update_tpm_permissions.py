@@ -43,7 +43,7 @@ class Command(BaseCommand):
     ]
 
     follow_up_page = [
-        'tpmvisit.tmp_activities',
+        'tpmvisit.tpm_activities',
         'tpmactivity.action_points',
         'tpmactivityactionpoint.*',
     ]
