@@ -206,7 +206,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             ).values_list('partnership__partner_focal_points__email', flat=True)
         )
 
-    @transition(status, source=[STATUSES.draft], target=STATUSES.assigned,
+    @transition(status, source=[STATUSES.draft, STATUSES.tpm_rejected], target=STATUSES.assigned,
                 conditions=[
                     TPMVisitAssignRequiredFieldsCheck.as_condition(),
                     ValidateTPMVisitActivities.as_condition(),
@@ -217,8 +217,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self._send_email(self._get_tpm_as_email_recipients(), 'tpm/visit/assign',
                          cc=self._get_unicef_focal_points_as_email_recipients())
 
-    @transition(status, source=[STATUSES.draft], target=STATUSES.cancelled,
-                permission=_has_action_permission(action='cancel'))
+    @transition(status, source=[
+        STATUSES.draft, STATUSES.assigned, STATUSES.tpm_accepted, STATUSES.tpm_rejected,
+        STATUSES.tpm_reported, STATUSES.tpm_report_rejected,
+    ], target=STATUSES.cancelled, permission=_has_action_permission(action='cancel'))
     def cancel(self):
         self.date_of_cancelled = timezone.now()
 
