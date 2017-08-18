@@ -230,3 +230,88 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
             user=self.usual_user
         )
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestTPMPartnerViewSet(TPMTestCaseMixin, APITenantTestCase):
+    def setUp(self):
+        super(TestTPMPartnerViewSet, self).setUp()
+        self.second_tpm_partner = TPMPartnerFactory()
+
+    def _test_list_view(self, user, expected_firms):
+        response = self.forced_auth_req(
+            'get',
+            '/api/tpm/partners/',
+            user=user
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            sorted(map(lambda x: x['id'], response.data['results'])),
+            sorted(map(lambda x: x.id, expected_firms))
+        )
+
+    def _test_list_options(self, user, can_create=True, writable_fields=None):
+        response = self.forced_auth_req(
+            'options',
+            '/api/tpm/partners/',
+            user=user
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        if can_create:
+            self.assertIn('POST', response.data['actions'])
+            self.assertListEqual(
+                sorted(writable_fields or []),
+                sorted(response.data['actions']['POST'].keys())
+            )
+        else:
+            self.assertNotIn('POST', response.data['actions'])
+
+    def _test_detail_options(self, user, can_update=True, writable_fields=None):
+        response = self.forced_auth_req(
+            'options',
+            '/api/tpm/partners/{}/'.format(self.tpm_partner.id),
+            user=user
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        if can_update:
+            self.assertIn('PUT', response.data['actions'])
+            self.assertListEqual(
+                sorted(writable_fields or []),
+                sorted(response.data['actions']['PUT'].keys())
+            )
+        else:
+            self.assertNotIn('PUT', response.data['actions'])
+
+    def test_pme_list_view(self):
+        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
+
+    def test_unicef_list_view(self):
+        self._test_list_view(self.unicef_user, [self.tpm_partner, self.second_tpm_partner])
+
+    def test_tpm_partner_list_view(self):
+        self._test_list_view(self.tpm_user, [self.tpm_partner])
+
+    def test_usual_user_list_view(self):
+        self._test_list_view(self.usual_user, [])
+
+    def test_pme_list_options(self):
+        self._test_list_options(
+            self.pme_user,
+            writable_fields=['attachments', 'email', 'phone_number', 'hidden', 'blocked']
+        )
+
+    def test_tpm_partner_list_options(self):
+        self._test_list_options(self.tpm_user, can_create=False)
+
+    def test_pme_detail_options(self):
+        self._test_detail_options(
+            self.pme_user,
+            writable_fields=['attachments', 'email', 'phone_number', 'hidden', 'blocked']
+        )
+
+    def test_tpm_partner_detail_options(self):
+        self._test_detail_options(self.tpm_user, can_update=False)

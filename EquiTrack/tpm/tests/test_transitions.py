@@ -10,7 +10,7 @@ from .base import TPMTestCaseMixin
 class TestTPMTransitions(TPMTestCaseMixin, APITenantTestCase):
     def setUp(self):
         super(TestTPMTransitions, self).setUp()
-        call_command('update_tpm_permissions')
+        call_command('update_tpm_permissions', verbosity=0)
 
     def _do_transition(self, visit, action, user, data={}):
         return self.forced_auth_req(
