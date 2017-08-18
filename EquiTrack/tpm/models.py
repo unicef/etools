@@ -35,7 +35,7 @@ class TPMPartner(BaseFirm):
     )
 
     STATUSES_DATES = {
-        STATUSES.draft: 'created',
+        STATUSES.draft: 'date_created',
         STATUSES.active: 'date_of_active',
         STATUSES.cancelled: 'date_of_cancel',
     }
@@ -43,8 +43,12 @@ class TPMPartner(BaseFirm):
     status = FSMField(_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
     attachments = GenericRelation(Attachment, verbose_name=_('attachments'), blank=True)
 
-    date_of_active = models.DateTimeField(blank=True, null=True)
-    date_of_cancel = models.DateTimeField(blank=True, null=True)
+    date_of_active = models.DateField(blank=True, null=True)
+    date_of_cancel = models.DateField(blank=True, null=True)
+
+    @property
+    def date_created(self):
+        return self.created.date()
 
     @property
     def status_date(self):
@@ -87,7 +91,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     )
 
     STATUSES_DATES = {
-        STATUSES.draft: 'created',
+        STATUSES.draft: 'date_created',
         STATUSES.assigned: 'date_of_assigned',
         STATUSES.cancelled: 'date_of_cancelled',
         STATUSES.tpm_accepted: 'date_of_tpm_accepted',
@@ -106,18 +110,22 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     attachments = CodedGenericRelation(Attachment, verbose_name=_('Related Documents'), code='attach', blank=True)
     report = CodedGenericRelation(Attachment, verbose_name=_('Report'), code='report', blank=True)
 
-    date_of_assigned = models.DateTimeField(blank=True, null=True)
-    date_of_cancelled = models.DateTimeField(blank=True, null=True)
-    date_of_tpm_accepted = models.DateTimeField(blank=True, null=True)
-    date_of_tpm_rejected = models.DateTimeField(blank=True, null=True)
-    date_of_tpm_reported = models.DateTimeField(blank=True, null=True)
-    date_of_tpm_report_rejected = models.DateTimeField(blank=True, null=True)
-    date_of_unicef_approved = models.DateTimeField(blank=True, null=True)
+    date_of_assigned = models.DateField(blank=True, null=True)
+    date_of_cancelled = models.DateField(blank=True, null=True)
+    date_of_tpm_accepted = models.DateField(blank=True, null=True)
+    date_of_tpm_rejected = models.DateField(blank=True, null=True)
+    date_of_tpm_reported = models.DateField(blank=True, null=True)
+    date_of_tpm_report_rejected = models.DateField(blank=True, null=True)
+    date_of_unicef_approved = models.DateField(blank=True, null=True)
 
     sections = models.ManyToManyField('users.Section', related_name='tpm_visits', blank=True)
 
     unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Point'),
                                                  related_name='tpm_visits', blank=True)
+
+    @property
+    def date_created(self):
+        return self.created.date()
 
     @property
     def status_date(self):
