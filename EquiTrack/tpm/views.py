@@ -1,5 +1,10 @@
+from itertools import chain
+
 from django.http import Http404
 from django.utils import timezone
+from django.views.generic.detail import SingleObjectMixin
+from django.views.generic.list import MultipleObjectMixin
+from easy_pdf.rendering import render_to_pdf_response
 
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import list_route
@@ -8,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, ExportViewSetDataMixin, \
-    NestedViewSetMixin
+    NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity
@@ -155,3 +160,18 @@ class TPMVisitViewSet(
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now())
         })
+
+    @list_route(methods=['get'], renderer_classes=(TPMVisitCSVRenderer,))
+    def export_pdf(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            queryset = page
+            print "len: ", len(page)
+        activities = list(chain(*[visit.tpm_activities.all() for visit in queryset]))
+
+        context = {
+            "activities": activities,
+        }
+
+        return render_to_pdf_response(request, "tpm/visit_pdf.html", context=context)
