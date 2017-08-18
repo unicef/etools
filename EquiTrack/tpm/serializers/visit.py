@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from audit.serializers.engagement import PartnerOrganizationLightSerializer
 from partners.models import InterventionResultLink
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer, InterventionListSerializer
 from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment
@@ -40,6 +41,10 @@ class TPMVisitReportRejectCommentSerializer(TPMPermissionsBasedSerializerMixin,
 
 class TPMActivityLightSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                                  serializers.ModelSerializer):
+    implementing_partner = SeparatedReadWriteField(
+        read_field=PartnerOrganizationLightSerializer(read_only=True),
+    )
+
     partnership = SeparatedReadWriteField(
         read_field=InterventionListSerializer(read_only=True),
     )
@@ -55,7 +60,7 @@ class TPMActivityLightSerializer(TPMPermissionsBasedSerializerMixin, WritableNes
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
-        fields = ['id', 'partnership', 'cp_output', 'locations', ]
+        fields = ['id', 'implementing_partner', 'partnership', 'cp_output', 'date', 'locations', ]
 
 
 class TPMActivitySerializer(TPMActivityLightSerializer):

@@ -290,8 +290,8 @@ class TPMVisitReportRejectComment(models.Model):
 
 @python_2_unicode_compatible
 class TPMActivity(models.Model):
+    implementing_partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Implementing Partner'))
     partnership = models.ForeignKey('partners.Intervention', verbose_name=_('partnership'))
-
     cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), null=True, blank=True)
 
     tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
