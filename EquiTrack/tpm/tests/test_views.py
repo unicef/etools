@@ -77,9 +77,11 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
                 'unicef_focal_points': self.tpm_visit.unicef_focal_points.values_list('id', flat=True),
                 'sections': self.tpm_visit.sections.values_list('id', flat=True),
                 'tpm_activities': [{
+                    'implementing_partner': activity.partnership.agreement.partner.id,
                     'partnership': activity.partnership_id,
                     'cp_output': activity.cp_output_id,
                     'locations': activity.locations.values_list('id', flat=True),
+                    'date': activity.date,
                 } for activity in self.tpm_visit.tpm_activities.all()]
             }
         )
