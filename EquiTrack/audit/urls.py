@@ -8,7 +8,7 @@ from audit.views import (
     AuditorFirmViewSet, AuditViewSet,
     EngagementViewSet, MicroAssessmentViewSet, SpotCheckViewSet,
     PurchaseOrderViewSet, AuditorStaffMembersViewSet,
-    EngagementPDFView)
+    AuditPDFView, SpotCheckPDFView, MicroAssessmentPDFView)
 from utils.common.routers import NestedComplexRouter
 
 auditor_firms_api = routers.SimpleRouter()
@@ -38,8 +38,10 @@ urlpatterns = [
     url(r'^', include(auditor_staffmember_api.urls)),
     url(r'^', include(purchase_orders_api.urls)),
     url(r'^', include(engagements_api.urls)),
+    url(r'^audits/(?P<pk>\d+)/pdf/$', AuditPDFView.as_view(), name='audit_pdf'),
+    url(r'^spot-checks/(?P<pk>\d+)/pdf/$', SpotCheckPDFView.as_view(), name='spot-check_pdf'),
+    url(r'^micro-assessments/(?P<pk>\d+)/pdf/$', MicroAssessmentPDFView.as_view(), name='micro-assessment_pdf'),
     url(r'^', include(micro_assessments_api.urls)),
     url(r'^', include(spot_checks_api.urls)),
     url(r'^', include(audits_api.urls)),
-    url(r'^engagements/(?P<pk>\d+)/pdf/$', EngagementPDFView.as_view(), name='engagement_pdf')
 ]

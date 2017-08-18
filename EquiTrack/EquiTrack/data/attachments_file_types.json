@@ -92,26 +92,8 @@
     {
         "pk": 11,
         "fields": {
-            "order": 2,
-            "name": "Report",
-            "code": "audit_report"
-        },
-        "model": "attachments.filetype"
-    },
-    {
-        "pk": 12,
-        "fields": {
             "order": 0,
-            "name": "ICE form",
-            "code": "audit_report"
-        },
-        "model": "attachments.filetype"
-    },
-    {
-        "pk": 13,
-        "fields": {
-            "order": 1,
-            "name": "FACE form",
+            "name": "Report",
             "code": "audit_report"
         },
         "model": "attachments.filetype"
@@ -119,7 +101,7 @@
     {
         "pk": 14,
         "fields": {
-            "order": 3,
+            "order": 1,
             "name": "Other",
             "code": "audit_report"
         },

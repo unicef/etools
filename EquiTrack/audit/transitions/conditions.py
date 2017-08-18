@@ -87,8 +87,7 @@ class SPSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsChec
 class AuditSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsCheck):
     fields = EngagementSubmitReportRequiredFieldsCheck.fields + [
         'audited_expenditure', 'financial_findings', 'percent_of_audited_expenditure',
-        'audit_opinion', 'number_of_financial_findings', 'high_risk', 'medium_risk',
-        'low_risk', 'recommendation', 'audit_observation', 'ip_response',
+        'audit_opinion', 'recommendation', 'audit_observation', 'ip_response',
     ]
 
 
