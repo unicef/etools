@@ -7,7 +7,7 @@ from django_fsm import can_proceed, has_transition_perm
 from rest_framework import exceptions
 from rest_framework.compat import is_authenticated
 from rest_framework.decorators import detail_route
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError, MethodNotAllowed
 from rest_framework.serializers import Serializer
 
 
@@ -62,11 +62,18 @@ class ExportViewSetDataMixin(object):
 
 
 class FSMTransitionActionMixin(object):
-    @detail_route(methods=['post'], url_path='(?P<action>\D+)')
+    @detail_route(methods=['get', 'post'], url_path='(?P<action>\D+)')
     def action(self, request, *args, **kwargs):
         """
         Change status of FSM controlled object
         """
+        try:
+            view_method = getattr(self, kwargs.get('action'))
+            return view_method(request, *args, **kwargs)
+        except AttributeError, KeyError:
+            if request.method.lower() not in ['post']:
+                raise MethodNotAllowed(request.method.upper())
+
         action = kwargs.get('action', False)
         instance = self.get_object()
         instance_action = getattr(instance, action, None)

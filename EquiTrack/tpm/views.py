@@ -7,7 +7,7 @@ from django.views.generic.list import MultipleObjectMixin
 from easy_pdf.rendering import render_to_pdf_response
 
 from rest_framework import viewsets, mixins
-from rest_framework.decorators import list_route
+from rest_framework.decorators import list_route, detail_route
 from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -161,17 +161,27 @@ class TPMVisitViewSet(
             'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now())
         })
 
-    @list_route(methods=['get'], renderer_classes=(TPMVisitCSVRenderer,))
+    @list_route(methods=['get'])
     def export_pdf(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             queryset = page
-            print "len: ", len(page)
         activities = list(chain(*[visit.tpm_activities.all() for visit in queryset]))
 
         context = {
             "activities": activities,
         }
 
-        return render_to_pdf_response(request, "tpm/visit_pdf.html", context=context)
+        return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context=context)
+
+    @detail_route(methods=['get'])
+    def export_visit_pdf(self, request, *args, **kwargs):
+        instance = self.get_object()
+        activities = instance.tpm_activities.all()
+
+        context = {
+            "activities": activities,
+        }
+
+        return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context=context)
