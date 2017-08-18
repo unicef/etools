@@ -70,12 +70,15 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
         ]
 
     def create(self, validated_data):
+        validated_data = self.validate_related_data(validated_data)
         validated_data['author'] = self.get_user()
         return super(TPMActivityActionPointSerializer, self).create(validated_data)
 
-    def validate(self, data):
-        validated_data = super(TPMActivityActionPointSerializer, self).validate(data)
+    def update(self, validated_data):
+        validated_data = self.validate_related_data(validated_data)
+        return super(TPMActivityActionPointSerializer, self).create(validated_data)
 
+    def validate_related_data(self, validated_data):
         tpm_visit = self.context['instance']
 
         instance = TPMActivityActionPoint.objects.get(id=validated_data['id']) if 'id' in validated_data else None
@@ -84,7 +87,17 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
         if section or instance:
             if (section or instance.section) not in tpm_visit.sections.all():
                 raise serializers.ValidationError({
-                    "section": "Section doesn't connected with visit"
+                    "section": "Section {} doesn't connected with visit".format(section or instance.section.id)
+                })
+
+        locations = validated_data.get('locations', None)
+        if locations or instance:
+            locations = set(locations or instance.locations.values_list('id', flat=True))
+            activity = validated_data.get('tpm_activity', None) or validated_data.get('tpm_activity_id', None) or instance.tpm_activity.id
+            not_related = locations - set(TPMActivity.objects.get(id=activity).locations.values_list('id', flat=True))
+            if len(not_related) == 0:
+                raise serializers.ValidationError({
+                    "location": "Locations {} don't connected with activity".format(",".join(not_related))
                 })
 
         return validated_data

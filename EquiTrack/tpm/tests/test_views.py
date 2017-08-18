@@ -152,7 +152,7 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
                     'id': activity.id,
                     'action_points': [
                         {
-                            "section": SectionFactory().id,
+                            "section": SectionFactory.create().id,
                             "locations": activity.locations.values_list('id', flat=True),
                             "person_responsible": self.tpm_visit.tpm_partner.staff_members.first().user.id,
                             "cp_outputs": [activity.cp_output.id, ],
