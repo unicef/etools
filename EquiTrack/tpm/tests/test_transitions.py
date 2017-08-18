@@ -3,7 +3,6 @@ from django.core.management import call_command
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
-from tpm.models import TPMVisit
 from .base import TPMTestCaseMixin
 
 
@@ -11,18 +10,6 @@ class TestTPMTransitions(TPMTestCaseMixin, APITenantTestCase):
     def setUp(self):
         super(TestTPMTransitions, self).setUp()
         call_command('update_tpm_permissions')
-
-    def _do_transition(self, visit, action, user, data={}):
-        return self.forced_auth_req(
-            'post',
-            '/api/tpm/visits/{0}/{1}/'.format(visit.id, action),
-            user=user,
-            data=data
-        )
-
-    def _refresh_tpm_visit_instace(self, visit):
-        # Calling refresh_from_db will cause an exception.
-        return TPMVisit.objects.get(id=visit.id)
 
     def test_assign_without_perms(self):
         for user in [self.unicef_user, self.unicef_focal_point, self.tpm_user]:
@@ -125,3 +112,11 @@ class TestTPMTransitions(TPMTestCaseMixin, APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.tpm_visit = self._refresh_tpm_visit_instace(self.tpm_visit)
         self.assertEquals(self.tpm_visit.status, 'tpm_reported')
+
+    def test_approve_report_success(self):
+        self.test_tpm_report_success()
+        self.assertEquals(self.tpm_visit.status, 'tpm_reported')
+        response = self._do_transition(self.tpm_visit, 'approve', self.unicef_focal_point)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.tpm_visit = self._refresh_tpm_visit_instace(self.tpm_visit)
+        self.assertEquals(self.tpm_visit.status, 'unicef_approved')

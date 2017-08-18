@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django_fsm import FSMField, transition
@@ -293,6 +294,35 @@ class TPMActivity(models.Model):
 
     class Meta:
         verbose_name_plural = _('TPM Activities')
+
+
+@python_2_unicode_compatible
+class TPMActivityActionPoint(models.Model):
+    STATUSES = Choices(
+        ('open', 'Open'),
+        ('ongoing', 'Ongoing'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    )
+
+    author = models.ForeignKey(User, related_name='created_tpm_activity_action_points')
+    person_responsible = models.ForeignKey(User, related_name='tpm_activity_action_points')
+
+    tpm_activity = models.ForeignKey(TPMActivity, related_name='action_points')
+
+    section = models.ForeignKey('users.Section')
+    locations = models.ManyToManyField('locations.Location')
+    cp_outputs = models.ManyToManyField('reports.Result', verbose_name=_('CP Output'))
+
+    due_date = models.DateTimeField()
+    status = models.CharField(choices=STATUSES, max_length=9, null=True, verbose_name='Status')
+    description = models.TextField()
+    completed_at = models.DateTimeField(blank=True, null=True)
+    actions_taken = models.TextField(blank=True, null=True)
+    follow_up = models.BooleanField(default=False)
+
+    def __str__(self):
+        return 'Action Point #{} on {}'.format(self.id, self.tpm_activity)
 
 
 PME = GroupWrapper(code='pme',

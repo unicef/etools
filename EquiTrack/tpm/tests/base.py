@@ -4,13 +4,25 @@ import tempfile
 from django.core.files import File
 
 from attachments.models import FileType, Attachment
-from tpm.models import PME, ThirdPartyMonitor, UNICEFUser
+from tpm.models import PME, ThirdPartyMonitor, UNICEFUser, TPMVisit
 from EquiTrack.factories import UserFactory, LocationFactory, SectionFactory
 from utils.groups.wrappers import GroupWrapper
 from .factories import TPMVisitFactory, TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
 
 class TPMTestCaseMixin(object):
+    def _do_transition(self, visit, action, user, data={}):
+        return self.forced_auth_req(
+            'post',
+            '/api/tpm/visits/{0}/{1}/'.format(visit.id, action),
+            user=user,
+            data=data
+        )
+
+    def _refresh_tpm_visit_instace(self, visit):
+        # Calling refresh_from_db will cause an exception.
+        return TPMVisit.objects.get(id=visit.id)
+
     def _add_attachment(self, code, instance):
         with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=".trash") as temporary_file:
             try:

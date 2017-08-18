@@ -1,3 +1,5 @@
+from datetime import timedelta, datetime
+
 from django.core.management import call_command
 from django.utils.translation import ugettext as _
 
@@ -96,6 +98,35 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
         )
 
         self.assertEquals(assign_response.status_code, status.HTTP_200_OK)
+
+    def test_action_points(self):
+        self._do_transition(self.tpm_visit, 'assign', self.pme_user)
+        self._do_transition(self.tpm_visit, 'accept', self.tpm_user)
+        self._add_attachment('report', self.tpm_visit)
+        self._do_transition(self.tpm_visit, 'send_report', self.tpm_user)
+        self._do_transition(self.tpm_visit, 'approve', self.unicef_focal_point)
+        self.tpm_visit = self._refresh_tpm_visit_instace(self.tpm_visit)
+        self.assertEquals(self.tpm_visit.status, 'unicef_approved')
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/tpm/visits/{}/'.format(self.tpm_visit.id),
+            user=self.unicef_focal_point,
+            data={
+                'tpm_activities': [{
+                    'id': activity.id,
+                    'action_popints': [
+                        {
+                            "sections": self.tpm_visit.sections.values_list('id', flat=True),
+                            "locations": activity.locations.values_list('id', flat=True),
+                            "person_responsible": self.tpm_visit.tpm_partner.staff_members.first().id,
+                            "cp_outputs": [activity.cp_output.id, ],
+                            "due_date": datetime.now().date() + timedelta(days=5),
+                        }
+                    ]
+                } for activity in self.tpm_visit.tpm_activities.all()]
+            }
+        )
 
 
 class TestTPMFirmViewSet(TPMTestCaseMixin, APITenantTestCase):

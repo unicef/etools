@@ -2,7 +2,8 @@ from rest_framework import serializers
 
 from partners.models import InterventionResultLink
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
-from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment
+from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, \
+    TPMActivityActionPoint
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
@@ -38,6 +39,41 @@ class TPMVisitReportRejectCommentSerializer(TPMPermissionsBasedSerializerMixin,
         fields = ['id', 'rejected_at', 'reject_reason', ]
 
 
+class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
+                                       WritableNestedSerializerMixin,
+                                       serializers.ModelSerializer):
+    section = SeparatedReadWriteField(
+        read_field=SectionSerializer(read_only=True),
+        required=True
+    )
+
+    cp_outputs = SeparatedReadWriteField(
+        read_field=ResultSerializer(many=True, read_only=True),
+        required=True
+    )
+
+    locations = SeparatedReadWriteField(
+        read_field=LocationSerializer(many=True, read_only=True)
+    )
+
+    person_responsible = SeparatedReadWriteField(
+        read_field=MinimalUserSerializer(read_only=True, many=True),
+        required=True
+    )
+
+    class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+        model = TPMActivityActionPoint
+        fields = [
+            'id', 'section', 'cp_outputs', 'locations', 'person_responsible',
+            'due_date', 'status', 'description', 'completed_at', 'actions_taken',
+            'follow_up'
+        ]
+
+    def create(self, validated_data):
+        validated_data['author'] = self.get_user()
+        return super(EngagementActionPointSerializer, self).create(validated_data)
+
+
 class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             serializers.ModelSerializer):
     partnership = SeparatedReadWriteField(
@@ -53,9 +89,11 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         read_field=LocationSerializer(many=True, read_only=True),
     )
 
+    action_points = TPMActivityActionPointSerializer(many=True, required=False)
+
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
-        fields = ['id', 'partnership', 'cp_output', 'locations', ]
+        fields = ['id', 'partnership', 'cp_output', 'locations', 'action_points', ]
 
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,

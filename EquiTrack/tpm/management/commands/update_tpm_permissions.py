@@ -29,7 +29,8 @@ class Command(BaseCommand):
         'tpmpartnerstaffmember.*',
         'tpmvisit.*',
         'tpmactivity.*',
-        'tpmvisitreportrejectcomment.*'
+        'tpmvisitreportrejectcomment.*',
+        'tpmactivityactionpoint.*',
     ]
 
     visit_create = [
@@ -39,6 +40,12 @@ class Command(BaseCommand):
         'tpmvisit.unicef_focal_points',
         'tpmvisit.sections',
         'tpmactivity.*',
+    ]
+
+    follow_up_page = [
+        'tpmvisit.tmp_activities',
+        'tpmactivity.action_points',
+        'tpmactivityactionpoint.*',
     ]
 
     new_visit = 'new'
@@ -129,6 +136,9 @@ class Command(BaseCommand):
 
         # UNICEF can approve report or ask actions
         self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'action', ['tpmvisit.approve'])
+
+        # UNICEF and PME can add action point for approved visit
+        self.add_permissions(self.unicef_approved, [self.pme, self.focal_point], 'edit', self.follow_up_page)
 
         # update permissions
         all_tenants = get_tenant_model().objects.exclude(schema_name='public')
