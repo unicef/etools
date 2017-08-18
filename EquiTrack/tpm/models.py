@@ -118,9 +118,14 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     date_of_unicef_approved = models.DateField(blank=True, null=True)
 
     sections = models.ManyToManyField('users.Section', related_name='tpm_visits', blank=True)
+    offices = models.ManyToManyField('users.Office', related_name='tpm_visits', blank=True)
 
-    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Point'),
+    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Points'),
                                                  related_name='tpm_visits', blank=True)
+
+    tpm_partner_focal_points = models.ManyToManyField(
+        TPMPartnerStaffMember, verbose_name=_('TPM Focal Points'), related_name='tpm_visits', blank=True
+    )
 
     @property
     def date_created(self):

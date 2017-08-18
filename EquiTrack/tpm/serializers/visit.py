@@ -1,18 +1,18 @@
 from rest_framework import serializers
 
 from partners.models import InterventionResultLink
-from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
+from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer, InterventionListSerializer
 from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
 from utils.common.serializers.fields import SeparatedReadWriteField
-from tpm.serializers.partner import TPMPartnerLightSerializer
-from users.serializers import MinimalUserSerializer
+from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
+from users.serializers import MinimalUserSerializer, OfficeSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from users.serializers import SectionSerializer
-from locations.serializers import LocationSerializer
-from reports.serializers.v1 import ResultSerializer
+from locations.serializers import LocationLightSerializer
+from reports.serializers.v1 import ResultLightSerializer
 
 
 class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
@@ -38,19 +38,19 @@ class TPMVisitReportRejectCommentSerializer(TPMPermissionsBasedSerializerMixin,
         fields = ['id', 'rejected_at', 'reject_reason', ]
 
 
-class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
-                            serializers.ModelSerializer):
+class TPMActivityLightSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
+                                 serializers.ModelSerializer):
     partnership = SeparatedReadWriteField(
-        read_field=InterventionCreateUpdateSerializer(read_only=True),
+        read_field=InterventionListSerializer(read_only=True),
     )
 
     cp_output = SeparatedReadWriteField(
-        read_field=ResultSerializer(read_only=True),
+        read_field=ResultLightSerializer(read_only=True),
         required=True
     )
 
     locations = SeparatedReadWriteField(
-        read_field=LocationSerializer(many=True, read_only=True),
+        read_field=LocationLightSerializer(many=True, read_only=True),
     )
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
@@ -58,12 +58,37 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         fields = ['id', 'partnership', 'cp_output', 'locations', ]
 
 
+class TPMActivitySerializer(TPMActivityLightSerializer):
+    partnership = SeparatedReadWriteField(
+        read_field=InterventionCreateUpdateSerializer(read_only=True),
+    )
+
+    class Meta(TPMActivityLightSerializer.Meta):
+        pass
+
+
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
                               serializers.ModelSerializer):
-    tpm_activities = TPMActivitySerializer(many=True, required=False)
+    tpm_activities = TPMActivityLightSerializer(many=True, required=False)
 
     tpm_partner = SeparatedReadWriteField(
         read_field=TPMPartnerLightSerializer(read_only=True),
+    )
+
+    sections = SeparatedReadWriteField(
+        read_field=SectionSerializer(read_only=True, many=True),
+    )
+
+    offices = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True, many=True)
+    )
+
+    unicef_focal_points = SeparatedReadWriteField(
+        read_field=MinimalUserSerializer(read_only=True, many=True),
+    )
+
+    tpm_partner_focal_points = SeparatedReadWriteField(
+        read_field=TPMPartnerStaffMemberSerializer(read_only=True, many=True),
     )
 
     status_date = serializers.ReadOnlyField()
@@ -75,25 +100,18 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
             'id', 'start_date', 'end_date',
             'tpm_activities', 'tpm_partner',
             'status', 'status_date', 'reference_number',
+            'sections', 'offices', 'tpm_partner_focal_points', 'unicef_focal_points',
             'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
             'date_of_tpm_rejected', 'date_of_tpm_reported', 'date_of_unicef_approved',
-            'date_of_tpm_report_rejected', 'date_of_cancelled'
+            'date_of_tpm_report_rejected', 'date_of_cancelled',
         ]
 
 
 class TPMVisitSerializer(TPMVisitLightSerializer):
+    tpm_activities = TPMActivitySerializer(many=True, required=False)
+
     attachments = TPMAttachmentsSerializer(many=True, required=False)
     report = TPMReportAttachmentsSerializer(many=True, required=False)
-
-    unicef_focal_points = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True, many=True),
-        required=True
-    )
-
-    sections = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, many=True),
-        required=True
-    )
 
     report_reject_comments = SeparatedReadWriteField(
         read_field=TPMVisitReportRejectCommentSerializer(many=True, read_only=True),
@@ -104,12 +122,11 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
             'reject_comment',
             'attachments',
             'report',
-            'unicef_focal_points',
-            'sections',
             'report_reject_comments',
         ]
         extra_kwargs = {
             'tpm_partner': {'required': True},
+            'unicef_focal_points': {'required': True},
         }
 
 
