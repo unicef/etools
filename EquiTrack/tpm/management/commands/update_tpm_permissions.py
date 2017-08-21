@@ -119,7 +119,7 @@ class Command(BaseCommand):
         self.add_permissions(self.assigned, [self.pme, self.focal_point], 'action', 'tpmvisit.cancel')
 
         # cancelled - no edit, no actions
-        self.add_permissions(self.tpm_accepted, self.everybody, 'view', self.everything)
+        self.add_permissions(self.cancelled, self.everybody, 'view', self.everything)
 
         # tpm_accepted - tpm edit report area, tpm can report
         self.add_permissions(self.tpm_accepted, self.everybody, 'view', self.everything)
