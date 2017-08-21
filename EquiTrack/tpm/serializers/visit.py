@@ -4,7 +4,8 @@ from audit.serializers.engagement import PartnerOrganizationLightSerializer
 from partners.models import InterventionResultLink
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer, InterventionListSerializer
 from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment
-from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
+from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, \
+    TPMActivityPDSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
 from utils.common.serializers.fields import SeparatedReadWriteField
@@ -58,9 +59,11 @@ class TPMActivityLightSerializer(TPMPermissionsBasedSerializerMixin, WritableNes
         read_field=LocationLightSerializer(many=True, read_only=True),
     )
 
+    pd_files = TPMActivityPDSerializer(many=True, required=False)
+
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
-        fields = ['id', 'implementing_partner', 'partnership', 'cp_output', 'date', 'locations', ]
+        fields = ['id', 'implementing_partner', 'partnership', 'cp_output', 'date', 'locations', 'pd_files', ]
 
 
 class TPMActivitySerializer(TPMActivityLightSerializer):
