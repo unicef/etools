@@ -299,6 +299,8 @@ class TPMActivity(models.Model):
     tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
     locations = models.ManyToManyField('locations.Location', verbose_name=_('Locations'), related_name='tpm_activities')
 
+    pd_files = CodedGenericRelation(Attachment, verbose_name=_('Programme Documents'), code='visit_pd', blank=True)
+
     is_pv = models.BooleanField(default=False)
 
     date = models.DateField(blank=True, null=True)

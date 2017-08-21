@@ -99,6 +99,23 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
 
         self.assertEquals(assign_response.status_code, status.HTTP_200_OK)
 
+    def test_pd_documents(self):
+        activity = self.tpm_visit.tpm_activities.first()
+        self.assertEquals(activity.pd_files.count(), 0)
+        self._add_attachment('visit_pd', activity)
+        self.assertEquals(activity.pd_files.count(), 1)
+
+        visit_response = self.forced_auth_req(
+            'get',
+            '/api/tpm/visits/{}/'.format(self.tpm_visit.id),
+            user=self.pme_user,
+        )
+        self.assertEquals(visit_response.status_code, status.HTTP_200_OK)
+
+        tpm_activities = visit_response.data.get("tpm_activities", [])
+        activity_with_pd = next((activity for activity in tpm_activities if activity['pd_files'] != []), None)
+        self.assertNotEquals(activity_with_pd, None)
+
 
 class TestTPMFirmViewSet(TPMTestCaseMixin, APITenantTestCase):
     def setUp(self):
