@@ -101,6 +101,7 @@ class Command(BaseCommand):
         # new_visit - UNICEF can edit
         self.add_permissions(self.new_visit, self.everybody, 'view', self.everything)
         self.add_permissions(self.new_visit, self.pme, 'edit', self.visit_create)
+        self.revoke_permissions(self.new_visit, self.everybody, 'view', 'tpmvisit.report')
 
         # draft - UNICEF can edit visit + assign
         self.add_permissions(self.draft, self.everybody, 'view', self.everything)
@@ -109,6 +110,7 @@ class Command(BaseCommand):
             'tpmvisit.assign',
             'tpmvisit.cancel',
         ])
+        self.revoke_permissions(self.draft, self.everybody, 'view', 'tpmvisit.report')
 
         # assigned - pme edit overview + attachments, tpm accept/reject
         self.add_permissions(self.assigned, self.everybody, 'view', self.everything)
@@ -117,9 +119,11 @@ class Command(BaseCommand):
             'tpmvisit.reject',
         ])
         self.add_permissions(self.assigned, [self.pme, self.focal_point], 'action', 'tpmvisit.cancel')
+        self.revoke_permissions(self.assigned, self.everybody, 'view', 'tpmvisit.report')
 
         # cancelled - no edit, no actions
         self.add_permissions(self.cancelled, self.everybody, 'view', self.everything)
+        self.revoke_permissions(self.cancelled, self.everybody, 'view', 'tpmvisit.report')
 
         # tpm_accepted - tpm edit report area, tpm can report
         self.add_permissions(self.tpm_accepted, self.everybody, 'view', self.everything)
@@ -128,6 +132,7 @@ class Command(BaseCommand):
         self.add_permissions(self.tpm_accepted, [self.pme, self.focal_point], 'action', [
             'tpmvisit.cancel',
         ])
+        self.revoke_permissions(self.tpm_accepted, [self.pme, self.focal_point], 'view', 'tpmvisit.report')
 
         # tpm_rejected - pme edit overview + attachments, pme can send to assigned
         self.add_permissions(self.tpm_rejected, self.everybody, 'view', self.everything)
@@ -135,6 +140,7 @@ class Command(BaseCommand):
             'tpmvisit.assign',
             'tpmvisit.cancel',
         ])
+        self.revoke_permissions(self.tpm_rejected, [self.pme, self.focal_point], 'view', 'tpmvisit.report')
 
         # tpm_reported - UNICEF can reject report or ask actions
         self.add_permissions(self.tpm_reported, self.everybody, 'view', self.everything)
