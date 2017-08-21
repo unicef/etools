@@ -26,16 +26,22 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
             sorted(map(lambda x: x.id, expected_visits))
         )
 
-    def test_list_view(self):
+    def test_unicef_list_view(self):
         additional_tpm_visit = TPMVisitFactory()
 
         self._test_list_view(self.pme_user, [self.tpm_visit, additional_tpm_visit, ])
         self._test_list_view(self.unicef_user, [self.tpm_visit, additional_tpm_visit, ])
         self._test_list_view(self.unicef_focal_point, [self.tpm_visit, additional_tpm_visit, ])
-
-        self._test_list_view(self.tpm_user, [self.tpm_visit, ])
-
         self._test_list_view(self.usual_user, [])
+
+    def test_tpm_list_view(self):
+        # drafts shouldn't be available for tpm
+        self._test_list_view(self.tpm_user, [])
+
+        self.tpm_visit.assign()
+        self.tpm_visit.save()
+
+        self._test_list_view(self.tpm_user, [self.tpm_visit])
 
     def test_create_empty(self):
         create_response = self.forced_auth_req(
@@ -140,9 +146,16 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
         response = self.forced_auth_req(
             'get',
             '/api/tpm/partners/{0}/staff-members/'.format(self.tpm_partner.id),
+            user=self.tpm_user
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/tpm/partners/{0}/staff-members/'.format(self.tpm_partner.id),
             user=self.usual_user
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_detail_view(self):
         response = self.forced_auth_req(
@@ -161,24 +174,36 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
                 self.tpm_partner.id,
                 self.tpm_partner.staff_members.first().id
             ),
+            user=self.tpm_user
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/tpm/partners/{0}/staff-members/{1}/'.format(
+                self.tpm_partner.id,
+                self.tpm_partner.staff_members.first().id
+            ),
             user=self.usual_user
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_create_view(self):
+        user_data = {
+            "user": {
+                "email": "test_email_1@gmail.com",
+                "first_name": "John",
+                "last_name": "Doe"
+            }
+        }
+
         response = self.forced_auth_req(
             'post',
             '/api/tpm/partners/{0}/staff-members/'.format(
                 self.tpm_partner.id,
                 self.tpm_partner.staff_members.first().id
             ),
-            data={
-                "user": {
-                    "email": "test_email_1@gmail.com",
-                    "first_name": "John",
-                    "last_name": "Doe"
-                }
-            },
+            data=user_data,
             user=self.pme_user
         )
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
@@ -189,30 +214,37 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
                 self.tpm_partner.id,
                 self.tpm_partner.staff_members.first().id
             ),
-            data={
-                "user": {
-                    "email": "test_email_2@gmail.com",
-                    "first_name": "John",
-                    "last_name": "Doe"
-                }
-            },
+            data=user_data,
+            user=self.tpm_user
+        )
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/tpm/partners/{0}/staff-members/'.format(
+                self.tpm_partner.id,
+                self.tpm_partner.staff_members.first().id
+            ),
+            data=user_data,
             user=self.usual_user
         )
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_view(self):
+        user_data = {
+            "user": {
+                "first_name": "John",
+                "last_name": "Doe"
+            }
+        }
+
         response = self.forced_auth_req(
             'patch',
             '/api/tpm/partners/{0}/staff-members/{1}/'.format(
                 self.tpm_partner.id,
                 self.tpm_partner.staff_members.first().id
             ),
-            data={
-                "user": {
-                    "first_name": "John",
-                    "last_name": "Doe"
-                }
-            },
+            data=user_data,
             user=self.pme_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -223,12 +255,18 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
                 self.tpm_partner.id,
                 self.tpm_partner.staff_members.first().id
             ),
-            data={
-                "user": {
-                    "first_name": "John",
-                    "last_name": "Doe"
-                }
-            },
+            data=user_data,
+            user=self.tpm_user
+        )
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.forced_auth_req(
+            'patch',
+            '/api/tpm/partners/{0}/staff-members/{1}/'.format(
+                self.tpm_partner.id,
+                self.tpm_partner.staff_members.first().id
+            ),
+            data=user_data,
             user=self.usual_user
         )
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)

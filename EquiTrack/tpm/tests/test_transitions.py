@@ -25,7 +25,7 @@ class TestTPMTransitions(TPMTestCaseMixin, APITenantTestCase):
         return TPMVisit.objects.get(id=visit.id)
 
     def test_assign_without_perms(self):
-        for user in [self.unicef_user, self.unicef_focal_point, self.tpm_user]:
+        for user in [self.unicef_user, self.unicef_focal_point]:
             self.assertEquals(self.tpm_visit.status, 'draft')
 
             response = self._do_transition(self.tpm_visit, 'assign', user)
