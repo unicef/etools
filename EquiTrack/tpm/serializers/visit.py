@@ -13,7 +13,7 @@ from users.serializers import MinimalUserSerializer, OfficeSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from users.serializers import SectionSerializer
 from locations.serializers import LocationLightSerializer
-from reports.serializers.v1 import ResultLightSerializer
+from reports.serializers.v1 import ResultSerializer
 
 
 class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
@@ -50,8 +50,8 @@ class TPMActivityLightSerializer(TPMPermissionsBasedSerializerMixin, WritableNes
     )
 
     cp_output = SeparatedReadWriteField(
-        read_field=ResultLightSerializer(read_only=True),
-        required=True
+        read_field=ResultSerializer(read_only=True),
+        required=False,
     )
 
     locations = SeparatedReadWriteField(
