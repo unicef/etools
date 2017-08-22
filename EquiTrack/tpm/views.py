@@ -161,19 +161,11 @@ class TPMVisitViewSet(
             'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now())
         })
 
-    @list_route(methods=['get'])
+    @detail_route(methods=['get'])
     def export_pdf(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            queryset = page
-        activities = list(chain(*[visit.tpm_activities.all() for visit in queryset]))
-
-        context = {
-            "activities": activities,
-        }
-
-        return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context=context)
+        return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context={
+            "activities": self.get_object().tpm_activities.all(),
+        })
 
     @detail_route(methods=['get'])
     def export_visit_pdf(self, request, *args, **kwargs):
