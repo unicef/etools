@@ -58,7 +58,7 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
     )
 
     locations = SeparatedReadWriteField(
-        read_field=LocationSerializer(many=True, read_only=True)
+        read_field=LocationLightSerializer(many=True, read_only=True)
     )
 
     person_responsible = SeparatedReadWriteField(
