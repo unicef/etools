@@ -12,7 +12,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBac
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, ExportViewSetDataMixin, \
+from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, \
     NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
@@ -25,7 +25,7 @@ from .export.serializers import TPMVisitExportSerializer
 
 
 class BaseTPMViewSet(
-    ExportViewSetDataMixin,
+    SafeTenantViewSetMixin,
     MultiSerializerViewSetMixin,
 ):
     metadata_class = TPMBaseMetadata
