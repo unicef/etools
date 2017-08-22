@@ -9,10 +9,10 @@ from .base import TPMTestCaseMixin
 class TestTPMTransitions(TPMTestCaseMixin, APITenantTestCase):
     def setUp(self):
         super(TestTPMTransitions, self).setUp()
-        call_command('update_tpm_permissions')
+        call_command('update_tpm_permissions', verbosity=0)
 
     def test_assign_without_perms(self):
-        for user in [self.unicef_user, self.unicef_focal_point, self.tpm_user]:
+        for user in [self.unicef_user, self.unicef_focal_point]:
             self.assertEquals(self.tpm_visit.status, 'draft')
 
             response = self._do_transition(self.tpm_visit, 'assign', user)

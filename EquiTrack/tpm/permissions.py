@@ -15,9 +15,9 @@ class IsPMEorReadonlyPermission(BasePermission):
 
 
 class CanCreateStaffMembers(BasePermission):
-    message = _('User is not PME')
+    message = _('You have no power here')
 
     def has_permission(self, request, view):
-        return request.user.groups.filter(
+        return view.action in ['retrieve', 'list'] or request.user.groups.filter(
             id=PME.as_group().id
         ).exists()

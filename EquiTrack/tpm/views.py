@@ -1,24 +1,31 @@
+from itertools import chain
+
 from django.http import Http404
+from django.utils import timezone
+from django.views.generic.detail import SingleObjectMixin
+from django.views.generic.list import MultipleObjectMixin
+from easy_pdf.rendering import render_to_pdf_response
 
 from rest_framework import viewsets, mixins
-from rest_framework.decorators import list_route
+from rest_framework.decorators import list_route, detail_route
 from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, ExportViewSetDataMixin, \
-    NestedViewSetMixin
+from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, \
+    NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember
+from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from .permissions import IsPMEorReadonlyPermission, CanCreateStaffMembers
 from .export.renderers import TPMVisitCSVRenderer
+from .export.serializers import TPMVisitExportSerializer
 
 
 class BaseTPMViewSet(
-    ExportViewSetDataMixin,
+    SafeTenantViewSetMixin,
     MultiSerializerViewSetMixin,
 ):
     metadata_class = TPMBaseMetadata
@@ -133,8 +140,8 @@ class TPMVisitViewSet(
             return queryset.none()
         if user_type == ThirdPartyMonitor:
             queryset = queryset.filter(
-                tpm_partner=self.request.user.tpm_tpmpartnerstaffmember.tpm_partner
-            )
+                tpm_partner=self.request.user.tpm_tpmpartnerstaffmember.tpm_partner,
+            ).exclude(status=TPMVisit.STATUSES.draft)
         return queryset
 
     def get_serializer_class(self):
@@ -146,5 +153,27 @@ class TPMVisitViewSet(
 
     @list_route(methods=['get'], renderer_classes=(TPMVisitCSVRenderer,))
     def export(self, request, *args, **kwargs):
-        # TODO: Update export
-        raise NotImplemented()
+        tpm_activities = TPMActivity.objects.filter(
+            tpm_visit__in=self.get_queryset(),
+        )
+        serializer = TPMVisitExportSerializer(tpm_activities, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now())
+        })
+
+    @detail_route(methods=['get'])
+    def export_pdf(self, request, *args, **kwargs):
+        return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context={
+            "activities": self.get_object().tpm_activities.all(),
+        })
+
+    @detail_route(methods=['get'])
+    def export_visit_pdf(self, request, *args, **kwargs):
+        instance = self.get_object()
+        activities = instance.tpm_activities.all()
+
+        context = {
+            "activities": activities,
+        }
+
+        return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context=context)

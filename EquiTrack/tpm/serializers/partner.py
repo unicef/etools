@@ -29,7 +29,7 @@ class TPMPartnerLightSerializer(serializers.ModelSerializer):
 
 class TPMPartnerSerializer(WritableNestedSerializerMixin, TPMPartnerLightSerializer):
     staff_members = TPMPartnerStaffMemberSerializer(many=True, required=False, read_only=True)
-    attachments = TPMAttachmentsSerializer(read_only=True, many=True)
+    attachments = TPMAttachmentsSerializer(many=True)
 
     class Meta(WritableNestedSerializerMixin.Meta, TPMPartnerLightSerializer.Meta):
         fields = TPMPartnerLightSerializer.Meta.fields + [

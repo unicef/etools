@@ -119,9 +119,14 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     date_of_unicef_approved = models.DateField(blank=True, null=True)
 
     sections = models.ManyToManyField('users.Section', related_name='tpm_visits', blank=True)
+    offices = models.ManyToManyField('users.Office', related_name='tpm_visits', blank=True)
 
-    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Point'),
+    unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Points'),
                                                  related_name='tpm_visits', blank=True)
+
+    tpm_partner_focal_points = models.ManyToManyField(
+        TPMPartnerStaffMember, verbose_name=_('TPM Focal Points'), related_name='tpm_visits', blank=True
+    )
 
     @property
     def date_created(self):
@@ -202,7 +207,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             ).values_list('partnership__partner_focal_points__email', flat=True)
         )
 
-    @transition(status, source=[STATUSES.draft], target=STATUSES.assigned,
+    @transition(status, source=[STATUSES.draft, STATUSES.tpm_rejected], target=STATUSES.assigned,
                 conditions=[
                     TPMVisitAssignRequiredFieldsCheck.as_condition(),
                     ValidateTPMVisitActivities.as_condition(),
@@ -213,8 +218,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self._send_email(self._get_tpm_as_email_recipients(), 'tpm/visit/assign',
                          cc=self._get_unicef_focal_points_as_email_recipients())
 
-    @transition(status, source=[STATUSES.draft], target=STATUSES.cancelled,
-                permission=_has_action_permission(action='cancel'))
+    @transition(status, source=[
+        STATUSES.draft, STATUSES.assigned, STATUSES.tpm_accepted, STATUSES.tpm_rejected,
+        STATUSES.tpm_reported, STATUSES.tpm_report_rejected,
+    ], target=STATUSES.cancelled, permission=_has_action_permission(action='cancel'))
     def cancel(self):
         self.date_of_cancelled = timezone.now()
 
@@ -286,12 +293,15 @@ class TPMVisitReportRejectComment(models.Model):
 
 @python_2_unicode_compatible
 class TPMActivity(models.Model):
-    partnership = models.ForeignKey('partners.Intervention', verbose_name=_('partnership'))
+    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
 
+    implementing_partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Implementing Partner'))
+    partnership = models.ForeignKey('partners.Intervention', verbose_name=_('partnership'))
     cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), null=True, blank=True)
 
-    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
     locations = models.ManyToManyField('locations.Location', verbose_name=_('Locations'), related_name='tpm_activities')
+
+    pd_files = CodedGenericRelation(Attachment, verbose_name=_('Programme Documents'), code='visit_pd', blank=True)
 
     is_pv = models.BooleanField(default=False)
 

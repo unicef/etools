@@ -38,6 +38,8 @@ class Command(BaseCommand):
         'tpmvisit.tpm_activities',
         'tpmvisit.attachments',
         'tpmvisit.unicef_focal_points',
+        'tpmvisit.tpm_partner_focal_points',
+        'tpmvisit.offices',
         'tpmvisit.sections',
         'tpmactivity.*',
     ]
@@ -51,13 +53,12 @@ class Command(BaseCommand):
     new_visit = 'new'
     draft = 'draft'
     assigned = 'assigned'
+    cancelled = 'cancelled'
     tpm_accepted = 'tpm_accepted'
     tpm_rejected = 'tpm_rejected'
     tpm_reported = 'tpm_reported'
-    submitted = 'submitted'
-    unicef_approved = 'unicef_approved'
     tpm_report_rejected = 'tpm_report_rejected'
-    cancelled = 'cancelled'
+    unicef_approved = 'unicef_approved'
 
     def __init__(self, *args, **kwargs):
         super(Command, self).__init__(*args, **kwargs)
@@ -104,38 +105,68 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         verbosity = options.get('verbosity', 1)
 
-        # all users can view  visit on all steps
+        # new_visit - UNICEF can edit
         self.add_permissions(self.new_visit, self.everybody, 'view', self.everything)
-        self.add_permissions(self.draft, self.everybody, 'view', self.everything)
-        self.add_permissions(self.assigned, self.everybody, 'view', self.everything)
-        self.add_permissions(self.tpm_accepted, self.everybody, 'view', self.everything)
-        self.add_permissions(self.tpm_rejected, self.everybody, 'view', self.everything)
-        self.add_permissions(self.tpm_reported, self.everybody, 'view', self.everything)
-        self.add_permissions(self.submitted, self.everybody, 'view', self.everything)
-        self.add_permissions(self.unicef_approved, self.everybody, 'view', self.everything)
-
-        # new status: only pme can edit
         self.add_permissions(self.new_visit, self.pme, 'edit', self.visit_create)
+        self.revoke_permissions(self.new_visit, self.everybody, 'view', 'tpmvisit.report')
 
-        # pme can edit visit before submit
+        # draft - UNICEF can edit visit + assign
+        self.add_permissions(self.draft, self.everybody, 'view', self.everything)
         self.add_permissions(self.draft, self.pme, 'edit', self.visit_create)
-        self.add_permissions(self.draft, self.pme, 'action', ['tpmvisit.assign'])
-        self.add_permissions(self.draft, self.pme, 'action', ['tpmvisit.cancel'])
+        self.add_permissions(self.draft, self.pme, 'action', [
+            'tpmvisit.assign',
+            'tpmvisit.cancel',
+        ])
+        self.revoke_permissions(self.draft, self.everybody, 'view', 'tpmvisit.report')
 
-        # TPM can accept or reject visit and add reject comment
-        self.add_permissions(self.assigned, self.third_party_monitor, 'action', ['tpmvisit.accept', 'tpmvisit.reject'])
+        # assigned - pme edit overview + attachments, tpm accept/reject
+        self.add_permissions(self.assigned, self.everybody, 'view', self.everything)
+        self.add_permissions(self.assigned, self.third_party_monitor, 'action', [
+            'tpmvisit.accept',
+            'tpmvisit.reject',
+        ])
+        self.add_permissions(self.assigned, [self.pme, self.focal_point], 'action', 'tpmvisit.cancel')
+        self.revoke_permissions(self.assigned, self.everybody, 'view', 'tpmvisit.report')
 
-        # TPM can add report
+        # cancelled - no edit, no actions
+        self.add_permissions(self.cancelled, self.everybody, 'view', self.everything)
+        self.revoke_permissions(self.cancelled, self.everybody, 'view', 'tpmvisit.report')
+
+        # tpm_accepted - tpm edit report area, tpm can report
+        self.add_permissions(self.tpm_accepted, self.everybody, 'view', self.everything)
         self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'edit', ['tpmvisit.report'])
-        self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'action', ['tpmvisit.send_report'])
+        self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'action', 'tpmvisit.send_report')
+        self.add_permissions(self.tpm_accepted, [self.pme, self.focal_point], 'action', [
+            'tpmvisit.cancel',
+        ])
+        self.revoke_permissions(self.tpm_accepted, [self.pme, self.focal_point], 'view', 'tpmvisit.report')
+
+        # tpm_rejected - pme edit overview + attachments, pme can send to assigned
+        self.add_permissions(self.tpm_rejected, self.everybody, 'view', self.everything)
+        self.add_permissions(self.tpm_rejected, [self.pme, self.focal_point], 'action', [
+            'tpmvisit.assign',
+            'tpmvisit.cancel',
+        ])
+        self.revoke_permissions(self.tpm_rejected, [self.pme, self.focal_point], 'view', 'tpmvisit.report')
+
+        # tpm_reported - UNICEF can reject report or ask actions
+        self.add_permissions(self.tpm_reported, self.everybody, 'view', self.everything)
+        self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'action', [
+            'tpmvisit.reject_report',
+            'tpmvisit.approve',
+            'tpmvisit.cancel',
+        ])
+
+        # tpm_report_rejected - similar to tpm_accepted. tpm edit report area, tpm can report.
+        self.add_permissions(self.tpm_report_rejected, self.everybody, 'view', self.everything)
         self.add_permissions(self.tpm_report_rejected, self.third_party_monitor, 'edit', ['tpmvisit.report'])
-        self.add_permissions(self.tpm_report_rejected, self.third_party_monitor, 'action', ['tpmvisit.send_report'])
+        self.add_permissions(self.tpm_report_rejected, self.third_party_monitor, 'action', 'tpmvisit.send_report')
+        self.add_permissions(self.tpm_report_rejected, [self.pme, self.focal_point], 'action', [
+            'tpmvisit.cancel',
+        ])
 
-        # UNICEF can reject report or ask actions
-        self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'action', ['tpmvisit.reject_report'])
-
-        # UNICEF can approve report or ask actions
-        self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'action', ['tpmvisit.approve'])
+        # unicef_approved - readonly
+        self.add_permissions(self.unicef_approved, self.everybody, 'view', self.everything)
 
         # UNICEF and PME can add action point for approved visit
         self.add_permissions(self.unicef_approved, [self.pme, self.focal_point], 'edit', self.follow_up_page)
