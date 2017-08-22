@@ -102,9 +102,9 @@ class UserMapper(object):
         Return True if the attribute was changed and False otherwise.
         """
         # clean the value
-        field = obj._meta.get_field_by_name(attr)
-        if field[0].get_internal_type() == "CharField" and len(value) > field[0].max_length:
-            cleaned_value = value[:field[0].max_length]
+        field = obj._meta.get_field(attr)
+        if field.get_internal_type() == "CharField" and len(value) > field.max_length:
+            cleaned_value = value[:field.max_length]
             logging.warn('The attribute "%s" was trimmed from "%s" to "%s"' %
                          (attr, value, cleaned_value))
         else:

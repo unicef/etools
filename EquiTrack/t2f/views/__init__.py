@@ -37,6 +37,6 @@ def run_transition(serializer):
         transition = getattr(instance, transition_name)
         try:
             transition()
-        except (TransitionNotAllowed, TransitionError) as exc:
-            raise ValidationError({'non_field_errors': [exc.message]})
+        except (TransitionNotAllowed, TransitionError) as exception:
+            raise ValidationError({'non_field_errors': [str(exception)]})
         instance.save()

@@ -114,7 +114,8 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                     existing_user and existing_user.profile.partner_staff_member and \
                     existing_user.profile.partner_staff_member != self.instance.pk:
                 raise ValidationError(
-                    {'active': 'The Partner Staff member you are trying to activate is associated with a different partnership'}
+                    {'active':
+                     'The Partner Staff member you are trying to activate is associated with a different partnership'}
                 )
 
         return data
@@ -252,7 +253,6 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
-
 
 
 class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):

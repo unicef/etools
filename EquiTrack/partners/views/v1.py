@@ -21,7 +21,6 @@ from easy_pdf.views import PDFTemplateView
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
 from locations.models import Location
-from reports.models import CountryProgramme
 from partners.models import (
     FileType,
     PartnershipBudget,

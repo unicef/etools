@@ -135,3 +135,34 @@ Complicated ``except`` blocks run the risk of raising errors of their own.
 Exception handlers have an underused ``else`` clause that executes if no exception is raised. It's
 the appropriate place for the code you might be tempted to put in the ``try`` block after the
 suspect code.
+
+
+Django Settings
+---------------
+
+Add new Django settings to the `base.py` settings module. If a customization is needed for a
+specific environment, keep the production value in `base.py` and add an override for local
+development in `local.py`. This allows a developer to mimic a production environment by simply
+commenting out a setting in `local.py`. It may sometimes be reasonable to do the reverse, for
+example, if you want to avoid importing a package that is only needed on production. In those cases,
+you should add the override only to production.py. We should try to avoid having both local
+overrides and production overrides of the same setting.
+
+Order of settings
+~~~~~~~~~~~~~~~~~
+
+Within base.py, settings should be organized in the following order: Django core settings, Django
+contrib settings, Third-party app settings, and finally eTools-specific settings. You are strongly
+encouraged to add detailed comments, with links, explaining the intended purpose of the setting.
+
+Use str2bool for Boolean env vars
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using environment variables as settings is a good practice that allows flexibility in deployment.
+This is generally straightforward, unless the setting is a Boolean value. If you write: ``ENABLE_FOO
+= os.environ.get(‘ENABLE_FOO’, True)``, and then set ``ENABLE_FOO=False`` in the environment, the
+python variable ``ENABLE_FOO`` gets set to the string ``‘False’`` and if it is treated like a
+Boolean in other parts of the code then ``bool(‘False’)`` equals ``True``, which is probably not
+what you wanted. We have a helper function called ``str2bool`` that converts commonly used boolean
+representations from a string to a proper Python Boolean value, which allows us to write ``ENABLE_FOO
+= str2bool(os.environ.get(‘ENABLE_FOO’, True))``.

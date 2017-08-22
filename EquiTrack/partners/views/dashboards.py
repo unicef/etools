@@ -38,4 +38,3 @@ class InterventionPartnershipDashView(ListCreateAPIView):
 
         qs = qs.annotate(days_since_last_pv=delta)
         return qs
-

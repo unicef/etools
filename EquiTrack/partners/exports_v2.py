@@ -32,6 +32,34 @@ class PartnerOrganizationCsvRenderer(r.CSVRenderer):
     }
 
 
+class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
+    header = ["name", "partner_type", "shared_partner", "shared_with", "total_ct_cp",
+              "hact_values.planned_cash_transfer", "total_ct_cy", "hact_values.micro_assessment_needed", "rating",
+              "hact_values.planned_visits", "hact_min_requirements.programme_visits", "hact_values.programmatic_visits",
+              "hact_min_requirements.spot_checks", "hact_values.spot_checks", "hact_values.audits_mr",
+              "hact_values.audits_done", "hact_values.follow_up_flags"]
+
+    labels = {
+        'name': 'Implementing Partnerr',
+        'partner_type': 'Partner Type',
+        'shared_partner': 'Shared',
+        'shared_with': 'Shared IP',
+        'total_ct_cp': 'TOTAL for current CP cycle',
+        'hact_values.planned_cash_transfer': 'PLANNED for current year',
+        'total_ct_cy': 'ACTUAL for current year',
+        'hact_values.micro_assessment_needed': 'Micro Assessment',
+        'rating': 'Risk Rating',
+        'hact_values.planned_visits': 'Programmatic Visits Planned',
+        'hact_min_requirements.programme_visits': 'Programmatic Visits M.R',
+        'hact_values.programmatic_visits': 'Programmatic Visits Done',
+        'hact_min_requirements.spot_checks': 'Spot Checks M.R',
+        'hact_values.spot_checks': 'Spot Checks Done',
+        'hact_values.audits_mr': 'Audits M.R',
+        'hact_values.audits_done': 'Audits Done',
+        'hact_values.follow_up_flags': 'Flag for Follow up',
+    }
+
+
 class AgreementCvsRenderer(r.CSVRenderer):
     header = [
         "agreement_number",
@@ -68,8 +96,8 @@ class AgreementCvsRenderer(r.CSVRenderer):
 
 class InterventionCvsRenderer(r.CSVRenderer):
     header = [
-        "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
-        "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
+        "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
+        "title", "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
         "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
         "planned_budget_local", "unicef_budget", "cso_contribution",
         "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",

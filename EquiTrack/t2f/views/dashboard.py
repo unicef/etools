@@ -15,14 +15,14 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
     def list(self, request, **kwargs):
         data = {}
         months = request.query_params.get("months", None)
-        if months != None:
+        if months is not None:
             months = map(lambda x: int(x), months.split(','))
         year = request.query_params.get("year", None)
         office_id = request.query_params.get("office_id", None)
         try:
             travels_all = Travel.objects.filter(
-                start_date__year = year,
-                start_date__month__in = months,
+                start_date__year=year,
+                start_date__month__in=months,
             )
         except ValueError:
             travels_all = Travel.objects.filter(
@@ -67,14 +67,15 @@ class ActionPointDashboardViewSet(mixins.ListModelMixin,
 
     def list(self, request, **kwargs):
         data = {}
-
         office_id = request.query_params.get("office_id", None)
+        if office_id:
+            office_id = office_id.split(',')
         section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
         action_points_by_section = []
         for section_id in section_ids:
             travels = Travel.objects.filter(section=section_id)
             if office_id:
-                travels = travels.filter(office_id=office_id)
+                travels = travels.filter(office_id__in=office_id)
             if travels.exists():
                 action_points = ActionPoint.objects.filter(travel__in=travels)
                 total = action_points.count()

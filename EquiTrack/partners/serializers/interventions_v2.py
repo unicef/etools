@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-import json
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -50,6 +49,7 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "total",
             'currency'
         )
+
 
 class SupplyPlanCreateUpdateSerializer(serializers.ModelSerializer):
 
@@ -407,12 +407,13 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
-            "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
+            "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
+            "title", "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
             "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
             "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
-            "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date", "migration_error_msg",
+            "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
+            "migration_error_msg",
             "signed_by_partner_date", "url", "days_from_submission_to_signed", "days_from_review_to_signed"
         )
 
@@ -430,7 +431,10 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join([l.name for l in ll.all()])
 
     def get_partner_authorized_officer_signatory(self, obj):
-        return obj.partner_authorized_officer_signatory.get_full_name() if obj.partner_authorized_officer_signatory else ''
+        if obj.partner_authorized_officer_signatory:
+            return obj.partner_authorized_officer_signatory.get_full_name()
+        else:
+            return ''
 
     def get_partner_focal_points(self, obj):
         return ', '.join([pf.get_full_name() for pf in obj.partner_focal_points.all()])
@@ -512,7 +516,8 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'unicef_cash', 'cso_contribution', 'total_unicef_budget',
+            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'unicef_cash', 'cso_contribution',
+            'total_unicef_budget',
             'total_budget', 'sectors', 'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
             'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount'
         )

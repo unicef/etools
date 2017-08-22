@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import os
+import sys
 
 if __name__ == "__main__":
 
-
-    import sys
     try:
         sys.path.append("/code/pycharm-debug.egg")
     except:
@@ -22,26 +21,27 @@ if __name__ == "__main__":
 
         # Make pydev debugger works for auto reload.
         try:
-           import pydevd
+            import pydevd
         except ImportError:
-           sys.stderr.write("Error: " +
-               "Could not import pydevd. make sure your pycharm-debug.egg is in the main EquiTrack folder")
-           sys.exit(1)
+            sys.stderr.write(
+                "Error: " +
+                "Could not import pydevd. make sure your pycharm-debug.egg is in the main EquiTrack folder")
+            sys.exit(1)
 
         from django.utils import autoreload
         m = autoreload.main
-        def main(main_func, args=None, kwargs=None):
-           import os
-           if os.environ.get("RUN_MAIN") == "true":
-               def pydevdDecorator(func):
-                   def wrap(*args, **kws):
-                       pydevd.settrace(DEBUG_IP, port=DEBUG_PORT, suspend=False, stdoutToServer=True,
-                                       stderrToServer=True)
-                       return func(*args, **kws)
-                   return wrap
-               main_func = pydevdDecorator(main_func)
 
-           return m(main_func, args, kwargs)
+        def main(main_func, args=None, kwargs=None):
+            if os.environ.get("RUN_MAIN") == "true":
+                def pydevdDecorator(func):
+                    def wrap(*args, **kws):
+                        pydevd.settrace(DEBUG_IP, port=DEBUG_PORT, suspend=False, stdoutToServer=True,
+                                        stderrToServer=True)
+                        return func(*args, **kws)
+                    return wrap
+                main_func = pydevdDecorator(main_func)
+
+            return m(main_func, args, kwargs)
 
         autoreload.main = main
 
