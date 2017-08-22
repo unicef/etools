@@ -1,9 +1,12 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from audit.serializers.engagement import PartnerOrganizationLightSerializer
-from partners.models import InterventionResultLink
+from locations.models import Location
+from partners.models import InterventionResultLink, Intervention
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer, InterventionListSerializer
-from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment
+from reports.models import Result
+from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMPartnerStaffMember
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, \
     TPMActivityPDSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
@@ -71,6 +74,57 @@ class TPMActivitySerializer(TPMActivityLightSerializer):
         read_field=InterventionCreateUpdateSerializer(read_only=True),
     )
 
+    def validate(self, attrs):
+        validated_data = super(TPMActivitySerializer, self).validate(attrs)
+
+        implementing_partner = validated_data.get('implementing_partner', None) or \
+                               (self.instance.implementing_partner if self.instance else None)
+        if not implementing_partner:
+            raise ValidationError({'implementing_partner': self.error_messages['required']})
+
+        if 'partnership' in validated_data:
+            if not Intervention.objects.filter(
+                id=validated_data['partnership'].id,
+                agreement__partner_id=implementing_partner.id
+            ).exists():
+                raise ValidationError({
+                    'partnership': self.fields['partnership']
+                        .error_messages['does_not_exist'].format(pk_value=validated_data['partnership'].id)
+                })
+
+        partnership = validated_data.get('partnership', None) or \
+                      (self.instance.partnership if self.instance else None)
+        if not partnership:
+            raise ValidationError({'partnership': self.error_messages['required']})
+
+        if 'cp_output' in validated_data:
+            if not Result.objects.filter(
+                id=validated_data['cp_output'].id,
+                intervention_links__intervention_id=partnership.id
+            ).exists():
+                raise ValidationError({
+                    'cp_output': self.fields['cp_output'].write_field
+                        .error_messages['does_not_exist'].format(pk_value=validated_data['cp_output'].id)
+                })
+
+        if 'locations' in validated_data:
+            locations = set(map(lambda x: x.id, validated_data['locations']))
+            diff = locations - set(Location.objects.filter(
+                id__in=locations,
+                intervention_sector_locations__intervention_id=partnership.id
+            ).values_list('id', flat=True))
+
+            if diff:
+                raise ValidationError({
+                    'locations': [
+                        self.fields['locations'].write_field.child_relation
+                            .error_messages['does_not_exist'].format(pk_value=pk)
+                        for pk in diff
+                    ]
+                })
+
+        return validated_data
+
     class Meta(TPMActivityLightSerializer.Meta):
         pass
 
@@ -121,9 +175,31 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
     attachments = TPMAttachmentsSerializer(many=True, required=False)
     report = TPMReportAttachmentsSerializer(many=True, required=False)
 
-    report_reject_comments = SeparatedReadWriteField(
-        read_field=TPMVisitReportRejectCommentSerializer(many=True, read_only=True),
-    )
+    report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
+
+    def validate(self, attrs):
+        validated_data = super(TPMVisitSerializer, self).validate(attrs)
+
+        tpm_partner = validated_data.get('tpm_partner', None) or \
+                      (self.instance.tpm_partner if self.instance else None)
+
+        if 'tpm_partner_focal_points' in validated_data:
+            tpm_partner_focal_points = set(map(lambda x: x.id, validated_data['tpm_partner_focal_points']))
+            diff = tpm_partner_focal_points - set(TPMPartnerStaffMember.objects.filter(
+                id__in=tpm_partner_focal_points,
+                tpm_partner_id=tpm_partner.id
+            ).values_list('id', flat=True))
+
+            if diff:
+                raise ValidationError({
+                    'tpm_partner_focal_points': [
+                        self.fields['tpm_partner_focal_points'].write_field.child_relation
+                            .error_messages['does_not_exist'].format(pk_value=pk)
+                        for pk in diff
+                    ]
+                })
+
+        return validated_data
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
