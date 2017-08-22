@@ -146,6 +146,9 @@ class TPMActivitySerializer(TPMActivityLightSerializer):
     def validate(self, attrs):
         validated_data = super(TPMActivitySerializer, self).validate(attrs)
 
+        if 'id' in validated_data:
+            self.instance = self.Meta.model.objects.get(id=validated_data['id'])
+
         implementing_partner = validated_data.get('implementing_partner', None) or \
                                (self.instance.implementing_partner if self.instance else None)
         if not implementing_partner:

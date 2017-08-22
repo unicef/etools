@@ -5,7 +5,7 @@ from django.core.files import File
 
 from attachments.models import FileType, Attachment
 from tpm.models import PME, ThirdPartyMonitor, UNICEFUser, TPMVisit
-from EquiTrack.factories import UserFactory, LocationFactory, SectionFactory
+from EquiTrack.factories import UserFactory, SectionFactory
 from utils.groups.wrappers import GroupWrapper
 from .factories import TPMVisitFactory, TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
@@ -78,12 +78,6 @@ class TPMTestCaseMixin(object):
         self.unicef_focal_point = UserFactory(first_name='UNICEF Focal Point')
 
         self.tpm_visit.unicef_focal_points.add(self.unicef_focal_point)
-
-        for activity in self.tpm_visit.tpm_activities.all():
-            activity.locations.add(*[LocationFactory() for x in xrange(3)])
-
-        activity = self.tpm_visit.tpm_activities.first()
-        activity.save()
 
         self.usual_user = UserFactory(first_name='Unknown user')
         self.usual_user.groups = []
