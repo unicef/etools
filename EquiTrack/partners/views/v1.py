@@ -67,7 +67,7 @@ from EquiTrack.utils import get_data_from_insight
 
 
 class PcaPDFView(PDFTemplateView):
-    template_name = "partners/pca/170809IFRCPCAEnglish.docx.html"
+    template_name = "partners/pca/english_pdf.html"
     # TODO add proper templates for different languages
     language_templates_mapping = {
         "arabic": "partners/pca/arabic_pdf.html",

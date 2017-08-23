@@ -77,7 +77,7 @@ def start_date_signed_valid(i):
 
 def start_date_related_agreement_valid(i):
     # i = intervention
-    if i.document_type in [i.PD, i.SHPD] and i.start < i.agreement.start:
+    if i.document_type in [i.PD, i.SHPD] and i.start and i.start < i.agreement.start:
         return False
     return True
 
