@@ -81,6 +81,7 @@ def start_date_related_agreement_valid(i):
         return False
     return True
 
+
 def signed_date_valid(i):
     # i = intervention
     today = date.today()
@@ -155,7 +156,7 @@ class InterventionValid(CompleteValidation):
                             'If you seleced Other as an amendment type, please add the description',
         'ssfa_agreement_has_no_other_intervention': 'The agreement selected has at least one '
                                                     'other SSFA Document connected',
-        'start_date_signature_valid': 'The start date cannot be before the later of signature dates.',
+        'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
         'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA'
     }
 

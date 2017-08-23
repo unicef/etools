@@ -161,7 +161,6 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(result.get('result_links'), {'name': ['This field may not be null.']})
 
     def test_add_invalid_start_date(self):
-        frs_data = [self.fr_1.id]
         data = {
             "document_type": Intervention.PD,
             "title": "My test intervention",
