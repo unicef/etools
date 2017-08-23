@@ -30,8 +30,13 @@ from partners.models import (
     InterventionBudget,
 )
 
+def get_date_from_prior_year():
+    '''Return a date for which year < the current year'''
+    return datetime.date.today() - datetime.timedelta(days=700)
 
-class TestRefNumberGeneration(TenantTestCase):
+class TestAgreementNumberGeneration(TenantTestCase):
+    '''Test that agreements have the expected base and reference numbers for all types of agreements'''
+
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -39,16 +44,16 @@ class TestRefNumberGeneration(TenantTestCase):
         self.tenant.country_short_code = 'LEBA'
         self.tenant.save()
 
-        self.text = 'LEBA/{{}}{}'.format(self.date.year)
-
-    @skip("Fix this")
-    def test_pca_ref_generation(self):
-
-        text = self.text.format('PCA')
+    def test_reference_number_pca(self):
+        '''Thoroughly exercise agreement reference numbers for PCA'''
+        # All of the agreements created here are PCAs, so id is the only part of the reference number that varies
+        # for this test.
+        reference_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
 
         # test basic sequence
         agreement1 = AgreementFactory()
-        self.assertEqual(agreement1.reference_number, text)
+        expected_reference_number = reference_number_template.format(id=agreement1.id)
+        self.assertEqual(agreement1.reference_number, expected_reference_number)
 
         # create amendment
         AgreementAmendmentLog.objects.create(
@@ -56,28 +61,39 @@ class TestRefNumberGeneration(TenantTestCase):
             amended_at=self.date,
             status=PCA.ACTIVE
         )
-        self.assertEqual(agreement1.reference_number, text + '-01')
+        # reference number should be unchanged.
+        self.assertEqual(agreement1.reference_number, expected_reference_number)
 
         # add another agreement
         agreement2 = AgreementFactory()
-        self.assertEqual(agreement2.reference_number, text[:-1] + '2')
-
-        # now sign the agreement and commit the number to the database
-        agreement2.signed_by_unicef_date = self.date
-        agreement2.save()
-        self.assertEqual(agreement2.reference_number, text[:-1] + '2')
+        expected_reference_number = reference_number_template.format(id=agreement2.id)
+        self.assertEqual(agreement2.reference_number, expected_reference_number)
 
         # agreement numbering remains the same even if previous agreement is deleted
-        agreement3 = AgreementFactory(signed_by_unicef_date=self.date)
+        agreement3 = AgreementFactory()
+        expected_reference_number = reference_number_template.format(id=agreement3.id)
         agreement1.delete()
-        self.assertEqual(agreement3.reference_number, text[:-1] + '3')
+        self.assertEqual(agreement3.reference_number, expected_reference_number)
 
-    def test_other_agreement_types(self):
+        # verify that the 'signed_by' date doesn't change the reference number.
+        # set signed_by date to a year that is not the current year.
+        expected_reference_number = reference_number_template.format(id=agreement2.id)
+        agreement2.signed_by_unicef_date = get_date_from_prior_year()
+        agreement2.save()
+        self.assertEqual(agreement2.reference_number, expected_reference_number)
 
-        for doc_type in [Agreement.SSFA]:
-            agreement = AgreementFactory(agreement_type=doc_type)
-            # test startswith only to avoid failing tests because of mismatching last digits
-            self.assertTrue(agreement.reference_number.startswith(self.text.format(doc_type)))
+        # Verify that reference_number is accessible (if a little strange) prior to the first save.
+        agreement4 = AgreementFactory.build()
+        self.assertEqual(agreement4.reference_number, reference_number_template.format(id=None))
+
+    def test_reference_number_other(self):
+        '''Verify simple agreement reference # generation for all agreement types'''
+        reference_number_template = 'LEBA/{agreement_type}' + str(self.date.year) + '{id}'
+        agreement_types = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
+        for agreement_type in agreement_types:
+            agreement = AgreementFactory(agreement_type=agreement_type)
+            expected_reference_number = reference_number_template.format(agreement_type=agreement_type, id=agreement.id)
+            self.assertEqual(agreement.reference_number, expected_reference_number)
 
     @skip("Fix this")
     def test_pd_numbering(self):
