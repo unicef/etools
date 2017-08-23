@@ -69,7 +69,7 @@ def start_end_dates_valid(i):
 
 def start_date_signed_valid(i):
     # i = intervention
-    if i.signed_by_unicef_date and i.signed_by_partner_date:
+    if i.signed_by_unicef_date and i.signed_by_partner_date and i.start:
         if i.start < max([i.signed_by_unicef_date, i.signed_by_partner_date]):
             return False
     return True
