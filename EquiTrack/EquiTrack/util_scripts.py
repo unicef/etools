@@ -921,12 +921,10 @@ def assert_interventions_valid():
             if not i.agreement.agreement_type == i.agreement.PCA:
                 print('NO WAY PCA')
 
-
 def wow():
     c = Intervention.objects.filter(status='active').count()
     if c>0:
         print(c)
-
 
 def intervention_update_task():
     from django.db import transaction
