@@ -717,6 +717,13 @@ class TestInterventionModel(TenantTestCase):
         )
         self.assertEqual(int(self.intervention.total_budget), 100200)
 
+    def test_year(self):
+        '''Exercise the year property'''
+        self.assertIsNone(self.intervention.signed_by_unicef_date)
+        self.assertEqual(self.intervention.year, self.intervention.created.year)
+        self.intervention.signed_by_unicef_date = get_date_from_prior_year()
+        self.assertEqual(self.intervention.year, self.intervention.signed_by_unicef_date.year)
+
     def test_reference_number(self):
         '''Exercise the reference number property'''
         expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
