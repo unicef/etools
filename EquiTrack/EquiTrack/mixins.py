@@ -209,12 +209,3 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     def login(self, request, user):
         # if we need to add any other login validation, here would be the place.
         return super(CustomAccountAdapter, self).login(request, user)
-
-
-class CSRFExemptMiddleware(object):
-    def process_request(self, request):
-        """
-        Rest framework session based authentication cannot handle csrf_exempt decorator.
-        This will prevent csrf related issues with post requests
-        """
-        request.csrf_processing_done = True

@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 from functools import wraps
 import logging
@@ -13,7 +13,7 @@ from django.conf import settings
 from django.db import models, connection
 from django.template.context import Context
 from django.template.loader import render_to_string
-from django.utils.timezone import now
+from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy
 from django_fsm import FSMField, transition
 
@@ -71,7 +71,7 @@ class ModeOfTravel(object):
 
 def make_travel_reference_number():
     numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
-    year = datetime.now().year
+    year = timezone_now().year
     return '{}/{}'.format(year, numeric_part)
 
 
@@ -263,7 +263,7 @@ class Travel(models.Model):
         if travels.count() >= 3:
             raise TransitionError('Maximum 3 open travels are allowed.')
 
-        end_date_limit = datetime.utcnow() - timedelta(days=15)
+        end_date_limit = timezone_now() - timedelta(days=15)
         if travels.filter(end_date__lte=end_date_limit).exclude(id=self.id).exists():
             raise TransitionError(ugettext('Another of your trips ended more than 15 days ago, but was not completed '
                                            'yet. Please complete that before creating a new trip.'))
@@ -282,9 +282,9 @@ class Travel(models.Model):
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
                 conditions=[validate_itinerary, has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
-        self.submitted_at = now()
+        self.submitted_at = timezone_now()
         if not self.first_submission_date:
-            self.first_submission_date = now()
+            self.first_submission_date = timezone_now()
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')
@@ -304,14 +304,14 @@ class Travel(models.Model):
         self.approved_cost_traveler = expenses['user']
         self.approved_cost_travel_agencies = expenses['travel_agent']
 
-        self.approved_at = datetime.now()
+        self.approved_at = timezone_now()
         self.send_notification_email('Travel #{} was approved.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/approved.html')
 
     @transition(status, source=[SUBMITTED], target=REJECTED)
     def reject(self):
-        self.rejected_at = datetime.now()
+        self.rejected_at = timezone_now()
         self.send_notification_email('Travel #{} was rejected.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/rejected.html')
@@ -324,7 +324,7 @@ class Travel(models.Model):
                                 CERTIFIED],
                 target=CANCELLED)
     def cancel(self):
-        self.canceled_at = datetime.now()
+        self.canceled_at = timezone_now()
         self.send_notification_email('Travel #{} was cancelled.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/cancelled.html')
@@ -385,7 +385,7 @@ class Travel(models.Model):
     @transition(status, source=[CERTIFIED, SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
                 conditions=[check_trip_report, check_state_flow])
     def mark_as_completed(self):
-        self.completed_at = datetime.now()
+        self.completed_at = timezone_now()
 
         if not self.ta_required and self.status == self.PLANNED:
             self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
@@ -400,12 +400,12 @@ class Travel(models.Model):
             from partners.models import PartnerOrganization
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.PROGRAMME_MONITORING,
-                                              date__year=datetime.now().year):
+                                              date__year=timezone_now().year):
                 PartnerOrganization.programmatic_visits(act.partner, update_one=True)
 
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.SPOT_CHECK,
-                                              date__year=datetime.now().year):
+                                              date__year=timezone_now().year):
                 PartnerOrganization.spot_checks(act.partner, update_one=True)
         except Exception as e:
             logging.info('Exception while trying to update hact values {}'.format(e))
@@ -572,7 +572,7 @@ class TravelAttachment(models.Model):
 
 
 def make_action_point_number():
-    year = datetime.now().year
+    year = timezone_now().year
     action_points_qs = ActionPoint.objects.select_for_update().filter(created_at__year=year)
 
     # This will lock the matching rows and prevent concurency issue

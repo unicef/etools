@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from __future__ import absolute_import
 
 import copy
 import logging
@@ -6,6 +7,7 @@ import logging
 from django.apps import apps
 from django.db.models import ObjectDoesNotExist
 from django.db.models.fields.files import FieldFile
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django_fsm import (
     can_proceed, has_transition_perm,
@@ -15,6 +17,7 @@ from rest_framework.exceptions import ValidationError
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.parsers import parse_multipart_data
+from utils.common.utils import get_all_field_names
 
 
 def check_editable_fields(obj, fields):
@@ -71,7 +74,7 @@ def check_rigid_related(obj, related):
     if len(current_related) == 0:
         return True
 
-    field_names = current_related[0]._meta.get_all_field_names()
+    field_names = get_all_field_names(current_related[0])
     current_related.sort(key=lambda x: x.id)
     old_related.sort(key=lambda x: x.id)
     comparison_map = zip(current_related, old_related)
@@ -269,18 +272,38 @@ class ValidatorViewMixin(object):
         return instance, old_instance, main_serializer
 
 
-class TransitionError(BaseException):
-    def __init__(self, message=[]):
-        if not isinstance(message, list):
-            raise TypeError('Transition exception takes a list of errors not {}'.format(type(message)))
-        super(TransitionError, self).__init__(message)
+def _unicode_if(s):
+    '''Given a string (str or unicode), always returns a unicode version of that string, converting it if necessary.
+
+    This function is Python 2- and 3-compatible.
+    '''
+    # Under Python 2, we can use isinstance(s, unicode), but that syntax doesn't work under Python 3 because the
+    # unicode type doesn't exist (only str which is Unicode by default). Instead I rely on the quirk that Python 2
+    # str instances lack a method (.isnumeric()) that exists on Python 2 unicode instances and Python 3 str instances.
+    return s if hasattr(s, 'isnumeric') else s.decode('utf-8')
 
 
-class StateValidError(BaseException):
+@python_2_unicode_compatible
+class _BaseStateError(BaseException):
+    '''Base class for state-related exceptions. Accepts only one param which must be a list of strings.'''
     def __init__(self, message=[]):
         if not isinstance(message, list):
-            raise TypeError('Transition exception takes a list of errors not {}'.format(type(message)))
-        super(StateValidError, self).__init__(message)
+            raise TypeError('{} takes a list of errors not {}'.format(self.__class__, type(message)))
+        super(_BaseStateError, self).__init__(message)
+
+    def __str__(self):
+        # There's only 1 arg, and it must be a list of messages. Under Python 2, that list might be a mix of unicode
+        # and str instances, so we have to combine them carefully to avoid encode/decode errors.
+        return u'\n'.join([_unicode_if(msg) for msg in self.args[0]])
+
+
+class TransitionError(_BaseStateError):
+    pass
+
+
+class StateValidError(_BaseStateError):
+    pass
+
 
 
 class BasicValidationError(BaseException):
@@ -293,7 +316,7 @@ def error_string(function):
         try:
             valid = function(*args, **kwargs)
         except BasicValidationError as e:
-            return (False, [e.message])
+            return (False, [str(e)])
         else:
             if valid and type(valid) is bool:
                 return (True, [])
@@ -307,7 +330,7 @@ def transition_error_string(function):
         try:
             valid = function(*args, **kwargs)
         except TransitionError as e:
-            return (False, e.message)
+            return (False, [str(e)])
 
         if valid and type(valid) is bool:
             return (True, [])
@@ -321,7 +344,7 @@ def state_error_string(function):
         try:
             valid = function(*args, **kwargs)
         except StateValidError as e:
-            return (False, e.message)
+            return (False, [str(e)])
 
         if valid and type(valid) is bool:
             return (True, [])
@@ -349,8 +372,7 @@ class CompleteValidation(object):
                 try:
                     instance_class = apps.get_model(getattr(self, 'VALIDATION_CLASS'))
                 except LookupError:
-                    raise TypeError('Object Transimitted for validation cannot be dict if instance_class '
-                                    'is not defined')
+                    raise TypeError('Object transmitted for validation cannot be dict if instance_class is not defined')
             new_id = new.get('id', None) or new.get('pk', None)
             if new_id:
                 # logging.debug('newid')
@@ -384,8 +406,8 @@ class CompleteValidation(object):
             self.old_status = self.old.status if self.old else None
         self.user = user
 
-        # permissions to be set in each function that is needed, this attribute can change values as
-        # auto-update goes through different statuses
+        # permissions to be set in each function that is needed, this attribute can change values as auto-update goes
+        # through different statuses
         self.permissions = None
         self.disable_rigid_check = disable_rigid_check
 
@@ -483,16 +505,15 @@ class CompleteValidation(object):
 
         for potential_transition_to in pttl:
             # test to see if it's a viable transition:
-            # logging.debug("test to see if transition is possible : {} -> {}".format(
-            #     self.new.status, potential_transition_to))
+            # template = "test to see if transition is possible : {} -> {}"
+            # logging.debug(template.format(self.new.status, potential_transition_to))
             # try to find a possible transition... if no possible transition (transition was not defined on the model
             # it will always validate
             possible_fsm_transition = self._get_fsm_defined_transitions(self.new.status, potential_transition_to)
             if not possible_fsm_transition:
-                logging.debug("transition: {} -> {} is possible since there was no transition defined "
-                              "on the model".format(self.new.status, potential_transition_to))
+                template = "transition: {} -> {} is possible since there was no transition defined on the model"
+                logging.debug(template.format(self.new.status, potential_transition_to))
             if self.auto_transition_validation(possible_fsm_transition)[0]:
-
                 # get the side effects function if any
                 SIDE_EFFECTS_DICT = getattr(self.new.__class__, 'TRANSITION_SIDE_EFFECTS', {})
                 transition_side_effects = SIDE_EFFECTS_DICT.get(potential_transition_to, [])
@@ -538,8 +559,8 @@ class CompleteValidation(object):
         while self._make_auto_transition():
             any_transition_made = True
 
-        # logging.debug("*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}".format(
-        #     any_transition_made))
+        # template = "*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}"
+        # logging.debug(template.format(any_transition_made))
 
         # reset rigid check:
         self.disable_rigid_check = originial_rigid_check_setting
@@ -592,8 +613,8 @@ class CompleteValidation(object):
 
             # before checking if any further transitions can be made, if the current instance just transitioned,
             # apply side-effects:
-            # TODO.. this needs to be re-written and have a consistent way to include side-effects
-            # on both auto-transition / manual transition
+            # TODO.. this needs to be re-written and have a consistent way to include side-effects on both
+            # auto-transition / manual transition
             self._apply_current_side_effects()
 
             if self.make_auto_transitions():

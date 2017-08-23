@@ -124,6 +124,10 @@ urlpatterns = [
     url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
 
 
+    # ***************  API version 3  ******************
+    url(r'^api/v3/users/', include('users.urls_v3')),
+
+
     url(r'^api/docs/', schema_view),
     url(r'^admin/', include(admin.site.urls)),
 

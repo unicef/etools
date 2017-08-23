@@ -102,7 +102,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
-    'EquiTrack.mixins.CSRFExemptMiddleware',
 )
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 
@@ -421,29 +420,6 @@ ACTSTREAM_SETTINGS = {
 
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
 TENANT_MODEL = "users.Country"  # app.Model
-
-# django-storages: https://django-storages.readthedocs.io/en/latest/backends/azure.html
-AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME')
-AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY')
-AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER')
-AZURE_SSL = True
-AZURE_AUTO_SIGN = True  # flag for automatically signing urls
-AZURE_ACCESS_POLICY_EXPIRY = 120  # length of time before signature expires in seconds
-AZURE_ACCESS_POLICY_PERMISSION = 'r'  # read permission
-
-if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
-    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
-    from storages.backends.azure_storage import AzureStorage
-    storage = AzureStorage()
-    with storage.open('saml/certs/saml.key') as key, \
-            storage.open('saml/certs/sp.crt') as crt, \
-            storage.open('saml/federationmetadata.xml') as meta:
-        with open('EquiTrack/saml/certs/saml.key', 'w+') as new_key, \
-                open('EquiTrack/saml/certs/sp.crt', 'w+') as new_crt, \
-                open('EquiTrack/saml/federationmetadata.xml', 'w+') as new_meta:
-            new_key.write(key.read())
-            new_crt.write(crt.read())
-            new_meta.write(meta.read())
 
 # django-saml2: https://github.com/robertavram/djangosaml2
 HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
