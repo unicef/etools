@@ -98,10 +98,10 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
         locations = validated_data.get('locations', None)
         if locations or instance:
             locations = set(locations or instance.locations.values_list('id', flat=True))
-            activity = validated_data.get(
-                'tpm_activity', validated_data.get(
-                    'tpm_activity_id', instance.tpm_activity.id)
-            )
+            activity = validated_data.get('tpm_activity', None) or validated_data.get('tpm_activity_id', None)
+            if not activity:
+                activity = instance.tpm_activity.id
+
             not_related = locations - set(TPMActivity.objects.get(id=activity).locations.values_list('id', flat=True))
             if len(not_related) == 0:
                 raise serializers.ValidationError({
