@@ -766,7 +766,7 @@ class TestAgreementAPIView(APITenantTestCase):
             agreement=self.agreement,
             signed_amendment="application/pdf",
             signed_date=datetime.date.today(),
-            types=[AgreementAmendment.CP_EXTENSION]
+            types=[AgreementAmendment.IP_NAME]
         )
         self.amendment2 = AgreementAmendment.objects.create(
             number="002",
