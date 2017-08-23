@@ -1070,14 +1070,12 @@ class AgreementAmendment(TimeStampedModel):
     Represents an amendment to an agreement
     '''
     IP_NAME = u'Change IP name'
-    # CP_EXTENSION = u'CP extension'
     AUTHORIZED_OFFICER = u'Change authorized officer'
     BANKING_INFO = u'Change banking info'
     CLAUSE = u'Change in clause'
 
     AMENDMENT_TYPES = Choices(
         (IP_NAME, 'Change in Legal Name of Implementing Partner'),
-        # (CP_EXTENSION, 'Extension of Country Programme Cycle'),
         (AUTHORIZED_OFFICER, 'Change Authorized Officer(s)'),
         (BANKING_INFO, 'Banking Information'),
         (CLAUSE, 'Change in clause'),
