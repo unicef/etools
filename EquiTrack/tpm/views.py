@@ -1,9 +1,6 @@
-from itertools import chain
 
 from django.http import Http404
 from django.utils import timezone
-from django.views.generic.detail import SingleObjectMixin
-from django.views.generic.list import MultipleObjectMixin
 from easy_pdf.rendering import render_to_pdf_response
 
 from rest_framework import viewsets, mixins

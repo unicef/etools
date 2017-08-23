@@ -98,7 +98,10 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
         locations = validated_data.get('locations', None)
         if locations or instance:
             locations = set(locations or instance.locations.values_list('id', flat=True))
-            activity = validated_data.get('tpm_activity', None) or validated_data.get('tpm_activity_id', None) or instance.tpm_activity.id
+            activity = validated_data.get(
+                'tpm_activity', validated_data.get(
+                    'tpm_activity_id', instance.tpm_activity.id)
+            )
             not_related = locations - set(TPMActivity.objects.get(id=activity).locations.values_list('id', flat=True))
             if len(not_related) == 0:
                 raise serializers.ValidationError({
@@ -149,8 +152,10 @@ class TPMActivitySerializer(TPMActivityLightSerializer):
         if 'id' in validated_data:
             self.instance = self.Meta.model.objects.get(id=validated_data['id'])
 
-        implementing_partner = validated_data.get('implementing_partner', None) or \
-                               (self.instance.implementing_partner if self.instance else None)
+        implementing_partner = validated_data.get(
+            'implementing_partner',
+            self.instance.implementing_partner if self.instance else None
+        )
         if not implementing_partner:
             raise ValidationError({'implementing_partner': self.error_messages['required']})
 
@@ -160,12 +165,12 @@ class TPMActivitySerializer(TPMActivityLightSerializer):
                 agreement__partner_id=implementing_partner.id
             ).exists():
                 raise ValidationError({
-                    'partnership': self.fields['partnership']
-                        .error_messages['does_not_exist'].format(pk_value=validated_data['partnership'].id)
+                    'partnership': self.fields['partnership'].error_messages['does_not_exist'].format(
+                        pk_value=validated_data['partnership'].id
+                    )
                 })
 
-        partnership = validated_data.get('partnership', None) or \
-                      (self.instance.partnership if self.instance else None)
+        partnership = validated_data.get('partnership', self.instance.partnership if self.instance else None)
         if not partnership:
             raise ValidationError({'partnership': self.error_messages['required']})
 
@@ -175,8 +180,9 @@ class TPMActivitySerializer(TPMActivityLightSerializer):
                 intervention_links__intervention_id=partnership.id
             ).exists():
                 raise ValidationError({
-                    'cp_output': self.fields['cp_output'].write_field
-                        .error_messages['does_not_exist'].format(pk_value=validated_data['cp_output'].id)
+                    'cp_output': self.fields['cp_output'].write_field.error_messages['does_not_exist'].format(
+                        pk_value=validated_data['cp_output'].id
+                    )
                 })
 
         if 'locations' in validated_data:
@@ -189,8 +195,9 @@ class TPMActivitySerializer(TPMActivityLightSerializer):
             if diff:
                 raise ValidationError({
                     'locations': [
-                        self.fields['locations'].write_field.child_relation
-                            .error_messages['does_not_exist'].format(pk_value=pk)
+                        self.fields['locations'].write_field.child_relation.error_messages['does_not_exist'].format(
+                            pk_value=pk
+                        )
                         for pk in diff
                     ]
                 })
@@ -252,8 +259,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
     def validate(self, attrs):
         validated_data = super(TPMVisitSerializer, self).validate(attrs)
 
-        tpm_partner = validated_data.get('tpm_partner', None) or \
-                      (self.instance.tpm_partner if self.instance else None)
+        tpm_partner = validated_data.get('tpm_partner', self.instance.tpm_partner if self.instance else None)
 
         if 'tpm_partner_focal_points' in validated_data:
             tpm_partner_focal_points = set(map(lambda x: x.id, validated_data['tpm_partner_focal_points']))
