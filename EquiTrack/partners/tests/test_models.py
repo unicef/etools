@@ -95,6 +95,54 @@ class TestAgreementNumberGeneration(TenantTestCase):
             expected_reference_number = reference_number_template.format(agreement_type=agreement_type, id=agreement.id)
             self.assertEqual(agreement.reference_number, expected_reference_number)
 
+    def test_base_number_generation(self):
+        '''Verify correct values in the .base_number attribute'''
+        base_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
+        agreement = AgreementFactory()
+
+        expected_base_number = base_number_template.format(id=agreement.id)
+        self.assertEqual(agreement.base_number, expected_base_number)
+
+        # Ensure that changing the agreement number doesn't change the base number.
+        agreement.update_reference_number(amendment_number=42)
+        self.assertEqual(agreement.agreement_number, expected_base_number + '-42')
+        self.assertEqual(agreement.base_number, expected_base_number)
+
+        # Ensure base_number is OK to access even when the field it depends on is blank.
+        agreement.agreement_number = ''
+        self.assertEqual(agreement.base_number, '')
+
+    def test_update_reference_number(self):
+        '''Exercise Agreement.update_reference_number()'''
+        reference_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
+
+        agreement = AgreementFactory.build()
+
+        # Prior to saving, base_number and agreement_number are blank.
+        self.assertEqual(agreement.base_number, '')
+        self.assertEqual(agreement.agreement_number, '')
+        self.assertEqual(agreement.reference_number, reference_number_template.format(id=None))
+
+        # Calling save should call update_reference_number(). Before calling save, I have to save the objects with
+        # which this agreement has a FK relationship.
+        agreement.partner.save()
+        agreement.partner_id = agreement.partner.id
+        agreement.country_programme.save()
+        agreement.country_programme_id = agreement.country_programme.id
+        agreement.save()
+
+        # Ensure base_number, agreement_number, and reference_number are what I expect
+        expected_reference_number = reference_number_template.format(id=agreement.id)
+        self.assertEqual(agreement.base_number, expected_reference_number)
+        self.assertEqual(agreement.agreement_number, expected_reference_number)
+        self.assertEqual(agreement.reference_number, expected_reference_number)
+
+        # Update ref number and ensure base_number, agreement_number, and reference_number are what I expect
+        agreement.update_reference_number(amendment_number=42)
+        self.assertEqual(agreement.base_number, expected_reference_number)
+        self.assertEqual(agreement.agreement_number, expected_reference_number + '-42')
+        self.assertEqual(agreement.reference_number, expected_reference_number)
+
     @skip("Fix this")
     def test_pd_numbering(self):
 
