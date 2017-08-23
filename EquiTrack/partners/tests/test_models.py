@@ -619,7 +619,6 @@ class TestAgreementModel(TenantTestCase):
         create_snapshot_activity_stream(
             self.partner_organization, self.agreement, created=True)
 
-    @skip('no temp ref')
     def test_reference_number(self):
         self.assertIn("PCA", self.agreement.reference_number)
 
