@@ -30,9 +30,11 @@ from partners.models import (
     InterventionBudget,
 )
 
+
 def get_date_from_prior_year():
     '''Return a date for which year < the current year'''
     return datetime.date.today() - datetime.timedelta(days=700)
+
 
 class TestAgreementNumberGeneration(TenantTestCase):
     '''Test that agreements have the expected base and reference numbers for all types of agreements'''
