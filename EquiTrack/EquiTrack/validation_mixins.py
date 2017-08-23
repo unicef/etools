@@ -305,7 +305,6 @@ class StateValidError(_BaseStateError):
     pass
 
 
-
 class BasicValidationError(BaseException):
     def __init__(self, message=''):
         super(BasicValidationError, self).__init__(message)
