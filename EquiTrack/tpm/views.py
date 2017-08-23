@@ -166,14 +166,3 @@ class TPMVisitViewSet(
         return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context={
             "activities": self.get_object().tpm_activities.all(),
         })
-
-    @detail_route(methods=['get'])
-    def export_visit_pdf(self, request, *args, **kwargs):
-        instance = self.get_object()
-        activities = instance.tpm_activities.all()
-
-        context = {
-            "activities": activities,
-        }
-
-        return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context=context)
