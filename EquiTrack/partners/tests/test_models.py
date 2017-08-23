@@ -717,9 +717,17 @@ class TestInterventionModel(TenantTestCase):
         )
         self.assertEqual(int(self.intervention.total_budget), 100200)
 
-    @skip("Improve this test.. tempref not available anymore.")
     def test_reference_number(self):
-        self.assertIn("TempRef:", self.intervention.reference_number)
+        '''Exercise the reference number property'''
+        expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
+        expected_reference_number += str(self.intervention.created.year) + str(self.intervention.id)
+        self.assertEqual(self.intervention.reference_number, expected_reference_number)
+
+        self.intervention.signed_by_unicef_date = get_date_from_prior_year()
+
+        expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
+        expected_reference_number += str(self.intervention.signed_by_unicef_date.year) + str(self.intervention.id)
+        self.assertEqual(self.intervention.reference_number, expected_reference_number)
 
     @skip("Fix when HACT available")
     def test_planned_cash_transfers(self):
