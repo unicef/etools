@@ -8,7 +8,7 @@ from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 class TPMActivityPDSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
     class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
-        fields = ['id', 'file', 'hyperlink', 'created', 'modified', ]
+        fields = ['id', 'file', 'file_name', 'hyperlink', 'created', 'modified', ]
 
     def validate(self, data):
         validated_data = super(TPMActivityPDSerializer, self).validate(data)
