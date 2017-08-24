@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 
 from users.models import Country
+from publics.models import Currency
 
 
 class Command(BaseCommand):
@@ -13,10 +14,12 @@ class Command(BaseCommand):
         try:
             name = options['country_name']
             slug = name.lower().replace(' ', '-').strip()
+            usd = Currency.objects.get(code='USD')
             Country.objects.create(
                 domain_url='{}.etools.unicef.org'.format(slug),
                 schema_name=name.lower().replace(' ', '_').strip(),
-                name=name
+                name=name,
+                local_currency=usd,
             )
         except Exception as exp:
             raise CommandError(exp.message)

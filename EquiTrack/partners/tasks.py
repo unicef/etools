@@ -59,7 +59,7 @@ def _make_agreement_status_automatic_transitions(country_name):
     bad_agreements = []
 
     # SSFAs don't transition automatically unless they transition based on the intervention.
-    signed_ended_agrs = Agreement.objects.filter(status=Agreement.SIGNED, end__gt=datetime.date.today())\
+    signed_ended_agrs = Agreement.objects.filter(status=Agreement.SIGNED, end__lt=datetime.date.today())\
         .exclude(agreement_type=Agreement.SSFA)
     processed = 0
 
@@ -108,7 +108,7 @@ def _make_intervention_status_automatic_transitions(country_name):
     bad_interventions = []
 
     active_ended = Intervention.objects.filter(status=Intervention.ACTIVE,
-                                               end=datetime.date.today() - datetime.timedelta(days=1))
+                                               end__lt=datetime.date.today())
 
     # get all the interventions for which their status is endend and total otustanding_amt is 0 and
     # actual_amt is the same as the total_amt
