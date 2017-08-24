@@ -5,6 +5,7 @@ from unittest import skip, TestCase
 import datetime
 from datetime import date, timedelta
 from decimal import Decimal
+from django.utils import timezone
 
 from rest_framework import status
 from actstream.models import model_stream
@@ -765,7 +766,7 @@ class TestAgreementAPIView(APITenantTestCase):
             agreement=self.agreement,
             signed_amendment="application/pdf",
             signed_date=datetime.date.today(),
-            types=[AgreementAmendment.CP_EXTENSION]
+            types=[AgreementAmendment.IP_NAME]
         )
         self.amendment2 = AgreementAmendment.objects.create(
             number="002",
@@ -1358,8 +1359,8 @@ class TestInterventionViews(APITenantTestCase):
             "document_type": Intervention.SHPD,
             "status": Intervention.DRAFT,
             "title": "2009 EFY AWP",
-            "start": "2016-10-28",
-            "end": "2016-10-28",
+            "start": (timezone.now().date()).isoformat(),
+            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
         }
@@ -1414,8 +1415,8 @@ class TestInterventionViews(APITenantTestCase):
             "document_type": Intervention.SHPD,
             "title": "2009 EFY AWP Updated",
             "status": "draft",
-            "start": "2016-10-28",
-            "end": "2016-10-28",
+            "start": (timezone.now().date()).isoformat(),
+            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "submission_date_prc": "2016-10-31",
             "review_date_prc": "2016-10-28",
             "submission_date": "2016-10-28",
@@ -1527,8 +1528,8 @@ class TestInterventionViews(APITenantTestCase):
             "document_type": Intervention.SHPD,
             "status": Intervention.DRAFT,
             "title": "2009 EFY AWP Updated",
-            "start": "2016-10-28",
-            "end": "2016-10-28",
+            "start": (timezone.now().date()).isoformat(),
+            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
         }
