@@ -187,14 +187,6 @@ class InterventionValid(CompleteValidation):
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
-
-        if intervention.signed_by_unicef_date and intervention.signed_by_partner_date and intervention.start:
-            if intervention.start < max([intervention.signed_by_unicef_date, intervention.signed_by_partner_date]):
-                raise StateValidError([_('The start date cannot be before the later of signature dates.')])
-
-        if intervention.document_type in [intervention.PD, intervention.SHPD] and not intervention.contingency_pd and \
-            intervention.start and intervention.agreement.start:
-                raise StateValidError([_('PD start date cannot be earlier than the Start Date of the related PCA')])
         return True
 
     def state_suspended_valid(self, intervention, user=None):

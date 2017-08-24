@@ -21,7 +21,6 @@ from reports.models import ResultType, Sector
 from partners.models import (
     InterventionSectorLocationLink,
     InterventionBudget,
-    InterventionAmendment,
     Intervention
 )
 from utils.common.utils import get_all_field_names
@@ -188,7 +187,6 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
-
 
     def test_add_one_valid_fr_on_create_pd(self):
         frs_data = [self.fr_1.id]
