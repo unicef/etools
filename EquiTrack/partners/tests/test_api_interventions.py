@@ -93,15 +93,6 @@ class TestInterventionsAPI(APITenantTestCase):
                                                        unicef_signatory=self.unicef_staff,
                                                        partner_authorized_officer_signatory=self.partner1.
                                                        staff_members.all().first())
-        #
-        # self.contingency_intervention = InterventionFactory(agreement=self.active_agreement,
-        #                                                document_type=Intervention.PD,
-        #                                                status='draft',
-        #                                                signed_by_unicef_date=today - datetime.timedelta(days=1),
-        #                                                signed_by_partner_date=today - datetime.timedelta(days=1),
-        #                                                unicef_signatory=self.unicef_staff,
-        #                                                partner_authorized_officer_signatory=self.partner1.
-        #                                                staff_members.all().first())
         self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
         self.result = ResultFactory(result_type=self.result_type)
 
