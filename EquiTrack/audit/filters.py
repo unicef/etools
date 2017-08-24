@@ -1,3 +1,5 @@
+from django.db.models.lookups import YearTransform
+
 from rest_framework.filters import BaseFilterBackend
 
 from .models import Engagement
@@ -53,5 +55,5 @@ class UniqueIDOrderingFilter(BaseFilterBackend):
 
         ordering_params = ['partner__name', 'engagement_type', 'created_year', 'id']
 
-        return queryset.extra(select={'created_year': 'EXTRACT(year FROM created)'})\
+        return queryset.annotate(created_year=YearTransform('created'))\
             .order_by(*map(lambda param: ('' if ordering == 'unique_id' else '-') + param, ordering_params))

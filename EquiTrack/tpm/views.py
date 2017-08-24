@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, \
     NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
+from .filters import ReferenceNumberOrderingFilter
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
@@ -128,6 +129,17 @@ class TPMVisitViewSet(
         'create': TPMVisitDraftSerializer,
         'list': TPMVisitLightSerializer,
     }
+    filter_backends = (ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter, DjangoFilterBackend, )
+    search_fields = (
+        'tpm_partner__name', 'tpm_activities__implementing_partner__name'
+    )
+    ordering_fields = (
+        'tpm_partner__name', 'tpm_activities__implementing_partner__name', 'status'
+    )
+    filter_fields = (
+        'tpm_partner', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
+        'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status',
+    )
 
     def get_queryset(self):
         queryset = super(TPMVisitViewSet, self).get_queryset()
