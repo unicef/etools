@@ -94,7 +94,15 @@ class TestInterventionsAPI(APITenantTestCase):
                                                        unicef_signatory=self.unicef_staff,
                                                        partner_authorized_officer_signatory=self.partner1.
                                                        staff_members.all().first())
-
+        #
+        # self.contingency_intervention = InterventionFactory(agreement=self.active_agreement,
+        #                                                document_type=Intervention.PD,
+        #                                                status='draft',
+        #                                                signed_by_unicef_date=today - datetime.timedelta(days=1),
+        #                                                signed_by_partner_date=today - datetime.timedelta(days=1),
+        #                                                unicef_signatory=self.unicef_staff,
+        #                                                partner_authorized_officer_signatory=self.partner1.
+        #                                                staff_members.all().first())
         self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
         self.result = ResultFactory(result_type=self.result_type)
 
@@ -110,10 +118,7 @@ class TestInterventionsAPI(APITenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.amendment = InterventionAmendment.objects.create(
-            intervention=self.intervention,
-            types=[InterventionAmendment.RESULTS]
-        )
+
         self.location = InterventionSectorLocationLink.objects.create(
             intervention=self.intervention,
             sector=Sector.objects.create(name="Sector 2")
@@ -159,6 +164,31 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         result = json.loads(response.rendered_content)
         self.assertEqual(result.get('result_links'), {'name': ['This field may not be null.']})
+
+    def test_add_invalid_start_date(self):
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention",
+            "start": (timezone.now().date() - datetime.timedelta(days=365)).isoformat(),
+            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
+            "agreement": self.agreement.id,
+        }
+        status_code, response = self.run_request_list_ep(data)
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response[0], u'PD start date cannot be earlier than the Start Date of the related PCA')
+
+    def test_add_contingency_pd(self):
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention1",
+            "contingency_pd": True,
+            "agreement": self.agreement.id,
+        }
+        status_code, response = self.run_request_list_ep(data)
+
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+
 
     def test_add_one_valid_fr_on_create_pd(self):
         frs_data = [self.fr_1.id]
