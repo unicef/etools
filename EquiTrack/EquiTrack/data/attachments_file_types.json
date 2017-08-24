@@ -151,5 +151,14 @@
             "name": "Report",
             "code": "tpm_report"
         }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 20,
+        "fields": {
+            "order": 0,
+            "name": "Programme Documents",
+            "code": "tpm_pd"
+        }
     }
 ]

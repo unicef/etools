@@ -16,7 +16,7 @@ class TPMActivityPDSerializer(WritableNestedSerializerMixin, Base64AttachmentSer
             code='tpm_pd',
             defaults={
                 'name': 'Programme Documents',
-                'odred': 0,
+                'order': 0,
             }
         )
         return validated_data
