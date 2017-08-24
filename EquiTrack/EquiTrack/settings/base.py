@@ -16,22 +16,26 @@ from __future__ import absolute_import
 
 import os
 from os.path import abspath, basename, dirname, join, normpath
-from sys import path
 import datetime
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.backends import default_backend
 
+import djcelery
 import dj_database_url
 import saml2
 from saml2 import saml
-from kombu import Exchange, Queue
+
+
+# Helper function to convert strings (i.e. environment variable values) to a Boolean
+def str2bool(value):
+    """
+    Given a string 'value', return a Boolean which that string represents.
+
+    This assumes that 'value' is one of a list of some common possible Truthy string values.
+    """
+    return str(value).lower() in ("yes", "true", "t", "1")
+
 
 # Absolute filesystem path to the Django project directory:
 DJANGO_ROOT = dirname(dirname(abspath(__file__)))
-
-# Add our project to our pythonpath, this way we don't need to type our project
-# name in our dotted import paths:
-path.append(DJANGO_ROOT)
 
 # Absolute filesystem path to the top-level project folder:
 SITE_ROOT = dirname(DJANGO_ROOT)
@@ -43,7 +47,8 @@ SITE_NAME = basename(DJANGO_ROOT)
 # DJANGO: CACHE
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'redis_cache.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
     }
 }
 
@@ -63,13 +68,7 @@ DATABASE_ROUTERS = (
 )
 
 # DJANGO: DEBUGGING
-DEBUG = os.environ.get('DJANGO_DEBUG', False)
-
-if isinstance(DEBUG, str):
-    if DEBUG.lower() == "true":
-        DEBUG = True
-    else:
-        DEBUG = False
+DEBUG = str2bool(os.environ.get('DJANGO_DEBUG'))
 
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
@@ -78,7 +77,7 @@ EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_PORT = os.environ.get('EMAIL_HOST_PORT', 587)
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', False)  # set True if using TLS
+EMAIL_USE_TLS = str2bool(os.environ.get('EMAIL_USE_TLS'))  # set True if using TLS
 
 # DJANGO: ERROR REPORTING
 
@@ -129,7 +128,7 @@ LOGGING = {
 
 # DJANGO: MODELS
 FIXTURE_DIRS = (
-    normpath(join(SITE_ROOT, 'EquiTrack/data')),
+    normpath(join(DJANGO_ROOT, 'data')),
 )
 SHARED_APPS = (
     'django.contrib.auth',
@@ -211,6 +210,9 @@ TENANT_APPS = (
 INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
 
 # DJANGO: SECURITY
+ALLOWED_HOSTS = [
+    os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
+]
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"  # only used locally
 
 # DJANGO: SERIALIZATION
@@ -254,9 +256,15 @@ TEST_RUNNER = 'EquiTrack.tests.runners.TestRunner'
 # DJANGO: URLS
 ROOT_URLCONF = '%s.urls' % SITE_NAME
 
+
 # Django Contrib Settings ################################
 
 # CONTRIB: AUTH
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'djangosaml2.backends.Saml2Backend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
 AUTH_USER_MODEL = 'auth.User'
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
@@ -315,13 +323,12 @@ POST_OFFICE = {
 }
 
 # django-celery: https://github.com/celery/django-celery
-import djcelery
 djcelery.setup_loader()
 
 # celery: http://docs.celeryproject.org/en/3.1/configuration.html
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)
-BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(BROKER_VISIBILITY_VAR)}  # 5 hours
+BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(BROKER_VISIBILITY_VAR)}
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 # Sensible settings for celery
@@ -335,12 +342,7 @@ CELERY_DISABLE_RATE_LIMITS = False
 CELERY_IGNORE_RESULT = True
 CELERY_SEND_TASK_ERROR_EMAILS = False
 CELERY_TASK_RESULT_EXPIRES = 600
-# Don't use pickle as serializer, json is much safer
-# CELERY_TASK_SERIALIZER = "json"
-# CELERY_ACCEPT_CONTENT = ['application/json']
-# CELERYD_HIJACK_ROOT_LOGGER = False
 CELERYD_PREFETCH_MULTIPLIER = 1
-# CELERYD_MAX_TASKS_PER_CHILD = 1000
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
 CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
@@ -369,7 +371,7 @@ REST_FRAMEWORK = {
 }
 
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = False
 
 # django-rest-swagger: http://django-rest-swagger.readthedocs.io/en/latest/settings/
 SWAGGER_SETTINGS = {
@@ -383,6 +385,7 @@ USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 # django-allauth: https://github.com/pennersr/django-allauth
 ACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomAccountAdapter'
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "none"  # "optional", "mandatory" or "none"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/login"
@@ -418,16 +421,132 @@ ACTSTREAM_SETTINGS = {
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
 TENANT_MODEL = "users.Country"  # app.Model
 
+# django-saml2: https://github.com/robertavram/djangosaml2
+HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
+SAML_ATTRIBUTE_MAPPING = {
+    'upn': ('username',),
+    'emailAddress': ('email',),
+    'givenName': ('first_name',),
+    'surname': ('last_name',),
+}
+SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
+SAML_CREATE_UNKNOWN_USER = True
+SAML_CONFIG = {
+    # full path to the xmlsec1 binary programm
+    'xmlsec_binary': '/usr/bin/xmlsec1',
+
+    # your entity id, usually your subdomain plus the url to the metadata view
+    'entityid': 'https://{}/saml2/metadata/'.format(HOST),
+
+    # directory with attribute mapping
+    'attribute_map_dir': join(DJANGO_ROOT, 'saml/attribute-maps'),
+
+    # this block states what services we provide
+    'service': {
+        # we are just a lonely SP
+        'sp': {
+            'name': 'eTools',
+            'name_id_format': saml.NAMEID_FORMAT_PERSISTENT,
+            'endpoints': {
+                # url and binding to the assetion consumer service view
+                # do not change the binding or service name
+                'assertion_consumer_service': [
+                    ('https://{}/saml2/acs/'.format(HOST),
+                     saml2.BINDING_HTTP_POST),
+                ],
+                # url and binding to the single logout service view
+                # do not change the binding or service name
+                'single_logout_service': [
+                    ('https://{}/saml2/ls/'.format(HOST),
+                     saml2.BINDING_HTTP_REDIRECT),
+                    ('https://{}/saml2/ls/post'.format(HOST),
+                     saml2.BINDING_HTTP_POST),
+                ],
+
+            },
+
+            # attributes that this project needs to identify a user
+            'required_attributes': ['upn', 'emailAddress'],
+        },
+    },
+    # where the remote metadata is stored
+    'metadata': {
+        "local": [join(DJANGO_ROOT, 'saml/federationmetadata.xml')],
+    },
+
+    # set to 1 to output debugging information
+    'debug': 1,
+
+    # allow 300 seconds for time difference between adfs server and etools server
+    'accepted_time_diff': 300,  # in seconds
+
+    # certificate
+    'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
+    'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),  # public part
+
+    # own metadata settings
+    'contact_person': [
+        {'given_name': 'James',
+         'sur_name': 'Cranwell-Ward',
+         'company': 'UNICEF',
+         'email_address': 'jcranwellward@unicef.org',
+         'contact_type': 'technical'},
+    ],
+    # you can set multilanguage information here
+    'organization': {
+        'name': [('UNICEF', 'en')],
+        'display_name': [('UNICEF', 'en')],
+        'url': [('http://www.unicef.org', 'en')],
+    },
+    'valid_for': 24,  # how long is our metadata valid
+}
+SAML_SIGNED_LOGOUT = True
+
+# django-rest-framework-jwt: http://getblimp.github.io/django-rest-framework-jwt/
+JWT_AUTH = {
+   'JWT_ENCODE_HANDLER':
+   'rest_framework_jwt.utils.jwt_encode_handler',
+
+   'JWT_DECODE_HANDLER':
+   'rest_framework_jwt.utils.jwt_decode_handler',
+
+   'JWT_PAYLOAD_HANDLER':
+   'rest_framework_jwt.utils.jwt_payload_handler',
+
+   'JWT_PAYLOAD_GET_USER_ID_HANDLER':
+   'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
+
+   'JWT_PAYLOAD_GET_USERNAME_HANDLER':
+   'rest_framework_jwt.utils.jwt_get_username_from_payload_handler',
+
+   'JWT_RESPONSE_PAYLOAD_HANDLER':
+   'rest_framework_jwt.utils.jwt_response_payload_handler',
+
+   'JWT_ALGORITHM': 'HS256',
+   'JWT_VERIFY': True,
+   'JWT_VERIFY_EXPIRATION': True,
+   'JWT_LEEWAY': 30,
+   'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=30000),
+   'JWT_AUDIENCE': None,
+   'JWT_ISSUER': None,
+
+   'JWT_ALLOW_REFRESH': False,
+   'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
+
+   'JWT_AUTH_HEADER_PREFIX': 'JWT',
+}
+
+
 # eTools settings ################################
 
 COUCHBASE_URL = os.environ.get('COUCHBASE_URL')
 COUCHBASE_USER = os.environ.get('COUCHBASE_USER')
 COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
 
-DISABLE_INVOICING = True if os.getenv('DISABLE_INVOICING', False) in ['1', 'True', 'true'] else False
+DISABLE_INVOICING = str2bool(os.getenv('DISABLE_INVOICING'))
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
-HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
+ETRIPS_VERSION = os.environ.get('ETRIPS_VERSION')
 
 INACTIVE_BUSINESS_AREAS = os.environ.get('INACTIVE_BUSINESS_AREAS', '').split(',')
 
@@ -438,10 +557,3 @@ TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
 VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
-
-# Deprecated. I think all of these can be removed
-BASE_DIR = dirname(SITE_ROOT)  # not used
-AUTH_PROFILE_MODULE = 'users.UserProfile'  # no longer needed
-MONGODB_URL = os.environ.get('MONGODB_URL', 'mongodb://localhost:27017')  # I don't see mongo being used
-MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
-RAPIDPRO_TOKEN = os.environ.get('RAPIDPRO_TOKEN') # I don't see RapidPro installed
