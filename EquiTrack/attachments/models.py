@@ -48,3 +48,6 @@ class Attachment(TimeStampedModel, models.Model):
     @property
     def url(self):
         return self.file.url if self.file else self.hyperlink
+
+    class Meta:
+        ordering = ['id', ]

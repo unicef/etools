@@ -278,7 +278,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
 @python_2_unicode_compatible
 class TPMVisitReportRejectComment(models.Model):
-    rejected_at = models.DateTimeField(auto_now=True)
+    rejected_at = models.DateTimeField(auto_now_add=True)
 
     reject_reason = models.TextField()
 
@@ -289,6 +289,7 @@ class TPMVisitReportRejectComment(models.Model):
 
     class Meta:
         verbose_name_plural = _('Report Reject Comments')
+        ordering = ['tpm_visit', 'id']
 
 
 @python_2_unicode_compatible
@@ -312,6 +313,7 @@ class TPMActivity(models.Model):
 
     class Meta:
         verbose_name_plural = _('TPM Activities')
+        ordering = ['tpm_visit', 'id', ]
 
 
 @python_2_unicode_compatible
@@ -341,6 +343,9 @@ class TPMActivityActionPoint(models.Model):
 
     def __str__(self):
         return 'Action Point #{} on {}'.format(self.id, self.tpm_activity)
+
+    class Meta:
+        ordering = ['tpm_activity', 'id']
 
 
 PME = GroupWrapper(code='pme',
