@@ -120,7 +120,7 @@ class NestedViewSetMixin(object):
 
         child = self
         lookups = []
-        for i, parent in enumerate(parents):
+        for parent in parents:
             lookups.append(child.parent_lookup_field)
             filters['{}__{}'.format(
                 '__'.join(lookups), getattr(child.parent, 'lookup_field', 'pk')
