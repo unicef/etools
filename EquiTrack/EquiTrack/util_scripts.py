@@ -981,5 +981,5 @@ def interventions_associated_ssfa():
                                                             document_type=Intervention.SSFA)
         interventions = intervention_pds_ssfa | intervention_ssfa_pca
         for i in interventions:
-            print('intervention {} type {} has agreement type {}'.format(
-                i.id, i.document_type, i.agreement.agreement_type))
+            print('intervention {} type {} status {} has agreement type {}'.format(
+                i.id, i.document_type, i.agreement.agreement_type, i.status))

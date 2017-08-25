@@ -172,7 +172,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             mock_db_connection,
             mock_logger):
         '''Exercise _make_agreement_status_automatic_transitions() when all agreements are valid.'''
-        end_date = datetime.date.today() + datetime.timedelta(days=2)
+        end_date = datetime.date.today() - datetime.timedelta(days=2)
         # Agreements sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
         # pulled out of the database.
         agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, created=_make_past_datetime(i),
@@ -184,7 +184,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
         AgreementFactory(status=Agreement.SUSPENDED, end=end_date, agreement_type=Agreement.MOU)
         # Ignored because of end date.
         AgreementFactory(status=Agreement.SIGNED,
-                         end=datetime.date.today() - datetime.timedelta(days=2),
+                         end=datetime.date.today() + datetime.timedelta(days=2),
                          agreement_type=Agreement.MOU)
         # Ignored because of type.
         AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.SSFA)
@@ -222,7 +222,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             mock_db_connection,
             mock_logger):
         '''Exercise _make_agreement_status_automatic_transitions() when some agreements are valid and some aren't.'''
-        end_date = datetime.date.today() + datetime.timedelta(days=2)
+        end_date = datetime.date.today() - datetime.timedelta(days=2)
         # Agreements sort by oldest last, so I make sure my list here is ordered in the same way as they'll be
         # pulled out of the database.
         agreements = [AgreementFactory(status=Agreement.SIGNED, end=end_date, created=_make_past_datetime(i),
@@ -234,7 +234,7 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
         AgreementFactory(status=Agreement.SUSPENDED, end=end_date, agreement_type=Agreement.MOU)
         # Ignored because of end date.
         AgreementFactory(status=Agreement.SIGNED,
-                         end=datetime.date.today() - datetime.timedelta(days=2),
+                         end=datetime.date.today() + datetime.timedelta(days=2),
                          agreement_type=Agreement.MOU)
         # Ignored because of type.
         AgreementFactory(status=Agreement.SIGNED, end=end_date, agreement_type=Agreement.SSFA)
@@ -352,7 +352,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
         # Ignored because of end date
-        InterventionFactory(status=Intervention.ACTIVE, end=datetime.date.today() - datetime.timedelta(days=2))
+        InterventionFactory(status=Intervention.ACTIVE, end=datetime.date.today() + datetime.timedelta(days=2))
         # Ignored because of status
         InterventionFactory(status=Intervention.IMPLEMENTED, end=end_date)
         # Ignored because funds total outstanding != 0
@@ -417,7 +417,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
         # Ignored because of end date
-        InterventionFactory(status=Intervention.ACTIVE, end=datetime.date.today() - datetime.timedelta(days=2))
+        InterventionFactory(status=Intervention.ACTIVE, end=datetime.date.today() + datetime.timedelta(days=2))
         # Ignored because of status
         InterventionFactory(status=Intervention.IMPLEMENTED, end=end_date)
         # Ignored because funds total outstanding != 0
