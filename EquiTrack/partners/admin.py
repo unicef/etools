@@ -466,22 +466,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         IndicatorDueDatesAdmin,
     )
 
-    suit_form_tabs = (
-        (u'info', u'Info'),
-        (u'results', u'Results'),
-        (u'locations', u'Locations'),
-        (u'trips', u'Trips'),
-        (u'supplies', u'Supplies'),
-        (u'attachments', u'Attachments')
-    )
-
-    suit_form_includes = (
-        ('admin/partners/funding_summary.html', 'middle', 'info'),
-        # ('admin/partners/work_plan.html', 'bottom', 'results'),
-        ('admin/partners/trip_summary.html', 'top', 'trips'),
-        ('admin/partners/attachments_note.html', 'top', 'attachments'),
-    )
-
     def work_plan_template(self, obj):
         return u'<a class="btn btn-primary default" ' \
                u'href="{}" >Download Template</a>'.format(
