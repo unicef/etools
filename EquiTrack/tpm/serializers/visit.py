@@ -1,9 +1,9 @@
+import itertools
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from audit.serializers.engagement import PartnerOrganizationLightSerializer
 from locations.models import Location
-from partners.models import InterventionResultLink, Intervention
+from partners.models import InterventionResultLink, Intervention, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer, InterventionListSerializer
 from reports.models import Result
 from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActivityActionPoint, \
@@ -31,6 +31,14 @@ class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterventionResultLink
+        fields = [
+            'id', 'name'
+        ]
+
+
+class PartnerOrganizationLightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerOrganization
         fields = [
             'id', 'name'
         ]
@@ -234,12 +242,34 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
 
     status_date = serializers.ReadOnlyField()
 
+    implementing_partners = serializers.SerializerMethodField()
+
+    locations = serializers.SerializerMethodField()
+
+    def get_implementing_partners(self, obj):
+        return PartnerOrganizationLightSerializer(
+            set(map(
+                lambda a: a.implementing_partner,
+                obj.tpm_activities.all()
+            )),
+            many=True
+        ).data
+
+    def get_locations(self, obj):
+        return LocationLightSerializer(
+            set(itertools.chain(*map(
+                lambda a: a.locations.all(),
+                obj.tpm_activities.all()
+            ))),
+            many=True
+        ).data
+
     class Meta(StatusPermissionsBasedRootSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMVisit
         permission_class = TPMPermission
         fields = [
             'id', 'start_date', 'end_date',
-            'tpm_activities', 'tpm_partner',
+            'tpm_activities', 'tpm_partner', 'implementing_partners', 'locations',
             'status', 'status_date', 'reference_number',
             'sections', 'offices', 'tpm_partner_focal_points', 'unicef_focal_points',
             'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
