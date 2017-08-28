@@ -123,6 +123,7 @@ class TPMVisitViewSet(
         'tpm_activities__partnership',
         'unicef_focal_points',
         'attachments',
+        'sections',
     )
     serializer_class = TPMVisitSerializer
     serializer_action_classes = {
