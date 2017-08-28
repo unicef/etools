@@ -138,7 +138,7 @@ class TPMVisitViewSet(
         'tpm_partner__name', 'tpm_activities__implementing_partner__name', 'status'
     )
     filter_fields = (
-        'tpm_partner', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
+        'tpm_partner', 'sections', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
         'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status',
     )
 
