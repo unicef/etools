@@ -3,6 +3,8 @@ import json
 from unittest import skip
 from actstream.models import model_stream
 
+from django.utils import timezone
+
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import PartnershipFactory, AgreementFactory, InterventionFactory, InterventionBudgetFactory
@@ -137,18 +139,28 @@ class TestHACTCalculations(TenantTestCase):
             unicef_cash=60000,
             in_kind_amount=5000
         )
+
+        tz = timezone.get_default_timezone()
+
+        start = datetime.datetime.combine(current_cp.from_date, datetime.time(0, 0, 1, tzinfo=tz))
+        end = current_cp.from_date + datetime.timedelta(days=200)
+        end = datetime.datetime.combine(end, datetime.time(23, 59, 59, tzinfo=tz))
         FundingCommitment.objects.create(
-            start=current_cp.from_date,
-            end=current_cp.from_date + datetime.timedelta(days=200),
+            start=start,
+            end=end,
             grant=grant,
             fr_number='0123456789',
             wbs='Test',
             fc_type='PCA',
             expenditure_amount=40000.00
         )
+
+        start = current_cp.from_date + datetime.timedelta(days=200)
+        start = datetime.datetime.combine(start, datetime.time(0, 0, 1, tzinfo=tz))
+        end = datetime.datetime.combine(current_cp.to_date, datetime.time(23, 59, 59, tzinfo=tz))
         FundingCommitment.objects.create(
-            start=current_cp.from_date + datetime.timedelta(days=200),
-            end=current_cp.to_date,
+            start=start,
+            end=end,
             grant=grant,
             fr_number='0123456789',
             wbs='Test',
@@ -159,9 +171,8 @@ class TestHACTCalculations(TenantTestCase):
     def test_planned_cash_transfers(self):
 
         PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner)
-        hact = json.loads(self.intervention.agreement.partner.hact_values) \
-            if isinstance(self.intervention.agreement.partner.hact_values, str) \
-            else self.intervention.agreement.partner.hact_values
+        hact = self.intervention.agreement.partner.hact_values
+        hact = json.loads(hact) if isinstance(hact, str) else hact
         self.assertEqual(hact['planned_cash_transfer'], 60000)
 
 
@@ -414,7 +425,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_planned_cash_transfers_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
-        cp = CountryProgramme.objects.create(
+        CountryProgramme.objects.create(
             name="CP 1",
             wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
@@ -467,7 +478,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
-        cp = CountryProgramme.objects.create(
+        CountryProgramme.objects.create(
             name="CP 1",
             wbs="/A0/",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),

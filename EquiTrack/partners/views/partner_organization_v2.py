@@ -23,7 +23,6 @@ from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import (
     PartnerStaffMember,
-    Intervention,
     PartnerOrganization,
     Assessment,
 )
@@ -41,7 +40,7 @@ from partners.serializers.partner_organization_v2 import (
 from t2f.models import TravelActivity
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
-from partners.exports_v2 import PartnerOrganizationCsvRenderer
+from partners.exports_v2 import PartnerOrganizationCsvRenderer, PartnerOrganizationHactCsvRenderer
 
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):
@@ -190,7 +189,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
         return Response(PartnerOrganizationDetailSerializer(instance).data)
 
 
-class PartnerOrganizationHactAPIView(ListCreateAPIView):
+class PartnerOrganizationHactAPIView(ListAPIView):
 
     """
     Create new Partners.
@@ -199,6 +198,19 @@ class PartnerOrganizationHactAPIView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.filter(total_ct_cp__gt=0).all()
     serializer_class = PartnerOrganizationHactSerializer
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
+
+    def list(self, request, format=None):
+        """
+        Checks for format query parameter
+        :returns: JSON or CSV file
+        """
+        query_params = self.request.query_params
+        response = super(PartnerOrganizationHactAPIView, self).list(request)
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                response['Content-Disposition'] = "attachment;filename=hact_dashboard.csv"
+        return response
 
 
 class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
