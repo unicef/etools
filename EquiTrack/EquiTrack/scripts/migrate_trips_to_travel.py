@@ -19,7 +19,7 @@ from EquiTrack.util_scripts import set_country
 from trips.models import Trip
 from t2f.models import Travel
 from t2f.models import TravelActivity
-from t2f.models import IteneraryItem
+from t2f.models import ItineraryItem
 from t2f.models import CostAssignment
 from t2f.models import ActionPoint
 from t2f.models import TravelAttachment
@@ -159,7 +159,7 @@ def migrate_trips(country):
                     "arrival_date": route.arrive,
                 }
                 # TODO this goddamn model is misspelled
-                itinerary_item = IteneraryItem(**itinerary_payload)
+                itinerary_item = ItineraryItem(**itinerary_payload)
                 itinerary_item.save()
 
             for funds in trip.tripfunds_set.all():
