@@ -70,7 +70,7 @@ from partners.forms import (
 )
 
 
-class PcaLocationInlineAdmin(admin.TabularInline):
+class PCALocationInlineAdmin(admin.TabularInline):
     form = LocationForm
     model = GwPCALocation
     verbose_name = 'Location'
@@ -84,7 +84,7 @@ class PcaLocationInlineAdmin(admin.TabularInline):
     extra = 5
 
 
-class PcaSectorInlineAdmin(admin.TabularInline):
+class PCASectorInlineAdmin(admin.TabularInline):
     model = PCASector
     form = AmendmentForm
     formset = ParentInlineAdminFormSet
@@ -102,7 +102,7 @@ class PcaSectorInlineAdmin(admin.TabularInline):
         if db_field.rel.to is Section:
             kwargs['queryset'] = connection.tenant.sections.all()
 
-        return super(PcaSectorInlineAdmin, self).formfield_for_foreignkey(
+        return super(PCASectorInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
@@ -173,7 +173,7 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
     )
 
 
-class PcaGrantInlineAdmin(admin.TabularInline):
+class PCAGrantInlineAdmin(admin.TabularInline):
 
     model = PCAGrant
     verbose_name = 'Grant'
@@ -468,11 +468,11 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
 
     inlines = (
-        PcaSectorInlineAdmin,
+        PCASectorInlineAdmin,
         PartnershipBudgetInlineAdmin,
-        PcaGrantInlineAdmin,
+        PCAGrantInlineAdmin,
         IndicatorsInlineAdmin,
-        PcaLocationInlineAdmin,
+        PCALocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
         # ResultsInlineAdmin,
