@@ -219,7 +219,8 @@ class EngagementPDFView(
 
     def check_permissions(self, request):
         super(EngagementPDFView, self).check_permissions(request)
-        if not AuditPermission.objects.filter(instance=self.get_object(), user=request.user).exists():
+        if self.pk_url_kwarg in self.kwargs and \
+           not AuditPermission.objects.filter(instance=self.get_object(), user=request.user).exists():
             self.permission_denied(
                 request, message=_('You have no access to this engagement.')
             )

@@ -21,7 +21,6 @@ from rest_framework.generics import (
 from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import (
-    InterventionBudget,
     Intervention,
     InterventionPlannedVisits,
     InterventionAttachment,

@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from django.db import connection, models
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
-from django.core.urlresolvers import reverse
 from django.forms import SelectMultiple
 
 from reversion.admin import VersionAdmin
@@ -19,11 +18,11 @@ from supplies.models import SupplyItem
 from reports.models import Result
 from users.models import Section
 
-from .exports import (
+from partners.exports import (
     PartnerExport,
-    InterventionExport, AgreementExport
+    InterventionExport,
 )
-from .models import (
+from partners.models import (
     PCA,
     PCAFile,
     FileType,
@@ -33,17 +32,13 @@ from .models import (
     PartnerOrganization,
     Assessment,
     Agreement,
-    BankDetails,
     RAMIndicator,
     PartnerStaffMember,
     PartnershipBudget,
-    AmendmentLog,
     SupplyPlan,
     DistributionPlan,
     FundingCommitment,
-    AgreementAmendmentLog,
     IndicatorDueDates,
-    IndicatorReport,
     InterventionPlannedVisits,
     Intervention,
     AgreementAmendment,
@@ -54,17 +49,16 @@ from .models import (
     InterventionAttachment,
 
 )
-from .filters import (
+from partners.filters import (
     PCASectorFilter,
     PCADonorFilter,
     PCAGrantFilter,
     PCAGatewayTypeFilter,
 )
-from .mixins import ReadOnlyMixin, HiddenPartnerMixin
-from .forms import (
+from partners.mixins import ReadOnlyMixin, HiddenPartnerMixin
+from partners.forms import (
     PartnershipForm,
     PartnersAdminForm,
-    AssessmentAdminForm,
     AmendmentForm,
     AgreementForm,
     DistributionPlanForm,
@@ -299,7 +293,6 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.ManyToManyField: {'widget': SelectMultiple(attrs={'size': '5', 'style': 'width:100%'})},
     }
-
 
 
 class InterventionSectorLocationAdmin(admin.ModelAdmin):
@@ -602,14 +595,15 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         (_('Intervention Details'), {
             'fields':
                 (
-                'agreement',
-                'document_type',
-                'number',
-                'title',
-                'status',
-                'country_programme',
-                'submission_date',
-                'metadata',)
+                    'agreement',
+                    'document_type',
+                    'number',
+                    'title',
+                    'status',
+                    'country_programme',
+                    'submission_date',
+                    'metadata',
+                )
         }),
         (_('Dates and Signatures'), {
             'fields':
@@ -989,5 +983,3 @@ admin.site.register(SupplyItem, SupplyItemAdmin)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(FileType, FileTypeAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
-
-

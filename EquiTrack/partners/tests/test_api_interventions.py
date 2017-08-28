@@ -24,6 +24,7 @@ from partners.models import (
     InterventionAmendment,
     Intervention
 )
+from utils.common.utils import get_all_field_names
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -65,7 +66,7 @@ class TestInterventionsAPI(APITenantTestCase):
         'signed': [],
         'active': ['']
     }
-    ALL_FIELDS = Intervention._meta.get_all_field_names()
+    ALL_FIELDS = get_all_field_names(Intervention)
 
     def setUp(self):
         today = datetime.date.today()
@@ -334,7 +335,6 @@ class TestInterventionsAPI(APITenantTestCase):
                               [perm for perm in edit_permissions if edit_permissions[perm]])
         self.assertItemsEqual(self.REQUIRED_FIELDS['signed'],
                               [perm for perm in required_permissions if required_permissions[perm]])
-
 
     def test_list_interventions(self):
         with self.assertNumQueries(10):

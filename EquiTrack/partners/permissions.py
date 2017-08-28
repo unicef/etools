@@ -4,6 +4,7 @@ from django.utils.lru_cache import lru_cache
 
 from EquiTrack.utils import HashableDict
 from EquiTrack.validation_mixins import check_rigid_related
+from utils.common.utils import get_all_field_names
 
 
 class PMPPermissions(object):
@@ -21,7 +22,7 @@ class PMPPermissions(object):
         self.instance = instance
         self.condition_group_valid = lru_cache(maxsize=16)(self.condition_group_valid)
         self.permission_structure = permission_structure
-        self.all_model_fields = self.MODEL._meta.get_all_field_names()
+        self.all_model_fields = get_all_field_names(self.MODEL)
 
     def condition_group_valid(self, condition_group):
         if condition_group['status'] and condition_group['status'] != '*':
@@ -88,7 +89,7 @@ class InterventionPermissions(PMPPermissions):
 
         def user_added_amendment(instance):
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
-            #check_rigid_related checks if there were any changes from the previous
+            # check_rigid_related checks if there were any changes from the previous
             # amendments if there were changes it returns False
             return not check_rigid_related(instance, 'amendments')
 
@@ -99,6 +100,7 @@ class InterventionPermissions(PMPPermissions):
             # this condition can only be checked on data save
             'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)
         }
+
 
 class AgreementPermissions(PMPPermissions):
 
@@ -118,7 +120,7 @@ class AgreementPermissions(PMPPermissions):
 
         def user_added_amendment(instance):
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
-            #check_rigid_related checks if there were any changes from the previous
+            # check_rigid_related checks if there were any changes from the previous
             # amendments if there were changes it returns False
             return not check_rigid_related(instance, 'amendments')
 

@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import datetime
 
 from django.db import migrations
+from django.utils import timezone
 
 
 def set_clearances_for_old_trips(apps, schema_editor):
@@ -17,7 +18,7 @@ def set_clearances_for_old_trips(apps, schema_editor):
     Travel = apps.get_model("t2f", "Travel")
     Clearances = apps.get_model("t2f", "Clearances")
 
-    six_months_ago = datetime.datetime.today() - datetime.timedelta(days=180)
+    six_months_ago = timezone.now() - datetime.timedelta(days=180)
     for travel in Travel.objects.filter(created__gt=six_months_ago):
         if not hasattr(travel, 'clearances'):
             # creating Clearances

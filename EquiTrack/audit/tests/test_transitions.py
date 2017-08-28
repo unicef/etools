@@ -1,20 +1,17 @@
 import random
 
-from django.core.management import call_command
 from factory import fuzzy
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from audit.transitions.conditions import EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck, \
     AuditSubmitReportRequiredFieldsCheck
-from .base import EngagementTransitionsTestCaseMixin
-from .factories import MicroAssessmentFactory, AuditFactory, SpotCheckFactory
+from audit.tests.base import EngagementTransitionsTestCaseMixin
+from audit.tests.factories import MicroAssessmentFactory, AuditFactory, SpotCheckFactory
 
 
 class EngagementCheckTransitionsTestCaseMixin(object):
-    def setUp(self):
-        call_command('loaddata', 'audit_risks_blueprints', verbosity=0)
-        super(EngagementCheckTransitionsTestCaseMixin, self).setUp()
+    fixtures = ('audit_risks_blueprints', )
 
     def _test_transition(self, user, action, expected_response, errors=None, data=None):
         response = self.forced_auth_req(

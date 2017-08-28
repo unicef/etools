@@ -1,6 +1,3 @@
-__author__ = 'jcranwellward'
-
-
 from django.contrib import admin
 from django.db.models.query_utils import Q
 
@@ -277,4 +274,3 @@ class InterventionExportFilter(BaseFilterBackend):
             q &= Q(ends_before__lte=ends_before)
 
         return queryset.filter(q)
-

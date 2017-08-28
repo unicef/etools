@@ -227,6 +227,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
         # TODO: update value on resultchain (atomic)
         serializers.ValidationError({'result_chain': "Deprecated"})
 
+
 class GWLocationSerializer(serializers.ModelSerializer):
 
     pca_title = serializers.CharField(source='pca.title', read_only=True)
@@ -336,4 +337,3 @@ class InterventionExportFilterSerializer(serializers.Serializer):
     grant = serializers.CharField(required=False)
     starts_after = serializers.DateField(required=False)
     ends_before = serializers.DateField(required=False)
-

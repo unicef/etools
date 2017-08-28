@@ -9,8 +9,8 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import CurrencyFactory, CountryFactory, DSARegionFactory, DSARateFactory, \
     ExpenseTypeFactory
-from t2f.helpers.cost_summary_calculator import CostSummaryCalculator, DSACalculator
-from t2f.tests.factories import TravelFactory, ExpenseFactory, IteneraryItemFactory, DeductionFactory
+from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
+from t2f.tests.factories import TravelFactory, ExpenseFactory, IteneraryItemFactory
 
 
 class CostSummaryTest(APITenantTestCase):
@@ -22,9 +22,9 @@ class CostSummaryTest(APITenantTestCase):
         self.currency_huf = CurrencyFactory(name='Hungarian Forint', code='HUF')
 
         self.user_et_1 = ExpenseTypeFactory(title='Train cost',
-                                                 vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
+                                            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
         self.user_et_2 = ExpenseTypeFactory(title='Other expenses',
-                                                 vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
+                                            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
         self.ta_et = ExpenseTypeFactory(title='Travel agent')
 
         netherlands = CountryFactory(name='Netherlands', long_name='Netherlands')
@@ -33,15 +33,15 @@ class CostSummaryTest(APITenantTestCase):
         germany = CountryFactory(name='Germany', long_name='Germany')
 
         self.amsterdam = DSARegionFactory(country=netherlands,
-                                            area_name='Amsterdam',
-                                            area_code='ds1')
+                                          area_name='Amsterdam',
+                                          area_code='ds1')
         DSARateFactory(region=self.amsterdam,
                        dsa_amount_usd=100,
                        dsa_amount_60plus_usd=60)
 
         self.budapest = DSARegionFactory(country=hungary,
-                                           area_name='Budapest',
-                                           area_code='ds2')
+                                         area_name='Budapest',
+                                         area_code='ds2')
         DSARateFactory(region=self.budapest,
                        dsa_amount_usd=200,
                        dsa_amount_60plus_usd=120)
