@@ -126,7 +126,6 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
             headers=headers
         )
 
-
     def get_queryset(self, format=None):
         q = Intervention.objects.detail_qs().all()
         query_params = self.request.query_params

@@ -155,19 +155,6 @@ class TestInterventionsAPI(APITenantTestCase):
         result = json.loads(response.rendered_content)
         self.assertEqual(result.get('result_links'), {'name': ['This field may not be null.']})
 
-    def test_add_invalid_start_date(self):
-        data = {
-            "document_type": Intervention.PD,
-            "title": "My test intervention",
-            "start": (timezone.now().date() - datetime.timedelta(days=365)).isoformat(),
-            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
-            "agreement": self.agreement.id,
-        }
-        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
-
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response[0], u'PD start date cannot be earlier than the Start Date of the related PCA')
-
     def test_add_contingency_pd(self):
         data = {
             "document_type": Intervention.PD,

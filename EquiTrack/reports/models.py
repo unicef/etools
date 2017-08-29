@@ -425,7 +425,7 @@ class Indicator(models.Model):
     view_on_dashboard = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['active', 'name']
         unique_together = (("name", "result", "sector"),)
 
     def __unicode__(self):
