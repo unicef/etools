@@ -108,7 +108,7 @@ WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 # DJANGO: LOGGING
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': os.environ.get('DJANGO_DISABLE_EXISTING_LOGGERS', True),
     'handlers': {
         # Send all messages to console
         'console': {
