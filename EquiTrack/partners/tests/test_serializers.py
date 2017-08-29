@@ -64,6 +64,33 @@ class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
         self.assertIsInstance(exception.detail['errors'], list)
         self.assertEqual(exception.detail['errors'], [expected_message])
 
+    def assertAmendmentExceptionFundamentals(self, context_manager, expected_message):
+        '''Given the context manager produced by self.assertRaises() for an amendment-related exception,
+        checks the exception it contains for the expected message in the correct location.
+        '''
+        exception = context_manager.exception
+
+        # In this case, exception detail contains a dict that contains a list that contains a dict that contains a list.
+        # Example --
+        #    {'errors':
+        #        [
+        #            {'signed_amendment':
+        #                [
+        #                'Please check that the Document is attached and signatures are not in the future'
+        #                ]
+        #            }
+        #        ]
+        #    }
+        self.assertTrue(hasattr(exception, 'detail'))
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(len(exception.detail['errors']), 1)
+        the_error = exception.detail['errors'][0]
+        self.assertIsInstance(the_error, dict)
+        self.assertEqual(the_error.keys(), ['signed_amendment'])
+        self.assertIsInstance(the_error['signed_amendment'], list)
+        self.assertEqual(the_error['signed_amendment'], [expected_message])
 
 class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
     '''Exercise the AgreementCreateUpdateSerializer.'''
@@ -501,29 +528,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        # In this case, exception detail contains a dict that contains a list that contains a dict that contains a list.
-        # Example --
-        #    {'errors':
-        #        [
-        #            {'signed_amendment':
-        #                [
-        #                'Please check that the Document is attached and signatures are not in the future'
-        #                ]
-        #            }
-        #        ]
-        #    }
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        self.assertEqual(len(exception.detail['errors']), 1)
-        the_error = exception.detail['errors'][0]
-        self.assertIsInstance(the_error, dict)
-        self.assertEqual(the_error.keys(), ['signed_amendment'])
-        self.assertIsInstance(the_error['signed_amendment'], list)
-        msg = 'Please check that the Document is attached and signatures are not in the future'
-        self.assertEqual(the_error['signed_amendment'], [msg])
+        self.assertAmendmentExceptionFundamentals(
+            context_manager,
+            'Please check that the Document is attached and signatures are not in the future'
+            )
 
     def test_update_with_due_to_amendments_signed_date(self):
         '''Ensure agreement update fails if amendments don't have a signed_date or if it's in the future,
@@ -552,29 +560,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        # In this case, exception detail contains a dict that contains a list that contains a dict that contains a list.
-        # Example --
-        #    {'errors':
-        #        [
-        #            {'signed_amendment':
-        #                [
-        #                'Please check that the Document is attached and signatures are not in the future'
-        #                ]
-        #            }
-        #        ]
-        #    }
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        self.assertEqual(len(exception.detail['errors']), 1)
-        the_error = exception.detail['errors'][0]
-        self.assertIsInstance(the_error, dict)
-        self.assertEqual(the_error.keys(), ['signed_amendment'])
-        self.assertIsInstance(the_error['signed_amendment'], list)
-        msg = 'Please check that the Document is attached and signatures are not in the future'
-        self.assertEqual(the_error['signed_amendment'], [msg])
+        self.assertAmendmentExceptionFundamentals(
+            context_manager,
+            'Please check that the Document is attached and signatures are not in the future'
+            )
 
         # Set the signed date, but set it to the future which should cause a failure.
         amendment.signed_date = self.today + datetime.timedelta(days=5)
@@ -583,29 +572,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        # In this case, exception detail contains a dict that contains a list that contains a dict that contains a list.
-        # Example --
-        #    {'errors':
-        #        [
-        #            {'signed_amendment':
-        #                [
-        #                'Please check that the Document is attached and signatures are not in the future'
-        #                ]
-        #            }
-        #        ]
-        #    }
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        self.assertEqual(len(exception.detail['errors']), 1)
-        the_error = exception.detail['errors'][0]
-        self.assertIsInstance(the_error, dict)
-        self.assertEqual(the_error.keys(), ['signed_amendment'])
-        self.assertIsInstance(the_error['signed_amendment'], list)
-        msg = 'Please check that the Document is attached and signatures are not in the future'
-        self.assertEqual(the_error['signed_amendment'], [msg])
+        self.assertAmendmentExceptionFundamentals(
+            context_manager,
+            'Please check that the Document is attached and signatures are not in the future'
+            )
 
         # Change the amendment so it will pass validation.
         amendment.signed_date = self.today
