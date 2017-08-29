@@ -724,6 +724,60 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertIn("Location", response.data[0]["location_name"])
 
 
+class TestAgreementCreateAPIView(APITenantTestCase):
+    '''Exercise the create portion of the API.'''
+    def setUp(self):
+        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        partner_staff = PartnerStaffFactory(partner=self.partner)
+
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.partnership_manager_user.groups.add(GroupFactory())
+        self.partnership_manager_user.profile.partner_staff_member = partner_staff.id
+        self.partnership_manager_user.save()
+
+    def test_minimal_create(self):
+        '''Test passing as few fields as possible to create'''
+        data = {
+            "agreement_type": Agreement.MOU,
+            "partner": self.partner.id,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/'.format(self.partner.id),
+            user=self.partnership_manager_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Check for activity action created
+        stream = model_stream(Agreement)
+        self.assertEqual(len(stream), 1)
+        self.assertEqual(stream[0].verb, 'created')
+        self.assertIsNone(stream[0].target.start)
+
+    def test_create_simple_fail(self):
+        '''Verify that failing gives appropriate feedback'''
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner.id,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/'.format(self.partner.id),
+            user=self.partnership_manager_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertIsInstance(response.data, dict)
+        self.assertEqual(response.data.keys(), ['country_programme'])
+        self.assertIsInstance(response.data['country_programme'], list)
+        self.assertEqual(response.data['country_programme'][0], 'Country Programme is required for PCAs!')
+
+        # Check that no activity action was created
+        self.assertEqual(len(model_stream(Agreement)), 0)
+
+
 class TestAgreementAPIView(APITenantTestCase):
 
     def setUp(self):
@@ -784,57 +838,6 @@ class TestAgreementAPIView(APITenantTestCase):
             agreement=self.agreement,
             document_type=Intervention.PD)
 
-    @skip('fix this')
-    def test_agreements_create(self):
-        today = datetime.date.today()
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "country_programme": self.country_programme.id,
-            "status": "draft",
-            "start": date(today.year - 1, 1, 1),
-            "end": self.country_programme.to_date,
-            "signed_by": self.unicef_staff.id,
-            "partner_manager": self.partner_staff.id,
-            "signed_by_partner_date": date(today.year - 1, 1, 1),
-            "signed_by_unicef_date": date(today.year - 1, 1, 1),
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partnership_manager_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        # Check for activity action created
-        self.assertEqual(model_stream(Agreement).count(), 1)
-        self.assertEqual(model_stream(Agreement)[0].verb, 'created')
-        self.assertEqual(model_stream(Agreement)[0].target.start, date(today.year - 1, 1, 1))
-
-    @skip('fix this')
-    def test_agreements_create_max_signoff_single_date(self):
-        today = datetime.date.today()
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "status": "draft",
-            "country_programme": self.agreement.country_programme.id,
-            "start": date(today.year - 1, 1, 1),
-            "end": self.country_programme.to_date,
-            "signed_by": self.unicef_staff.id,
-            "signed_by_unicef_date": date(today.year - 1, 1, 1),
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partnership_manager_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
     def test_cp_end_date_update(self):
         data = {
             'agreement_type': 'PCA'
@@ -862,26 +865,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         for r in response_json:
             self.assertEqual(r['end'], self.country_programme.to_date.isoformat())
-
-    @skip('fix this')
-    def test_agreements_create_max_signoff_no_date(self):
-        today = datetime.date.today()
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "country_programme": self.agreement.country_programme.id,
-            "status": "draft",
-            "start": date(today.year - 1, 1, 1),
-            "end": self.country_programme.to_date
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partnership_manager_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_agreements_list(self):
         response = self.forced_auth_req(
@@ -1072,28 +1055,6 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    @skip('fix this')
-    def test_agreements_create_PCA_must_be_CSO(self):
-        self.partner.partner_type = "Government"
-        self.partner.save()
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "country_programme": self.country_programme.id,
-            "status": "draft",
-            "signed_by": self.unicef_staff.id,
-            "partner_manager": self.partner_staff.id,
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/',
-            user=self.partnership_manager_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["errors"], ["Partner type must be CSO for PCA or SSFA agreement types."])
 
     @skip("Test transitions")
     def test_agreements_update_set_to_active_on_save(self):
