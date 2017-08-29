@@ -92,6 +92,7 @@ class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
         self.assertIsInstance(the_error['signed_amendment'], list)
         self.assertEqual(the_error['signed_amendment'], [expected_message])
 
+
 class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
     '''Exercise the AgreementCreateUpdateSerializer.'''
     def test_simple_create(self):
@@ -297,11 +298,9 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'SSFA signatures are captured at the Document (TOR) level, please clear the' \
+            'SSFA signatures are captured at the Document (TOR) level, please clear the'
             'signatures and dates and add them to the TOR'
             )
 
@@ -362,7 +361,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; '
             'If dates are set, signatories are required'
             )
 
@@ -380,7 +379,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; '
             'If dates are set, signatories are required'
             )
 
@@ -395,7 +394,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; '
             'If dates are set, signatories are required'
             )
 
@@ -413,7 +412,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; '
             'If dates are set, signatories are required'
             )
 
