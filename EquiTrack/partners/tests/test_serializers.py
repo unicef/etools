@@ -625,3 +625,118 @@ class TestAgreementCreateUpdateSerializer(FastTenantTestCase):
 
         # Should not raise an error.
         serializer.validate(data=data)
+
+
+class TestAgreementSerializerTransitions(FastTenantTestCase):
+    '''Exercise the transition validations of AgreementCreateUpdateSerializer.'''
+    def setUp(self):
+        self.user = UserFactory()
+
+        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+
+        self.today = datetime.date.today()
+
+        this_year = self.today.year
+        self.country_programme = CountryProgrammeFactory(from_date=datetime.date(this_year - 1, 1, 1),
+                                                         to_date=datetime.date(this_year + 1, 1, 1))
+
+        class Stub(object):
+            # FIXME docstring
+            pass
+        self.fake_request = Stub()
+        self.fake_request.user = self.user
+
+    def test_fail_transition_to_signed(self):
+        '''Exercise transition to signed.'''
+        agreement = AgreementFactory(agreement_type=Agreement.MOU,
+                                     status=Agreement.DRAFT,
+                                     signed_by_unicef_date=None,
+                                     signed_by_partner_date=None)
+        data = {
+            "agreement": agreement,
+            "status": Agreement.SIGNED,
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        # If I don't set serializer.instance, the validator gets confused. I guess (?) this is ordinarily set by DRF?
+        # # during an update?
+        serializer.instance = agreement
+        serializer.context['request'] = self.fake_request
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        msg = 'Agreement cannot transition to signed until start date greater or equal to today'
+        self.assertEqual(exception.detail['errors'], [msg])
+
+        # Fix problem with start date, now break end date.
+        agreement.start = self.today - datetime.timedelta(days=5)
+        agreement.end = self.today - datetime.timedelta(days=3)
+        agreement.save()
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(exception.detail['errors'], ['Agreement cannot transition to signed end date has passed'])
+
+        # Fix end date
+        agreement.end = self.today
+        agreement.save()
+
+        # Should not raise an exception
+        serializer.validate(data=data)
+
+    def test_fail_transition_to_ended(self):
+        '''Exercise transition to ended.'''
+        # First test valid/positive case
+        agreement = AgreementFactory(agreement_type=Agreement.MOU,
+                                     status=Agreement.SIGNED,
+                                     end=self.today - datetime.timedelta(days=3),
+                                     signed_by_unicef_date=None,
+                                     signed_by_partner_date=None)
+        data = {
+            "agreement": agreement,
+            "status": Agreement.ENDED,
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        # If I don't set serializer.instance, the validator gets confused. I guess (?) this is ordinarily set by DRF?
+        # # during an update?
+        serializer.instance = agreement
+        serializer.context['request'] = self.fake_request
+
+        # This should succeed
+        serializer.validate(data=data)
+
+        # Should fail; no end date set.
+        agreement = AgreementFactory(agreement_type=Agreement.MOU,
+                                     status=Agreement.SIGNED,
+                                     signed_by_unicef_date=None,
+                                     signed_by_partner_date=None)
+        data = {
+            "agreement": agreement,
+            "status": Agreement.ENDED,
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        # If I don't set serializer.instance, the validator gets confused. I guess (?) this is ordinarily set by DRF?
+        # # during an update?
+        serializer.instance = agreement
+        serializer.context['request'] = self.fake_request
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        msg = 'agreement_transition_to_ended_invalid'
+        self.assertEqual(exception.detail['errors'], [msg])
