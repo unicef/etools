@@ -50,6 +50,20 @@ class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
         self.fake_request = Stub()
         self.fake_request.user = self.user
 
+    def assertSimpleExceptionFundamentals(self, context_manager, expected_message):
+        '''Given the context manager produced by self.assertRaises(), checks the exception it contains for
+        the expected message in the correct location.
+        '''
+        exception = context_manager.exception
+
+        self.assertTrue(hasattr(exception, 'detail'))
+        self.assertIsInstance(exception.detail, dict)
+        # exception.detail should have only one key.
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        # exception.detail['errors'] should map to a list that contains the expected message.
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(exception.detail['errors'], [expected_message])
+
 
 class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
     '''Exercise the AgreementCreateUpdateSerializer.'''
@@ -59,7 +73,6 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             "partner": self.partner.id,
         }
         serializer = AgreementCreateUpdateSerializer(data=data)
-
         serializer.context['request'] = self.fake_request
 
         self.assertTrue(serializer.is_valid(raise_exception=True))
@@ -102,13 +115,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        expected_msg = 'A different agreement of type PCA already exists for this Partner for this Country Programme'
-        self.assertEqual(exception.detail['errors'], [expected_msg])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'A different agreement of type PCA already exists for this Partner for this Country Programme'
+            )
 
     def test_create_ok_non_PCA_with_same_programme_and_partner(self):
         '''Ensure it is OK to create non-PCA agreements that have the same country programme and partner.
@@ -150,12 +160,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        self.assertEqual(exception.detail['errors'], ['Agreement start date needs to be earlier than end date'])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'Agreement start date needs to be earlier than end date'
+            )
 
     def test_create_ok_with_start_date_equal_end_date(self):
         '''Ensure it's OK to create an agreement where the start & end dates are the same.'''
@@ -213,12 +221,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             with self.assertRaises(serializers.ValidationError) as context_manager:
                 serializer.validate(data=data)
 
-            exception = context_manager.exception
-
-            self.assertIsInstance(exception.detail, dict)
-            self.assertEqual(exception.detail.keys(), ['errors'])
-            self.assertIsInstance(exception.detail['errors'], list)
-            self.assertEqual(exception.detail['errors'], ['Partner type must be CSO for PCA or SSFA agreement types.'])
+            self.assertSimpleExceptionFundamentals(
+                context_manager,
+                'Partner type must be CSO for PCA or SSFA agreement types.'
+                )
 
         # Test for all agreement types that are not PCA or SSFA. These should not fail.
         agreement_types = [agreement_type for agreement_type in _ALL_AGREEMENT_TYPES
@@ -266,12 +272,11 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         exception = context_manager.exception
 
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        msg = 'SSFA signatures are captured at the Document (TOR) level, please clear the' \
-              'signatures and dates and add them to the TOR'
-        self.assertEqual(exception.detail['errors'], [msg])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'SSFA signatures are captured at the Document (TOR) level, please clear the' \
+            'signatures and dates and add them to the TOR'
+            )
 
     def test_create_ok_and_fail_due_to_signatures_non_SSFA(self):
         '''Ensure signature validation works correctly for non-SSFA types'''
@@ -328,14 +333,11 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        msg = 'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
-              'If dates are set, signatories are required'
-        self.assertEqual(exception.detail['errors'], [msg])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+            'If dates are set, signatories are required'
+            )
 
         # This should fail because signed_by_unicef_date and signed_by are both set, but the signed by date is
         # in the future.
@@ -349,14 +351,11 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        msg = 'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
-              'If dates are set, signatories are required'
-        self.assertEqual(exception.detail['errors'], [msg])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+            'If dates are set, signatories are required'
+            )
 
         # This should fail because signed_by_partner_date is set but not partner_manager
         data = {
@@ -367,14 +366,11 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        msg = 'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
-              'If dates are set, signatories are required'
-        self.assertEqual(exception.detail['errors'], [msg])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+            'If dates are set, signatories are required'
+            )
 
         # This should fail because signed_by_partner_date and partner_manager are both set, but the signed by date is
         # in the future.
@@ -388,14 +384,11 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        msg = 'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
-              'If dates are set, signatories are required'
-        self.assertEqual(exception.detail['errors'], [msg])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+            'If dates are set, signatories are required'
+            )
 
     def test_update_intervention(self):
         '''Ensure agreement update fails if intervention dates aren't appropriate.
@@ -425,12 +418,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        self.assertEqual(exception.detail['errors'], ["Start and end dates don't match the Document's start and end"])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            "Start and end dates don't match the Document's start and end"
+            )
 
         # Set start date and save again; it should still fail because end date isn't set.
         intervention.start = agreement.start
@@ -439,12 +430,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        self.assertEqual(exception.detail['errors'], ["Start and end dates don't match the Document's start and end"])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            "Start and end dates don't match the Document's start and end"
+            )
 
         # Set start date and save again; it should still fail because end date doesn't match agreement end date.
         intervention.end = agreement.end + datetime.timedelta(days=100)
@@ -453,12 +442,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        self.assertEqual(exception.detail['errors'], ["Start and end dates don't match the Document's start and end"])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            "Start and end dates don't match the Document's start and end"
+            )
 
         # Set start date and save again; it should now succeed.
         intervention.end = agreement.end
@@ -486,12 +473,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        self.assertEqual(exception.detail['errors'], ["Cannot change fields while in draft: partner"])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            "Cannot change fields while in draft: partner"
+            )
 
     def test_update_fail_due_to_amendments_unsigned(self):
         '''Ensure agreement update fails if amendments aren't signed.
@@ -650,13 +635,10 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        msg = 'Agreement cannot transition to signed until start date greater or equal to today'
-        self.assertEqual(exception.detail['errors'], [msg])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'Agreement cannot transition to signed until start date greater or equal to today'
+            )
 
         # Fix problem with start date, now break end date.
         agreement.start = self.today - datetime.timedelta(days=5)
@@ -666,12 +648,10 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        self.assertEqual(exception.detail['errors'], ['Agreement cannot transition to signed end date has passed'])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'Agreement cannot transition to signed end date has passed'
+            )
 
         # Fix end date
         agreement.end = self.today
@@ -719,10 +699,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
-        exception = context_manager.exception
-
-        self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
-        self.assertIsInstance(exception.detail['errors'], list)
-        msg = 'agreement_transition_to_ended_invalid'
-        self.assertEqual(exception.detail['errors'], [msg])
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'agreement_transition_to_ended_invalid'
+            )
