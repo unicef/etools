@@ -29,8 +29,8 @@ from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
 
-class TestAgreementCreateUpdateSerializer(FastTenantTestCase):
-    '''Exercise the AgreementCreateUpdateSerializer.'''
+class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
+    '''Base class for testing AgreementCreateUpdateSerializer'''
     def setUp(self):
         self.user = UserFactory()
 
@@ -50,6 +50,9 @@ class TestAgreementCreateUpdateSerializer(FastTenantTestCase):
         self.fake_request = Stub()
         self.fake_request.user = self.user
 
+
+class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
+    '''Exercise the AgreementCreateUpdateSerializer.'''
     def test_simple_create(self):
         data = {
             "agreement_type": Agreement.MOU,
@@ -627,25 +630,8 @@ class TestAgreementCreateUpdateSerializer(FastTenantTestCase):
         serializer.validate(data=data)
 
 
-class TestAgreementSerializerTransitions(FastTenantTestCase):
+class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
     '''Exercise the transition validations of AgreementCreateUpdateSerializer.'''
-    def setUp(self):
-        self.user = UserFactory()
-
-        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-
-        self.today = datetime.date.today()
-
-        this_year = self.today.year
-        self.country_programme = CountryProgrammeFactory(from_date=datetime.date(this_year - 1, 1, 1),
-                                                         to_date=datetime.date(this_year + 1, 1, 1))
-
-        class Stub(object):
-            # FIXME docstring
-            pass
-        self.fake_request = Stub()
-        self.fake_request.user = self.user
-
     def test_fail_transition_to_signed(self):
         '''Exercise transition to signed.'''
         agreement = AgreementFactory(agreement_type=Agreement.MOU,
