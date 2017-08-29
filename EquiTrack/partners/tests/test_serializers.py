@@ -14,6 +14,7 @@ from rest_framework import serializers
 
 # Project imports
 from EquiTrack.factories import (
+    AgreementAmendmentFactory,
     AgreementFactory,
     CountryProgrammeFactory,
     InterventionFactory,
@@ -393,3 +394,234 @@ class TestAgreementCreateUpdateSerializer(FastTenantTestCase):
               'If dates are set, signatories are required'
         self.assertEqual(exception.detail['errors'], [msg])
 
+    def test_update_intervention(self):
+        '''Ensure agreement update fails if intervention dates aren't appropriate.
+
+        I don't think it's possible to supply interventions when creating via the serializer, so this only tests update.
+        '''
+        agreement = AgreementFactory(agreement_type=Agreement.SSFA,
+                                     partner=self.partner,
+                                     status=Agreement.DRAFT,
+                                     start=self.today - datetime.timedelta(days=5),
+                                     end=self.today + datetime.timedelta(days=5),
+                                     signed_by_unicef_date=None,
+                                     signed_by_partner_date=None)
+        intervention = InterventionFactory(agreement=agreement)
+
+        # Start w/an invalid intervention.
+        data = {
+            "agreement": agreement,
+            "intervention": intervention,
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        # If I don't set serializer.instance, the validator gets confused. I guess (?) this is ordinarily set by DRF
+        # during an update?
+        serializer.instance = agreement
+        serializer.context['request'] = self.fake_request
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(exception.detail['errors'], ["Start and end dates don't match the Document's start and end"])
+
+        # Set start date and save again; it should still fail because end date isn't set.
+        intervention.start = agreement.start
+        intervention.save()
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(exception.detail['errors'], ["Start and end dates don't match the Document's start and end"])
+
+        # Set start date and save again; it should still fail because end date doesn't match agreement end date.
+        intervention.end = agreement.end + datetime.timedelta(days=100)
+        intervention.save()
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(exception.detail['errors'], ["Start and end dates don't match the Document's start and end"])
+
+        # Set start date and save again; it should now succeed.
+        intervention.end = agreement.end
+        intervention.save()
+
+        # Should not raise an exception
+        serializer.validate(data=data)
+
+    def test_update_fail_due_to_uneditable_field(self):
+        '''Exercise changing a field that can't be changed while the agreement has this status.'''
+        agreement = AgreementFactory(agreement_type=Agreement.MOU,
+                                     status=Agreement.DRAFT,
+                                     signed_by_unicef_date=None,
+                                     signed_by_partner_date=None)
+        data = {
+            "agreement": agreement,
+            "partner": self.partner,
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        # If I don't set serializer.instance, the validator gets confused. I guess (?) this is ordinarily set by DRF
+        # during an update?
+        serializer.instance = agreement
+        serializer.context['request'] = self.fake_request
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(exception.detail['errors'], ["Cannot change fields while in draft: partner"])
+
+    def test_update_fail_due_to_amendments_unsigned(self):
+        '''Ensure agreement update fails if amendments aren't signed.
+
+        I don't think it's possible to supply amendments when creating via the serializer, so this only tests update.
+        '''
+        agreement = AgreementFactory(agreement_type=Agreement.MOU,
+                                     signed_by_unicef_date=None,
+                                     signed_by_partner_date=None)
+
+        amendment = AgreementAmendmentFactory(agreement=agreement)
+        data = {
+            'agreement': agreement,
+            'amendments': [amendment],
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        # If I don't set serializer.instance, the validator gets confused. I guess (?) this is ordinarily set by DRF
+        # during an update?
+        serializer.instance = agreement
+        serializer.context['request'] = self.fake_request
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        # In this case, exception detail contains a dict that contains a list that contains a dict that contains a list.
+        # Example --
+        #    {'errors':
+        #        [
+        #            {'signed_amendment':
+        #                [
+        #                'Please check that the Document is attached and signatures are not in the future'
+        #                ]
+        #            }
+        #        ]
+        #    }
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(len(exception.detail['errors']), 1)
+        the_error = exception.detail['errors'][0]
+        self.assertIsInstance(the_error, dict)
+        self.assertEqual(the_error.keys(), ['signed_amendment'])
+        self.assertIsInstance(the_error['signed_amendment'], list)
+        msg = 'Please check that the Document is attached and signatures are not in the future'
+        self.assertEqual(the_error['signed_amendment'], [msg])
+
+    def test_update_with_due_to_amendments_signed_date(self):
+        '''Ensure agreement update fails if amendments don't have a signed_date or if it's in the future,
+        and that update succeeds when the amendments signatures meet criteria.
+
+        I don't think it's possible to supply amendments when creating via the serializer, so this only tests update.
+        '''
+        agreement = AgreementFactory(agreement_type=Agreement.MOU,
+                                     signed_by_unicef_date=None,
+                                     signed_by_partner_date=None)
+
+        amendment = AgreementAmendmentFactory(agreement=agreement)
+        # I need to give amendment.signed_amendment a name to exercise the date part of the amendment validator.
+        amendment.signed_amendment.name = 'fake_amendment.pdf'
+        amendment.save()
+        data = {
+            'agreement': agreement,
+            'amendments': [amendment],
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        # If I don't set serializer.instance, the validator gets confused. I guess (?) this is ordinarily set by DRF
+        # during an update?
+        serializer.instance = agreement
+        serializer.context['request'] = self.fake_request
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        # In this case, exception detail contains a dict that contains a list that contains a dict that contains a list.
+        # Example --
+        #    {'errors':
+        #        [
+        #            {'signed_amendment':
+        #                [
+        #                'Please check that the Document is attached and signatures are not in the future'
+        #                ]
+        #            }
+        #        ]
+        #    }
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(len(exception.detail['errors']), 1)
+        the_error = exception.detail['errors'][0]
+        self.assertIsInstance(the_error, dict)
+        self.assertEqual(the_error.keys(), ['signed_amendment'])
+        self.assertIsInstance(the_error['signed_amendment'], list)
+        msg = 'Please check that the Document is attached and signatures are not in the future'
+        self.assertEqual(the_error['signed_amendment'], [msg])
+
+        # Set the signed date, but set it to the future which should cause a failure.
+        amendment.signed_date = self.today + datetime.timedelta(days=5)
+        amendment.save()
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        # In this case, exception detail contains a dict that contains a list that contains a dict that contains a list.
+        # Example --
+        #    {'errors':
+        #        [
+        #            {'signed_amendment':
+        #                [
+        #                'Please check that the Document is attached and signatures are not in the future'
+        #                ]
+        #            }
+        #        ]
+        #    }
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(len(exception.detail['errors']), 1)
+        the_error = exception.detail['errors'][0]
+        self.assertIsInstance(the_error, dict)
+        self.assertEqual(the_error.keys(), ['signed_amendment'])
+        self.assertIsInstance(the_error['signed_amendment'], list)
+        msg = 'Please check that the Document is attached and signatures are not in the future'
+        self.assertEqual(the_error['signed_amendment'], [msg])
+
+        # Change the amendment so it will pass validation.
+        amendment.signed_date = self.today
+        amendment.save()
+
+        # Should not raise an error.
+        serializer.validate(data=data)

@@ -430,3 +430,13 @@ class NotificationFactory(factory.django.DjangoModelFactory):
     template_name = 'trips/trip/TA_request'
     recipients = ['test@test.com', 'test1@test.com', 'test2@test.com']
     template_data = factory.Dict({'url': 'www.unicef.org', 'pa_assistant': 'Test revised', 'owner_name': 'Tester revised'}, dict_factory=JSONFieldFactory)
+
+
+class AgreementAmendmentFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.AgreementAmendment
+
+    number = factory.Sequence(lambda n: '{:05}'.format(n))
+    agreement = factory.SubFactory(AgreementFactory)
+    types = [partner_models.AgreementAmendment.CLAUSE]
