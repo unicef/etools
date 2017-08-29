@@ -1,22 +1,25 @@
 from datetime import timedelta, datetime
 
 from django.core.management import call_command
-from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from EquiTrack.factories import SectionFactory
 from .base import TPMTestCaseMixin
-from .factories import TPMVisitFactory, TPMPartnerFactory
+from .factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
 
 from ..models import TPMActivityActionPoint
 
 
 class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
-    def setUp(self):
-        super(TestTPMVisitViewSet, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         call_command('update_tpm_permissions', verbosity=0)
+
+        cls.pme_user = UserFactory(pme=True)
+        cls.unicef_user = UserFactory(unicef_user=True)
+        cls.tpm_user = UserFactory(tpm=True)
 
     def _test_list_view(self, user, expected_visits):
         response = self.forced_auth_req(
@@ -32,21 +35,22 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
         )
 
     def test_unicef_list_view(self):
-        additional_tpm_visit = TPMVisitFactory()
+        tpm_visits = [TPMVisitFactory(), TPMVisitFactory()]
 
-        self._test_list_view(self.pme_user, [self.tpm_visit, additional_tpm_visit, ])
-        self._test_list_view(self.unicef_user, [self.tpm_visit, additional_tpm_visit, ])
-        self._test_list_view(self.unicef_focal_point, [self.tpm_visit, additional_tpm_visit, ])
-        self._test_list_view(self.usual_user, [])
+        self._test_list_view(self.pme_user, tpm_visits)
+        self._test_list_view(self.unicef_user, tpm_visits)
 
     def test_tpm_list_view(self):
+        TPMVisitFactory()
+
         # drafts shouldn't be available for tpm
         self._test_list_view(self.tpm_user, [])
 
-        self.tpm_visit.assign()
-        self.tpm_visit.save()
+        visit = TPMVisitFactory(status='assigned',
+                                tpm_partner=self.tpm_user.tpm_tpmpartnerstaffmember.tpm_partner,
+                                tpm_partner_focal_points=[self.tpm_user.tpm_tpmpartnerstaffmember])
 
-        self._test_list_view(self.tpm_user, [self.tpm_visit])
+        self._test_list_view(self.tpm_user, [visit])
 
     def test_create_empty(self):
         create_response = self.forced_auth_req(
@@ -58,120 +62,43 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
 
         self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
 
-    def test_assign_empty(self):
-        create_response = self.forced_auth_req(
-            'post',
-            '/api/tpm/visits/',
-            user=self.pme_user,
-            data={}
-        )
-
-        self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
-
-        assign_response = self.forced_auth_req(
-            'post',
-            '/api/tpm/visits/{}/assign/'.format(create_response.data['id']),
-            user=self.pme_user,
-            data={}
-        )
-        self.assertEquals(assign_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('tpm_partner', assign_response.data)
-        self.assertEquals(assign_response.data['tpm_partner'], _('This field is required.'))
-
-    def test_assign(self):
-        create_response = self.forced_auth_req(
-            'post',
-            '/api/tpm/visits/',
-            user=self.pme_user,
-            data={
-                'tpm_partner': self.tpm_visit.tpm_partner_id,
-                'unicef_focal_points': self.tpm_visit.unicef_focal_points.values_list('id', flat=True),
-                'sections': self.tpm_visit.sections.values_list('id', flat=True),
-                'tpm_activities': [{
-                    'implementing_partner': activity.partnership.agreement.partner.id,
-                    'partnership': activity.partnership_id,
-                    'cp_output': activity.cp_output_id,
-                    'locations': activity.locations.values_list('id', flat=True),
-                    'date': activity.date,
-                } for activity in self.tpm_visit.tpm_activities.all()]
-            }
-        )
-        self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
-
-        self.assertEqual(create_response.data['start_date'], self.tpm_visit.start_date)
-        self.assertEqual(create_response.data['end_date'], self.tpm_visit.end_date)
-
-        assign_response = self.forced_auth_req(
-            'post',
-            '/api/tpm/visits/{}/assign/'.format(create_response.data['id']),
-            user=self.pme_user,
-            data={}
-        )
-
-        self.assertEquals(assign_response.status_code, status.HTTP_200_OK)
-
-    def test_pd_documents(self):
-        activity = self.tpm_visit.tpm_activities.first()
-        self.assertEquals(activity.pd_files.count(), 0)
-        self._add_attachment('visit_pd', activity)
-        self.assertEquals(activity.pd_files.count(), 1)
-
-        visit_response = self.forced_auth_req(
-            'get',
-            '/api/tpm/visits/{}/'.format(self.tpm_visit.id),
-            user=self.pme_user,
-        )
-        self.assertEquals(visit_response.status_code, status.HTTP_200_OK)
-
-        tpm_activities = visit_response.data.get("tpm_activities", [])
-        activity_with_pd = next((activity for activity in tpm_activities if activity['pd_files'] != []), None)
-        self.assertNotEquals(activity_with_pd, None)
-
-    def _approve_visit(self):
-        self._do_transition(self.tpm_visit, 'assign', self.pme_user)
-        self._do_transition(self.tpm_visit, 'accept', self.tpm_user)
-        self._add_attachment('report', self.tpm_visit)
-        self._do_transition(self.tpm_visit, 'send_report', self.tpm_user)
-        self._do_transition(self.tpm_visit, 'approve', self.unicef_focal_point)
-        self.tpm_visit = self._refresh_tpm_visit_instace(self.tpm_visit)
-        self.assertEquals(self.tpm_visit.status, 'unicef_approved')
-        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
-
     def test_action_points(self):
-        self._approve_visit()
-        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
+        visit = TPMVisitFactory(status='unicef_approved', unicef_focal_points__count=1)
+        unicef_focal_point = visit.unicef_focal_points.first()
+        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=visit).count(), 0)
 
         response = self.forced_auth_req(
             'patch',
-            '/api/tpm/visits/{}/'.format(self.tpm_visit.id),
-            user=self.unicef_focal_point,
+            '/api/tpm/visits/{}/'.format(visit.id),
+            user=unicef_focal_point,
             data={
                 'tpm_activities': [{
                     'id': activity.id,
                     'action_points': [
                         {
-                            "section": self.tpm_visit.sections.values_list('id', flat=True)[0],
+                            "section": visit.sections.values_list('id', flat=True)[0],
                             "locations": activity.locations.values_list('id', flat=True),
-                            "person_responsible": self.tpm_visit.tpm_partner.staff_members.first().user.id,
+                            "person_responsible": visit.tpm_partner.staff_members.first().user.id,
                             "cp_outputs": [activity.cp_output.id, ],
                             "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
                             "description": "Description",
                         }
                     ]
-                } for activity in self.tpm_visit.tpm_activities.all()]
+                } for activity in visit.tpm_activities.all()]
             }
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertNotEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
+        self.assertNotEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=visit).count(), 0)
 
     def test_action_point_with_not_related_section(self):
-        self._approve_visit()
-        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
+        visit = TPMVisitFactory(status='unicef_approved', unicef_focal_points__count=1)
+        unicef_focal_point = visit.unicef_focal_points.first()
+        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=visit).count(), 0)
 
         response = self.forced_auth_req(
             'patch',
-            '/api/tpm/visits/{}/'.format(self.tpm_visit.id),
-            user=self.unicef_focal_point,
+            '/api/tpm/visits/{}/'.format(visit.id),
+            user=unicef_focal_point,
             data={
                 'tpm_activities': [{
                     'id': activity.id,
@@ -179,48 +106,28 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
                         {
                             "section": SectionFactory.create().id,
                             "locations": activity.locations.values_list('id', flat=True),
-                            "person_responsible": self.tpm_visit.tpm_partner.staff_members.first().user.id,
+                            "person_responsible": visit.tpm_partner.staff_members.first().user.id,
                             "cp_outputs": [activity.cp_output.id, ],
                             "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
                             "description": "Description",
                         }
                     ]
-                } for activity in self.tpm_visit.tpm_activities.all()]
+                } for activity in visit.tpm_activities.all()]
             }
         )
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=self.tpm_visit).count(), 0)
-
-
-class TestTPMFirmViewSet(TPMTestCaseMixin, APITenantTestCase):
-    def setUp(self):
-        super(TestTPMFirmViewSet, self).setUp()
-        self.second_tpm_partner = TPMPartnerFactory()
-
-    def _test_list_view(self, user, expected_firms):
-        response = self.forced_auth_req(
-            'get',
-            '/api/tpm/partners/',
-            user=user
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            sorted(map(lambda x: x['id'], response.data['results'])),
-            sorted(map(lambda x: x.id, expected_firms))
-        )
-
-    def test_unicef_list_view(self):
-        self._test_list_view(self.unicef_user, [self.tpm_partner, self.second_tpm_partner])
-
-    def test_auditor_list_view(self):
-        self._test_list_view(self.tpm_user, [self.tpm_partner])
-
-    def test_usual_user_list_view(self):
-        self._test_list_view(self.usual_user, [])
+        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=visit).count(), 0)
 
 
 class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tpm_partner = TPMPartnerFactory()
+
+        cls.pme_user = UserFactory(pme=True)
+        cls.unicef_user = UserFactory(unicef_user=True)
+        cls.tpm_user = UserFactory(tpm=True, tpm_partner=cls.tpm_partner)
+
     def test_list_view(self):
         response = self.forced_auth_req(
             'get',
@@ -239,7 +146,7 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
         response = self.forced_auth_req(
             'get',
             '/api/tpm/partners/{0}/staff-members/'.format(self.tpm_partner.id),
-            user=self.usual_user
+            user=self.unicef_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
@@ -270,7 +177,7 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
                 self.tpm_partner.id,
                 self.tpm_partner.staff_members.first().id
             ),
-            user=self.usual_user
+            user=self.unicef_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
@@ -312,7 +219,7 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
                 self.tpm_partner.staff_members.first().id
             ),
             data=user_data,
-            user=self.usual_user
+            user=self.unicef_user
         )
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -353,15 +260,20 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
                 self.tpm_partner.staff_members.first().id
             ),
             data=user_data,
-            user=self.usual_user
+            user=self.unicef_user
         )
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class TestTPMPartnerViewSet(TPMTestCaseMixin, APITenantTestCase):
-    def setUp(self):
-        super(TestTPMPartnerViewSet, self).setUp()
-        self.second_tpm_partner = TPMPartnerFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.tpm_partner = TPMPartnerFactory()
+        cls.second_tpm_partner = TPMPartnerFactory()
+
+        cls.pme_user = UserFactory(pme=True)
+        cls.unicef_user = UserFactory(unicef_user=True)
+        cls.tpm_user = UserFactory(tpm=True, tpm_partner=cls.tpm_partner)
 
     def _test_list_view(self, user, expected_firms):
         response = self.forced_auth_req(
@@ -420,9 +332,6 @@ class TestTPMPartnerViewSet(TPMTestCaseMixin, APITenantTestCase):
 
     def test_tpm_partner_list_view(self):
         self._test_list_view(self.tpm_user, [self.tpm_partner])
-
-    def test_usual_user_list_view(self):
-        self._test_list_view(self.usual_user, [])
 
     def test_pme_list_options(self):
         self._test_list_options(
