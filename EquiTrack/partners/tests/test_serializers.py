@@ -190,3 +190,60 @@ class TestAgreementCreateUpdateSerializer(FastTenantTestCase):
 
         self.assertTrue(serializer.is_valid(raise_exception=True))
 
+    def test_create_with_partner_type(self):
+        '''Exercise create success & failure related to the rules regarding agreement type and partner type'''
+        # Set partner to something other than civil society org.
+        self.partner.partner_type = PartnerType.UN_AGENCY
+        self.partner.save()
+
+        # Create PCA & SSFA should fail now.
+        for agreement_type in (Agreement.PCA, Agreement.SSFA):
+            data = {
+                "agreement_type": agreement_type,
+                "country_programme": self.country_programme,
+                "partner": self.partner,
+            }
+            serializer = AgreementCreateUpdateSerializer(data=data)
+            serializer.context['request'] = self.fake_request
+
+            with self.assertRaises(serializers.ValidationError) as context_manager:
+                serializer.validate(data=data)
+
+            exception = context_manager.exception
+
+            self.assertIsInstance(exception.detail, dict)
+            self.assertEqual(exception.detail.keys(), ['errors'])
+            self.assertIsInstance(exception.detail['errors'], list)
+            self.assertEqual(exception.detail['errors'], ['Partner type must be CSO for PCA or SSFA agreement types.'])
+
+        # Test for all agreement types that are not PCA or SSFA. These should not fail.
+        agreement_types = [agreement_type for agreement_type in _ALL_AGREEMENT_TYPES
+                           if agreement_type
+                           not in (Agreement.PCA, Agreement.SSFA)]
+
+        for agreement_type in agreement_types:
+            data = {
+                "agreement_type": agreement_type,
+                "country_programme": self.country_programme.id,
+                "partner": self.partner.id,
+            }
+            serializer = AgreementCreateUpdateSerializer(data=data)
+            serializer.context['request'] = self.fake_request
+
+            self.assertTrue(serializer.is_valid(raise_exception=True))
+
+        # Set partner to civil service org; create all agreement types should succeed
+        self.partner.partner_type = PartnerType.CIVIL_SOCIETY_ORGANIZATION
+        self.partner.save()
+
+        for agreement_type in _ALL_AGREEMENT_TYPES:
+            data = {
+                "agreement_type": agreement_type,
+                "country_programme": self.country_programme.id,
+                "partner": self.partner.id,
+            }
+            serializer = AgreementCreateUpdateSerializer(data=data)
+            serializer.context['request'] = self.fake_request
+
+            self.assertTrue(serializer.is_valid(raise_exception=True))
+
