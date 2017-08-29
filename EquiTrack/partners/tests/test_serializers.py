@@ -130,3 +130,63 @@ class TestAgreementCreateUpdateSerializer(FastTenantTestCase):
             serializer.context['request'] = self.fake_request
 
             self.assertTrue(serializer.is_valid(raise_exception=True))
+
+    def test_create_fail_start_date_after_end_date(self):
+        '''Ensure create fails if start date is after end date'''
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner,
+            "country_programme": self.country_programme,
+            "start": self.today + datetime.timedelta(days=5),
+            "end": self.today,
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        serializer.context['request'] = self.fake_request
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        self.assertEqual(exception.detail['errors'], ['Agreement start date needs to be earlier than end date'])
+
+    def test_create_ok_with_start_date_equal_end_date(self):
+        '''Ensure it's OK to create an agreement where the start & end dates are the same.'''
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner.id,
+            "country_programme": self.country_programme.id,
+            "start": self.today,
+            "end": self.today,
+        }
+        serializer = AgreementCreateUpdateSerializer(data=data)
+        serializer.context['request'] = self.fake_request
+
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
+    def test_create_ok_when_start_or_end_not_present(self):
+        '''Ensure that date validation doesn't kick in when one date or another isn't present'''
+        # Test w/start date present but not end date
+        data = {
+            "agreement_type": Agreement.SSFA,
+            "partner": self.partner.id,
+            "start": self.today + datetime.timedelta(days=5),
+        }
+        serializer = AgreementCreateUpdateSerializer(data=data)
+        serializer.context['request'] = self.fake_request
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
+        # Test w/end date present but not start date
+        data = {
+            "agreement_type": Agreement.SSFA,
+            "partner": self.partner.id,
+            "end": self.today + datetime.timedelta(days=5),
+        }
+        serializer = AgreementCreateUpdateSerializer(data=data)
+        serializer.context['request'] = self.fake_request
+
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
