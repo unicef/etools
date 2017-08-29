@@ -877,10 +877,10 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data), 2)
         self.assertIn("Partner", response.data[0]["partner_name"])
 
-    @skip('bad test, status is already active.. rewrite..')
-    def test_agreements_update(self):
+    def test_null_update_generates_no_activity_stream(self):
+        '''Verify that a do-nothing update doesn't create anything in the model's activity stream'''
         data = {
-            "status": "active",
+            "agreement_number": self.agreement.agreement_number
         }
         response = self.forced_auth_req(
             'patch',
@@ -888,11 +888,7 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
             data=data
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], "active")
-
-        # There should not be any activity stream item created as there is no delta data
         self.assertEqual(model_stream(Agreement).count(), 0)
 
     def test_agreements_retrieve(self):
