@@ -64,7 +64,8 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
 
     def test_success_assign(self):
         visit = TPMVisitFactory(status='draft',
-                                tpm_activities__count=3)
+                                tpm_activities__count=3,
+                                unicef_focal_points__count=3)
 
         response = self._do_transition(visit, 'assign', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
