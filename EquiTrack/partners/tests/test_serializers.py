@@ -247,3 +247,149 @@ class TestAgreementCreateUpdateSerializer(FastTenantTestCase):
 
             self.assertTrue(serializer.is_valid(raise_exception=True))
 
+    def test_create_fail_due_to_signatures_SSFA(self):
+        '''Ensure signature validation works correctly for SSFA'''
+        data = {
+            "agreement_type": Agreement.SSFA,
+            "partner": self.partner,
+            "signed_by_unicef_date": self.today,
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        serializer.context['request'] = self.fake_request
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        msg = 'SSFA signatures are captured at the Document (TOR) level, please clear the' \
+              'signatures and dates and add them to the TOR'
+        self.assertEqual(exception.detail['errors'], [msg])
+
+    def test_create_ok_and_fail_due_to_signatures_non_SSFA(self):
+        '''Ensure signature validation works correctly for non-SSFA types'''
+        signatory = UserFactory()
+        partner_signatory = PartnerStaffFactory(partner=self.partner)
+
+        # This should succeed; it's OK to have only one set of signatures (UNICEF)
+        data = {
+            "agreement_type": Agreement.MOU,
+            "partner": self.partner.id,
+            "signed_by_unicef_date": self.today,
+            "signed_by": signatory.id,
+        }
+        serializer = AgreementCreateUpdateSerializer(data=data)
+        serializer.context['request'] = self.fake_request
+
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
+        # This should succeed; it's OK to have only one set of signatures (partner)
+        data = {
+            "agreement_type": Agreement.MOU,
+            "partner": self.partner.id,
+            "signed_by_partner_date": self.today,
+            "partner_manager": partner_signatory.id,
+        }
+        serializer = AgreementCreateUpdateSerializer(data=data)
+        serializer.context['request'] = self.fake_request
+
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
+        # This should succeed; it's OK to have both sets of signatures (UNICEF & partner)
+        data = {
+            "agreement_type": Agreement.MOU,
+            "partner": self.partner.id,
+            "signed_by_unicef_date": self.today,
+            "signed_by": signatory.id,
+            "signed_by_partner_date": self.today,
+            "partner_manager": partner_signatory.id,
+        }
+        serializer = AgreementCreateUpdateSerializer(data=data)
+        serializer.context['request'] = self.fake_request
+
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
+        # This should fail because signed_by_unicef_date is set but not signed_by
+        data = {
+            "agreement_type": Agreement.MOU,
+            "partner": self.partner,
+            "signed_by_unicef_date": self.today,
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        serializer.context['request'] = self.fake_request
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        msg = 'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+              'If dates are set, signatories are required'
+        self.assertEqual(exception.detail['errors'], [msg])
+
+        # This should fail because signed_by_unicef_date and signed_by are both set, but the signed by date is
+        # in the future.
+        data = {
+            "agreement_type": Agreement.MOU,
+            "partner": self.partner,
+            "signed_by_unicef_date": self.today + datetime.timedelta(days=5),
+            "signed_by": signatory,
+        }
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        msg = 'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+              'If dates are set, signatories are required'
+        self.assertEqual(exception.detail['errors'], [msg])
+
+        # This should fail because signed_by_partner_date is set but not partner_manager
+        data = {
+            "agreement_type": Agreement.MOU,
+            "partner": self.partner,
+            "signed_by_partner_date": self.today,
+        }
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        msg = 'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+              'If dates are set, signatories are required'
+        self.assertEqual(exception.detail['errors'], [msg])
+
+        # This should fail because signed_by_partner_date and partner_manager are both set, but the signed by date is
+        # in the future.
+        data = {
+            "agreement_type": Agreement.MOU,
+            "partner": self.partner,
+            "signed_by_partner_date": self.today + datetime.timedelta(days=5),
+            "partner_manager": partner_signatory,
+        }
+
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        exception = context_manager.exception
+
+        self.assertIsInstance(exception.detail, dict)
+        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertIsInstance(exception.detail['errors'], list)
+        msg = 'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; ' \
+              'If dates are set, signatories are required'
+        self.assertEqual(exception.detail['errors'], [msg])
+
