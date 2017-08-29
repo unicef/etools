@@ -1367,7 +1367,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data
         )
         self.intervention = response.data
@@ -1465,7 +1465,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=self.intervention_data
         )
         self.intervention_data = response.data
@@ -1536,7 +1536,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -1570,7 +1570,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=self.intervention_data
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1638,7 +1638,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data={}
         )
 
@@ -1655,7 +1655,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 
@@ -1671,7 +1671,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 
@@ -1687,7 +1687,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 

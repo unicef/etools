@@ -148,7 +148,7 @@ class TestInterventionsAPI(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/' + str(self.intervention.id) + '/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -163,7 +163,7 @@ class TestInterventionsAPI(APITenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
         }
-        status_code, response = self.run_request_list_ep(data)
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response[0], u'PD start date cannot be earlier than the Start Date of the related PCA')
@@ -175,7 +175,7 @@ class TestInterventionsAPI(APITenantTestCase):
             "contingency_pd": True,
             "agreement": self.agreement.id,
         }
-        status_code, response = self.run_request_list_ep(data)
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
@@ -189,7 +189,7 @@ class TestInterventionsAPI(APITenantTestCase):
             "agreement": self.agreement.id,
             "frs": frs_data
         }
-        status_code, response = self.run_request_list_ep(data)
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
@@ -204,7 +204,7 @@ class TestInterventionsAPI(APITenantTestCase):
             "agreement": self.agreement.id,
             "frs": frs_data
         }
-        status_code, response = self.run_request_list_ep(data)
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
@@ -219,7 +219,7 @@ class TestInterventionsAPI(APITenantTestCase):
             "agreement": self.agreement.id,
             "frs": frs_data
         }
-        status_code, response = self.run_request_list_ep(data)
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
@@ -278,7 +278,8 @@ class TestInterventionsAPI(APITenantTestCase):
         data = {
             "frs": frs_data
         }
-        status_code, response = self.run_request(self.intervention_2.id, data, method='patch', user=self.unicef_staff)
+        status_code, response = self.run_request(self.intervention_2.id, data, method='patch',
+                                                 user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['frs'], ['One or more selected FRs is expired, {}'.format(self.fr_1.fr_number)])
@@ -317,8 +318,7 @@ class TestInterventionsAPI(APITenantTestCase):
         }
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch',
                                                  user=self.unicef_staff)
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Cannot change fields while in draft: title', response)
+        self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
 
     def test_permissions_for_intervention_status_draft(self):
         # intervention is in Draft status
@@ -370,7 +370,7 @@ class TestInterventionsAPI(APITenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
         }
-        status_code, response = self.run_request_list_ep(data)
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
         # even though we added a new intervention, the number of queries remained static
