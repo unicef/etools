@@ -455,7 +455,7 @@ class TravelActivity(models.Model):
         return self.travels.filter(traveler=self.primary_traveler).first().status
 
 
-class IteneraryItem(models.Model):
+class ItineraryItem(models.Model):
     travel = models.ForeignKey('Travel', related_name='itinerary')
     origin = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)

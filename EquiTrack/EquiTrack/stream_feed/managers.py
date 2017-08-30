@@ -25,7 +25,7 @@ class CustomDataActionManager(ActionManager):
 
         try:
             obj = obj_content.get_object_for_this_type(pk=obj_id)
-        except Exception as e:
+        except Exception:
             raise Http404
 
         return obj.target_actions.public(**kwargs)

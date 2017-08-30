@@ -2,7 +2,7 @@ from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from partners.views.dashboards import InterventionPartnershipDashView
-from partners.views.v1 import PcaPDFView
+from partners.views.v1 import PCAPDFView
 from partners.views.partner_organization_v2 import (
     PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView, PartnerStaffMemberListAPIVIew,
     PartnerOrganizationHactAPIView, PartnerOrganizationAssessmentDeleteView, PartnerOrganizationAddView,
@@ -36,7 +36,7 @@ urlpatterns = (
 
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
     url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(), name='agreement-detail'),
-    url(r'^agreements/(?P<agr>\d+)/generate_doc/$', PcaPDFView.as_view(), name='pca_pdf'),
+    url(r'^agreements/(?P<agr>\d+)/generate_doc/$', PCAPDFView.as_view(), name='pca_pdf'),
     url(r'^agreements/amendments/(?P<pk>\d+)/$',
         view=AgreementAmendmentDeleteView.as_view(http_method_names=['delete']),
         name='agreement-amendment-del'),
