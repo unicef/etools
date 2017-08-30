@@ -16,7 +16,7 @@ from partners.models import PartnerType
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
 from t2f.models import TravelAttachment, Travel, ModeOfTravel, TravelType
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory, IteneraryItemFactory
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory, ItineraryItemFactory
 
 from .factories import TravelFactory
 
@@ -787,8 +787,8 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                      start_date=datetime(2017, 5, 1, 1, 0, tzinfo=UTC),
                                      end_date=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
                                      supervisor=self.unicef_staff)
-        IteneraryItemFactory(travel=extra_travel)
-        IteneraryItemFactory(travel=extra_travel)
+        ItineraryItemFactory(travel=extra_travel)
+        ItineraryItemFactory(travel=extra_travel)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': extra_travel.id,
@@ -809,8 +809,8 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                      start_date=datetime(2017, 5, 1, 1, 0, tzinfo=UTC),
                                      end_date=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
                                      supervisor=self.unicef_staff)
-        IteneraryItemFactory(travel=extra_travel)
-        IteneraryItemFactory(travel=extra_travel)
+        ItineraryItemFactory(travel=extra_travel)
+        ItineraryItemFactory(travel=extra_travel)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': extra_travel.id,

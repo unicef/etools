@@ -4,7 +4,7 @@ django-braces==1.10.0
 django-model-utils==2.6
 dj-database-url==0.4.1
 dj-static==0.0.6
-django-easy-pdf==0.1.0
+django-easy-pdf==0.1.1
 django-logentry-admin==1.0.2
 djrill==2.1.0
 django-autocomplete-light==3.2.1
@@ -22,8 +22,6 @@ django-analytical==2.2.2
 django-celery==3.1.17
 django-fsm==2.4.0
 django-celery-email==1.1.5
-django-suit==0.2.21
-django-suit-ckeditor==0.0.2
 django-import-export==0.5.1
 django-reversion==1.10.1
 django-generic-links==0.4.0

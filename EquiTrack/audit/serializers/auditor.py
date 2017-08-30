@@ -12,8 +12,8 @@ from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True},
+            'first_name': {'required': True, 'label': _('First Name')},
+            'last_name': {'required': True, 'label': _('Last Name')},
         }
 
     def update(self, instance, validated_data):
@@ -63,7 +63,7 @@ class PurchaseOrderSerializer(
     AuditPermissionsBasedSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer
 ):
     auditor_firm = SeparatedReadWriteField(
-        read_field=AuditorFirmLightSerializer(read_only=True),
+        read_field=AuditorFirmLightSerializer(read_only=True, label=_('Auditor')),
     )
 
     class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):

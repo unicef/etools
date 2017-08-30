@@ -960,19 +960,18 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        number = '{code}/{type}{year}{id}'.format(
+        return '{code}/{type}{year}{id}'.format(
             code=connection.tenant.country_short_code or '',
             type=self.agreement_type,
             year=self.created.year,
             id=self.id,
         )
-        return'{}'.format(number)
 
     @property
     def base_number(self):
         return self.agreement_number.split('-')[0]
 
-    def update_reference_number(self, amendment_number=None, **kwargs):
+    def update_reference_number(self, amendment_number=None):
 
         if amendment_number:
             self.agreement_number = '{}-{}'.format(self.base_number, amendment_number)
@@ -1070,14 +1069,12 @@ class AgreementAmendment(TimeStampedModel):
     Represents an amendment to an agreement
     '''
     IP_NAME = u'Change IP name'
-    CP_EXTENSION = u'CP extension'
     AUTHORIZED_OFFICER = u'Change authorized officer'
     BANKING_INFO = u'Change banking info'
     CLAUSE = u'Change in clause'
 
     AMENDMENT_TYPES = Choices(
         (IP_NAME, 'Change in Legal Name of Implementing Partner'),
-        (CP_EXTENSION, 'Extension of Country Programme Cycle'),
         (AUTHORIZED_OFFICER, 'Change Authorized Officer(s)'),
         (BANKING_INFO, 'Banking Information'),
         (CLAUSE, 'Change in clause'),
