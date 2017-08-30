@@ -960,19 +960,18 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        number = '{code}/{type}{year}{id}'.format(
+        return '{code}/{type}{year}{id}'.format(
             code=connection.tenant.country_short_code or '',
             type=self.agreement_type,
             year=self.created.year,
             id=self.id,
         )
-        return'{}'.format(number)
 
     @property
     def base_number(self):
         return self.agreement_number.split('-')[0]
 
-    def update_reference_number(self, amendment_number=None, **kwargs):
+    def update_reference_number(self, amendment_number=None):
 
         if amendment_number:
             self.agreement_number = '{}-{}'.format(self.base_number, amendment_number)

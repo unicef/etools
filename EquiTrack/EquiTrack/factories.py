@@ -1,11 +1,10 @@
 """
 Model factories used for generating models dynamically for tests
 """
+from datetime import datetime, timedelta, date
+import decimal
 import json
 
-from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
-import decimal
-from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
@@ -334,7 +333,8 @@ class CoverPageBudgetFactory(factory.DjangoModelFactory):
     class Meta:
         model = CoverPageBudget
 
-    date = factory.LazyAttribute(lambda o: datetime.now())
+    from_date = factory.LazyAttribute(lambda o: date.today())
+    to_date = factory.LazyAttribute(lambda o: date.today() + timedelta(days=3))
     total_amount = fuzzy.FuzzyText(length=50)
     funded_amount = fuzzy.FuzzyText(length=50)
     unfunded_amount = fuzzy.FuzzyText(length=50)

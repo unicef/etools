@@ -1,11 +1,9 @@
 from datetime import datetime
 
-from django.forms import ModelForm, fields, Form
+from django.forms import ModelForm, fields, Form, Textarea
 from django.core.exceptions import ValidationError
 from django.forms.models import BaseInlineFormSet
 
-from suit.widgets import AutosizedTextarea
-from suit_ckeditor.widgets import CKEditorWidget
 from datetimewidget.widgets import DateTimeWidget, DateWidget
 
 from dal import autocomplete
@@ -97,9 +95,7 @@ class TripForm(ModelForm):
         fields = '__all__'
         widgets = {
             'purpose_of_travel':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
-            'main_observations':
-                CKEditorWidget(editor_options={'startupFocus': False}),
+                Textarea(),
         }
 
     def clean(self):
