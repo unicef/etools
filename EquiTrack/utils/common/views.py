@@ -1,8 +1,11 @@
 import six
 
 from django.core.exceptions import ValidationError as CoreValidationError
+from django.db import ProgrammingError
 from django.http import Http404
 from django_fsm import can_proceed, has_transition_perm
+from rest_framework import exceptions
+from rest_framework.compat import is_authenticated
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.serializers import Serializer
@@ -120,7 +123,7 @@ class NestedViewSetMixin(object):
 
         child = self
         lookups = []
-        for i, parent in enumerate(parents):
+        for parent in parents:
             lookups.append(child.parent_lookup_field)
             filters['{}__{}'.format(
                 '__'.join(lookups), getattr(child.parent, 'lookup_field', 'pk')
@@ -157,3 +160,13 @@ class NestedViewSetMixin(object):
         queryset = super(NestedViewSetMixin, self).filter_queryset(queryset)
         queryset = queryset.filter(**self._get_parent_filters())
         return queryset
+
+
+class SafeTenantViewSetMixin(object):
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super(SafeTenantViewSetMixin, self).dispatch(request, *args, **kwargs)
+        except ProgrammingError:
+            if request.user and not is_authenticated(request.user):
+                raise exceptions.NotAuthenticated()
+            raise

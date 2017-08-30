@@ -40,7 +40,6 @@ from trips.exports import TripResource, ActionPointResource
 
 class LinkedPartnerInlineAdmin(admin.TabularInline):
     model = LinkedPartner
-    suit_classes = u'suit-tab suit-tab-planning'
     extra = 1
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
@@ -54,7 +53,6 @@ class LinkedPartnerInlineAdmin(admin.TabularInline):
 
 class LinkedGovernmentPartnerInlineAdmin(admin.TabularInline):
     model = LinkedGovernmentPartner
-    suit_classes = u'suit-tab suit-tab-planning'
     extra = 1
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
@@ -69,7 +67,6 @@ class LinkedGovernmentPartnerInlineAdmin(admin.TabularInline):
 class TravelRoutesInlineAdmin(admin.TabularInline):
     model = TravelRoutes
     form = TravelRoutesForm
-    suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Travel Itinerary'
     extra = 5
 
@@ -77,7 +74,6 @@ class TravelRoutesInlineAdmin(admin.TabularInline):
 class TripFundsInlineAdmin(admin.TabularInline):
     model = TripFunds
     formset = TripFundsForm
-    suit_classes = u'suit-tab suit-tab-planning'
     extra = 1
     max_num = 10
 
@@ -93,7 +89,6 @@ class TripFundsInlineAdmin(admin.TabularInline):
 class ActionPointInlineAdmin(CountryUsersAdminMixin, admin.StackedInline):
     model = ActionPoint
     form = AutoSizeTextForm
-    suit_classes = u'suit-tab suit-tab-reporting'
     extra = 1
     fields = (
         (u'description', u'due_date',),
@@ -108,7 +103,6 @@ class TripLocationsInlineAdmin(admin.TabularInline):
     model = TripLocation
     form = TripLocationForm
     formset = RequireOneLocationFormSet
-    suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Sites to visit'
     fields = (
         'location',
@@ -117,7 +111,6 @@ class TripLocationsInlineAdmin(admin.TabularInline):
 
 class FileAttachmentInlineAdmin(admin.TabularInline):
     model = FileAttachment
-    suit_classes = u'suit-tab suit-tab-attachments'
     # make the textarea a little smaller by default. they can be extended if needed
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
@@ -129,7 +122,6 @@ class FileAttachmentInlineAdmin(admin.TabularInline):
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):
-    suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
 
 
@@ -202,7 +194,6 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     )
     fieldsets = (
         (u'Traveler', {
-            u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 ((u'status', u'cancelled_reason'),
                  u'owner',
@@ -218,14 +209,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
                  (u'international_travel', u'representative',),
                  u'approved_by_human_resources',)
         }),
-        # (u'Partnership Details', {
-        #     u'classes': (u'suit-tab suit-tab-planning', u'collapse',),
-        #     u'fields':
-        #         (u'pcas',
-        #          u'partners',),
-        # }),
         (u'Approval', {
-            u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 ((u'approved_by_supervisor', u'date_supervisor_approved',),
                  (u'approved_by_budget_owner', u'date_budget_owner_approved',),
@@ -234,7 +218,6 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
                  u'approved_date',),
         }),
         (u'Travel/Admin', {
-            u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 (
                  (u'driver', u'driver_supervisor'),
@@ -247,14 +230,12 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         }),
 
         (u'Report', {
-            u'classes': (u'suit-tab suit-tab-reporting', u'full-width',),
             u'fields': (
                 u'main_observations',
             ),
         }),
 
         (u'Constraints/Challenges/Opportunities', {
-            u'classes': (u'suit-tab suit-tab-reporting',),
             u'fields': (
                 u'constraints',
                 u'lessons_learned',
@@ -263,22 +244,10 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         }),
 
         (u'Travel Certification', {
-            u'classes': (u'suit-tab suit-tab-reporting',),
             u'fields': (
                 u'ta_trip_took_place_as_planned',
                 u'ta_trip_repay_travel_allowance',),
         }),
-    )
-    suit_form_tabs = (
-        (u'planning', u'Planning'),
-        (u'reporting', u'Reporting'),
-        (u'attachments', u'Attachments'),
-        (u'checklists', u'Checklists'),
-
-    )
-
-    suit_form_includes = (
-        ('admin/trips/checklists-tab.html', 'top', 'checklists'),
     )
 
     def show_driver_trip(self, obj):
