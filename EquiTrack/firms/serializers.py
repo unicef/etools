@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
 from django.contrib.auth.models import User
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -13,11 +15,21 @@ class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSeri
     class Meta(WritableNestedSerializerMixin.Meta):
         model = UserProfile
         fields = ['job_title', 'phone_number']
+        extra_kwargs = {
+            'job_title': {
+                'label': _('Position'),
+            },
+            'phone_number': {
+                'label': _('Phone Number'),
+            }
+        }
 
 
 class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     profile = UserProfileSerializer(required=False)
-    email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
+    email = serializers.EmailField(
+        label=_('E-mail Address'), validators=[UniqueValidator(queryset=User.objects.all())]
+    )
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = User

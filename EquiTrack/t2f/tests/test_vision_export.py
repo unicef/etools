@@ -16,7 +16,7 @@ from publics.tests.factories import DSARegionFactory, DSARateFactory
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.models import Travel, Expense, CostAssignment, Invoice
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory, \
-    IteneraryItemFactory
+    ItineraryItemFactory
 from t2f.vision import InvoiceUpdater
 
 
@@ -87,11 +87,11 @@ class VisionXML(URLAssertionMixin, APITenantTestCase):
                                currency=huf,
                                amount=35)
 
-        IteneraryItemFactory(travel=travel,
+        ItineraryItemFactory(travel=travel,
                              departure_date=datetime(2017, 5, 10, tzinfo=UTC),
                              arrival_date=datetime(2017, 5, 11, tzinfo=UTC),
                              dsa_region=dsa_region)
-        IteneraryItemFactory(travel=travel,
+        ItineraryItemFactory(travel=travel,
                              departure_date=datetime(2017, 5, 20, tzinfo=UTC),
                              arrival_date=datetime(2017, 5, 21, tzinfo=UTC),
                              dsa_region=dsa_region)

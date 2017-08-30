@@ -10,7 +10,7 @@ from publics.models import TravelExpenseType
 from publics.tests.factories import CurrencyFactory, CountryFactory, DSARegionFactory, DSARateFactory, \
     ExpenseTypeFactory
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
-from t2f.tests.factories import TravelFactory, ExpenseFactory, IteneraryItemFactory
+from t2f.tests.factories import TravelFactory, ExpenseFactory, ItineraryItemFactory
 
 
 class CostSummaryTest(APITenantTestCase):
@@ -67,22 +67,22 @@ class CostSummaryTest(APITenantTestCase):
         self.travel.deductions.all().delete()
 
     def test_calculations(self):
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
                              dsa_region=self.copenhagen)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 23, 0, tzinfo=UTC),
                              dsa_region=self.dusseldorf)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 3, 10, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 3, 13, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
