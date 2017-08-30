@@ -1,11 +1,8 @@
 from __future__ import absolute_import
 
-from django.db.models import Q
-
-__author__ = 'unicef-leb-inn'
-
 from django import forms
 from django.db import connection
+from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.forms import Textarea
 from django.forms.models import BaseInlineFormSet
@@ -52,7 +49,7 @@ class RequireOneFormSet(ParentInlineAdminFormSet):
 
         if completed < 1 and self.required:
             raise forms.ValidationError("At least one %s is required." %
-                self.model._meta.object_name.lower())
+                                        self.model._meta.object_name.lower())
 
 
 class UserGroupForm(forms.ModelForm):

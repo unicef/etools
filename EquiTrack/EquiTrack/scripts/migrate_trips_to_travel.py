@@ -9,7 +9,6 @@ from operator import attrgetter
 
 from django.db import transaction
 from django.db import IntegrityError
-from django.db.transaction import TransactionManagementError
 from django.core.exceptions import ObjectDoesNotExist
 
 from users.models import Country
@@ -44,19 +43,17 @@ TRIPTRAVEL_FIELDS_MAP = OrderedDict({
 
 TRAVEL_TYPE_MAP = {
         'programme_monitoring': 'Programmatic Visit',
-        'spot_check':'Spot Check',
+        'spot_check': 'Spot Check',
         'advocacy': 'Advocacy',
         'technical_support': 'Technical Support',
         'meeting': 'Meeting',
         'duty_travel': 'Technical Support',
-        'home_leave':'Staff Entitlement',
-        'family_visit':'Staff Entitlement',
+        'home_leave': 'Staff Entitlement',
+        'family_visit': 'Staff Entitlement',
         'education_grant': 'Staff Entitlement',
         'staff_development': 'Staff Development',
         'staff_entitlement': 'Staff Entitlement',
 }
-
-
 
 
 def migrate_trips(country):
@@ -87,7 +84,7 @@ def migrate_trips(country):
                 continue
             travel_payload.update({"reference_number": ref_number})
 
-            #print 'payload', travel_payload
+            # print 'payload', travel_payload
             with transaction.atomic():
                 try:
                     travel = Travel(**travel_payload)
@@ -118,23 +115,40 @@ def migrate_trips(country):
             # stashed in additional_notes..
             try:
                 additional_notes = {
-                    "Travel Focal Point": trip.travel_assistant.get_full_name() if trip.travel_assistant is not None else '',
-                    "Security Clearance Required": trip.security_clearance_required if trip.security_clearance_required is not None else '',
-                    "Budget Owner": trip.budget_owner.get_full_name() if trip.budget_owner is not None else '',
-                    "Representative": trip.representative.get_full_name() if trip.representative is not None else '',
-                    "Certified by Human Resources": trip.approved_by_human_resources if trip.approved_by_human_resources is not None else '',
-                    "Approved by Supervisor": trip.approved_by_supervisor if trip.approved_by_supervisor is not None else '',
-                    "Approved by Budget Owner": trip.approved_by_budget_owner if trip.approved_by_budget_owner is not None else '',
-                    "Date Human Resources Approved": trip.date_human_resources_approved if trip.date_human_resources_approved is not None else '',
-                    "Representative Approval": trip.representative_approval if trip.representative_approval is not None else '',
-                    "Approved Date": trip.approved_date if trip.approved_date is not None else '',
-                    "Driver": trip.driver.get_full_name() if trip.driver is not None else '',
-                    "Transport Booked": trip.transport_booked if trip.transport_booked is not None else '',
-                    "Security Granted": trip.security_granted if trip.security_granted is not None else '',
-                    "TA drafted?": trip.ta_drafted if trip.ta_drafted is not None else '',
-                    "TA Drafted Date": trip.ta_drafted_date if trip.ta_drafted_date is not None else '',
-                    "TA Reference": trip.ta_reference if trip.ta_reference is not None else '',
-                    "Vision Approver": trip.vision_approver.get_full_name() if trip.vision_approver is not None else '',
+                    "Travel Focal Point": trip.travel_assistant.get_full_name()
+                    if trip.travel_assistant is not None else '',
+                    "Security Clearance Required": trip.security_clearance_required
+                    if trip.security_clearance_required is not None else '',
+                    "Budget Owner": trip.budget_owner.get_full_name()
+                    if trip.budget_owner is not None else '',
+                    "Representative": trip.representative.get_full_name()
+                    if trip.representative is not None else '',
+                    "Certified by Human Resources": trip.approved_by_human_resources
+                    if trip.approved_by_human_resources is not None else '',
+                    "Approved by Supervisor": trip.approved_by_supervisor
+                    if trip.approved_by_supervisor is not None else '',
+                    "Approved by Budget Owner": trip.approved_by_budget_owner
+                    if trip.approved_by_budget_owner is not None else '',
+                    "Date Human Resources Approved": trip.date_human_resources_approved
+                    if trip.date_human_resources_approved is not None else '',
+                    "Representative Approval": trip.representative_approval
+                    if trip.representative_approval is not None else '',
+                    "Approved Date": trip.approved_date
+                    if trip.approved_date is not None else '',
+                    "Driver": trip.driver.get_full_name()
+                    if trip.driver is not None else '',
+                    "Transport Booked": trip.transport_booked
+                    if trip.transport_booked is not None else '',
+                    "Security Granted": trip.security_granted
+                    if trip.security_granted is not None else '',
+                    "TA drafted?": trip.ta_drafted
+                    if trip.ta_drafted is not None else '',
+                    "TA Drafted Date": trip.ta_drafted_date
+                    if trip.ta_drafted_date is not None else '',
+                    "TA Reference": trip.ta_reference
+                    if trip.ta_reference is not None else '',
+                    "Vision Approver": trip.vision_approver.get_full_name()
+                    if trip.vision_approver is not None else '',
                 }
             except ObjectDoesNotExist:
                 additional_notes = {}
@@ -241,11 +255,10 @@ def migrate_trips(country):
                     try:
                         travelattachment.save()
                     except Exception as e:
-                        #SOme weird data error remember this problem
+                        # Some weird data error remember this problem
                         failed_travel_attachments.append(travel.id)
                         print 'EXception saving travel attachment {}'.format(travelattachment_payload)
                         continue
-
 
             # create TravelActivity objects
             linkedpartners_gov = trip.linkedgovernmentpartner_set.all()
@@ -275,8 +288,10 @@ def migrate_trips(country):
 
                     if trip.status in [trip.COMPLETED, trip.APPROVED]:
                         trips_with_gov_activities.append(trip.id)
-                        print "!!!GOV_PA|{} Please address this trip as government partner could not be added to travel activity".format(trip.id)
-                    print "Linked government partner not ported into T2F id: {}  Partners {} ".format(trip.id, linkedpartners_gov.all())
+                        print("!!!GOV_PA|{} Please address this trip as government partner could not "
+                              "be added to travel activity".format(trip.id))
+                    print("Linked government partner not ported into T2F id: {}  Partners {} ".format(
+                        trip.id, linkedpartners_gov.all()))
 
                 if linkedpartners.exists():
                     partners = linkedpartners
@@ -289,7 +304,6 @@ def migrate_trips(country):
                             )
                         except (AttributeError, Intervention.DoesNotExist):
                             intervention = None
-
 
                         activity_payload = {
                             "travel_type": travel_type,

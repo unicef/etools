@@ -44,9 +44,9 @@ JWT_AUTH.update({  # noqa: F405
 })
 
 # django-storages: https://django-storages.readthedocs.io/en/latest/backends/azure.html
-AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME')
-AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY')
-AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER')
+AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME')  # noqa: F405
+AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY')  # noqa: F405
+AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER')  # noqa: F405
 AZURE_SSL = True
 AZURE_AUTO_SIGN = True  # flag for automatically signing urls
 AZURE_ACCESS_POLICY_EXPIRY = 120  # length of time before signature expires in seconds
