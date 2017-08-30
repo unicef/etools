@@ -1,8 +1,10 @@
 from unittest import skip
 
+from django.contrib.contenttypes.management import update_contenttypes
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import TestCase
+from django.apps import apps
 from mock import Mock
 from rest_framework import serializers
 
@@ -11,13 +13,21 @@ from ..serializers import WritableNestedChildSerializerMixin, WritableNestedPare
     DeletableSerializerMixin
 
 
-class WritableSerializerSingleTestCase(TestCase):
+class BaseWritableSerializersTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         # We disable synchronisation of test models. So we need to create it manually.
         with connection.schema_editor() as editor:
-            editor.create_model(Parent)
-            editor.create_model(Child1)
+            for model in [Child1, Parent, Child2, GenericChild, Child3, CodedGenericChild]:
+                editor.create_model(model)
+
+        update_contenttypes(apps.get_app_config('writable_serializers'))
+
+
+class WritableSerializerSingleTestCase(BaseWritableSerializersTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super(WritableSerializerSingleTestCase, cls).setUpTestData()
 
         class Child1Serializer(WritableNestedChildSerializerMixin, serializers.ModelSerializer):
             class Meta(WritableNestedChildSerializerMixin.Meta):
@@ -103,13 +113,10 @@ class WritableSerializerSingleTestCase(TestCase):
         self.assertFalse(Child1.objects.filter(parent=self.parent).exists())
 
 
-class WritableSerializerManyTestCase(TestCase):
+class WritableSerializerManyTestCase(BaseWritableSerializersTestCase):
     @classmethod
     def setUpTestData(cls):
-        # We disable synchronisation of test models. So we need to create it manually.
-        with connection.schema_editor() as editor:
-            editor.create_model(Parent)
-            editor.create_model(Child2)
+        super(WritableSerializerManyTestCase, cls).setUpTestData()
 
         class Child2Serializer(WritableNestedChildSerializerMixin, serializers.ModelSerializer):
             class Meta(WritableNestedChildSerializerMixin.Meta):
@@ -203,13 +210,10 @@ class WritableSerializerManyTestCase(TestCase):
         self.assertTrue(Child2.objects.filter(parent=parent, field=102).exists())
 
 
-class WritableSerializerForwardTestCase(TestCase):
+class WritableSerializerForwardTestCase(BaseWritableSerializersTestCase):
     @classmethod
     def setUpTestData(cls):
-        # We disable synchronisation of test models. So we need to create it manually.
-        with connection.schema_editor() as editor:
-            editor.create_model(Parent)
-            editor.create_model(Child1)
+        super(WritableSerializerForwardTestCase, cls).setUpTestData()
 
         class ParentSerializer(WritableNestedChildSerializerMixin, serializers.ModelSerializer):
             class Meta(WritableNestedChildSerializerMixin.Meta):
@@ -258,13 +262,10 @@ class WritableSerializerForwardTestCase(TestCase):
         self.assertEqual(Parent.objects.get(id=self.child1.parent_id).id, self.parent.id)
 
 
-class WritableSerializerGenericTestCase(TestCase):
+class WritableSerializerGenericTestCase(BaseWritableSerializersTestCase):
     @classmethod
     def setUpTestData(cls):
-        # We disable synchronisation of test models. So we need to create it manually.
-        with connection.schema_editor() as editor:
-            editor.create_model(Parent)
-            editor.create_model(GenericChild)
+        super(WritableSerializerGenericTestCase, cls).setUpTestData()
 
         class GenericSerializer(WritableNestedChildSerializerMixin, serializers.ModelSerializer):
             class Meta(WritableNestedChildSerializerMixin.Meta):
@@ -357,13 +358,10 @@ class WritableSerializerGenericTestCase(TestCase):
         )
 
 
-class WritableCodedGenericRelationTestCase(TestCase):
+class WritableCodedGenericRelationTestCase(BaseWritableSerializersTestCase):
     @classmethod
     def setUpTestData(cls):
-        # We disable synchronisation of test models. So we need to create it manually.
-        with connection.schema_editor() as editor:
-            editor.create_model(Parent)
-            editor.create_model(CodedGenericChild)
+        super(WritableCodedGenericRelationTestCase, cls).setUpTestData()
 
         class CodedGenericSerializer(WritableNestedChildSerializerMixin, serializers.ModelSerializer):
             class Meta(WritableNestedChildSerializerMixin.Meta):
@@ -429,13 +427,10 @@ class WritableCodedGenericRelationTestCase(TestCase):
         )
 
 
-class WritableSerializerRequiredTestCase(TestCase):
+class WritableSerializerRequiredTestCase(BaseWritableSerializersTestCase):
     @classmethod
     def setUpTestData(cls):
-        # We disable synchronisation of test models. So we need to create it manually.
-        with connection.schema_editor() as editor:
-            editor.create_model(Parent)
-            editor.create_model(Child1)
+        super(WritableSerializerRequiredTestCase, cls).setUpTestData()
 
         class Child1Serializer(WritableNestedChildSerializerMixin, serializers.ModelSerializer):
             class Meta(WritableNestedChildSerializerMixin.Meta):
@@ -472,13 +467,10 @@ class WritableSerializerRequiredTestCase(TestCase):
         }, errors)
 
 
-class WritableSerializerUniqueTestCase(TestCase):
+class WritableSerializerUniqueTestCase(BaseWritableSerializersTestCase):
     @classmethod
     def setUpTestData(cls):
-        # We disable synchronisation of test models. So we need to create it manually.
-        with connection.schema_editor() as editor:
-            editor.create_model(Parent)
-            editor.create_model(Child3)
+        super(WritableSerializerUniqueTestCase, cls).setUpTestData()
 
         class Child3Serializer(WritableNestedChildSerializerMixin, serializers.ModelSerializer):
             class Meta(WritableNestedChildSerializerMixin.Meta):
@@ -567,13 +559,10 @@ class WritableSerializerUniqueTestCase(TestCase):
         }, errors)
 
 
-class WritableListSerializerTestCase(TestCase):
+class WritableListSerializerTestCase(BaseWritableSerializersTestCase):
     @classmethod
     def setUpTestData(cls):
-        # We disable synchronisation of test models. So we need to create it manually.
-        with connection.schema_editor() as editor:
-            editor.create_model(Parent)
-            editor.create_model(Child2)
+        super(WritableListSerializerTestCase, cls).setUpTestData()
 
         class Child2Serializer(WritableNestedChildSerializerMixin, serializers.ModelSerializer):
             class Meta(WritableNestedChildSerializerMixin.Meta):
@@ -734,13 +723,10 @@ class WritableListSerializerTestCase(TestCase):
         }, errors)
 
 
-class DeletableSerializerTestCase(TestCase):
+class DeletableSerializerTestCase(BaseWritableSerializersTestCase):
     @classmethod
     def setUpTestData(cls):
-        # We disable synchronisation of test models. So we need to create it manually.
-        with connection.schema_editor() as editor:
-            editor.create_model(Parent)
-            editor.create_model(Child2)
+        super(DeletableSerializerTestCase, cls).setUpTestData()
 
         class Child2Serializer(DeletableSerializerMixin, WritableNestedChildSerializerMixin,
                                serializers.ModelSerializer):

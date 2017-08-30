@@ -1,5 +1,4 @@
 from django import forms
-from suit.widgets import AutosizedTextarea
 
 from reports.models import Indicator, Result
 
@@ -10,8 +9,7 @@ class IndicatorAdminForm(forms.ModelForm):
         model = Indicator
         fields = '__all__'
         widgets = {
-            'name':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+            'name': forms.Textarea(),
         }
 
     def __init__(self, *args, **kwargs):

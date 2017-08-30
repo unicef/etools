@@ -16,7 +16,7 @@ from .views.v1 import (
     AmendmentLogViewSet,
     GwPCALocationViewSet,
     IndicatorReportViewSet,
-    PcaPDFView,
+    PCAPDFView,
     PartnerOrganizationsViewSet,
     PartnerStaffMembersViewSet,
     AgreementViewSet,
@@ -88,7 +88,7 @@ urlpatterns = (
 
     url(r'^accounts/loginfailed/(?P<email>.+)/$', PortalLoginFailedView.as_view(), name='sociallogin_notamember'),
     url(r'^locations/$', InterventionLocationView.as_view(), name='locations'),
-    url(r'^agreement/(?P<agr>\d+)/pdf', PcaPDFView.as_view(), name='pca_pdf'),
+    url(r'^agreement/(?P<agr>\d+)/pdf', PCAPDFView.as_view(), name='pca_pdf'),
 
     url(r'^staffmember/(?P<pk>\d+)/$', PartnerStaffMemberPropertiesView.as_view()),
 )
