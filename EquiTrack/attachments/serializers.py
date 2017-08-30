@@ -25,10 +25,15 @@ class BaseAttachmentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
         fields = ['id', 'file_type', 'file', 'hyperlink', 'created', 'modified', ]
+        extra_kwargs = {
+            'created': {
+                'label': _('Date Uploaded'),
+            },
+        }
 
 
 class Base64AttachmentSerializer(BaseAttachmentsSerializer):
-    file = Base64FileField(required=False)
+    file = Base64FileField(required=False, label=_('File Attachment'))
     file_name = serializers.CharField(write_only=True, required=False)
 
     def validate(self, attrs):
