@@ -1012,7 +1012,6 @@ class TestAgreementAPIView(APITenantTestCase):
             "end": today + datetime.timedelta(days=5),
             "signed_by": self.unicef_staff.id,
             "signed_by_unicef_date": datetime.date.today(),
-            #"partner_manager": self.partner_staff.id,
         }
         response = self.forced_auth_req(
             'patch',
@@ -1020,14 +1019,18 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
             data=data
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], Agreement.SIGNED)
 
-    @skip("Test transitions")
     def test_partner_agreements_update_suspend(self):
+        '''Ensure that interventions related to an agreement are suspended when the agreement is suspended'''
+        # There's a limited number of statuses that the intervention can have in order to transition to suspended;
+        # signed is one of them.
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.save()
+
         data = {
-            "status": "suspended",
+            "status": Agreement.SUSPENDED,
         }
         response = self.forced_auth_req(
             'patch',
@@ -1035,10 +1038,9 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
             data=data
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], "suspended")
-        self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, "suspended")
+        self.assertEqual(response.data["status"], Agreement.SUSPENDED)
+        self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, Intervention.SUSPENDED)
 
     def test_agreement_amendment_delete_error(self):
         response = self.forced_auth_req(
