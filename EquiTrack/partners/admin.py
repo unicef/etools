@@ -75,7 +75,6 @@ class PCALocationInlineAdmin(admin.TabularInline):
     model = GwPCALocation
     verbose_name = 'Location'
     verbose_name_plural = 'Locations'
-    suit_classes = u'suit-tab suit-tab-locations'
     fields = (
         'sector',
         'location',
@@ -90,7 +89,6 @@ class PCASectorInlineAdmin(admin.TabularInline):
     formset = ParentInlineAdminFormSet
     verbose_name = 'Programme/Sector/Section'
     verbose_name_plural = 'Programmes/Sectors/Sections'
-    suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
         'sector',
@@ -111,7 +109,6 @@ class PCAFileInline(admin.TabularInline):
     model = PCAFile
     verbose_name = 'File'
     verbose_name_plural = 'Files'
-    suit_classes = u'suit-tab suit-tab-attachments'
     extra = 0
     fields = (
         'type',
@@ -159,7 +156,6 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
     formset = ParentInlineAdminFormSet
     verbose_name = 'Budget'
     verbose_name_plural = 'Budget'
-    suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
         'partner_contribution',
@@ -178,7 +174,6 @@ class PCAGrantInlineAdmin(admin.TabularInline):
     model = PCAGrant
     verbose_name = 'Grant'
     verbose_name_plural = 'Grants'
-    suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
         'grant',
@@ -189,12 +184,10 @@ class PCAGrantInlineAdmin(admin.TabularInline):
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):
-    suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
 
 
 class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-results'
     model = RAMIndicator
     verbose_name = 'RAM Result'
     verbose_name_plural = 'RAM Results'
@@ -213,7 +206,6 @@ class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
 
 
 class InterventionBudgetAdmin(admin.ModelAdmin):
-    suit_classes = u'suit-tab suit-tab-info'
     model = InterventionBudget
     fields = (
         'intervention',
@@ -316,7 +308,6 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
 
 
 class SupplyPlanAdmin(admin.ModelAdmin):
-    suit_classes = u'suit-tab suit-tab-supplies'
     model = SupplyPlan
     fields = (
         'intervention',
@@ -334,13 +325,11 @@ class SupplyPlanAdmin(admin.ModelAdmin):
 
 
 class IndicatorDueDatesAdmin(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-results'
     model = IndicatorDueDates
     extra = 1
 
 
 class DistributionPlanInlineAdmin(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-supplies'
     model = DistributionPlan
     form = DistributionPlanForm
     formset = DistributionPlanFormSet
@@ -429,7 +418,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
     fieldsets = (
         (_('Intervention Details'), {
-            u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 ('partner',
                  'agreement',
@@ -440,7 +428,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                  'initiation_date',)
         }),
         (_('Dates and Signatures'), {
-            u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 (('submission_date',),
                  'review_date',
@@ -453,11 +440,9 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                  'fr_number',),
         }),
         (_('Add sites by P Code'), {
-            u'classes': (u'suit-tab suit-tab-locations',),
             'fields': ('location_sector', 'p_codes',),
         }),
         (_('Import work plan'), {
-            u'classes': (u'suit-tab suit-tab-results',),
             'fields': ('work_plan', 'work_plan_template'),
         }),
     )
@@ -479,22 +464,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         # SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
         IndicatorDueDatesAdmin,
-    )
-
-    suit_form_tabs = (
-        (u'info', u'Info'),
-        (u'results', u'Results'),
-        (u'locations', u'Locations'),
-        (u'trips', u'Trips'),
-        (u'supplies', u'Supplies'),
-        (u'attachments', u'Attachments')
-    )
-
-    suit_form_includes = (
-        ('admin/partners/funding_summary.html', 'middle', 'info'),
-        # ('admin/partners/work_plan.html', 'bottom', 'results'),
-        ('admin/partners/trip_summary.html', 'top', 'trips'),
-        ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
 
     def work_plan_template(self, obj):
@@ -617,10 +586,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                  ('start', 'end'),
                  'population_focus'),
         }),
-        # (_('Add sites by P Code'), {
-        #     u'classes': (u'suit-tab suit-tab-locations',),
-        #     'fields': ('location_sector', 'p_codes',),
-        # }),
     )
 
     inlines = (
