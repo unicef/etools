@@ -189,7 +189,7 @@ class Engagement(TimeStampedModel, models.Model):
         verbose_name_plural = _('Engagements')
 
     def __str__(self):
-        return '{}: {}, {}'.format(self.engagment_type, self.agreement.order_number, self.partner.name)
+        return '{}: {}, {}'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
 
     @property
     def displayed_status(self):
