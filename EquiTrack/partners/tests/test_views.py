@@ -609,23 +609,6 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertIn("Partner", response.data[0]["name"])
 
-    @skip("Fix this")
-    def test_api_agreements_create(self):
-
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "status": "active"
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/partners/' + str(self.partner.id) + '/agreements/',
-            user=self.unicef_staff,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
     @skip("different endpoint")
     def test_api_agreements_list(self):
 
