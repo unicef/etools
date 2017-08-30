@@ -143,10 +143,6 @@ class Command(BaseCommand):
 
         # tpm_rejected - pme edit overview + attachments, pme can send to assigned
         self.add_permissions(self.tpm_rejected, self.everybody, 'view', self.everything)
-        self.add_permissions(self.tpm_rejected, [self.pme, self.focal_point], 'action', [
-            'tpmvisit.assign',
-            'tpmvisit.cancel',
-        ])
         self.revoke_permissions(self.tpm_rejected, [self.pme, self.focal_point], 'view', 'tpmvisit.report')
 
         # tpm_reported - UNICEF can reject report or ask actions
