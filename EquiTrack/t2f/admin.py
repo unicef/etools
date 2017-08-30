@@ -46,7 +46,7 @@ class TravelActivityAdmin(admin.ModelAdmin):
 
 
 class ItineraryItemAdmin(admin.ModelAdmin):
-    model = models.IteneraryItem
+    model = models.ItineraryItem
     list_filter = (
         'travel',
         'departure_date',
@@ -119,7 +119,7 @@ class InvoiceItemAdmin(AdminListMixin, admin.ModelAdmin):
 
 admin.site.register(models.TravelActivity, TravelActivityAdmin)
 admin.site.register(models.Travel, TravelAdmin)
-admin.site.register(models.IteneraryItem, ItineraryItemAdmin)
+admin.site.register(models.ItineraryItem, ItineraryItemAdmin)
 admin.site.register(models.ActionPoint, ActionPointAdmin)
 admin.site.register(models.Expense, ExpenseAdmin)
 admin.site.register(models.Deduction, DeductionAdmin)

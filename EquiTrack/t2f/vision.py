@@ -12,7 +12,6 @@ from django.core.mail.message import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.models.query_utils import Q
-from django.template.context import Context
 from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDict
 
@@ -200,9 +199,7 @@ class InvoiceUpdater(object):
     def send_mail_for_error(self, workspace, invoice):
         url = reverse('t2f:invoices:details', kwargs={'invoice_pk': invoice.id})
 
-        context = Context({'invoice': invoice,
-                           'url': url})
-        html_content = render_to_string('emails/failed_invoice_sync.html', context)
+        html_content = render_to_string('emails/failed_invoice_sync.html', {'invoice': invoice, 'url': url})
 
         recipients = User.objects.filter(profile__country=workspace,
                                          groups__name='Finance Focal Point').values_list('email', flat=True)
