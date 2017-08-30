@@ -991,20 +991,32 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data), 2)
         # self.assertEquals(response.data[1]["agreement_number"], self.agreement.agreement_number)
 
-    @skip("Test transitions")
     def test_agreements_update_set_to_active_on_save(self):
+        '''Ensure that a draft agreement auto-transitions to signed when saved with signing info'''
+        agreement = AgreementFactory(
+            agreement_type=Agreement.MOU,
+            status=Agreement.DRAFT,
+            partner=self.partner,
+            partner_manager=self.partner_staff,
+            start=datetime.date.today(),
+            end=self.country_programme.to_date,
+            signed_by=None,
+        )
+        # In order to auto-transition to signed, this agreement needs authorized officers
+        agreement.authorized_officers.add(self.partner_staff)
+        agreement.save()
+
         today = datetime.date.today()
         data = {
-            "start": date(today.year, 3, 1),
-            "end": date(today.year, 6, 1),
+            "start": today - datetime.timedelta(days=5),
+            "end": today + datetime.timedelta(days=5),
             "signed_by": self.unicef_staff.id,
-            "partner_manager": self.partner_staff.id,
-            "signed_by_partner_date": date(today.year, 2, 1),
-            "signed_by_unicef_date": date(today.year, 3, 1),
+            "signed_by_unicef_date": datetime.date.today(),
+            #"partner_manager": self.partner_staff.id,
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            '/api/v2/agreements/{}/'.format(agreement.id),
             user=self.partnership_manager_user,
             data=data
         )
