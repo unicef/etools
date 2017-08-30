@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import json
 
 from django.utils import timezone
@@ -157,7 +158,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
                   'date_last_assessment_against_core_values', 'assessments', 'url',)
 
     def get_staff_members(self, obj):
-        return ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
+        return ', '.join(['{} ({})'.format(sm.get_full_name(), sm.email)
                           for sm in obj.staff_members.filter(active=True).all()])
 
     def get_assessments(self, obj):
