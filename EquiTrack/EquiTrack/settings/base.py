@@ -142,7 +142,6 @@ SHARED_APPS = (
     'dal_select2',
     'django.contrib.gis',
     'django.contrib.postgres',
-    'suit',
     'django.contrib.admin',
     'django.contrib.humanize',
     'mathfilters',
@@ -154,7 +153,6 @@ SHARED_APPS = (
     'rest_framework.authtoken',
     'import_export',
     'smart_selects',
-    'suit_ckeditor',
     'generic_links',
     'gunicorn',
     'post_office',
@@ -294,25 +292,6 @@ STATICFILES_FINDERS = (
 
 
 # Third party library settings ################################
-
-# django-suit: http://django-suit.readthedocs.io/en/develop/configuration.html
-SUIT_CONFIG = {
-    'ADMIN_NAME': 'eTools',
-    'SEARCH_URL': '/admin/partners/pca/',
-    'CONFIRM_UNSAVED_CHANGES': False,
-    'MENU': (
-        {'app': 'auth', 'label': 'Users', 'icon': 'icon-user'},
-        {'label': 'Dashboard', 'icon': 'icon-globe', 'url': 'dashboard'},
-        {'app': 'funds', 'icon': 'icon-briefcase'},
-        {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign', 'models': [
-            {'model': 'reports.sector'},
-            {'model': 'reports.result'},
-            {'model': 'reports.indicator'},
-            {'model': 'reports.goal'},
-        ]},
-        {'app': 'locations', 'icon': 'icon-map-marker'},
-    )
-}
 
 # django-post_office: https://github.com/ui/django-post_office
 POST_OFFICE = {
