@@ -1,13 +1,10 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.management import call_command
 from django.core.urlresolvers import resolve, reverse, NoReverseMatch
-
+from django.db import connection
 from rest_framework.test import APIClient, force_authenticate, APIRequestFactory
-
 from tenant_schemas.test.cases import TenantTestCase
 from tenant_schemas.test.client import TenantClient
-
-from django.db import connection
-from django.core.management import call_command
 from tenant_schemas.utils import get_tenant_model
 
 from users.models import WorkspaceCounter
