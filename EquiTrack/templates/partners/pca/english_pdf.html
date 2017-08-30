@@ -477,21 +477,22 @@
                     <tr>
                         <td colspan="2" style="text-align: center;vertical-align: middle"><br>Account</td>
                     </tr>
+                    {% for bank_detail in bank_details %}
                     <tr>
                         <td style="width: 33%;"><br>Bank Name</td>
-                        <td></td>
+                        <td>{{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Bank Address</td>
-                        <td></td>
+                        <td>{{ bank_detail.bank_address }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Account Title</td>
-                        <td></td>
+                        <td>{{ bank_detail.account_title }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Account No.</td>
-                        <td></td>
+                        <td>{{ bank_detail.account_number }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Account Currency</td>
@@ -499,27 +500,14 @@
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Routing Details <br/> SWIFT/IBAN</td>
-                        <td></td>
+                        <td>{{ bank_detail.routing_details }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Bank Contact Person</td>
-                        <td></td>
+                        <td>{{ bank_detail.bank_contact_person }}</td>
                     </tr>
+                    {% endfor %}
                 </table>
-                {% for bank_detail in bank_details %}
-                        <div class="bank_details" style="border-top: solid 1px; padding-top: 10px">
-                            Bank name: {{ bank_detail.bank_name }}
-                        </div>
-                        <div class="bank_details">Bank address: {{ bank_detail.bank_address }}</div>
-                        <div class="bank_details">Account title: {{ bank_detail.account_title }}</div>
-                        <div class="bank_details">Account No.: {{ bank_detail.account_number }}</div>
-                        <div class="bank_details">
-                            Routing Details, including SWIFT/IBAN (if applicable): {{ bank_detail.routing_details }}
-                        </div>
-{#                        <div style=class="bank_details" style="padding-bottom: 20px">Bank contact#}
-{#                            person: {{ bank_detail.bank_contact_person }}</div>#}
-                        <br>
-                {% endfor %}
 
                 <div><p><b>(B) Transfer of supplies/equipment by UNICEF to IP</b></p></div>
                 <li>Supplies and equipment transferred to the IP by UNICEF will be used exclusively for the
