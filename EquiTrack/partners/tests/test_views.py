@@ -991,27 +991,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data), 2)
         # self.assertEquals(response.data[1]["agreement_number"], self.agreement.agreement_number)
 
-    @skip("Test transitions - checked when going active")
-    def test_agreements_create_validation_signed_by(self):
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "status": "draft",
-            "start": datetime.date.today(),
-            "end": datetime.date.today(),
-            "signed_by_partner_date": datetime.date.today(),
-            "signed_by_unicef_date": datetime.date.today(),
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/',
-            user=self.partnership_manager_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["errors"], ["Partner manager and signed by must be provided."])
-
     @skip('fix this')
     def test_agreements_create_start_set_to_max_signed(self):
         today = datetime.date.today()
