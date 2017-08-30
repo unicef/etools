@@ -401,12 +401,10 @@ class Travel(models.Model):
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.PROGRAMME_MONITORING):
                 PartnerOrganization.programmatic_visits(act.partner, update_one=True)
-                print('---------------------------------------------PROGRAMMATIC VISISTS')
 
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.SPOT_CHECK):
                 PartnerOrganization.spot_checks(act.partner, update_one=True)
-                print('---------------------------------------------SPOT CHECKS')
         except Exception as e:
             logging.info('Exception while trying to update hact values {}'.format(e))
 
