@@ -1872,21 +1872,3 @@ class TestPartnershipDashboardView(APITenantTestCase):
             data=self.intervention_data
         )
         self.intervention_data = response.data
-
-    @skip('endpoint deprecated')
-    def test_with_ct_pk(self):
-        intervention = Intervention.objects.get(id=self.intervention_data['id'])
-        intervention.status = Intervention.ACTIVE
-        intervention.save()
-
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/partnership-dash/{}/'.format(self.agreement2.country_programme.id),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotEqual(response.data['active_value'], 0)
-        self.assertEqual(response.data['active_count'], 1)
-        self.assertEqual(response.data['active_this_year_count'], 1)
-        self.assertEqual(response.data['active_this_year_percentage'], '100%')
