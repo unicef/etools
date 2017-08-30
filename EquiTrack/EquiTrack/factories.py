@@ -332,7 +332,8 @@ class CoverPageBudgetFactory(factory.DjangoModelFactory):
     class Meta:
         model = CoverPageBudget
 
-    date = factory.LazyAttribute(lambda o: datetime.now())
+    from_date = factory.LazyAttribute(lambda o: date.today())
+    to_date = factory.LazyAttribute(lambda o: date.today() + timedelta(days=3))
     total_amount = fuzzy.FuzzyText(length=50)
     funded_amount = fuzzy.FuzzyText(length=50)
     unfunded_amount = fuzzy.FuzzyText(length=50)

@@ -13,7 +13,6 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
 from dal import autocomplete
-from suit.widgets import AutosizedTextarea, SuitDateWidget
 
 from EquiTrack.forms import (
     AutoSizeTextForm,
@@ -304,10 +303,6 @@ class AgreementForm(UserGroupForm):
     class Meta:
         model = Agreement
         fields = '__all__'
-        widgets = {
-            'start': SuitDateWidget,
-            'end': SuitDateWidget,
-        }
 
     def clean(self):
         cleaned_data = super(AgreementForm, self).clean()
@@ -438,7 +433,7 @@ class PartnershipForm(UserGroupForm):
         model = PCA
         fields = '__all__'
         widgets = {
-            'title': AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+            'title': forms.Textarea(),
         }
 
     def add_locations(self, p_codes, sector):

@@ -4,20 +4,18 @@ from django import forms
 from django.db import connection
 from django.db.models import Q
 from django.contrib.auth.models import Group
-from suit.widgets import AutosizedTextarea
+from django.forms import Textarea
 from django.forms.models import BaseInlineFormSet
 
 
 class AutoSizeTextForm(forms.ModelForm):
     """
-    Adds large text boxes to name and description fields
+    Use textarea for name and description fields
     """
     class Meta:
         widgets = {
-            'name':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
-            'description':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+            'name': Textarea(),
+            'description': Textarea(),
         }
 
 
