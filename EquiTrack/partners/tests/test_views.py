@@ -82,7 +82,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             completed_date=datetime.date.today()
         )
 
-        self.partner_gov = PartnerFactory(partner_type="Government")
+        self.partner_gov = PartnerFactory(partner_type=PartnerType.GOVERNMENT)
 
         agreement = AgreementFactory(
             partner=self.partner,
@@ -157,7 +157,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
     def test_api_partners_create(self):
         data = {
             "name": "PO 1",
-            "partner_type": "Government",
+            "partner_type": PartnerType.GOVERNMENT,
             "vendor_number": "AAA",
             "staff_members": [],
         }
@@ -180,7 +180,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         }]
         data = {
             "name": "PO 1",
-            "partner_type": "Government",
+            "partner_type": PartnerType.GOVERNMENT,
             "vendor_number": "AAA",
             "staff_members": staff_members,
         }
@@ -765,7 +765,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(partner_type="Civil Society Organization")
+        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         self.partner_staff = PartnerStaffFactory(partner=self.partner)
         self.partner_staff2 = PartnerStaffFactory(partner=self.partner)
 
@@ -814,8 +814,8 @@ class TestAgreementAPIView(APITenantTestCase):
         )
         self.agreement2 = AgreementFactory(
             partner=self.partner,
-            agreement_type="MOU",
-            status="draft"
+            agreement_type=Agreement.MOU,
+            status=Agreement.DRAFT,
         )
         self.intervention = InterventionFactory(
             agreement=self.agreement,
@@ -823,7 +823,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
     def test_cp_end_date_update(self):
         data = {
-            'agreement_type': 'PCA'
+            'agreement_type': Agreement.PCA,
         }
         response = self.forced_auth_req(
             'get',
@@ -925,7 +925,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_agreements_list_filter_type(self):
-        params = {"agreement_type": "PCA"}
+        params = {"agreement_type": Agreement.PCA}
         response = self.forced_auth_req(
             'get',
             '/api/v2/agreements/'.format(self.partner.id),
@@ -936,7 +936,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.agreement.id)
-        self.assertEqual(response.data[0]["agreement_type"], "PCA")
+        self.assertEqual(response.data[0]["agreement_type"], Agreement.PCA)
 
     def test_agreements_list_filter_status(self):
         params = {"status": "signed"}
@@ -950,7 +950,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.agreement.id)
-        self.assertEqual(response.data[0]["status"], "signed")
+        self.assertEqual(response.data[0]["status"], Agreement.SIGNED)
 
     def test_agreements_list_filter_partner_name(self):
         params = {"partner_name": self.partner.name}
@@ -1098,7 +1098,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(partner_type="Civil Society Organization")
+        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         self.partner_staff = PartnerStaffFactory(partner=self.partner)
         self.partner_staff_user = UserFactory(is_staff=True)
         self.partner_staff_user.groups.add(GroupFactory())
@@ -1139,7 +1139,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
     @skip("Skip staffmembers for now")
     def test_partner_staffmember_create_already_partner(self):
-        partner = PartnerFactory(partner_type="Civil Society Organization")
+        partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         partner_staff = PartnerStaffFactory(partner=partner)
         partner_staff_user = UserFactory(is_staff=True)
         partner_staff_user.profile.partner_staff_member = partner_staff.id
@@ -1324,7 +1324,7 @@ class TestInterventionViews(APITenantTestCase):
             "partner_id": self.agreement2.partner.id,
             "document_type": Intervention.SHPD,
             "title": "2009 EFY AWP Updated",
-            "status": "draft",
+            "status": Intervention.DRAFT,
             "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "submission_date_prc": "2016-10-31",
@@ -1672,7 +1672,7 @@ class TestInterventionViews(APITenantTestCase):
 
     def test_intervention_planned_visits_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = "active"
+        intervention.status = Intervention.ACTIVE
         intervention.save()
         response = self.forced_auth_req(
             'delete',
@@ -1716,7 +1716,7 @@ class TestInterventionViews(APITenantTestCase):
 
     def test_intervention_results_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = "active"
+        intervention.status = Intervention.ACTIVE
         intervention.save()
         response = self.forced_auth_req(
             'delete',
@@ -1738,7 +1738,7 @@ class TestInterventionViews(APITenantTestCase):
 
     def test_intervention_amendments_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = "active"
+        intervention.status = Intervention.ACTIVE
         intervention.save()
         response = self.forced_auth_req(
             'delete',
@@ -1760,7 +1760,7 @@ class TestInterventionViews(APITenantTestCase):
 
     def test_intervention_sector_locations_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = "active"
+        intervention.status = Intervention.ACTIVE
         intervention.save()
         response = self.forced_auth_req(
             'delete',
@@ -1790,7 +1790,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.agreement = AgreementFactory()
-        self.agreement2 = AgreementFactory(status="draft")
+        self.agreement2 = AgreementFactory(status=Agreement.DRAFT)
         self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
         data = {
             "document_type": Intervention.SHPD,
@@ -1824,7 +1824,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
             "partner_id": self.agreement2.partner.id,
             "document_type": Intervention.SHPD,
             "title": "2009 EFY AWP Updated",
-            "status": "draft",
+            "status": Intervention.DRAFT,
             "start": "2017-01-28",
             "end": "2019-01-28",
             "submission_date_prc": "2017-01-31",
