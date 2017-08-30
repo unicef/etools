@@ -287,21 +287,21 @@ class DSARateUploader(object):
 
         regions_to_delete = set(DSARegion.objects.all().values_list('id', flat=True))
 
-        for line, row in enumerate(rows):
+        for line, row in enumerate(rows, start=1):
             if '__extra_columns__' in row.keys():
                 msg = 'There are more fields than header columns ({}).'.format(row['__extra_columns__'])
-                self.errors['Misaligned csv (line {})'.format(line+1)] = msg
+                self.errors['Misaligned csv (line {})'.format(line)] = msg
                 continue
 
             if '__missing_columns__' in row.values():
                 msg = 'There are missing fields compared to header columns.'
-                self.errors['Misaligned csv (line {})'.format(line+1)] = msg
+                self.errors['Misaligned csv (line {})'.format(line)] = msg
                 continue
 
             country_qs = Country.objects.filter(dsa_code=row['Country Code'])
             if not country_qs.exists():
                 msg = 'Cannot find country for country code {}. Skipping it.'.format(row['Country Code'])
-                self.warnings['Country Code (line {})'.format(line+1)] = msg
+                self.warnings['Country Code (line {})'.format(line)] = msg
                 continue
 
             row['Local_60'] = process_number('Local_60')
