@@ -991,29 +991,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data), 2)
         # self.assertEquals(response.data[1]["agreement_number"], self.agreement.agreement_number)
 
-    @skip('fix this')
-    def test_agreements_create_start_set_to_max_signed(self):
-        today = datetime.date.today()
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "status": "draft",
-            "country_programme": self.agreement.country_programme.id,
-            "start": date(today.year - 1, 1, 1),
-            "end": self.country_programme.to_date,
-            "signed_by": self.unicef_staff.id,
-            "partner_manager": self.partner_staff.id,
-            "signed_by_partner_date": date(today.year - 1, 2, 1),
-            "signed_by_unicef_date": date(today.year - 1, 3, 1),
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/',
-            user=self.partnership_manager_user,
-            data=data
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
     @skip("Test transitions")
     def test_agreements_update_set_to_active_on_save(self):
         today = datetime.date.today()
