@@ -163,10 +163,10 @@ class TransitionPermissionTestCaseMetaclass(type):
         return transitions
 
     @staticmethod
-    def _annotate_test(klass, status, transition):
+    def _annotate_test(klass, obj_status, transition):
         def test(self):
             obj = self.create_object(transition, **{
-                self.status_field.name: status,
+                self.status_field.name: obj_status,
             })
 
             result = self.do_transition(obj, transition)
@@ -177,7 +177,7 @@ class TransitionPermissionTestCaseMetaclass(type):
 
         model = klass.model
         model_name = model._meta.model_name
-        test_name = 'test_{}_for_{}_{}'.format(transition, status, model_name)
+        test_name = 'test_{}_for_{}_{}'.format(transition, obj_status, model_name)
         setattr(klass, test_name, test)
 
     def __new__(cls, name, bases, attrs):
@@ -192,9 +192,9 @@ class TransitionPermissionTestCaseMetaclass(type):
         newclass.status_field = getattr(newclass.model, newclass.transitions[0])._django_fsm.field
         newclass.statuses = zip(*newclass.status_field.choices)[0]
 
-        for status in newclass.statuses:
+        for obj_status in newclass.statuses:
             for transition in newclass.transitions:
-                cls._annotate_test(newclass, status, transition)
+                cls._annotate_test(newclass, obj_status, transition)
 
         return newclass
 
