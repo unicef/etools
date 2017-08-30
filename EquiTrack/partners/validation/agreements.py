@@ -20,7 +20,7 @@ def agreement_transition_to_signed_valid(agreement):
 
         raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
 
-    if not agreement.start or agreement.start >= today:
+    if not agreement.start or agreement.start > today:
         raise TransitionError(['Agreement cannot transition to signed until start date greater or equal to today'])
     if not agreement.end or agreement.end < today:
         raise TransitionError(['Agreement cannot transition to signed end date has passed'])

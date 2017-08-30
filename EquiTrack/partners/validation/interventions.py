@@ -67,6 +67,22 @@ def start_end_dates_valid(i):
     return True
 
 
+def start_date_signed_valid(i):
+    # i = intervention
+    if i.signed_by_unicef_date and i.signed_by_partner_date and i.start:
+        if i.start < max([i.signed_by_unicef_date, i.signed_by_partner_date]):
+            return False
+    return True
+
+
+def start_date_related_agreement_valid(i):
+    # i = intervention
+    if i.document_type in [i.PD, i.SHPD] and not i.contingency_pd and i.start and i.agreement.start and\
+                    i.start < i.agreement.start:
+        return False
+    return True
+
+
 def signed_date_valid(i):
     # i = intervention
     today = date.today()
@@ -124,6 +140,8 @@ class InterventionValid(CompleteValidation):
         ssfa_agreement_has_no_other_intervention,
         start_end_dates_valid,
         signed_date_valid,
+        start_date_signed_valid,
+        start_date_related_agreement_valid,
         document_type_pca_valid,
         amendments_valid,
     ]
@@ -138,7 +156,9 @@ class InterventionValid(CompleteValidation):
         'amendments_valid': 'Type, signed date, and signed amendment are required in Amendments. '
                             'If you seleced Other as an amendment type, please add the description',
         'ssfa_agreement_has_no_other_intervention': 'The agreement selected has at least one '
-                                                    'other SSFA Document connected'
+                                                    'other SSFA Document connected',
+        'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
+        'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA'
     }
 
     PERMISSIONS_CLASS = InterventionPermissions
@@ -167,7 +187,6 @@ class InterventionValid(CompleteValidation):
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
-
         return True
 
     def state_suspended_valid(self, intervention, user=None):
