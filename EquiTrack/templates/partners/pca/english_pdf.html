@@ -13,7 +13,6 @@
                 size: {{ pagesize|default:"letter" }};
                 margin-left: 2.0cm;
                 margin-right: 2.0cm;
-                /*margin-top: 1.8cm;*/
                 margin-top: 2.4cm;
                 margin-bottom: 1.8cm;
                 @frame header {
@@ -479,19 +478,19 @@
                     {% for bank_detail in bank_details %}
                     <tr>
                         <td style="width: 33%;"><br>Bank Name</td>
-                        <td>{{ bank_detail.bank_name }}</td>
+                        <td><br> {{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Bank Address</td>
-                        <td>{{ bank_detail.bank_address }}</td>
+                        <td><br>{{ bank_detail.bank_address }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Account Title</td>
-                        <td>{{ bank_detail.account_title }}</td>
+                        <td><br>{{ bank_detail.account_title }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Account No.</td>
-                        <td>{{ bank_detail.account_number }}</td>
+                        <td><br>{{ bank_detail.account_number }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Account Currency</td>
@@ -499,11 +498,11 @@
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Routing Details <br/> SWIFT/IBAN</td>
-                        <td>{{ bank_detail.routing_details }}</td>
+                        <td><br>{{ bank_detail.routing_details }}</td>
                     </tr>
                     <tr>
                         <td style="width: 33%;"><br>Bank Contact Person</td>
-                        <td>{{ bank_detail.bank_contact_person }}</td>
+                        <td><br>{{ bank_detail.bank_contact_person }}</td>
                     </tr>
                     {% endfor %}
                 </table>
