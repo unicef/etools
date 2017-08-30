@@ -35,7 +35,7 @@ class RiskBlueprintNestedSerializer(WritableNestedSerializerMixin, serializers.M
     """
     Risk blueprint connected with risk value for certain engagement instance.
     """
-    risk = RiskSerializer()
+    risk = RiskSerializer(label=_('Risk Assessment'))
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = RiskBluePrint
