@@ -87,7 +87,8 @@ def create_location(pcode, carto_table, parent, parent_instance,
 @app.task
 def update_sites_from_cartodb(carto_table):
 
-    client = APIKeyAuthClient(api_key=carto_table.api_key, base_url="https://equitrack.carto.com/")
+    auth_client = APIKeyAuthClient(api_key=carto_table.api_key, base_url="https://equitrack.carto.com/")
+    sql_client = SQLClient(auth_client)
 
     sites_created = sites_updated = sites_not_added = 0
     try:
@@ -105,7 +106,7 @@ def update_sites_from_cartodb(carto_table):
                 carto_table.pcode_col,
                 carto_table.table_name)
 
-        sites = client.sql(qry)
+        sites = sql_client.sql(qry)
     except CartoException:
         logging.exception("CartoDB exception occured")
     else:
