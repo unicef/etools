@@ -2,12 +2,8 @@
 Project wide base classes and utility functions for apps
 """
 import csv
-import os
 from collections import OrderedDict as SortedDict
 from functools import wraps
-
-import collections
-from import_export.resources import ModelResource
 import json
 import requests
 import tablib
@@ -21,13 +17,14 @@ from django.contrib.sites.models import Site
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import connection
 from django.utils.cache import patch_cache_control
-
+from import_export.resources import ModelResource
 from rest_framework import status
 from rest_framework.response import Response
 
 
 def get_environment():
     return settings.ENVIRONMENT
+
 
 def get_current_site():
     return Site.objects.get_current()
@@ -105,16 +102,13 @@ class BaseExportResource(ModelResource):
         Exports a resource.
         """
 
-        #TODO quickly patched.. this whole code needs to be rewritten to for performance (streaming)
-
-
+        # TODO quickly patched.. this whole code needs to be rewritten to for performance (streaming)
 
         if queryset is None:
             queryset = self.get_queryset()
 
         if getattr(self, 'up_queryset', None):
             queryset = self.up_queryset(queryset)
-
 
         fields = SortedDict()
         data = tablib.Dataset(headers=fields.keys())
@@ -173,7 +167,7 @@ def get_data_from_insight(endpoint, data={}):
         return False, 'Loading data from Vision Failed, status {}'.format(response.status_code)
     try:
         result = json.loads(response.json())
-    except ValueError as e:
+    except ValueError:
         return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
     return True, result
 
@@ -227,6 +221,7 @@ class Vividict(dict):
     def __missing__(self, key):
         value = self[key] = type(self)()
         return value
+
 
 class HashableDict(dict):
     def __hash__(self):
