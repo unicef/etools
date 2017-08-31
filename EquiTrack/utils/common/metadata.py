@@ -74,7 +74,7 @@ class CRUActionsMetadataMixin(object):
     actions = {
         'PUT': 'update',
         'POST': 'create',
-        'GET': 'list'
+        'GET': 'retrieve'
     }
 
     def determine_actions(self, request, view):
