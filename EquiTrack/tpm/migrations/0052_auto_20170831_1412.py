@@ -9,7 +9,7 @@ import django.db.models.deletion
 def fill_sections(apps, schema_editor):
     TPMActivity = apps.get_model('tpm', 'tpmactivity')
     Section = apps.get_model('users', 'Section')
-    TPMActivity.objects.all().update(section_id=Section.objects.first().id)
+    TPMActivity.objects.all().update(section=Section.objects.first())
 
 
 def do_nothing(*args):
