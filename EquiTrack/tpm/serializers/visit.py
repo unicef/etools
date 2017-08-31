@@ -4,7 +4,7 @@ from rest_framework.exceptions import ValidationError
 
 from locations.models import Location
 from partners.models import InterventionResultLink, Intervention, PartnerOrganization
-from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer, InterventionListSerializer
+from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from reports.models import Result
 from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActivityActionPoint, \
     TPMPartnerStaffMember
