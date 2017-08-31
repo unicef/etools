@@ -1,9 +1,7 @@
 [flake8]
 max-line-length = 120
 exclude =
-    # ignore auto-generated code
     migrations,
-    # ignore data files
     load_initial_data.py,
     publics/management/commands/xml,
     t2f/management/commands/et2f_init.py,
