@@ -70,6 +70,13 @@ class CRUActionsMetadataMixin(object):
     """
     Return "GET" with readable fields as allowed method.
     """
+
+    actions = {
+        'PUT': 'update',
+        'POST': 'create',
+        'GET': 'list'
+    }
+
     def determine_actions(self, request, view):
         """
         For generic class based views we return information about
@@ -78,6 +85,7 @@ class CRUActionsMetadataMixin(object):
         actions = {}
         for method in {'PUT', 'POST', 'GET'} & set(view.allowed_methods):
             view.request = clone_request(request, method)
+            view.action = self.actions[method]
             instance = None
             try:
                 # Test global permissions
