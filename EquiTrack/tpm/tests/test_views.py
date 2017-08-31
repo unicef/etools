@@ -5,7 +5,6 @@ from django.core.management import call_command
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
-from EquiTrack.factories import SectionFactory
 from .base import TPMTestCaseMixin
 from .factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
 
