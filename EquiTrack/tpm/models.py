@@ -302,6 +302,8 @@ class TPMActivity(models.Model):
 
     locations = models.ManyToManyField('locations.Location', verbose_name=_('Locations'), related_name='tpm_activities')
 
+    additional_information = models.TextField(verbose_name=_('Additional Information'), blank=True)
+
     pd_files = CodedGenericRelation(Attachment, verbose_name=_('Programme Documents'), code='visit_pd', blank=True)
 
     is_pv = models.BooleanField(default=False)

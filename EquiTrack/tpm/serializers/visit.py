@@ -79,13 +79,13 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
         return super(TPMActivityActionPointSerializer, self).create(validated_data)
 
 
-class TPMActivityLightSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
-                                 serializers.ModelSerializer):
+class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
+                            serializers.ModelSerializer):
     implementing_partner = SeparatedReadWriteField(
         read_field=PartnerOrganizationLightSerializer(read_only=True),
     )
     partnership = SeparatedReadWriteField(
-        read_field=InterventionListSerializer(read_only=True),
+        read_field=InterventionCreateUpdateSerializer(read_only=True),
     )
 
     cp_output = SeparatedReadWriteField(
@@ -105,14 +105,8 @@ class TPMActivityLightSerializer(TPMPermissionsBasedSerializerMixin, WritableNes
         model = TPMActivity
         fields = [
             'id', 'implementing_partner', 'partnership', 'cp_output',
-            'date', 'locations', 'pd_files', 'action_points',
+            'date', 'locations', 'pd_files', 'action_points', 'additional_information'
         ]
-
-
-class TPMActivitySerializer(TPMActivityLightSerializer):
-    partnership = SeparatedReadWriteField(
-        read_field=InterventionCreateUpdateSerializer(read_only=True),
-    )
 
     def validate(self, attrs):
         validated_data = super(TPMActivitySerializer, self).validate(attrs)
@@ -177,9 +171,6 @@ class TPMActivitySerializer(TPMActivityLightSerializer):
                 })
 
         return validated_data
-
-    class Meta(TPMActivityLightSerializer.Meta):
-        pass
 
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
