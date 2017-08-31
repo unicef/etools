@@ -5,6 +5,7 @@ def int_or_str(c):
     except ValueError:
         return c
 
+
 def list_or_dict(a):
     return '[]' if isinstance(a, int) else '{}'
 
@@ -51,6 +52,7 @@ def set_current_path_in_dict(r, path, next_value, end=False):
         exec exec_str in globals(), locals()
     return r
 
+
 def path_in_dict_exists(r, pth):
 
     try:
@@ -59,6 +61,7 @@ def path_in_dict_exists(r, pth):
     except Exception as e:
         return False
     return True
+
 
 def form_myd_path(path):
     mys = ''
@@ -69,6 +72,7 @@ def form_myd_path(path):
             mys += '[' + str(path[i]) + ']'
     return mys
 
+
 def parse_multipart_data(myd):
     r = {}
     lok = l_o_k(myd)
@@ -76,7 +80,6 @@ def parse_multipart_data(myd):
     def set_in_path(r, path, next_value, original_list):
         # 'strip the _obj elements before set'
         pth = form_path_from_list(path)
-
 
         if path_in_dict_exists(r, pth):
             # move to the next bit
@@ -106,6 +109,6 @@ def parse_multipart_data(myd):
                     parcurs.append(k[i + 1])
                     exec_str = 'r' + pth + '.append(myd[form_myd_path(parcurs)])'
                     exec exec_str in globals(), locals()
-            i+=1
+            i += 1
 
     return r

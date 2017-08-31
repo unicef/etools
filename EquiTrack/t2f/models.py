@@ -11,7 +11,6 @@ from django.core.mail.message import EmailMultiAlternatives
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models, connection
-from django.template.context import Context
 from django.template.loader import render_to_string
 from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy
@@ -421,9 +420,7 @@ class Travel(models.Model):
         url = 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
                                                                    travel_id=self.id)
 
-        context = Context({'travel': serializer.data,
-                           'url': url})
-        html_content = render_to_string(template_name, context)
+        html_content = render_to_string(template_name, {'travel': serializer.data, 'url': url})
 
         # TODO what should be used?
         sender = settings.DEFAULT_FROM_EMAIL
@@ -645,9 +642,8 @@ class ActionPoint(models.Model):
         url = 'https://{host}/t2f/action-point/{action_point_id}/'.format(host=settings.HOST,
                                                                           action_point_id=self.id)
 
-        context = Context({'action_point': serializer.data,
-                           'url': url})
-        html_content = render_to_string('emails/action_point_assigned.html', context)
+        html_content = render_to_string('emails/action_point_assigned.html',
+                                        {'action_point': serializer.data, 'url': url})
 
         # TODO what should be used?
         sender = settings.DEFAULT_FROM_EMAIL
