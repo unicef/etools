@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from django.db import connection, models
 from django.contrib import admin
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
 
@@ -12,7 +13,6 @@ from generic_links.admin import GenericLinkStackedInline
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
-from EquiTrack.utils import get_staticfile_link
 from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from reports.models import Result
@@ -469,7 +469,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     def work_plan_template(self, obj):
         return u'<a class="btn btn-primary default" ' \
                u'href="{}" >Download Template</a>'.format(
-                   get_staticfile_link(
+                   static(
                        'partner/templates/workplan_template.xlsx')
                )
     work_plan_template.allow_tags = True

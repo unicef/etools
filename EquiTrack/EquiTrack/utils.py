@@ -13,7 +13,6 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
-from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import connection
 from django.utils.cache import patch_cache_control
 from import_export.resources import ModelResource
@@ -45,16 +44,6 @@ def get_changeform_link(model, link_name='View', action='change'):
         return u'<a class="btn btn-primary default" ' \
                u'href="{}" target="_blank">{}</a>'.format(changeform_url, link_name)
     return u''
-
-
-def get_staticfile_link(file_path):
-    """
-    Returns the full URL to a file in static files
-
-    :param file_path: path to file relative to static files root
-    :return: fully qualified URL to file
-    """
-    return static(file_path)
 
 
 class BaseExportResource(ModelResource):
