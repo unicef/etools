@@ -184,8 +184,6 @@ class TPMActivitySerializer(TPMActivityLightSerializer):
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
                               serializers.ModelSerializer):
-    tpm_activities = TPMActivityLightSerializer(many=True, required=False)
-
     tpm_partner = SeparatedReadWriteField(
         read_field=TPMPartnerLightSerializer(read_only=True),
     )
@@ -234,8 +232,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
         model = TPMVisit
         permission_class = TPMPermission
         fields = [
-            'id', 'start_date', 'end_date',
-            'tpm_activities', 'tpm_partner', 'implementing_partners', 'locations',
+            'id', 'start_date', 'end_date', 'tpm_partner', 'implementing_partners', 'locations',
             'status', 'status_date', 'reference_number',
             'sections', 'offices', 'tpm_partner_focal_points', 'unicef_focal_points',
             'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
@@ -277,6 +274,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
+            'tpm_activities',
             'reject_comment',
             'attachments',
             'report',

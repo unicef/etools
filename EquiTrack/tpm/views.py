@@ -119,8 +119,6 @@ class TPMVisitViewSet(
     metadata_class = TPMPermissionBasedMetadata
     queryset = TPMVisit.objects.all().prefetch_related(
         'tpm_partner',
-        'tpm_activities',
-        'tpm_activities__partnership',
         'unicef_focal_points',
         'attachments',
         'sections',
@@ -135,7 +133,7 @@ class TPMVisitViewSet(
         'tpm_partner__name', 'tpm_activities__implementing_partner__name'
     )
     ordering_fields = (
-        'tpm_partner__name', 'tpm_activities__implementing_partner__name', 'status'
+        'tpm_partner__name', 'status'
     )
     filter_fields = (
         'tpm_partner', 'sections', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
