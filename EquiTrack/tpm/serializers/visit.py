@@ -55,68 +55,28 @@ class TPMVisitReportRejectCommentSerializer(TPMPermissionsBasedSerializerMixin,
 class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
                                        WritableNestedSerializerMixin,
                                        serializers.ModelSerializer):
-    section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True),
-        required=True
-    )
-
-    cp_outputs = SeparatedReadWriteField(
-        read_field=ResultSerializer(many=True, read_only=True),
-        required=True
-    )
-
-    locations = SeparatedReadWriteField(
-        read_field=LocationLightSerializer(many=True, read_only=True)
-    )
+    author = MinimalUserSerializer(read_only=True)
 
     person_responsible = SeparatedReadWriteField(
         read_field=MinimalUserSerializer(read_only=True),
         required=True
     )
 
+    is_responsible = serializers.SerializerMethodField()
+
+    def get_is_responsible(self, obj):
+        return self.get_user() == obj.person_responsible
+
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivityActionPoint
         fields = [
-            'id', 'section', 'cp_outputs', 'locations', 'person_responsible',
-            'due_date', 'status', 'description', 'completed_at', 'actions_taken',
-            'follow_up'
+            'id', 'author', 'person_responsible', 'is_responsible',
+            'due_date', 'status', 'description', 'comments',
         ]
 
     def create(self, validated_data):
-        validated_data = self.validate_related_data(validated_data)
         validated_data['author'] = self.get_user()
         return super(TPMActivityActionPointSerializer, self).create(validated_data)
-
-    def update(self, validated_data):
-        validated_data = self.validate_related_data(validated_data)
-        return super(TPMActivityActionPointSerializer, self).create(validated_data)
-
-    def validate_related_data(self, validated_data):
-        tpm_visit = self.context['instance']
-
-        instance = TPMActivityActionPoint.objects.get(id=validated_data['id']) if 'id' in validated_data else None
-
-        section = validated_data.get('section', None)
-        if section or instance:
-            if (section or instance.section) not in tpm_visit.sections.all():
-                raise serializers.ValidationError({
-                    "section": "Section {} doesn't connected with visit".format(section or instance.section.id)
-                })
-
-        locations = validated_data.get('locations', None)
-        if locations or instance:
-            locations = set(locations or instance.locations.values_list('id', flat=True))
-            activity = validated_data.get('tpm_activity', None) or validated_data.get('tpm_activity_id', None)
-            if not activity:
-                activity = instance.tpm_activity.id
-
-            not_related = locations - set(TPMActivity.objects.get(id=activity).locations.values_list('id', flat=True))
-            if len(not_related) == 0:
-                raise serializers.ValidationError({
-                    "location": "Locations {} don't connected with activity".format(",".join(not_related))
-                })
-
-        return validated_data
 
 
 class TPMActivityLightSerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
@@ -157,8 +117,14 @@ class TPMActivitySerializer(TPMActivityLightSerializer):
     def validate(self, attrs):
         validated_data = super(TPMActivitySerializer, self).validate(attrs)
 
+        if '_delete' in validated_data:
+            return validated_data
+
         if 'id' in validated_data:
-            self.instance = self.Meta.model.objects.get(id=validated_data['id'])
+            try:
+                self.instance = self.Meta.model.objects.get(id=validated_data['id'])
+            except self.Meta.model.DoesNotExist:
+                raise ValidationError('Activity does not exist')
 
         implementing_partner = validated_data.get(
             'implementing_partner',
@@ -182,7 +148,7 @@ class TPMActivitySerializer(TPMActivityLightSerializer):
         if not partnership:
             raise ValidationError({'partnership': self.error_messages['required']})
 
-        if 'cp_output' in validated_data:
+        if validated_data.get('cp_output'):
             if not Result.objects.filter(
                 id=validated_data['cp_output'].id,
                 intervention_links__intervention_id=partnership.id

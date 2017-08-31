@@ -63,7 +63,7 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
         self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
 
     def test_action_points(self):
-        visit = TPMVisitFactory(status='unicef_approved', unicef_focal_points__count=1)
+        visit = TPMVisitFactory(status='tpm_reported', unicef_focal_points__count=1)
         unicef_focal_point = visit.unicef_focal_points.first()
         self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=visit).count(), 0)
 
@@ -76,10 +76,7 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
                     'id': activity.id,
                     'action_points': [
                         {
-                            "section": visit.sections.values_list('id', flat=True)[0],
-                            "locations": activity.locations.values_list('id', flat=True),
                             "person_responsible": visit.tpm_partner.staff_members.first().user.id,
-                            "cp_outputs": [activity.cp_output.id, ],
                             "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
                             "description": "Description",
                         }
@@ -89,34 +86,6 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertNotEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=visit).count(), 0)
-
-    def test_action_point_with_not_related_section(self):
-        visit = TPMVisitFactory(status='unicef_approved', unicef_focal_points__count=1)
-        unicef_focal_point = visit.unicef_focal_points.first()
-        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=visit).count(), 0)
-
-        response = self.forced_auth_req(
-            'patch',
-            '/api/tpm/visits/{}/'.format(visit.id),
-            user=unicef_focal_point,
-            data={
-                'tpm_activities': [{
-                    'id': activity.id,
-                    'action_points': [
-                        {
-                            "section": SectionFactory.create().id,
-                            "locations": activity.locations.values_list('id', flat=True),
-                            "person_responsible": visit.tpm_partner.staff_members.first().user.id,
-                            "cp_outputs": [activity.cp_output.id, ],
-                            "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
-                            "description": "Description",
-                        }
-                    ]
-                } for activity in visit.tpm_activities.all()]
-            }
-        )
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=visit).count(), 0)
 
 
 class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):

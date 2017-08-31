@@ -74,3 +74,10 @@ class TPMPartnerStaffMemberAdmin(admin.ModelAdmin):
     def active(self, obj):
         return obj.user.is_active
     active.admin_order_field = 'user__is_active'
+
+
+@admin.register(models.TPMActivityActionPoint)
+class TPMActivityActionPointAdmin(admin.ModelAdmin):
+    list_display = [
+        'author', 'person_responsible', 'tpm_activity', 'due_date', 'status',
+    ]

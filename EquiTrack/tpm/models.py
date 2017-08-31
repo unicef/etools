@@ -317,29 +317,24 @@ class TPMActivity(models.Model):
 
 
 @python_2_unicode_compatible
-class TPMActivityActionPoint(models.Model):
+class TPMActivityActionPoint(TimeStampedModel, models.Model):
     STATUSES = Choices(
         ('open', 'Open'),
-        ('ongoing', 'Ongoing'),
+        ('progress', 'In-Progress'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     )
 
+    tpm_activity = models.ForeignKey(TPMActivity, related_name='action_points')
+
     author = models.ForeignKey(User, related_name='created_tpm_activity_action_points')
     person_responsible = models.ForeignKey(User, related_name='tpm_activity_action_points')
 
-    tpm_activity = models.ForeignKey(TPMActivity, related_name='action_points')
-
-    section = models.ForeignKey('users.Section')
-    locations = models.ManyToManyField('locations.Location')
-    cp_outputs = models.ManyToManyField('reports.Result', verbose_name=_('CP Output'))
-
     due_date = models.DateField()
-    status = models.CharField(choices=STATUSES, max_length=9, null=True, verbose_name='Status')
     description = models.TextField()
-    completed_at = models.DateTimeField(blank=True, null=True)
-    actions_taken = models.TextField(blank=True, null=True)
-    follow_up = models.BooleanField(default=False)
+    comments = models.TextField(blank=True)
+
+    status = models.CharField(choices=STATUSES, max_length=9, verbose_name='Status', default=STATUSES.open)
 
     def __str__(self):
         return 'Action Point #{} on {}'.format(self.id, self.tpm_activity)
