@@ -118,7 +118,6 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     date_of_tpm_report_rejected = models.DateField(blank=True, null=True)
     date_of_unicef_approved = models.DateField(blank=True, null=True)
 
-    sections = models.ManyToManyField('users.Section', related_name='tpm_visits', blank=True)
     offices = models.ManyToManyField('users.Office', related_name='tpm_visits', blank=True)
 
     unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Points'),
@@ -301,6 +300,7 @@ class TPMActivity(models.Model):
     cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), null=True, blank=True)
 
     locations = models.ManyToManyField('locations.Location', verbose_name=_('Locations'), related_name='tpm_activities')
+    section = models.ForeignKey('users.Section', related_name='tpm_activities')
 
     additional_information = models.TextField(verbose_name=_('Additional Information'), blank=True)
 

@@ -97,6 +97,11 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         read_field=LocationLightSerializer(many=True, read_only=True),
     )
 
+    section = SeparatedReadWriteField(
+        read_field=SectionSerializer(read_only=True),
+        required=True,
+    )
+
     pd_files = TPMActivityPDSerializer(many=True, required=False)
 
     action_points = TPMActivityActionPointSerializer(many=True, required=False)
@@ -104,7 +109,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
-            'id', 'implementing_partner', 'partnership', 'cp_output',
+            'id', 'implementing_partner', 'partnership', 'cp_output', 'section',
             'date', 'locations', 'pd_files', 'action_points', 'additional_information'
         ]
 
@@ -179,10 +184,6 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
         read_field=TPMPartnerLightSerializer(read_only=True),
     )
 
-    sections = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, many=True),
-    )
-
     offices = SeparatedReadWriteField(
         read_field=OfficeSerializer(read_only=True, many=True)
     )
@@ -225,7 +226,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
         fields = [
             'id', 'start_date', 'end_date', 'tpm_partner', 'implementing_partners', 'locations',
             'status', 'status_date', 'reference_number',
-            'sections', 'offices', 'tpm_partner_focal_points', 'unicef_focal_points',
+            'offices', 'tpm_partner_focal_points', 'unicef_focal_points',
             'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
             'date_of_tpm_rejected', 'date_of_tpm_reported', 'date_of_unicef_approved',
             'date_of_tpm_report_rejected', 'date_of_cancelled',

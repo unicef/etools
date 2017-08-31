@@ -121,7 +121,6 @@ class TPMVisitViewSet(
         'tpm_partner',
         'unicef_focal_points',
         'attachments',
-        'sections',
     )
     serializer_class = TPMVisitSerializer
     serializer_action_classes = {
@@ -136,7 +135,7 @@ class TPMVisitViewSet(
         'tpm_partner__name', 'status'
     )
     filter_fields = (
-        'tpm_partner', 'sections', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
+        'tpm_partner', 'tpm_activities__section', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
         'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status',
     )
 
