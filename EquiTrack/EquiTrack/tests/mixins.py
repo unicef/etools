@@ -4,7 +4,6 @@ from django.core.urlresolvers import resolve, reverse, NoReverseMatch
 from django.db import connection
 from rest_framework.test import APIClient, force_authenticate, APIRequestFactory
 from tenant_schemas.test.cases import TenantTestCase
-from tenant_schemas.test.client import TenantClient
 from tenant_schemas.utils import get_tenant_model
 
 from users.models import WorkspaceCounter
@@ -138,11 +137,6 @@ class FastTenantTestCase(TenantTestCase):
 
         if exact and len(key_set) != len(container_set):
             self.fail('{} != {}'.format(', '.join(key_set), ', '.join(container_set)))
-
-
-class APITenantClient(TenantClient, APIClient):
-    def __init__(self, tenant, **defaults):
-        super(APITenantClient, self).__init__(tenant=tenant, defaults=defaults)
 
 
 class APITenantTestCase(FastTenantTestCase):
