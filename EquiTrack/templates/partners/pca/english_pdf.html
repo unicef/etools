@@ -95,8 +95,13 @@
             .keep-with-next {
                 -pdf-keep-with-next: true;
             }
-            ol.indented li {
-                text-indent: 2cm;
+            .small-indent {
+                /*padding-left: 0.6cm;*/
+                text-indent: 0.8cm;
+            }
+            .indented {
+                /*list-style-position: inside;*/
+                /*text-indent: 12px;*/
             }
         </style>
     {% endblock %}
@@ -135,7 +140,7 @@
             <div class="keep-with-next" style="padding-bottom: 10px; padding-left: 5px">
                 In this Agreement, the expression:
             </div>
-            <ol style="padding-bottom: 10px;">
+            <ol class="indented" style="padding-bottom: 10px;">
                 <li>“<u>United Nations Children’s Fund</u>” or “<u>UNICEF</u>” means the subsidiary organ of the United
                     Nations established by the General Assembly pursuant to resolution 57(I) of 11 December 1946.
                 </li>
@@ -212,7 +217,7 @@
         <div id="article-II" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-bottom: 0px"><b>ARTICLE II</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>AGREEMENT DOCUMENTS</b></div>
-            <ol>
+            <ol class="indented">
                 <li>
                     This Agreement consists of the following documents:
                     <div>(a) This Agreement;</div>
@@ -228,7 +233,7 @@
         <div id="article-III" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE III</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>PURPOSE AND SCOPE</b></div>
-            <ol>
+            <ol class="indented">
                 <li>
                     This Agreement shall govern the implementation by the IP of the relevant parts of the Programme
                     (including humanitarian response in the Country) through one or several Programme Documents.
@@ -240,7 +245,7 @@
         <div id="article-IV" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE IV</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>GENERAL RESPONSIBILITIES OF THE PARTIES</b></div>
-            <ol>
+            <ol class="indented">
                 <li>The Parties will work together in a spirit of cooperation and partnership, with the responsibilities
                     and accountabilities set out in this Agreement, to implement the Programme Documents in full in a timely,
                     efficient, and effective, manner.
@@ -265,7 +270,7 @@
             <div class="keep-with-next" style="padding-top: 0px; text-align: center">
                 <b>RESPONSIBILITIES OF THE IP</b>
             </div>
-            <ol>
+            <ol class="indented">
                 <li>The IP will contribute to the implementation of each Programme Document covered by this Agreement by
                     undertaking the responsibilities allocated to it in this Agreement, in full cooperation with UNICEF,
                     and will do so in accordance with the budget, schedule, and other details set out in the Programme
@@ -308,7 +313,7 @@
         <div id="article-VI" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE VI</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>RESPONSIBILITIES OF UNICEF</b></div>
-            <ol>
+            <ol class="indented">
                 <li>UNICEF will contribute to the implementation of each Programme Document covered by this Agreement
                     by undertaking the responsibilities allocated to it in this Agreement, including by:
                 </li>
@@ -345,7 +350,7 @@
         <div id="article-VII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE VII</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>PROGRAMME DOCUMENTS</b></div>
-            <ol>
+            <ol class="indented">
                 <li>The Parties will conclude one or several Programme Documents as the case may be.
                     Programme Documents shall be signed by duly authorized representatives of the Parties.
                 </li>
@@ -365,7 +370,7 @@
 
             <div class="keep-with-next" ><b>(A) Cash Transfer by UNICEF to/on behalf of IP</b></div>
             <div class="keep-with-next" ><p><u>General Provisions:</u></p></div>
-            <ol>
+            <ol class="indented">
                 <li>UNICEF will provide the IP with cash assistance for the activities as stipulated in the Programme
                     Documents (the “<u>Cash Transfer</u>”), subject to the availability of funds and the terms of this
                     Agreement. UNICEF’s assistance to the IP will not exceed the amounts included in the Programme
@@ -539,7 +544,7 @@
         <div id="article-IX" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE IX</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>RECORD KEEPING</b></div>
-            <ol>
+            <ol class="indented">
                 <li>The IP agrees to maintain books and records that are accurate, complete and up-to-date. </li>
                 <div><p><u>Cash Transfer:</u></p></div>
                 <li>The IP’s books and records will clearly identify all Cash Transfer Installments received by the IP
@@ -574,12 +579,12 @@
         <div id="article-X" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE X</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>REPORTING REQUIREMENTS</b></div>
-            <ol>
+            <ol class="indented">
                 <li>The IP will deliver to UNICEF the reports set out below.  Narrative reports will, if possible,
                     be provided in English, French, or Spanish.
                 </li>
-                <div><p><b>(A) Financial reporting</b></p></div>
-                <div><p><u>Financial reporting using FACE form:</u></p></div>
+                <div class="keep-with-next"><p><b>(A) Financial reporting</b></p></div>
+                <div class="keep-with-next"><p><u>Financial reporting using FACE form:</u></p></div>
                 <li>(a) Unless otherwise agreed between the Parties in writing, the IP will submit FACE forms at
                     the end of every Quarter, using the FACE form. Should a FACE form not be submitted within six (6)
                     months from the last Quarter, UNICEF will, unless agreed otherwise, suspend any further cash transfers
@@ -696,7 +701,7 @@
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XI</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>ACTIONS UPON COMPLETION</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>OF ACTIVITIES UNDER PROGRAMME DOCUMENT</b></div>
-            <ol>
+            <ol class="indented">
                 <li>(a) Upon completion of the IP’s activities under a Programme Document, the IP shall refund to UNICEF
                     the unspent balances of all Cash Transfers under that Programme Document (which shall be reported on
                     the final FACE form submitted by the IP) and all other amounts of money it is not entitled to.
@@ -719,7 +724,7 @@
         <div id="article-XII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XII</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>PRIVILEGES AND IMMUNITIES; RESOLUTION OF DISPUTES</b></div>
-            <ol>
+            <ol class="indented">
                 <li>In accordance with Article 17 of the General Terms and Conditions for Implementing Partner
                     Agreements, nothing in or relating to this Agreement shall be deemed a waiver, express or implied,
                     of any of the privileges and immunities of the United Nations, including UNICEF.
@@ -754,7 +759,7 @@
         <div id="article-XIII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XIII</b></div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>FINAL PROVISIONS</b></div>
-            <ol>
+            <ol class="indented">
                 <li>This Agreement shall enter into force on the date it is signed by both Parties. It shall expire on
                     the last day of the Programme unless terminated earlier in accordance with Article 11 of the General
                     Terms and Conditions attached to and incorporated in this Agreement.
@@ -819,18 +824,18 @@
                     shall be subject to, conform to and give full effect to the provisions of this Agreement.
                 </li>
                 <li><b>OFFICIALS NOT TO BENEFIT; RESTRICTION ON HIRING UNICEF PERSONNEL:</b></li>
-                <div>a. a. IP warrants that no official of UNICEF has received or will be offered by IP any direct or
+                <div>a. IP warrants that no official of UNICEF has received or will be offered by IP any direct or
                     indirect benefit arising from this Agreement or the award thereof. IP agrees that breach of this
                     provision is a breach of an essential term of this Agreement.
                 </div>
-                <div>b. b. The IP represents and warrants that the following with regard to former UNICEF officials
+                <div>b. The IP represents and warrants that the following with regard to former UNICEF officials
                     have been complied with and will be complied with:
                     (i)  during the one year period after an official has separated from UNICEF, the IP may not make
                     a direct or indirect offer of employment to that former UNICEF official if that former UNICEF official
-                    was, during the three years prior to separating from UNICEF, involved in any aspect of the process
+                    was, during the three years prior to separating from UNICEF, involved in any aspect of the process
                     leading to the IP’s selection or the implementation of the Programme; and
                     (ii) during the two year period after an official has separated from UNICEF, the former official
-                    may not communicate with UNICEF, or present to UNICEF, on behalf of the IP on any matters that were
+                    may not communicate with UNICEF, or present to UNICEF, on behalf of the IP on any matters that were
                     within such former official's responsibilities while at UNICEF.
                 </div>
                 <li><b>INDEMNIFICATION:</b> IP shall indemnify, hold and save harmless, and defend, at its own expense,
@@ -979,7 +984,7 @@
                     <u>http://www.unicef.org/publicpartnerships/files/Policy_Prohibiting_and_Combatting_Fraud_and_Corruption.pdf</u>
                     or such other URL as may be decided from time to time by UNICEF.
                 </li>
-                <li><b>14. ASSURANCE ACTIVITIES:</b></li>
+                <li><b>ASSURANCE ACTIVITIES:</b></li>
                 <div>14.1 Audit:</div>
                 <div style="padding-left: 15px">a. At the request of and at such times as determined solely by UNICEF, IP will have its
                     activities under this Agreement audited. Audits will be performed subject to such standards, scope,
