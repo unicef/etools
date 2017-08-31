@@ -24,9 +24,4 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(fill_sections, do_nothing),
-        migrations.AlterField(
-            model_name='tpmactivity',
-            name='section',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tpm_activities', to='users.Section'),
-        ),
     ]
