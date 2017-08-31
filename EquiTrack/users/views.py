@@ -161,18 +161,6 @@ class UsersDetailAPIView(RetrieveAPIView):
         )
 
 
-class UserProfileAPIView(RetrieveUpdateAPIView):
-    """
-    Updates a UserProfile object
-    Allow updating profiles for other users, but requires more permissions.
-    """
-    queryset = UserProfile.objects.all()
-    serializer_class = ProfileRetrieveUpdateSerializer
-    lookup_field = 'user_id'
-
-    permission_classes = (IsAdminUser, )
-
-
 class ProfileEdit(FormView):
 
     template_name = 'users/profile.html'

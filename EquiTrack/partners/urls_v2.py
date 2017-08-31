@@ -15,7 +15,6 @@ from partners.views.agreements_v2 import (
 )
 from partners.views.interventions_v2 import (
     InterventionListAPIView,
-    InterventionSectorListView,
     InterventionListDashView,
     InterventionDetailAPIView,
     InterventionPlannedVisitsDeleteView,
@@ -94,10 +93,6 @@ urlpatterns = (
     url(r'^interventions/$',
         view=InterventionListAPIView.as_view(http_method_names=['get', 'post']),
         name='intervention-list'),
-
-    url(r'^interventions/sectors/$',
-        view=InterventionSectorListView.as_view(http_method_names=['get']),
-        name='intervention-sectors-list'),
 
     url(r'^interventions/dash/$',
         view=InterventionListDashView.as_view(http_method_names=['get', 'post']),
