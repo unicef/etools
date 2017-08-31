@@ -12,7 +12,6 @@ import uuid
 from django.conf import settings
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
-from django.contrib.auth.decorators import user_passes_test
 from django.contrib.sites.models import Site
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import connection
@@ -132,17 +131,6 @@ class BaseExportResource(ModelResource):
             data.append(row.values())
 
         return data
-
-
-def staff_test(u):
-    if u.is_authenticated and u.email.endswith("unicef.org"):
-        return True
-    return False
-
-
-def staff_required(function, home_url="/partners/", redirect_field_name=None):
-    actual_decorator = user_passes_test(staff_test, home_url, redirect_field_name)
-    return actual_decorator(function)
 
 
 def set_country(user, request):
