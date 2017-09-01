@@ -17,6 +17,7 @@ from actstream.models import model_stream
 from rest_framework import status
 
 from EquiTrack.factories import (
+    AgreementAmendmentFactory,
     PartnerFactory,
     UserFactory,
     ResultFactory,
@@ -768,8 +769,8 @@ class TestAgreementCreateAPIView(APITenantTestCase):
 
 
 class TestAgreementAPIFileAttachments(APITenantTestCase):
-    '''Test retrieving attachments. attached_agreement_file is a read-only field on
-    AgreementDetailSerializer and AgreementAmendmentCreateUpdateSerializer, so it can't be updated through the API.
+    '''Test retrieving attachments to agreements and agreement amendments. The file-specific fields are read-only
+    on the relevant serializers, so they can't be edited through the API.
     '''
     def setUp(self):
         self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
@@ -796,7 +797,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
 
         # Now add an attachment. Note that in Python 2, the content must be str, in Python 3 the content must be
         # bytes. I think the existing code is compatible with both.
-        self.agreement.attached_agreement = SimpleUploadedFile('hello_world.txt', u'hello_world'.encode('utf-8'))
+        self.agreement.attached_agreement = SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8'))
         self.agreement.save()
 
         response = self.forced_auth_req(
@@ -810,12 +811,12 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         self.assertIsInstance(response_json, dict)
         self.assertIn('attached_agreement_file', response_json)
 
-        attachment_url = response_json['attached_agreement_file']
+        url = response_json['attached_agreement_file']
 
-        # attachment_url is a URL like this one --
+        # url is a URL like this one --
         # http://testserver/media/test/file_attachments/partner_organization/934/agreements/PCA2017841/foo.txt
 
-        url = urlparse(attachment_url)
+        url = urlparse(url)
         self.assertIn(url.scheme, ('http', 'https'))
         self.assertEqual(url.netloc, 'testserver')
 
@@ -830,6 +831,57 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
                                     # normalized path.
                                     self.agreement.agreement_number.strip('/'),
                                     'hello_world.txt']
+
+        self.assertEqual(expected_path_components, url.path.split('/'))
+
+
+        # Confirm that there are no amendments as of yet.
+        self.assertIn('amendments', response_json)
+        self.assertEqual(response_json['amendments'], [])
+
+        # Now add an amendment.
+        amendment = AgreementAmendmentFactory(agreement=self.agreement, signed_amendment=None)
+        amendment.signed_amendment = SimpleUploadedFile('goodbye_world.txt', u'goodbye world!'.encode('utf-8'))
+        amendment.save()
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:agreement-detail', kwargs={'pk': self.agreement.id}),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertIsInstance(response_json, dict)
+        self.assertIn('amendments', response_json)
+        self.assertEqual(len(response_json['amendments']), 1)
+        response_amendment = response_json['amendments'][0]
+
+        self.assertIsInstance(response_amendment, dict)
+
+        self.assertIn('signed_amendment_file', response_amendment)
+
+        url = response_amendment['signed_amendment_file']
+
+        # url looks something like this --
+        # http://testserver/media/test/file_attachments/partner_org/1658/agreements/MOU20171421/amendments/tmp02/goodbye_world.txt
+
+        url = urlparse(url)
+        self.assertIn(url.scheme, ('http', 'https'))
+        self.assertEqual(url.netloc, 'testserver')
+
+        expected_path_components = ['',
+                                    settings.MEDIA_URL.strip('/'),
+                                    connection.schema_name,
+                                    'file_attachments',
+                                    'partner_org',
+                                    str(self.agreement.partner.id),
+                                    'agreements',
+                                    self.agreement.base_number.strip('/'),
+                                    'amendments',
+                                    amendment.number.strip('/'),
+                                    'goodbye_world.txt']
 
         self.assertEqual(expected_path_components, url.path.split('/'))
 
