@@ -7,5 +7,3 @@ exclude =
     load_initial_data.py,
     publics/management/commands/xml,
     t2f/management/commands/et2f_init.py,
-    # Everything below here will eventually be removed from 'exclude'
-    EquiTrack,
