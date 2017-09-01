@@ -73,5 +73,110 @@
             "language": "",
             "default_template": null
         }
+    },
+  {
+    "model": "post_office.emailtemplate",
+    "pk": 23,
+    "fields": {
+      "name": "tpm/visit/assign",
+      "description": "Visit assigned. TPM should be notified.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-01T12:01:46.417Z",
+      "subject": "{{ visit.reference_number }} visit was assigned.",
+      "content": "{{ visit.tpm_partner.name }} will visit several implementing partners:\r\n\r\n{% for activity in visit.tpm_activities.all %}\r\n{{ activity.implementing_partner.name }} at {{ activity.date }} in the following locations: {{ activity.locations.all|join:', ' }} in the framework of their partnership with UNICEF {{ activity.partnership.title }}\r\n{% endfor %}\r\n\r\nVisit ID: {{ visit.reference_number }}\r\nPlease click this link to see more info: {{ visit.get_object_url }}",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\n{{ visit.tpm_partner.name }} will visit several partners:<br/>\r\n<br/>\r\n{% for activity in visit.tpm_activities.all %}\r\n    {{ activity.implementing_partner.name }} at {{ activity.date }} in the following locations: {{ activity.locations.all|join:', ' }} in the framework of their partnership with UNICEF {{ activity.partnership.title }}<br/>\r\n{% endfor %}\r\n<br/>\r\n<br/>\r\nVisit ID: {{ visit.reference_number }}<br/>\r\nPlease click this link to see more info: {{ visit.get_object_url }}<br/>\r\n{% endblock %}",
+      "language": "",
+      "default_template": null
     }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "pk": 24,
+    "fields": {
+      "name": "tpm/visit/reject",
+      "description": "TPM rejected visit. Notify focal points & PME.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-01T12:02:04.758Z",
+      "subject": "{{ visit.reference_number }} visit was rejected by tpm.",
+      "content": "{{ visit.tpm_partner.name }} rejected visit {{ visit.reference_number }}.\r\n\r\nReason: {{ visit.reject_comment }}\r\nVisit ID: {{ visit.reference_number }}\r\nPlease click this link to see more info: {{ visit.get_object_url }}",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\n{{ visit.tpm_partner.name }} rejected  \r\nvisit {{ visit.reference_number }}.<br/>\r\n<br/>\r\nReason: {{ visit.reject_comment }}<br/>\r\nVisit ID: {{ visit.reference_number }}<br/>\r\nPlease click this link to see more info: {{ visit.get_object_url }}\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "pk": 25,
+    "fields": {
+      "name": "tpm/visit/accept",
+      "description": "TPM accepted visit. Notify focal points & PME.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-01T12:06:51.683Z",
+      "subject": "{{ visit.reference_number }} visit was accepted by {{ visit.tpm_partner.name }}.",
+      "content": "{{ visit.tpm_partner.name }} accepted visit {{ visit.reference_number }}.\r\n\r\nVisit ID: {{ visit.reference_number }}\r\nPlease click this link to see more info: {{ visit.get_object_url }}",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\n{{ visit.tpm_partner.name }} accepted visit.<br/>\r\n<br/>\r\nVisit ID: {{ visit.reference_number }}<br/>\r\nPlease click this link to see more info: {{ visit.get_object_url }}\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "pk": 26,
+    "fields": {
+      "name": "tpm/visit/report",
+      "description": "TPM finished with visit report.  Notify PME & focal points.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-01T12:03:33.094Z",
+      "subject": "TPM submitted report for {{ visit.reference_number }} visit.",
+      "content": "{{ visit.tpm_partner.name }} submitted report for visit.\r\n\r\nVisit ID: {{ visit.reference_number }}\r\nPlease click this link to see more info: {{ visit.get_object_url }}",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\n{{ visit.tpm_partner.name }} submitted report for visit.<br/>\r\n<br/>\r\nVisit ID: {{ visit.reference_number }}<br/>\r\nPlease click this link to see more info: {{ visit.get_object_url }}\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "pk": 27,
+    "fields": {
+      "name": "tpm/visit/report_rejected",
+      "description": "Report was rejected. Notify TPM.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-01T12:04:48.165Z",
+      "subject": "Report was rejected for {{ visit.reference_number }} visit.",
+      "content": "Report was rejected for visit.\r\n\r\nVisit ID: {{ visit.reference_number }}\r\nPlease click this link to see more info: {{ visit.get_object_url }}",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nReport was rejected for visit.<br/>\r\n<br/>\r\nVisit ID: {{ visit.reference_number }}<br/>\r\nPlease click this link to see more info: {{ visit.get_object_url }}\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "pk": 28,
+    "fields": {
+      "name": "tpm/visit/approve",
+      "description": "Report was approved. Notify TPM.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-01T12:06:23.344Z",
+      "subject": "Report for {{ visit.reference_number }} visit was approved.",
+      "content": "Visit report was approved.\r\n\r\nVisit ID: {{ visit.reference_number }}\r\nPlease click this link to see more info: {{ visit.get_object_url }}",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nVisit report was approved.<br/>\r\n<br/>\r\nVisit ID: {{ visit.reference_number }}<br/>\r\nPlease click this link to see more info: {{ visit.get_object_url }}\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "pk": 29,
+    "fields": {
+      "name": "tpm/visit/report_for_ip",
+      "description": "Report was approved. Notify IP.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-01T12:19:45.420Z",
+      "subject": "Report for {{ visit.reference_number }} visit was approved.",
+      "content": "Visit report was approved by UNICEF.\r\n\r\nVisit ID: {{ visit.reference_number }}",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nVisit report was approved by UNICEF.<br/>\r\n<br/>\r\nVisit ID: {{ visit.reference_number }}\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  }
 ]
