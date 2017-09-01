@@ -41,6 +41,7 @@ class Command(BaseCommand):
         'tpmvisit.tpm_partner_focal_points',
         'tpmvisit.offices',
         'tpmvisit.sections',
+        'tpmvisit.visit_information',
         'tpmactivity.*',
     ]
 
