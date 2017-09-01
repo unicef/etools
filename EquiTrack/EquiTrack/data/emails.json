@@ -153,8 +153,8 @@
     "model": "post_office.emailtemplate",
     "pk": 28,
     "fields": {
-      "name": "tpm/visit/approve",
-      "description": "Report was approved. Notify TPM.",
+      "name": "tpm/visit/approve_report",
+      "description": "Report was approved. Notify UNICEF focal points.",
       "created": "2017-09-01T10:08:23.360Z",
       "last_updated": "2017-09-01T12:06:23.344Z",
       "subject": "Report for {{ visit.reference_number }} visit was approved.",
@@ -168,13 +168,13 @@
     "model": "post_office.emailtemplate",
     "pk": 29,
     "fields": {
-      "name": "tpm/visit/report_for_ip",
-      "description": "Report was approved. Notify IP.",
+      "name": "tpm/visit/approve_report_tpm",
+      "description": "Report was approved. Notify TPM.",
       "created": "2017-09-01T10:08:23.360Z",
       "last_updated": "2017-09-01T12:19:45.420Z",
       "subject": "Report for {{ visit.reference_number }} visit was approved.",
-      "content": "Visit report was approved by UNICEF.\r\n\r\nVisit ID: {{ visit.reference_number }}",
-      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nVisit report was approved by UNICEF.<br/>\r\n<br/>\r\nVisit ID: {{ visit.reference_number }}\r\n{%endblock %}",
+      "content": "Visit report was approved.\r\n\r\nVisit ID: {{ visit.reference_number }}\r\nPlease click this link to see more info: {{ visit.get_object_url }}",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nVisit report was approved.<br/>\r\n<br/>\r\nVisit ID: {{ visit.reference_number }}<br/>\r\nPlease click this link to see more info: {{ visit.get_object_url }}\r\n{%endblock %}",
       "language": "",
       "default_template": null
     }
