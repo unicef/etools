@@ -110,6 +110,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     attachments = CodedGenericRelation(Attachment, verbose_name=_('Related Documents'), code='attach', blank=True)
     report = CodedGenericRelation(Attachment, verbose_name=_('Report'), code='report', blank=True)
 
+    visit_information = models.TextField(verbose_name=_('Visit Information'), blank=True)
+
     date_of_assigned = models.DateField(blank=True, null=True)
     date_of_cancelled = models.DateField(blank=True, null=True)
     date_of_tpm_accepted = models.DateField(blank=True, null=True)
