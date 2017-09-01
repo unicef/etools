@@ -1,14 +1,20 @@
 from __future__ import unicode_literals
 
-import json
-from unittest import skip, TestCase
 import datetime
 from datetime import date, timedelta
 from decimal import Decimal
+import json
+from unittest import skip, TestCase
+from urlparse import urlparse
+
+from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.urlresolvers import reverse
+from django.db import connection
 from django.utils import timezone
 
-from rest_framework import status
 from actstream.models import model_stream
+from rest_framework import status
 
 from EquiTrack.factories import (
     PartnerFactory,
@@ -759,6 +765,73 @@ class TestAgreementCreateAPIView(APITenantTestCase):
 
         # Check that no activity action was created
         self.assertEqual(len(model_stream(Agreement)), 0)
+
+
+class TestAgreementAPIFileAttachments(APITenantTestCase):
+    '''Test retrieving attachments. attached_agreement_file is a read-only field on
+    AgreementDetailSerializer and AgreementAmendmentCreateUpdateSerializer, so it can't be updated through the API.
+    '''
+    def setUp(self):
+        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.agreement = AgreementFactory(
+            agreement_type=Agreement.MOU,
+            partner=self.partner,
+            attached_agreement=None,
+        )
+
+    def test_retrieve_attachment(self):
+        '''Exercise getting attachment data when there is one and when there isn't.'''
+        # The agreement starts with no attachment.
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:agreement-detail', kwargs={'pk': self.agreement.id}),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, dict)
+        self.assertIsNone(response_json['attached_agreement_file'])
+
+        # Now add an attachment. Note that in Python 2, the content must be str, in Python 3 the content must be
+        # bytes. I think the existing code is compatible with both.
+        self.agreement.attached_agreement = SimpleUploadedFile('hello_world.txt', u'hello_world'.encode('utf-8'))
+        self.agreement.save()
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:agreement-detail', kwargs={'pk': self.agreement.id}),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, dict)
+        self.assertIn('attached_agreement_file', response_json)
+
+        attachment_url = response_json['attached_agreement_file']
+
+        # attachment_url is a URL like this one --
+        # http://testserver/media/test/file_attachments/partner_organization/934/agreements/PCA2017841/foo.txt
+
+        url = urlparse(attachment_url)
+        self.assertIn(url.scheme, ('http', 'https'))
+        self.assertEqual(url.netloc, 'testserver')
+
+        expected_path_components = ['',
+                                    settings.MEDIA_URL.strip('/'),
+                                    connection.schema_name,
+                                    'file_attachments',
+                                    'partner_organization',
+                                    str(self.agreement.partner.id),
+                                    'agreements',
+                                    # Note that slashes have to be stripped from the agreement number to match the
+                                    # normalized path.
+                                    self.agreement.agreement_number.strip('/'),
+                                    'hello_world.txt']
+
+        self.assertEqual(expected_path_components, url.path.split('/'))
 
 
 class TestAgreementAPIView(APITenantTestCase):
