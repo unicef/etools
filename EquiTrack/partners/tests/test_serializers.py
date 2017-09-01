@@ -28,7 +28,6 @@ from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
-
 class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
     '''Base class for testing AgreementCreateUpdateSerializer'''
     def setUp(self):
@@ -672,3 +671,14 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
             context_manager,
             'agreement_transition_to_ended_invalid'
             )
+
+    def test_ensure_field_read_write_status(self):
+        '''Ensure that the fields I expect to be read-only are read-only; also confirm the converse'''
+        expected_read_only_fields = ('id', 'created', 'modified', 'partner_name', 'amendments', 'unicef_signatory',
+                                     'partner_signatory', 'agreement_number', 'attached_agreement_file')
+
+        serializer = AgreementCreateUpdateSerializer()
+
+        for field_name, field in serializer.fields.items():
+            expected_read_only = (field_name in expected_read_only_fields)
+            self.assertEqual(field.read_only, expected_read_only)
