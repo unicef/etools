@@ -425,7 +425,7 @@ class Indicator(models.Model):
     view_on_dashboard = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['active', 'name']  # in frontend dropdown the active indicators will show up first
+        ordering = ['active', 'name']  # active indicators will show up first in the list
         unique_together = (("name", "result", "sector"),)
 
     def __unicode__(self):
