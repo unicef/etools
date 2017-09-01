@@ -25,16 +25,16 @@ PUBLIC_SYNC_HANDLERS = []
 
 
 SYNC_HANDLERS = [
-    ProgrammeSynchronizer,
-    RAMSynchronizer,
-    PartnerSynchronizer,
-    FundingSynchronizer,
-    CurrencySyncronizer,
-    TravelAgenciesSyncronizer,
+    # ProgrammeSynchronizer,
+    # RAMSynchronizer,
+    # PartnerSynchronizer,
+    # FundingSynchronizer,
+    # CurrencySyncronizer,
+    # TravelAgenciesSyncronizer,
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
-    # DCTSynchronizer,
-    POSynchronizer
+    ## DCTSynchronizer,
+    # POSynchronizer
 ]
 
 

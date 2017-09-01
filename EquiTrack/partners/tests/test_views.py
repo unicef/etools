@@ -1545,6 +1545,25 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(model_stream(Intervention).count(), 3)
         self.assertEqual(model_stream(Intervention)[0].verb, 'created')
 
+    def test_intervention_create_unicef_user_fail(self):
+        data = {
+            "document_type": Intervention.SHPD,
+            "status": Intervention.DRAFT,
+            "title": "2009 EFY AWP Updated fail",
+            "start": (timezone.now().date()).isoformat(),
+            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
+            "unicef_budget": 0,
+            "agreement": self.agreement.id,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['detail'], u'Accessing this item is not allowed.')
+
     def test_intervention_retrieve_fr_numbers(self):
         self.fr_header_1.intervention = self.intervention_obj
         self.fr_header_2.intervention = self.intervention_obj
