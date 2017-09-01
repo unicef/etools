@@ -22,7 +22,7 @@ from utils.groups.wrappers import GroupWrapper
 from utils.permissions.utils import has_action_permission
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
-from .transitions.serializers import TPMVisitRejectSerializer
+from .transitions.serializers import TPMVisitRejectSerializer, TPMVisitApproveSerializer
 from .transitions.conditions import ValidateTPMVisitActivities, \
                                     TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
 
@@ -261,8 +261,14 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                          cc=self._get_tpm_as_email_recipients())
 
     @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
+                custom={'serializer': TPMVisitApproveSerializer},
                 permission=_has_action_permission(action='approve'))
-    def approve(self, mark_as_programmatic_visit=True, notify_focal_point=True, notify_partner=True):
+    def approve(self, mark_as_programmatic_visit=None, notify_focal_point=True, notify_partner=True):
+        mark_as_programmatic_visit = mark_as_programmatic_visit or []
+
+        pv_activities = self.tpm_activities.filter(id__in=mark_as_programmatic_visit)  # noqa
+        # todo: mark as programmatic visits
+
         self.date_of_unicef_approved = timezone.now()
         if notify_focal_point:
             self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/approve')

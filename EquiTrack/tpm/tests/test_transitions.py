@@ -143,7 +143,9 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
     def test_approve_report_success(self):
         visit = TPMVisitFactory(status='tpm_reported')
 
-        response = self._do_transition(visit, 'approve', self.pme_user)
+        response = self._do_transition(visit, 'approve', self.pme_user, data={
+            'mark_as_programmatic_visit': []
+        })
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         visit = self._refresh_tpm_visit_instace(visit)
@@ -250,6 +252,9 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
 
         if transition in ['reject', 'reject_report']:
             extra_data['reject_comment'] = 'Just because.'
+
+        if transition == 'approve':
+            extra_data['mark_as_programmatic_visit'] = []
 
         return self._do_transition(obj, transition, self.user, extra_data)
 
