@@ -726,7 +726,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.partnership_manager_user,
             data=data
         )
@@ -746,7 +746,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.partnership_manager_user,
             data=data
         )
@@ -827,7 +827,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.partner_staff_user,
             data=data
         )
@@ -840,7 +840,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.country_programme.save()
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.partner_staff_user,
             data=data
         )
@@ -928,7 +928,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"agreement_type": Agreement.PCA}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.unicef_staff,
             data=params
         )
@@ -942,7 +942,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"status": "signed"}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.unicef_staff,
             data=params
         )
@@ -956,7 +956,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"partner_name": self.partner.name}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.unicef_staff,
             data=params
         )
@@ -969,7 +969,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"search": "Partner"}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.unicef_staff,
             data=params
         )
@@ -982,7 +982,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"search": datetime.date.today().year}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.unicef_staff,
             data=params
         )
