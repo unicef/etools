@@ -199,8 +199,8 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
     status_date = serializers.ReadOnlyField()
 
     implementing_partners = serializers.SerializerMethodField()
-
     locations = serializers.SerializerMethodField()
+    sections = serializers.SerializerMethodField()
 
     def get_implementing_partners(self, obj):
         return PartnerOrganizationLightSerializer(
@@ -220,11 +220,21 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
             many=True
         ).data
 
+    def get_sections(self, obj):
+        return SectionSerializer(
+            set(map(
+                lambda a: a.section,
+                obj.tpm_activities.all()
+            )),
+            many=True
+        ).data
+
     class Meta(StatusPermissionsBasedRootSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMVisit
         permission_class = TPMPermission
         fields = [
-            'id', 'start_date', 'end_date', 'tpm_partner', 'implementing_partners', 'locations',
+            'id', 'start_date', 'end_date', 'tpm_partner',
+            'implementing_partners', 'locations', 'sections',
             'status', 'status_date', 'reference_number',
             'offices', 'tpm_partner_focal_points', 'unicef_focal_points',
             'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
