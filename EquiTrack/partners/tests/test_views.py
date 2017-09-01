@@ -834,7 +834,6 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
 
         self.assertEqual(expected_path_components, url.path.split('/'))
 
-
         # Confirm that there are no amendments as of yet.
         self.assertIn('amendments', response_json)
         self.assertEqual(response_json['amendments'], [])
