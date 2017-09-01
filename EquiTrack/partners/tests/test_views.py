@@ -781,9 +781,8 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
             attached_agreement=None,
         )
 
-    def test_retrieve_attachment(self):
-        '''Exercise getting attachment data when there is one and when there isn't.'''
-        # The agreement starts with no attachment.
+    def _get_and_assert_response(self):
+        '''Helper method to get the agreement and verify some basic about the response JSON (which it returns).'''
         response = self.forced_auth_req(
             'get',
             reverse('partners_api:agreement-detail', kwargs={'pk': self.agreement.id}),
@@ -793,6 +792,15 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
+
+        return response_json
+
+    def test_retrieve_attachment(self):
+        '''Exercise getting agreement attachment and agreement amendment attachments both when they're present
+        and absent.
+        '''
+        # The agreement starts with no attachment.
+        response_json = self._get_and_assert_response()
         self.assertIsNone(response_json['attached_agreement_file'])
 
         # Now add an attachment. Note that in Python 2, the content must be str, in Python 3 the content must be
@@ -800,15 +808,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         self.agreement.attached_agreement = SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8'))
         self.agreement.save()
 
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:agreement-detail', kwargs={'pk': self.agreement.id}),
-            user=self.partnership_manager_user,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, dict)
+        response_json = self._get_and_assert_response()
         self.assertIn('attached_agreement_file', response_json)
 
         url = response_json['attached_agreement_file']
@@ -844,16 +844,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         amendment.signed_amendment = SimpleUploadedFile('goodbye_world.txt', u'goodbye world!'.encode('utf-8'))
         amendment.save()
 
-        response = self.forced_auth_req(
-            'get',
-            reverse('partners_api:agreement-detail', kwargs={'pk': self.agreement.id}),
-            user=self.partnership_manager_user,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-
-        self.assertIsInstance(response_json, dict)
+        response_json = self._get_and_assert_response()
         self.assertIn('amendments', response_json)
         self.assertEqual(len(response_json['amendments']), 1)
         response_amendment = response_json['amendments'][0]
