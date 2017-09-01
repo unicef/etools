@@ -234,7 +234,6 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
         opts = {}
 
         if transition == 'assign':
-            opts['sections__count'] = 3
             opts['unicef_focal_points__count'] = 1
             opts['offices__count'] = 1
             opts['tpm_partner_focal_points__count'] = 1

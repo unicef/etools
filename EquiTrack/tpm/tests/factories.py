@@ -69,6 +69,17 @@ class FullInterventionFactory(InterventionFactory):
     sector_locations = factory.RelatedFactory(InterventionSectorLocationLinkFactory, 'intervention')
 
 
+class SectionFactory(SimpleSectionFactory):
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        obj = super(SectionFactory, cls)._create(model_class, *args, **kwargs)
+
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+            connection.tenant.sections.add(obj)
+
+        return obj
+
+
 class TPMActivityFactory(factory.DjangoModelFactory):
     class Meta:
         model = TPMActivity
@@ -76,6 +87,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     partnership = factory.SubFactory(FullInterventionFactory)
     implementing_partner = factory.SelfAttribute('partnership.agreement.partner')
     date = fuzzy.FuzzyDate(_FUZZY_START_DATE, _FUZZY_END_DATE)
+    section = factory.SubFactory(SectionFactory)
 
     @factory.post_generation
     def cp_output(self, create, extracted, **kwargs):
@@ -104,17 +116,6 @@ class InheritedTrait(factory.Trait):
         overrides.update(kwargs)
 
         super(InheritedTrait, self).__init__(**overrides)
-
-
-class SectionFactory(SimpleSectionFactory):
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        obj = super(SectionFactory, cls)._create(model_class, *args, **kwargs)
-
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            connection.tenant.sections.add(obj)
-
-        return obj
 
 
 class OfficeFactory(SimpleOfficeFactory):
@@ -177,8 +178,6 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
     tpm_partner = factory.SubFactory(SimpleTPMPartnerFactory)
 
-    sections__count = 0
-
     unicef_focal_points__count = 0
     offices__count = 0
 
@@ -197,8 +196,6 @@ class TPMVisitFactory(factory.DjangoModelFactory):
         assigned = factory.Trait(
             status=TPMVisit.STATUSES.assigned,
             date_of_assigned=factory.LazyFunction(timezone.now),
-
-            sections__count=3,
 
             unicef_focal_points__count=3,
             offices__count=3,
@@ -262,16 +259,6 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             status = extra.pop('status')
             extra[status] = True
         return super(TPMVisitFactory, cls).attributes(create, extra)
-
-    @factory.post_generation
-    def sections(self, create, extracted, count, **kwargs):
-        if not create:
-            return
-
-        if extracted is not None:
-            self.sections.add(*extracted)
-        else:
-            self.sections.add(*[SectionFactory() for i in range(count)])
 
     @factory.post_generation
     def offices(self, create, extracted, count, **kwargs):
