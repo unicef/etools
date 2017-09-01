@@ -137,6 +137,7 @@ class TPMVisitViewSet(
     filter_fields = (
         'tpm_partner', 'tpm_activities__section', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
         'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status',
+        'deleted_flag', 'blocked'
     )
 
     def get_queryset(self):

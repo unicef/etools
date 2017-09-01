@@ -240,6 +240,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
             'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
             'date_of_tpm_rejected', 'date_of_tpm_reported', 'date_of_unicef_approved',
             'date_of_tpm_report_rejected', 'date_of_cancelled',
+            'vision_synced', 'blocked', 'deleted_flag'
         ]
 
 

@@ -60,8 +60,10 @@ class BaseFirm(TimeStampedModel, models.Model):
         blank=True, null=True
     )
 
+    vision_synced = models.BooleanField(default=False)
     blocked = models.BooleanField(_('blocked'), default=False)
     hidden = models.BooleanField(_('hidden'), default=False)
+    deleted_flag = models.BooleanField(default=False, verbose_name='Marked for deletion')
 
     class Meta:
         abstract = True
