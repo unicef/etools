@@ -28,6 +28,7 @@ from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
+
 class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
     '''Base class for testing AgreementCreateUpdateSerializer'''
     def setUp(self):
