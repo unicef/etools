@@ -129,6 +129,8 @@ class PCAPDFView(PDFTemplateView):
                  'title': officer.title}
             )
 
+        font_path = settings.SITE_ROOT + '/assets/fonts/'
+
         return super(PCAPDFView, self).get_context_data(
             error=error,
             pagesize="Letter",
@@ -138,6 +140,7 @@ class PCAPDFView(PDFTemplateView):
             cp=agreement.country_programme,
             auth_officers=officers_list,
             country=self.request.tenant.long_name,
+            font_path=font_path,
             **kwargs
         )
 

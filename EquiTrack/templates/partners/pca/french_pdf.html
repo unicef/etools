@@ -55,6 +55,39 @@
                 width: 200px;
                 height: 150px;
             }
+            /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
+            /*dejavu*/
+            @font-face {
+                font-family: "DejaVuSans";
+                src: url("{{font_path}}truetype/dejavu/DejaVuSans.ttf");
+            }
+            @font-face {
+                font-family: "DejaVuSansMono";
+                src: url("{{font_path}}truetype/dejavu/DejaVuSansMono.ttf");
+            }
+            @font-face {
+                font-family: "DejaVuSerif";
+                src: url("{{font_path}}truetype/dejavu/DejaVuSerif.ttf");
+            }
+
+            /*times new roman*/
+            @font-face {
+                font-family: "Times_New_Roman";
+                src: url("{{font_path}}truetype/times_new_roman/Times_New_Roman.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Italic";
+                src: url("{{font_path}}truetype/times_new_roman/Times_New_Roman_Italic.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Bold";
+                src: url("{{font_path}}truetype/times_new_roman/Times_New_Roman_Bold.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Bold_Italic";
+                src: url("{{font_path}}truetype/times_new_roman/Times_New_Roman_Bold_Italic.ttf");
+            }
+
             ul {
                 list-style-type: none;
             }
@@ -81,14 +114,33 @@
                 border: 1px solid black;
                 font-size:10pt;
             }
+
+            /*fonts*/
             #header_content {
-                font-family: "Times New Roman";
+                font-family: "Times_New_Roman";
+                /*font-family: "DejaVuSansMono";*/
                 font-size: 12pt;
             }
             #content {
-                font-family: "Times New Roman";
+                font-family: "Times_New_Roman";
+                /*font-family: "DejaVuSansMono";*/
                 font-size: 12pt;
             }
+            /*bold fix*/
+            #header_content b, #content b, #header_content strong, #content strong {
+                font-family: "Times_New_Roman_bold";
+            }
+            /*italic fix*/
+            #header_content i, #content i {
+                font-family: "Times_New_Roman_italic";
+            }
+            /*TODO: does not seem to work, investigate why.*/
+            /*italic bold. no observed occurences in the template.*/
+            #header_content b i, #content b i, #header_content strong i, #content strong i,
+            #header_content i b, #content i b, #header_content i strong, #content i strong {
+                font-family: "Times_New_Roman_Bold_Italic"!important;
+            }
+
             .page-break {
                 page-break-after: always;
             }
