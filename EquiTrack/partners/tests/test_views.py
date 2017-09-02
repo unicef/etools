@@ -1367,7 +1367,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data
         )
         self.intervention = response.data
@@ -1465,7 +1465,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=self.intervention_data
         )
         self.intervention_data = response.data
@@ -1536,7 +1536,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -1544,6 +1544,25 @@ class TestInterventionViews(APITenantTestCase):
         # Check for activity action created
         self.assertEqual(model_stream(Intervention).count(), 3)
         self.assertEqual(model_stream(Intervention)[0].verb, 'created')
+
+    def test_intervention_create_unicef_user_fail(self):
+        data = {
+            "document_type": Intervention.SHPD,
+            "status": Intervention.DRAFT,
+            "title": "2009 EFY AWP Updated fail",
+            "start": (timezone.now().date()).isoformat(),
+            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
+            "unicef_budget": 0,
+            "agreement": self.agreement.id,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['detail'], u'Accessing this item is not allowed.')
 
     def test_intervention_retrieve_fr_numbers(self):
         self.fr_header_1.intervention = self.intervention_obj
@@ -1570,7 +1589,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=self.intervention_data
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1638,7 +1657,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data={}
         )
 
@@ -1655,7 +1674,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 
@@ -1671,7 +1690,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 
@@ -1687,7 +1706,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 
