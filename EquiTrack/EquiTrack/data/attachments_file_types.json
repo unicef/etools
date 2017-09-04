@@ -3,7 +3,7 @@
         "pk": 1,
         "fields": {
             "order": 0,
-            "name": "Programme Document",
+            "name": "FACE",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -12,7 +12,7 @@
         "pk": 2,
         "fields": {
             "order": 1,
-            "name": "Supply Manual List",
+            "name": "Progress report",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -21,7 +21,7 @@
         "pk": 3,
         "fields": {
             "order": 2,
-            "name": "UNICEF Trip Report/Action Point Report",
+            "name": "Partnership review",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -30,7 +30,7 @@
         "pk": 4,
         "fields": {
             "order": 3,
-            "name": "Partner Report",
+            "name": "Final Partnership Review",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -39,7 +39,7 @@
         "pk": 5,
         "fields": {
             "order": 4,
-            "name": "Previous Trip Reports",
+            "name": "Correspondence",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -48,7 +48,7 @@
         "pk": 6,
         "fields": {
             "order": 5,
-            "name": "Training materials",
+            "name": "Supply/Distribution Plan",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -57,7 +57,7 @@
         "pk": 7,
         "fields": {
             "order": 6,
-            "name": "ToRs",
+            "name": "Workplan",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -147,7 +147,7 @@
         "model": "attachments.filetype",
         "pk": 19,
         "fields": {
-            "order": 8,
+            "order": 0,
             "name": "Report",
             "code": "tpm_report"
         }
@@ -159,6 +159,33 @@
             "order": 0,
             "name": "Programme Documents",
             "code": "tpm_pd"
+        }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 21,
+        "fields": {
+            "order": 8,
+            "name": "PCA",
+            "code": "tpm"
+        }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 22,
+        "fields": {
+            "order": 9,
+            "name": "Signed PD/SSFA",
+            "code": "tpm"
+        }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 23,
+        "fields": {
+            "order": 10,
+            "name": "PRC Submission",
+            "code": "tpm"
         }
     }
 ]
