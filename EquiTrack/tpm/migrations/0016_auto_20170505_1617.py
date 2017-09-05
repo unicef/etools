@@ -13,8 +13,8 @@ def create_email_templates(apps, schema_editor):
     EmailTemplate.objects.get_or_create(name='tpm/visit/accept')
     EmailTemplate.objects.get_or_create(name='tpm/visit/generate_report')
     EmailTemplate.objects.get_or_create(name='tpm/visit/report')
-    EmailTemplate.objects.get_or_create(name='tpm/visit/approve_report')
-    EmailTemplate.objects.get_or_create(name='tpm/visit/approve_report_tpm')
+    EmailTemplate.objects.get_or_create(name='tpm/visit/approve')
+    EmailTemplate.objects.get_or_create(name='tpm/visit/report_for_ip')
 
 
 def do_nothing(apps, schema_editor):
