@@ -1,7 +1,6 @@
 [
     {
         "model": "post_office.emailtemplate",
-        "pk": 18,
         "fields": {
             "name": "base",
             "description": "Base template for emails.",
@@ -16,7 +15,6 @@
     },
     {
         "model": "post_office.emailtemplate",
-        "pk": 19,
         "fields": {
             "name": "organisations/staff_member/set_password",
             "description": "The email that is sent to partner staff member when he have been registered in the system.",
@@ -31,7 +29,6 @@
     },
     {
         "model": "post_office.emailtemplate",
-        "pk": 20,
         "fields": {
             "name": "audit/engagement/submit_to_auditor",
             "description": "Email that send to auditor when engagement have been created.",
@@ -46,7 +43,6 @@
     },
     {
         "model": "post_office.emailtemplate",
-        "pk": 21,
         "fields": {
             "name": "audit/engagement/reported_by_auditor",
             "description": "Email that send when auditor fill engagement's report.",
@@ -61,7 +57,6 @@
     },
     {
         "model": "post_office.emailtemplate",
-        "pk": 22,
         "fields": {
             "name": "audit/engagement/action_point_assigned",
             "description": "",
@@ -76,7 +71,6 @@
     },
   {
     "model": "post_office.emailtemplate",
-    "pk": 23,
     "fields": {
       "name": "tpm/visit/assign",
       "description": "Visit assigned. TPM should be notified.",
@@ -91,7 +85,6 @@
   },
   {
     "model": "post_office.emailtemplate",
-    "pk": 24,
     "fields": {
       "name": "tpm/visit/reject",
       "description": "TPM rejected visit. Notify focal points & PME.",
@@ -106,7 +99,6 @@
   },
   {
     "model": "post_office.emailtemplate",
-    "pk": 25,
     "fields": {
       "name": "tpm/visit/accept",
       "description": "TPM accepted visit. Notify focal points & PME.",
@@ -121,7 +113,6 @@
   },
   {
     "model": "post_office.emailtemplate",
-    "pk": 26,
     "fields": {
       "name": "tpm/visit/report",
       "description": "TPM finished with visit report.  Notify PME & focal points.",
@@ -136,7 +127,6 @@
   },
   {
     "model": "post_office.emailtemplate",
-    "pk": 27,
     "fields": {
       "name": "tpm/visit/report_rejected",
       "description": "Report was rejected. Notify TPM.",
@@ -151,7 +141,6 @@
   },
   {
     "model": "post_office.emailtemplate",
-    "pk": 28,
     "fields": {
       "name": "tpm/visit/approve_report",
       "description": "Report was approved. Notify UNICEF focal points.",
@@ -166,7 +155,6 @@
   },
   {
     "model": "post_office.emailtemplate",
-    "pk": 29,
     "fields": {
       "name": "tpm/visit/approve_report_tpm",
       "description": "Report was approved. Notify TPM.",
