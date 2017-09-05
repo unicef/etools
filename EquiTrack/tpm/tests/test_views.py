@@ -304,7 +304,7 @@ class TestTPMPartnerViewSet(TPMTestCaseMixin, APITenantTestCase):
     def test_pme_list_options(self):
         self._test_list_options(
             self.pme_user,
-            writable_fields=['attachments', 'email', 'phone_number', 'hidden', 'blocked']
+            writable_fields=['attachments', 'email', 'phone_number']
         )
 
     def test_tpm_partner_list_options(self):
@@ -313,7 +313,7 @@ class TestTPMPartnerViewSet(TPMTestCaseMixin, APITenantTestCase):
     def test_pme_detail_options(self):
         self._test_detail_options(
             self.pme_user,
-            writable_fields=['attachments', 'email', 'phone_number', 'hidden', 'blocked']
+            writable_fields=['attachments', 'email', 'phone_number']
         )
 
     def test_tpm_partner_detail_options(self):
