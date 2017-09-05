@@ -5,25 +5,20 @@ from rest_framework.exceptions import ValidationError
 from locations.models import Location
 from partners.models import InterventionResultLink, Intervention, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
+from permissions2.serializers import PermissionsBasedSerializerMixin
 from reports.models import Result
-from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActivityActionPoint, \
+from tpm.models import TPMVisit, TPMActivity, TPMVisitReportRejectComment, TPMActivityActionPoint, \
     TPMPartnerStaffMember
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, \
     TPMActivityPDSerializer
-from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
-    StatusPermissionsBasedRootSerializerMixin
 from utils.common.serializers.fields import SeparatedReadWriteField
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from users.serializers import MinimalUserSerializer, OfficeSerializer
+from utils.common.serializers.mixins import UserContextSerializerMixin
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from users.serializers import SectionSerializer
 from locations.serializers import LocationLightSerializer
 from reports.serializers.v1 import ResultSerializer
-
-
-class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
-    class Meta(StatusPermissionsBasedSerializerMixin.Meta):
-        permission_class = TPMPermission
 
 
 class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
@@ -44,16 +39,17 @@ class PartnerOrganizationLightSerializer(serializers.ModelSerializer):
         ]
 
 
-class TPMVisitReportRejectCommentSerializer(TPMPermissionsBasedSerializerMixin,
+class TPMVisitReportRejectCommentSerializer(PermissionsBasedSerializerMixin,
                                             WritableNestedSerializerMixin,
                                             serializers.ModelSerializer):
-    class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(PermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMVisitReportRejectComment
         fields = ['id', 'rejected_at', 'reject_reason', ]
 
 
-class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
+class TPMActivityActionPointSerializer(PermissionsBasedSerializerMixin,
                                        WritableNestedSerializerMixin,
+                                       UserContextSerializerMixin,
                                        serializers.ModelSerializer):
     author = MinimalUserSerializer(read_only=True)
 
@@ -64,22 +60,22 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
 
     is_responsible = serializers.SerializerMethodField()
 
-    def get_is_responsible(self, obj):
-        return self.get_user() == obj.person_responsible
-
-    class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(PermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivityActionPoint
         fields = [
             'id', 'author', 'person_responsible', 'is_responsible',
             'due_date', 'status', 'description', 'comments',
         ]
 
+    def get_is_responsible(self, obj):
+        return self.get_user() == obj.person_responsible
+
     def create(self, validated_data):
         validated_data['author'] = self.get_user()
         return super(TPMActivityActionPointSerializer, self).create(validated_data)
 
 
-class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
+class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             serializers.ModelSerializer):
     implementing_partner = SeparatedReadWriteField(
         read_field=PartnerOrganizationLightSerializer(read_only=True),
@@ -106,7 +102,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     action_points = TPMActivityActionPointSerializer(many=True, required=False)
 
-    class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(PermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
             'id', 'implementing_partner', 'partnership', 'cp_output', 'section',
@@ -178,7 +174,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         return validated_data
 
 
-class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
+class TPMVisitLightSerializer(WritableNestedSerializerMixin,
                               serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(
         read_field=TPMPartnerLightSerializer(read_only=True),
@@ -202,6 +198,17 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
 
     locations = serializers.SerializerMethodField()
 
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = TPMVisit
+        fields = [
+            'id', 'start_date', 'end_date', 'tpm_partner', 'implementing_partners', 'locations',
+            'status', 'status_date', 'reference_number',
+            'offices', 'tpm_partner_focal_points', 'unicef_focal_points',
+            'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
+            'date_of_tpm_rejected', 'date_of_tpm_reported', 'date_of_unicef_approved',
+            'date_of_tpm_report_rejected', 'date_of_cancelled',
+        ]
+
     def get_implementing_partners(self, obj):
         return PartnerOrganizationLightSerializer(
             set(map(
@@ -220,26 +227,27 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
             many=True
         ).data
 
-    class Meta(StatusPermissionsBasedRootSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
-        model = TPMVisit
-        permission_class = TPMPermission
-        fields = [
-            'id', 'start_date', 'end_date', 'tpm_partner', 'implementing_partners', 'locations',
-            'status', 'status_date', 'reference_number',
-            'offices', 'tpm_partner_focal_points', 'unicef_focal_points',
-            'date_created', 'date_of_assigned', 'date_of_tpm_accepted',
-            'date_of_tpm_rejected', 'date_of_tpm_reported', 'date_of_unicef_approved',
-            'date_of_tpm_report_rejected', 'date_of_cancelled',
-        ]
 
-
-class TPMVisitSerializer(TPMVisitLightSerializer):
+class TPMVisitSerializer(PermissionsBasedSerializerMixin, TPMVisitLightSerializer):
     tpm_activities = TPMActivitySerializer(many=True, required=False)
 
     attachments = TPMAttachmentsSerializer(many=True, required=False)
     report = TPMReportAttachmentsSerializer(many=True, required=False)
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
+
+    class Meta(PermissionsBasedSerializerMixin.Meta, TPMVisitLightSerializer.Meta):
+        fields = TPMVisitLightSerializer.Meta.fields + [
+            'tpm_activities',
+            'reject_comment',
+            'attachments',
+            'report',
+            'report_reject_comments',
+        ]
+        extra_kwargs = {
+            'tpm_partner': {'required': True},
+            'unicef_focal_points': {'required': True},
+        }
 
     def validate(self, attrs):
         validated_data = super(TPMVisitSerializer, self).validate(attrs)
@@ -263,19 +271,6 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
                 })
 
         return validated_data
-
-    class Meta(TPMVisitLightSerializer.Meta):
-        fields = TPMVisitLightSerializer.Meta.fields + [
-            'tpm_activities',
-            'reject_comment',
-            'attachments',
-            'report',
-            'report_reject_comments',
-        ]
-        extra_kwargs = {
-            'tpm_partner': {'required': True},
-            'unicef_focal_points': {'required': True},
-        }
 
 
 class TPMVisitDraftSerializer(TPMVisitSerializer):

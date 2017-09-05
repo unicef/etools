@@ -188,6 +188,7 @@ SHARED_APPS = (
     'utils.mail',
     'utils.writable_serializers',
     'utils.permissions',
+    'permissions2',
 )
 TENANT_APPS = (
     'django_fsm',

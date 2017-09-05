@@ -12,10 +12,6 @@ from .factories import TPMVisitFactory, UserFactory
 
 
 class TPMTransitionTestCase(TPMTestCaseMixin, APITenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        call_command('update_tpm_permissions', verbosity=0)
-
     def _do_transition(self, visit, action, user, data=None):
         data = data or {}
         return self.forced_auth_req(
@@ -297,17 +293,15 @@ class PMEPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
         cls.user_role = 'PME'
 
 
-class FPPermissionsForTpmTransitionTestCase(PMEPermissionsForTPMTransitionTestCase):
+class FPPermissionsForTpmTransitionTestCase(TPMTransitionPermissionsTestCase):
+    ALLOWED_TRANSITION = []
+
     @classmethod
     def setUpTestData(cls):
         super(FPPermissionsForTpmTransitionTestCase, cls).setUpTestData()
 
         cls.user = UserFactory(unicef_user=True)
         cls.user_role = 'UNICEF Focal Point'
-
-        cls.ALLOWED_TRANSITION = cls.ALLOWED_TRANSITION[:]
-        cls.ALLOWED_TRANSITION.remove(('draft', 'cancel'))
-        cls.ALLOWED_TRANSITION.remove(('draft', 'assign'))
 
     def create_object(self, transition, **kwargs):
         opts = {

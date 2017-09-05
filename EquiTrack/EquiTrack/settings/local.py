@@ -49,6 +49,7 @@ if 'test' in sys.argv:
         # So on the serialization stage these models do not exist.
         'utils.common',
         'utils.writable_serializers',
+        'permissions2',
     ]
 
     # Disable logging output during tests

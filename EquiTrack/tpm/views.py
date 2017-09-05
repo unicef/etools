@@ -1,4 +1,3 @@
-
 from django.http import Http404
 from django.utils import timezone
 from easy_pdf.rendering import render_to_pdf_response
@@ -9,8 +8,10 @@ from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBac
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, \
-    NestedViewSetMixin, SafeTenantViewSetMixin
+from permissions2.conditions import TPMRoleCondition, TPMStaffMemberCondition, ObjectStatusCondition, \
+    TPMModuleCondition, TPMVisitUNICEFFocalPointCondition, TPMVisitTPMFocalPointCondition
+from permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
+from utils.common.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
 from .filters import ReferenceNumberOrderingFilter
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
@@ -36,9 +37,10 @@ class TPMPartnerViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    FSMTransitionActionMixin,
+    PermittedFSMActionMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
+    PermittedSerializerMixin,
     viewsets.GenericViewSet
 ):
     metadata_class = TPMPermissionBasedMetadata
@@ -61,6 +63,19 @@ class TPMPartnerViewSet(
             queryset = queryset.filter(staff_members__user=self.request.user)
 
         return queryset
+
+    def extra_permission_context(self):
+        context = list()
+
+        context.append(TPMModuleCondition().to_internal_value())
+        context.append(TPMRoleCondition(self.request.user).to_internal_value())
+
+        if (self.lookup_url_kwarg or self.lookup_field) in self.kwargs:
+            partner = self.get_object()
+            context.append(ObjectStatusCondition(partner).to_internal_value())
+            context.append(TPMStaffMemberCondition(partner, self.request.user).to_internal_value())
+
+        return context
 
     @list_route(methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
@@ -90,9 +105,11 @@ class TPMStaffMembersViewSet(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
+    PermittedSerializerMixin,
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = TPMPermissionBasedMetadata
     queryset = TPMPartnerStaffMember.objects.all()
     serializer_class = TPMPartnerStaffMemberSerializer
     permission_classes = (IsAuthenticated, IsPMEorReadonlyPermission, )
@@ -111,7 +128,8 @@ class TPMVisitViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    FSMTransitionActionMixin,
+    PermittedFSMActionMixin,
+    PermittedSerializerMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
@@ -157,6 +175,20 @@ class TPMVisitViewSet(
                 self.get_object().status == TPMVisit.STATUSES.draft:
             return TPMVisitDraftSerializer
         return super(TPMVisitViewSet, self).get_serializer_class()
+
+    def extra_permission_context(self):
+        context = list()
+
+        context.append(TPMRoleCondition(self.request.user).to_internal_value())
+
+        if (self.lookup_url_kwarg or self.lookup_field) in self.kwargs:
+            visit = self.get_object()
+            context.append(ObjectStatusCondition(visit).to_internal_value())
+            context.append(TPMStaffMemberCondition(visit.tpm_partner, self.request.user).to_internal_value())
+            context.append(TPMVisitUNICEFFocalPointCondition(visit, self.request.user).to_internal_value())
+            context.append(TPMVisitTPMFocalPointCondition(visit, self.request.user).to_internal_value())
+
+        return context
 
     @list_route(methods=['get'], renderer_classes=(TPMVisitCSVRenderer,))
     def export(self, request, *args, **kwargs):

@@ -15,11 +15,11 @@ from post_office import mail
 from EquiTrack.utils import get_environment
 from attachments.models import Attachment
 from firms.models import BaseFirm, BaseStaffMember
+from permissions2.fsm import has_action_permission as new_has_action_permission
 from publics.models import SoftDeleteMixin
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import site_url, build_frontend_url
 from utils.groups.wrappers import GroupWrapper
-from utils.permissions.utils import has_action_permission
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from .transitions.serializers import TPMVisitRejectSerializer
@@ -56,12 +56,12 @@ class TPMPartner(BaseFirm):
 
     # TODO: Remove hardcode for PME permissions?
     @transition(status, source=[STATUSES.draft, STATUSES.cancelled], target=STATUSES.active,
-                permission=lambda instance, user: PME.as_group() in user.groups.all())
+                permission=new_has_action_permission('activate'))
     def activate(self):
         self.date_of_active = timezone.now()
 
     @transition(status, source=[STATUSES.draft, STATUSES.active], target=STATUSES.cancelled,
-                permission=lambda instance, user: PME.as_group() in user.groups.all())
+                permission=new_has_action_permission('cancel'))
     def cancel(self):
         self.date_of_cancel = timezone.now()
 
@@ -72,9 +72,7 @@ class TPMPartnerStaffMember(BaseStaffMember):
     receive_tpm_notifications = models.BooleanField(verbose_name=_('Receive Notifications on TPM Tasks'), default=False)
 
 
-def _has_action_permission(action):
-    return lambda instance=None, user=None: \
-        has_action_permission(TPMPermission, instance=instance, user=user, action=action)
+_has_action_permission = new_has_action_permission
 
 
 @python_2_unicode_compatible

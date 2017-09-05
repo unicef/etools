@@ -1,7 +1,5 @@
 from datetime import timedelta, datetime
 
-from django.core.management import call_command
-
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -14,7 +12,7 @@ from ..models import TPMActivityActionPoint
 class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        call_command('update_tpm_permissions', verbosity=0)
+        super(TestTPMVisitViewSet, cls).setUpTestData()
 
         cls.pme_user = UserFactory(pme=True)
         cls.unicef_user = UserFactory(unicef_user=True)
@@ -90,6 +88,8 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
 class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMStaffMembersViewSet, cls).setUpTestData()
+
         cls.tpm_partner = TPMPartnerFactory()
 
         cls.pme_user = UserFactory(pme=True)
@@ -236,6 +236,8 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
 class TestTPMPartnerViewSet(TPMTestCaseMixin, APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super(TestTPMPartnerViewSet, cls).setUpTestData()
+
         cls.tpm_partner = TPMPartnerFactory()
         cls.second_tpm_partner = TPMPartnerFactory()
 

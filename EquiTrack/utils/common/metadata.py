@@ -55,11 +55,11 @@ class FSMTransitionActionMetadataMixin(object):
 
         model_transitions = []
         for action in self._collect_actions(instance):
-            meta = action._django_fsm
-            im_self = getattr(action, 'im_self', getattr(action, '__self__'))
-            current_state = meta.field.get_state(im_self)
-
-            if meta.has_transition(current_state) and meta.has_transition_perm(im_self, current_state, request.user):
+            try:
+                view.check_transition_permission(action, request.user)
+            except (exceptions.PermissionDenied, exceptions.ValidationError):
+                pass
+            else:
                 model_transitions.append(action)
 
         actions["allowed_FSM_transitions"] = map(lambda t: t.__name__, model_transitions)
