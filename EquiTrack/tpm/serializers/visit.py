@@ -6,7 +6,7 @@ from locations.models import Location
 from partners.models import InterventionResultLink, Intervention, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from reports.models import Result
-from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActivityActionPoint, \
+from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActionPoint, \
     TPMPartnerStaffMember
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, \
     TPMActivityPDSerializer
@@ -52,9 +52,9 @@ class TPMVisitReportRejectCommentSerializer(TPMPermissionsBasedSerializerMixin,
         fields = ['id', 'rejected_at', 'reject_reason', ]
 
 
-class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
-                                       WritableNestedSerializerMixin,
-                                       serializers.ModelSerializer):
+class TPMActionPointSerializer(TPMPermissionsBasedSerializerMixin,
+                               WritableNestedSerializerMixin,
+                               serializers.ModelSerializer):
     author = MinimalUserSerializer(read_only=True)
 
     person_responsible = SeparatedReadWriteField(
@@ -68,7 +68,7 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
         return self.get_user() == obj.person_responsible
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
-        model = TPMActivityActionPoint
+        model = TPMActionPoint
         fields = [
             'id', 'author', 'person_responsible', 'is_responsible',
             'due_date', 'status', 'description', 'comments',
@@ -76,7 +76,7 @@ class TPMActivityActionPointSerializer(TPMPermissionsBasedSerializerMixin,
 
     def create(self, validated_data):
         validated_data['author'] = self.get_user()
-        return super(TPMActivityActionPointSerializer, self).create(validated_data)
+        return super(TPMActionPointSerializer, self).create(validated_data)
 
 
 class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
@@ -104,13 +104,11 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     pd_files = TPMActivityPDSerializer(many=True, required=False)
 
-    action_points = TPMActivityActionPointSerializer(many=True, required=False)
-
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
             'id', 'implementing_partner', 'partnership', 'cp_output', 'section',
-            'date', 'locations', 'pd_files', 'action_points', 'additional_information'
+            'date', 'locations', 'pd_files', 'additional_information',
         ]
 
     def validate(self, attrs):
@@ -251,6 +249,8 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
+    action_points = TPMActionPointSerializer(many=True, required=False)
+
     def validate(self, attrs):
         validated_data = super(TPMVisitSerializer, self).validate(attrs)
 
@@ -276,7 +276,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
-            'tpm_activities', 'attachments', 'report',
+            'tpm_activities', 'attachments', 'report', 'action_points',
             'reject_comment', 'visit_information', 'report_reject_comments',
         ]
         extra_kwargs = {

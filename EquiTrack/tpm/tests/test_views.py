@@ -8,7 +8,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from .base import TPMTestCaseMixin
 from .factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
 
-from ..models import TPMActivityActionPoint
+from ..models import TPMActionPoint
 
 
 class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
@@ -64,27 +64,24 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
     def test_action_points(self):
         visit = TPMVisitFactory(status='tpm_reported', unicef_focal_points__count=1)
         unicef_focal_point = visit.unicef_focal_points.first()
-        self.assertEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=visit).count(), 0)
+        self.assertEquals(TPMActionPoint.objects.filter(tpm_visit=visit).count(), 0)
 
         response = self.forced_auth_req(
             'patch',
             '/api/tpm/visits/{}/'.format(visit.id),
             user=unicef_focal_point,
             data={
-                'tpm_activities': [{
-                    'id': activity.id,
-                    'action_points': [
-                        {
-                            "person_responsible": visit.tpm_partner.staff_members.first().user.id,
-                            "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
-                            "description": "Description",
-                        }
-                    ]
-                } for activity in visit.tpm_activities.all()]
+                'action_points': [
+                    {
+                        "person_responsible": visit.tpm_partner.staff_members.first().user.id,
+                        "due_date": (datetime.now().date() + timedelta(days=5)).strftime('%Y-%m-%d'),
+                        "description": "Description",
+                    }
+                ]
             }
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertNotEquals(TPMActivityActionPoint.objects.filter(tpm_activity__tpm_visit=visit).count(), 0)
+        self.assertNotEquals(TPMActionPoint.objects.filter(tpm_visit=visit).count(), 0)
 
 
 class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):

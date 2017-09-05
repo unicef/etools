@@ -327,7 +327,7 @@ class TPMActivity(models.Model):
 
 
 @python_2_unicode_compatible
-class TPMActivityActionPoint(TimeStampedModel, models.Model):
+class TPMActionPoint(TimeStampedModel, models.Model):
     STATUSES = Choices(
         ('open', 'Open'),
         ('progress', 'In-Progress'),
@@ -335,10 +335,10 @@ class TPMActivityActionPoint(TimeStampedModel, models.Model):
         ('cancelled', 'Cancelled'),
     )
 
-    tpm_activity = models.ForeignKey(TPMActivity, related_name='action_points')
+    tpm_visit = models.ForeignKey(TPMVisit, related_name='action_points')
 
-    author = models.ForeignKey(User, related_name='created_tpm_activity_action_points')
-    person_responsible = models.ForeignKey(User, related_name='tpm_activity_action_points')
+    author = models.ForeignKey(User, related_name='created_tpm_action_points')
+    person_responsible = models.ForeignKey(User, related_name='tpm_action_points')
 
     due_date = models.DateField()
     description = models.TextField()
@@ -348,9 +348,6 @@ class TPMActivityActionPoint(TimeStampedModel, models.Model):
 
     def __str__(self):
         return 'Action Point #{} on {}'.format(self.id, self.tpm_activity)
-
-    class Meta:
-        ordering = ['tpm_activity', 'id']
 
 
 PME = GroupWrapper(code='pme',

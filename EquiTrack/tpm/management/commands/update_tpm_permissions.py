@@ -46,9 +46,8 @@ class Command(BaseCommand):
     ]
 
     follow_up_page = [
-        'tpmvisit.tpm_activities',
-        'tpmactivity.action_points',
-        'tpmactivityactionpoint.*',
+        'tpmvisit.action_points',
+        'tpmactionpoint.*',
     ]
 
     new_visit = 'new'
