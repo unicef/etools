@@ -9,10 +9,10 @@ class TPMResource(BaseExportResource):
 
     def fill_tpm_row(self, row, tpm):
 
-        self.insert_column(row, 'PCA', tpm.pca.__unicode__())
+        self.insert_column(row, 'PCA', unicode(tpm.pca))
         self.insert_column(row, 'Status', tpm.status)
         self.insert_column(row, 'Cycle Number', tpm.cycle_number if tpm.cycle_number else 0)
-        self.insert_column(row, 'Location', tpm.pca_location.__unicode__())
+        self.insert_column(row, 'Location', unicode(tpm.pca_location))
         self.insert_column(row, 'Sections', tpm.pca.sector_names)
         self.insert_column(row, 'Assigned by', tpm.assigned_by.get_full_name())
         self.insert_column(row, 'Tentative Date', tpm.tentative_date.strftime("%d-%m-%Y") if tpm.tentative_date else '')
