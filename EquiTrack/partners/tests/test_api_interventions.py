@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import json
 import datetime
+import os
 from unittest import skip, TestCase
 
 from django.core.urlresolvers import reverse
@@ -123,6 +124,14 @@ class TestInterventionsAPI(APITenantTestCase):
             reverse('partners_api:intervention-list'),
             user=user or self.unicef_staff,
             data=data
+        )
+        return response.status_code, json.loads(response.rendered_content)
+
+    def run_request_details_v3(self, intervention_id, user=None, method='get'):
+        response = self.forced_auth_req(
+            method,
+            reverse('partners_api_v3:intervention-detail', args=[intervention_id]),
+            user=user or self.unicef_staff,
         )
         return response.status_code, json.loads(response.rendered_content)
 
@@ -366,3 +375,23 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEquals(len(response), 4)
+
+    def test_intervention_details(self):
+        with self.assertNumQueries(20):
+            status_code, response = self.run_request_details_v3(
+                intervention_id=self.intervention.pk, user=self.unicef_staff, method='get'
+            )
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+
+        # todo: swap to v3 format
+        json_filename = os.path.join(os.path.dirname(__file__), 'data', 'intervention_v2.json')
+        with open(json_filename) as f:
+            expected_intervention = json.loads(f.read())
+            # print json.dumps(expected_intervention, indent=2, sort_keys=True)
+
+        for dynamic_key in ['created', 'modified']:
+            del response[dynamic_key]
+            del expected_intervention[dynamic_key]
+
+        self.assertEqual(response, expected_intervention)
