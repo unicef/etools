@@ -386,7 +386,6 @@ class Travel(models.Model):
                 conditions=[check_trip_report, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = timezone_now()
-
         if not self.ta_required and self.status == self.PLANNED:
             self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
                                          self.supervisor.email,
@@ -405,6 +404,7 @@ class Travel(models.Model):
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.SPOT_CHECK):
                 PartnerOrganization.spot_checks(act.partner, update_one=True)
+
         except Exception as e:
             logging.info('Exception while trying to update hact values {}'.format(e))
 
