@@ -66,7 +66,7 @@ from partners.serializers.v1 import (
 from EquiTrack.utils import get_data_from_insight
 
 
-class PcaPDFView(PDFTemplateView):
+class PCAPDFView(PDFTemplateView):
     template_name = "partners/pca/english_pdf.html"
     # TODO add proper templates for different languages
     language_templates_mapping = {
@@ -128,7 +128,7 @@ class PcaPDFView(PDFTemplateView):
                  'title': officer.title}
             )
 
-        return super(PcaPDFView, self).get_context_data(
+        return super(PCAPDFView, self).get_context_data(
             error=error,
             pagesize="Letter",
             title="Partnership",

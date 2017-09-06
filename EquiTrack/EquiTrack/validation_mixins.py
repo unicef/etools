@@ -1,18 +1,18 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
+
 import copy
 import logging
+
 from django.apps import apps
 from django.db.models import ObjectDoesNotExist
 from django.db.models.fields.files import FieldFile
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
-
 from django_fsm import (
     can_proceed, has_transition_perm,
     get_all_FIELD_transitions
 )
-
 from rest_framework.exceptions import ValidationError
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
