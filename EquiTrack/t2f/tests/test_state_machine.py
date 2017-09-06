@@ -162,7 +162,6 @@ class StateMachineTest(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.CERTIFIED)
 
-
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
@@ -202,7 +201,6 @@ class StateMachineTest(APITenantTestCase):
                          partner_prog_after_complete.hact_values['programmatic_visits'])
         self.assertEqual(partner_spot_checks.hact_values['spot_checks']+1,
                          partner_spot_checks_after_complete.hact_values['spot_checks'])
-
 
     @override_settings(DISABLE_INVOICING=True)
     def test_state_machine_flow_invoice_disabled(self):
