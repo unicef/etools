@@ -8,7 +8,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from t2f.models import Invoice
 from publics.tests.factories import BusinessAreaFactory
 from t2f.serializers.mailing import TravelMailSerializer
-from t2f.tests.factories import IteneraryItemFactory
+from t2f.tests.factories import ItineraryItemFactory
 
 from .factories import TravelFactory
 
@@ -26,8 +26,8 @@ class MailingTest(APITenantTestCase):
                                         last_name='Doe')
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
-        IteneraryItemFactory(travel=self.travel)
-        IteneraryItemFactory(travel=self.travel)
+        ItineraryItemFactory(travel=self.travel)
+        ItineraryItemFactory(travel=self.travel)
         mail.outbox = []
 
     @override_settings(DISABLE_INVOICING=False)
