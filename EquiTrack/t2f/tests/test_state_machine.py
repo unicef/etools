@@ -14,7 +14,6 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
 from t2f.models import Travel, Invoice, ModeOfTravel, TravelType
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
-from partners.models import PartnerOrganization
 from .factories import TravelFactory, TravelActivityFactory
 
 
@@ -168,11 +167,9 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.traveler)
-
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
         self.assertEqual(travel.report_note, '')
-
         # None should be handled as empty string
         travel.report_note = None   # This has to be set explicitly since serializer does not accept None
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -182,7 +179,6 @@ class StateMachineTest(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
         self.assertEqual(travel.report_note, None)
-
         # adding activities to travel for hact_values check after marked as complete
         a1 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING, primary_traveler=self.traveler)
         a2 = TravelActivityFactory(travel_type=TravelType.SPOT_CHECK, primary_traveler=self.traveler)
@@ -192,7 +188,6 @@ class StateMachineTest(APITenantTestCase):
         from partners.models import PartnerOrganization
         partner_prog = PartnerOrganization.objects.get(id=a1.partner.id)
         partner_spot_checks = PartnerOrganization.objects.get(id=a2.partner.id)
-
         data = response_json
         data['report'] = 'Something'
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -200,16 +195,13 @@ class StateMachineTest(APITenantTestCase):
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
-        
         partner_prog_after_complete = PartnerOrganization.objects.get(id=a1.partner.id)
         partner_spot_checks_after_complete = PartnerOrganization.objects.get(id=a2.partner.id)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
-        self.assertEqual(partner_prog.hact_values['programmatic_visits']+1, partner_prog_after_complete.hact_values['programmatic_visits'])
-        self.assertEqual(partner_spot_checks.hact_values['spot_checks']+1, partner_spot_checks_after_complete.hact_values['spot_checks'])
-
-
-
-    # def test_hact_dashboard_updates_upon_completed_trip(self):
+        self.assertEqual(partner_prog.hact_values['programmatic_visits']+1,
+                         partner_prog_after_complete.hact_values['programmatic_visits'])
+        self.assertEqual(partner_spot_checks.hact_values['spot_checks']+1,
+                         partner_spot_checks_after_complete.hact_values['spot_checks'])
 
 
     @override_settings(DISABLE_INVOICING=True)
