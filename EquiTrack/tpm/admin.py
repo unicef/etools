@@ -76,8 +76,8 @@ class TPMPartnerStaffMemberAdmin(admin.ModelAdmin):
     active.admin_order_field = 'user__is_active'
 
 
-@admin.register(models.TPMActivityActionPoint)
-class TPMActivityActionPointAdmin(admin.ModelAdmin):
+@admin.register(models.TPMActionPoint)
+class TPMActionPointAdmin(admin.ModelAdmin):
     list_display = [
-        'author', 'person_responsible', 'tpm_activity', 'due_date', 'status',
+        'author', 'person_responsible', 'tpm_visit', 'due_date', 'status',
     ]

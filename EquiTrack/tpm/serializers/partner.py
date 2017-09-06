@@ -24,8 +24,16 @@ class TPMPartnerLightSerializer(serializers.ModelSerializer):
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
             'email', 'phone_number', 'status', 'status_date',
-            'hidden', 'blocked'
+            'hidden', 'blocked', 'vision_synced', 'deleted_flag',
         ]
+        extra_kwargs = {
+            field: {'read_only': True}
+            for field in [
+                'vendor_number', 'name', 'status',
+                'street_address', 'city', 'postal_code', 'country',
+                'hidden', 'blocked', 'vision_synced', 'deleted_flag',
+            ]
+        }
 
 
 class TPMPartnerSerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin, TPMPartnerLightSerializer):
@@ -36,10 +44,3 @@ class TPMPartnerSerializer(PermissionsBasedSerializerMixin, WritableNestedSerial
         fields = TPMPartnerLightSerializer.Meta.fields + [
             'staff_members', 'attachments',
         ]
-        extra_kwargs = {
-            field: {'read_only': True}
-            for field in [
-                'vendor_number', 'name', 'status',
-                'street_address', 'city', 'postal_code', 'country',
-            ]
-        }

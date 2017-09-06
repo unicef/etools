@@ -41,13 +41,13 @@ class Command(BaseCommand):
         'tpmvisit.tpm_partner_focal_points',
         'tpmvisit.offices',
         'tpmvisit.sections',
+        'tpmvisit.visit_information',
         'tpmactivity.*',
     ]
 
     follow_up_page = [
-        'tpmvisit.tpm_activities',
-        'tpmactivity.action_points',
-        'tpmactivityactionpoint.*',
+        'tpmvisit.action_points',
+        'tpmactionpoint.*',
     ]
 
     new_visit = 'new'

@@ -53,7 +53,9 @@ class TPMPartnerViewSet(
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('vendor_number', 'name')
     ordering_fields = ('vendor_number', 'name', 'country')
-    filter_fields = ('status', 'blocked', 'hidden')
+    filter_fields = (
+        'status', 'blocked', 'hidden', 'deleted_flag',
+    )
 
     def get_queryset(self):
         queryset = super(TPMPartnerViewSet, self).get_queryset()
@@ -154,7 +156,7 @@ class TPMVisitViewSet(
     )
     filter_fields = (
         'tpm_partner', 'tpm_activities__section', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
-        'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status',
+        'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status'
     )
 
     def get_queryset(self):

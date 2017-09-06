@@ -54,6 +54,11 @@ class POSynchronizer(VisionDataSynchronizer):
         'auditor_firm': AuditorFirm,
         'order': PurchaseOrder,
     })
+    DEFAULTS = {
+        AuditorFirm: {
+            'vision_synced': True
+        }
+    }
     DATE_FIELDS = ['EXPIRY_DATE', 'PO_DATE', ]
 
     def __init__(self, country=None, po_number=None):
@@ -124,6 +129,7 @@ class POSynchronizer(VisionDataSynchronizer):
                         [(field_name, value) for field_name, value in mapped_item.items()
                          if field_name not in kwargs.keys()]
                     )
+                    defaults.update(self.DEFAULTS.get(model, {}))
                     obj, created = model.objects.update_or_create(
                         defaults=defaults, **kwargs
                     )
