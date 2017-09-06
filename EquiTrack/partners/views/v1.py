@@ -9,6 +9,12 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 
+#experimenting
+import json
+import pdfkit
+from django.template.loader import render_to_string
+
+
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -66,7 +72,8 @@ from partners.serializers.v1 import (
 from EquiTrack.utils import get_data_from_insight
 
 
-class PCAPDFView(PDFTemplateView):
+#class PCAPDFView(PDFTemplateView):
+class PCAPDFView(TemplateView):
     template_name = "partners/pca/english_pdf.html"
     # TODO add proper templates for different languages
     language_templates_mapping = {
@@ -80,6 +87,29 @@ class PCAPDFView(PDFTemplateView):
         "ifrc_french": "partners/pca/ifrc_french_pdf.html"
     }
 
+    def get(self, request, *args, **kwargs):
+        #t = loader.get_template(self.template_name)
+        lang = self.request.GET.get('lang', None)
+        rendered = render_to_string(self.language_templates_mapping[lang], self.get_context_data(**kwargs))
+
+        options = {
+            'page-size': 'Letter',
+            'margin-top': '0.75in',
+            'margin-right': '0.75in',
+            'margin-bottom': '0.75in',
+            'margin-left': '0.75in',
+            'encoding': "UTF-8",
+            'custom-header': [
+                ('Accept-Encoding', 'gzip')
+            ],
+            'no-outline': None
+        }
+
+        pdf = pdfkit.from_string(rendered, False, options)
+
+        #return HttpResponse(rendered)
+        return HttpResponse(pdf, content_type='application/pdf')
+
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
         lang = self.request.GET.get('lang', None)
@@ -89,6 +119,7 @@ class PCAPDFView(PDFTemplateView):
             except KeyError:
                 return {"error": "Cannot find document with given query parameter lang={}".format(lang)}
         error = None
+
         try:
             agreement = Agreement.objects.get(id=agr_id)
         except Agreement.DoesNotExist:
@@ -130,6 +161,7 @@ class PCAPDFView(PDFTemplateView):
             )
 
         font_path = settings.SITE_ROOT + '/assets/fonts/'
+
 
         return super(PCAPDFView, self).get_context_data(
             error=error,

@@ -28,11 +28,22 @@ RUN apt-get install -y --no-install-recommends \
     libxml2-dev \
     libxslt-dev \
     xmlsec1
+#packages needed for RTL text support for PDF generation
+#RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+RUN apt-get install -y --no-install-recommends \
+    libfreetype6 \
+    libfontconfig1 \
+    libxrender1 \
+    libxext6 \
+    #xorg \
+    #libssl-dev \
+    wkhtmltopdf
 
 RUN pip install --upgrade \
     setuptools \
     pip \
-    wheel
+    wheel \
+    pdfkit
 
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
@@ -50,3 +61,10 @@ WORKDIR /code/
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 RUN SECRET_KEY=not-so-secret-key-just-for-collectstatic python manage.py collectstatic --noinput
+
+#overwrite wkhtmltopdf binary with a patched version with QT support
+#ADD docker-entrypoint.sh /
+#RUN chmod a+rx /docker-entrypoint.sh
+#ENTRYPOINT ["/docker-entrypoint.sh"]
+
+ADD ./bin/wkhtmltopdf-amd64 /usr/bin/wkhtmltopdf
