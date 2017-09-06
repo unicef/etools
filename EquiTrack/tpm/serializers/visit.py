@@ -8,8 +8,7 @@ from partners.serializers.interventions_v2 import InterventionCreateUpdateSerial
 from reports.models import Result
 from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActionPoint, \
     TPMPartnerStaffMember
-from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, \
-    TPMActivityPDSerializer
+from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
 from utils.common.serializers.fields import SeparatedReadWriteField
@@ -102,7 +101,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         required=True,
     )
 
-    pd_files = TPMActivityPDSerializer(many=True, required=False)
+    pd_files = TPMAttachmentsSerializer(many=True, required=False)
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity

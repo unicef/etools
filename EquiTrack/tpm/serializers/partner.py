@@ -3,7 +3,7 @@ from rest_framework import serializers
 from firms.serializers import BaseStaffMemberSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from ..models import TPMPartner, TPMPartnerStaffMember
-from .attachments import TPMAttachmentsSerializer
+from .attachments import TPMPartnerAttachmentsSerializer
 
 
 class TPMPartnerStaffMemberSerializer(BaseStaffMemberSerializer):
@@ -37,7 +37,7 @@ class TPMPartnerLightSerializer(serializers.ModelSerializer):
 
 class TPMPartnerSerializer(WritableNestedSerializerMixin, TPMPartnerLightSerializer):
     staff_members = TPMPartnerStaffMemberSerializer(many=True, required=False, read_only=True)
-    attachments = TPMAttachmentsSerializer(many=True)
+    attachments = TPMPartnerAttachmentsSerializer(many=True)
 
     class Meta(WritableNestedSerializerMixin.Meta, TPMPartnerLightSerializer.Meta):
         fields = TPMPartnerLightSerializer.Meta.fields + [
