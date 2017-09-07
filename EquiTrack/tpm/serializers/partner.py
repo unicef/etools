@@ -4,7 +4,7 @@ from firms.serializers import BaseStaffMemberSerializer
 from permissions2.serializers import PermissionsBasedSerializerMixin
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from ..models import TPMPartner, TPMPartnerStaffMember
-from .attachments import TPMAttachmentsSerializer
+from .attachments import TPMPartnerAttachmentsSerializer
 
 
 class TPMPartnerStaffMemberSerializer(PermissionsBasedSerializerMixin, BaseStaffMemberSerializer):
@@ -38,7 +38,7 @@ class TPMPartnerLightSerializer(serializers.ModelSerializer):
 
 class TPMPartnerSerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin, TPMPartnerLightSerializer):
     staff_members = TPMPartnerStaffMemberSerializer(many=True, required=False, read_only=True)
-    attachments = TPMAttachmentsSerializer(many=True)
+    attachments = TPMPartnerAttachmentsSerializer(many=True)
 
     class Meta(PermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta, TPMPartnerLightSerializer.Meta):
         fields = TPMPartnerLightSerializer.Meta.fields + [
