@@ -94,5 +94,5 @@ class NewObjectCondition(TemplateCondition):
 
     def get_context(self):
         return {
-            'model': '{}_{}'.format(self.model.app_label, self.model.model_name)
+            'model': '{}_{}'.format(self.model._meta.app_label, self.model._meta.model_name)
         }

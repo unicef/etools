@@ -8,7 +8,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBac
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from permissions2.conditions import ObjectStatusCondition
+from permissions2.conditions import ObjectStatusCondition, NewObjectCondition
 from permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from utils.common.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
@@ -31,6 +31,19 @@ class BaseTPMViewSet(
     metadata_class = TPMBaseMetadata
     pagination_class = DynamicPageNumberPagination
     permission_classes = (IsAuthenticated, )
+
+    def get_permission_context(self):
+        context = [
+            TPMModuleCondition(),
+            TPMRoleCondition(self.request.user),
+        ]
+
+        if getattr(self, 'action', None) == 'create':
+            context.append(
+                NewObjectCondition(self.queryset.model),
+            )
+
+        return context
 
 
 class TPMPartnerViewSet(
@@ -67,18 +80,11 @@ class TPMPartnerViewSet(
 
         return queryset
 
-    def get_permission_context(self):
-        context = list()
-
-        context.append(TPMModuleCondition().to_internal_value())
-        context.append(TPMRoleCondition(self.request.user).to_internal_value())
-
-        if (self.lookup_url_kwarg or self.lookup_field) in self.kwargs:
-            partner = self.get_object()
-            context.append(ObjectStatusCondition(partner).to_internal_value())
-            context.append(TPMStaffMemberCondition(partner, self.request.user).to_internal_value())
-
-        return context
+    def get_obj_permission_context(self, obj):
+        return [
+            ObjectStatusCondition(obj),
+            TPMStaffMemberCondition(obj, self.request.user),
+        ]
 
     @list_route(methods=['get'], url_path='sync/(?P<vendor_number>[^/]+)')
     def sync(self, request, *args, **kwargs):
@@ -179,19 +185,13 @@ class TPMVisitViewSet(
             return TPMVisitDraftSerializer
         return super(TPMVisitViewSet, self).get_serializer_class()
 
-    def get_permission_context(self):
-        context = list()
-
-        context.append(TPMRoleCondition(self.request.user).to_internal_value())
-
-        if (self.lookup_url_kwarg or self.lookup_field) in self.kwargs:
-            visit = self.get_object()
-            context.append(ObjectStatusCondition(visit).to_internal_value())
-            context.append(TPMStaffMemberCondition(visit.tpm_partner, self.request.user).to_internal_value())
-            context.append(TPMVisitUNICEFFocalPointCondition(visit, self.request.user).to_internal_value())
-            context.append(TPMVisitTPMFocalPointCondition(visit, self.request.user).to_internal_value())
-
-        return context
+    def get_obj_permission_context(self, obj):
+        return [
+            ObjectStatusCondition(obj),
+            TPMStaffMemberCondition(obj.tpm_partner, self.request.user),
+            TPMVisitUNICEFFocalPointCondition(obj, self.request.user),
+            TPMVisitTPMFocalPointCondition(obj, self.request.user),
+        ]
 
     @list_route(methods=['get'], renderer_classes=(TPMVisitCSVRenderer,))
     def export(self, request, *args, **kwargs):

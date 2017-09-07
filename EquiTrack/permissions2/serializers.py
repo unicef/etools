@@ -89,7 +89,10 @@ class PermissionsBasedSerializerMixin(object):
         return permissions
 
     def _get_permission_context(self):
-        return self.context.get('permission_context', [])
+        return map(
+            lambda condition: condition.to_internal_value(),
+            self.context.get('permission_context', []),
+        )
 
     @property
     def permissions(self):
