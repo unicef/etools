@@ -49,7 +49,8 @@ RUN pip install --upgrade \
     fabric \
     pip \
     wheel \
-    pdfkit
+    pdfkit \
+    django-wkhtmltopdf
 
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
@@ -68,13 +69,12 @@ WORKDIR /code/
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.local
 
+#temp
 ENV VISION_URL https://devapis.unicef.org/BIService/BIWebService.svc/
 ENV VISION_USER ntrncic@unicef.org
 ENV VISION_PASSWORD zvezda14!
 
-#overwrite wkhtmltopdf binary with a patched version with QT support
-#ADD docker-entrypoint.sh /
-#RUN chmod a+rx /docker-entrypoint.sh
-#ENTRYPOINT ["/docker-entrypoint.sh"]
-
+#overwrite existing wkhtmltopdf binary with a pre-compiled one with QT support.
+#the precompiled binary was downloaded from the official github repo
+#this is a debian specific issue with wkhtmltopdf
 ADD ./bin/wkhtmltopdf-amd64 /usr/bin/wkhtmltopdf

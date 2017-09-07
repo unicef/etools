@@ -13,6 +13,7 @@ from django.utils.http import urlsafe_base64_decode
 import json
 import pdfkit
 from django.template.loader import render_to_string
+from wkhtmltopdf.views import PDFTemplateResponse, PDFTemplateView as WKHTMLPDFTemplateView
 
 
 from rest_framework import status, viewsets, mixins
@@ -23,6 +24,7 @@ from rest_framework.response import Response
 
 from actstream import action
 from easy_pdf.views import PDFTemplateView
+from easy_pdf.rendering import render_to_pdf_response
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
@@ -72,8 +74,7 @@ from partners.serializers.v1 import (
 from EquiTrack.utils import get_data_from_insight
 
 
-#class PCAPDFView(PDFTemplateView):
-class PCAPDFView(TemplateView):
+class PCAPDFView(PDFTemplateView):
     template_name = "partners/pca/english_pdf.html"
     # TODO add proper templates for different languages
     language_templates_mapping = {
@@ -88,27 +89,55 @@ class PCAPDFView(TemplateView):
     }
 
     def get(self, request, *args, **kwargs):
-        #t = loader.get_template(self.template_name)
         lang = self.request.GET.get('lang', None)
-        rendered = render_to_string(self.language_templates_mapping[lang], self.get_context_data(**kwargs))
 
-        options = {
-            'page-size': 'Letter',
-            'margin-top': '0.75in',
-            'margin-right': '0.75in',
-            'margin-bottom': '0.75in',
-            'margin-left': '0.75in',
-            'encoding': "UTF-8",
-            'custom-header': [
-                ('Accept-Encoding', 'gzip')
-            ],
-            'no-outline': None
-        }
+        if lang == 'arabic':
+            #use wkhtmlpdf(has RTL supoort) for arabic language
+            '''
+            rendered = render_to_string(self.language_templates_mapping[lang],
+                                        self.get_context_data(**kwargs))
 
-        pdf = pdfkit.from_string(rendered, False, options)
+            options = {
+                'page-size': 'Letter',
+                'margin-top': '0.75in',
+                'margin-right': '0.75in',
+                'margin-bottom': '0.75in',
+                'margin-left': '0.75in',
+                'encoding': "UTF-8",
+                'custom-header': [
+                    ('Accept-Encoding', 'gzip')
+                ],
+                'no-outline': None
+            }
 
-        #return HttpResponse(rendered)
-        return HttpResponse(pdf, content_type='application/pdf')
+            #return HttpResponse(rendered)
+            pdf = pdfkit.from_string(rendered, False, options)
+            return HttpResponse(pdf, content_type='application/pdf')
+            '''
+
+            response = PDFTemplateResponse(
+                request=request,
+                template=self.language_templates_mapping[lang],
+                header_template="partners/pca/arabic_pdf_header.html",
+                filename="Partnership.pdf",
+                context=self.get_context_data(**kwargs),
+                show_content_in_browser=True,
+                cmd_options= {
+                    'margin-top': "2cm",
+                    'margin-right': "2cm",
+                    'margin-bottom': "2cm",
+                    'margin-left': "2cm",
+                    'page-size':"Letter",
+                    #'header-spacing': 30,
+                    'zoom': '1',
+                    #"disable-smart-shrinking":True
+                }
+            )
+            return response
+        else:
+            #user xhtml2pdf/easy_pdf for non-arabic languages
+            return render_to_pdf_response(request, self.language_templates_mapping[lang], self.get_context_data(**kwargs))
+
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')

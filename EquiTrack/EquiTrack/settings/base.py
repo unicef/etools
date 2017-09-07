@@ -174,6 +174,7 @@ SHARED_APPS = (
     'analytical',
     'mptt',
     'easy_pdf',
+    'wkhtmltopdf',
     'ordered_model',
 
     'vision',
