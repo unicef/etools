@@ -8,11 +8,12 @@ from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBac
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from permissions2.conditions import TPMRoleCondition, TPMStaffMemberCondition, ObjectStatusCondition, \
-    TPMModuleCondition, TPMVisitUNICEFFocalPointCondition, TPMVisitTPMFocalPointCondition
+from permissions2.conditions import ObjectStatusCondition
 from permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from utils.common.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
+from .conditions import TPMModuleCondition, TPMStaffMemberCondition, TPMVisitUNICEFFocalPointCondition, \
+    TPMVisitTPMFocalPointCondition, TPMRoleCondition
 from .filters import ReferenceNumberOrderingFilter
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity

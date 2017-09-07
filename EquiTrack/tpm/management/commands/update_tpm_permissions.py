@@ -2,10 +2,11 @@ from django.core.management import BaseCommand
 from django.utils import six
 
 from permissions2.models import Permission
-from permissions2.conditions import TPMRoleCondition, TPMStaffMemberCondition, ObjectStatusCondition, \
-    NewObjectCondition, TPMVisitUNICEFFocalPointCondition
+from permissions2.conditions import ObjectStatusCondition, \
+    NewObjectCondition
 
-from tpm.models import UNICEFUser, PME, ThirdPartyMonitor, TPMVisit
+from ...conditions import TPMStaffMemberCondition, TPMVisitUNICEFFocalPointCondition, TPMRoleCondition
+from ...models import UNICEFUser, PME, ThirdPartyMonitor, TPMVisit
 
 
 class Command(BaseCommand):
