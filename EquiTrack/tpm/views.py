@@ -66,7 +66,7 @@ class TPMPartnerViewSet(
 
         return queryset
 
-    def extra_permission_context(self):
+    def get_permission_context(self):
         context = list()
 
         context.append(TPMModuleCondition().to_internal_value())
@@ -178,7 +178,7 @@ class TPMVisitViewSet(
             return TPMVisitDraftSerializer
         return super(TPMVisitViewSet, self).get_serializer_class()
 
-    def extra_permission_context(self):
+    def get_permission_context(self):
         context = list()
 
         context.append(TPMRoleCondition(self.request.user).to_internal_value())

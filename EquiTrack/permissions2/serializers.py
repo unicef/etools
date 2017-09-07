@@ -10,12 +10,6 @@ from .utils import collect_parent_models
 from .models import Permission
 
 
-from firms.serializers import BaseStaffMemberSerializer
-from utils.writable_serializers.serializers import WritableNestedSerializerMixin
-from tpm.models import TPMPartner, TPMPartnerStaffMember
-from tpm.serializers.attachments import TPMAttachmentsSerializer
-
-
 class PermissionsBasedSerializerMixin(object):
     class Meta:
         permission_class = Permission
@@ -44,7 +38,12 @@ class PermissionsBasedSerializerMixin(object):
             for field in node_fields:
                 if isinstance(node, PermissionsBasedSerializerMixin):
                     related_models = collect_parent_models(node.Meta.model)
-                    targets.extend(map(lambda model: model._meta.model_name + '.' + field.field_name, related_models))
+                    targets.extend(map(
+                        lambda model: '{}_{}.{}'.format(model._meta.app_label,
+                                                        model._meta.model_name,
+                                                        field.field_name),
+                        related_models
+                    ))
 
                 if isinstance(field, SeparatedReadWriteField):
                     if isinstance(field.read_field, serializers.BaseSerializer):
@@ -102,7 +101,8 @@ class PermissionsBasedSerializerMixin(object):
             self.root._permissions = list(self._collect_permissions())
 
         permissions = self.root._permissions
-        related_models = tuple(map(lambda x: x._meta.model_name + '.', collect_parent_models(self.Meta.model)))
+        related_models = tuple(map(lambda model: '{}_{}.'.format(model._meta.app_label, model._meta.model_name),
+                                   collect_parent_models(self.Meta.model)))
         permissions = filter(lambda p: p.target.startswith(related_models), permissions)
 
         context = set(self._get_permission_context())
@@ -181,38 +181,3 @@ class PermissionsBasedSerializerMixin(object):
         filtered_fields = filter(lambda f: f.field_name not in disallowed_fields_names, filtered_fields)
 
         return filtered_fields
-
-
-class TPMPartnerStaffMemberSerializer(PermissionsBasedSerializerMixin, BaseStaffMemberSerializer):
-    class Meta(PermissionsBasedSerializerMixin.Meta, BaseStaffMemberSerializer.Meta):
-        model = TPMPartnerStaffMember
-        fields = BaseStaffMemberSerializer.Meta.fields + [
-            'receive_tpm_notifications',
-        ]
-
-
-class TPMPartnerLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
-    class Meta(PermissionsBasedSerializerMixin.Meta):
-        model = TPMPartner
-        fields = [
-            'id', 'vendor_number', 'name',
-            'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number', 'status', 'hidden', 'blocked'
-        ]
-
-
-class TPMPartnerSerializer(WritableNestedSerializerMixin, TPMPartnerLightSerializer):
-    staff_members = TPMPartnerStaffMemberSerializer(many=True, required=False, read_only=True)
-    attachments = TPMAttachmentsSerializer(read_only=True, many=True)
-
-    class Meta(WritableNestedSerializerMixin.Meta, TPMPartnerLightSerializer.Meta):
-        fields = TPMPartnerLightSerializer.Meta.fields + [
-            'staff_members', 'attachments',
-        ]
-        extra_kwargs = {
-            field: {'read_only': True}
-            for field in [
-                'vendor_number', 'name', 'status',
-                'street_address', 'city', 'postal_code', 'country',
-            ]
-        }

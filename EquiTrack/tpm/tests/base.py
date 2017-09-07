@@ -6,7 +6,7 @@ from utils.groups.wrappers import GroupWrapper
 class TPMTestCaseMixin(object):
     @classmethod
     def setUpTestData(cls):
-        call_command('new_update_tpm_permissions', verbosity=0)
+        call_command('update_tpm_permissions', verbosity=0)
 
     def setUp(self):
         super(TPMTestCaseMixin, self).setUp()
