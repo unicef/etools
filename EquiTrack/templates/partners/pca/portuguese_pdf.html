@@ -93,22 +93,19 @@
             }
             #officers_table {
                 width: 512pt;
+                margin-top: 24px;
+                margin-bottom: 12px;
                 border-collapse: collapse;
                 table-layout: fixed;
             }
-            #officers_table tr {
-                /*height: 1.4cm;*/
-                /*line-height: 1cm;*/
-            }
+            #officers_table tr {width: 512pt;}
             #officers_table th {
-                width: 128pt;
                 text-align: center;
                 vertical-align: middle;
                 font-weight: normal;
                 border: 1px solid black;
             }
             #officers_table td {
-                width: 128pt;
                 text-align: center;
                 vertical-align: middle;
                 border: 1px solid black;
@@ -118,12 +115,10 @@
             /*fonts*/
             #header_content {
                 font-family: "Times_New_Roman";
-                /*font-family: "DejaVuSansMono";*/
                 font-size: 12pt;
             }
             #content {
                 font-family: "Times_New_Roman";
-                /*font-family: "DejaVuSansMono";*/
                 font-size: 12pt;
             }
             /*bold fix*/
@@ -148,13 +143,9 @@
                 -pdf-keep-with-next: true;
             }
             .small-indent {
-                /*padding-left: 0.6cm;*/
                 text-indent: 0.8cm;
             }
-            .indented {
-                /*list-style-position: inside;*/
-                /*text-indent: 12px;*/
-            }
+            .indented {}
             .list-style-type-letter {
                 list-style-type: lower-alpha;
             }
@@ -243,6 +234,7 @@
                 <li>
                     “<u>Oficial autorizado</u>” significa um dos seguintes oficiais do PI:
 
+                    <!--
                     <table id="officers_table" repeat="1">
                     <tr>
                         <th><br>Nome Completo</th>
@@ -258,6 +250,28 @@
                         <td><br></td>
                     </tr>
                     {% endfor %}
+                    </table>
+                    -->
+
+                    <table id="officers_table">
+                        {% for officer in auth_officers %}
+                        <tr>
+                            <td style="width: 33%;"><br>Nome Completo</td>
+                            <td><br> {{ officer.first_name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Título</td>
+                            <td><br>{{ officer.title }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Email</td>
+                            <td><br>{{ officer.email }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Amostra da assinatura</td>
+                            <td><br></td>
+                        </tr>
+                        {% endfor %}
                     </table>
 
                     <div style="padding-top: 15px">

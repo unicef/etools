@@ -93,22 +93,19 @@
             }
             #officers_table {
                 width: 512pt;
+                margin-top: 24px;
+                margin-bottom: 12px;
                 border-collapse: collapse;
                 table-layout: fixed;
             }
-            #officers_table tr {
-                /*height: 1.4cm;*/
-                /*line-height: 1cm;*/
-            }
+            #officers_table tr {width: 512pt;}
             #officers_table th {
-                width: 128pt;
                 text-align: center;
                 vertical-align: middle;
                 font-weight: normal;
                 border: 1px solid black;
             }
             #officers_table td {
-                width: 128pt;
                 text-align: center;
                 vertical-align: middle;
                 border: 1px solid black;
@@ -118,12 +115,10 @@
             /*fonts*/
             #header_content {
                 font-family: "Times_New_Roman";
-                /*font-family: "DejaVuSansMono";*/
                 font-size: 12pt;
             }
             #content {
                 font-family: "Times_New_Roman";
-                /*font-family: "DejaVuSansMono";*/
                 font-size: 12pt;
             }
             /*bold fix*/
@@ -151,10 +146,7 @@
                 /*padding-left: 0.6cm;*/
                 text-indent: 1cm;
             }
-            .indented {
-                /*list-style-position: inside;*/
-                /*text-indent: 12px;*/
-            }
+            .indented {}
             .list-style-type-letter {
                 list-style-type: lower-alpha;
             }
@@ -256,9 +248,10 @@
                     attributed to a specific activity implemented by the IP in accordance with this Agreement,
                     including any Programme Document.
                 </li>
-                <li>
+                <li class="keep-with-next">
                     “<u>Authorized Officer</u>” means one of the following officers of the IP:
 
+                    <!--
                     <table id="officers_table" repeat="1">
                     <tr>
                         <th><br>Full name</th>
@@ -274,6 +267,28 @@
                         <td><br></td>
                     </tr>
                     {% endfor %}
+                    </table>
+                    -->
+
+                    <table id="officers_table">
+                        {% for officer in auth_officers %}
+                        <tr>
+                            <td style="width: 33%;"><br>Fullname</td>
+                            <td><br> {{ officer.first_name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Title</td>
+                            <td><br>{{ officer.title }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Email</td>
+                            <td><br>{{ officer.email }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Samplesignature</td>
+                            <td><br></td>
+                        </tr>
+                        {% endfor %}
                     </table>
 
                     <div style="padding-top: 15px">

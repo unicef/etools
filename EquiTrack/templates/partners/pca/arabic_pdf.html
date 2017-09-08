@@ -54,37 +54,39 @@
                 list-style-type: none;
             }
             #officers_table {
-                /*width: 512pt;*/
+                width: 100%;
+                margin-top: 24px;
                 border-collapse: collapse;
                 table-layout: fixed;
             }
             #officers_table tr {
                 text-align: center;
                 vertical-align: middle;
-                /*height: 1.4cm;*/
-                /*line-height: 1cm;*/
             }
             #officers_table th {
-                width: 122pt;
                 text-align: center;
                 vertical-align: middle;
                 font-weight: normal;
                 border: 1px solid black;
             }
             #officers_table td {
-                width: 122pt;
                 text-align: center;
                 vertical-align: middle;
                 border: 1px solid black;
-                font-size:10pt;
+                font-size:14pt;
             }
 
             body {dir:"rtl"}
             /*fonts*/
             #content {
                 font-family: "Times_New_Roman";
-                font-size: 12pt;
+                font-size: 14pt;
             }
+
+            #content li #content ol div, #content ol li div {
+                margin:12px auto;
+            }
+
             /*bold fix*/
             #header_content b, #content b, #header_content strong, #content strong {
                 font-family: "Times_New_Roman_bold";
@@ -112,13 +114,10 @@
                 page-break-inside: auto;
             }
             .keep-with-next {
-                /*-pdf-keep-with-next: true;*/
                 page-break-inside: avoid;
                 page-break-after: avoid;
             }
             .small-indent {
-                /*list-style-position: outside;*/
-                /*text-indent: 2cm;*/
                 margin-right: 1cm;
             }
             .medium-indent {
@@ -145,7 +144,7 @@
 {% else %}
     <div id="content" style="direction:rtl;">
         <div id="title" style="text-align: center; padding-top: 0px">
-            <div style="font-size: 16pt;padding-top: 18px;"><b>
+            <div style="font-size: 18pt;padding-top: 18px;"><b>
 اتفاقية التعاون في البرنامج
             </b></div>
             <div><b>بين كل من</b></div>
@@ -161,7 +160,7 @@
         </div>
 
         <div id="article-I">
-            <div class="keep-with-next" style="padding-top: 12px;text-align: center">
+            <div class="keep-with-next" style="padding-top: 18px;text-align: center">
                 <b>المادة الأولى</b>
             </div>
             <div class="keep-with-next" style="padding-top: 0px;padding-bottom: 12px;text-align: center">
@@ -208,6 +207,7 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                 <li>&nbsp;&nbsp;&nbsp;&nbsp;
                     يشير “الموظف المفوض” إلى أي من الموظفين الآتي ذكرهم من العاملين لدى الشريك المنفذ:
 
+                    <!--
                     <table id="officers_table" repeat="1">
                     <tr>
                         <th>الاسم الكامل</th>
@@ -224,10 +224,34 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                     </tr>
                     {% endfor %}
                     </table>
+                    -->
 
+                    <table  id="officers_table" style="border: 1px solid black;">
+                        {% for officer in auth_officers %}
+                        <tr>
+                            <td style="width: 33%;">الاسم الكامل</td>
+                            <td> {{ officer.first_name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;">لمنصب</td>
+                            <td>{{ officer.title }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;">البريد الإلكتروني</td>
+                            <td>{{ officer.email }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;">التوقيع النموذجي</td>
+                            <td></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+
+                    <!--
                     <div style="padding:8px; padding-top:16px; margin-top: 12px;margin-bottom: 16px;border: 1px solid black;background-color: #eaeaea">
                         إيضاح لمستخدم اليونيسف: يرجى إضافة أية تفاصيل أخرى بشأن مزيد من الموظفين المفوضين حسب الحاجة.
                     </div>
+                    -->
 
                     <div style="padding-top: 15px">
                         من المفهوم لتفادي الشك أن أي استبعادات من (قائمة) الموظفين المفوضين المحددين
@@ -475,7 +499,7 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                     تقدم اليونيسف التحويلات النقدية غير الدفعات المباشرة إلى الحساب المصرفي التالي المملوك للشريك المنفذ:
                 </li>
 
-                <table style="border: 1px solid black;">
+                <table style="border: 1px solid black;margin-top: 12px;">
                     <tr>
                         <td colspan="2" style="text-align: center;vertical-align: middle"><br>الحساب المصرفي</td>
                     </tr>
@@ -511,6 +535,7 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                     {% endfor %}
                 </table>
 
+                <div class="page-break"></div>
                 <div class="keep-with-next" style="padding-top: 24px;">
                     <p><b>(ب) تحويل اليونيسف للإمدادات/المعدات إلى الشريك المنفذ</b></p>
                 </div>
@@ -699,13 +724,13 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
             <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>الامتيازات والحصانات؛ وتسوية المنازعات</b></div>
             <ol class="indented">
                 <li>&nbsp;&nbsp;&nbsp;&nbsp;
-                    1. بمقتضى المادة 17 من الشروط والأحكام العامة لاتفاقيات الشريك المنفذ، ليس في هذه الاتفاقية أو ما يتعلق بها ما يعتبر تنازلاً، صراحة أو ضمناً، عن أي من امتيازات وحضانات للأمم المتحدة، بما في ذلك امتيازات وحضانات اليونيسف.
+                    بمقتضى المادة 17 من الشروط والأحكام العامة لاتفاقيات الشريك المنفذ، ليس في هذه الاتفاقية أو ما يتعلق بها ما يعتبر تنازلاً، صراحة أو ضمناً، عن أي من امتيازات وحضانات للأمم المتحدة، بما في ذلك امتيازات وحضانات اليونيسف.
                 </li>
                 <li>&nbsp;&nbsp;&nbsp;&nbsp;
-                    2. يبذل الطرفان قصارى جهدهما للتوصل إلى تسوية ودية لأي نزاع أو خلاف أو مطالبة تنشأ عن هذه الاتفاقية أو عن مخالفة أحكامها أو فسخها أو بطلانها.  وفي حال رغب الطرفان بالسعي إلى مثل هذه التسوية الودية عن طريق المصالحة، تُجرى المصالحة وفقاً لقواعد المصالحة الصادرة عن لجنة الأمم المتحدة للقانون التجاري الدولي (الأونسيترال UNCITRAL) السارية آنذاك، أو وفقاً لغيرها من الإجراءات التي قد يتفق عليها الطرفان خطياً.
+                    يبذل الطرفان قصارى جهدهما للتوصل إلى تسوية ودية لأي نزاع أو خلاف أو مطالبة تنشأ عن هذه الاتفاقية أو عن مخالفة أحكامها أو فسخها أو بطلانها.  وفي حال رغب الطرفان بالسعي إلى مثل هذه التسوية الودية عن طريق المصالحة، تُجرى المصالحة وفقاً لقواعد المصالحة الصادرة عن لجنة الأمم المتحدة للقانون التجاري الدولي (الأونسيترال UNCITRAL) السارية آنذاك، أو وفقاً لغيرها من الإجراءات التي قد يتفق عليها الطرفان خطياً.
                 </li>
                 <li>&nbsp;&nbsp;&nbsp;&nbsp;
-                    3. يحيل أي من الطرفين أي نزاع أو خلاف أو مطالبة تنشأ بين الطرفين عن الاتفاقية أو مخالفة أحكامها أو فسخها أو بطلانها، ما لم يتم تسويتها ودياً على النحو المنصوص عليه في الفقرة السابقة، في غضون ستين (60) يوماً من تلقي أحد الطرفين طلباً خطياً للتسوية الودية من الطرف الآخر، إلى التحكيم وفقاً لقواعد الأونسيترال للتحكيم السارية آنذاك. وتستند قرارات هيئة التحكيم إلى المبادئ العامة للقانون التجاري الدولي. وتكون هيئة التحكيم مخولة بإصدار أمر بإعادة أو إتلاف البضائع أو أي ممتلكات، سواء كانت ملموسة أو غير ملموسة، أو أي من المعلومات السرية المقدمة بموجب الاتفاقية، أو إصدار أمر بإنهاء الاتفاقية أو أمر باتخاذ أي تدابير وقائية أخرى فيما يتعلق بالبضائع أو الخدمات أو أي ممتلكات أخرى، سواء ملموسة أو غير ملموسة، أو أي من المعلومات السرية المقدمة بموجب الاتفاقية، حسب الاقتضاء، وكل ذلك وفقاً لسلطة لجنة التحكيم بموجب المادة 26 (“التدابير الوقائية المؤقتة”) والمادة 34 (“شكل قرار التحكيم وأثره”) من قواعد الأونسيترال للتحكيم. ولن يكون من سلطة هيئة التحكيم الحكم بتعويضات عقابية. وبالإضافة إلى ذلك، لن يكون من سلطة هيئة التحكيم الحكم بدفع فوائد تتجاوز سعر الفائدة المعمول به فيما بين مصارف لندن (“الليبور”) السائد آنذاك، وتكون أي من هذه الفوائد فائدة بسيطة فقط، ما لم ينص على خلاف ذلك صراحة في الاتفاقية. ويلتزم الطرفان بأي قرار تحكيم يصدر وفقاً لهذا التحكيم بوصفه حكماً نهائياً لأي نزاع أو خلاف أو مطالبة.
+                    يحيل أي من الطرفين أي نزاع أو خلاف أو مطالبة تنشأ بين الطرفين عن الاتفاقية أو مخالفة أحكامها أو فسخها أو بطلانها، ما لم يتم تسويتها ودياً على النحو المنصوص عليه في الفقرة السابقة، في غضون ستين (60) يوماً من تلقي أحد الطرفين طلباً خطياً للتسوية الودية من الطرف الآخر، إلى التحكيم وفقاً لقواعد الأونسيترال للتحكيم السارية آنذاك. وتستند قرارات هيئة التحكيم إلى المبادئ العامة للقانون التجاري الدولي. وتكون هيئة التحكيم مخولة بإصدار أمر بإعادة أو إتلاف البضائع أو أي ممتلكات، سواء كانت ملموسة أو غير ملموسة، أو أي من المعلومات السرية المقدمة بموجب الاتفاقية، أو إصدار أمر بإنهاء الاتفاقية أو أمر باتخاذ أي تدابير وقائية أخرى فيما يتعلق بالبضائع أو الخدمات أو أي ممتلكات أخرى، سواء ملموسة أو غير ملموسة، أو أي من المعلومات السرية المقدمة بموجب الاتفاقية، حسب الاقتضاء، وكل ذلك وفقاً لسلطة لجنة التحكيم بموجب المادة 26 (“التدابير الوقائية المؤقتة”) والمادة 34 (“شكل قرار التحكيم وأثره”) من قواعد الأونسيترال للتحكيم. ولن يكون من سلطة هيئة التحكيم الحكم بتعويضات عقابية. وبالإضافة إلى ذلك، لن يكون من سلطة هيئة التحكيم الحكم بدفع فوائد تتجاوز سعر الفائدة المعمول به فيما بين مصارف لندن (“الليبور”) السائد آنذاك، وتكون أي من هذه الفوائد فائدة بسيطة فقط، ما لم ينص على خلاف ذلك صراحة في الاتفاقية. ويلتزم الطرفان بأي قرار تحكيم يصدر وفقاً لهذا التحكيم بوصفه حكماً نهائياً لأي نزاع أو خلاف أو مطالبة.
                 </li>
             </ol>
         </div>
@@ -783,7 +808,7 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                 <li><b>الأعباء/حقوق الحجز:</b>
                      لا يتسبب الشريك المنفذ أو يسمح بأن يتم رفع دعوى حجز أو مصادرة أو غيرها من الأعباء من جانب أي شخص أو أن تبقى مدرجة في ملفات أي مكتب عام عن أي أموال مستحقة أو ستصبح مستحقة لأي عمل تم الاضطلاع به أو خدمات تم تقديمها أو مواد أو إمدادات أو معدات تم تقديمها بموجب هذه الاتفاقية، أو بسبب أي مطالبة أو طلب مرفوع ضد الشريك المنفذ.
                 </li>
-                <div class="page-break-avoid">
+                <div class="">
                     <li class="keep-with-next"><b>حقوق الطبع والنشر وبراءات الاختراع وغيرها من حقوق الملكية؛ السرية:</b></li>
                     <div class="small-indent">
                         <div style="padding-top: 2px">8.1 &nbsp;&nbsp;&nbsp;&nbsp;

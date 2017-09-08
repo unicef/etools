@@ -9,13 +9,6 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 
-#experimenting
-import json
-import pdfkit
-from django.template.loader import render_to_string
-from wkhtmltopdf.views import PDFTemplateResponse, PDFTemplateView as WKHTMLPDFTemplateView
-
-
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -25,6 +18,7 @@ from rest_framework.response import Response
 from actstream import action
 from easy_pdf.views import PDFTemplateView
 from easy_pdf.rendering import render_to_pdf_response
+from wkhtmltopdf.views import PDFTemplateResponse
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
@@ -91,30 +85,12 @@ class PCAPDFView(PDFTemplateView):
     def get(self, request, *args, **kwargs):
         lang = self.request.GET.get('lang', None)
 
+        #we need to use two tools for pdf generation for: now easy_pdf(based on xhtml2pdf) and wkhtmlpdf
+        #the non-arabic templates were designed to work with easy_pdf, but easy_pdf does not have RTL(right to left) support,
+        #so (only) the arabic template will be served with wkhtmlpdf.
+        #TODO:  maybe adapt the non-arabic templates for wkhtmlpdf
         if lang == 'arabic':
-            #use wkhtmlpdf(has RTL supoort) for arabic language
-            '''
-            rendered = render_to_string(self.language_templates_mapping[lang],
-                                        self.get_context_data(**kwargs))
-
-            options = {
-                'page-size': 'Letter',
-                'margin-top': '0.75in',
-                'margin-right': '0.75in',
-                'margin-bottom': '0.75in',
-                'margin-left': '0.75in',
-                'encoding': "UTF-8",
-                'custom-header': [
-                    ('Accept-Encoding', 'gzip')
-                ],
-                'no-outline': None
-            }
-
-            #return HttpResponse(rendered)
-            pdf = pdfkit.from_string(rendered, False, options)
-            return HttpResponse(pdf, content_type='application/pdf')
-            '''
-
+            #use wkhtmlpdf's PDFTemplateResponse(has RTL supoort) for arabic language
             response = PDFTemplateResponse(
                 request=request,
                 template=self.language_templates_mapping[lang],
@@ -128,15 +104,18 @@ class PCAPDFView(PDFTemplateView):
                     'margin-bottom': "2cm",
                     'margin-left': "2cm",
                     'page-size':"Letter",
-                    #'header-spacing': 30,
-                    'zoom': '1',
+                    #'zoom': '1.2',
                     #"disable-smart-shrinking":True
                 }
             )
             return response
         else:
             #user xhtml2pdf/easy_pdf for non-arabic languages
-            return render_to_pdf_response(request, self.language_templates_mapping[lang], self.get_context_data(**kwargs))
+            return render_to_pdf_response(
+                request,
+                self.language_templates_mapping[lang],
+                self.get_context_data(**kwargs)
+            )
 
 
     def get_context_data(self, **kwargs):
@@ -190,7 +169,6 @@ class PCAPDFView(PDFTemplateView):
             )
 
         font_path = settings.SITE_ROOT + '/assets/fonts/'
-
 
         return super(PCAPDFView, self).get_context_data(
             error=error,
