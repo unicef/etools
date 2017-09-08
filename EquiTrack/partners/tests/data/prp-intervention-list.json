@@ -1,136 +1,73 @@
 {
-    "pd-details": [
-        {
-            "id": 983,
-            "title": "water, sanitation & hygiene  sanitation program at scale in pakistan (spsp)",
-            "offices": ["beirut", "tripoli"],
-            "number": "leb / pca201701 / pd201701",
-            "partner_org": {
-                "name": "business development international",
-                "unicef_vendor_number": "1231",
-                "short_name": "bdi"
-            },
-            "unicef_focal_points": [
-                {
-                    "name": "john smith",
-                    "email": "abc @org.com"
-                },
-                {
-                    "name": "john smith",
-                    "email": "abc @org.com"
-                }
-            ],
-            "agreement_auth_officers": [
-                {
-                    "name": "john smith",
-                    "title": "chairman",
-                    "phone_num": "+1-251-111-5555",
-                    "email": "abc @org.com"
-                },
-                {
-                    "name": "jane scott",
-                    "title": "president",
-                    "phone_num": "+1-251-555-1111",
-                    "email": "xyc @org.com"
-                }
-            ],
-            "focal_points": [
-                {
-                    "name": "john smith",
-                    "title": "chairman",
-                    "phone_num": "+1-251-111-5555",
-                    "email": "abc @org.com"
-                },
-                {
-                    "name": "jane scott",
-                    "title": "president",
-                    "phone_num": "+1-251-555-1111",
-                    "email": "xyc @org.com"
-                }
-            ],
-            "start_date": "01-01-2017",
-            "end_date": "31-12-2017",
-            "cso_budget": "5,000",
-            "cso_budget_currency": "usd",
-            "unicef_budget": "30,000",
-            "unicef_budget_currency": "usd",
-            "funds_recieved": "10,000",
-            "funds_received_currency": "usd",
-            "reporting_frequencies": [
-                {
-                    "start": "2016-12-12",
-                    "end": "2017-01-01",
-                    "due_date": "2017-01-10"
-                }
-            ],
-            "expected_results": [
-                {
-                    "pd_output": [
-                        {
-                            "id": 71,
-                            "title": "access to hand pumps",
-                            "cp_output": [
-                                {
-                                    "id": 9,
-                                    "title": "wash cp output"
-                                }
-                            ],
-                            "indicators": [
-                                {
-                                    "id": 3298,
-                                    "title": "# of hand pumps distributed",
-                                    "is_cluster": "True",
-                                    "parent_id": "9283",
-                                    "type": "quantity",
-                                    "pd_frequency": "weekly",
-                                    "display_type": "",
-                                    "means_of_verification": "data should be collected by checking household",
-                                    "baseline": "50",
-                                    "target": "1000",
-                                    "locations": [
-                                        {
-                                            "name": "beirut",
-                                            "pcode": "leb9183",
-                                            "location_type": "governorate"
-                                        }
-                                    ],
-                                    "disaggregation": [
-                                        {
-                                            "id": 1371,
-                                            "prp_id": 234,
-                                            "name": "gender",
-                                            "parameter": [
-                                                {
-                                                    "id": 123,
-                                                    "name": "male"
-                                                },
-                                                {
-                                                    "id": 837,
-                                                    "name": "female"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": 8372,
-                                            "name": "age",
-                                            "parameter": [
-                                                {
-                                                    "id": 9272,
-                                                    "name": "0-5y"
-                                                },
-                                                {
-                                                    "id": 3618,
-                                                    "name": "6-12y"
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        }
-    ]
+  "pd-details": [
+    {
+      "expected_results": [],
+      "unicef_focal_points": [],
+      "end_date": "2017-12-07",
+      "agreement_auth_officers": [],
+      "title": "Intervention Title 38",
+      "funds_received": null,
+      "unicef_budget": null,
+      "unicef_budget_currency": null,
+      "number": "/PCA2017106/PD2017179",
+      "start_date": "2017-09-07",
+      "focal_points": [],
+      "offices": [],
+      "partner_org": {
+        "unicef_vendor_number": null,
+        "name": "Partner 25",
+        "short_name": ""
+      },
+      "funds_received_currency": null,
+      "cso_budget_currency": null,
+      "id": 179,
+      "cso_budget": null
+    },
+    {
+      "expected_results": [],
+      "unicef_focal_points": [],
+      "end_date": null,
+      "agreement_auth_officers": [],
+      "title": "Intervention Title 37",
+      "funds_received": null,
+      "unicef_budget": null,
+      "unicef_budget_currency": null,
+      "number": "/PCA2017105/PD2017178",
+      "start_date": null,
+      "focal_points": [],
+      "offices": [],
+      "partner_org": {
+        "unicef_vendor_number": null,
+        "name": "Partner 24",
+        "short_name": ""
+      },
+      "funds_received_currency": null,
+      "cso_budget_currency": null,
+      "id": 178,
+      "cso_budget": null
+    },
+    {
+      "expected_results": [],
+      "unicef_focal_points": [],
+      "end_date": null,
+      "agreement_auth_officers": [],
+      "title": "Intervention Title 36",
+      "funds_received": "300.00",
+      "unicef_budget": "100.00",
+      "unicef_budget_currency": "",
+      "number": "/PCA2017105/2017177",
+      "start_date": null,
+      "focal_points": [],
+      "offices": [],
+      "partner_org": {
+        "unicef_vendor_number": null,
+        "name": "Partner 24",
+        "short_name": ""
+      },
+      "funds_received_currency": "",
+      "cso_budget_currency": "",
+      "id": 177,
+      "cso_budget": "200.00"
+    }
+  ]
 }

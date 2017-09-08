@@ -127,10 +127,10 @@ class TestInterventionsAPI(APITenantTestCase):
         )
         return response.status_code, json.loads(response.rendered_content)
 
-    def run_request_details_v3(self, intervention_id, user=None, method='get'):
+    def run_prp_v1(self, user=None, method='get'):
         response = self.forced_auth_req(
             method,
-            reverse('partners_api_v3:intervention-detail', args=[intervention_id]),
+            reverse('prp_api_v1:prp-intervention-list'),
             user=user or self.unicef_staff,
         )
         return response.status_code, json.loads(response.rendered_content)
@@ -376,22 +376,22 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEquals(len(response), 4)
 
-    def test_intervention_details(self):
-        with self.assertNumQueries(20):
-            status_code, response = self.run_request_details_v3(
-                intervention_id=self.intervention.pk, user=self.unicef_staff, method='get'
+    def test_prp_api(self):
+        with self.assertNumQueries(16):
+            status_code, response = self.run_prp_v1(
+                user=self.unicef_staff, method='get'
             )
 
         self.assertEqual(status_code, status.HTTP_200_OK)
 
-        # todo: swap to v3 format
-        json_filename = os.path.join(os.path.dirname(__file__), 'data', 'intervention_v2.json')
+        json_filename = os.path.join(os.path.dirname(__file__), 'data', 'prp-intervention-list.json')
         with open(json_filename) as f:
             expected_intervention = json.loads(f.read())
-            # print json.dumps(expected_intervention, indent=2, sort_keys=True)
 
-        for dynamic_key in ['created', 'modified']:
-            del response[dynamic_key]
-            del expected_intervention[dynamic_key]
+        for dynamic_key in ['id', 'number']:
+            for result in response['pd-details']:
+                del result[dynamic_key]
+            for result in expected_intervention['pd-details']:
+                del result[dynamic_key]
 
         self.assertEqual(response, expected_intervention)
