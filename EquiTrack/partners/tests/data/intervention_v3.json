@@ -1,125 +1,136 @@
 {
-  "auth_officer": [
-    {
-      "email": "abc @org.com",
-      "name": "john smith",
-      "phone_num": "+1-251-111-5555",
-      "title": "chairman"
-    },
-    {
-      "email": "xyc @org.com",
-      "name": "jane scott",
-      "phone_num": "+1-251-555-1111",
-      "title": "president"
-    }
-  ],
-  "cso_budget": "5,000",
-  "cso_budget_currency": "usd",
-  "end_date": "31-12-2017",
-  "expected_results": [
-    {
-      "pd_output": [
+    "pd-details": [
         {
-          "cp_output": [
-            {
-              "id": 9,
-              "title": "wash cp output"
-            }
-          ],
-          "id": 71,
-          "indicator": [
-            {
-              "baseline": "50",
-              "disaggregation": [
+            "id": 983,
+            "title": "water, sanitation & hygiene  sanitation program at scale in pakistan (spsp)",
+            "offices": ["beirut", "tripoli"],
+            "number": "leb / pca201701 / pd201701",
+            "partner_org": {
+                "name": "business development international",
+                "unicef_vendor_number": "1231",
+                "short_name": "bdi"
+            },
+            "unicef_focal_points": [
                 {
-                  "id": 1371,
-                  "name": "gender",
-                  "parameter": [
-                    {
-                      "id": 123,
-                      "name": "male"
-                    },
-                    {
-                      "id": 837,
-                      "name": "female"
-                    }
-                  ]
+                    "name": "john smith",
+                    "email": "abc @org.com"
                 },
                 {
-                  "id": 8372,
-                  "name": "age",
-                  "parameter": [
-                    {
-                      "id": 9272,
-                      "name": "0-5y"
-                    },
-                    {
-                      "id": 3618,
-                      "name": "6-12y"
-                    }
-                  ]
+                    "name": "john smith",
+                    "email": "abc @org.com"
                 }
-              ],
-              "display_type": "",
-              "id": 3298,
-              "is_cluster": "True",
-              "locations": [
+            ],
+            "agreement_auth_officers": [
                 {
-                  "id": 918,
-                  "location_type": "governorate",
-                  "name": "beirut",
-                  "pcode": "leb9183"
+                    "name": "john smith",
+                    "title": "chairman",
+                    "phone_num": "+1-251-111-5555",
+                    "email": "abc @org.com"
+                },
+                {
+                    "name": "jane scott",
+                    "title": "president",
+                    "phone_num": "+1-251-555-1111",
+                    "email": "xyc @org.com"
                 }
-              ],
-              "means_of_verification": "data should be collected by checking household",
-              "parent_id": "9283",
-              "pd_frequency": "weekly",
-              "target": "1000",
-              "title": "# of hand pumps distributed",
-              "type": "quantity"
-            }
-          ],
-          "title": "access to hand pumps"
+            ],
+            "focal_points": [
+                {
+                    "name": "john smith",
+                    "title": "chairman",
+                    "phone_num": "+1-251-111-5555",
+                    "email": "abc @org.com"
+                },
+                {
+                    "name": "jane scott",
+                    "title": "president",
+                    "phone_num": "+1-251-555-1111",
+                    "email": "xyc @org.com"
+                }
+            ],
+            "start_date": "01-01-2017",
+            "end_date": "31-12-2017",
+            "cso_budget": "5,000",
+            "cso_budget_currency": "usd",
+            "unicef_budget": "30,000",
+            "unicef_budget_currency": "usd",
+            "funds_recieved": "10,000",
+            "funds_received_currency": "usd",
+            "reporting_frequencies": [
+                {
+                    "start": "2016-12-12",
+                    "end": "2017-01-01",
+                    "due_date": "2017-01-10"
+                }
+            ],
+            "expected_results": [
+                {
+                    "pd_output": [
+                        {
+                            "id": 71,
+                            "title": "access to hand pumps",
+                            "cp_output": [
+                                {
+                                    "id": 9,
+                                    "title": "wash cp output"
+                                }
+                            ],
+                            "indicators": [
+                                {
+                                    "id": 3298,
+                                    "title": "# of hand pumps distributed",
+                                    "is_cluster": "True",
+                                    "parent_id": "9283",
+                                    "type": "quantity",
+                                    "pd_frequency": "weekly",
+                                    "display_type": "",
+                                    "means_of_verification": "data should be collected by checking household",
+                                    "baseline": "50",
+                                    "target": "1000",
+                                    "locations": [
+                                        {
+                                            "name": "beirut",
+                                            "pcode": "leb9183",
+                                            "location_type": "governorate"
+                                        }
+                                    ],
+                                    "disaggregation": [
+                                        {
+                                            "id": 1371,
+                                            "prp_id": 234,
+                                            "name": "gender",
+                                            "parameter": [
+                                                {
+                                                    "id": 123,
+                                                    "name": "male"
+                                                },
+                                                {
+                                                    "id": 837,
+                                                    "name": "female"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": 8372,
+                                            "name": "age",
+                                            "parameter": [
+                                                {
+                                                    "id": 9272,
+                                                    "name": "0-5y"
+                                                },
+                                                {
+                                                    "id": 3618,
+                                                    "name": "6-12y"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
         }
-      ]
-    }
-  ],
-  "focal_point": [
-    {
-      "email": "abc @org.com",
-      "name": "john smith",
-      "phone_num": "+1-251-111-5555",
-      "title": "chairman"
-    },
-    {
-      "email": "xyc @org.com",
-      "name": "jane scott",
-      "phone_num": "+1-251-555-1111",
-      "title": "president"
-    }
-  ],
-  "funds_received_currency": "usd",
-  "funds_recieved": "10,000",
-  "id": 983,
-  "office": [
-    "beirut",
-    "tripoli"
-  ],
-  "org_acnym": "bdi",
-  "org_name": "business development international",
-  "ref_num": "leb / pca201701 / pd201701",
-  "start_date": "01-01-2017",
-  "title": "water, sanitation & hygiene  sanitation program at scale in pakistan (spsp)",
-  "unicef_budget": "30,000",
-  "unicef_budget_currency": "usd",
-  "unicef_focal_point": [
-    {
-      "email": "abc @org.com",
-      "name": "john smith"
-    },
-    {
-      "email": "abc @org.com",
-      "name": "john smith"
-    }
-  ]
+    ]
 }
