@@ -7,10 +7,16 @@ from rest_framework.renderers import JSONRenderer
 from partners.models import (
     Intervention,
     PartnerStaffMember,
-    PartnerOrganization)
+    PartnerOrganization, InterventionResultLink)
+from reports.models import Indicator
+from reports.serializers.v2 import LowerResultSerializer
 
 
 class PDDetailsWrapperRenderer(JSONRenderer):
+    """
+    The sole purpose of this class is just to format the root api inside a wrapper like this:
+    { "pd-details": [actual data ] }
+    """
     def render(self, data, accepted_media_type=None, renderer_context=None):
         data = {'pd-details': data}
         return super(PDDetailsWrapperRenderer, self).render(data, accepted_media_type, renderer_context)
@@ -53,6 +59,42 @@ class PartnerFocalPointSerializer(serializers.ModelSerializer):
         fields = ('name', 'email')
 
 
+class PRPIndicatorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Indicator
+        fields = (
+            'id',
+        )
+
+
+class PRPResultSerializer(serializers.ModelSerializer):
+    # todo: fix / change to new formats
+    indicators = PRPIndicatorSerializer(many=True, read_only=True, source='ram_indicators')
+
+    class Meta:
+        model = InterventionResultLink
+        fields = (
+            'id',
+            # 'title',
+            'cp_output',
+            'indicators',
+        )
+
+
+class PRPResultWrapperSerializer(serializers.Serializer):
+    """
+    The sole purpose of this class is just to format the results like
+    { "pd_output": { [actual data ] } }
+    """
+    pd_output = PRPResultSerializer(many=False, read_only=True, source='*')
+
+    class Meta:
+        model = InterventionResultLink
+        fields = (
+            'pd_output',
+        )
+
+
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')  # todo: do these need to be lowercased?
@@ -72,6 +114,8 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     funds_received = serializers.DecimalField(source='total_budget', read_only=True,
                                               max_digits=20, decimal_places=2)
     funds_received_currency = serializers.CharField(source='default_budget_currency', read_only=True)
+    expected_results = PRPResultWrapperSerializer(many=True, read_only=True, required=False,
+                                                  source='result_links')
 
     class Meta:
         model = Intervention
@@ -87,6 +131,6 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'cso_budget', 'cso_budget_currency',
             'unicef_budget', 'unicef_budget_currency',
             'funds_received', 'funds_received_currency',
-            # 'reporting_frequencies',
-            # 'expected_results',
+            # 'reporting_frequencies',  # todo: figure out where this comes from
+            'expected_results',
         )
