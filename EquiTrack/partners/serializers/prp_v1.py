@@ -36,6 +36,8 @@ class PartnerFocalPointSerializer(serializers.ModelSerializer):
 
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
+    # todo: do these need to be lowercased?
+    offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
     focal_points = PartnerFocalPointSerializer(many=True, read_only=True,source='partner_focal_points')
     start_date = serializers.DateField(source='start')
