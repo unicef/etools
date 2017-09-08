@@ -7,13 +7,22 @@ from rest_framework.renderers import JSONRenderer
 from partners.models import (
     Intervention,
     PartnerStaffMember,
-)
+    PartnerOrganization)
 
 
 class PDDetailsWrapperRenderer(JSONRenderer):
     def render(self, data, accepted_media_type=None, renderer_context=None):
         data = {'pd-details': data}
         return super(PDDetailsWrapperRenderer, self).render(data, accepted_media_type, renderer_context)
+
+
+class PartnerSerializer(serializers.ModelSerializer):
+    unicef_vendor_number = serializers.CharField(source='vendor_number', read_only=True)
+
+    class Meta:
+        model = PartnerOrganization
+        depth = 1
+        fields = ('name', 'unicef_vendor_number', 'short_name')
 
 
 class UserFocalPointSerializer(serializers.ModelSerializer):
@@ -38,6 +47,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     # todo: do these need to be lowercased?
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
+    partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
     focal_points = PartnerFocalPointSerializer(many=True, read_only=True,source='partner_focal_points')
     start_date = serializers.DateField(source='start')
@@ -60,7 +70,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'id', 'title',
             'offices',  # todo: convert to names, not ids
             'number',
-            # 'partner_org',
+            'partner_org',
             'unicef_focal_points',
             'focal_points',
             # 'agreement_auth_officers',
