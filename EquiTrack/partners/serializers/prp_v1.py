@@ -8,7 +8,7 @@ from partners.models import (
     Intervention,
     PartnerStaffMember,
     PartnerOrganization, InterventionResultLink)
-from reports.models import Indicator
+from reports.models import Indicator, Result
 from reports.serializers.v2 import LowerResultSerializer
 
 
@@ -67,9 +67,21 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
         )
 
 
+class PRPCPOutputResultSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='name', read_only=True)
+
+    class Meta:
+        model = Result
+        fields = (
+            'id',
+            'title',
+        )
+
+
 class PRPResultSerializer(serializers.ModelSerializer):
     # todo: fix / change to new formats
     indicators = PRPIndicatorSerializer(many=True, read_only=True, source='ram_indicators')
+    cp_output = PRPCPOutputResultSerializer(read_only=True)
 
     class Meta:
         model = InterventionResultLink
