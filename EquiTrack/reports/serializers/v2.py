@@ -51,6 +51,20 @@ class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
         model = AppliedIndicator
         fields = '__all__'
 
+class LowerResultSimpleCUSerializer(serializers.ModelSerializer):
+
+    code = serializers.CharField(read_only=True)
+
+    def update(self, instance, validated_data):
+        new_result_link = validated_data.get('result_link')
+        if new_result_link.pk != instance.result_link.pk:
+            raise ValidationError("You can't associate this PD Output to a different CP Result")
+
+        return super(LowerResultSimpleCUSerializer, self).update(instance, validated_data)
+
+    class Meta:
+        model = LowerResult
+        fields = '__all__'
 
 class LowerResultSerializer(serializers.ModelSerializer):
 

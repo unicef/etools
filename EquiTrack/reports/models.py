@@ -271,7 +271,7 @@ class LowerResult(TimeStampedModel):
     # Lower result is always an output
 
     # link to intermediary model to intervention and cp ouptut
-    result_link = models.ForeignKey('partners.InterventionResultLink', related_name='ll_results', null=True)
+    result_link = models.ForeignKey('partners.InterventionResultLink', related_name='ll_results')
 
     name = models.CharField(max_length=500)
 

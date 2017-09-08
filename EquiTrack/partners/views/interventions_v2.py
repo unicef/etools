@@ -5,6 +5,7 @@ import logging
 from django.db import transaction
 from django.db.models import Q
 
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
@@ -12,6 +13,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 
 from rest_framework.generics import (
+    GenericAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
@@ -42,9 +44,11 @@ from partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
 )
 from partners.exports_v2 import InterventionCvsRenderer
-from partners.filters import PartnerScopeFilter
+from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
+from reports.models import LowerResult
+from reports.serializers.v2 import LowerResultSerializer, LowerResultSimpleCUSerializer
 
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
@@ -375,3 +379,38 @@ class InterventionListMapView(ListCreateAPIView):
                 q = q.filter(expression).distinct()
 
         return q
+
+
+class InterventionLowerResultListCreateView(ListCreateAPIView):
+
+    serializer_class = LowerResultSimpleCUSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (InterventionResultLinkFilter,)
+    renderer_classes = (r.JSONRenderer,)
+    queryset = LowerResult.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        raw_data = request.data
+        raw_data['result_link'] = kwargs.get('result_link_pk', None)
+
+        serializer = self.get_serializer(data=raw_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class InterventionLowerResultUpdateView(RetrieveUpdateDestroyAPIView):
+
+    serializer_class = LowerResultSimpleCUSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (InterventionResultLinkFilter,)
+    renderer_classes = (r.JSONRenderer,)
+    queryset = LowerResult.objects.all()
+
+    def delete(self, request, *args, **kwargs):
+        # make sure there are no indicators added to this LLO
+        obj = self.get_object()
+        if obj.applied_indicators.exists():
+            raise ValidationError(u'This PD Output has indicators related, please remove the indicators first')
+        return super(InterventionLowerResultUpdateView, self).delete(request, *args, **kwargs)
