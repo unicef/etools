@@ -24,12 +24,12 @@ from partners.serializers.interventions_v2 import (
     InterventionSectorLocationCUSerializer,
     InterventionResultCUSerializer,
 )
-from partners.serializers.interventions_v3 import InterventionDetailSerializerV3
+from partners.serializers.prp_v1 import InterventionDetailSerializerV3
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartneshipManagerPermission
 
 
-class InterventionDetailAPIViewV3(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
+class PRPInterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     V3 of the Intervention Detail API
     """
@@ -52,7 +52,7 @@ class InterventionDetailAPIViewV3(ValidatorViewMixin, RetrieveUpdateDestroyAPIVi
         """
         if self.request.method in ["PATCH", "PUT"]:
             return InterventionCreateUpdateSerializer
-        return super(InterventionDetailAPIViewV3, self).get_serializer_class()
+        return super(PRPInterventionDetailAPIView, self).get_serializer_class()
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
