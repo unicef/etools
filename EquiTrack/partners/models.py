@@ -145,6 +145,14 @@ def get_agreement_amd_file_path(instance, filename):
          filename]
     )
 
+
+def _get_currency_name_or_default(budget):
+    if budget and budget.currency:
+        # todo: confirm lower is correct. example was 'usd' but db has 'USD'
+        return budget.currency.code.lower()
+    return ''
+
+
 # TODO: move this to a workspace app for common configuration options
 
 
@@ -1351,6 +1359,12 @@ class Intervention(TimeStampedModel):
     def total_partner_contribution(self):
         # TODO: test this
         return self.planned_budget.partner_contribution if self.planned_budget else 0
+
+    @cached_property
+    def default_budget_currency(self):
+        # todo: this seems to always come from self.planned_budget so not splitting it out
+        # by different categories - e.g. partner vs unicef. is this valid?
+        return _get_currency_name_or_default(self.planned_budget)
 
     @cached_property
     def total_unicef_cash(self):
