@@ -120,7 +120,7 @@ urlpatterns = [
     url(r'^api/audit/', include('audit.urls', namespace='audit')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
-    url(r'^api/v3/', include('partners.urls_v3', namespace='partners_api_v3')),
+    url(r'^api/prp/v1/', include('partners.prp_urls', namespace='prp_api_v1')),
     url(r'^api/v2/users/', include('users.urls_v2')),
     url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
 
