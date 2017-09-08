@@ -23,7 +23,8 @@ from partners.views.interventions_v2 import (
     InterventionAmendmentDeleteView,
     InterventionSectorLocationLinkDeleteView,
     InterventionListMapView,
-    InterventionLowerResultListCreateView, InterventionLowerResultUpdateView)
+    InterventionLowerResultListCreateView, InterventionLowerResultUpdateView, InterventionResultLinkListCreateView,
+    InterventionResultLinkUpdateView)
 
 from partners.views.v2 import (
     PmpStaticDropdownsListApiView, PMPDropdownsListApiView,
@@ -96,10 +97,20 @@ urlpatterns = (
 
     url(r'^interventions/result-links/(?P<result_link_pk>\d+)/lower-results/$',
         view=InterventionLowerResultListCreateView.as_view(http_method_names=['get', 'post']),
-        name='intervention-list'),
+        name='intervention-lower-results-list'),
+
+    url(r'^interventions/(?P<intervention_pk>\d+)/result-links/$',
+        view=InterventionResultLinkListCreateView.as_view(http_method_names=['get', 'post']),
+        name='intervention-result-links-list'),
+
+    url(r'^interventions/result-links/(?P<pk>\d+)/$',
+        view=InterventionResultLinkUpdateView.as_view(http_method_names=['get', 'patch', 'delete']),
+        name='intervention-result-links-update'),
+
+
     url(r'^interventions/lower-results/(?P<pk>\d+)/$',
         view=InterventionLowerResultUpdateView.as_view(http_method_names=['get', 'patch', 'delete']),
-        name='intervention-list'),
+        name='intervention-lower-results-update'),
 
     url(r'^interventions/dash/$',
         view=InterventionListDashView.as_view(http_method_names=['get', 'post']),

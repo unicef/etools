@@ -134,6 +134,13 @@ class PartnerScopeFilter(BaseFilterBackend):
         return queryset
 
 
+class InterventionFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        if request.parser_context['kwargs'] and 'intervention_pk' in request.parser_context['kwargs']:
+            return queryset.filter(intervention__pk=request.parser_context['kwargs']['intervention_pk'])
+        return queryset
+
+
 class InterventionResultLinkFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         if request.parser_context['kwargs'] and 'result_link_pk' in request.parser_context['kwargs']:

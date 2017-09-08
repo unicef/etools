@@ -42,9 +42,9 @@ from partners.serializers.interventions_v2 import (
     InterventionResultCUSerializer,
     InterventionListMapSerializer,
     MinimalInterventionListSerializer,
-)
+    InterventionResultLinkSimpleCUSerializer)
 from partners.exports_v2 import InterventionCvsRenderer
-from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter
+from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter, InterventionFilter
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from reports.models import LowerResult
@@ -414,3 +414,39 @@ class InterventionLowerResultUpdateView(RetrieveUpdateDestroyAPIView):
         if obj.applied_indicators.exists():
             raise ValidationError(u'This PD Output has indicators related, please remove the indicators first')
         return super(InterventionLowerResultUpdateView, self).delete(request, *args, **kwargs)
+
+
+class InterventionResultLinkListCreateView(ListCreateAPIView):
+
+    serializer_class = InterventionResultLinkSimpleCUSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (InterventionFilter,)
+    renderer_classes = (r.JSONRenderer,)
+    queryset = InterventionResultLink.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        raw_data = request.data
+        raw_data['intervention'] = kwargs.get('intervention_pk', None)
+
+        serializer = self.get_serializer(data=raw_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class InterventionResultLinkUpdateView(RetrieveUpdateDestroyAPIView):
+
+    serializer_class = InterventionResultLinkSimpleCUSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (InterventionFilter,)
+    renderer_classes = (r.JSONRenderer,)
+    queryset = InterventionResultLink.objects.all()
+
+    def delete(self, request, *args, **kwargs):
+        # make sure there are no indicators added to this LLO
+        obj = self.get_object()
+        if obj.ll_results.exists():
+            raise ValidationError(u'This CP Output cannot be removed from this Intervention because there are nested'
+                                  u' Results, please remove all Document Results to continue')
+        return super(InterventionResultLinkUpdateView, self).delete(request, *args, **kwargs)
