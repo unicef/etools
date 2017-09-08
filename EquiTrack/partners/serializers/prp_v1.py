@@ -79,7 +79,8 @@ class PRPCPOutputResultSerializer(serializers.ModelSerializer):
 
 
 class PRPResultSerializer(serializers.ModelSerializer):
-    # todo: fix / change to new formats
+    # todo: figure out where this comes from
+    # title = serializers.CharField(source='name', read_only=True)
     indicators = PRPIndicatorSerializer(many=True, read_only=True, source='ram_indicators')
     cp_output = PRPCPOutputResultSerializer(read_only=True)
 
