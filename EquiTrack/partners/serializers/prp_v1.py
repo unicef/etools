@@ -14,6 +14,52 @@ from partners.models import (
 )
 
 
+class PRPInterventionListSerializer(serializers.ModelSerializer):
+
+    partner_name = serializers.CharField(source='agreement.partner.name')
+    unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
+    cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
+                                                decimal_places=2)
+    total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
+    total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
+
+    sectors = serializers.SerializerMethodField()
+    cp_outputs = serializers.SerializerMethodField()
+    offices_names = serializers.SerializerMethodField()
+    frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
+    frs_latest_end_date = serializers.DateField(source='total_frs.latest_end_date', read_only=True)
+    frs_total_frs_amt = serializers.DecimalField(source='total_frs.total_frs_amt', read_only=True,
+                                                 max_digits=20,
+                                                 decimal_places=2)
+    frs_total_intervention_amt = serializers.DecimalField(source='total_frs.total_intervention_amt', read_only=True,
+                                                          max_digits=20,
+                                                          decimal_places=2)
+    frs_total_outstanding_amt = serializers.DecimalField(source='total_frs.total_outstanding_amt', read_only=True,
+                                                         max_digits=20,
+                                                         decimal_places=2)
+    actual_amount = serializers.DecimalField(source='total_frs.total_actual_amt', read_only=True,
+                                                    max_digits=20,
+                                                    decimal_places=2)
+
+    def get_offices_names(self, obj):
+        return [o.name for o in obj.offices.all()]
+
+    def get_cp_outputs(self, obj):
+        return [rl.cp_output.id for rl in obj.result_links.all()]
+
+    def get_sectors(self, obj):
+        return [l.sector.name for l in obj.sector_locations.all()]
+
+    class Meta:
+        model = Intervention
+        fields = (
+            'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end', 'frs_total_frs_amt',
+            'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
+            'sectors', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt', 'frs_total_outstanding_amt',
+            'offices', 'actual_amount', 'offices_names', 'total_unicef_budget', 'total_budget', 'metadata',
+        )
+
+
 class InterventionDetailSerializerV3(serializers.ModelSerializer):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
