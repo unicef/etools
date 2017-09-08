@@ -8,7 +8,7 @@ from partners.models import (
     Intervention,
     PartnerStaffMember,
     PartnerOrganization, InterventionResultLink)
-from reports.models import Indicator, Result
+from reports.models import Indicator, Result, AppliedIndicator
 from reports.serializers.v2 import LowerResultSerializer
 
 
@@ -60,10 +60,25 @@ class PartnerFocalPointSerializer(serializers.ModelSerializer):
 
 
 class PRPIndicatorSerializer(serializers.ModelSerializer):
+    # todo: this class hasn't been tested at all because there are no `AppliedIndicator`s in the current DB
+    # todo: need to validate these and fill in missing fields
+    title = serializers.CharField(source='indicator.name', read_only=True)
+    # type = serializers.CharField(source='result.type.name', read_only=True)
+    # parent_id = serializers.PrimaryKeyRelatedField(source='result.parent.id', read_only=True)
+
     class Meta:
-        model = Indicator
+        model = AppliedIndicator
         fields = (
             'id',
+            'title',
+            # 'is_cluster',
+            # 'parent_id',
+            # 'type',
+            # 'pd_frequency',
+            # 'display_type',
+            'means_of_verification',
+            'baseline',
+            'target',
         )
 
 
@@ -79,16 +94,16 @@ class PRPCPOutputResultSerializer(serializers.ModelSerializer):
 
 
 class PRPResultSerializer(serializers.ModelSerializer):
-    # todo: figure out where this comes from
-    # title = serializers.CharField(source='name', read_only=True)
-    indicators = PRPIndicatorSerializer(many=True, read_only=True, source='ram_indicators')
+    # todo: figure out where this comes from / if this is right
+    title = serializers.CharField(source='parent.name', read_only=True)
+    indicators = PRPIndicatorSerializer(many=True, read_only=True, source='ll_indicators')
     cp_output = PRPCPOutputResultSerializer(read_only=True)
 
     class Meta:
         model = InterventionResultLink
         fields = (
             'id',
-            # 'title',
+            'title',
             'cp_output',
             'indicators',
         )
