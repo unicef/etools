@@ -8,8 +8,7 @@ from partners.models import (
     Intervention,
     PartnerStaffMember,
     PartnerOrganization, InterventionResultLink)
-from reports.models import Indicator, Result, AppliedIndicator
-from reports.serializers.v2 import LowerResultSerializer
+from reports.models import Result, AppliedIndicator
 
 
 class PDDetailsWrapperRenderer(JSONRenderer):
