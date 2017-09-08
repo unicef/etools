@@ -25,6 +25,16 @@ class PartnerSerializer(serializers.ModelSerializer):
         fields = ('name', 'unicef_vendor_number', 'short_name')
 
 
+class AuthOfficerSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='get_full_name', read_only=True)
+    phone_num = serializers.CharField(source='phone', read_only=True)
+
+    class Meta:
+        model = PartnerStaffMember
+        depth = 1
+        fields = ('name', 'title', 'phone_num', 'email')
+
+
 class UserFocalPointSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
 
@@ -45,17 +55,16 @@ class PartnerFocalPointSerializer(serializers.ModelSerializer):
 
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
-    # todo: do these need to be lowercased?
-    offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
+    offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')  # todo: do these need to be lowercased?
     partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
+    agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True, source='agreement.authorized_officers')
     focal_points = PartnerFocalPointSerializer(many=True, read_only=True,source='partner_focal_points')
     start_date = serializers.DateField(source='start')
     end_date = serializers.DateField(source='end')
     cso_budget = serializers.DecimalField(source='total_partner_contribution', read_only=True,
                                           max_digits=20, decimal_places=2)
     cso_budget_currency = serializers.CharField(source='default_budget_currency', read_only=True)
-
     unicef_budget = serializers.DecimalField(source='total_unicef_budget', read_only=True,
                                              max_digits=20, decimal_places=2)
     unicef_budget_currency = serializers.CharField(source='default_budget_currency', read_only=True)
@@ -72,9 +81,8 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'number',
             'partner_org',
             'unicef_focal_points',
+            'agreement_auth_officers',
             'focal_points',
-            # 'agreement_auth_officers',
-            # 'focal_points',
             'start_date', 'end_date',
             'cso_budget', 'cso_budget_currency',
             'unicef_budget', 'unicef_budget_currency',
