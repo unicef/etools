@@ -155,23 +155,6 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
                     )
                 })
 
-        if 'locations' in validated_data:
-            locations = set(map(lambda x: x.id, validated_data['locations']))
-            diff = locations - set(Location.objects.filter(
-                id__in=locations,
-                intervention_sector_locations__intervention_id=partnership.id
-            ).values_list('id', flat=True))
-
-            if diff:
-                raise ValidationError({
-                    'locations': [
-                        self.fields['locations'].write_field.child_relation.error_messages['does_not_exist'].format(
-                            pk_value=pk
-                        )
-                        for pk in diff
-                    ]
-                })
-
         return validated_data
 
 
