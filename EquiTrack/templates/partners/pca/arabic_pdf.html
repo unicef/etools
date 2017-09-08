@@ -101,17 +101,28 @@
             }
             .page-break {
                 page-break-after: always;
+                page-break-inside: auto;
             }
             .page-break-avoid {
+                page-break-after: avoid;
                 page-break-inside: avoid;
+            }
+            .page-break-reset {
+                page-break-after: auto;
+                page-break-inside: auto;
             }
             .keep-with-next {
                 /*-pdf-keep-with-next: true;*/
+                page-break-inside: avoid;
+                page-break-after: avoid;
             }
             .small-indent {
                 /*list-style-position: outside;*/
                 /*text-indent: 2cm;*/
                 margin-right: 1cm;
+            }
+            .medium-indent {
+                margin-right: 2cm;
             }
             .indented, .indented li {
                 list-style-position: inside;
@@ -410,384 +421,329 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                 <div class="keep-with-next"><p><u>
                     إجراءات إضافية تنطبق فقط على طريقة الدفع المباشر:
                 </u></p></div>
-                <div class="small-indent">(d) &nbsp;&nbsp;&nbsp;&nbsp;The request for a Direct Payment is submitted using the FACE form and  shall in all cases include the
-                    vendor’s complete details and banking information in a format specified by UNICEF at the time of
-                    Programme Document finalization.
+                <div class="small-indent">(4) &nbsp;&nbsp;&nbsp;&nbsp;
+                    يُقدم طلب الدفع المباشر باستخدام استمارة الإذن بالصرف وشهادة الإنفاق ويشمل في جميع الحالات التفاصيل الكاملة للبائع ومعلوماته البنكية بنسق تحدده اليونيسف في وقت الانتهاء من الصيغة النهائية لوثيقة البرنامج.
                 </div>
-                <div class="small-indent">(e) &nbsp;&nbsp;&nbsp;&nbsp;For both Direct Payment and Reimbursement modalities, the requested expenditures should have been
-                    previously authorized through the FACE form by UNICEF.
+                <div class="small-indent">(و) &nbsp;&nbsp;&nbsp;&nbsp;
+                    يجب أن تكون النفقات المطلوبة حاصلة على ترخيص مسبق من جانب اليونيسف من خلال استمارة الإذن بالصرف وشهادة الإنفاق لكل من طرائق الدفع المباشر والسداد.
                 </div>
-                <div class="keep-with-next"><p><u>Special terms and conditions for Cash Transfer Installments:</u></p></div>
-                <li>Any request for a Cash Transfer Installment by the IP will fulfill the following criteria to the
-                    satisfaction of UNICEF, failing which UNICEF may decide not to honor the request in whole or in part:
+                <div class="keep-with-next"><p><u>
+                    شروط وأحكام خاصة لأقساط التحويل النقدي:
+                </u></p></div>
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    يجب أن يفي أي طلب مقدم من جانب الشريك المنفذ للحصول على قسط تحويل نقدي بالمعايير التالية بالشكل الذي يرضي اليونيسف، وإلا يجوز لليونيسف عدم الموافقة على الطلب كلياً أو جزئياً:
                 </li>
-                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;&nbsp;The amount and purpose of the request will correspond to the provisions of the Programme Document,
-                    including its activities, schedule and budget;
+                <div class="small-indent">(أ) &nbsp;&nbsp;&nbsp;&nbsp;
+                    يجب أن يتوافق مبلغ الطلب وغرضه مع أحكام وثيقة البرنامج، بما في ذلك أنشطتها وجدولها الزمني وميزانيتها التقديرية.
                 </div>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;&nbsp;The request will be reasonable and justified under principles of sound financial management,
-                    in particular the principles of value for money and cost-effectiveness;
+                <div class="small-indent">(ب) &nbsp;&nbsp;&nbsp;&nbsp;
+                    يجب أن يكون الطلب معقولاً ومبرراً في إطار مبادئ الإدارة المالية السليمة، خاصة مبادئ جدارة التكلفة وفعالية التكلفة.
                 </div>
-                <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;&nbsp;There are to be no other grounds for believing the expenditure is in contravention of this Agreement,
-                    including the Programme Document; and
+                <div class="small-indent">(ج) &nbsp;&nbsp;&nbsp;&nbsp;
+                    يجب ألا يكون هناك أساس للاعتقاد بأن الإنفاق يتعارض مع هذه الاتفاقية، بما في ذلك وثيقة البرنامج.
                 </div>
-                <div class="small-indent">(d) &nbsp;&nbsp;&nbsp;&nbsp;Subject to paragraph 4(d) above, prior Cash Transfer Installments will have been reported on to
-                    UNICEF’s satisfaction in accordance with Article X of this Agreement.
+                <div class="small-indent">(د) &nbsp;&nbsp;&nbsp;&nbsp;
+                    مع مراعاة أحكام الفقرة 4(د) أعلاه، يجب أن يكون قد تم الإبلاغ عن أقساط التحويل النقدي السابقة بالشكل الذي يرضي اليونيسف وفقاً للمادة العاشرة من هذه الاتفاقية.
                 </div>
-                <li>UNICEF may decide to adjust the amount of any Cash Transfer Installment where it has reason to do so, including:
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    يجوز لليونيسف أن تقرر تعديل مبلغ أي من أقساط التحويل النقدي متى كان لديها سبب يدفعها للقيام بذلك، بما في ذلك:
                 </li>
-                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;&nbsp;To take into consideration the general progress made to date under the Programme Document; or
+                <div class="small-indent">(أ) &nbsp;&nbsp;&nbsp;&nbsp;
+                    الأخذ في الاعتبار التقدم العام المحرز في حينه بموجب وثيقة البرنامج.
                 </div>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;&nbsp;To offset any unspent or unreported balance remaining with the IP from any previous Cash Transfer Installment
+                <div class="small-indent">(ب) &nbsp;&nbsp;&nbsp;&nbsp;
+                    مقاصة أي مبلغ متبقِ غير منفق أو غير مسجل لدى الشريك المنفذ من أي أقساط تحويل نقدي سابقة
                 </div>
-                <li>UNICEF will only be required to transfer to or, where the Direct Payment modality is used, on behalf of,
-                    the IP the amount UNICEF determines is due under the terms of this Agreement.  The IP agrees that UNICEF
-                    will not be liable to the IP or any third party, including the IP’s vendor or supplier,
-                    for any amounts that UNICEF determines are not in compliance with this Agreement.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    سوف تلتزم اليونيسف فقط بتحويل المبلغ الذي ترى أنه مستحق للشريك المنفذ بموجب شروط هذه الاتفاقية، أو نيابةً عنه عند استخدام طريقة الدفع المباشر.  ويوافق الشريك المنفذ على إخلاء مسؤولية اليونيسف تجاهه أو تجاه أي طرف ثالث، بما في ذلك البائع أو المورّد التابع للشريك المنفذ، عن أي مبالغ ترى اليونيسف أنها لا تمتثل لهذه الاتفاقية.
                 </li>
                 <li>
-                    <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;&nbsp;The administration by the IP of the Cash Transfer shall be carried out under its own financial regulations,
-                        rules and procedures, which UNICEF has reviewed and assessed and found to be appropriate.</div>
+                    <div class="small-indent">(أ) &nbsp;&nbsp;&nbsp;&nbsp;
+                        يدير الشريك المنفذ التحويلات النقدية في إطار لوائحه وقواعده وإجراءاته المالية الخاصة، التي تولت اليونيسف مراجعتها وتقييمها وتبينت أنها مناسبة لها.
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;&nbsp;Where, in accordance with HACT, UNICEF provides a Cash Transfer prior to the review and assessment of
-                    the IP’s financial regulations, rules and procedures, then in the event UNICEF subsequently determines that
-                    the IP’s financial regulations, rules and procedures are not appropriate, UNICEF shall give written notice
-                    to the IP and in such case UNICEF may require return of unspent Cash Transfers already provided to the IP
-                    and may decide to implement the Programme Document or any parts thereof (including any procurement activities) directly.
+                <div class="small-indent">(ب) &nbsp;&nbsp;&nbsp;&nbsp;
+                    في حال قدمت اليونيسف، وفقاً للنهج المنسق للتحويلات النقدية، تحويلاً نقدياً قبل مراجعة وتقييم اللوائح والقواعد والإجراءات المالية للشريك المنفذ، فإنه في حال رأت اليونيسف عندئذ أن اللوائح والقواعد والإجراءات المالية للشريك المنفذ غير مناسبة، تقدم اليونيسف إخطاراً خطياً إلى الشريك المنفذ وفي هذه الحالة يجوز لليونيسف طلب استرداد التحويلات النقدية غير المنفقة المقدمة في السابق للشريك المنفذ ولها أن تقرر تنفيذ وثيقة البرنامج أو أي أجزاء منها (بما في ذلك أي أنشطة شراء) مباشرةً.
                 </div>
-                <li>Where the IP buys goods or services from the Cash Transfer, the IP shall do so giving due
-                    consideration to the following principles:
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    يجب على الشريك المنفذ، عند شراء بضائع أو خدمات باستخدام التحويل النقدي، مراعاة المبادئ التالية على أكمل وجه:
                 </li>
-                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;&nbsp;Best value for money;</div>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;&nbsp;Fairness, integrity and transparency;</div>
-                <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;&nbsp;Competition.</div>
-                <li class="keep-with-next">
-                    The Cash Transfer other than Direct Payments shall be made by UNICEF to the following bank account of the IP:
+                <div class="small-indent">(1) &nbsp;&nbsp;&nbsp;&nbsp;أفضل قيمة مقابل المال (جدارة التكلفة).</div>
+                <div class="small-indent">(2) &nbsp;&nbsp;&nbsp;&nbsp;العدل والنزاهة والشفافية.</div>
+                <div class="small-indent">(3) &nbsp;&nbsp;&nbsp;&nbsp;المنافسة.</div>
+                <li class="keep-with-next"> &nbsp;&nbsp;&nbsp;&nbsp;
+                    تقدم اليونيسف التحويلات النقدية غير الدفعات المباشرة إلى الحساب المصرفي التالي المملوك للشريك المنفذ:
                 </li>
 
                 <table style="border: 1px solid black;">
                     <tr>
-                        <td colspan="2" style="text-align: center;vertical-align: middle"><br>Account</td>
+                        <td colspan="2" style="text-align: center;vertical-align: middle"><br>الحساب المصرفي</td>
                     </tr>
                     {% for bank_detail in bank_details %}
                     <tr>
-                        <td style="width: 33%;"><br>Bank Name</td>
-                        <td><br> {{ bank_detail.bank_name }}</td>
+                        <td style="width: 33%;">اسم البنك</td>
+                        <td>{{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Bank Address</td>
-                        <td><br>{{ bank_detail.bank_address }}</td>
+                        <td style="width: 33%;">عنوان البنك</td>
+                        <td>{{ bank_detail.bank_address }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Account Title</td>
-                        <td><br>{{ bank_detail.account_title }}</td>
+                        <td style="width: 33%;">اسم صاحب الحساب</td>
+                        <td>{{ bank_detail.account_title }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Account No.</td>
-                        <td><br>{{ bank_detail.account_number }}</td>
+                        <td style="width: 33%;">رقم الحساب</td>
+                        <td>{{ bank_detail.account_number }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Account Currency</td>
+                        <td style="width: 33%;">عملة الحساب</td>
                         <td></td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Routing Details <br/> SWIFT/IBAN</td>
-                        <td><br>{{ bank_detail.routing_details }}</td>
+                        <td style="width: 33%;">تفاصيل التوجيه، بما في ذلك السويفت SWIFT/ رقم IBAN</td>
+                        <td>{{ bank_detail.routing_details }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Bank Contact Person</td>
-                        <td><br>{{ bank_detail.bank_contact_person }}</td>
+                        <td style="width: 33%;">مسؤول الاتصال في البنك</td>
+                        <td>{{ bank_detail.bank_contact_person }}</td>
                     </tr>
                     {% endfor %}
                 </table>
 
                 <div class="keep-with-next" style="padding-top: 24px;">
-                    <p><b>(B) Transfer of supplies/equipment by UNICEF to IP</b></p>
+                    <p><b>(ب) تحويل اليونيسف للإمدادات/المعدات إلى الشريك المنفذ</b></p>
                 </div>
-                <li>Supplies and equipment transferred to the IP by UNICEF will be used exclusively for the
-                    implementation of the Programme Document, unless UNICEF agrees otherwise.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    تُستخدم الإمدادات والمعدات التي تحولها اليونيسف إلى الشريك المنفذ حصراً لتنفيذ وثيقة البرنامج، ما لم توافق اليونيسف على خلاف ذلك.
                 </li>
-                <li>The IP will become owner of the supplies and equipment when it receives them.  In the event that
-                    UNICEF agrees to store the supplies and equipment for the IP or hold them on the IP’s behalf,
-                    the IP will become owner of those supplies and equipment as agreed between UNICEF and the IP.
-                    Exceptionally, UNICEF may decide in writing that UNICEF shall remain the owner of the supplies
-                    and equipment transferred to the IP by UNICEF.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+سوف يصبح الشريك المنفذ مالكاً للإمدادات والمعدات حال استلامه لها.  وفي حال وافقت اليونيسف على تخزين الإمدادات والمعدات للشريك المنفذ أو الاحتفاظ بها نيابة عنه، فسيغدو الشريك المنفذ مالك تلك الإمدادات والمعدات حسبما هو متفق عليه بين اليونيسف والشريك المنفذ.  وبشكل استثنائي، يجوز لليونيسف أن تقرر خطياً بقاء الإمدادات والمعدات التي حولتها إلى الشريك المنفذ ملكاً لها.
                 </li>
-                <li>UNICEF may, in its absolute discretion, decide that supplies and equipment already transferred
-                    to the IP should be deployed by the IP for implementation of another Programme Document,
-                    or reassigned to another implementing partner in connection with implementation
-                    of the Programme Document or another Programme Document.  The IP will promptly comply with UNICEF’s
-                    decision and in the latter case, the IP agrees that, notwithstanding the provisions of Article VIII,
-                    paragraph 12 above, it shall upon written instructions by UNICEF transfer ownership of the
-                    supplies and equipment to the successor implementing partner designated by UNICEF.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    لليونيسف، وفق تقديرها المطلق، أن تقرر ضرورة استخدام الشريك المنفذ للإمدادات والمعدات المحولة إليه بالفعل لتنفيذ وثيقة أخرى للبرنامج، أو إعادة تخصيص تلك الإمدادات والمعدات إلى شريك منفذ آخر فيما يتصل بتنفيذ وثيقة البرنامج أو وثيقة أخرى للبرنامج.  ويمتثل الشريك المنفذ على الفور لقرار اليونيسف، وفي الحالة الأخيرة، يوافق الشريك المنفذ، على الرغم من أحكام المادة الثامنة، الفقرة 12 أعلاه، وبناءً على تعليمات خطية صادرة عن اليونيسف، على تحويل ملكية الإمدادات والمعدات إلى الشريك المنفذ الذي يخلفه والذي تعينه اليونيسف.
                 </li>
-                <li>The IP shall exercise the highest standard of care when using and administering such supplies and equipment,
-                    and the IP shall place UNICEF markings thereon in consultation with UNICEF.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    يراعي الشريك المنفذ أعلى مستويات العناية عند استخدام هذه الإمدادات والمعدات، ويضع الشريك المنفذ علامات اليونيسف عليها بالتشاور مع اليونيسف.
                 </li>
-                <li>Vehicles, if any, made available to the IP by UNICEF will be transferred on loan only.
-                    Such vehicles will be provided to IP once the Parties sign the standard UNICEF vehicle loan agreement,
-                    a copy of which will be provided to the IP.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    سوف تحول المركبات، إن وجدت، التي توفرها اليونيسف للشريك المنفذ على سبيل الإعارة فقط.  وتقُدم هذه المركبات إلى الشريك المنفذ بمجرد أن يوقع الطرفان على اتفاقية إعارة مركبات اليونيسف القياسية، على أن يحصل الشريك المنفذ على نسخة من تلك الاتفاقية.
                 </li>
-
             </ol>
         </div>
 
         <div id="article-IX" style="padding-bottom: 10px">
-            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE IX</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>RECORD KEEPING</b></div>
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>المادة التاسعة</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>حفظ السجلات</b></div>
             <ol class="indented">
-                <li>The IP agrees to maintain books and records that are accurate, complete and up-to-date. </li>
-                <div class="keep-with-next"><p><u>Cash Transfer:</u></p></div>
-                <li>The IP’s books and records will clearly identify all Cash Transfer Installments received by the IP
-                    as well as disbursements made by the IP under this Agreement, including the amount of any unspent funds.
-                    Without limiting the foregoing, the IP is required to maintain:
+                <li>يوافق الشريك المنفذ على الاحتفاظ بالدفاتر والسجلات الدقيقة والكاملة والمحدثة. </li>
+                <div class="keep-with-next"><p><u>التحويل النقدي:</u></p></div>
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    سوف تحدد دفاتر الشريك المنفذ وسجلاته بوضوح جميع أقساط التحويل النقدي التي حصل عليها الشريك المنفذ وكذلك المدفوعات التي قدمها الشريك المنفذ بموجب هذه الاتفاقية، بما يشمل مقدار أي أموال غير منفقة.  يلتزم الشريك المنفذ، بدون انتقاص أي مما سبق، بالحفاظ على ما يلي:
                 </li>
-                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;&nbsp;Records showing which transactions recorded in its accounting system represent the expenditures
-                    reported for each line on the FACE forms and any income earned by the IP in relation
-                    to Advance Payments (Direct Cash Transfers) made by UNICEF;
+                <div class="small-indent">(1) &nbsp;&nbsp;&nbsp;&nbsp;
+                    السجلات التي تظهر المعاملات المسجلة في نظامه المحاسبي والتي تمثل النفقات المعلن عنها لكل سطر في استمارات الإذن بالصرف وشهادة الإنفاق وأي دخل يحققه الشريك المنفذ فيما يتعلق بالدفعات المسبقة (التحويلات النقدية المباشرة) التي تقدمها اليونيسف.
                 </div>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;&nbsp;Original documentation
-                    including bills, invoices, receipts and any other relevant documentation,
-                    which shall be kept by the IP for a period of five (5) years after the completion of the last
-                    Programme Document or the termination of this Agreement, whichever happens later.  Such documentation
-                    shall include but not be limited to purchase orders, suppliers’ invoices, contracts, delivery notes,
-                    leases, payment vouchers, bank statements, airline tickets, gasoline coupons, payroll records,
-                    employment contracts, attendance lists, expenses claims, petty cash receipts, journal vouchers,
-                    procurement files documenting competitive and fair selection, and any other relevant supporting
-                    documentation. Unless agreed in advance with UNICEF, the IP shall ensure that all vouchers related
-                    to the utilization of Cash Transfers carry clear notation showing a reference to the Programme Document.
-                    The IP understands that a written statement by the IP that money has been spent is insufficient
-                    and cannot replace the original documentation to support expenditures.
+                <div class="small-indent">(2) &nbsp;&nbsp;&nbsp;&nbsp;
+                     الوثائق الأصلية بما فيها كشوف الحسابات والفواتير والإيصالات وأي وثائق ذات صلة، التي يجب أن يحتفظ بها الشريك المنفذ لفترة خمس (5) سنوات بعد الانتهاء من وثيقة البرنامج الأخيرة أو بعد إنهاء هذه الاتفاقية، أيهما يحدث لاحقاً.  وتشمل هذه الوثائق على سبيل المثال لا الحصر أوامر الشراء وفواتير الموردين والعقود وإشعارات التسليم والإيجارات وقسائم الدفع والكشوفات المصرفية وتذاكر الطيران وكوبونات البنزين وسجلات مرتبات الموظفين وعقود العمل وقوائم الحضور ومطالبات النفقات ومقبوضات صندوق النثريات والقسائم اليومية وملفات المشتريات التي توثق الاختيار التنافسي والعادل وأي وثائق داعمة أخرى ذات صلة.  ويضمن الشريك المنفذ أن تحمل جميع القسائم المتعلقة باستخدام التحويلات النقدية تدويناً واضحاً يبين إشارة إلى وثيقة البرنامج، ما لم يتفق على ذلك مسبقاً مع اليونيسف. ويدرك الشريك المنفذ أن أي إفادة خطية يقدمها بأن الأموال قد أُنفِقت تعتبر غير كافية ولا يمكن أن تحل محل الوثائق الأصلية لدعم النفقات.
                 </div>
-                <div class="keep-with-next"><p><u>Supplies/equipment:</u></p></div>
-                <li>The IP will maintain records of supplies and equipment purchased from the Cash Transfer or transferred
-                    to the IP in accordance with Article VIII (B) of this Agreement. Detailed inventories shall be taken
-                    by the IP and kept for a period of five (5) years after the completion of the last Programme Document
-                    or the termination of this Agreement, whichever happens later.
+                <div class="keep-with-next"><p><u>الإمدادات/المعدات:</u></p></div>
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    سوف يحتفظ الشريك المنفذ بسجلات للإمدادات والمعدات التي تم شراؤها من التحويل النقدي أو تم تحويلها إلى الشريك المنفذ وفقاً للمادة الثامنة (ب) من هذه الاتفاقية.  يجري الشريك المنفذ جردات مفصلة ويحتفظ بها لفترة خمس (5) سنوات بعد الانتهاء من وثيقة البرنامج الأخيرة أو بعد إنهاء هذه الاتفاقية، أيهما يحدث لاحقاً.
                 </li>
             </ol>
         </div>
 
         <div id="article-X" style="padding-bottom: 10px">
-            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE X</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>REPORTING REQUIREMENTS</b></div>
-            <ol>
-                <li>The IP will deliver to UNICEF the reports set out below.  Narrative reports will, if possible,
-                    be provided in English, French, or Spanish.
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>المادة العاشرة</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>متطلبات رفع التقارير</b></div>
+            <ol class="indented">
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    سوف يقدم الشريك المنفذ إلى اليونيسف التقارير المبينة أدناه.  وسوف تُقدم التقارير المفصلة، إن أمكن، باللغة الإنجليزية أو الفرنسية أو الإسبانية.
                 </li>
-                <div class="keep-with-next"><p><b>(A) Financial reporting</b></p></div>
-                <div class="keep-with-next"><p><u>Financial reporting using FACE form:</u></p></div>
-                <li><div class="small-indent">
-                    (a) &nbsp;&nbsp;&nbsp;&nbsp;Unless otherwise agreed between the Parties in writing, the IP will submit FACE forms at
-                    the end of every Quarter, using the FACE form. Should a FACE form not be submitted within six (6)
-                    months from the last Quarter, UNICEF will, unless agreed otherwise, suspend any further cash transfers
-                    to the IP, or on behalf of the IP.</div>
+                <div class="keep-with-next"><p><b>(أ) إعداد التقارير المالية</b></p></div>
+                <div class="keep-with-next"><p><u>إعداد التقارير المالية باستخدام استمارة الإذن بالصرف وشهادة الإنفاق:</u></p></div>
+                <li><div class="small-indent">(أ) &nbsp;&nbsp;&nbsp;&nbsp;
+يقدم الشريك المنفذ استمارات الإذن بالصرف وشهادة الإنفاق بنهاية كل ربع سنة، باستخدام استمارة الإذن بالصرف وشهادة الإنفاق، ما لم يتفق الطرفان على خلاف ذلك كتابةً. وإذا لم يُقدم الشريك المنفذ استمارة إذن بالصرف وشهادة إنفاق في غضون ستة (6) أشهر من انتهاء ربع السنة الأخير، فسوف تعلق اليونيسف أي تحويلات نقدية إضافية إلى الشريك المنفذ أو نيابةً عنه، ما لم يُتفق على خلاف ذلك.
+                </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;&nbsp;The final FACE form will be submitted no later than thirty (30)
-                    calendar days after the end of the Programme Document.
+                <div class="small-indent">(ب) &nbsp;&nbsp;&nbsp;&nbsp;
+                    سوف تُقدم الاستمارة النهائية للإذن بالصرف وشهادة الإنفاق في موعد أقصاه ثلاثون (30) يوماً تقويمياً بعد نهاية وثيقة البرنامج.
                 </div>
 
-                <div class="small-indent keep-with-next">(c) &nbsp;&nbsp;&nbsp;&nbsp;The FACE form:</div>
-                <div class="small-indent">
-                    <div style="padding-left: 25px">(i) &nbsp;&nbsp;&nbsp;&nbsp;will only include expenditures that are identifiable and verifiable.
-                        (The term “<u>identifiable</u>” includes that the expenditures are recorded in the IP’s accounting system
-                        and that the accounting system shows which transactions represent the expenditures reported for each line
-                        on the FACE form. The term “<u>verifiable</u>” includes that the expenditures may be confirmed by
-                        the records in Article IX.)
+                <div class="small-indent">(ج) &nbsp;&nbsp;&nbsp;&nbsp;
+                     استمارة الإذن بالصرف وشهادة الإنفاق:
+                </div>
+                <div class="medium-indent page-break-reset">
+                    <div style="padding-left: 25px">(i) &nbsp;&nbsp;&nbsp;&nbsp;
+                        لن تشمل سوى النفقات التي يمكن تحديدها والتحقق منها. (عبارة “يمكن تحديدها” تعني أيضاً أن النفقات مسجلة في النظام المحاسبي للشريك المنفذ وأن النظام المحاسبي يبين المعاملات التي تمثل النفقات المعلنة لكل سطر في استمارة الإذن بالصرف وشهادة الإنفاق.  وعبارة “يمكن التحقق منها” تعني أيضاً أنه يمكن التأكد من صحة النفقات بالرجوع إلى السجلات الوارد بيانها في المادة التاسعة).
                     </div>
-                    <div style="padding-left: 25px"> (ii) &nbsp;&nbsp;&nbsp;&nbsp;will only include those expenditures that are directly
-                        attributable to the implementation of the activities included in the Programme Document;
+                    <div style="padding-left: 25px"> (ii) &nbsp;&nbsp;&nbsp;&nbsp;
+                        لن تشمل سوى النفقات التي تُعزى مباشرةً لتنفيذ الأنشطة الواردة في وثيقة البرنامج.
                     </div>
-                    <div style="padding-left: 25px"> (iii) &nbsp;&nbsp;&nbsp;&nbsp;will only include expenditures that have actually been incurred
-                        and borne by the IP;
+                    <div style="padding-left: 25px"> (iii) &nbsp;&nbsp;&nbsp;&nbsp;
+                        لن تشمل سوى النفقات التي تكبدها وتحملها الشريك المنفذ بالفعل.
                     </div>
-                    <div style="padding-left: 25px">(iv) &nbsp;&nbsp;&nbsp;&nbsp;will not include any expenditures that are ineligible for Cash Transfer
-                        (“<u>Ineligible Expenditures</u>”, as stipulated in sub-paragraph 2(c) of this Article X, below);
+                    <div style="padding-left: 25px">(iv) &nbsp;&nbsp;&nbsp;&nbsp;
+                        لن تشمل أي نفقات غير مؤهلة للتحويل النقدي (“النفقات غير المؤهلة”)، كما هو منصوص عليه في الفقرة الفرعية 2(ج) من هذه المادة العاشرة أدناه).
                     </div>
-                    <div style="padding-left: 25px">(v) &nbsp;&nbsp;&nbsp;&nbsp;will include the balance of any unspent funds remaining from any previous
-                        Cash Transfer Installments; and
+                    <div style="padding-left: 25px">(v) &nbsp;&nbsp;&nbsp;&nbsp;
+                        سوف تشمل المبلغ المتبقي من أي أموال غير منفقة متبقية من أي أقساط تحويل نقدي سابقة.
                     </div>
-                    <div style="padding-left: 25px">(vi) &nbsp;&nbsp;&nbsp;&nbsp;will include any refunds or adjustments received by the IP against any previous
-                        Cash Transfer Installments.
+                    <div style="padding-left: 25px">(vi) &nbsp;&nbsp;&nbsp;&nbsp;
+                        سوف تشمل أي مبالغ مستردة أو تسويات يتلقاها الشريك المنفذ مقابل أي أقساط تحويل نقدي سابقة.
                     </div>
-                    <div>(d) &nbsp;&nbsp;&nbsp;&nbsp;UNICEF will have access, upon request, to all documents and records that support or may be deemed
-                        to support the information contained in the FACE form.
+                    <div>(ب) &nbsp;&nbsp;&nbsp;&nbsp;
+                        سوف تطلع اليونيسف، عند الطلب، على جميع الوثائق والسجلات التي تدعم أو تُعتبر بأنها تدعم المعلومات الواردة في استمارة الإذن بالصرف وشهادة الإنفاق.
                     </div>
-                    <div class="keep-with-next"><p><u>Ineligible Expenditures:</u></p></div>
-                    <div>(e) &nbsp;&nbsp;&nbsp;&nbsp;The following are Ineligible Expenditures (as determined by UNICEF in its sole discretion) and,
-                        therefore, will not be included in the FACE form:
+                    <div class=""><p><u>النفقات غير المؤهلة:</u></p></div>
+                    <div>(ج) &nbsp;&nbsp;&nbsp;&nbsp;
+                        فيما يلي النفقات غير المؤهلة (على النحو الذي تحدده اليونيسف وفق تقديرها الحصري) وبالتالي لن تُدرج في استمارة الإذن بالصرف وشهادة الإنفاق:
                     </div>
-                    <div style="padding-left: 25px">(i) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures not made for activities, or not necessary for the
-                        implementation of the activities, included in the Programme Document;
+                    <div style="padding-left: 25px">(i) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات غير المخصصة للأنشطة أو غير الضرورية لتنفيذ الأنشطة، والمدرجة في وثيقة البرنامج.
                     </div>
-                    <div style="padding-left: 25px">(ii) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures for value added tax (“<u>VAT</u>”) unless the IP can
-                        reasonably demonstrate to UNICEF that it is unable to recover the VAT;
+                    <div style="padding-left: 25px">(ii) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات المخصصة لضريبة القيمة المضافة VAT ما لم يستطع الشريك المنفذ أن يثبت لليونيسف إلى حد معقول أنه غير قادر على استرداد ضريبة القيمة المضافة.
                     </div>
-                    <div style="padding-left: 25px">(iii) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures covered by or relating to another Programme Document;
+                    <div style="padding-left: 25px">(iii) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات المشمولة في وثيقة أخرى للبرنامج أو متعلقة بها.
                     </div>
-                    <div style="padding-left: 25px">(iv) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures paid or reimbursed to the IP by another donor or entity;
+                    <div style="padding-left: 25px">(iv) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات المدفوعة أو المسددة إلى الشريك المنفذ من جانب جهة مانحة أخرى أو كيان آخر.
                     </div>
-                    <div style="padding-left: 25px">(v) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures in relation to which the IP has received an in-kind contribution
-                        from another donor or entity;
+                    <div style="padding-left: 25px">(v) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات المتعلقة بالأمر الذي تلقى الشريك المنفذ على إثره مساهمة نوعية من جهة مانحة أخرى أو كيان آخر.
                     </div>
-                    <DIV style="padding-left: 25px">(vi) &nbsp;&nbsp;&nbsp;&nbsp;Support costs, if any, exceeding the support cost rate referred to
-                        in Article VI, paragraph 2, of this Agreement;
+                    <DIV style="padding-left: 25px">(vi) &nbsp;&nbsp;&nbsp;&nbsp;
+                        تكاليف الدعم، إن وجدت، التي تتجاوز معدل تكاليف الدعم المشار إليها في المادة السادسة، الفقرة 2، من هذه الاتفاقية.
                     </div>
-                    <div style="padding-left: 25px">(vii) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures that are not verifiable by records as provided in Article IX of
-                        this Agreement (other than support costs, if any, referred to in Article VI, paragraph 2 of this Agreement);
+                    <div style="padding-left: 25px">(vii) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات التي لا يمكن التحقق منها من واقع السجلات المشار إليها في المادة التاسعة من هذه الاتفاقية (بخلاف تكاليف الدعم، إن وجدت، المشار إليها في المادة السادسة، الفقرة 2، من هذه الاتفاقية).
                     </div>
-                    <div style="padding-left: 25px">(viii) &nbsp;&nbsp;&nbsp;&nbsp;Salaries for IP’s employees exceeding the rates payable by UNICEF
-                        for comparable functions performed by locally-recruited staff members at the relevant duty station;
+                    <div style="padding-left: 25px">(viii) &nbsp;&nbsp;&nbsp;&nbsp;
+                        الرواتب الخاصة بموظفي الشريك المنفذ التي تتجاوز المعدلات التي تدفعها اليونيسف للوظائف المماثلة التي يضطلع بها الموظفون المعينون محلياً في مراكز العمل ذي الصلة.
                     </div>
-                    <div style="padding-left: 25px">(ix)  &nbsp;&nbsp;&nbsp;&nbsp;Salaries for IP’s internationally recruited employees
-                        exceeding the rates payable by UNICEF for comparable functions performed by
-                        internationally recruited staff members at the relevant duty station;
+                    <div style="padding-left: 25px">(ix)  &nbsp;&nbsp;&nbsp;&nbsp;
+الرواتب الخاصة بموظفي الشريك المنفذ المعينين دولياً والتي تتجاوز المعدلات التي تدفعها اليونيسف للوظائف المماثلة التي يضطلع بها الموظفون المعينون دولياً في مراكز العمل ذي الصلة.
                     </div>
-                    <div style="padding-left: 25px">(x) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures in respect of fees for individual consultants retained by the IP
-                        exceeding those payable by UNICEF for comparable services rendered by individual consultants;
+                    <div style="padding-left: 25px">(x) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات المتعلقة بالرسوم الخاصة بالمستشارين الأفراد التابعين للشريك المنفذ والتي تتجاوز ما تدفعه اليونيسف للخدمات المماثلة التي يقدمها المستشارون الأفراد.
                     </div>
-                    <div style="padding-left: 25px">(xi) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures for travel, daily subsistence and related allowances
-                        for the IP’s employees or consultants exceeding those payable by UNICEF
-                        to its staff members or consultants, as applicable;
+                    <div style="padding-left: 25px">(xi) &nbsp;&nbsp;&nbsp;&nbsp;
+                        نفقات السفر والإقامة اليومية والبدلات ذات العلاقة لموظفي الشريك المنفذ أو مستشاريه بما يتجاوز تلك النفقات التي تدفعها اليونيسف إلى موظفيها أو مستشاريها في تلك الحالات، حسب الاقتضاء.
                     </div>
-                    <div style="padding-left: 25px">(xii) &nbsp;&nbsp;&nbsp;&nbsp;Amounts that represent accruals of costs not expenditures actually
-                        incurred by the IP;
+                    <div style="padding-left: 25px">(xii) &nbsp;&nbsp;&nbsp;&nbsp;
+                        المبالغ التي تُمثّل مستحقات لتكاليف غير النفقات التي يتكبدها الشريك المنفذ بالفعل.
                     </div>
-                    <div style="padding-left: 25px">(xiii) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures that merely represent financial transfers between administrative units
-                        or locations of the IP, for example as payment for services provided by one administrative unit of the IP to another;
+                    <div style="padding-left: 25px">(xiii) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات التي تُمثّل مجرد التحويلات المالية ما بين الوحدات الإدارية أو المقار للشريك المنفذ، كالدفع مقابل الخدمات التي تقدمها إحدى الوحدات الإدارية التابعة للشريك المنفذ لوحدة أخرى.
                     </div>
-                    <div style="padding-left: 25px">(xiv) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures that are not reasonable and justified under principles of
-                        sound financial management, in particular the principles of value for money and
-                        cost-effectiveness;
+                    <div style="padding-left: 25px">(xiv) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات غير المعقولة وغير المبررة في إطار مبادئ الإدارة المالية السليمة، خاصة مبادئ جدارة التكلفة (القيمة مقابل المال) وفعالية التكلفة
                     </div>
-                    <div style="padding-left: 25px">(xv) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures that relate to obligations that were entered into after the end date
-                        of the relevant Programme Document;
+                    <div style="padding-left: 25px">(xv) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات المتعلقة بالالتزامات التي تم تحملها بعد تاريخ انتهاء خطة العمل ذات العلاقة.
                     </div>
-                    <div style="padding-left: 25px">(xvi) &nbsp;&nbsp;&nbsp;&nbsp;Debt and debt service charges;</div>
-                    <div style="padding-left: 25px">(xvii) &nbsp;&nbsp;&nbsp;&nbsp;Foreign exchange loss;</div>
-                    <div style="padding-left: 25px">(xviii) &nbsp;&nbsp;&nbsp;&nbsp;Fines or levies payable to the authorities related to timeliness of payment of VAT
-                        or custom payments required by law;
+                    <div style="padding-left: 25px">(xvi) &nbsp;&nbsp;&nbsp;&nbsp;	مصاريف الدين وخدمة الدين.</div>
+                    <div style="padding-left: 25px">(xvii) &nbsp;&nbsp;&nbsp;&nbsp;	خسائر صرف العملة الأجنبية.</div>
+                    <div style="padding-left: 25px">(xviii) &nbsp;&nbsp;&nbsp;&nbsp;
+                        الغرامات أو الإتاوات مستحقة الدفع إلى السلطات المتعلقة بالتوقيت الصحيح لدفع ضريبة القيمة المضافة أو المدفوعات الجمركية المطلوبة بموجب القانون
                     </div>
-                    <div style="padding-left: 25px">(xix) &nbsp;&nbsp;&nbsp;&nbsp;Expenditures made in contravention of any of the terms of this Agreement.
+                    <div style="padding-left: 25px">(xix) &nbsp;&nbsp;&nbsp;&nbsp;
+                        النفقات المقدمة بما يخالف أياً من شروط هذه الاتفاقية.
                     </div>
                 </div>
 
-                <li>All financial reporting to UNICEF will be performed by the IP in the currency in which the
-                    Cash Transfer was made.  The IP is not required to convert transactions into United States Dollars
-                    or any other currency.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    يضطلع الشريك المنفذ بإعداد جميع التقارير المالية المقدمة إلى اليونيسف بعملة التحويلات النقدية.  ولا يلزم على الشريك المنفذ تحويل المعاملات إلى الدولار الأمريكي أو أي عملة أخرى.
                 </li>
-                <div class="keep-with-next"><p><u>Use of eFACE:</u></p></div>
-                <li>In addition to using the FACE form, the IP may enter the information contained in the FACE form into
-                    the FACE e-tool, once available, if requested by UNICEF.
+                <div class="keep-with-next"><p><u>استخدام الأداة الإلكترونية للإذن بالصرف وشهادة الإنفاق:</u></p></div>
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+يمكن للشريك المنفذ، بالإضافة إلى استخدام استمارة الإذن بالصرف وشهادة الإنفاق، إدخال المعلومات الواردة في الاستمارة سالفة الذكر في الأداة الإلكترونية للإذن بالصرف وشهادة الإنفاق، بمجرد توافرها، في حالة طلبتها اليونيسف.
                 </li>
-                <div class="keep-with-next"><p><b>(B) Progress reporting</b></p></div>
-                <li>The IP will submit to UNICEF narrative progress reports against the planned activities contained
-                    in the Programme Document, using the PDPR. Unless otherwise agreed between the Parties in writing,
-                    these reports will be submitted at the end of every Quarter. The final report will be submitted
-                    no later than thirty (30) calendar days after the end the Programme and will be provided together
-                    with the FACE form.
+                <div class="keep-with-next"><p><b>(ب) إعداد التقارير المرحلية</b></p></div>
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    سوف يقدم الشريك المنفذ إلى اليونيسف التقارير المرحلية التفصيلية عن الأنشطة المخططة الواردة في وثيقة البرنامج، وذلك باستخدام التقرير المرحلي عن وثيقة البرنامج. وسوف تُقدم تلك التقارير بنهاية كل
                 </li>
-                <div class="keep-with-next"><p><b>(C) Additional reporting</b></p></div>
-                <li>Additional reporting requirements will be specified in the Programme Document. The IP will provide
-                    ad hoc reporting as may be requested by UNICEF from time to time. UNICEF will make every reasonable effort
-                    to minimize ad hoc reporting requests.
+                <div class="keep-with-next"><p><b>(ج) إعداد التقارير الإضافية</b></p></div>
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    سوف يتم تحديد متطلبات إعداد التقارير الإضافية في وثيقة البرنامج. وسوف يقدم الشريك المنفذ تقارير مخصصة لهدف معين بحسب ما تحدده اليونيسف من حين لآخر. كما ستبذل اليونيسف كل الجهود المعقولة للحد من طلبات التقارير المخصصة لهدف معين.
                 </li>
             </ol>
         </div>
 
         <div id="article-XI" style="padding-bottom: 10px">
-            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XI</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>ACTIONS UPON COMPLETION</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>OF ACTIVITIES UNDER PROGRAMME DOCUMENT</b></div>
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>المادة الحادية عشرة</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>الإجراءات المتخذة عند انتهاء</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>الأنشطة بموجب وثيقة للبرنامج</b></div>
             <ol class="indented">
-                <li>(a) Upon completion of the IP’s activities under a Programme Document, the IP shall refund to UNICEF
-                    the unspent balances of all Cash Transfers under that Programme Document (which shall be reported on
-                    the final FACE form submitted by the IP) and all other amounts of money it is not entitled to.
-                <div>(b) Upon completion of the IP’s activities under a Programme Document, the IP shall return to UNICEF
-                    all unused supplies and equipment provided by UNICEF as inputs for programme implementation but not used.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                <div>(أ)&nbsp;&nbsp;&nbsp;&nbsp;
+                    عند الانتهاء من أنشطة الشريك المنفذ بموجب وثيقة للبرنامج، يرد الشريك المنفذ إلى اليونيسف المبالغ المتبقية غير المنفقة من جميع التحويلات النقدية بموجب وثيقة البرنامج تلك (التي يرد بيانها في استمارة الإذن بالصرف وشهادة الإنفاق النهائية التي يقدمها الشريك المنفذ) وجميع المبالغ الأخرى التي لا تحق له.
                 </div>
-                <div>(c) Such refunds and returns shall be effected no later than ninety (90) calendar days after the end
-                    date of the Programme Document or the effective date activities have ceased, whichever occurred earlier.
+                <div>(ب)&nbsp;&nbsp;&nbsp;&nbsp;
+                    عند انتهاء أنشطة الشريك المنفذ بموجب وثيقة للبرنامج، يرد الشريك المنفذ إلى اليونيسف جميع الإمدادات والمعدات غير المستخدمة التي قدمتها إليه اليونيسف كإسهامات لتنفيذ البرنامج ولكن لم يتم استخدامها.
                 </div>
-                <li>Upon winding up of the IP’s activities under a Programme Document, the Parties shall consult as to the
-                disposition of all non-expendable property provided by UNICEF or acquired from the Cash Transfer to or,
-                insofar as the Direct Payment modality was used, on behalf of the IP, with regard to that Programme Document.
-                UNICEF may decide that such non-expendable property shall be transferred for use by another implementing partner.
-                In that case, the IP shall, upon written instructions by UNICEF, transfer ownership of such property to the
-                implementing partner designated by UNICEF.
+                <div>(ج)&nbsp;&nbsp;&nbsp;&nbsp;
+                    تسري هذه المبالغ المستردة والمرتجعات في موعد أقصاه تسعون (90) يوماً تقويمياً بعد تاريخ انتهاء وثيقة البرنامج أو التاريخ الفعلي لتوقف الأنشطة، أيهما أسبق.
+                </div>
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                عند اختتام أنشطة الشريك المنفذ بموجب وثيقة للبرنامج، يتشاور الطرفان فيما يتعلق بالتصرف في جميع الممتلكات غير المستهلكة التي قدمتها اليونيسف إلى الشريك المنفذ أو التي حصل عليها الشريك المنفذ من التحويلات النقدية، أو نيابةً عنه في نطاق استخدام طريقة الدفع المباشر، فيما يتعلق بوثيقة البرنامج هذه.  ولليونيسف أن تقرر تحويل هذه الممتلكات غير المستهلكة ليستخدمها شريك منفذ آخر.  وفي تلك الحالة، يحول الشريك المنفذ، بناءً على تعليمات خطية من اليونيسف، ملكية هذه الممتلكات إلى الشريك المنفذ الذي تعينه اليونيسف.
                 </li>
             </ol>
         </div>
 
         <div id="article-XII" style="padding-bottom: 10px">
-            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>PRIVILEGES AND IMMUNITIES; RESOLUTION OF DISPUTES</b></div>
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>المادة الثانية عشرة</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>الامتيازات والحصانات؛ وتسوية المنازعات</b></div>
             <ol class="indented">
-                <li>In accordance with Article 17 of the General Terms and Conditions for Implementing Partner
-                    Agreements, nothing in or relating to this Agreement shall be deemed a waiver, express or implied,
-                    of any of the privileges and immunities of the United Nations, including UNICEF.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    1. بمقتضى المادة 17 من الشروط والأحكام العامة لاتفاقيات الشريك المنفذ، ليس في هذه الاتفاقية أو ما يتعلق بها ما يعتبر تنازلاً، صراحة أو ضمناً، عن أي من امتيازات وحضانات للأمم المتحدة، بما في ذلك امتيازات وحضانات اليونيسف.
                 </li>
-                <li>The Parties shall use their best efforts to amicably settle any dispute, controversy, or claim
-                    arising out of this Agreement or the breach, termination, or invalidity thereof.  Where the Parties
-                    wish to seek such an amicable settlement through conciliation, the conciliation shall take place in
-                    accordance with the Conciliation Rules then obtaining of the United Nations Commission on
-                    International Trade Law (“UNCITRAL”), or according to such other procedure as may be agreed between
-                    the Parties in writing.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    2. يبذل الطرفان قصارى جهدهما للتوصل إلى تسوية ودية لأي نزاع أو خلاف أو مطالبة تنشأ عن هذه الاتفاقية أو عن مخالفة أحكامها أو فسخها أو بطلانها.  وفي حال رغب الطرفان بالسعي إلى مثل هذه التسوية الودية عن طريق المصالحة، تُجرى المصالحة وفقاً لقواعد المصالحة الصادرة عن لجنة الأمم المتحدة للقانون التجاري الدولي (الأونسيترال UNCITRAL) السارية آنذاك، أو وفقاً لغيرها من الإجراءات التي قد يتفق عليها الطرفان خطياً.
                 </li>
-                <li>Any dispute, controversy, or claim between the Parties arising out of this Agreement or the breach,
-                    termination, or invalidity thereof, unless settled amicably under the preceding paragraph, within
-                    sixty (60) days after receipt by one Party of the other Party’s written request for such amicable
-                    settlement, shall be referred by either Party to arbitration in accordance with the UNCITRAL
-                    Arbitration Rules then obtaining. The decisions of the arbitral tribunal shall be based on general
-                    principles of international commercial law. The arbitral tribunal shall be empowered to order the
-                    return or destruction of goods or any property, whether tangible or intangible, or of any confidential
-                    information provided under the Agreement, order the termination of the Agreement, or order that any
-                    other protective measures be taken with respect to the goods, services or any other property, whether
-                    tangible or intangible, or of any confidential information provided under the Agreement, as appropriate,
-                    all in accordance with the authority of the arbitral tribunal pursuant to Article 26
-                    (“Interim Measures of Protection”) and Article 34 (“Form and Effect of the Award”) of the UNCITRAL
-                    Arbitration Rules. The arbitral tribunal shall have no authority to award punitive damages. In addition,
-                    unless otherwise expressly provided in the Agreement, the arbitral tribunal shall have no authority
-                    to award interest in excess of the London Inter-Bank Offered Rate (“LIBOR”) then prevailing, and any
-                    such interest shall be simple interest only. The Parties shall be bound by any arbitration award
-                    rendered as a result of such arbitration as the final adjudication of any such dispute, controversy, or claim.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    3. يحيل أي من الطرفين أي نزاع أو خلاف أو مطالبة تنشأ بين الطرفين عن الاتفاقية أو مخالفة أحكامها أو فسخها أو بطلانها، ما لم يتم تسويتها ودياً على النحو المنصوص عليه في الفقرة السابقة، في غضون ستين (60) يوماً من تلقي أحد الطرفين طلباً خطياً للتسوية الودية من الطرف الآخر، إلى التحكيم وفقاً لقواعد الأونسيترال للتحكيم السارية آنذاك. وتستند قرارات هيئة التحكيم إلى المبادئ العامة للقانون التجاري الدولي. وتكون هيئة التحكيم مخولة بإصدار أمر بإعادة أو إتلاف البضائع أو أي ممتلكات، سواء كانت ملموسة أو غير ملموسة، أو أي من المعلومات السرية المقدمة بموجب الاتفاقية، أو إصدار أمر بإنهاء الاتفاقية أو أمر باتخاذ أي تدابير وقائية أخرى فيما يتعلق بالبضائع أو الخدمات أو أي ممتلكات أخرى، سواء ملموسة أو غير ملموسة، أو أي من المعلومات السرية المقدمة بموجب الاتفاقية، حسب الاقتضاء، وكل ذلك وفقاً لسلطة لجنة التحكيم بموجب المادة 26 (“التدابير الوقائية المؤقتة”) والمادة 34 (“شكل قرار التحكيم وأثره”) من قواعد الأونسيترال للتحكيم. ولن يكون من سلطة هيئة التحكيم الحكم بتعويضات عقابية. وبالإضافة إلى ذلك، لن يكون من سلطة هيئة التحكيم الحكم بدفع فوائد تتجاوز سعر الفائدة المعمول به فيما بين مصارف لندن (“الليبور”) السائد آنذاك، وتكون أي من هذه الفوائد فائدة بسيطة فقط، ما لم ينص على خلاف ذلك صراحة في الاتفاقية. ويلتزم الطرفان بأي قرار تحكيم يصدر وفقاً لهذا التحكيم بوصفه حكماً نهائياً لأي نزاع أو خلاف أو مطالبة.
                 </li>
             </ol>
         </div>
         <div id="article-XIII" style="padding-bottom: 10px">
-            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XIII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>FINAL PROVISIONS</b></div>
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>المادة الثالثة عشرة</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>أحكام نهائية</b></div>
             <ol class="indented">
-                <li>This Agreement shall enter into force on the date it is signed by both Parties. It shall expire on
-                    the last day of the Programme unless terminated earlier in accordance with Article 11 of the General
-                    Terms and Conditions attached to and incorporated in this Agreement.
+                <li>&nbsp;&nbsp;&nbsp;&nbsp;
+                    تدخل هذه الاتفاقية حيز التنفيذ في تاريخ توقيع كلا الطرفين عليها. وتنتهي في اليوم الأخير من البرنامج ما لم يتم إنهاؤها قبل ذلك وفقاً للمادة 11 من الشروط والأحكام العامة المرفقة بهذه الاتفاقية والمدمجة بها.
                 </li>
-                <div class="keep-with-next"><p>IN WITNESS WHEREOF, the undersigned, duly authorized by the respective Parties, have signed
-                    this Agreement.</p></div>
+                <div class="keep-with-next"><p>
+                    وإثباتاً لما تقدَّم، قام الممثلان الموقعان أدناه المفوضان حسب الأصول، كل من قبل الطرف الذي يمثله، بتوقيع هذه الاتفاقية.
+                </p></div>
                 <div style="padding-top: 3px">
                     <table border="0" style="border: none;">
                         <tr>
-                            <td style="padding-top: 8px; padding-bottom: 0px; border:none;"><b>For the Implementing Partner</b></td>
-                            <td style="padding-top: 8px; padding-bottom: 0px"><b>For the United Nations Children’s Fund:</b></td>
+                            <td style="padding-top: 8px; padding-bottom: 0px; border:none;"><b>عن صندوق الأمم المتحدة للطفولة:</b></td>
+                            <td style="padding-top: 8px; padding-bottom: 0px"><b>عن الشريك المنفذ:</b></td>
                         </tr>
                         <tr>
-                            <td style="padding-top: 8px; padding-bottom: 0px">Name:</td>
-                            <td style="padding-top: 8px; padding-bottom: 0px">Name:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">الاسم:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">الاسم:</td>
                         </tr>
                         <tr>
-                            <td style="padding-top: 8px; padding-bottom: 0px">Title:</td>
-                            <td style="padding-top: 8px; padding-bottom: 0px">Title:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">المنصب:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">المنصب:</td>
                         </tr>
                         <tr>
-                            <td style="padding-top: 8px; padding-bottom: 0px">Signature: ______________________</td>
-                            <td style="padding-top: 8px; padding-bottom: 0px">Signature: ______________________</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px"> التوقيع:______________________</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px"> التوقيع:______________________</td>
                         </tr>
                         <tr>
-                            <td style="padding-top: 8px; padding-bottom: 0px">Date:</td>
-                            <td style="padding-top: 8px; padding-bottom: 0px">Date:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">التاريخ:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">التاريخ:</td>
                         </tr>
                         <tr>
-                            <td style="padding-top: 8px; padding-bottom: 0px">Email:</td>
-                            <td style="padding-top: 8px; padding-bottom: 0px">Email:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">البريد الإلكتروني</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">البريد الإلكتروني</td>
                         </tr>
                     </table>
                 </div>
@@ -795,353 +751,211 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
         </div>
         <div class="page-break"></div>
         <div id="general-terms" style="font: 10pt; padding-bottom: 10px">
-            <div class="keep-with-next" style="padding-bottom: 0px; text-align: center"><b>GENERAL TERMS AND CONDITIONS</b></div>
-            <div class="keep-with-next" style="text-align: center; padding-top: 0px"><b>FOR PROGRAMME COOPERATION AGREEMENTS</b></div>
+            <div class="keep-with-next" style="padding-bottom: 0px; text-align: center"><b>أحكام وشروط عامة</b></div>
+            <div class="keep-with-next" style="text-align: center; padding-top: 0px"><b>لاتفاقيات التعاون في البرنامج</b></div>
             <ol>
-                <li><b>LEGAL STATUS:</b> IP shall be considered as having the legal status of an independent contractor
-                    vis-à-vis UNICEF.  IP’s employees, personnel and sub-contractors shall not be considered in any respect
-                    as being the employees or agents of UNICEF.
+                <li><b>الوضع القانوني: </b>
+                     يُعتبر الوضع القانوني للشريك المنفذ بأنه مقاول مستقل لدى اليونيسف.  ولا يُعتبر موظفو الشريك المنفذ ومقاولوه من الباطن بأي شكل من الأشكال موظفين أو وكلاء لدى اليونيسف.
                 </li>
-                <li><b>IP'S RESPONSIBILITY FOR EMPLOYEES, PERSONNEL AND SUBCONTRACTORS:</b>  IP shall be responsible for
-                    the professional and technical competence of its employees, personnel and subcontractors and will select,
-                    for work under this Agreement, reliable persons who will perform effectively in the implementation of
-                    this Agreement, respect the local customs, and conform to a high standard of moral and ethical conduct.
+                <li><b>مسؤولية الشريك المنفذ تجاه الموظفين والعاملين والمقاولين من الباطن:</b>
+                     يكون الشريك المنفذ مسؤولاً عن الكفاءة المهنية والتقنية للموظفين والعاملين والمقاولين من الباطن التابعين له وسوف يختار، للعمل بموجب هذه الاتفاقية، أشخاصاً موثوقين ممن سيشاركون بفعالية في تنفيذ هذه الاتفاقية واحترام الأعراف المحلية واتباع أعلى مستويات السلوك الأخلاقي.
                 </li>
-                <li><b>ASSIGNMENT:</b> IP shall not assign, transfer, pledge or make other disposition of this Agreement
-                    or any parts thereof, including any Programme Documents, or any of IP’s rights, claims or
-                    obligations under this Agreement except with the prior written consent of UNICEF.
+                <li><b>التنازل:</b>
+                     لا يتنازل الشريك المنفذ عن هذه الاتفاقية أو يحولها أو يرهنها أو يتصرف بطريقة أخرى بها أو بأجزاء منها، بما في ذلك أي وثائق للبرنامج، أو أي من حقوق الشريك المنفذ أو مطالباته أو التزاماته بموجب هذه الاتفاقية إلا بموافقة خطية مسبقة من اليونيسف.
                 </li>
-                <li><b>SUB-CONTRACTING:</b> IP may not use the services of sub-contractors unless permission is granted
-                    in advance by UNICEF in writing in any particular case. If UNICEF approves a particular sub-contracting
-                    of services, the IP shall ensure that IP’s sub-contractors do not use further tiers of sub-contractors,
-                    including sub-subcontractors, unless UNICEF has given prior written permission in each particular case.
-                    The use by IP of sub-contractors, or of further tiers of sub-contractors in the event that UNICEF has
-                    given prior written permission in accordance with the preceding sentence, shall not relieve IP of any
-                    of its obligations under this Agreement. The terms of any sub-contract, sub-subcontract and so forth
-                    shall be subject to, conform to and give full effect to the provisions of this Agreement.
+                <li><b>تكليف مقاولين من الباطن:</b>
+ لا يجوز للشريك المنفذ الاستعانة بخدمات مقاولين من الباطن إلا بعد الحصول على إذن خطي مسبق من اليونيسف في كل حالة. وإذا وافقت اليونيسف على تنفيذ خدمات معينة من الباطن، يضمن الشريك المنفذ أن المقاولين من الباطن التابعين له لن يستعينوا بمقاولين آخرين لتقديم الخدمات من الباطن، بمن فيهم المقاولون التابعون للمقاولين من الباطن، ما لم تمنح اليونيسف إذناً خطياً مسبقاً في كل حالة معينة. كما أن استعانة الشريك المنفذ بالمقاولين من الباطن أو بمستويات إضافية من المقاولين من الباطن، بعد الحصول على إذن خطي مسبق من اليونيسف وفقاً لما سبق، لا يعفيه من أي من التزاماته بموجب هذه الاتفاقية. وتخضع شروط أي عقد من الباطن أو عقد فرعي من الباطن وما إلى ذلك لأحكام هذه الاتفاقية وتتوافق معها وتنفذها بالكامل.
                 </li>
-                <li class="keep-with-next"><b>OFFICIALS NOT TO BENEFIT; RESTRICTION ON HIRING UNICEF PERSONNEL:</b></li>
-                <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
-                    <li>IP warrants that no official of UNICEF has received or will be offered by IP any direct or
-                        indirect benefit arising from this Agreement or the award thereof. IP agrees that breach of this
-                        provision is a breach of an essential term of this Agreement.
-                    </li>
-                    <li>The IP represents and warrants that the following with regard to former UNICEF officials
-                        have been complied with and will be complied with:
-                        (i)  during the one year period after an official has separated from UNICEF, the IP may not make
-                        a direct or indirect offer of employment to that former UNICEF official if that former UNICEF official
-                        was, during the three years prior to separating from UNICEF, involved in any aspect of the process
-                        leading to the IP’s selection or the implementation of the Programme; and
-                        (ii) during the two year period after an official has separated from UNICEF, the former official
-                        may not communicate with UNICEF, or present to UNICEF, on behalf of the IP on any matters that were
-                        within such former official's responsibilities while at UNICEF.
-                    </li>
-                </ol>
-                <li><b>INDEMNIFICATION:</b> IP shall indemnify, hold and save harmless, and defend, at its own expense,
-                    UNICEF, its officials, agents, servants and employees from and against all suits, claims, demands,
-                    and liability of any nature or kind, including their costs and expenses, arising out of acts or
-                    omissions of IP, or IP's employees, officers, agents or sub-contractors, in the performance of
-                    this Agreement and Programme Documents. This provision shall extend, inter alia, to claims and
-                    liability in the nature of workmen's compensation, products liability and liability arising out of
-                    the use of patented inventions or devices, copyrighted material or other intellectual property by IP,
-                    its employees, officers, agents, servants or sub-contractors. The obligations under this Article do
-                    not lapse upon termination of this Agreement.
+                <div class="page-break-avoid">
+                    <li class="keep-with-next"><b>الموظفون لا يحصلون على أي فائدة؛ القيود المفروضة على الاستعانة بموظفي اليونيسف: </b></li>
+                    <ol class="" style="list-style-type: decimal">
+                        <li>
+                          يضمن الشريك المنفذ عدم حصول أي موظف لدى اليونيسف على أي فائدة مباشرة أو غير مباشرة تنشأ عن هذه الاتفاقية أو عن قرار منحها له.  ويوافق الشريك المنفذ على أن يكون انتهاك هذا الحكم بمثابة انتهاك لشرط أساسي من شروط هذه الاتفاقية.
+                        </li>
+                        <li>
+                            يتعهد الشريك المنفذ ويضمن أنه قد امتثل وسيمتثل لما يلي فيما يتعلق بموظفي اليونيسف السابقين: (1) لا يجوز للشريك المنفذ أن يقدم عرض توظيف مباشر أو غير مباشر لموظف سابق لدى اليونيسف خلال عام واحد بعد انفصال الموظف عن العمل باليونيسف في حالة كان ذلك الموظف، أثناء فترة الثلاث سنوات السابقة من انفصاله عن اليونيسف، مشتركاً في أي جانب من جوانب العملية التي أدت إلى اختيار الشريك المنفذ أو تنفيذ البرنامج؛ (2) لا يجوز للموظف السابق التواصل مع اليونيسف خلال عامين بعد انفصاله عنها أو أن يقدم لليونيسف، نيابةً عن الشريك المنفذ، أي أمور كانت ضمن مسؤولياته أثناء فترة عمله لدى اليونيسف.
+                        </li>
+                    </ol>
+                </div>
+                <li><b>التعويض عن الضرر:</b>
+                     يعوِّض الشريك المنفذ اليونيسف ومسؤوليها ووكلاءها وعامليها وموظفيها عن وضد جميع الدعاوى والمطالبات والمطالب والتبعات من أي طبيعة أو نوع ويدرأ مسؤوليتهم ويدافع عنهم على حسابه الخاص، بما في ذلك المصاريف والنفقات الناشئة عن أفعال أو إغفالات الشريك المنفذ أو موظفيه أو مسؤوليه أو وكلائه أو مقاوليه من الباطن، في أداء هذه الاتفاقية ووثائق البرنامج. ويشمل هذا الحكم، في جملة أمور، المطالبات والتبعات في طبيعة تعويض العمال والمسؤولية عن المنتجات والتبعات الناشئة عن استخدام الاختراعات أو الأجهزة المحفوظة ببراءة اختراع أو المواد المحفوظة بحقوق ملكية أو غيرها من الملكية الفكرية، وذلك من قبل الشريك المنفذ أو موظفيه أو مسؤوليه أو وكلائه أو عماله أو مقاوليه من الباطن. ولا تنقضي الالتزامات المنصوص عليها بموجب هذه المادة عند انتهاء هذه الاتفاقية.
                 </li>
-                <li><b>ENCUMBRANCES/LIENS:</b>  IP shall not cause or permit any lien, attachment or other encumbrance
-                    by any person to be placed on file or to remain on file in any public office against any monies due
-                    or to become due for any work done, services rendered or materials, supplies or equipment furnished
-                    under this Agreement, or by reason of any other claim or demand against IP.
+                <li><b>الأعباء/حقوق الحجز:</b>
+                     لا يتسبب الشريك المنفذ أو يسمح بأن يتم رفع دعوى حجز أو مصادرة أو غيرها من الأعباء من جانب أي شخص أو أن تبقى مدرجة في ملفات أي مكتب عام عن أي أموال مستحقة أو ستصبح مستحقة لأي عمل تم الاضطلاع به أو خدمات تم تقديمها أو مواد أو إمدادات أو معدات تم تقديمها بموجب هذه الاتفاقية، أو بسبب أي مطالبة أو طلب مرفوع ضد الشريك المنفذ.
                 </li>
-                <li class="keep-with-next"><b>COPYRIGHT, PATENTS AND OTHER PROPRIETARY RIGHTS; CONFIDENTIALITY:</b></li>
-                <div style="padding-top: 2px">8.1 &nbsp;&nbsp;&nbsp;&nbsp;Except as is otherwise expressly provided in writing in the Agreement, UNICEF shall be entitled
-                    to all intellectual property and other proprietary rights including, but not limited to, patents,
-                    copyrights, and trademarks, with regard to products, processes, inventions, ideas, know-how, or
-                    documents and other materials which IP has developed under the Agreement and which bear a direct
-                    relation to or are produced or prepared or collected in consequence of, or during the course of,
-                    the performance of the Agreement, and IP acknowledges and agrees that such products, documents and
-                    other materials constitute works made for hire.
+                <div class="page-break-avoid">
+                    <li class="keep-with-next"><b>حقوق الطبع والنشر وبراءات الاختراع وغيرها من حقوق الملكية؛ السرية:</b></li>
+                    <div class="small-indent">
+                        <div style="padding-top: 2px">8.1 &nbsp;&nbsp;&nbsp;&nbsp;
+                            باستثناء ما هو منصوص عليه صراحة خطياً في الاتفاقية، تمتلك اليونيسف جميع حقوق الملكية الفكرية وغيرها من حقوق الملكية الخاصة بما في ذلك، على سبيل المثال لا الحصر، براءات الاختراع وحقوق الطبع والنشر والعلامات التجارية، فيما يتعلق بالمنتجات أو العمليات أو الاختراعات أو الأفكار أو الخبرة الفنية أو الوثائق والمواد الأخرى التي طورها الشريك المنفذ بموجب الاتفاقية والتي لها علاقة مباشرة بها أو تم إنتاجها أو إعدادها أو جمعها نتيجة لأداء الاتفاقية أو أثناء فترة أدائها، ويقر الشريك المنفذ ويوافق على أن هذه المنتجات والوثائق والمواد الأخرى تشّكل الأعمال المنفذة مقابل أجر.
+                        </div>
+                        <div style="padding-top: 16px">8.2 &nbsp;&nbsp;&nbsp;&nbsp;
+                            بناءً على طلب من اليونيسف، يتخذ الشريك المنفذ جميع الخطوات اللازمة وينشئ جميع الوثائق اللازمة ويساعد بوجه عام في تأمين حقوق الملكية وينقلها أو يرخصها لليونيسف وفقاً لمتطلبات القانون النافذ.
+                        </div>
+                        <div style="padding-top: 16px">8.3 &nbsp;&nbsp;&nbsp;&nbsp;
+                            رهناً بالأحكام السابقة، تكون جميع الخرائط والرسومات والصور والفسيفساء والخطط والتقارير والتقديرات والتوصيات والوثائق وجميع البيانات الأخرى التي جمعها الشريك المنفذ أو استلمها بموجب هذه الاتفاقية ملكاً لليونيسف ويتم توفيرها لليونيسف لاستخدامها وفحصها في أوقات وأماكن معقولة، وتُعامل على أنها سرية وتقدم لموظفي اليونيسف المفوضين فقط عند انتهاء الأعمال بموجب الاتفاقية.
+                        </div>
+                        <div style="padding-top: 16px">8.4 &nbsp;&nbsp;&nbsp;&nbsp;
+                            يحترم الشريك المنفذ سرية جميع المعلومات التي أخطرته اليونيسف بسريتها، ويعاملها بقدر من السرية لا يقل عن أكثر المعلومات السرية لديه.  وعندما يتعين على الشريك المنفذ الإفصاح عن معلومات سرية مملوكة لليونيسف بموجب القانون، يقدم الشريك المنفذ إشعاراً مسبقاً كافياً بطلب الإفصاح عن المعلومات من أجل إتاحة فرص معقولة لليونيسف لاتخاذ تدابير وقائية تجاه هذه الأعمال بقدر ما يكون مناسباً قبل الإفصاح عن أي معلومات.
+                        </div>
+                        <div style="padding-top: 16px">8.5 &nbsp;&nbsp;&nbsp;&nbsp;
+                            إذا كان جمع واستخدام البيانات المتعلقة بالمستفيدين (بمعنى أي معلومات شخصية بما في ذلك المعلومات المتعلقة بالهوية مثل الاسم أو رقم الهوية أو رقم جواز السفر أو رقم الهاتف الجوال/المحمول أو عنوان البريد الإلكتروني أو تفاصيل المعاملات النقدية) جزءاً من مسؤوليات الشريك المنفذ بموجب هذه الاتفاقية، تُعتبر هذه المعلومات معلومات سرية مملوكة لليونيسف وتخضع لسياسة الإفصاح عن المعلومات لليونيسف، التي يتوافر نسخة منها على الموقع الإلكتروني http://www.unicef.org/about/legal_disclosure.html. ولا يستخدم الشريك المنفذ هذه البيانات إلا من أجل تنفيذ وثيقة البرنامج.  ويخطر الشريك المنفذ اليونيسف على الفور بأي حادث فعلي أو مشتبه فيه أو تهديدي لأي إتلاف عارض أو غير قانوني أو خسارة عارضة أو تغيير أو إفصاح أو اطلاع غير مصرح به أو عرضي بشأن هذه البيانات.
+                        </div>
+                    </div>
                 </div>
-                <div style="padding-top: 16px">8.2 &nbsp;&nbsp;&nbsp;&nbsp;At the request of UNICEF, IP shall take all necessary steps, execute all necessary documents and
-                    generally assist in securing such proprietary rights and transferring or licensing them to UNICEF in
-                    compliance with the requirements of applicable law.
-                </div>
-                <div style="padding-top: 16px">8.3 &nbsp;&nbsp;&nbsp;&nbsp;Subject to the foregoing provisions, all maps, drawings, photographs, mosaics, plans, reports,
-                    estimates, recommendations, documents, and all other data compiled by or received by IP under this
-                    Agreement shall be the property of UNICEF, shall be made available for use or inspection by UNICEF
-                    at reasonable times and in reasonable places, shall be treated as confidential, and shall be delivered
-                    only to UNICEF authorized officials on completion of work under the Agreement.
-                </div>
-                <div style="padding-top: 16px">8.4 &nbsp;&nbsp;&nbsp;&nbsp;The IP shall respect the confidentiality of all information that UNICEF advises the IP is
-                    confidential, and shall treat it no less confidentially that the most IP’s most confidential information.
-                    When the IP is required to disclose UNICEF’s confidential information by law, the IP shall give UNICEF
-                    sufficient prior notice of a request for the disclosure of information in order to allow UNICEF to have
-                    reasonable opportunities to take protective measures of such other actions as may be appropriate prior
-                    to any disclosure being made.
-                </div>
-                <div style="padding-top: 16px">8.5 &nbsp;&nbsp;&nbsp;&nbsp;Where collection and use of data related to beneficiaries (meaning any personal information
-                    including identifying information such as the name, identification or passport number, mobile
-                    telephone number, email address, cash transaction details) is part of the responsibilities of the IP
-                    under this Agreement, such information shall be deemed to be UNICEF’s confidential information and
-                    shall be governed by the UNICEF Disclosure of Information policy, a copy of which is available at
-                    <u>http://www.unicef.org/about/legal_disclosure.html</u> The IP shall only use such data in order to
-                    implement the Programme Document. The IP shall promptly notify UNICEF of any actual or suspected or
-                    threatened incident of accidental or unlawful destruction or accidental loss, alteration,
-                    unauthorized or accidental disclosure or access to such data.
-                </div>
-                <li><b>USE OF UNICEF’s AND IP’s NAME, LOGO AND EMBLEM:</b> Each of the Parties is permitted to use the
-                    other’s name, logo, and emblem, as applicable, solely in connection with this Agreement and the
-                    implementation of the Programme Documents, unless permission is withdrawn in any particular case by
-                    any of the Parties and notified in writing to the other Party. When reporting to third parties and/or
-                    general public, the IP will attribute results reported as being funded by UNICEF. At UNICEF’s request,
-                    the IP shall provide visibility, as specified by UNICEF, to UNICEF’s donors that are contributing funds
-                    for the Programme Document. Where such visibility would jeopardize the safety and security of the
-                    IP’s staff, the IP shall propose appropriate alternative arrangements.
+                <li><b></b>
+                    استخدام اسم وشعار ورمز اليونيسف والشريك المنفذ: يُسمح لكلا الطرفين باستخدام اسم الآخر وشعاره ورمزه، حسب الاقتضاء، فقط فيما يتعلق بهذه الاتفاقية وتنفيذ وثائق البرنامج، ما لم يسحب أحد الطرفين الإذن في أي حالة معينة أو يخطر الطرف الآخر به كتابةً. وعند إبلاغ أطراف ثالثة و/أو الجمهور العام، فسوف يشير الشريك المنفذ إلى أن النتائج المعلنة تم تحقيقها بتمويل من اليونيسف. وبناءً على طلب من اليونيسف، يوفر الشريك المنفذ قابلية الرؤية والوضوح، على النحو الذي تحدده اليونيسف، إلى الجهات المانحة التابعة لليونيسف التي تساهم في تمويل وثيقة البرنامج. وحيثما تعرض قابلية الرؤية سلامة موظفي الشريك المنفذ وأمنهم للخطر، يجب أن يقترح الشريك المنفذ ترتيبات بديلة ملائمة.
                 </li>
-                <li class="keep-with-next"><b>FORCE MAJEURE; OTHER CHANGES IN CONDITIONS:</b></li>
-                <div style="padding-top: 2px">10.1 &nbsp;&nbsp;&nbsp;&nbsp;In the event of and as soon as possible
-                    after the occurrence of any cause constituting <i>force majeure</i>,
-                    IP shall give notice and full particulars in writing to UNICEF, of such occurrence or change if IP is
-                    thereby rendered unable, wholly or in part, to perform its obligations and meet its responsibilities
-                    under this Agreement.  IP shall also notify UNICEF of any other changes in conditions or the occurrence
-                    of any event that interferes or threatens to interfere with its performance of this Agreement. On
-                    receipt of the notice required under this Article, UNICEF shall take such action as it considers,
-                    in its sole discretion, to be appropriate or necessary in the circumstances, including the granting
-                    to IP of a reasonable extension of time in which to perform its obligations under this Agreement.
+                <div class="page-break-avoid">
+                    <li class=""><b>القوة القاهرة، تغيرات أخرى في الظروف:</b></li>
+                    <div class="small-indent">
+                        <div style="padding-top: 2px">10.1 &nbsp;&nbsp;&nbsp;&nbsp;
+                            في حال وقوع أي حدث يمثل قوة قاهرة وفي أقرب وقت ممكن بعد وقوعه، يُخطِر الشريك المنفذ اليونيسف مع سرد كامل التفاصيل بذلك الحدث الواقع أو التغير خطياً إذا كان الشريك المنفذ غير قادر بسبب هذا الحدث سواء بشكل كلي أو جزئي على أداء التزاماته والوفاء بمسؤولياته بموجب هذه الاتفاقية.  ويخطِر الشريك المنفذ اليونيسيف بأية تغييرات أخرى في الظروف أو بوقوع أي حدث يعترض أو يهدد باعتراض أدائه لهذه الاتفاقية. وعند استلام الإخطار المطلوب بموجب هذه المادة، على اليونيسف اتخاذ الإجراءات التي تراها وفق تقديرها الحصري مناسبة أو ضرورية في هذه الظروف، ومنها منح الشريك المنفذ تمديداً معقولاً للوقت الذي يؤدي فيه التزاماته بموجب هذه الاتفاقية.
+                        </div>
+                        <div style="padding-top: 16px">10.2 &nbsp;&nbsp;&nbsp;&nbsp;
+                            إذا اعتُبر الشريك المنفذ غير قادر سواء كلياً أو جزئياً بشكل دائم على أداء التزاماته والوفاء بمسؤولياته بموجب هذه الاتفاقية بسبب القوة القاهرة، فإنه يحق لليونيسف تعليق هذه الاتفاقية أو إنهاؤها وفق ذات الشروط والأحكام المنصوص عليها في المادة 11 (“الإنهاء”) باستثناء أن مدة الإخطار تكون 7 (سبعة) أيام بدلاً من 30 (ثلاثين) يوماً.
+                        </div>
+                        <div style="padding-top: 16px">10.3 &nbsp;&nbsp;&nbsp;&nbsp;
+                            يُقصَد بالقوة القاهرة حسب استخدامها في هذه المادة أي حدث لا يمكن توقعه ولا درؤه من أحداث الطبيعة أو أحداث الحرب (سواء أُعلنت أو لم يعلن عنها) أو الغزو أو الثورة أو التمرد أو الإرهاب أو أية أحداث لها ذات القوة أو الطبيعة، شريطة أن تنشأ هذه الأحداث من أسباب خارجة عن السيطرة ودون خطأ أو إهمال من الطرف المعني.
+                        </div>
+                        <div style="padding-top: 16px">10.4 &nbsp;&nbsp;&nbsp;&nbsp;
+                            يقر الشريك المنفذ ويوافق على أنه، بخصوص أي من الالتزامات بموجب هذه الاتفاقية بأنه يتعين عليه أداء مهامه في أية مناطق تعمل فيها اليونيسف أو تستعد للعمل فيها أو تنفصل فيها عن أية عمليات لحفظ السلام أو عمليات إنسانية أو ما يشبهها، فإن أي تأخير أو عدم أداء للالتزامات المذكورة مما ينشأ عن ظروف صعبة أو يتعلق بها داخل المناطق المذكورة أو يتعلق بأية أحداث قلاقل مدنية تقع في المناطق المشار إليها، لا يمثل في حد ذاته قوة قاهرة.
+                        </div>
+                    </div>
                 </div>
-                <div style="padding-top: 16px">10.2 &nbsp;&nbsp;&nbsp;&nbsp;If the IP is rendered permanently unable,
-                    wholly or in part, by reason of <i>force majeure</i>
-                    to perform its obligations and meet its responsibilities under this Agreement, UNICEF shall have
-                    the right to suspend or terminate this Agreement on the same terms and conditions as are provided
-                    for in Article 11, "Termination", except that the period of notice shall be seven (7) days instead
-                    of thirty (30) days.
-                </div>
-                <div style="padding-top: 16px">10.3 &nbsp;&nbsp;&nbsp;&nbsp;<i>Force majeure</i> as used in this
-                    Article means any unforeseeable and irresistible act of nature,
-                    any act of war (whether declared or not), invasion, revolution, insurrection, terrorism, or any other
-                    acts of a similar force or nature, provided that such acts arise from causes beyond the control and
-                    without the fault or negligence of the Party concerned.
-                </div>
-                <div style="padding-top: 16px">10.4 &nbsp;&nbsp;&nbsp;&nbsp;The IP acknowledges and agrees that,
-                    with respect to any obligations under this Agreement that
-                    the IP must perform in or for any areas in which UNICEF is engaged in, preparing to engage in, or
-                    disengaging from any peacekeeping, humanitarian or similar operations, any delays or failure to perform
-                    such obligations arising from or relating to harsh conditions within such areas or to any incidents
-                    of civil unrest occurring in such areas shall not, in and of itself, constitute <i>force majeure</i>.
-                </div>
-                <li class="keep-with-next"><b>TERMINATION:</b></li>
-                <div class="keep-with-next" style="padding-top: 2px">11.1 &nbsp;&nbsp;&nbsp;&nbsp;Either Party may terminate this Agreement
-                    by giving thirty (30) calendar days’ written notice to the other Party in each of the following situations:
+                <li class="keep-with-next"><b>إنهاء الاتفاقية:</b></li>
+
+                <div class="keep-with-next" style="padding-top: 2px">11.1 &nbsp;&nbsp;&nbsp;&nbsp;
+                    يحق لأي طرف إنهاء هذه الاتفاقية بإرسال إخطار كتابي قبل 30 (ثلاثين) يوماً تقويمياً للطرف الآخر في أي من الحالات التالية:
                 </div>
                 <div style="padding-left: 25px;">
-                    <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
-                        <li>if it concludes that the other Party has breached its obligations under this Agreement or any
-                            Programme Document and has not remedied that breach after having been given not less than fourteen
-                            (14) calendar days’ written notice to do so with effect from a date specified in such notice; and
+                    <ol class="" style="list-style-type: decimal">
+                        <li>
+                            إذا انتهى إلى أن الطرف الآخر قد أخل بالتزاماته بموجب هذه الاتفاقية أو بأي من وثائق البرنامج ولم يقم بعلاج هذا الخلل بعد تلقيه إخطاراً كتابياً لا تقل مدته عن 14 (أربعة عشر) يوماً تقويمياً يشير إليه بالقيام بذلك مع السريان من تاريخ محدد في الإخطار المذكور.
                         </li>
-                        <li>if it concludes that the other Party cannot meet its obligations under this Agreement.
+                        <li>
+                            إذا انتهى إلى أنه ليس بمقدور الطرف الآخر الوفاء بالتزاماته بموجب الاتفاقية.
                         </li>
                     </ol>
                 </div>
 
-                <div class="keep-with-next">11.2 &nbsp;&nbsp;&nbsp;&nbsp;UNICEF may also suspend or terminate this Agreement
-                    forthwith in each of the following situations:</div>
+                <div class="keep-with-next">11.2 &nbsp;&nbsp;&nbsp;&nbsp;
+                    كذلك فإنه يجوز لليونيسف تعليق هذه الاتفاقية أو إنهاؤها على الفور في أي من الحالات التالية:
+                </div>
                 <div style="padding-left: 25px;">
-                    <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
-                        <li>if implementation of any Programme Document has not commenced within a reasonable time;</li>
-                        <li>if it decides that IP or any of its employees or personnel has engaged in any corrupt,
-                            fraudulent, collusive, coercive or obstructive practice (as such terms are defined in clause 14.3 b.);
+                    <ol class="" style="list-style-type: decimal">
+                        <li>
+                            إذا لم يتم البدء في تنفيذ أي وثيقة من وثائق البرنامج خلال مدة معقولة.
                         </li>
-                        <li>should UNICEF’s funding decrease, be curtailed or terminated; or</li>
-                        <li>should IP be adjudged bankrupt, or be liquidated or become insolvent, or should IP
-                            make an assignment for the benefit of its creditors, or should a Receiver be appointed on account of
-                            the insolvency of IP, in which case IP shall immediately inform UNICEF of the occurrence of any of
-                            the above events.
+                        <li>
+                            إذا انتهت إلى أن الشريك المنفذ أو أياً من موظفيه أو عامليه قد اشترك في ممارسة فساد أو احتيال أو تواطؤ أو إكراه أو تعطيل (حسب الشروط الموضحة في البند 14-3ب).
+                        </li>
+                        <li>
+                            عند تقلص تمويل اليونيسف أو انخفاضه أو إنهائه.
+                        </li>
+                        <li>
+                            إذا صدر حكم بأن الشريك المنفذ قد أفلس أو خضع للتصفية أو صار معسراً، أو في حال تنازل هذا الشريك لمنفعة دائنيه أو تم تعيين حارس قضائي بسبب إعسار هذا الشريك، وعندئذ يتعين على الشريك المنفذ أن يخطر اليونيسف على الفور بوقوع أي من الأحداث المذكورة أعلاه.
                         </li>
                     </ol>
                 </div>
-                <div>11.3 &nbsp;&nbsp;&nbsp;&nbsp;The Party receiving a notice of suspension or termination will immediately take all necessary
-                    steps to suspend or terminate (as the case may be) its activities in an orderly manner so that
-                    continued expenses are kept to a minimum.
+                <div>11.3 &nbsp;&nbsp;&nbsp;&nbsp;
+                    يتخذ الطرف الذي يتلقى إخطاراً بالتعليق أو الإنهاء على الفور كافة الخطوات الضرورية لتعليق أو إنهاء أنشطته (حسب واقع الحال) بشكل منظم بحيث تبقى النفقات المستمرة في أدنى حد لها.
                 </div>
-                <div>11.4 &nbsp;&nbsp;&nbsp;&nbsp;Immediately upon sending or receiving a notice of termination UNICEF will cease disbursement
-                    of any funds under this Agreement and IP will not make any forward commitments, financial or otherwise,
-                    in connection with this Agreement.
+                <div>11.4 &nbsp;&nbsp;&nbsp;&nbsp;
+                    فور إرسال أو استلام إخطار بالإنهاء، تتوقف اليونيسف عن صرف أية أموال بموجب هذه الاتفاقية، ولن يؤدي الشريك المنفذ أية التزامات سواء كانت مالية أو غير مالية بعد ذلك فيما يتصل بهذه الاتفاقية.
                 </div>
-                <div>11.5 &nbsp;&nbsp;&nbsp;&nbsp;On termination of this Agreement pursuant to this clause 11, IP will transfer either to UNICEF
-                    or in accordance with UNICEF’s instructions the unexpended balance of the Cash Transfer held by IP
-                    and the unused supplies and equipment provided by UNICEF under this Agreement and any non-expendable
-                    property provided by UNICEF under this Agreement or purchased by the IP using funds provided by UNICEF
-                    under this Agreement.
+                <div>11.5 &nbsp;&nbsp;&nbsp;&nbsp;
+                    عند إنهاء هذه الاتفاقية طبقاً لهذا البند 11، يحوِل الشريك المنفذ إما لليونيسف أو طبقاً لتعليماتها المبلغ المتبقي غير المنفق من التحويل النقدي المودع لدى الشريك المنفذ، وكذلك الإمدادات والمعدات غير المستخدمة التي قدمتها له اليونيسف بموجب هذه الاتفاقية، وكذلك أية ممتلكات غير قابلة للاستهلاك مما قدمته اليونيسف بموجب هذه الاتفاقية أو اشتراه الشريك المنفذ بأموال قدمتها له اليونيسف بموجب هذه الاتفاقية.
                 </div>
-                <div>11.6 &nbsp;&nbsp;&nbsp;&nbsp;If UNICEF exercises its right to terminate this Agreement, UNICEF will have the right to require
-                    IP to repay to UNICEF such amount of money, up to the total amount paid to IP by UNICEF prior to the
-                    date of the notice of termination, as UNICEF shall determine. It is understood that expenditures
-                    incurred by the IP in compliance with this Agreement prior to the date of the notice of termination
-                    will not be required to be repaid. The payment owing by IP will be made promptly upon receipt of UNICEF’s
-                    notice to pay.
+                <div>11.6 &nbsp;&nbsp;&nbsp;&nbsp;
+                    إذا مارست اليونيسف حقها في إنهاء هذه الاتفاقية، فإنه يحق لها مطالبة الشريك المنفذ بأن يرد إليها مبلغ المال الذي يكون أقصاه إجمالي المبلغ الذي دفعته للشريك المنفذ قبل تاريخ الإخطار بالإنهاء، على حسب ما تقرّره اليونيسف. ومن المعلوم أن النفقات التي تحملها الشريك المنفذ امتثالاً لهذه الاتفاقية قبل تاريخ الإخطار بالإنهاء لن تتم مطالبته بردها. وتُسدَد المدفوعات المستحقة على الشريك المنفذ على الفور بعد استلام إخطار السداد من اليونيسف.
                 </div>
-                <div>11.7 &nbsp;&nbsp;&nbsp;&nbsp;If UNICEF exercises its right to terminate this Agreement and decides that the Programme Document
-                    is to be implemented by another organization, IP will promptly provide full cooperation to UNICEF and
-                    the other organization in the orderly transfer to the other organization of all unused supplies and
-                    equipment provided to IP by UNICEF and the provisions of paragraph 11.5 above will apply.
+                <div>11.7 &nbsp;&nbsp;&nbsp;&nbsp;
+                    إذا مارست اليونيسف حقها في إنهاء هذه الاتفاقية وقررت إسناد تنفيذ وثيقة البرنامج إلى منظمة أخرى، فإن الشريك المنفذ يتعاون بشكل كامل مع اليونيسف وهذه المنظمة الأخرى في تحويل منظم لكافة الإمدادات والمعدات غير المستخدمة التي قدمتها اليونيسف للشريك المنفذ، وذلك إلى المنظمة الأخرى المذكورة كما ستنطبق أحكام الفقرة 11-5 المذكورة أعلاه.
                 </div>
-                <li><b>EVALUATION:</b> The evaluation of the activities performed under this Agreement shall be subject to
-                    the provisions of the UNICEF Evaluation Policy as from time to time approved or amended by UNICEF’s
-                    Executive Board.
+                <li><b>التقييم:</b>
+                     يخضع تقييم الأنشطة المضطلع بها بموجب هذه الاتفاقية لأحكام سياسة التقييم لدى اليونيسف حسب اعتمادها وتعديلها من المجلس التنفيذي لليونيسف من حين لآخر.
                 </li>
-                <li><b>COMPLIANCE WITH UNICEF POLICIES:</b> The IP will be required to comply with the relevant provisions
-                    of UNICEF’s Policy Prohibiting and Combatting Fraud and Corruption, available at
-                    <u>http://www.unicef.org/publicpartnerships/files/Policy_Prohibiting_and_Combatting_Fraud_and_Corruption.pdf</u>
-                    or such other URL as may be decided from time to time by UNICEF.
+                <li><b>الامتثال لسياسات اليونيسف: </b>
+                     سوف يُطلب من الشريك المنفذ الامتثال للأحكام ذات الصلة من سياسة اليونيسف التي تحظر وتكافح الاحتيال والفساد وهي متاحة على الموقع http://www.unicef.org/publicpartnerships/files/Policy_Prohibiting_and_Combatting_Fraud_and_Corruption.pdf أو على عنوان URL آخر حسب ما تحدده اليونيسف من حين لآخر.
                 </li>
-                <li><b>ASSURANCE ACTIVITIES:</b></li>
-                <div class="keep-with-next">14.1 &nbsp;&nbsp;&nbsp;&nbsp;Audit:</div>
+                <li><b>أنشطة الضمان: </b></li>
+                <div class="keep-with-next">14.1 &nbsp;&nbsp;&nbsp;&nbsp;التدقيق:</div>
                 <div style="padding-left: 25px;">
-                    <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
-                        <li>At the request of and at such times as determined solely by UNICEF, IP will have its
-                            activities under this Agreement audited. Audits will be performed subject to such standards, scope,
-                            frequency and timing as decided by UNICEF (and may cover financial transactions and internal controls
-                            related to the activities implemented by IP).
+                    <ol class="" style="list-style-type: decimal">
+                        <li>
+                            بناء على طلب اليونيسف وفي الأوقات التي تحددها وفق تقديرها الحصري، يتم تدقيق أنشطة الشريك المنفذ بموجب هذه الاتفاقية. وتُؤدى أعمال التدقيق طبقاً لما تحدده اليونيسف من معايير ونطاق وتكرار وتوقيت (وقد تشمل المعاملات المالية والضوابط الداخلية فيما يتعلق بالأنشطة التي يقوم الشريك المنفذ بتنفيذها).
                         </li>
-                        <li>Audits as provided under paragraph 1 of this Article shall be conducted by individual
-                            or corporate auditors to be designated by UNICEF, such as, for example, an audit or accounting firm.
-                            IP shall provide its full and timely cooperation with any audits. Such cooperation shall include,
-                            but shall not be limited to, IP’s obligation to make available its personnel and any relevant
-                            documentation and records for such purposes at reasonable times and on reasonable conditions and to
-                            grant the auditors access to IP’s premises and/or sites of programme implementation at reasonable
-                            times and on reasonable conditions in connection with such access to IP’s personnel and relevant
-                            documentation and records.  IP shall require its agents, including, but not limited to, IP’s
-                            attorneys, accountants or other advisers, and its subcontractors to reasonably cooperate with any
-                            audits carried out hereunder.
+                        <li>
+                           تتم أعمال التدقيق حسب المنصوص عليه في الفقرة 1 من هذه المادة بواسطة مدققين أفراد أو شركات تعيّنهم اليونيسف، كأن يكونوا مثلاً مكتب تدقيق أو محاسبة.  ويُقدِم الشريك المنفذ تعاونه الكامل وفي الوقت المناسب في أية أعمال تدقيق. ويشمل هذا التعاون على سبيل المثال لا الحصر: التزام الشريك المنفذ بتوافر عامليه وأية وثائق وسجلات ذات صلة لهذه الأغراض في مواعيد معقولة وبناء على شروط معقولة وأن يتيح للمدققين الدخول إلى مقاره و/أو مواقع تنفيذ البرنامج في مواعيد معقولة وبناء على شروط معقولة فيما يتصل بهذا الوصول إلى عامليه والوثائق والسجلات ذات الصلة.  ويطلب الشريك المنفذ من وكلائه ومنهم على سبيل المثال لا الحصر محاموه أو محاسبوه أو غيرهم من المستشارين والمقاولين من الباطن الذين يستعين بهم أن يتعاونوا بالشكل المعقول في أية أعمال تدقيق تتم بموجب هذه الاتفاقية.
                         </li>
-                        <li>In the event that the audit is conducted by auditors designated by UNICEF,
-                            UNICEF or the auditors will provide a copy of the final audit report to IP without delay.
+                        <li>
+                             في حال قيام مدققين عينتهم اليونيسف بأداء أعمال التدقيق، تقدم اليونيسف أو يقدم المدققون، وبدون أي تأخير، نسخة من تقرير التدقيق النهائي للشريك المنفذ.
                         </li>
                     </ol>
                 </div>
-                <div class="keep-with-next">14.2 &nbsp;&nbsp;&nbsp;&nbsp;Spot checks and programmatic visits:</div>
-                <div>IP agrees that, from time to time, UNICEF may conduct on site reviews (“<u>spot checks</u>” and
-                    programmatic visits), subject to such standards, scope, frequency and timing as decided by UNICEF.
-                    IP shall provide its full and timely cooperation with any such spot checks or programmatic visits,
-                    which shall include IP’s obligation to make available its personnel and any relevant documentation
-                    and records for such purposes at reasonable times and on reasonable conditions and to grant to
-                    UNICEF access to IP’s premises and/or sites of programme implementation at reasonable times and on
-                    reasonable conditions.  IP shall require its agents, including, but not limited to, IP’s attorneys,
-                    accountants or other advisers, and its subcontractors to reasonably cooperate with any spot checks
-                    carried out by UNICEF hereunder.  It is understood that UNICEF may, at its sole discretion, contract
-                    for the services of an individual or corporate person to conduct spot checks or programmatic visits,
-                    or UNICEF may conduct spot checks or programmatic visits with its own staff, employees and agents.
+                <div class="keep-with-next">14.2 &nbsp;&nbsp;&nbsp;&nbsp;أعمال التفتيش المفاجئ والزيارات المتعلقة بالبرنامج:</div>
+                <div>
+                    يقر الشريك المنفذ بأنه يحق لليونيسف من آن لآخر إجراء مراجعات بالمواقع (يُشار إليها بـ “أعمال التفتيش المفاجئ” والزيارات المتعلقة بالبرنامج) حسب المعايير والنطاق والتكرار والتوقيت الذي تحدده اليونيسف.  ويتعاون الشريك المنفذ بشكل كامل وفي وقت مناسب في أية أعمال تفتيش مفاجئ أو زيارات متعلقة بالبرنامج، وهذا يشمل التزام الشريك المنفذ بتوافرعامليه وأية وثائق وسجلات ذات صلة لهذه الأغراض في وقت معقول وبناء على شروط معقولة وأن يمنح اليونيسف حق الدخول إلى مقاره و/أو مواقع تنفيذ البرنامج وذلك في وقت معقول وبناء على شروط معقولة.  ويطلب الشريك المنفذ من وكلائه ومنهم على سبيل المثال لا الحصر محاموه أو محاسبوه أو غيرهم من المستشارين والمقاولين من الباطن الذين يستعين بهم أن يتعاونوا بالشكل المعقول في أية أعمال تفتيش مفاجئ تقوم بها اليونيسف بموجب هذه الاتفاقية.  ومن المعلوم أنه يجوز لليونيسف وبناء على تقديرها الحصري التعاقد للحصول على خدمات شخص طبيعي أو اعتباري بهدف القيام بأعمال التفتيش المفاجئ أو الزيارات المتعلقة بالبرنامج، أو أنه يجوز لليونيسف أداء هذه الأعمال أو الزيارات من خلال موظفيها وعامليها ووكلائها.
                 </div>
-                <div>14.3 &nbsp;&nbsp;&nbsp;&nbsp;Investigation:</div>
+                <div class="keep-with-next">14.3 &nbsp;&nbsp;&nbsp;&nbsp;التحقيق:</div>
                 <div style="padding-left: 25px">
                     <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
-                        <li>IP agrees that UNICEF may conduct investigations, at such times as determined
-                            solely by UNICEF, relating to any aspect of this Agreement or the award thereof, the obligations
-                            performed under the Agreement, and the operations of the IP relating to performance of this Agreement.
-                            The right of UNICEF to conduct investigations shall not lapse upon expiration or prior termination of
-                            this Agreement. IP shall provide its full and timely cooperation with any such investigations.
-                            Such cooperation shall include, but shall not be limited to, IP’s obligation to make available its
-                            personnel and any relevant documentation and records at reasonable times and on reasonable conditions
-                            and to grant to UNICEF access to the IP’s premises and/or sites of programme implementation at
-                            reasonable times and on reasonable conditions. IP shall require its agents, including, but not
-                            limited to, IP’s attorneys, accountants or other advisers, and its subcontractors to reasonably
-                            cooperate with any investigations carried out by UNICEF hereunder.  It is understood that UNICEF may,
-                            at its sole discretion, contract for investigation services of an individual or corporate person,
-                            or UNICEF may conduct investigations with its own staff, employees and agents.
+                        <li>
+                            يقر الشريك المنفذ بأنه يجوز لليونيسف إجراء تحقيقات في الأوقات التي تحددها وفق تقديرها الحصري فيما يتعلق بأي جانب من جوانب هذه الاتفاقية أو بمنحها، والالتزامات المضطلع بها بموجبها، وعمليات الشريك المنفذ فيما يتعلق بأداء هذه الاتفاقية.  ولا يسقط حق اليونيسف في إجراء التحقيقات عند انتهاء هذه الاتفاقية أو إنهائها المبكر. ويُقدِم الشريك المنفذ تعاونه الكامل وفي الوقت المناسب في أي من هذه التحقيقات.  ويشمل هذا التعاون على سبيل المثال لا الحصر: التزام الشريك المنفذ بتوافر عامليه وأية وثائق وسجلات ذات صلة في مواعيد معقولة وبناء على شروط معقولة وأن يتيح لليونيسف الدخول إلى مقاره و/أو مواقع تنفيذ البرنامج في مواعيد معقولة وبناء على شروط معقولة. ويطلب الشريك المنفذ من وكلائه، ومنهم على سبيل المثال لا الحصر محاموه أو محاسبوه أو غيرهم من المستشارين والمقاولين من الباطن الذين يستعين بهم، أن يتعاونوا بالشكل المعقول في أية تحقيقات تقوم بها اليونيسف بموجب هذه الاتفاقية.  ومن المعلوم أنه يجوز لليونيسف ووفق تقديرها الحصري التعاقد على خدمات التحقيق مع أي شخص طبيعي أو اعتباري أو أنه يجوز لليونيسف إجراء التحقيقات من خلال موظفيها وعامليها ووكلائها.
                         </li>
-                        <li>IP agrees to bring allegations of corrupt, fraudulent, collusive, coercive or
-                            obstructive practices arising in relation to this Agreement, of which IP has been informed or
-                            has otherwise become aware, promptly to the attention of the Director, Office of Internal Audit
-                            and Investigation, UNICEF.  For purposes of this Agreement, the following definitions shall apply:
+                        <li>
+                            يقر الشريك المنفذ بلفت انتباه المدير ومكتب التدقيق والتحقيق الداخلي باليونيسف وعلى الفور إلى أية ادعاءات بممارسة الفساد أو الاحتيال أو التواطؤ أو الإكراه أو التعطيل الناشئة فيما يتعلق بهذه الاتفاقية مما أُخبِر به الشريك المنفذ أو علِم به.  ولأغراض هذه الاتفاقية، تُستخدم التعريفات التالية:
                         </li>
                         <div style="padding-left: 30px">
-                            (i) &nbsp;&nbsp;&nbsp;&nbsp;“<u>corrupt practice</u>” &nbsp;means the offering, giving, receiving, or soliciting,
-                            directly or indirectly, of anything of value to influence improperly the actions of a public official;
+                            (i) &nbsp;&nbsp;&nbsp;&nbsp;“<u>ممارسة الفساد</u>” &nbsp;
+                             تعني عرض أو إعطاء أو استلام أو استجداء سواء بشكل مباشر أو غير مباشر أي شيء ذي قيمة للتأثير بشكل غير لائق على تصرفات مسؤول عام.
         {#                </div>#}
         {#                <div style="padding-left: 30px">#}
                             <br />
-                            (ii) &nbsp;&nbsp;&nbsp;&nbsp;“<u>fraudulent practice</u>” &nbsp;means any act or omission, including misrepresentation, that
-                            knowingly or recklessly misleads, or attempts to mislead, a party to obtain a financial or other
-                            benefit, or to avoid an obligation;
+                            (ii) &nbsp;&nbsp;&nbsp;&nbsp;“<u>ممارسة الاحتيال</u>” &nbsp;
+                         تعني أي فعل أو إغفال، بما في ذلك التحريف الذي يضلل، أو يُحاول بتعمد أو بإهمال، تضليل أي طرف للحصول على ميزة مالية أو غيرها من المزايا أو لتجنب الوفاء بأي التزام.
         {#                </div>#}
                             <br />
         {#                <div style="padding-left: 30px">#}
-                            (iii) &nbsp;&nbsp;&nbsp;&nbsp;“<u>collusive practice</u>” &nbsp;means an arrangement between two or more parties designed to
-                            achieve an improper purpose, including influencing improperly the actions of another party;
+                            (iii) &nbsp;&nbsp;&nbsp;&nbsp;“<u>ممارسة التواطؤ</u>” &nbsp;
+                        تعني أي ترتيب بين طرفين أو أكثر يهدف إلى تحقيق غرض غير لائق، بما في ذلك التأثير بشكل غير لائق على تصرفات طرف آخر.
         {#                </div>#}
                             <br />
         {#                <div style="padding-left: 30px">#}
-                            (iv) &nbsp;&nbsp;&nbsp;&nbsp;“<u>coercive practice</u>” &nbsp;means impairing or harming, or threatening to impair or harm,
-                            directly or indirectly, any party or the property of the party to influence improperly the actions
-                            of a party;
+                            (iv) &nbsp;&nbsp;&nbsp;&nbsp;“<u>ممارسة الإكراه</u>” &nbsp;
+                         تعني الإعاقة أو الإضرار أو التهديد بإلحاق الإعاقة أو الضرر سواء بشكل مباشر أو غير مباشر بأي طرف أو ممتلكاته، بهدف التأثير بشكل غير لائق على تصرفات أي طرف.
         {#                </div>#}
                             <br />
         {#                <div style="padding-left: 30px">#}
-                            (v) &nbsp;&nbsp;&nbsp;&nbsp;“<u>obstructive practice</u>” &nbsp;means acts intended to materially impede the exercise of UNICEF’s
-                            contractual rights of audit, investigation and access to information, including destruction,
-                            falsification, alteration or concealment of evidence material to a UNICEF investigation into
-                            allegations of fraud and corruption.
+                            (v) &nbsp;&nbsp;&nbsp;&nbsp;“<u>ممارسة التعطيل</u>” &nbsp;
+                        تعني الفعل الذي يُقصد به اعتراض مادي لممارسة الحقوق التعاقدية لليونيسف في التدقيق والتحقيق والوصول إلى المعلومات، بما في ذلك إتلاف أو تزوير أو تحريف أو طمس الأدلة المهمة لأي تحقيق تجريه اليونيسف في ادعاءات بالاحتيال والفساد.
                         </div>
                     </ol>
                 </div>
-                <div>14.4&nbsp;&nbsp;&nbsp;&nbsp;IP consents to the public disclosure by UNICEF of the audit reports referred to in article 14.1;
-                    the spot check and programmatic visit reports referred to in article 14.2; and the investigation
-                    reports referred to in article 14.3.
+                <div>14.4&nbsp;&nbsp;&nbsp;&nbsp;
+                    يوافق الشريك المنفذ على أن تنشر اليونيسف تقارير التدقيق المشار إليها في المادة 14-1 وتقارير التفتيش المفاجئ والزيارات المتعلقة بالبرنامج المشار إليها في المادة 14-2 وتقارير التحقيق المشار إليها في المادة 14-3.
                 </div>
-                <li><b>ASSESSMENTS:</b> IP agrees that UNICEF may from time to time conduct assessments of IP, including
-                    IP’s capacity and internal control framework (“assessment”).  UNICEF may conduct such assessments
-                    subject to such standards, scope, frequency and timing as decided by UNICEF with reasonable advance
-                    notice provided to the IP.  IP shall provide its full and timely cooperation with any assessments.
-                    Such cooperation shall include, but shall not be limited to, IP’s obligation to make available its
-                    personnel and any relevant documentation and records at reasonable times and on reasonable conditions
-                    and to grant to UNICEF access to IP’s premises at reasonable times and on reasonable conditions.
-                    IP shall require its agents, including, but not limited to, IP’s attorneys, accountants or other
-                    advisers, and its subcontractors to reasonably cooperate with any assessments carried out by UNICEF
-                    hereunder.  It is understood that UNICEF may, at its sole discretion, contract for services of an
-                    individual or corporate person to conduct any assessment, or UNICEF may conduct the assessment with
-                    its own staff, employees and agents.  IP consent to the public disclosure by UNICEF of the assessments
-                    referred to in this article 15.
+                <li><b>التقييمات: </b>
+                     يقر الشريك المنفذ بأنه يجوز لليونيسف من آن لآخر إجراء تقييمات له، ومنها تقييم مدى قدرته وإطار عمل الرقابة الداخلية لديه (يشار إلى هذا بـ “التقييم”).  ويجوز لليونيسف إجراء هذه التقييمات بحسب ما تحدده من معايير ونطاق وتكرار وتوقيت بعد إرسال إخطار مسبق للشريك المنفذ.  ويُقدِم الشريك المنفذ تعاونه الكامل وفي الوقت المناسب في أية أعمال تقييم.  ويشمل هذا التعاون على سبيل المثال لا الحصر: التزام الشريك المنفذ بتوافر عامليه وأية وثائق وسجلات ذات صلة في مواعيد معقولة وبناء على شروط معقولة وأن يتيح لليونيسف الدخول إلى مقاره في مواعيد معقولة وبناء على شروط معقولة. ويطلب الشريك المنفذ من وكلائه، ومنهم على سبيل المثال لا الحصر محاموه أو محاسبوه أو غيرهم من المستشارين والمقاولين من الباطن الذين يستعين بهم، أن يتعاونوا بالشكل المعقول في أية أعمال تقييم تقوم بها اليونيسف بموجب هذه الاتفاقية.  ومن المعلوم أنه يجوز لليونيسف ووفق تقديرها الحصري التعاقد على خدمات التقييم مع أي شخص طبيعي أو اعتباري أو أنه يجوز لليونيسف أداء التقييم من خلال موظفيها وعامليها ووكلائها.  ويوافق الشريك المنفذ على نشر اليونيسف للتقييمات المشار إليها في هذه المادة
                 </li>
-                <li><b>REFUNDS/OFFSETS:</b> UNICEF shall be entitled to a refund from IP or to make an offset against any
-                    amounts payable to IP: for any amounts paid by UNICEF or used by IP other than in accordance with
-                    the terms and conditions of this Agreement, including any amounts shown by audits, spot checks or
-                    investigations to have been so paid or used; for any amounts paid by UNICEF or used by IP as a result
-                    of IP or any of its employees or personnel having engaged in any corrupt, fraudulent, collusive,
-                    coercive or obstructive practice (as such terms are defined in clause 13.3 b.); for any unspent
-                    amounts; for any amounts transferred by UNICEF to IP but not included or properly reflected in any
-                    financial report (using the FACE form) or supported by appropriate documentation and records; for
-                    any amounts paid by UNICEF in relation to an Ineligible Expenditure; or for any amounts otherwise
-                    subject to a refund in accordance with the terms of this Agreement.  IP will make payment of such
-                    refund within promptly upon receiving from UNICEF a written request for such refund.
+                <li><b>الاسترداد/الاستقطاع:</b>
+                     يحق لليونيسف استرداد أية مبالغ مستحقة للشريك المنفذ أو الاستقطاع منها، وذلك عن أية مبالغ دفعتها اليونيسف أو استخدمها الشريك المنفذ بغير ما يتوافق مع أحكام وشروط هذه الاتفاقية، بما فيها أية مبالغ يظهر من أعمال التدقيق أو التفتيش المفاجئ أو التحقيقات أنه تم سدادها أو استخدامها كما ذكر، وكذلك عن أية مبالغ دفعتها اليونيسف أو استخدمها الشريك المنفذ نتيجة اشتراك هذا الشريك أو أي من موظفيه أو عامليه في أي ممارسة فساد أو احتيال أو تواطؤ أو إكراه أو تعطيل (مثل الشروط المبينة في البند 13-3ب)، وعن أية مبالغ لم يتم صرفها، وأية مبالغ حولتها اليونيسف للشريك المنفذ ولكن لم تُدرج أو تُسجَل بالشكل المناسب في أي تقرير مالي (باستخدام استمارة الإذن بالصرف وشهادة الإنفاق) أو لم تدعمها الوثائق أو السجلات المناسبة، وكذلك عن أية مبالغ دفعتها اليونيسف فيما يتعلق بنفقات غير مؤهلة، أو أية مبالغ بخلاف ذلك تكون خاضعة للاسترداد طبقاً لشروط هذه الاتفاقية.  ويقوم الشريك المنفذ بهذا بسداد مبالغ الاسترداد فور تلقيه طلباً مكتوباً من اليونيسف بشأن هذا الاسترداد.
                 </li>
-                <li><b>PRIVILEGES AND IMMUNITIES:</b> Nothing in or relating to this Agreement shall be deemed a waiver,
-                    express or implied, of any of the privileges and immunities of the United Nations, including UNICEF.
+                <li><b>الامتيازات والحصانات: </b>
+                     ليس في هذه الاتفاقية أو ما يتعلق بها ما يعتبر تنازلاً، صراحة أو ضمناً، عن أي من امتيازات وحصانات الأمم المتحدة، ومنها امتيازات وحصانات اليونيسف.
                 </li>
-                <li><b>OBSERVANCE OF THE LAW:</b> IP shall comply with all laws, ordinances, rules, and regulations
-                    bearing upon the performance of its obligations under the terms of this Agreement.
+                <li><b>احترام القانون:</b>
+ يلتزم الشريك المنفذ بكافة القوانين والمراسيم والقواعد واللوائح المنطبقة على أداء التزاماته بموجب أحكام هذه الاتفاقية.
                 </li>
-                <li><b>SEXUAL EXPLOITATION AND PROTECTION OF CHILDREN:</b> IP shall ensure that all its employees and
-                    personnel comply with the provisions of ST/SGB/2003/13 entitled “Special Measures for Protection
-                    from Sexual Exploitation and Sexual Abuse”, which is available at
-                    http://www.un.org/Docs/journal/asp/ws.asp?m=ST/SGB/2003/13. IP shall further ensure that none of
-                    its employees and personnel exposes any intended beneficiary, including children, to any form of
-                    discrimination, abuse or exploitation and that each of the IP’s employees and personnel complies
-                    with the provisions of other UNICEF policies relating to protection of children as advised by
-                    UNICEF from time to time.
+                <li><b>الاستغلال الجنسي وحماية الأطفال:</b>
+                     يضمن الشريك المنفذ التزام جميع موظفيه وعامليه بأحكام التدابير ST/SGB/2003/13 المعنونة “التدابير الخاصة للحماية من الاستغلال الجنسي والاعتداء الجنسي” وهي متاحة على http://www.un.org/Docs/journal/asp/ws.asp?m=ST/SGB/2003/13 ، كما يضمن الشريك المنفذ ألا يقوم أي من موظفيه أو عامليه بتعريض أيَ مستفيدين مقصودين، ومنهم الأطفال، لأي صورة من صور التمييز أو الاعتداء أو الإيذاء أو الاستغلال وأن يلتزم جميع موظفيه وعامليه بأحكام سياسات اليونيسف فيما يتعلق بحماية الأطفال على النحو الذي تحدده اليونيسف من آن لآخر.
                 </li>
-                <li><b>AUTHORITY TO MODIFY:</b> No modification or change in this Agreement shall be valid and
-                    enforceable against UNICEF unless provided by a written amendment to this Agreement signed
-                    by a duly authorized officer of UNICEF and an Authorized Officer of IP.
+                <li><b>سلطة التعديل:</b>
+                    لا يصح أو يسري أي تعديل أو تغيير في هذه الاتفاقية على اليونيسف ما لم يتم عن طريق تعديل كتابي على هذه الاتفاقية ويكون موقعاً من مسؤول مفوض حسب الأصول من جانب اليونيسف ومسؤول مفوض من جانب الشريك المنفذ.
                 </li>
-                <li><b>SUPPORT TO TERRORISM:</b> IP agrees to apply the highest reasonable standard of diligence to
-                    ensure that cash, supplies and equipment under its control, including but not limited to cash,
-                    supplies and equipment transferred by UNICEF to IP: (a) are not used to provide support to
-                    individuals or entities associated with terrorism; (b) are not transferred by the IP to any
-                    individual or entity on the UN Security Council Committee Consolidated List available at
-                    https://www.un.org/sc/suborg/en/sanctions/un-sc-consolidated-list; and (c) are not used, in the
-                    case of money, for the purpose of any payment to persons or entities, or for any import of goods,
-                    if such payment or import is prohibited by a decision of the United Nations Security Council taken
-                    under Chapter VII of the Charter of the United Nations.
+                <li><b>دعم الإرهاب:</b>
+                     يقر الشريك المنفذ بتطبيق أعلى معايير العناية المعقولة لضمان أن النقود والإمدادات والمعدات الكائنة تحت سيطرته، بما في ذلك على سبيل المثال لا الحصر النقود والإمدادات والمعدات المحولة له من اليونيسف: (أ) لا تُستخدم لتقديم الدعم لأشخاص أو لجهات مرتبطة بالإرهاب، (ب) ولا يحولها الشريك المنفذ لأي شخص أو جهة مُدرجة على القائمة الموحدة الصادرة عن لجنة مجلس الأمن التابع للأمم المتحدة وهي متاحة على الموقع https://www.un.org/sc/suborg/en/sanctions/un-sc-consolidated-list   (ج) وأنها لا تُستخدم – وهذا بالنسبة للأموال – لأغراض أي مدفوعات لأشخاص أو جهات، أو لأي عملية استيراد لسلع إذا كانت تلك المدفوعات أو السلع محظورة بقرار من مجلس الأمن التابع للأمم المتحدة صدر بموجب الفصل السابع من ميثاق الأمم المتحدة.
                 </li>
 
             </ol>
