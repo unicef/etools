@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils import six
 from django.utils.encoding import force_text
 
 from rest_framework import exceptions
@@ -53,16 +54,25 @@ class FSMTransitionActionMetadataMixin(object):
         if not instance:
             return actions
 
-        model_transitions = []
+        actions["allowed_FSM_transitions"] = []
         for action in self._collect_actions(instance):
             meta = action._django_fsm
             im_self = getattr(action, 'im_self', getattr(action, '__self__'))
             current_state = meta.field.get_state(im_self)
 
             if meta.has_transition(current_state) and meta.has_transition_perm(im_self, current_state, request.user):
-                model_transitions.append(action)
+                field_name = meta.field if isinstance(meta.field, six.string_types) else meta.field.name
+                transition = meta.get_transition(getattr(instance, field_name))
 
-        actions["allowed_FSM_transitions"] = map(lambda t: t.__name__, model_transitions)
+                name = transition.custom.get('name', transition.name)
+                if callable(name):
+                    name = name(instance)
+
+                actions["allowed_FSM_transitions"].append({
+                    'code': action.__name__,
+                    'display_name': name
+                })
+
         return actions
 
 
