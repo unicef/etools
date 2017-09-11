@@ -40,7 +40,6 @@ RUN pip install --upgrade \
     setuptools \
     pip \
     wheel \
-    pdfkit \
     django-wkhtmltopdf
 
 # http://gis.stackexchange.com/a/74060
