@@ -8,8 +8,7 @@ from partners.serializers.interventions_v2 import InterventionCreateUpdateSerial
 from reports.models import Result
 from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActionPoint, \
     TPMPartnerStaffMember
-from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, \
-    TPMActivityPDSerializer
+from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
 from utils.common.serializers.fields import SeparatedReadWriteField
@@ -102,7 +101,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         required=True,
     )
 
-    pd_files = TPMActivityPDSerializer(many=True, required=False)
+    pd_files = TPMAttachmentsSerializer(many=True, required=False)
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
@@ -154,23 +153,6 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
                     'cp_output': self.fields['cp_output'].write_field.error_messages['does_not_exist'].format(
                         pk_value=validated_data['cp_output'].id
                     )
-                })
-
-        if 'locations' in validated_data:
-            locations = set(map(lambda x: x.id, validated_data['locations']))
-            diff = locations - set(Location.objects.filter(
-                id__in=locations,
-                intervention_sector_locations__intervention_id=partnership.id
-            ).values_list('id', flat=True))
-
-            if diff:
-                raise ValidationError({
-                    'locations': [
-                        self.fields['locations'].write_field.child_relation.error_messages['does_not_exist'].format(
-                            pk_value=pk
-                        )
-                        for pk in diff
-                    ]
                 })
 
         return validated_data
