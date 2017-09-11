@@ -97,20 +97,6 @@ class PRPResultSerializer(serializers.ModelSerializer):
         )
 
 
-class PRPResultWrapperSerializer(serializers.Serializer):
-    """
-    The sole purpose of this class is just to format the results like
-    { "pd_output": { [actual data ] } }
-    """
-    pd_output = PRPResultSerializer(many=False, read_only=True, source='*')
-
-    class Meta:
-        model = InterventionResultLink
-        fields = (
-            'pd_output',
-        )
-
-
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')  # todo: do these need to be lowercased?
@@ -130,8 +116,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     funds_received = serializers.DecimalField(source='total_budget', read_only=True,
                                               max_digits=20, decimal_places=2)
     funds_received_currency = serializers.CharField(source='default_budget_currency', read_only=True)
-    expected_results = PRPResultWrapperSerializer(many=True, read_only=True, required=False,
-                                                  source='result_links')
+    expected_results = PRPResultSerializer(many=True, read_only=True, required=False, source='result_links')
 
     class Meta:
         model = Intervention
