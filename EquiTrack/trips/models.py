@@ -404,7 +404,7 @@ class Trip(AdminURLMixin, models.Model):
                 instance.get_admin_url()),
             'purpose_of_travel': instance.purpose_of_travel,
             'environment': get_environment(),
-            'action_points': ('\n'.join([action.__unicode__() for action in instance.actionpoint_set.all()]))
+            'action_points': ('\n'.join([unicode(action) for action in instance.actionpoint_set.all()]))
         }
 
         if instance.status == Trip.SUBMITTED:
