@@ -67,11 +67,6 @@ WORKDIR /code/
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.local
 
-#the env variables above are needed for the VISION api
-ENV VISION_URL https://devapis.unicef.org/BIService/BIWebService.svc/
-ENV VISION_USER ntrncic@unicef.org
-ENV VISION_PASSWORD zvezda14!
-
 #overwrite the existing wkhtmltopdf binary with a pre-compiled one with QT support.
 #the precompiled binary was downloaded from the official github repo
 #this is a debian specific issue with wkhtmltopdf - the official library does not have QT support
