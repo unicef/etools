@@ -5,14 +5,6 @@ from partners.filters import PartnerScopeFilter
 from partners.models import (
     Intervention,
 )
-from partners.serializers.interventions_v2 import (
-    InterventionBudgetCUSerializer,
-    PlannedVisitsCUSerializer,
-    InterventionAttachmentSerializer,
-    InterventionAmendmentCUSerializer,
-    InterventionSectorLocationCUSerializer,
-    InterventionResultCUSerializer,
-)
 from partners.serializers.prp_v1 import PRPInterventionListSerializer
 from partners.permissions import PartneshipManagerPermission
 
@@ -25,15 +17,6 @@ class PRPInterventionListAPIView(ListAPIView):
     serializer_class = PRPInterventionListSerializer
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
-
-    SERIALIZER_MAP = {
-        'planned_budget': InterventionBudgetCUSerializer,
-        'planned_visits': PlannedVisitsCUSerializer,
-        'attachments': InterventionAttachmentSerializer,
-        'amendments': InterventionAmendmentCUSerializer,
-        'sector_locations': InterventionSectorLocationCUSerializer,
-        'result_links': InterventionResultCUSerializer
-    }
 
     def get_queryset(self, format=None):
         q = Intervention.objects.detail_qs().all()
