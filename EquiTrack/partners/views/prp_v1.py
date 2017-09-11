@@ -14,8 +14,7 @@ from partners.serializers.interventions_v2 import (
     InterventionSectorLocationCUSerializer,
     InterventionResultCUSerializer,
 )
-from partners.serializers.prp_v1 import PRPInterventionListSerializer, \
-    PDDetailsWrapperRenderer
+from partners.serializers.prp_v1 import PRPInterventionListSerializer
 from partners.permissions import PartneshipManagerPermission
 
 
@@ -27,7 +26,6 @@ class PRPInterventionListAPIView(ValidatorViewMixin, ListAPIView):
     serializer_class = PRPInterventionListSerializer
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (PDDetailsWrapperRenderer,)
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,

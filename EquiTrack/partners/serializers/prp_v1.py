@@ -2,23 +2,12 @@ from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
-from rest_framework.renderers import JSONRenderer
 
 from partners.models import (
     Intervention,
     PartnerStaffMember,
     PartnerOrganization, InterventionResultLink)
 from reports.models import Result, AppliedIndicator
-
-
-class PDDetailsWrapperRenderer(JSONRenderer):
-    """
-    The sole purpose of this class is just to format the root api inside a wrapper like this:
-    { "pd-details": [actual data ] }
-    """
-    def render(self, data, accepted_media_type=None, renderer_context=None):
-        data = {'pd-details': data}
-        return super(PDDetailsWrapperRenderer, self).render(data, accepted_media_type, renderer_context)
 
 
 class PartnerSerializer(serializers.ModelSerializer):
