@@ -69,7 +69,6 @@ class ProfileAdmin(admin.ModelAdmin):
         'post_title',
         'vendor_number',
         'section_code'
-
     ]
     list_display = (
         'username',
@@ -99,9 +98,6 @@ class ProfileAdmin(admin.ModelAdmin):
     readonly_fields = (
         u'user',
         u'country',
-    )
-    suit_form_includes = (
-        ('users/supervisor.html', ),
     )
 
     def has_add_permission(self, request):

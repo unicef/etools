@@ -153,7 +153,7 @@ class WorkspaceFileType(models.Model):
     Represents a file type
     """
 
-    name = models.CharField(max_length=64L, unique=True)
+    name = models.CharField(max_length=64, unique=True)
 
     def __unicode__(self):
         return self.name
@@ -261,7 +261,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         blank=True
     )
     description = models.CharField(
-        max_length=256L,
+        max_length=256,
         blank=True
     )
     shared_with = ArrayField(models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES), blank=True, null=True)
@@ -280,19 +280,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=50
     )
     street_address = models.CharField(
-        max_length=500L,
+        max_length=500,
         blank=True, null=True
     )
     city = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True, null=True
     )
     postal_code = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True, null=True
     )
     country = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True, null=True
     )
 
@@ -309,7 +309,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         blank=True, null=True
     )
     phone_number = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True, null=True
     )
     vendor_number = models.CharField(
@@ -639,11 +639,11 @@ class PartnerStaffMember(models.Model):
 
     partner = models.ForeignKey(
         PartnerOrganization, related_name='staff_members')
-    title = models.CharField(max_length=64L, null=True, blank=True)
-    first_name = models.CharField(max_length=64L)
-    last_name = models.CharField(max_length=64L)
-    email = models.CharField(max_length=128L, unique=True, blank=False)
-    phone = models.CharField(max_length=64L, blank=True, null=True)
+    title = models.CharField(max_length=64, null=True, blank=True)
+    first_name = models.CharField(max_length=64)
+    last_name = models.CharField(max_length=64)
+    email = models.CharField(max_length=128, unique=True, blank=False)
+    phone = models.CharField(max_length=64, blank=True, null=True)
     active = models.BooleanField(
         default=True
     )
@@ -805,7 +805,7 @@ class BankDetails(models.Model):
     partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details', null=True, blank=True)
     bank_name = models.CharField(max_length=255, null=True, blank=True)
     bank_address = models.CharField(
-        max_length=256L,
+        max_length=256,
         blank=True
     )
     account_title = models.CharField(max_length=255, null=True, blank=True)
@@ -882,7 +882,7 @@ class Agreement(TimeStampedModel):
         choices=AGREEMENT_TYPES
     )
     agreement_number = models.CharField(
-        max_length=45L,
+        max_length=45,
         blank=True,
         verbose_name='Reference Number',
         # TODO: write a script to insure this before merging.
@@ -960,19 +960,18 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        number = '{code}/{type}{year}{id}'.format(
+        return '{code}/{type}{year}{id}'.format(
             code=connection.tenant.country_short_code or '',
             type=self.agreement_type,
             year=self.created.year,
             id=self.id,
         )
-        return'{}'.format(number)
 
     @property
     def base_number(self):
         return self.agreement_number.split('-')[0]
 
-    def update_reference_number(self, amendment_number=None, **kwargs):
+    def update_reference_number(self, amendment_number=None):
 
         if amendment_number:
             self.agreement_number = '{}-{}'.format(self.base_number, amendment_number)
@@ -1070,14 +1069,12 @@ class AgreementAmendment(TimeStampedModel):
     Represents an amendment to an agreement
     '''
     IP_NAME = u'Change IP name'
-    CP_EXTENSION = u'CP extension'
     AUTHORIZED_OFFICER = u'Change authorized officer'
     BANKING_INFO = u'Change banking info'
     CLAUSE = u'Change in clause'
 
     AMENDMENT_TYPES = Choices(
         (IP_NAME, 'Change in Legal Name of Implementing Partner'),
-        (CP_EXTENSION, 'Extension of Country Programme Cycle'),
         (AUTHORIZED_OFFICER, 'Change Authorized Officer(s)'),
         (BANKING_INFO, 'Banking Information'),
         (CLAUSE, 'Change in clause'),
@@ -1797,7 +1794,7 @@ class GovernmentIntervention(models.Model):
         related_query_name='government_interventions'
     )
     number = models.CharField(
-        max_length=45L,
+        max_length=45,
         blank=True,
         verbose_name='Reference Number',
         unique=True
@@ -2158,11 +2155,11 @@ class PCA(AdminURLMixin, models.Model):
         verbose_name='Document type'
     )
     number = models.CharField(
-        max_length=45L,
+        max_length=45,
         blank=True, null=True,
         verbose_name='Reference Number'
     )
-    title = models.CharField(max_length=256L)
+    title = models.CharField(max_length=256)
     project_type = models.CharField(
         max_length=20,
         blank=True, null=True,
@@ -2587,7 +2584,7 @@ class AmendmentLog(TimeStampedModel):
     amended_at = models.DateField(null=True, verbose_name='Signed At')
     amendment_number = models.IntegerField(default=0)
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True,
         choices=PCA.PCA_STATUS,
     )
@@ -2863,7 +2860,7 @@ class AgreementAmendmentLog(TimeStampedModel):
         null=True,
     )
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True,
         choices=PCA.PCA_STATUS,
     )
