@@ -32,10 +32,10 @@ class TripResource(BaseExportResource):
         return row
 
     def fill_trip_pcas(self, row, trip):
-        pcas = set(lp.intervention.__unicode__() for lp in trip.linkedpartner_set.all() if lp.intervention)
+        pcas = set(unicode(lp.intervention) for lp in trip.linkedpartner_set.all() if lp.intervention)
 
         pcas.union(
-            set(lgp.intervention.__unicode__() for lgp in trip.linkedgovernmentpartner_set.all() if lgp.intervention)
+            set(unicode(lgp.intervention) for lgp in trip.linkedgovernmentpartner_set.all() if lgp.intervention)
         )
         self.insert_column(
             row,
@@ -100,7 +100,7 @@ class ActionPointResource(BaseExportResource):
 
     def fill_row(self, action, row):
 
-        self.insert_column(row, 'Trip', action.trip.__unicode__())
+        self.insert_column(row, 'Trip', unicode(action.trip))
         self.insert_column(row, 'Traveller', action.trip.owner)
         self.insert_column(row, 'Section', action.trip.section)
         self.insert_column(row, 'Office', action.trip.office)
