@@ -106,6 +106,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     status = FSMField(verbose_name=_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
     reject_comment = models.TextField(verbose_name=_('Request for more information'), blank=True)
+    approval_comment = models.TextField(verbose_name=_('Approval comments'), blank=True)
 
     attachments = CodedGenericRelation(Attachment, verbose_name=_('Related Documents'), code='attach', blank=True)
     report = CodedGenericRelation(Attachment, verbose_name=_('Report'), code='report', blank=True)
@@ -265,7 +266,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
                 custom={'serializer': TPMVisitApproveSerializer},
                 permission=_has_action_permission(action='approve'))
-    def approve(self, mark_as_programmatic_visit=None, notify_focal_point=True, notify_tpm_partner=True):
+    def approve(self, mark_as_programmatic_visit=None, approval_comment=None, notify_focal_point=True, notify_tpm_partner=True):
         mark_as_programmatic_visit = mark_as_programmatic_visit or []
 
         pv_activities = self.tpm_activities.filter(id__in=mark_as_programmatic_visit)  # noqa
@@ -278,6 +279,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         if notify_tpm_partner:
             # TODO: Generate report as PDF attachment.
             self._send_email(self._get_tpm_focal_points_as_email_recipients(), 'tpm/visit/approve_report_tpm')
+
+        if approval_comment:
+            self.approval_comment = approval_comment
 
     def get_object_url(self):
         return build_frontend_url('tpm', 'visits', self.id, 'details')

@@ -277,7 +277,8 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
             'tpm_activities', 'attachments', 'report', 'action_points',
-            'reject_comment', 'visit_information', 'report_reject_comments',
+            'reject_comment', 'approval_comment',
+            'visit_information', 'report_reject_comments',
         ]
         extra_kwargs = {
             'tpm_partner': {'required': True},
