@@ -148,9 +148,8 @@ def get_agreement_amd_file_path(instance, filename):
 
 def _get_currency_name_or_default(budget):
     if budget and budget.currency:
-        # todo: confirm lower is correct. example was 'usd' but db has 'USD'
-        return budget.currency.code.lower()
-    return ''
+        return budget.currency.code
+    return None
 
 
 # TODO: move this to a workspace app for common configuration options
