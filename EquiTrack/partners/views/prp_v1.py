@@ -1,7 +1,6 @@
 from rest_framework.generics import (
     ListAPIView)
 
-from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.filters import PartnerScopeFilter
 from partners.models import (
     Intervention,
@@ -18,7 +17,7 @@ from partners.serializers.prp_v1 import PRPInterventionListSerializer
 from partners.permissions import PartneshipManagerPermission
 
 
-class PRPInterventionListAPIView(ValidatorViewMixin, ListAPIView):
+class PRPInterventionListAPIView(ListAPIView):
     """
     Create new Interventions.
     Returns a list of Interventions.
