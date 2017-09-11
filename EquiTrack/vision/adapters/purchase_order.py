@@ -68,7 +68,7 @@ class POSynchronizer(VisionDataSynchronizer):
             if self.ENDPOINT is None:
                 raise VisionException(message='You must set the ENDPOINT name')
 
-            self.county = country
+            self.country = country
             self.url = '{}/{}'.format(
                 self.URL,
                 self.ENDPOINT
@@ -91,7 +91,8 @@ class POSynchronizer(VisionDataSynchronizer):
         def bad_record(record):
             if not record['VENDOR_NAME']:
                 return False
-            if not record['PURCHASING_GROUP_CODE'] or record['PURCHASING_GROUP_CODE'] != self.county.business_area_code:
+            if not record['PURCHASING_GROUP_CODE'] or \
+               record['PURCHASING_GROUP_CODE'] != self.country.business_area_code:
                 return False
             return True
 

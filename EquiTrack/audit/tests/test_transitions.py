@@ -177,7 +177,13 @@ class EngagementCheckTransitionsMetadataTestCaseMixin(object):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(sorted(response.data['actions']['allowed_FSM_transitions']), sorted(actions))
+        self.assertListEqual(
+            sorted(map(
+                lambda t: t['code'],
+                response.data['actions']['allowed_FSM_transitions']
+            )),
+            sorted(actions)
+        )
 
 
 class TestSCTransitionsMetadataTestCase(
