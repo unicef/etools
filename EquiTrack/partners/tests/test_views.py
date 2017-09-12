@@ -93,6 +93,10 @@ class TestPartnerOrganizationListView(APITenantTestCase):
             )
 
     def assertResponseFundamentals(self, response, expected_keys=None):
+        '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
+        response dict are compared to self.normal_field_names. Otherwise, they're compared to whatever is passed in
+        expected_keys.
+        '''
         if expected_keys is None:
             expected_keys = self.normal_field_names
 
@@ -264,8 +268,57 @@ class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestPartnerOrganizationMiscellaneousViews(APITenantTestCase):
-    '''Exercise the views for PartnerOrganization that aren't tested elsewhere in this file'''
+class TestPartnerOrganizationCreateView(APITenantTestCase):
+    '''Exercise the create view for PartnerOrganization'''
+    def setUp(self):
+        self.user = UserFactory(is_staff=True)
+        self.url = reverse('partners_api:partner-list')
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response. Return the id of the new object.'''
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, dict)
+        self.assertIn('id', response_json.keys())
+
+        return response_json['id']
+
+    def test_create_simple(self):
+        '''Exercise simple create'''
+        data = {
+            "name": "PO 1",
+            "partner_type": PartnerType.GOVERNMENT,
+            "vendor_number": "AAA",
+            "staff_members": [],
+        }
+        response = self.forced_auth_req('post', self.url, data=data)
+        self.assertResponseFundamentals(response)
+
+    def test_create_with_staff_members(self):
+        '''Exercise create with staff members'''
+        staff_members = [{
+            "title": "Some title",
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "email": "a@example.com",
+            "active": True,
+        }]
+        data = {
+            "name": "PO 1",
+            "partner_type": PartnerType.GOVERNMENT,
+            "vendor_number": "AAA",
+            "staff_members": staff_members,
+        }
+        response = self.forced_auth_req('post', self.url, data=data)
+        new_id = self.assertResponseFundamentals(response)
+        partner = PartnerOrganization.objects.get(pk=new_id)
+        staff_members = partner.staff_members.all()
+        self.assertEqual(len(staff_members), 1)
+        self.assertEqual(staff_members[0].email, 'a@example.com')
+
+
+class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
+    '''Exercise the retrieve, update, and delete views for PartnerOrganization'''
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory(
@@ -350,45 +403,6 @@ class TestPartnerOrganizationMiscellaneousViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["Cannot delete a completed assessment"])
-
-    def test_api_partners_create(self):
-        data = {
-            "name": "PO 1",
-            "partner_type": PartnerType.GOVERNMENT,
-            "vendor_number": "AAA",
-            "staff_members": [],
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/partners/',
-            user=self.unicef_staff,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    def test_api_partners_create_with_members(self):
-        staff_members = [{
-            "title": "Some title",
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "a@a.com",
-            "active": True,
-        }]
-        data = {
-            "name": "PO 1",
-            "partner_type": PartnerType.GOVERNMENT,
-            "vendor_number": "AAA",
-            "staff_members": staff_members,
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/partners/',
-            user=self.unicef_staff,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_api_partners_update_with_members(self):
         response = self.forced_auth_req(
