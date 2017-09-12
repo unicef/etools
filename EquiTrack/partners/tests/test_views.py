@@ -102,6 +102,11 @@ class TestPartnerOrganizationListView(APITenantTestCase):
         self.assertIn('id', response_json[0].keys())
         self.assertEqual(response_json[0]['id'], self.partner.id)
 
+        # These assertions belong in a serializer test, but they're here for now to absorb another test that wasn't
+        # doing anything else.
+        self.assertIn("vendor_number", response.data[0].keys())
+        self.assertNotIn("address", response.data[0].keys())
+
     def test_verbosity_minimal(self):
         '''Exercise behavior when verbosity=minimal'''
         response = self.forced_auth_req('get', self.url, data={"verbosity": "minimal"})
@@ -239,20 +244,6 @@ class TestPartnerOrganizationListView(APITenantTestCase):
         '''Ensure that garbage values are handled properly'''
         response = self.forced_auth_req('get', self.url, data={"values": "banana"})
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    # def test_api_partners_list_restricted(self):
-    #     # FIXME what to do with this test which was copied from TestPartnerOrganizationMiscellaneousViews?
-    #     # It's basically a weak serializer test. Would be better to have a proper test of the serializer that
-    #     # asserts exactly which fields are returned. Still stuck on the interesting problem of how to get run a
-    #     # view and assert that a certain serializer was used. Perhaps calling get_serializer() with a fake request
-    #     # is the answer?
-
-    #     response = self.forced_auth_req('get', '/api/v2/partners/')
-
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(response.data), 2)
-    #     self.assertIn("vendor_number", response.data[0].keys())
-    #     self.assertNotIn("address", response.data[0].keys())
 
 
 class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
