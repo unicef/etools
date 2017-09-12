@@ -44,7 +44,7 @@ from partners.serializers.interventions_v2 import (
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
-from partners.permissions import PartneshipManagerRepPermission
+from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
@@ -53,7 +53,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     Returns a list of Interventions.
     """
     serializer_class = InterventionListSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, InterventionCvsRenderer)
 
@@ -209,7 +209,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     """
     queryset = Intervention.objects.detail_qs().all()
     serializer_class = InterventionDetailSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (PartneshipManagerPermission,)
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
