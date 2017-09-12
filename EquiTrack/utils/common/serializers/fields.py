@@ -61,6 +61,7 @@ class SeparatedReadWriteField(Field):
         # Determine any extra field arguments and hidden fields that
         # should be included
         extra_kwargs = self.parent.get_extra_kwargs()
+        extra_kwargs.update(self._kwargs)
         extra_kwargs, hidden_fields = self.parent.get_uniqueness_extra_kwargs(
             [self.field_name], [self], extra_kwargs
         )
