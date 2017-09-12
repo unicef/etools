@@ -22,7 +22,7 @@ def check_db():
     for db in settings.DATABASES:
         db_conn = connections[db]
         try:
-            c = db_conn.cursor()
+            db_conn.cursor()
             c_status = 'OK'
         except OperationalError:
             c_status = 'FAIL'
