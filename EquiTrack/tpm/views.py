@@ -18,8 +18,8 @@ from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMP
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from .permissions import IsPMEorReadonlyPermission
-from .export.renderers import TPMVisitCSVRenderer
-from .export.serializers import TPMVisitExportSerializer
+from .export.renderers import TPMActivityCSVRenderer, TPMLocationCSVRenderer
+from .export.serializers import TPMActivityExportSerializer, TPMLocationExportSerializer
 
 
 class BaseTPMViewSet(
@@ -159,14 +159,28 @@ class TPMVisitViewSet(
             return TPMVisitDraftSerializer
         return super(TPMVisitViewSet, self).get_serializer_class()
 
-    @list_route(methods=['get'], renderer_classes=(TPMVisitCSVRenderer,))
-    def export(self, request, *args, **kwargs):
+    @list_route(methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
+    def activities_export(self, request, *args, **kwargs):
         tpm_activities = TPMActivity.objects.filter(
             tpm_visit__in=self.get_queryset(),
-        )
-        serializer = TPMVisitExportSerializer(tpm_activities, many=True)
+        ).prefetch_related(
+            'tpm_visit', 'section', 'locations', 'cp_output'
+        ).order_by('tpm_visit', 'id')
+        serializer = TPMActivityExportSerializer(tpm_activities, many=True)
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now())
+            'Content-Disposition': 'attachment;filename=tpm_attachments_{}.csv'.format(timezone.now())
+        })
+
+    @list_route(methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
+    def locations_export(self, request, *args, **kwargs):
+        tpm_locations = TPMActivity.locations.through.objects.filter(
+            tpmactivity__tpm_visit__in=self.get_queryset(),
+        ).prefetch_related(
+            'tpmactivity', 'location', 'tpmactivity__tpm_visit', 'tpmactivity__section', 'tpmactivity__cp_output'
+        ).order_by('tpmactivity__tpm_visit', 'tpmactivity', 'id')
+        serializer = TPMLocationExportSerializer(tpm_locations, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now())
         })
 
     @detail_route(methods=['get'])

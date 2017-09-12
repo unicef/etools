@@ -17,14 +17,27 @@ class CommaSeparatedExportField(serializers.Field):
         return ','.join(map(lambda x: getattr(x, self.export_attr), value.all()))
 
 
-class TPMVisitExportSerializer(serializers.Serializer):
+class TPMActivityExportSerializer(serializers.Serializer):
     ref = serializers.CharField(source='tpm_visit.reference_number')
     activity = serializers.SerializerMethodField()
-    sections = CommaSeparatedExportField(source='tpm_visit.sections', export_attr='name')
-    output = serializers.CharField(source='cp_output.name')
+    section = serializers.CharField(source='section.name')
+    cp_output = serializers.CharField(source='cp_output.name')
     locations = CommaSeparatedExportField(export_attr='name')
     date = serializers.DateField(format='%d/%m/%Y')
     unicef_focal_points = UsersExportField(source='tpm_visit.unicef_focal_points')
 
     def get_activity(self, obj):
         return 'Activity #{}.{}'.format(obj.tpm_visit.id, obj.id)
+
+
+class TPMLocationExportSerializer(serializers.Serializer):
+    ref = serializers.CharField(source='tpmactivity.tpm_visit.reference_number')
+    activity = serializers.SerializerMethodField()
+    section = serializers.CharField(source='tpmactivity.section.name')
+    cp_output = serializers.CharField(source='tpmactivity.cp_output.name')
+    location = serializers.CharField(source='location.name')
+    date = serializers.DateField(source='tpmactivity.date', format='%d/%m/%Y')
+    unicef_focal_points = UsersExportField(source='tpmactivity.tpm_visit.unicef_focal_points')
+
+    def get_activity(self, obj):
+        return 'Activity #{}.{}'.format(obj.tpmactivity.tpm_visit.id, obj.tpmactivity.id)
