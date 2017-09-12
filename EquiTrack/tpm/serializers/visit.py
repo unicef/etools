@@ -2,7 +2,6 @@ import itertools
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from locations.models import Location
 from partners.models import InterventionResultLink, Intervention, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from reports.models import Result
@@ -101,13 +100,14 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         required=True,
     )
 
-    pd_files = TPMAttachmentsSerializer(many=True, required=False)
+    attachments = TPMAttachmentsSerializer(many=True, required=False)
+    report_attachments = TPMReportAttachmentsSerializer(many=True, required=False)
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
             'id', 'implementing_partner', 'partnership', 'cp_output', 'section',
-            'date', 'locations', 'pd_files', 'additional_information',
+            'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
         ]
 
     def validate(self, attrs):
@@ -226,8 +226,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
 class TPMVisitSerializer(TPMVisitLightSerializer):
     tpm_activities = TPMActivitySerializer(many=True, required=False)
 
-    attachments = TPMAttachmentsSerializer(many=True, required=False)
-    report = TPMReportAttachmentsSerializer(many=True, required=False)
+    report_attachments = TPMAttachmentsSerializer(many=True, required=False)
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
@@ -258,7 +257,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
-            'tpm_activities', 'attachments', 'report', 'action_points',
+            'tpm_activities', 'report_attachments', 'action_points',
             'reject_comment', 'approval_comment',
             'visit_information', 'report_reject_comments',
         ]

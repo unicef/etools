@@ -108,8 +108,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     reject_comment = models.TextField(verbose_name=_('Request for more information'), blank=True)
     approval_comment = models.TextField(verbose_name=_('Approval comments'), blank=True)
 
-    attachments = CodedGenericRelation(Attachment, verbose_name=_('Related Documents'), code='attach', blank=True)
-    report = CodedGenericRelation(Attachment, verbose_name=_('Report'), code='report', blank=True)
+    report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Visit Report'),
+                                              code='visit_report', blank=True)
 
     visit_information = models.TextField(verbose_name=_('Visit Information'), blank=True)
 
@@ -337,7 +337,10 @@ class TPMActivity(models.Model):
 
     additional_information = models.TextField(verbose_name=_('Additional Information'), blank=True)
 
-    pd_files = CodedGenericRelation(Attachment, verbose_name=_('Programme Documents'), code='visit_pd', blank=True)
+    attachments = CodedGenericRelation(Attachment, verbose_name=_('Activity Attachments'),
+                                       code='activity_attachments', blank=True)
+    report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Activity Report'),
+                                              code='activity_report', blank=True)
 
     is_pv = models.BooleanField(default=False)
 

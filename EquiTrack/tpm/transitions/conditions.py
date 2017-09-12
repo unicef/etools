@@ -12,19 +12,16 @@ class TPMVisitAssignRequiredFieldsCheck(BaseRequiredFieldsCheck):
 
 
 class TPMVisitReportValidations(BaseTransitionCheck):
-    def get_errors(self, instance, *args, **kwargs):
-        errors = {}
-        if instance.report.all().count() <= 0:
-            errors["report"] = [_('This field is required.')]
-        return errors
-
-
-class ValidateTPMVisitActivities(BaseTransitionCheck):
     def _get_activities_errors(self, activities):
         activities_errors = []
 
-        if not activities:
-            return [_('This field is required.')]
+        for activity in activities:
+            if not activity.report_attachments.exists():
+                activities_errors.append({
+                    "id": activity.id,
+                    "report_attachments": [_('This field is required.')]
+                })
+
         return activities_errors
 
     def get_errors(self, instance, *args, **kwargs):
@@ -35,4 +32,14 @@ class ValidateTPMVisitActivities(BaseTransitionCheck):
 
         if activities_errors:
             errors['tpm_activities'] = activities_errors
+        return errors
+
+
+class ValidateTPMVisitActivities(BaseTransitionCheck):
+    def get_errors(self, instance, *args, **kwargs):
+        errors = {}
+
+        if not instance.tpm_activities.all():
+            errors['tpm_activities'] = [_('This field is required.')]
+
         return errors

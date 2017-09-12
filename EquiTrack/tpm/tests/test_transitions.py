@@ -106,7 +106,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
 
     def test_tpm_report_success(self):
         visit = TPMVisitFactory(status='tpm_accepted',
-                                report__count=1,
+                                tpm_activities__report_attachments__count=1,
                                 tpm_partner=self.tpm_partner,
                                 tpm_partner_focal_points=[self.tpm_staff])
 
@@ -242,7 +242,7 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
             opts['tpm_activities__count'] = 1
 
         if transition == 'send_report':
-            opts['report__count'] = 1
+            opts['tpm_activities__report_attachments__count'] = 1
 
         opts.update(kwargs)
         return super(TPMTransitionPermissionsTestCase, self).create_object(transition, **opts)
@@ -302,17 +302,15 @@ class PMEPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
         cls.user_role = 'PME'
 
 
-class FPPermissionsForTpmTransitionTestCase(PMEPermissionsForTPMTransitionTestCase):
+class FPPermissionsForTpmTransitionTestCase(TPMTransitionPermissionsTestCase):
+    ALLOWED_TRANSITION = []
+
     @classmethod
     def setUpTestData(cls):
         super(FPPermissionsForTpmTransitionTestCase, cls).setUpTestData()
 
         cls.user = UserFactory(unicef_user=True)
         cls.user_role = 'UNICEF Focal Point'
-
-        cls.ALLOWED_TRANSITION = cls.ALLOWED_TRANSITION[:]
-        cls.ALLOWED_TRANSITION.remove(('draft', 'cancel'))
-        cls.ALLOWED_TRANSITION.remove(('draft', 'assign'))
 
     def create_object(self, transition, **kwargs):
         opts = {
