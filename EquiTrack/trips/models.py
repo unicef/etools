@@ -80,7 +80,7 @@ class Trip(AdminURLMixin, models.Model):
     )
 
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         choices=TRIP_STATUS,
         default=PLANNED,
     )
@@ -93,7 +93,7 @@ class Trip(AdminURLMixin, models.Model):
         max_length=254
     )
     travel_type = models.CharField(
-        max_length=32L,
+        max_length=32,
         choices=TRAVEL_TYPE,
         default=PROGRAMME_MONITORING
     )
