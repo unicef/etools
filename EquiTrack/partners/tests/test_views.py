@@ -86,95 +86,63 @@ class TestPartnerOrganizationListView(APITenantTestCase):
 
         # self.normal_field_names is the list of field names present in responses that don't use an out-of-the-ordinary
         # serializer.
-        self.normal_field_names = ('blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name',
-                                   'partner_type', 'phone_number', 'rating', 'shared_partner', 'shared_with',
-                                   'short_name', 'total_ct_cp', 'total_ct_cy', 'vendor_number', )
+        self.normal_field_names = sorted(
+            ('blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name',
+            'partner_type', 'phone_number', 'rating', 'shared_partner', 'shared_with',
+            'short_name', 'total_ct_cp', 'total_ct_cy', 'vendor_number', )
+            )
+
+    def assertResponseFundamentals(self, response, expected_keys=None):
+        if expected_keys is None:
+            expected_keys = self.normal_field_names
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertEqual(len(response_json), 1)
+        self.assertIsInstance(response_json[0], dict)
+        if expected_keys:
+            self.assertEqual(sorted(response_json[0].keys()), expected_keys)
+        self.assertIn('id', response_json[0].keys())
+        self.assertEqual(response_json[0]['id'], self.partner.id)
 
     def test_simple(self):
         '''exercise simple fetch'''
         response = self.forced_auth_req('get', self.url)
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        self.assertIsInstance(response_json[0], dict)
-        self.assertIn('id', response_json[0].keys())
-        self.assertEqual(response_json[0]['id'], self.partner.id)
-
-        # These assertions belong in a serializer test, but they're here for now to absorb another test that wasn't
-        # doing anything else.
-        self.assertIn("vendor_number", response.data[0].keys())
-        self.assertNotIn("address", response.data[0].keys())
+        self.assertResponseFundamentals(response)
 
     def test_verbosity_minimal(self):
         '''Exercise behavior when verbosity=minimal'''
         response = self.forced_auth_req('get', self.url, data={"verbosity": "minimal"})
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        self.assertIsInstance(response_json[0], dict)
-        self.assertItemsEqual(response_json[0].keys(), ["id", "name"])
-        self.assertEqual(response_json[0]['id'], self.partner.id)
+        self.assertResponseFundamentals(response, sorted(("id", "name")))
 
     def test_verbosity_other(self):
         '''Exercise behavior when verbosity != minimal. ('minimal' is the only accepted value for verbosity;
         other values are ignored.)
         '''
         response = self.forced_auth_req('get', self.url, data={"verbosity": "banana"})
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        self.assertIsInstance(response_json[0], dict)
-        self.assertItemsEqual(response_json[0].keys(), self.normal_field_names)
-        self.assertEqual(response_json[0]['id'], self.partner.id)
+        self.assertResponseFundamentals(response)
 
     def test_filter_partner_type(self):
         '''Ensure filtering by partner type works as expected'''
         # Make another partner that should be excluded from the search results.
         PartnerFactory(partner_type=PartnerType.GOVERNMENT)
         response = self.forced_auth_req('get', self.url, data={"partner_type": PartnerType.UN_AGENCY})
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        self.assertIsInstance(response_json[0], dict)
-        self.assertIn('id', response_json[0].keys())
-        self.assertEqual(response_json[0]['id'], self.partner.id)
+        self.assertResponseFundamentals(response)
 
     def test_filter_cso_type(self):
         '''Ensure filtering by CSO type works as expected'''
         # Make another partner that should be excluded from the search results.
         PartnerFactory(cso_type="National")
         response = self.forced_auth_req('get', self.url, data={"cso_type": "International"})
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        self.assertIsInstance(response_json[0], dict)
-        self.assertIn('id', response_json[0].keys())
-        self.assertEqual(response_json[0]['id'], self.partner.id)
+        self.assertResponseFundamentals(response)
 
     def test_filter_hidden(self):
         '''Ensure filtering by the hidden flag works as expected'''
         # Make another partner that should be excluded from the search results.
         PartnerFactory(hidden=True)
-
         response = self.forced_auth_req('get', self.url, data={"hidden": False})
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        self.assertIsInstance(response_json[0], dict)
-        self.assertIn('id', response_json[0].keys())
-        self.assertEqual(response_json[0]['id'], self.partner.id)
+        self.assertResponseFundamentals(response)
 
     def test_filter_multiple(self):
         '''Test that when supplying multiple filter terms, they're ANDed together'''
@@ -196,26 +164,14 @@ class TestPartnerOrganizationListView(APITenantTestCase):
         # Make another partner that should be excluded from the search results.
         PartnerFactory(name="Somethingelse")
         response = self.forced_auth_req('get', self.url, data={"search": "PARTNER"})
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        self.assertIsInstance(response_json[0], dict)
-        self.assertIn('id', response_json[0].keys())
-        self.assertEqual(response_json[0]['id'], self.partner.id)
+        self.assertResponseFundamentals(response)
 
     def test_search_short_name(self):
         '''Test that short name search matches substrings and is case-independent'''
         # Make another partner that should be excluded from the search results.
         PartnerFactory(short_name="foo")
         response = self.forced_auth_req('get', self.url, data={"search": "SHORT"})
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        self.assertIsInstance(response_json[0], dict)
-        self.assertIn('id', response_json[0].keys())
-        self.assertEqual(response_json[0]['id'], self.partner.id)
+        self.assertResponseFundamentals(response)
 
     def test_values_positive(self):
         '''Ensure that passing the values param w/partner ids returns only data for those partners'''
