@@ -230,7 +230,7 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                         {% for officer in auth_officers %}
                         <tr>
                             <td style="width: 33%;">الاسم الكامل</td>
-                            <td> {{ officer.first_name }}</td>
+                            <td>{{ officer.first_name }} {{ officer.last_name }}</td>
                         </tr>
                         <tr>
                             <td style="width: 33%;">لمنصب</td>

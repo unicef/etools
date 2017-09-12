@@ -97,12 +97,12 @@ class PCAPDFView(PDFTemplateView):
 
         context = self.get_context_data(**kwargs)
 
-        #we need to use two tools for pdf generation for: now easy_pdf(based on xhtml2pdf) and wkhtmlpdf
-        #the non-arabic templates were designed to work with easy_pdf, but easy_pdf does not have RTL(right to left) support,
-        #so (only) the arabic template will be served with wkhtmlpdf.
-        #TODO:  maybe adapt the non-arabic templates for wkhtmlpdf
+        # we need to use two tools for pdf generation for: now easy_pdf(based on xhtml2pdf) and wkhtmlpdf
+        # the non-arabic templates were designed to work with easy_pdf, but easy_pdf does not have RTL support,
+        # so (only) the arabic template will be served with wkhtmlpdf.
+        # TODO:  maybe adapt the non-arabic templates for wkhtmlpdf
         if lang == 'arabic':
-            #use wkhtmlpdf's PDFTemplateResponse(has RTL supoort) for arabic language
+            # use wkhtmlpdf's PDFTemplateResponse(has RTL supoort) for arabic language
             response = PDFTemplateResponse(
                 request=request,
                 template=self.language_templates_mapping[lang],
@@ -110,25 +110,24 @@ class PCAPDFView(PDFTemplateView):
                 filename="Partnership.pdf",
                 context=context,
                 show_content_in_browser=True,
-                cmd_options= {
+                cmd_options={
                     'margin-top': "2cm",
                     'margin-right': "2cm",
                     'margin-bottom': "2cm",
                     'margin-left': "2cm",
-                    'page-size':"Letter",
-                    #'zoom': '1.2',
-                    #"disable-smart-shrinking":True
+                    'page-size': "Letter",
+                    # 'zoom': '1.2',
+                    # "disable-smart-shrinking":True
                 }
             )
             return response
         else:
-            #user xhtml2pdf/easy_pdf for non-arabic languages
+            # use xhtml2pdf/easy_pdf for non-arabic languages
             return render_to_pdf_response(
                 request,
                 self.language_templates_mapping[lang],
                 context
             )
-
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
