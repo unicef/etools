@@ -148,6 +148,13 @@ class InterventionResultLinkFilter(BaseFilterBackend):
         return queryset
 
 
+class AppliedIndicatorsFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        if request.parser_context['kwargs'] and 'lower_result_pk' in request.parser_context['kwargs']:
+            return queryset.filter(lower_result__pk=request.parser_context['kwargs']['lower_result_pk'])
+        return queryset
+
+
 class PartnerOrganizationExportFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         parameter_serializer = PartnershipExportFilterSerializer(data=request.GET)

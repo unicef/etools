@@ -1,11 +1,15 @@
+from __future__ import unicode_literals
 from datetime import date
 
 from django.db import models, transaction
-from django.contrib.postgres.fields import JSONField
 from django.utils.functional import cached_property
+from django.utils.six import python_2_unicode_compatible
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
+
+from locations.models import Location
+from users.models import Section
 
 
 class Quarter(models.Model):
@@ -329,29 +333,62 @@ class Unit(models.Model):
         return self.type
 
 
-class IndicatorBlueprint(models.Model):
-    NUMBER = u'number'
-    PERCENTAGE = u'percentage'
-    YESNO = u'yesno'
+class IndicatorBlueprint(TimeStampedModel):
+    """
+    IndicatorBlueprint module is a pattern for indicator
+    (here we setup basic parameter).
+    """
+    NUMBER = 'number'
+    PERCENTAGE = 'percentage'
+    LIKERT = 'likert'
+    YESNO = 'yesno'
     UNIT_CHOICES = (
         (NUMBER, NUMBER),
         (PERCENTAGE, PERCENTAGE),
-        (YESNO, YESNO)
+        # (LIKERT, LIKERT),
+        # (YESNO, YESNO),
     )
-    name = models.CharField(max_length=1024)
+
+    SUM = 'sum'
+    MAX = 'max'
+    AVG = 'avg'
+    RATIO = 'ratio'
+
+    QUANTITY_CALC_CHOICES = (
+        (SUM, SUM),
+        (MAX, MAX),
+        (AVG, AVG)
+    )
+
+    RATIO_CALC_CHOICES = (
+        (PERCENTAGE, PERCENTAGE),
+        (RATIO, RATIO)
+    )
+
+    CALC_CHOICES = QUANTITY_CALC_CHOICES + RATIO_CALC_CHOICES
+
+    QUANTITY_DISPLAY_TYPE_CHOICES = (
+        (NUMBER, NUMBER),
+    )
+
+    RATIO_DISPLAY_TYPE_CHOICES = (
+        (PERCENTAGE, PERCENTAGE),
+        (RATIO, RATIO)
+    )
+
+    DISPLAY_TYPE_CHOICES = QUANTITY_DISPLAY_TYPE_CHOICES + RATIO_DISPLAY_TYPE_CHOICES
+
+    title = models.CharField(max_length=1024)
     unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default=NUMBER)
     description = models.CharField(max_length=3072, null=True, blank=True)
     code = models.CharField(max_length=50, null=True, blank=True, unique=True)
     subdomain = models.CharField(max_length=255, null=True, blank=True)
     disaggregatable = models.BooleanField(default=False)
 
-    # TODO: add:
-    # siblings (similar inidcators to this indicator)
-    # other_representation (exact copies with different names for some random reason)
-    # children (indicators that aggregate up to this or contribute to this indicator through a formula)
-    # aggregation_types (potential aggregation types: geographic, time-periods ?)
-    # calculation_formula (how the children totals add up to this indicator's total value)
-    # aggregation_formulas (how the total value is aggregated from the reports if possible)
+    calculation_formula_across_periods = models.CharField(max_length=10, choices=CALC_CHOICES, default=SUM)
+    calculation_formula_across_locations = models.CharField(max_length=10, choices=CALC_CHOICES, default=SUM)
+
+    display_type = models.CharField(max_length=10, choices=DISPLAY_TYPE_CHOICES, default=NUMBER)
 
     def save(self, *args, **kwargs):
         # Prevent from saving empty strings as code because of the unique together constraint
@@ -359,13 +396,55 @@ class IndicatorBlueprint(models.Model):
             self.code = None
         super(IndicatorBlueprint, self).save(*args, **kwargs)
 
-    def __unicode__(self):
-        return self.name
+    class Meta:
+        ordering = ['-id']
 
 
-class AppliedIndicator(models.Model):
+@python_2_unicode_compatible
+class Disaggregation(TimeStampedModel):
+    """
+    Disaggregation module. For example: <Gender, Age>
+    """
+    name = models.CharField(max_length=255, verbose_name="Disaggregation by", null=True, blank=True, unique=True)
+    active = models.BooleanField(default=False)
 
-    indicator = models.ForeignKey(IndicatorBlueprint)
+    def __str__(self):
+        return "Disaggregation <pk:%s>" % self.id
+
+
+@python_2_unicode_compatible
+class DisaggregationValue(TimeStampedModel):
+    """
+    Disaggregation Value module. For example: Gender <Male, Female, Other>
+
+    related models:
+        indicator.Disaggregation (ForeignKey): "disaggregation"
+    """
+    disaggregation = models.ForeignKey(Disaggregation, related_name="disaggregation_value")
+    value = models.CharField(max_length=15, null=True, blank=True)
+    active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "Disaggregation Value <pk:%s>" % self.id
+
+
+class AppliedIndicator(TimeStampedModel):
+    """
+       Applied Indicator: a contextualized Indicator (an indicator with a target,
+           targeted in specific locations, connected to a PD, etc)
+
+       related models:
+           reports.Disaggregation (ManyToMany): "disaggregation"
+           locations.Location (ManyToMany): "locations"
+
+       """
+
+    indicator = models.ForeignKey(IndicatorBlueprint, null=True, blank=True)
+
+    section = models.ForeignKey(Section, null=True, blank=True)
+
+    cluster_id = models.PositiveIntegerField(blank=True, null=True)
+    cluster_indicator_title = models.CharField(max_length=1024, blank=True, null=True)
 
     # the result this indicator is contributing to.
     lower_result = models.ForeignKey(LowerResult, related_name='applied_indicators')
@@ -374,18 +453,21 @@ class AppliedIndicator(models.Model):
     # eg: (1.1) result code 1 - indicator code 1
     context_code = models.CharField(max_length=50, null=True, blank=True,
                                     verbose_name="Code in current context")
-    target = models.CharField(max_length=255, null=True, blank=True)
-    baseline = models.CharField(max_length=255, null=True, blank=True)
+
+    target = models.PositiveIntegerField(default=0)
+
+    baseline = models.PositiveIntegerField(null=True, blank=True)
+
     assumptions = models.TextField(null=True, blank=True)
     means_of_verification = models.CharField(max_length=255, null=True, blank=True)
 
-    # current total, transactional and dynamically calculated based on IndicatorReports
+    # current total, # not stored or calculated for now
     total = models.IntegerField(null=True, blank=True, default=0,
                                 verbose_name="Current Total")
 
-    # variable disaggregation's that may be present in the work plan
-    # this can only be present if the indicatorBlueprint has dissagregatable = true
-    disaggregation_logic = JSONField(null=True)
+    disaggregation = models.ManyToManyField(Disaggregation, related_name='applied_indicators', blank=True)
+
+    locations = models.ManyToManyField(Location, related_name='applied_indicators')
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)

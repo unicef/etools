@@ -24,7 +24,7 @@ from partners.views.interventions_v2 import (
     InterventionSectorLocationLinkDeleteView,
     InterventionListMapView,
     InterventionLowerResultListCreateView, InterventionLowerResultUpdateView, InterventionResultLinkListCreateView,
-    InterventionResultLinkUpdateView)
+    InterventionResultLinkUpdateView, InterventionIndicatorsListView, InterventionIndicatorsUpdateView)
 
 from partners.views.v2 import (
     PmpStaticDropdownsListApiView, PMPDropdownsListApiView,
@@ -111,6 +111,15 @@ urlpatterns = (
     url(r'^interventions/lower-results/(?P<pk>\d+)/$',
         view=InterventionLowerResultUpdateView.as_view(http_method_names=['get', 'patch', 'delete']),
         name='intervention-lower-results-update'),
+
+    url(r'^interventions/lower-results/(?P<lower_result_pk>\d+)/indicators/$',
+        view=InterventionIndicatorsListView.as_view(http_method_names=['get', 'post']),
+        name='intervention-indicators-list'),
+
+    url(r'^interventions/applied-indicators/(?P<pk>\d+)/$',
+        view=InterventionIndicatorsUpdateView.as_view(http_method_names=['get', 'patch', 'delete']),
+        name='intervention-indicators-update'),
+
 
     url(r'^interventions/dash/$',
         view=InterventionListDashView.as_view(http_method_names=['get', 'post']),

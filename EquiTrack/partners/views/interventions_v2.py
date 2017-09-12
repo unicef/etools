@@ -1,10 +1,10 @@
 import operator
 import functools
 import logging
+import copy
 
 from django.db import transaction
 from django.db.models import Q
-
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -44,11 +44,13 @@ from partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
     InterventionResultLinkSimpleCUSerializer)
 from partners.exports_v2 import InterventionCvsRenderer
-from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter, InterventionFilter
+from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter, InterventionFilter, \
+    AppliedIndicatorsFilter
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
-from reports.models import LowerResult
-from reports.serializers.v2 import LowerResultSerializer, LowerResultSimpleCUSerializer
+from reports.models import LowerResult, AppliedIndicator
+from reports.serializers.v2 import LowerResultSerializer, LowerResultSimpleCUSerializer, AppliedIndicatorSerializer, \
+    IndicatorBlueprintCUSerializer
 
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
@@ -390,7 +392,7 @@ class InterventionLowerResultListCreateView(ListCreateAPIView):
     queryset = LowerResult.objects.all()
 
     def create(self, request, *args, **kwargs):
-        raw_data = request.data
+        raw_data = copy.deepcopy(request.data)
         raw_data['result_link'] = kwargs.get('result_link_pk', None)
 
         serializer = self.get_serializer(data=raw_data)
@@ -425,7 +427,7 @@ class InterventionResultLinkListCreateView(ListCreateAPIView):
     queryset = InterventionResultLink.objects.all()
 
     def create(self, request, *args, **kwargs):
-        raw_data = request.data
+        raw_data = copy.deepcopy(request.data)
         raw_data['intervention'] = kwargs.get('intervention_pk', None)
 
         serializer = self.get_serializer(data=raw_data)
@@ -450,3 +452,36 @@ class InterventionResultLinkUpdateView(RetrieveUpdateDestroyAPIView):
             raise ValidationError(u'This CP Output cannot be removed from this Intervention because there are nested'
                                   u' Results, please remove all Document Results to continue')
         return super(InterventionResultLinkUpdateView, self).delete(request, *args, **kwargs)
+
+
+class InterventionIndicatorsListView(ListCreateAPIView):
+    serializer_class = AppliedIndicatorSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (AppliedIndicatorsFilter,)
+    renderer_classes = (r.JSONRenderer,)
+    queryset = AppliedIndicator.objects.all()
+
+    @transaction.atomic()
+    def create(self, request, *args, **kwargs):
+        raw_data = copy.deepcopy(request.data)
+        raw_data['lower_result'] = kwargs.get('lower_result_pk', None)
+
+        # if this is not a cluster indicator Automatically create / get the indicator blueprint
+        serializer = self.get_serializer(data=raw_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
+
+    serializer_class = AppliedIndicatorSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (AppliedIndicatorsFilter,)
+    renderer_classes = (r.JSONRenderer,)
+    queryset = AppliedIndicator.objects.all()
+
+    def delete(self, request, *args, **kwargs):
+        # make sure there are no indicators added to this LLO
+        raise ValidationError(u'Deleting an indicator is temporarily disabled..')
