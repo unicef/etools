@@ -31,6 +31,7 @@ class Command(BaseCommand):
         'tpmactivity.*',
         'tpmvisitreportrejectcomment.*',
         'tpmactivityactionpoint.*',
+        'tpmactionpoint.*',
     ]
 
     visit_create = [
@@ -162,11 +163,11 @@ class Command(BaseCommand):
             'tpmvisit.report_attachments',
             'tpmactivity.report_attachments',
         ])
-        self.revoke_permissions(self.tpm_accepted, self.third_party_monitor, 'view', [
+        self.revoke_permissions(self.tpm_accepted, self.everybody, 'view', [
             'tpmvisit.action_points',
         ])
 
-        # tpm_rejected - pme edit overview + attachments, pme can send to assigned
+        # tpm_rejected - pme edit overview + attachments, pme can reassign
         self.add_permissions(self.tpm_rejected, self.everybody, 'view', self.everything)
         self.add_permissions(self.tpm_rejected, self.pme, 'action', [
             'tpmvisit.assign',
@@ -176,7 +177,7 @@ class Command(BaseCommand):
             'tpmvisit.report_attachments',
             'tpmactivity.report_attachments',
         ])
-        self.revoke_permissions(self.tpm_rejected, self.third_party_monitor, 'view', [
+        self.revoke_permissions(self.tpm_rejected, self.everybody, 'view', [
             'tpmvisit.action_points',
         ])
 
@@ -199,12 +200,15 @@ class Command(BaseCommand):
         self.add_permissions(self.tpm_report_rejected, self.pme, 'action', [
             'tpmvisit.cancel',
         ])
-        self.revoke_permissions(self.tpm_report_rejected, self.third_party_monitor, 'view', [
+        self.revoke_permissions(self.tpm_report_rejected, self.everybody, 'view', [
             'tpmvisit.action_points',
         ])
 
         # unicef_approved - readonly
         self.add_permissions(self.unicef_approved, self.everybody, 'view', self.everything)
+        self.revoke_permissions(self.unicef_approved, self.third_party_monitor, 'view', [
+            'tpmvisit.action_points',
+        ])
 
         # update permissions
         all_tenants = get_tenant_model().objects.exclude(schema_name='public')
