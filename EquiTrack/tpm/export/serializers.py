@@ -41,3 +41,12 @@ class TPMLocationExportSerializer(serializers.Serializer):
 
     def get_activity(self, obj):
         return 'Activity #{}.{}'.format(obj.tpmactivity.tpm_visit.id, obj.tpmactivity.id)
+
+
+class TPMPartnerExportSerializer(serializers.Serializer):
+    vendor_number = serializers.CharField()
+    street_address = serializers.CharField()
+    postal_code = serializers.CharField()
+    city = serializers.CharField()
+    phone_number = serializers.CharField()
+    email = serializers.CharField()

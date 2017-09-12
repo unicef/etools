@@ -28,3 +28,18 @@ class TPMLocationCSVRenderer(CSVRenderer):
         'date': _('Date'),
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
     }
+
+
+class TPMPartnerCSVRenderer(CSVRenderer):
+    header = [
+        'vendor_number', 'street_address', 'postal_code', 'city',
+        'phone_number', 'email',
+    ]
+    labels = {
+        'vendor_number': _('Vendor Number'),
+        'street_address': _('Address'),
+        'postal_code': _('Postal Code'),
+        'city': _('City'),
+        'phone_number': _('Phone Number'),
+        'email': _('Email Address'),
+    }

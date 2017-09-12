@@ -18,8 +18,8 @@ from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMP
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from .permissions import IsPMEorReadonlyPermission
-from .export.renderers import TPMActivityCSVRenderer, TPMLocationCSVRenderer
-from .export.serializers import TPMActivityExportSerializer, TPMLocationExportSerializer
+from .export.renderers import TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer
+from .export.serializers import TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer
 
 
 class BaseTPMViewSet(
@@ -83,6 +83,14 @@ class TPMPartnerViewSet(
 
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
+    def export(self, request, *args, **kwargs):
+        tpm_partners = TPMPartner.objects.all().order_by('vendor_number')
+        serializer = TPMPartnerExportSerializer(tpm_partners, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_vendors_{}.csv'.format(timezone.now())
+        })
 
 
 class TPMStaffMembersViewSet(
