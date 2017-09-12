@@ -12,9 +12,9 @@ from django.test.utils import override_settings
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
-from t2f.models import Travel, Invoice, ModeOfTravel, TravelType
+from t2f.models import Travel, Invoice, ModeOfTravel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
-from .factories import TravelFactory, TravelActivityFactory
+from .factories import TravelFactory
 
 
 class StateMachineTest(APITenantTestCase):
@@ -187,8 +187,7 @@ class StateMachineTest(APITenantTestCase):
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
-        self.assertEqual(response_json['status'], Travel.COMPLETED)
- 
+
     @override_settings(DISABLE_INVOICING=True)
     def test_state_machine_flow_invoice_disabled(self):
         currency = CurrencyFactory()
