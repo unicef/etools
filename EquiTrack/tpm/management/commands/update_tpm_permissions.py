@@ -111,7 +111,7 @@ class Command(BaseCommand):
         self.revoke_permissions(self.new_visit, self.everybody, 'view', [
             'tpmvisit.report_attachments',
             'tpmactivity.report_attachments',
-            'tpmactivity.action_points',
+            'tpmvisit.action_points',
         ])
 
         # draft - UNICEF can edit visit + assign
@@ -124,7 +124,7 @@ class Command(BaseCommand):
         self.revoke_permissions(self.draft, self.everybody, 'view', [
             'tpmvisit.report_attachments',
             'tpmactivity.report_attachments',
-            'tpmactivity.action_points',
+            'tpmvisit.action_points',
         ])
 
         # assigned - pme edit overview + attachments, tpm accept/reject
@@ -137,7 +137,7 @@ class Command(BaseCommand):
         self.revoke_permissions(self.assigned, self.everybody, 'view', [
             'tpmvisit.report_attachments',
             'tpmactivity.report_attachments',
-            'tpmactivity.action_points',
+            'tpmvisit.action_points',
         ])
 
         # cancelled - no edit, no actions
@@ -145,7 +145,7 @@ class Command(BaseCommand):
         self.revoke_permissions(self.cancelled, self.everybody, 'view', [
             'tpmvisit.report_attachments',
             'tpmactivity.report_attachments',
-            'tpmactivity.action_points',
+            'tpmvisit.action_points',
         ])
 
         # tpm_accepted - tpm edit report area, tpm can report
@@ -163,7 +163,7 @@ class Command(BaseCommand):
             'tpmactivity.report_attachments',
         ])
         self.revoke_permissions(self.tpm_accepted, self.third_party_monitor, 'view', [
-            'tpmactivity.action_points',
+            'tpmvisit.action_points',
         ])
 
         # tpm_rejected - pme edit overview + attachments, pme can send to assigned
@@ -177,7 +177,7 @@ class Command(BaseCommand):
             'tpmactivity.report_attachments',
         ])
         self.revoke_permissions(self.tpm_rejected, self.third_party_monitor, 'view', [
-            'tpmactivity.action_points',
+            'tpmvisit.action_points',
         ])
 
         # tpm_reported - UNICEF can reject report or ask actions
@@ -189,7 +189,7 @@ class Command(BaseCommand):
         ])
         self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'edit', self.follow_up_page)
         self.revoke_permissions(self.tpm_reported, self.third_party_monitor, 'view', [
-            'tpmactivity.action_points',
+            'tpmvisit.action_points',
         ])
 
         # tpm_report_rejected - similar to tpm_accepted. tpm edit report area, tpm can report.
@@ -200,7 +200,7 @@ class Command(BaseCommand):
             'tpmvisit.cancel',
         ])
         self.revoke_permissions(self.tpm_report_rejected, self.third_party_monitor, 'view', [
-            'tpmactivity.action_points',
+            'tpmvisit.action_points',
         ])
 
         # unicef_approved - readonly
