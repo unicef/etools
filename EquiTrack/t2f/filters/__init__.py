@@ -3,9 +3,7 @@ from __future__ import unicode_literals
 from django.db.models.query_utils import Q
 from django.db.models import F
 from rest_framework.filters import BaseFilterBackend
-
 from t2f.serializers.filters import SearchFilterSerializer
-
 
 class TravelRelatedModelFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
@@ -76,7 +74,12 @@ class BaseFilterBoxFilter(BaseFilterBackend):
     serializer_class = None
 
     def filter_queryset(self, request, queryset, view):
+
         data = self._get_filter_kwargs(request, queryset, view)
+        statuses = request.query_params.get('f_status',None)
+        if statuses is not None:
+            statuses = statuses.split(',')
+            queryset = queryset.filter(status__in=statuses)
         # To have proper keys in data dict, the serializer renames the incoming values according to the needs
         return queryset.filter(**data)
 
