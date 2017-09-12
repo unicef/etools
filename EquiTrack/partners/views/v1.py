@@ -5,6 +5,7 @@ from collections import namedtuple
 from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponse
+from django.template import Context
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
@@ -17,6 +18,8 @@ from rest_framework.response import Response
 
 from actstream import action
 from easy_pdf.views import PDFTemplateView
+from easy_pdf.rendering import render_to_pdf_response
+from wkhtmltopdf.views import PDFTemplateResponse
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
@@ -80,15 +83,56 @@ class PCAPDFView(PDFTemplateView):
         "ifrc_french": "partners/pca/ifrc_french_pdf.html"
     }
 
+    def get(self, request, *args, **kwargs):
+        lang = self.request.GET.get('lang', None)
+
+        try:
+            self.template_name = self.language_templates_mapping[lang]
+        except KeyError:
+            return render_to_pdf_response(
+                request,
+                self.template_name,
+                Context({"error": "Cannot find document with given query parameter lang={}".format(lang)})
+            )
+
+        context = self.get_context_data(**kwargs)
+
+        # we need to use two tools for pdf generation for: now easy_pdf(based on xhtml2pdf) and wkhtmlpdf
+        # the non-arabic templates were designed to work with easy_pdf, but easy_pdf does not have RTL support,
+        # so (only) the arabic template will be served with wkhtmlpdf.
+        # TODO:  maybe adapt the non-arabic templates for wkhtmlpdf
+        if lang == 'arabic':
+            # use wkhtmlpdf's PDFTemplateResponse(has RTL supoort) for arabic language
+            response = PDFTemplateResponse(
+                request=request,
+                template=self.language_templates_mapping[lang],
+                header_template="partners/pca/arabic_pdf_header.html",
+                filename="Partnership.pdf",
+                context=context,
+                show_content_in_browser=True,
+                cmd_options={
+                    'margin-top': "2cm",
+                    'margin-right': "2cm",
+                    'margin-bottom': "2cm",
+                    'margin-left': "2cm",
+                    'page-size': "Letter",
+                    # 'zoom': '1.2',
+                    # "disable-smart-shrinking":True
+                }
+            )
+            return response
+        else:
+            # use xhtml2pdf/easy_pdf for non-arabic languages
+            return render_to_pdf_response(
+                request,
+                self.language_templates_mapping[lang],
+                context
+            )
+
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
-        lang = self.request.GET.get('lang', None)
-        if lang:
-            try:
-                self.template_name = self.language_templates_mapping[lang]
-            except KeyError:
-                return {"error": "Cannot find document with given query parameter lang={}".format(lang)}
         error = None
+
         try:
             agreement = Agreement.objects.get(id=agr_id)
         except Agreement.DoesNotExist:
@@ -129,6 +173,8 @@ class PCAPDFView(PDFTemplateView):
                  'title': officer.title}
             )
 
+        font_path = settings.SITE_ROOT + '/assets/fonts/'
+
         return super(PCAPDFView, self).get_context_data(
             error=error,
             pagesize="Letter",
@@ -138,6 +184,7 @@ class PCAPDFView(PDFTemplateView):
             cp=agreement.country_programme,
             auth_officers=officers_list,
             country=self.request.tenant.long_name,
+            font_path=font_path,
             **kwargs
         )
 

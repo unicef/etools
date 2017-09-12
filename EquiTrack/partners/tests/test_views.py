@@ -1178,7 +1178,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
     def test_agreement_generate_pdf_lang(self):
         params = {
-            "lang": "arabic",
+            "lang": "spanish",
         }
         response = self.forced_auth_req(
             'get',
