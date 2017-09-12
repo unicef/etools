@@ -112,7 +112,9 @@ class TestPartnerOrganizationListView(APITenantTestCase):
         self.assertEqual(response_json[0]['id'], self.partner.id)
 
     def test_verbosity_other(self):
-        '''Exercise behavior when verbosity != minimal. ('minimal' is the only accepted value for verbosity)'''
+        '''Exercise behavior when verbosity != minimal. ('minimal' is the only accepted value for verbosity;
+        other values are ignored.)
+        '''
         response = self.forced_auth_req('get', self.url, data={"verbosity": "banana"})
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -120,10 +122,7 @@ class TestPartnerOrganizationListView(APITenantTestCase):
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
         self.assertIsInstance(response_json[0], dict)
-        expected_field_names = ('blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name', 'partner_type',
-                                'phone_number', 'rating', 'shared_partner', 'shared_with', 'short_name',
-                                'total_ct_cp', 'total_ct_cy', 'vendor_number', )
-        self.assertItemsEqual(response_json[0].keys(), expected_field_names)
+        self.assertItemsEqual(response_json[0].keys(), self.normal_field_names)
         self.assertEqual(response_json[0]['id'], self.partner.id)
 
     def test_filter_partner_type(self):
