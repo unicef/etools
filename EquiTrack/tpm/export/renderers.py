@@ -16,6 +16,7 @@ class TPMActivityCSVRenderer(CSVRenderer):
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
     }
 
+
 class TPMLocationCSVRenderer(CSVRenderer):
     header = ['ref', 'activity', 'section', 'cp_output',
               'location', 'date', 'unicef_focal_points']

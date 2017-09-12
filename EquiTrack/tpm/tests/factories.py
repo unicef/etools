@@ -3,7 +3,6 @@ import datetime
 import factory
 import factory.fuzzy
 from django.contrib.auth.models import Group
-from django.contrib.contenttypes.models import ContentType
 from factory import fuzzy
 from django.db import connection
 from django.utils import timezone, six
