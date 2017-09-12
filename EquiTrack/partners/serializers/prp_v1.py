@@ -7,7 +7,7 @@ from partners.models import (
     Intervention,
     PartnerStaffMember,
     PartnerOrganization, InterventionResultLink)
-from reports.models import Result, AppliedIndicator
+from reports.models import Result, AppliedIndicator, LowerResult
 
 
 class PartnerSerializer(serializers.ModelSerializer):
@@ -135,3 +135,11 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             # 'reporting_frequencies',  # todo: figure out where this comes from
             'expected_results',
         )
+
+    # expected_results = serializers.SerializerMethodField()
+    # def get_expected_results(self, intervention):
+    #     """
+    #     Get all lower level results associated with this Intervention.
+    #     """
+    #     results = LowerResult.objects.filter(result_link__intervention=intervention)
+    #     return PRPResultSerializer(results, many=True, read_only=True).data
