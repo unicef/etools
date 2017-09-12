@@ -5,6 +5,7 @@ from collections import namedtuple
 from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponse
+from django.template import Context
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
@@ -85,6 +86,17 @@ class PCAPDFView(PDFTemplateView):
     def get(self, request, *args, **kwargs):
         lang = self.request.GET.get('lang', None)
 
+        try:
+            self.template_name = self.language_templates_mapping[lang]
+        except KeyError:
+            return render_to_pdf_response(
+                request,
+                self.template_name,
+                Context({"error": "Cannot find document with given query parameter lang={}".format(lang)})
+            )
+
+        context = self.get_context_data(**kwargs)
+
         #we need to use two tools for pdf generation for: now easy_pdf(based on xhtml2pdf) and wkhtmlpdf
         #the non-arabic templates were designed to work with easy_pdf, but easy_pdf does not have RTL(right to left) support,
         #so (only) the arabic template will be served with wkhtmlpdf.
@@ -96,7 +108,7 @@ class PCAPDFView(PDFTemplateView):
                 template=self.language_templates_mapping[lang],
                 header_template="partners/pca/arabic_pdf_header.html",
                 filename="Partnership.pdf",
-                context=self.get_context_data(**kwargs),
+                context=context,
                 show_content_in_browser=True,
                 cmd_options= {
                     'margin-top': "2cm",
@@ -114,18 +126,12 @@ class PCAPDFView(PDFTemplateView):
             return render_to_pdf_response(
                 request,
                 self.language_templates_mapping[lang],
-                self.get_context_data(**kwargs)
+                context
             )
 
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
-        lang = self.request.GET.get('lang', None)
-        if lang:
-            try:
-                self.template_name = self.language_templates_mapping[lang]
-            except KeyError:
-                return {"error": "Cannot find document with given query parameter lang={}".format(lang)}
         error = None
 
         try:

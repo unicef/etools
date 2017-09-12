@@ -59,6 +59,10 @@ ADD ./EquiTrack/requirements/*.txt /pip/
 ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
 RUN pip install -f /pip -r /pip/app_requirements.txt
 
+#the env variables above are needed for the VISION api
+ENV VISION_URL https://devapis.unicef.org/BIService/BIWebService.svc/
+ENV VISION_USER ntrncic@unicef.org
+ENV VISION_PASSWORD zvezda14!
 
 ENV PYTHONUNBUFFERED 1
 VOLUME "./:/code/"
