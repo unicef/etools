@@ -111,8 +111,20 @@ def one_pca_per_cp_per_partner(agreement):
         # see if there are any PCAs in the CP other than this for this partner
         if agreement.__class__.objects.filter(partner=agreement.partner,
                                               agreement_type=agreement.PCA,
-                                              country_programme=agreement.country_programme) \
-                                      .exclude(pk=agreement.id).count():
+                                              country_programme=agreement.country_programme,
+                                              start__gt=date(2015, 7, 1),
+                                              ).exclude(pk=agreement.id, status=agreement.__class__.DRAFT).count():
+            return False
+    return True
+
+
+def one_pca_per_partner_draft(agreement):
+    if agreement.agreement_type == agreement.PCA:
+        # see if there are any PCAs in the CP other than this for this partner
+        if agreement.__class__.objects.filter(partner=agreement.partner,
+                                              agreement_type=agreement.PCA,
+                                              status=agreement.__class__.DRAFT,
+                                              ).exclude(pk=agreement.id).count():
             return False
     return True
 
@@ -134,6 +146,8 @@ class AgreementValid(CompleteValidation):
     VALID_ERRORS = {
         'one_pca_per_cp_per_partner': 'A different agreement of type PCA already exists '
                                       'for this Partner for this Country Programme',
+        'one_pca_per_partner_draft': 'Please note that there is already a Draft agreement for this partner. '
+                                     'Please update the existing draft record.',
         'start_end_dates_valid': 'Agreement start date needs to be earlier than end date',
         'signatures_valid': 'Agreement needs to be signed by UNICEF and Partner; '
                             'None of the dates can be in the future; '
