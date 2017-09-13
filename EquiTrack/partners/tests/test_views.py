@@ -902,6 +902,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         self.assertIn(url.scheme, ('http', 'https'))
         self.assertEqual(url.netloc, 'testserver')
 
+        # The filename is probably 'hello_world.txt', but Django doesn't guarantee that so I don't test it.
         expected_path_components = ['',
                                     settings.MEDIA_URL.strip('/'),
                                     connection.schema_name,
@@ -912,9 +913,8 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
                                     # Note that slashes have to be stripped from the agreement number to match the
                                     # normalized path.
                                     self.agreement.agreement_number.strip('/'),
-                                    'hello_world.txt']
-
-        self.assertEqual(expected_path_components, url.path.split('/'))
+                                    ]
+        self.assertEqual(expected_path_components, url.path.split('/')[:-1])
 
         # Confirm that there are no amendments as of yet.
         self.assertIn('amendments', response_json)
@@ -943,6 +943,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         self.assertIn(url.scheme, ('http', 'https'))
         self.assertEqual(url.netloc, 'testserver')
 
+        # The filename is probably 'goodbye_world.txt', but Django doesn't guarantee that so I don't test it.
         expected_path_components = ['',
                                     settings.MEDIA_URL.strip('/'),
                                     connection.schema_name,
@@ -953,9 +954,8 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
                                     self.agreement.base_number.strip('/'),
                                     'amendments',
                                     amendment.number.strip('/'),
-                                    'goodbye_world.txt']
-
-        self.assertEqual(expected_path_components, url.path.split('/'))
+                                    ]
+        self.assertEqual(expected_path_components, url.path.split('/')[:-1])
 
 
 class TestAgreementAPIView(APITenantTestCase):
