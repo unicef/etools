@@ -169,6 +169,7 @@ class Command(BaseCommand):
 
         # tpm_rejected - pme edit overview + attachments, pme can reassign
         self.add_permissions(self.tpm_rejected, self.everybody, 'view', self.everything)
+        self.add_permissions(self.tpm_rejected, self.pme, 'edit', self.visit_create)
         self.add_permissions(self.tpm_rejected, self.pme, 'action', [
             'tpmvisit.assign',
             'tpmvisit.cancel',
