@@ -1,16 +1,23 @@
 from __future__ import unicode_literals
 
-import json
-from unittest import skip, TestCase
 import datetime
 from datetime import date, timedelta
 from decimal import Decimal
+import json
+from unittest import skip, TestCase
+from urlparse import urlparse
+
+from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.urlresolvers import reverse
+from django.db import connection
 from django.utils import timezone
 
-from rest_framework import status
 from actstream.models import model_stream
+from rest_framework import status
 
 from EquiTrack.factories import (
+    AgreementAmendmentFactory,
     PartnerFactory,
     UserFactory,
     ResultFactory,
@@ -82,7 +89,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             completed_date=datetime.date.today()
         )
 
-        self.partner_gov = PartnerFactory(partner_type="Government")
+        self.partner_gov = PartnerFactory(partner_type=PartnerType.GOVERNMENT)
 
         agreement = AgreementFactory(
             partner=self.partner,
@@ -157,7 +164,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
     def test_api_partners_create(self):
         data = {
             "name": "PO 1",
-            "partner_type": "Government",
+            "partner_type": PartnerType.GOVERNMENT,
             "vendor_number": "AAA",
             "staff_members": [],
         }
@@ -180,7 +187,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         }]
         data = {
             "name": "PO 1",
-            "partner_type": "Government",
+            "partner_type": PartnerType.GOVERNMENT,
             "vendor_number": "AAA",
             "staff_members": staff_members,
         }
@@ -609,23 +616,6 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertIn("Partner", response.data[0]["name"])
 
-    @skip("Fix this")
-    def test_api_agreements_create(self):
-
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "status": "active"
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/partners/' + str(self.partner.id) + '/agreements/',
-            user=self.unicef_staff,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
     @skip("different endpoint")
     def test_api_agreements_list(self):
 
@@ -724,11 +714,173 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertIn("Location", response.data[0]["location_name"])
 
 
+class TestAgreementCreateAPIView(APITenantTestCase):
+    '''Exercise the create portion of the API.'''
+    def setUp(self):
+        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        partner_staff = PartnerStaffFactory(partner=self.partner)
+
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.partnership_manager_user.groups.add(GroupFactory())
+        self.partnership_manager_user.profile.partner_staff_member = partner_staff.id
+        self.partnership_manager_user.save()
+
+    def test_minimal_create(self):
+        '''Test passing as few fields as possible to create'''
+        data = {
+            "agreement_type": Agreement.MOU,
+            "partner": self.partner.id,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/',
+            user=self.partnership_manager_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Check for activity action created
+        stream = model_stream(Agreement)
+        self.assertEqual(len(stream), 1)
+        self.assertEqual(stream[0].verb, 'created')
+        self.assertIsNone(stream[0].target.start)
+
+    def test_create_simple_fail(self):
+        '''Verify that failing gives appropriate feedback'''
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner.id,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/',
+            user=self.partnership_manager_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertIsInstance(response.data, dict)
+        self.assertEqual(response.data.keys(), ['country_programme'])
+        self.assertIsInstance(response.data['country_programme'], list)
+        self.assertEqual(response.data['country_programme'][0], 'Country Programme is required for PCAs!')
+
+        # Check that no activity action was created
+        self.assertEqual(len(model_stream(Agreement)), 0)
+
+
+class TestAgreementAPIFileAttachments(APITenantTestCase):
+    '''Test retrieving attachments to agreements and agreement amendments. The file-specific fields are read-only
+    on the relevant serializers, so they can't be edited through the API.
+    '''
+    def setUp(self):
+        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.agreement = AgreementFactory(
+            agreement_type=Agreement.MOU,
+            partner=self.partner,
+            attached_agreement=None,
+        )
+
+    def _get_and_assert_response(self):
+        '''Helper method to get the agreement and verify some basic about the response JSON (which it returns).'''
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:agreement-detail', kwargs={'pk': self.agreement.id}),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, dict)
+
+        return response_json
+
+    def test_retrieve_attachment(self):
+        '''Exercise getting agreement attachment and agreement amendment attachments both when they're present
+        and absent.
+        '''
+        # The agreement starts with no attachment.
+        response_json = self._get_and_assert_response()
+        self.assertIsNone(response_json['attached_agreement_file'])
+
+        # Now add an attachment. Note that in Python 2, the content must be str, in Python 3 the content must be
+        # bytes. I think the existing code is compatible with both.
+        self.agreement.attached_agreement = SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8'))
+        self.agreement.save()
+
+        response_json = self._get_and_assert_response()
+        self.assertIn('attached_agreement_file', response_json)
+
+        url = response_json['attached_agreement_file']
+
+        # url is a URL like this one --
+        # http://testserver/media/test/file_attachments/partner_organization/934/agreements/PCA2017841/foo.txt
+
+        url = urlparse(url)
+        self.assertIn(url.scheme, ('http', 'https'))
+        self.assertEqual(url.netloc, 'testserver')
+
+        expected_path_components = ['',
+                                    settings.MEDIA_URL.strip('/'),
+                                    connection.schema_name,
+                                    'file_attachments',
+                                    'partner_organization',
+                                    str(self.agreement.partner.id),
+                                    'agreements',
+                                    # Note that slashes have to be stripped from the agreement number to match the
+                                    # normalized path.
+                                    self.agreement.agreement_number.strip('/'),
+                                    'hello_world.txt']
+
+        self.assertEqual(expected_path_components, url.path.split('/'))
+
+        # Confirm that there are no amendments as of yet.
+        self.assertIn('amendments', response_json)
+        self.assertEqual(response_json['amendments'], [])
+
+        # Now add an amendment.
+        amendment = AgreementAmendmentFactory(agreement=self.agreement, signed_amendment=None)
+        amendment.signed_amendment = SimpleUploadedFile('goodbye_world.txt', u'goodbye world!'.encode('utf-8'))
+        amendment.save()
+
+        response_json = self._get_and_assert_response()
+        self.assertIn('amendments', response_json)
+        self.assertEqual(len(response_json['amendments']), 1)
+        response_amendment = response_json['amendments'][0]
+
+        self.assertIsInstance(response_amendment, dict)
+
+        self.assertIn('signed_amendment_file', response_amendment)
+
+        url = response_amendment['signed_amendment_file']
+
+        # url looks something like this --
+        # http://testserver/media/test/file_attachments/partner_org/1658/agreements/MOU20171421/amendments/tmp02/goodbye_world.txt
+
+        url = urlparse(url)
+        self.assertIn(url.scheme, ('http', 'https'))
+        self.assertEqual(url.netloc, 'testserver')
+
+        expected_path_components = ['',
+                                    settings.MEDIA_URL.strip('/'),
+                                    connection.schema_name,
+                                    'file_attachments',
+                                    'partner_org',
+                                    str(self.agreement.partner.id),
+                                    'agreements',
+                                    self.agreement.base_number.strip('/'),
+                                    'amendments',
+                                    amendment.number.strip('/'),
+                                    'goodbye_world.txt']
+
+        self.assertEqual(expected_path_components, url.path.split('/'))
+
+
 class TestAgreementAPIView(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(partner_type="Civil Society Organization")
+        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         self.partner_staff = PartnerStaffFactory(partner=self.partner)
         self.partner_staff2 = PartnerStaffFactory(partner=self.partner)
 
@@ -777,71 +929,20 @@ class TestAgreementAPIView(APITenantTestCase):
         )
         self.agreement2 = AgreementFactory(
             partner=self.partner,
-            agreement_type="MOU",
-            status="draft"
+            agreement_type=Agreement.MOU,
+            status=Agreement.DRAFT,
         )
         self.intervention = InterventionFactory(
             agreement=self.agreement,
             document_type=Intervention.PD)
 
-    @skip('fix this')
-    def test_agreements_create(self):
-        today = datetime.date.today()
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "country_programme": self.country_programme.id,
-            "status": "draft",
-            "start": date(today.year - 1, 1, 1),
-            "end": self.country_programme.to_date,
-            "signed_by": self.unicef_staff.id,
-            "partner_manager": self.partner_staff.id,
-            "signed_by_partner_date": date(today.year - 1, 1, 1),
-            "signed_by_unicef_date": date(today.year - 1, 1, 1),
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partnership_manager_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        # Check for activity action created
-        self.assertEqual(model_stream(Agreement).count(), 1)
-        self.assertEqual(model_stream(Agreement)[0].verb, 'created')
-        self.assertEqual(model_stream(Agreement)[0].target.start, date(today.year - 1, 1, 1))
-
-    @skip('fix this')
-    def test_agreements_create_max_signoff_single_date(self):
-        today = datetime.date.today()
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "status": "draft",
-            "country_programme": self.agreement.country_programme.id,
-            "start": date(today.year - 1, 1, 1),
-            "end": self.country_programme.to_date,
-            "signed_by": self.unicef_staff.id,
-            "signed_by_unicef_date": date(today.year - 1, 1, 1),
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partnership_manager_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
     def test_cp_end_date_update(self):
         data = {
-            'agreement_type': 'PCA'
+            'agreement_type': Agreement.PCA,
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.partner_staff_user,
             data=data
         )
@@ -854,7 +955,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.country_programme.save()
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.partner_staff_user,
             data=data
         )
@@ -862,26 +963,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         for r in response_json:
             self.assertEqual(r['end'], self.country_programme.to_date.isoformat())
-
-    @skip('fix this')
-    def test_agreements_create_max_signoff_no_date(self):
-        today = datetime.date.today()
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "country_programme": self.agreement.country_programme.id,
-            "status": "draft",
-            "start": date(today.year - 1, 1, 1),
-            "end": self.country_programme.to_date
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/'.format(self.partner.id),
-            user=self.partnership_manager_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_agreements_list(self):
         response = self.forced_auth_req(
@@ -894,10 +975,10 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data), 2)
         self.assertIn("Partner", response.data[0]["partner_name"])
 
-    @skip('bad test, status is already active.. rewrite..')
-    def test_agreements_update(self):
+    def test_null_update_generates_no_activity_stream(self):
+        '''Verify that a do-nothing update doesn't create anything in the model's activity stream'''
         data = {
-            "status": "active",
+            "agreement_number": self.agreement.agreement_number
         }
         response = self.forced_auth_req(
             'patch',
@@ -905,11 +986,7 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
             data=data
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], "active")
-
-        # There should not be any activity stream item created as there is no delta data
         self.assertEqual(model_stream(Agreement).count(), 0)
 
     def test_agreements_retrieve(self):
@@ -963,10 +1040,10 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_agreements_list_filter_type(self):
-        params = {"agreement_type": "PCA"}
+        params = {"agreement_type": Agreement.PCA}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.unicef_staff,
             data=params
         )
@@ -974,13 +1051,13 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.agreement.id)
-        self.assertEqual(response.data[0]["agreement_type"], "PCA")
+        self.assertEqual(response.data[0]["agreement_type"], Agreement.PCA)
 
     def test_agreements_list_filter_status(self):
         params = {"status": "signed"}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.unicef_staff,
             data=params
         )
@@ -988,13 +1065,13 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.agreement.id)
-        self.assertEqual(response.data[0]["status"], "signed")
+        self.assertEqual(response.data[0]["status"], Agreement.SIGNED)
 
     def test_agreements_list_filter_partner_name(self):
         params = {"partner_name": self.partner.name}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.unicef_staff,
             data=params
         )
@@ -1007,7 +1084,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"search": "Partner"}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.unicef_staff,
             data=params
         )
@@ -1020,7 +1097,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"search": datetime.date.today().year}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/',
             user=self.unicef_staff,
             data=params
         )
@@ -1029,97 +1106,46 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data), 2)
         # self.assertEquals(response.data[1]["agreement_number"], self.agreement.agreement_number)
 
-    @skip("Test transitions - checked when going active")
-    def test_agreements_create_validation_signed_by(self):
+    def test_agreements_update_set_to_active_on_save(self):
+        '''Ensure that a draft agreement auto-transitions to signed when saved with signing info'''
+        agreement = AgreementFactory(
+            agreement_type=Agreement.MOU,
+            status=Agreement.DRAFT,
+            partner=self.partner,
+            partner_manager=self.partner_staff,
+            start=datetime.date.today(),
+            end=self.country_programme.to_date,
+            signed_by=None,
+        )
+        # In order to auto-transition to signed, this agreement needs authorized officers
+        agreement.authorized_officers.add(self.partner_staff)
+        agreement.save()
+
+        today = datetime.date.today()
         data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "status": "draft",
-            "start": datetime.date.today(),
-            "end": datetime.date.today(),
-            "signed_by_partner_date": datetime.date.today(),
+            "start": today - datetime.timedelta(days=5),
+            "end": today + datetime.timedelta(days=5),
+            "signed_by": self.unicef_staff.id,
             "signed_by_unicef_date": datetime.date.today(),
         }
         response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/',
-            user=self.partnership_manager_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["errors"], ["Partner manager and signed by must be provided."])
-
-    @skip('fix this')
-    def test_agreements_create_start_set_to_max_signed(self):
-        today = datetime.date.today()
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "status": "draft",
-            "country_programme": self.agreement.country_programme.id,
-            "start": date(today.year - 1, 1, 1),
-            "end": self.country_programme.to_date,
-            "signed_by": self.unicef_staff.id,
-            "partner_manager": self.partner_staff.id,
-            "signed_by_partner_date": date(today.year - 1, 2, 1),
-            "signed_by_unicef_date": date(today.year - 1, 3, 1),
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/',
-            user=self.partnership_manager_user,
-            data=data
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    @skip('fix this')
-    def test_agreements_create_PCA_must_be_CSO(self):
-        self.partner.partner_type = "Government"
-        self.partner.save()
-        data = {
-            "agreement_type": "PCA",
-            "partner": self.partner.id,
-            "country_programme": self.country_programme.id,
-            "status": "draft",
-            "signed_by": self.unicef_staff.id,
-            "partner_manager": self.partner_staff.id,
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/',
-            user=self.partnership_manager_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["errors"], ["Partner type must be CSO for PCA or SSFA agreement types."])
-
-    @skip("Test transitions")
-    def test_agreements_update_set_to_active_on_save(self):
-        today = datetime.date.today()
-        data = {
-            "start": date(today.year, 3, 1),
-            "end": date(today.year, 6, 1),
-            "signed_by": self.unicef_staff.id,
-            "partner_manager": self.partner_staff.id,
-            "signed_by_partner_date": date(today.year, 2, 1),
-            "signed_by_unicef_date": date(today.year, 3, 1),
-        }
-        response = self.forced_auth_req(
             'patch',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            '/api/v2/agreements/{}/'.format(agreement.id),
             user=self.partnership_manager_user,
             data=data
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], Agreement.SIGNED)
 
-    @skip("Test transitions")
     def test_partner_agreements_update_suspend(self):
+        '''Ensure that interventions related to an agreement are suspended when the agreement is suspended'''
+        # There's a limited number of statuses that the intervention can have in order to transition to suspended;
+        # signed is one of them.
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.save()
+
         data = {
-            "status": "suspended",
+            "status": Agreement.SUSPENDED,
         }
         response = self.forced_auth_req(
             'patch',
@@ -1127,10 +1153,9 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
             data=data
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], "suspended")
-        self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, "suspended")
+        self.assertEqual(response.data["status"], Agreement.SUSPENDED)
+        self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, Intervention.SUSPENDED)
 
     def test_agreement_amendment_delete_error(self):
         response = self.forced_auth_req(
@@ -1188,7 +1213,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(partner_type="Civil Society Organization")
+        self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         self.partner_staff = PartnerStaffFactory(partner=self.partner)
         self.partner_staff_user = UserFactory(is_staff=True)
         self.partner_staff_user.groups.add(GroupFactory())
@@ -1229,7 +1254,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
     @skip("Skip staffmembers for now")
     def test_partner_staffmember_create_already_partner(self):
-        partner = PartnerFactory(partner_type="Civil Society Organization")
+        partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         partner_staff = PartnerStaffFactory(partner=partner)
         partner_staff_user = UserFactory(is_staff=True)
         partner_staff_user.profile.partner_staff_member = partner_staff.id
@@ -1367,7 +1392,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data
         )
         self.intervention = response.data
@@ -1414,7 +1439,7 @@ class TestInterventionViews(APITenantTestCase):
             "partner_id": self.agreement2.partner.id,
             "document_type": Intervention.SHPD,
             "title": "2009 EFY AWP Updated",
-            "status": "draft",
+            "status": Intervention.DRAFT,
             "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "submission_date_prc": "2016-10-31",
@@ -1465,7 +1490,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=self.intervention_data
         )
         self.intervention_data = response.data
@@ -1536,7 +1561,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -1544,6 +1569,25 @@ class TestInterventionViews(APITenantTestCase):
         # Check for activity action created
         self.assertEqual(model_stream(Intervention).count(), 3)
         self.assertEqual(model_stream(Intervention)[0].verb, 'created')
+
+    def test_intervention_create_unicef_user_fail(self):
+        data = {
+            "document_type": Intervention.SHPD,
+            "status": Intervention.DRAFT,
+            "title": "2009 EFY AWP Updated fail",
+            "start": (timezone.now().date()).isoformat(),
+            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
+            "unicef_budget": 0,
+            "agreement": self.agreement.id,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['detail'], u'Accessing this item is not allowed.')
 
     def test_intervention_retrieve_fr_numbers(self):
         self.fr_header_1.intervention = self.intervention_obj
@@ -1570,7 +1614,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=self.intervention_data
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1638,7 +1682,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data={}
         )
 
@@ -1655,7 +1699,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 
@@ -1671,7 +1715,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 
@@ -1687,7 +1731,7 @@ class TestInterventionViews(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/{}/'.format(self.intervention["id"]),
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data,
         )
 
@@ -1762,7 +1806,7 @@ class TestInterventionViews(APITenantTestCase):
 
     def test_intervention_planned_visits_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = "active"
+        intervention.status = Intervention.ACTIVE
         intervention.save()
         response = self.forced_auth_req(
             'delete',
@@ -1806,7 +1850,7 @@ class TestInterventionViews(APITenantTestCase):
 
     def test_intervention_results_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = "active"
+        intervention.status = Intervention.ACTIVE
         intervention.save()
         response = self.forced_auth_req(
             'delete',
@@ -1828,7 +1872,7 @@ class TestInterventionViews(APITenantTestCase):
 
     def test_intervention_amendments_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = "active"
+        intervention.status = Intervention.ACTIVE
         intervention.save()
         response = self.forced_auth_req(
             'delete',
@@ -1850,7 +1894,7 @@ class TestInterventionViews(APITenantTestCase):
 
     def test_intervention_sector_locations_delete_invalid(self):
         intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = "active"
+        intervention.status = Intervention.ACTIVE
         intervention.save()
         response = self.forced_auth_req(
             'delete',
@@ -1880,7 +1924,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.agreement = AgreementFactory()
-        self.agreement2 = AgreementFactory(status="draft")
+        self.agreement2 = AgreementFactory(status=Agreement.DRAFT)
         self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
         data = {
             "document_type": Intervention.SHPD,
@@ -1914,7 +1958,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
             "partner_id": self.agreement2.partner.id,
             "document_type": Intervention.SHPD,
             "title": "2009 EFY AWP Updated",
-            "status": "draft",
+            "status": Intervention.DRAFT,
             "start": "2017-01-28",
             "end": "2019-01-28",
             "submission_date_prc": "2017-01-31",
@@ -1962,21 +2006,3 @@ class TestPartnershipDashboardView(APITenantTestCase):
             data=self.intervention_data
         )
         self.intervention_data = response.data
-
-    @skip('endpoint deprecated')
-    def test_with_ct_pk(self):
-        intervention = Intervention.objects.get(id=self.intervention_data['id'])
-        intervention.status = Intervention.ACTIVE
-        intervention.save()
-
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/partnership-dash/{}/'.format(self.agreement2.country_programme.id),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotEqual(response.data['active_value'], 0)
-        self.assertEqual(response.data['active_count'], 1)
-        self.assertEqual(response.data['active_this_year_count'], 1)
-        self.assertEqual(response.data['active_this_year_percentage'], '100%')
