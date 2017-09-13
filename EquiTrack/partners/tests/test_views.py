@@ -88,9 +88,9 @@ class TestPartnerOrganizationListView(APITenantTestCase):
         # serializer.
         self.normal_field_names = sorted(
             ('blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name',
-            'partner_type', 'phone_number', 'rating', 'shared_partner', 'shared_with',
-            'short_name', 'total_ct_cp', 'total_ct_cy', 'vendor_number', )
-            )
+             'partner_type', 'phone_number', 'rating', 'shared_partner', 'shared_with',
+             'short_name', 'total_ct_cp', 'total_ct_cy', 'vendor_number', )
+             )
 
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
