@@ -7,27 +7,14 @@ import django.db.models.deletion
 import django.utils.timezone
 import model_utils.fields
 
-def reverse(apps, schema_editor):
-   return
-
-def remove_all_indicators(apps, schema_editor):
-   IndicatorBlueprint = apps.get_model('reports', 'IndicatorBlueprint')
-   # use the save method to mark invalid fields
-   deleted = IndicatorBlueprint.objects.all().delete()
-   if deleted[0]:
-       print "Deleted Indicators: {}".format(deleted[0])
-
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0008_workspacecounter'),
-        ('locations', '0004_auto_20170112_2051'),
-        ('reports', '0014_auto_20170908_1307'),
+        ('reports', '0015_remove_indicators'),
     ]
 
     operations = [
-        migrations.RunPython(remove_all_indicators, reverse_code=reverse),
         migrations.CreateModel(
             name='Disaggregation',
             fields=[
