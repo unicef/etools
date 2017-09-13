@@ -346,6 +346,8 @@ class PartnerOrganizationDeleteView(DestroyAPIView):
             raise ValidationError("This partner has agreements associated to it")
         elif TravelActivity.objects.filter(partner=partner).count() > 0:
             raise ValidationError("This partner has trips associated to it")
+        elif partner.total_ct_cp > 0:
+            raise ValidationError("This partner has cash transactions associated to it")
         else:
             partner.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
