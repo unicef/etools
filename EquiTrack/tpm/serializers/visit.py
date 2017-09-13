@@ -1,4 +1,7 @@
 import itertools
+
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -161,7 +164,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
                               serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(
-        read_field=TPMPartnerLightSerializer(read_only=True),
+        read_field=TPMPartnerLightSerializer(label=_('TPM Name'), read_only=True),
     )
 
     offices = SeparatedReadWriteField(
@@ -230,7 +233,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
-    action_points = TPMActionPointSerializer(many=True, required=False)
+    action_points = TPMActionPointSerializer(label=_('Activity information'), many=True, required=False)
 
     def validate(self, attrs):
         validated_data = super(TPMVisitSerializer, self).validate(attrs)
@@ -270,5 +273,5 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
 class TPMVisitDraftSerializer(TPMVisitSerializer):
     class Meta(TPMVisitSerializer.Meta):
         extra_kwargs = {
-            'tpm_partner': {'required': False},
+            'tpm_partner': {'required': False, 'label': _('TPM Name')},
         }
