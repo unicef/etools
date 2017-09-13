@@ -197,7 +197,11 @@ class Command(BaseCommand):
 
         # tpm_report_rejected - similar to tpm_accepted. tpm edit report area, tpm can report.
         self.add_permissions(self.tpm_report_rejected, self.everybody, 'view', self.everything)
-        self.add_permissions(self.tpm_report_rejected, self.third_party_monitor, 'edit', ['tpmvisit.report'])
+        self.add_permissions(self.tpm_report_rejected, self.third_party_monitor, 'edit', [
+            'tpmvisit.report_attachments',
+            'tpmvisit.tpm_activities',
+            'tpmactivity.report_attachments',
+        ])
         self.add_permissions(self.tpm_report_rejected, self.third_party_monitor, 'action', 'tpmvisit.send_report')
         self.add_permissions(self.tpm_report_rejected, self.pme, 'action', [
             'tpmvisit.cancel',
