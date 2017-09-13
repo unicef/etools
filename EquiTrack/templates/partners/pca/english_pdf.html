@@ -34,6 +34,7 @@
         </style>
     {% endblock %}
     {% block extra_style %}
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <style type="text/css">
             #page-header {
             {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
@@ -92,22 +93,19 @@
             }
             #officers_table {
                 width: 512pt;
+                margin-top: 24px;
+                margin-bottom: 12px;
                 border-collapse: collapse;
                 table-layout: fixed;
             }
-            #officers_table tr {
-                /*height: 1.4cm;*/
-                /*line-height: 1cm;*/
-            }
+            #officers_table tr {width: 512pt;}
             #officers_table th {
-                width: 128pt;
                 text-align: center;
                 vertical-align: middle;
                 font-weight: normal;
                 border: 1px solid black;
             }
             #officers_table td {
-                width: 128pt;
                 text-align: center;
                 vertical-align: middle;
                 border: 1px solid black;
@@ -117,12 +115,10 @@
             /*fonts*/
             #header_content {
                 font-family: "Times_New_Roman";
-                /*font-family: "DejaVuSansMono";*/
                 font-size: 12pt;
             }
             #content {
                 font-family: "Times_New_Roman";
-                /*font-family: "DejaVuSansMono";*/
                 font-size: 12pt;
             }
             /*bold fix*/
@@ -147,13 +143,9 @@
                 -pdf-keep-with-next: true;
             }
             .small-indent {
-                /*padding-left: 0.6cm;*/
                 text-indent: 0.8cm;
             }
-            .indented {
-                /*list-style-position: inside;*/
-                /*text-indent: 12px;*/
-            }
+            .indented {}
             .list-style-type-letter {
                 list-style-type: lower-alpha;
             }
@@ -173,14 +165,15 @@
     </div>
     <div id="content">
         <div id="title" style="text-align: center; padding-top: 0px">
-            <div style="font-size: 16pt;padding-top: 18px;"><b>PROGRAMME COOPERATION AGREEMENT</b></div>
-            <div><b>BETWEEN</b></div>
+            <div style="font-size: 16pt;padding-top: 18px;"><b>PROGRAMME COOPERATION Agreement</b></div>
+            <div><b>between</b></div>
             <div><b>{{ agreement.partner|upper }}</b></div>
-            <div><b>AND THE</b></div>
-            <div><b>UNITED NATIONS CHILDREN'S FUND</b></div>
-            <div><b>FOR THE</b></div>
-            <div><b>IMPLEMENTATION of UNICEF-FUNDED PROGRAMME RELATING TO THE UNICEF PROGRAMME
-                FOR {{ country|upper }}</b></div>
+            <div><b>and the</b></div>
+            <div><b>United Nations Children’s Fund</b></div>
+            <div><b>for the</b></div>
+            <div><b>Implementation of UNICEF-funded Programme relating to the UNICEF Country Programme for
+                {{ country|upper }}</b>
+            </div>
             <div style="padding-top: 12px;">
                 {{ agreement.partner }} and the United Nations Children’s Fund (referred to jointly as the “Parties”
                 and each separately as a “Party”), hereby agree as follows:
@@ -205,8 +198,8 @@
                     means {{ agreement.partner }}, {{ agreement.partner.address }}, {{ agreement.partner.city }} {{ agreement.partner.country }} </li>
                 <li>“<u>Programme</u>” means the UNICEF [programme for {{ country }}],
                     approved by the Executive Board of the United Nations Children’s Fund for the period
-                    [{{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}], including any subsequent extension of the ongoing Programme as
-                    approved by either the Executive Director or the Executive Board.
+                    [{{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}], including any subsequent extension of the
+                    ongoing Programme as approved by either the Executive Director or the Executive Board.
                 </li>
                 <li>“<u>Programme Document</u>” means the formal document (in standard format)
                     attached to this Agreement, which is concluded by the Parties and reflects expected
@@ -237,7 +230,7 @@
                 </li>
                 <li>
                     “<u>Authorized Officer</u>” means one of the following officers of the IP:
-
+                    <!--
                     <table id="officers_table" repeat="1">
                     <tr>
                         <th><br>Full name</th>
@@ -253,6 +246,28 @@
                         <td><br></td>
                     </tr>
                     {% endfor %}
+                    </table>
+                    -->
+
+                    <table id="officers_table">
+                        {% for officer in auth_officers %}
+                        <tr>
+                            <td style="width: 33%;"><br>Full name</td>
+                            <td><br> {{ officer.first_name }} {{ officer.last_name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Title</td>
+                            <td><br>{{ officer.title }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Email</td>
+                            <td><br>{{ officer.email }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Sample signature</td>
+                            <td><br></td>
+                        </tr>
+                        {% endfor %}
                     </table>
 
                     <div style="padding-top: 15px">
