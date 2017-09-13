@@ -612,8 +612,18 @@ class AssessmentAdmin(admin.ModelAdmin):
 class PartnerStaffMemberAdmin(admin.ModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
+
+    # display_staff_member_name() is used only in list_display. It could be replaced by this simple lambda --
+    #     lambda instance: unicode(instance)
+    # However, creating a function allows me to put a title on the column in the admin by populating the function's
+    # 'short_description' attribute.
+    # https://docs.djangoproject.com/en/1.11/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_display
+    def display_staff_member_name(instance):
+        return unicode(instance)
+    display_staff_member_name.short_description = 'Partner Staff Member'
+
     list_display = (
-        '__unicode__',
+        display_staff_member_name,
         'title',
         'email',
     )
