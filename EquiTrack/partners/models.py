@@ -2494,7 +2494,7 @@ class PCA(AdminURLMixin, models.Model):
         recipients = [user.email for user in managers]
 
         email_context = {
-            'number': instance.__unicode__(),
+            'number': unicode(instance),
             'state': 'Created',
             'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
         }
@@ -2561,7 +2561,7 @@ class RAMIndicator(models.Model):
     def __unicode__(self):
         return '{} -> {}'.format(
             self.result.sector.name if self.result.sector else '',
-            self.result.__unicode__(),
+            unicode(self.result),
         )
 
 
@@ -2707,7 +2707,7 @@ class GwPCALocation(models.Model):
         verbose_name = 'Partnership Location'
 
     def __unicode__(self):
-        return self.location.__unicode__() if self.location else ''
+        return unicode(self.location) if self.location else ''
 
     def view_location(self):
         return get_changeform_link(self)
@@ -2911,7 +2911,7 @@ class AuthorizedOfficer(models.Model):
     tracker = FieldTracker()
 
     def __unicode__(self):
-        return self.officer.__unicode__()
+        return unicode(self.officer)
 
     @classmethod
     def create_officer(cls, sender, instance, created, **kwargs):
