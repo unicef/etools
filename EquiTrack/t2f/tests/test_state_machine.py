@@ -187,7 +187,6 @@ class StateMachineTest(APITenantTestCase):
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
-
     @override_settings(DISABLE_INVOICING=True)
     def test_state_machine_flow_invoice_disabled(self):
         currency = CurrencyFactory()

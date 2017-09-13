@@ -71,14 +71,14 @@ class TravelActivityList(APITenantTestCase):
         wbs = WBSFactory(business_area=business_area)
         grant = wbs.grants.first()
         fund = grant.funds.first()
-        traveler= UserFactory(is_staff=True)
+        traveler = UserFactory(is_staff=True)
         traveler.profile.vendor_number = 'usrvend'
         traveler.profile.save()
 
         travel = TravelFactory(reference_number=make_travel_reference_number(),
-                                    traveler=traveler,
-                                    status=Travel.CERTIFIED,
-                                    supervisor=self.unicef_staff)
+                               traveler=traveler,
+                               status=Travel.CERTIFIED,
+                               supervisor=self.unicef_staff)
         data = {'cost_assignments': [{'wbs': wbs.id,
                                       'grant': grant.id,
                                       'fund': fund.id,
@@ -113,8 +113,8 @@ class TravelActivityList(APITenantTestCase):
                               'type': expense_type.id,
                               'currency': currency.id,
                               'document_currency': currency.id}]}
-        act1 =  TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING, primary_traveler=traveler)
-        act2 =  TravelActivityFactory(travel_type=TravelType.SPOT_CHECK, primary_traveler=traveler)
+        act1 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING, primary_traveler=traveler)
+        act2 = TravelActivityFactory(travel_type=TravelType.SPOT_CHECK, primary_traveler=traveler)
         act1.travels.add(travel)
         act2.travels.add(travel)
         partner_programmatic_visits = PartnerOrganization.objects.get(id=act1.partner.id)
@@ -132,5 +132,3 @@ class TravelActivityList(APITenantTestCase):
                          partner_programmatic_visits_after_complete.hact_values['programmatic_visits'])
         self.assertEqual(partner_spot_checks.hact_values['spot_checks']+1,
                          partner_spot_checks_after_complete.hact_values['spot_checks'])
-
-
