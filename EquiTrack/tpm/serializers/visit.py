@@ -112,6 +112,9 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
             'id', 'implementing_partner', 'partnership', 'cp_output', 'section',
             'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
         ]
+        extra_kwargs = {
+            'date': {'required': True}
+        }
 
     def validate(self, attrs):
         validated_data = super(TPMActivitySerializer, self).validate(attrs)
