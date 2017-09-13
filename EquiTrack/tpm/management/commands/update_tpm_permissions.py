@@ -153,13 +153,14 @@ class Command(BaseCommand):
         self.add_permissions(self.tpm_accepted, self.everybody, 'view', self.everything)
         self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'edit', [
             'tpmvisit.report_attachments',
+            'tpmvisit.tpm_activities',
             'tpmactivity.report_attachments',
         ])
         self.add_permissions(self.tpm_accepted, self.third_party_monitor, 'action', 'tpmvisit.send_report')
         self.add_permissions(self.tpm_accepted, self.pme, 'action', [
             'tpmvisit.cancel',
         ])
-        self.revoke_permissions(self.tpm_accepted, self.pme, 'view', [
+        self.revoke_permissions(self.tpm_accepted, self.all_unicef_users, 'view', [
             'tpmvisit.report_attachments',
             'tpmactivity.report_attachments',
         ])
@@ -174,7 +175,7 @@ class Command(BaseCommand):
             'tpmvisit.assign',
             'tpmvisit.cancel',
         ])
-        self.revoke_permissions(self.tpm_rejected, self.pme, 'view', [
+        self.revoke_permissions(self.tpm_rejected, self.everybody, 'view', [
             'tpmvisit.report_attachments',
             'tpmactivity.report_attachments',
         ])
