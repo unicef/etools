@@ -608,7 +608,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 travel_type=TravelType.SPOT_CHECK,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
-                travels__completed_at__in=datetime.datetime.now().year(),
+                travels__completed_at__year=datetime.datetime.now().year(),
                 partner=partner,
             ).count() or 0
 
