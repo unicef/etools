@@ -186,6 +186,7 @@ class StateMachineTest(APITenantTestCase):
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.COMPLETED)
 
     @override_settings(DISABLE_INVOICING=True)
     def test_state_machine_flow_invoice_disabled(self):
