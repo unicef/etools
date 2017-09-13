@@ -1463,7 +1463,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ENDED],
                 target=[CLOSED],
-                conditions=[intervention_validation.transition_ok])
+                conditions=[intervention_validation.transition_to_closed])
     def transition_to_closed(self):
         pass
 

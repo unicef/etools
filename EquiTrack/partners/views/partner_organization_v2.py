@@ -274,6 +274,8 @@ class PartnerOrganizationAddView(CreateAPIView):
         'email': "EMAIL",
         'total_ct_cp': "TOTAL_CASH_TRANSFERRED_CP",
         'total_ct_cy': "TOTAL_CASH_TRANSFERRED_CY",
+        'deleted_flag': "MARKED_FOR_DELETION",
+        'blocked': "POSTING_BLOCK",
     }
 
     cso_type_mapping = {
@@ -326,6 +328,8 @@ class PartnerOrganizationAddView(CreateAPIView):
                     partner_resp[v]) if v in partner_resp.keys() else None for k,
                 v in self.MAPPING.items()}
             partner_org['vision_synced'] = True
+            partner_org['deleted_flag'] = True if self.MAPPING['deleted_flag'] in partner_resp.keys() else False
+            partner_org['blocked'] = True if self.MAPPING['blocked'] in partner_resp.keys() else False
             po_serializer = self.get_serializer(data=partner_org)
             po_serializer.is_valid(raise_exception=True)
             po_serializer.save()
