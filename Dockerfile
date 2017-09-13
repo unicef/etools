@@ -27,20 +27,13 @@ RUN apt-get install -y --no-install-recommends \
     libgdal1-dev \
     libxml2-dev \
     libxslt-dev \
-    xmlsec1
-#packages needed for RTL text support for PDF generation
-RUN apt-get install -y --no-install-recommends \
-    libfreetype6 \
-    libfontconfig1 \
-    libxrender1 \
-    libxext6 \
+    xmlsec1 \
     wkhtmltopdf
 
 RUN pip install --upgrade \
     setuptools \
     pip \
-    wheel \
-    django-wkhtmltopdf
+    wheel
 
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
