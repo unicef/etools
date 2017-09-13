@@ -4,6 +4,7 @@ import logging
 from datetime import date
 
 from django.utils.translation import ugettext as _
+from django.db.models import Q
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError, \
     check_required_fields, BasicValidationError
@@ -112,8 +113,9 @@ def one_pca_per_cp_per_partner(agreement):
         if agreement.__class__.objects.filter(partner=agreement.partner,
                                               agreement_type=agreement.PCA,
                                               country_programme=agreement.country_programme,
-                                              start__gt=date(2015, 7, 1),
-                                              ).exclude(pk=agreement.id, status=agreement.__class__.DRAFT).count():
+                                              start__gt=date(2015, 7, 1)
+                                              ).exclude(
+                    Q(pk=agreement.id) | Q(status=agreement.__class__.DRAFT)).count():
             return False
     return True
 
