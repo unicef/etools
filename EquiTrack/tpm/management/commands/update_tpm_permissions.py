@@ -15,11 +15,6 @@ class Command(BaseCommand):
         'tpm_tpmpartnerstaffmember.*',
     ]
 
-    tpm_visit = [
-        'tpm_tpmvisit.*',
-        'tpm_tpmactivity.*',
-    ]
-
     tpm_visit_details = [
         'tpm_tpmvisit.tpm_partner',
         'tpm_tpmvisit.tpm_activities',

@@ -9,7 +9,7 @@ from .models import Parent, Child1
 
 
 class Child1Serializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
-    class Meta(PermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = Child1
         fields = ['id', 'field1', 'field2']
 
@@ -17,7 +17,7 @@ class Child1Serializer(PermissionsBasedSerializerMixin, WritableNestedSerializer
 class ParentSerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
     children1 = Child1Serializer(many=True)
 
-    class Meta(PermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = Parent
         fields = ['id', 'field1', 'field2', 'children1']
 
@@ -37,11 +37,11 @@ class SerializersTestCase(TestCase):
         ]
 
         Permission.objects.bulk_create([
-            Permission(permission='edit', target='parent.field1'),
-            Permission(permission='edit', target='parent.children1'),
-            Permission(permission='edit', target='child1.field1'),
-            Permission(permission='edit', target='parent.field2', condition=['user.group="PME"']),
-            Permission(permission='edit', target='child1.field2', condition=['user.group="PME"']),
+            Permission(permission='edit', target='permissions2_parent.field1'),
+            Permission(permission='edit', target='permissions2_parent.children1'),
+            Permission(permission='edit', target='permissions2_child1.field1'),
+            Permission(permission='edit', target='permissions2_parent.field2', condition=['user.group="PME"']),
+            Permission(permission='edit', target='permissions2_child1.field2', condition=['user.group="PME"']),
         ])
 
     def test_representation(self):

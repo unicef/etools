@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-from django.db import models
 from rest_framework import serializers
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
@@ -11,9 +10,6 @@ from .models import Permission
 
 
 class PermissionsBasedSerializerMixin(object):
-    class Meta:
-        permission_class = Permission
-
     def _collect_permissions_targets(self):
         """
         Collect permissions targets based on serializer's model and field name from full serializers tree.
@@ -39,9 +35,7 @@ class PermissionsBasedSerializerMixin(object):
                 if isinstance(node, PermissionsBasedSerializerMixin):
                     related_models = collect_parent_models(node.Meta.model)
                     targets.extend(map(
-                        lambda model: '{}_{}.{}'.format(model._meta.app_label,
-                                                        model._meta.model_name,
-                                                        field.field_name),
+                        lambda model: Permission.get_target(model, field),
                         related_models
                     ))
 
@@ -56,23 +50,11 @@ class PermissionsBasedSerializerMixin(object):
 
         return targets
 
-    def _extend_permissions_targets(self, targets):
-        """
-        Extend permissions targets to using wildcards.
-        :param targets:
-        :return:
-        """
-        wildcards = list(set(map(lambda x: '.'.join((x.split('.')[:-1])) + '.*', targets)))
-        return targets + wildcards
-
     def _collect_permissions(self):
         """
         Collect permission objects.
         :return:
         """
-        assert self.Meta.permission_class
-        assert issubclass(self.Meta.permission_class, Permission)
-
         targets = self._collect_permissions_targets()
         perms = self._get_permissions_queryset(targets)
         context = self._get_permission_context()
@@ -81,18 +63,10 @@ class PermissionsBasedSerializerMixin(object):
         return perms
 
     def _get_permissions_queryset(self, targets):
-        targets_query = models.Q(target__in=targets)
-        for target in self._extend_permissions_targets(targets):
-            targets_query |= models.Q(target__regex=target)
-
-        permissions = self.Meta.permission_class.objects.filter(targets_query)
-        return permissions
+        return Permission.objects.filter_by_targets(targets)
 
     def _get_permission_context(self):
-        return map(
-            lambda condition: condition.to_internal_value(),
-            self.context.get('permission_context', []),
-        )
+        return self.context.get('permission_context', [])
 
     @property
     def permissions(self):
@@ -104,7 +78,7 @@ class PermissionsBasedSerializerMixin(object):
             self.root._permissions = list(self._collect_permissions())
 
         permissions = self.root._permissions
-        related_models = tuple(map(lambda model: '{}_{}.'.format(model._meta.app_label, model._meta.model_name),
+        related_models = tuple(map(lambda model: Permission.get_target(model, ''),
                                    collect_parent_models(self.Meta.model)))
         permissions = filter(lambda p: p.target.startswith(related_models), permissions)
 
@@ -113,74 +87,37 @@ class PermissionsBasedSerializerMixin(object):
 
         return permissions
 
+    def _filter_fields_by_permissions(self, fields, permission):
+        model = self.Meta.model
+        targets_map = {Permission.get_target(model, field): field for field in fields}
+
+        pk_fields = []
+        pk_target = Permission.get_target(model, 'pk')
+        if pk_target in targets_map:
+            pk_fields.append(targets_map.pop(pk_target))
+
+        pk_field = model_meta.get_field_info(model).pk
+        pk_target = Permission.get_target(model, pk_field)
+        if pk_target in targets_map:
+            pk_fields.append(targets_map.pop(pk_target))
+
+        allowed_targets = Permission.apply_permissions(self.permissions, targets_map.keys(), permission)
+
+        allowed_fields = map(lambda target: targets_map[target], allowed_targets)
+
+        if allowed_fields:
+            allowed_fields.extend(pk_fields)
+
+        return allowed_fields
+
     @property
     def _writable_fields(self):
         fields = super(PermissionsBasedSerializerMixin, self)._writable_fields
 
-        allowed_permissions = filter(
-            lambda p:
-            p.permission == self.Meta.permission_class.PERMISSIONS.edit and
-            p.permission_type == self.Meta.permission_class.TYPES.allow,
-            self.permissions
-        )
-        disallowed_permissions = filter(
-            lambda p:
-            p.permission in [self.Meta.permission_class.PERMISSIONS.edit,
-                             self.Meta.permission_class.PERMISSIONS.view] and
-            p.permission_type == self.Meta.permission_class.TYPES.disallow,
-            self.permissions
-        )
-
-        allowed_fields_names = map(lambda p: p.target.split('.')[-1], allowed_permissions)
-        disallowed_fields_names = map(lambda p: p.target.split('.')[-1], disallowed_permissions)
-
-        # PK allowed be default
-        if allowed_fields_names:
-            model = self.Meta.model
-            info = model_meta.get_field_info(model)
-            allowed_fields_names.extend(['pk', info.pk.name])
-
-        if '*' in allowed_fields_names:
-            filtered_fields = fields
-        else:
-            filtered_fields = filter(lambda f: f.field_name in allowed_fields_names, fields)
-
-        filtered_fields = filter(lambda f: f.field_name not in disallowed_fields_names, filtered_fields)
-
-        return filtered_fields
+        return self._filter_fields_by_permissions(fields, Permission.PERMISSIONS.edit)
 
     @property
     def _readable_fields(self):
         fields = super(PermissionsBasedSerializerMixin, self)._readable_fields
 
-        allowed_permissions = filter(
-            lambda p:
-            p.permission in [self.Meta.permission_class.PERMISSIONS.edit,
-                             self.Meta.permission_class.PERMISSIONS.view] and
-            p.permission_type == self.Meta.permission_class.TYPES.allow,
-            self.permissions
-        )
-        disallowed_permissions = filter(
-            lambda p:
-            p.permission == self.Meta.permission_class.PERMISSIONS.view and
-            p.permission_type == self.Meta.permission_class.TYPES.disallow,
-            self.permissions
-        )
-
-        allowed_fields_names = map(lambda p: p.target.split('.')[-1], allowed_permissions)
-        disallowed_fields_names = map(lambda p: p.target.split('.')[-1], disallowed_permissions)
-
-        # PK allowed be default
-        if allowed_fields_names:
-            model = self.Meta.model
-            info = model_meta.get_field_info(model)
-            allowed_fields_names.extend(['pk', info.pk.name])
-
-        if '*' in allowed_fields_names:
-            filtered_fields = fields
-        else:
-            filtered_fields = filter(lambda f: f.field_name in allowed_fields_names, fields)
-
-        filtered_fields = filter(lambda f: f.field_name not in disallowed_fields_names, filtered_fields)
-
-        return filtered_fields
+        return self._filter_fields_by_permissions(fields, Permission.PERMISSIONS.view)

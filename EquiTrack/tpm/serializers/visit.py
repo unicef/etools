@@ -41,7 +41,7 @@ class PartnerOrganizationLightSerializer(serializers.ModelSerializer):
 class TPMVisitReportRejectCommentSerializer(PermissionsBasedSerializerMixin,
                                             WritableNestedSerializerMixin,
                                             serializers.ModelSerializer):
-    class Meta(PermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMVisitReportRejectComment
         fields = ['id', 'rejected_at', 'reject_reason', ]
 
@@ -59,7 +59,7 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin,
 
     is_responsible = serializers.SerializerMethodField()
 
-    class Meta(PermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMActionPoint
         fields = [
             'id', 'author', 'person_responsible', 'is_responsible',
@@ -99,7 +99,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
 
     pd_files = TPMAttachmentsSerializer(many=True, required=False)
 
-    class Meta(PermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
             'id', 'implementing_partner', 'partnership', 'cp_output', 'section',
@@ -245,7 +245,7 @@ class TPMVisitSerializer(PermissionsBasedSerializerMixin, TPMVisitLightSerialize
 
     action_points = TPMActionPointSerializer(many=True, required=False)
 
-    class Meta(PermissionsBasedSerializerMixin.Meta, TPMVisitLightSerializer.Meta):
+    class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
             'tpm_activities', 'attachments', 'report', 'action_points',
             'reject_comment', 'report_reject_comments',

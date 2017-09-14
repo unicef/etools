@@ -8,7 +8,7 @@ from .attachments import TPMPartnerAttachmentsSerializer
 
 
 class TPMPartnerStaffMemberSerializer(PermissionsBasedSerializerMixin, BaseStaffMemberSerializer):
-    class Meta(PermissionsBasedSerializerMixin.Meta, BaseStaffMemberSerializer.Meta):
+    class Meta(BaseStaffMemberSerializer.Meta):
         model = TPMPartnerStaffMember
         fields = BaseStaffMemberSerializer.Meta.fields + [
             'receive_tpm_notifications',
@@ -40,7 +40,7 @@ class TPMPartnerSerializer(PermissionsBasedSerializerMixin, WritableNestedSerial
     staff_members = TPMPartnerStaffMemberSerializer(many=True, required=False, read_only=True)
     attachments = TPMPartnerAttachmentsSerializer(many=True)
 
-    class Meta(PermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta, TPMPartnerLightSerializer.Meta):
+    class Meta(WritableNestedSerializerMixin.Meta, TPMPartnerLightSerializer.Meta):
         fields = TPMPartnerLightSerializer.Meta.fields + [
             'staff_members', 'attachments',
         ]

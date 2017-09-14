@@ -19,14 +19,16 @@ from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
-from .permissions import IsPMEorReadonlyPermission
 from .export.renderers import TPMVisitCSVRenderer
 from .export.serializers import TPMVisitExportSerializer
+
+from .permissions import IsPMEorReadonlyPermission
 
 
 class BaseTPMViewSet(
     SafeTenantViewSetMixin,
     MultiSerializerViewSetMixin,
+    PermittedSerializerMixin,
 ):
     metadata_class = TPMBaseMetadata
     pagination_class = DynamicPageNumberPagination
@@ -51,10 +53,9 @@ class TPMPartnerViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    PermittedFSMActionMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    PermittedSerializerMixin,
+    PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
     metadata_class = TPMPermissionBasedMetadata
@@ -63,6 +64,7 @@ class TPMPartnerViewSet(
     serializer_action_classes = {
         'list': TPMPartnerLightSerializer
     }
+    # TODO: Get rid of it
     permission_classes = (IsAuthenticated, IsPMEorReadonlyPermission,)
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('vendor_number', 'name')
@@ -114,13 +116,13 @@ class TPMStaffMembersViewSet(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    PermittedSerializerMixin,
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
     metadata_class = TPMPermissionBasedMetadata
     queryset = TPMPartnerStaffMember.objects.all()
     serializer_class = TPMPartnerStaffMemberSerializer
+    # TODO: Get rid of it
     permission_classes = (IsAuthenticated, IsPMEorReadonlyPermission, )
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
@@ -137,10 +139,9 @@ class TPMVisitViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    PermittedFSMActionMixin,
-    PermittedSerializerMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
+    PermittedFSMActionMixin,
     viewsets.GenericViewSet
 ):
     metadata_class = TPMPermissionBasedMetadata
