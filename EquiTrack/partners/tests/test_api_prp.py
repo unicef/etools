@@ -2,7 +2,7 @@ import json
 import os
 from django.core.urlresolvers import reverse
 from rest_framework import status
-from EquiTrack.factories import ResultFactory, LocationFactory
+from EquiTrack.factories import ResultFactory, LocationFactory, GatewayTypeFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import InterventionResultLink
 from partners.tests.test_utils import setup_intervention_test_data
@@ -27,7 +27,9 @@ class TestInterventionsAPI(APITenantTestCase):
             indicator=self.indicator_blueprint,
             lower_result=self.lower_result,
         )
-        self.applied_indicator.locations.add(LocationFactory(name='A Location'))
+        self.applied_indicator.locations.add(LocationFactory(name='A Location',
+                                                             gateway=GatewayTypeFactory(name='A Gateway'),
+                                                             p_code='a-p-code'))
         self.applied_indicator.disaggregation.create(name='A Disaggregation')
 
 

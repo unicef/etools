@@ -10,8 +10,8 @@ def setup_intervention_test_data(test_case):
     test_case.unicef_staff = UserFactory(is_staff=True)
     test_case.partnership_manager_user = UserFactory(is_staff=True)
     test_case.partnership_manager_user.groups.add(GroupFactory())
-    test_case.partner = PartnerFactory()
-    test_case.partner1 = PartnerFactory()
+    test_case.partner = PartnerFactory(name='Partner 1')
+    test_case.partner1 = PartnerFactory(name='Partner 2')
     test_case.agreement = AgreementFactory(partner=test_case.partner, signed_by_unicef_date=datetime.date.today())
 
     test_case.active_agreement = AgreementFactory(partner=test_case.partner1,
