@@ -1439,14 +1439,6 @@ class Intervention(TimeStampedModel):
         else:
             return datetime.date.today().year
 
-    def get_all_ll_results_(self):
-        """
-        Get all lower level results associated with this Intervention.
-        """
-        from reports.models import LowerResult
-        print 'calling the model function'
-        return LowerResult.objects.filter(result_link__intervention=self)
-
     def illegal_transitions(self):
         return False
 
