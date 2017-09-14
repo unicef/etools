@@ -63,7 +63,7 @@ class POSynchronizer(VisionDataSynchronizer):
             if self.ENDPOINT is None:
                 raise VisionException(message='You must set the ENDPOINT name')
 
-            self.county = country
+            self.country = country
             self.url = '{}/{}'.format(
                 self.URL,
                 self.ENDPOINT
