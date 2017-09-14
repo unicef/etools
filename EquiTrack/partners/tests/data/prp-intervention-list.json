@@ -8,7 +8,13 @@
             "target": 0,
             "title": "The Blueprint",
             "disaggregation": [],
-            "locations": [],
+            "locations": [
+              {
+                "pcode": "PCODE0",
+                "name": "A Location",
+                "location_type": "GatewayType 0"
+              }
+            ],
             "cluster_id": null,
             "id": 1,
             "baseline": null

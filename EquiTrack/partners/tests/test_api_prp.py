@@ -2,7 +2,7 @@ import json
 import os
 from django.core.urlresolvers import reverse
 from rest_framework import status
-from EquiTrack.factories import ResultFactory
+from EquiTrack.factories import ResultFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import InterventionResultLink
 from partners.tests.test_utils import setup_intervention_test_data
@@ -27,6 +27,8 @@ class TestInterventionsAPI(APITenantTestCase):
             indicator=self.indicator_blueprint,
             lower_result=self.lower_result,
         )
+        self.applied_indicator.locations.add(LocationFactory(name='A Location'))
+
 
     def run_prp_v1(self, user=None, method='get'):
         response = self.forced_auth_req(
