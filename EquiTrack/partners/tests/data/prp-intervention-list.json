@@ -1,6 +1,16 @@
 [
   {
-    "expected_results": [],
+    "expected_results": [
+      {
+        "indicators": [],
+        "cp_output": {
+          "id": 177,
+          "title": "Result 1"
+        },
+        "id": 1,
+        "title": "Lower Result 1"
+      }
+    ],
     "unicef_focal_points": [],
     "end_date": "2017-12-13",
     "agreement_auth_officers": [],
