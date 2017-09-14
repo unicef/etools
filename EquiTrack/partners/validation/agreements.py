@@ -109,7 +109,7 @@ def ssfa_static(agreement):
 
 def one_pca_per_cp_per_partner(agreement):
     if agreement.agreement_type == agreement.PCA:
-        # see if there are any PCAs in the CP other than this for this partner
+        # see if there are any PCAs in the CP other than this for this partner and started after july 2015
         if agreement.__class__.objects.filter(partner=agreement.partner,
                                               agreement_type=agreement.PCA,
                                               country_programme=agreement.country_programme,
@@ -122,7 +122,7 @@ def one_pca_per_cp_per_partner(agreement):
 
 def one_pca_per_partner_draft(agreement):
     if agreement.agreement_type == agreement.PCA:
-        # see if there are any PCAs in the CP other than this for this partner
+        # see if there are any Draft PCAs in the CP other than this for this partner
         if agreement.__class__.objects.filter(partner=agreement.partner,
                                               agreement_type=agreement.PCA,
                                               status=agreement.__class__.DRAFT,
