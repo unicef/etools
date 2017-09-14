@@ -28,6 +28,7 @@ class TestInterventionsAPI(APITenantTestCase):
             lower_result=self.lower_result,
         )
         self.applied_indicator.locations.add(LocationFactory(name='A Location'))
+        self.applied_indicator.disaggregation.create(name='A Disaggregation')
 
 
     def run_prp_v1(self, user=None, method='get'):
@@ -62,8 +63,10 @@ class TestInterventionsAPI(APITenantTestCase):
                 del expected_intervention['expected_results'][j]['id']
                 del expected_intervention['expected_results'][j]['cp_output']['id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['id']
+                del expected_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
                 del actual_intervention['expected_results'][j]['id']
                 del actual_intervention['expected_results'][j]['cp_output']['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['id']
+                del actual_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
 
         self.assertEqual(response, expected_interventions)

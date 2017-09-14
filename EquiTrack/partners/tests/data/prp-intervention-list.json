@@ -7,7 +7,12 @@
             "means_of_verification": null,
             "target": 0,
             "title": "The Blueprint",
-            "disaggregation": [],
+            "disaggregation": [
+              {
+                "id": 1,
+                "name": "A Disaggregation"
+              }
+            ],
             "locations": [
               {
                 "pcode": "PCODE0",
