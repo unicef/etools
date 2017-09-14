@@ -1,5 +1,6 @@
 import itertools
 
+from copy import copy
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -269,12 +270,11 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
         ]
         extra_kwargs = {
             'tpm_partner': {'required': True},
-            'unicef_focal_points': {'required': True},
+            'unicef_focal_points': {'required': True, 'label': _('TPM Name')},
         }
 
 
 class TPMVisitDraftSerializer(TPMVisitSerializer):
     class Meta(TPMVisitSerializer.Meta):
-        extra_kwargs = {
-            'tpm_partner': {'required': False, 'label': _('TPM Name')},
-        }
+        extra_kwargs = copy(TPMVisitSerializer.Meta.extra_kwargs)
+        extra_kwargs['tpm_partner']['required'] = False

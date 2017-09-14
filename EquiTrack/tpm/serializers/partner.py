@@ -39,6 +39,9 @@ class TPMPartnerLightSerializer(serializers.ModelSerializer):
         extra_kwargs['name'].update({
             'label': _('TPM Name'),
         })
+        extra_kwargs['vendor_number'].update({
+            'required': True
+        })
 
 
 class TPMPartnerSerializer(WritableNestedSerializerMixin, TPMPartnerLightSerializer):
