@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import json
 import datetime
-import os
 from unittest import skip, TestCase
 
 from django.core.urlresolvers import reverse
@@ -78,14 +77,6 @@ class TestInterventionsAPI(APITenantTestCase):
             reverse('partners_api:intervention-list'),
             user=user or self.unicef_staff,
             data=data
-        )
-        return response.status_code, json.loads(response.rendered_content)
-
-    def run_prp_v1(self, user=None, method='get'):
-        response = self.forced_auth_req(
-            method,
-            reverse('prp_api_v1:prp-intervention-list'),
-            user=user or self.unicef_staff,
         )
         return response.status_code, json.loads(response.rendered_content)
 
@@ -329,23 +320,3 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEquals(len(response), 4)
-
-    def test_prp_api(self):
-        with self.assertNumQueries(16):
-            status_code, response = self.run_prp_v1(
-                user=self.unicef_staff, method='get'
-            )
-
-        self.assertEqual(status_code, status.HTTP_200_OK)
-
-        json_filename = os.path.join(os.path.dirname(__file__), 'data', 'prp-intervention-list.json')
-        with open(json_filename) as f:
-            expected_intervention = json.loads(f.read())
-
-        for dynamic_key in ['id', 'number']:
-            for result in response['pd-details']:
-                del result[dynamic_key]
-            for result in expected_intervention['pd-details']:
-                del result[dynamic_key]
-
-        self.assertEqual(response, expected_intervention)
