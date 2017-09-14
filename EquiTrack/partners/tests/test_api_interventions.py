@@ -21,7 +21,6 @@ from reports.models import ResultType, Sector
 from partners.models import (
     InterventionSectorLocationLink,
     InterventionBudget,
-    InterventionAmendment,
     Intervention
 )
 from utils.common.utils import get_all_field_names
@@ -94,7 +93,6 @@ class TestInterventionsAPI(APITenantTestCase):
                                                        unicef_signatory=self.unicef_staff,
                                                        partner_authorized_officer_signatory=self.partner1.
                                                        staff_members.all().first())
-
         self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
         self.result = ResultFactory(result_type=self.result_type)
 
@@ -110,10 +108,7 @@ class TestInterventionsAPI(APITenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.amendment = InterventionAmendment.objects.create(
-            intervention=self.intervention,
-            types=[InterventionAmendment.RESULTS]
-        )
+
         self.location = InterventionSectorLocationLink.objects.create(
             intervention=self.intervention,
             sector=Sector.objects.create(name="Sector 2")
@@ -153,24 +148,35 @@ class TestInterventionsAPI(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/interventions/' + str(self.intervention.id) + '/',
-            user=self.unicef_staff,
+            user=self.partnership_manager_user,
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         result = json.loads(response.rendered_content)
         self.assertEqual(result.get('result_links'), {'name': ['This field may not be null.']})
 
+    def test_add_contingency_pd(self):
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention1",
+            "contingency_pd": True,
+            "agreement": self.agreement.id,
+        }
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
+
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+
     def test_add_one_valid_fr_on_create_pd(self):
         frs_data = [self.fr_1.id]
         data = {
             "document_type": Intervention.PD,
             "title": "My test intervention",
-            "start": (timezone.now().date() - datetime.timedelta(days=1)).isoformat(),
+            "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
             "frs": frs_data
         }
-        status_code, response = self.run_request_list_ep(data)
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
@@ -180,12 +186,12 @@ class TestInterventionsAPI(APITenantTestCase):
         data = {
             "document_type": Intervention.PD,
             "title": "My test intervention",
-            "start": (timezone.now().date() - datetime.timedelta(days=1)).isoformat(),
+            "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
             "frs": frs_data
         }
-        status_code, response = self.run_request_list_ep(data)
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
@@ -195,12 +201,12 @@ class TestInterventionsAPI(APITenantTestCase):
         data = {
             "document_type": Intervention.PD,
             "title": "My test intervention",
-            "start": (timezone.now().date() - datetime.timedelta(days=1)).isoformat(),
+            "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
             "frs": frs_data
         }
-        status_code, response = self.run_request_list_ep(data)
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
@@ -259,7 +265,8 @@ class TestInterventionsAPI(APITenantTestCase):
         data = {
             "frs": frs_data
         }
-        status_code, response = self.run_request(self.intervention_2.id, data, method='patch', user=self.unicef_staff)
+        status_code, response = self.run_request(self.intervention_2.id, data, method='patch',
+                                                 user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['frs'], ['One or more selected FRs is expired, {}'.format(self.fr_1.fr_number)])
@@ -298,8 +305,7 @@ class TestInterventionsAPI(APITenantTestCase):
         }
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch',
                                                  user=self.unicef_staff)
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Cannot change fields while in draft: title', response)
+        self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
 
     def test_permissions_for_intervention_status_draft(self):
         # intervention is in Draft status
@@ -347,11 +353,11 @@ class TestInterventionsAPI(APITenantTestCase):
         data = {
             "document_type": Intervention.PD,
             "title": "My test intervention",
-            "start": (timezone.now().date() - datetime.timedelta(days=1)).isoformat(),
+            "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
         }
-        status_code, response = self.run_request_list_ep(data)
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
         # even though we added a new intervention, the number of queries remained static

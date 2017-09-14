@@ -48,7 +48,7 @@ class TestAgreementsAPI(APITenantTestCase):
         self.intervention = InterventionFactory(agreement=self.agreement1)
         self.intervention_2 = InterventionFactory(agreement=self.agreement1, document_type=Intervention.PD)
         self.amendment = AgreementAmendment.objects.create(agreement=self.agreement1,
-                                                           types=[AgreementAmendment.CP_EXTENSION,
+                                                           types=[AgreementAmendment.IP_NAME,
                                                                   AgreementAmendment.CLAUSE],
                                                            number="001",
                                                            signed_amendment="application/pdf",

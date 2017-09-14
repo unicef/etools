@@ -17,7 +17,7 @@ from publics.tests.factories import DSARegionFactory, DSARateFactory
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.models import Travel, Expense, CostAssignment, InvoiceItem, Invoice
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory, \
-    IteneraryItemFactory
+    ItineraryItemFactory
 from t2f.vision import InvoiceUpdater
 
 
@@ -77,11 +77,11 @@ class InvoiceMaking(APITenantTestCase):
                                             supervisor=self.unicef_staff,
                                             currency=self.huf)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 5, 10, tzinfo=UTC),
                              arrival_date=datetime(2017, 5, 11, tzinfo=UTC),
                              dsa_region=dsa_region)
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 5, 20, tzinfo=UTC),
                              arrival_date=datetime(2017, 5, 21, tzinfo=UTC),
                              dsa_region=dsa_region)

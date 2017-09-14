@@ -91,9 +91,6 @@ class POSynchronizer(VisionDataSynchronizer):
         def bad_record(record):
             if not record['VENDOR_NAME']:
                 return False
-            if not record['PURCHASING_GROUP_CODE'] or \
-               record['PURCHASING_GROUP_CODE'] != self.country.business_area_code:
-                return False
             return True
 
         return filter(bad_record, records)

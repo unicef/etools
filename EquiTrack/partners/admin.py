@@ -14,7 +14,6 @@ from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
 from EquiTrack.utils import get_staticfile_link
 from supplies.models import SupplyItem
-# from tpm.models import TPMVisit
 from reports.models import Result
 from users.models import Section
 
@@ -70,12 +69,11 @@ from partners.forms import (
 )
 
 
-class PcaLocationInlineAdmin(admin.TabularInline):
+class PCALocationInlineAdmin(admin.TabularInline):
     form = LocationForm
     model = GwPCALocation
     verbose_name = 'Location'
     verbose_name_plural = 'Locations'
-    suit_classes = u'suit-tab suit-tab-locations'
     fields = (
         'sector',
         'location',
@@ -84,13 +82,12 @@ class PcaLocationInlineAdmin(admin.TabularInline):
     extra = 5
 
 
-class PcaSectorInlineAdmin(admin.TabularInline):
+class PCASectorInlineAdmin(admin.TabularInline):
     model = PCASector
     form = AmendmentForm
     formset = ParentInlineAdminFormSet
     verbose_name = 'Programme/Sector/Section'
     verbose_name_plural = 'Programmes/Sectors/Sections'
-    suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
         'sector',
@@ -102,7 +99,7 @@ class PcaSectorInlineAdmin(admin.TabularInline):
         if db_field.rel.to is Section:
             kwargs['queryset'] = connection.tenant.sections.all()
 
-        return super(PcaSectorInlineAdmin, self).formfield_for_foreignkey(
+        return super(PCASectorInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
@@ -111,7 +108,6 @@ class PCAFileInline(admin.TabularInline):
     model = PCAFile
     verbose_name = 'File'
     verbose_name_plural = 'Files'
-    suit_classes = u'suit-tab suit-tab-attachments'
     extra = 0
     fields = (
         'type',
@@ -159,7 +155,6 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
     formset = ParentInlineAdminFormSet
     verbose_name = 'Budget'
     verbose_name_plural = 'Budget'
-    suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
         'partner_contribution',
@@ -173,12 +168,11 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
     )
 
 
-class PcaGrantInlineAdmin(admin.TabularInline):
+class PCAGrantInlineAdmin(admin.TabularInline):
 
     model = PCAGrant
     verbose_name = 'Grant'
     verbose_name_plural = 'Grants'
-    suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
         'grant',
@@ -189,12 +183,10 @@ class PcaGrantInlineAdmin(admin.TabularInline):
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):
-    suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
 
 
 class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-results'
     model = RAMIndicator
     verbose_name = 'RAM Result'
     verbose_name_plural = 'RAM Results'
@@ -213,7 +205,6 @@ class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
 
 
 class InterventionBudgetAdmin(admin.ModelAdmin):
-    suit_classes = u'suit-tab suit-tab-info'
     model = InterventionBudget
     fields = (
         'intervention',
@@ -316,7 +307,6 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
 
 
 class SupplyPlanAdmin(admin.ModelAdmin):
-    suit_classes = u'suit-tab suit-tab-supplies'
     model = SupplyPlan
     fields = (
         'intervention',
@@ -334,13 +324,11 @@ class SupplyPlanAdmin(admin.ModelAdmin):
 
 
 class IndicatorDueDatesAdmin(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-results'
     model = IndicatorDueDates
     extra = 1
 
 
 class DistributionPlanInlineAdmin(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-supplies'
     model = DistributionPlan
     form = DistributionPlanForm
     formset = DistributionPlanFormSet
@@ -429,7 +417,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
     fieldsets = (
         (_('Intervention Details'), {
-            u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 ('partner',
                  'agreement',
@@ -440,7 +427,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                  'initiation_date',)
         }),
         (_('Dates and Signatures'), {
-            u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 (('submission_date',),
                  'review_date',
@@ -453,11 +439,9 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                  'fr_number',),
         }),
         (_('Add sites by P Code'), {
-            u'classes': (u'suit-tab suit-tab-locations',),
             'fields': ('location_sector', 'p_codes',),
         }),
         (_('Import work plan'), {
-            u'classes': (u'suit-tab suit-tab-results',),
             'fields': ('work_plan', 'work_plan_template'),
         }),
     )
@@ -468,33 +452,17 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
 
     inlines = (
-        PcaSectorInlineAdmin,
+        PCASectorInlineAdmin,
         PartnershipBudgetInlineAdmin,
-        PcaGrantInlineAdmin,
+        PCAGrantInlineAdmin,
         IndicatorsInlineAdmin,
-        PcaLocationInlineAdmin,
+        PCALocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
         # ResultsInlineAdmin,
         # SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
         IndicatorDueDatesAdmin,
-    )
-
-    suit_form_tabs = (
-        (u'info', u'Info'),
-        (u'results', u'Results'),
-        (u'locations', u'Locations'),
-        (u'trips', u'Trips'),
-        (u'supplies', u'Supplies'),
-        (u'attachments', u'Attachments')
-    )
-
-    suit_form_includes = (
-        ('admin/partners/funding_summary.html', 'middle', 'info'),
-        # ('admin/partners/work_plan.html', 'bottom', 'results'),
-        ('admin/partners/trip_summary.html', 'top', 'trips'),
-        ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
 
     def work_plan_template(self, obj):
@@ -524,29 +492,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
             form.base_fields['location_sector'].queryset = obj.sector_children
 
         return form
-
-    def save_formset(self, request, form, formset, change):
-        """
-        Overriding this to create TPM visits on location records
-        """
-        formset.save()
-        if change:
-            for form in formset.forms:
-                pass
-                # todo: tpmvisit admin
-                # obj = form.instance
-                # if isinstance(obj, GwPCALocation) and obj.tpm_visit:
-                #     visits = TPMVisit.objects.filter(
-                #         pca=obj.pca,
-                #         pca_location=obj,
-                #         completed_date__isnull=True
-                #     )
-                #     if not visits:
-                #         TPMVisit.objects.create(
-                #             pca=obj.pca,
-                #             pca_location=obj,
-                #             assigned_by=request.user
-                #         )
 
     def save_model(self, request, obj, form, change):
         created = False if change else True
@@ -619,10 +564,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                  ('start', 'end'),
                  'population_focus'),
         }),
-        # (_('Add sites by P Code'), {
-        #     u'classes': (u'suit-tab suit-tab-locations',),
-        #     'fields': ('location_sector', 'p_codes',),
-        # }),
     )
 
     inlines = (
@@ -646,42 +587,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(InterventionAdmin, self).save_model(request, obj, form, change)
-
-    # def get_form(self, request, obj=None, **kwargs):
-    #     """
-    #     Set up the form with extra data and initial values
-    #     """
-    #     form = super(PartnershipAdmin, self).get_form(request, obj, **kwargs)
-    #
-    #     # add the current request and object to the form
-    #     form.request = request
-    #     form.obj = obj
-    #
-    #     if obj and obj.sector_children:
-    #         form.base_fields['location_sector'].queryset = obj.sector_children
-    #
-    #     return form
-    #
-    # def save_formset(self, request, form, formset, change):
-    #     """
-    #     Overriding this to create TPM visits on location records
-    #     """
-    #     formset.save()
-    #     if change:
-    #         for form in formset.forms:
-    #             obj = form.instance
-    #             if isinstance(obj, GwPCALocation) and obj.tpm_visit:
-    #                 visits = TPMVisit.objects.filter(
-    #                     pca=obj.pca,
-    #                     pca_location=obj,
-    #                     completed_date__isnull=True
-    #                 )
-    #                 if not visits:
-    #                     TPMVisit.objects.create(
-    #                         pca=obj.pca,
-    #                         pca_location=obj,
-    #                         assigned_by=request.user
-    #                     )
 
     def has_module_permission(self, request):
         return request.user.is_superuser
