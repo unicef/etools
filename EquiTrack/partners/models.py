@@ -145,6 +145,13 @@ def get_agreement_amd_file_path(instance, filename):
          filename]
     )
 
+
+def _get_currency_name_or_default(budget):
+    if budget and budget.currency:
+        return budget.currency.code
+    return None
+
+
 # TODO: move this to a workspace app for common configuration options
 
 
@@ -1353,6 +1360,12 @@ class Intervention(TimeStampedModel):
         return self.planned_budget.partner_contribution if self.planned_budget else 0
 
     @cached_property
+    def default_budget_currency(self):
+        # todo: this seems to always come from self.planned_budget so not splitting it out
+        # by different categories - e.g. partner vs unicef. is this valid?
+        return _get_currency_name_or_default(self.planned_budget)
+
+    @cached_property
     def total_unicef_cash(self):
         # TODO: test this
         return self.planned_budget.unicef_cash if self.planned_budget else 0
@@ -1425,6 +1438,14 @@ class Intervention(TimeStampedModel):
                 return self.created.year
         else:
             return datetime.date.today().year
+
+    def get_all_ll_results_(self):
+        """
+        Get all lower level results associated with this Intervention.
+        """
+        from reports.models import LowerResult
+        print 'calling the model function'
+        return LowerResult.objects.filter(result_link__intervention=self)
 
     def illegal_transitions(self):
         return False

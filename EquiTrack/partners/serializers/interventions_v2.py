@@ -210,6 +210,10 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
             'id', 'intervention', 'cp_output', 'ram_indicators', 'll_results'
         )
 
+class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionResultLink
+        fields = "__all__"
 
 class InterventionResultCUSerializer(serializers.ModelSerializer):
 

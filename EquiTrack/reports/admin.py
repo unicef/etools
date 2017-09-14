@@ -13,7 +13,8 @@ from reports.models import (
     CountryProgramme,
     LowerResult,
     IndicatorBlueprint,
-    AppliedIndicator
+    AppliedIndicator,
+    Disaggregation,
 )
 from reports.forms import IndicatorAdminForm
 
@@ -247,3 +248,4 @@ admin.site.register(LowerResult, LowerResultAdmin)
 # admin.site.register(ResultType)
 admin.site.register(IndicatorBlueprint)
 admin.site.register(AppliedIndicator, AppliedIndicatorAdmin)
+admin.site.register(Disaggregation)

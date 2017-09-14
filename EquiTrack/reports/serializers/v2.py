@@ -27,28 +27,81 @@ class MinimalOutputListSerializer(serializers.ModelSerializer):
         )
 
 
-class AppliedIndicatorSerializer(serializers.ModelSerializer):
-
-    name = serializers.CharField(source='indicator.name')
-    unit = serializers.CharField(source='indicator.unit')
-    disaggregation_logic = serializers.JSONField()
-
-    class Meta:
-        model = AppliedIndicator
-        fields = '__all__'
-
-
 class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IndicatorBlueprint
         fields = '__all__'
+        # remove the unique validator as we're doing a get_por_create
+        extra_kwargs = {
+            'code': {'validators': []},
+        }
+
+    def create(self, validated_data):
+        # always try to get first
+        validated_data['title'] = validated_data['title'].title()
+        return IndicatorBlueprint.objects.get_or_create(**validated_data)[0]
+
+
+class AppliedIndicatorSerializer(serializers.ModelSerializer):
+
+    indicator = IndicatorBlueprintCUSerializer(required=False)
+
+    class Meta:
+        model = AppliedIndicator
+        extra_kwargs = {
+            'indicator': {'validators': []},
+        }
+        fields = '__all__'
+
+    def validate(self, attrs):
+        lower_result = attrs.get('lower_result')
+        blueprint_data = attrs.get('indicator')
+        if self.partial:
+            if not isinstance(blueprint_data, IndicatorBlueprint):
+                raise ValidationError('Indicator blueprint cannot be updated after first use, '
+                                      'please remove this indicator and add another or contact the eTools Focal Point in '
+                                      'your office for assistance')
+
+        elif not attrs.get('cluster_id'):
+            print "no cluster id"
+            indicator_blueprint = IndicatorBlueprintCUSerializer(data=blueprint_data)
+            indicator_blueprint.is_valid(raise_exception=True)
+            indicator_blueprint.save()
+
+            attrs["indicator"] = indicator_blueprint.instance
+            if lower_result.applied_indicators.filter(indicator__id=attrs['indicator'].id).exists():
+                raise ValidationError('This indicator is already being monitored for this Result')
+
+
+        return super(AppliedIndicatorSerializer, self).validate(attrs)
+
+    def create(self, validated_data):
+
+        return super(AppliedIndicatorSerializer, self).create(validated_data)
+
 
 
 class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AppliedIndicator
+        fields = '__all__'
+
+
+class LowerResultSimpleCUSerializer(serializers.ModelSerializer):
+
+    code = serializers.CharField(read_only=True)
+
+    def update(self, instance, validated_data):
+        new_result_link = validated_data.get('result_link')
+        if new_result_link.pk != instance.result_link.pk:
+            raise ValidationError("You can't associate this PD Output to a different CP Result")
+
+        return super(LowerResultSimpleCUSerializer, self).update(instance, validated_data)
+
+    class Meta:
+        model = LowerResult
         fields = '__all__'
 
 
@@ -72,7 +125,7 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
     def handle_blueprint(self, indicator):
 
         blueprint_instance, created = IndicatorBlueprint.objects.get_or_create(
-            name=indicator.pop('name', None),
+            title=indicator.pop('name', None),
             unit=indicator.pop('unit', None),
             # for now all indicator blueprints will be considered dissagregatable
             disaggregatable=True
