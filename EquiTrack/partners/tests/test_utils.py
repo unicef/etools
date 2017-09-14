@@ -19,18 +19,22 @@ def setup_intervention_test_data(test_case):
                                              signed_by_unicef_date=datetime.date.today(),
                                              signed_by_partner_date=datetime.date.today())
 
-    test_case.intervention = InterventionFactory(agreement=test_case.agreement)
-    test_case.intervention_2 = InterventionFactory(agreement=test_case.agreement, document_type=Intervention.PD)
-    test_case.active_intervention = InterventionFactory(agreement=test_case.active_agreement,
-                                                   document_type=Intervention.PD,
-                                                   start=today - datetime.timedelta(days=1),
-                                                   end=today + datetime.timedelta(days=90),
-                                                   status='active',
-                                                   signed_by_unicef_date=today - datetime.timedelta(days=1),
-                                                   signed_by_partner_date=today - datetime.timedelta(days=1),
-                                                   unicef_signatory=test_case.unicef_staff,
-                                                   partner_authorized_officer_signatory=test_case.partner1.
-                                                   staff_members.all().first())
+    test_case.intervention = InterventionFactory(agreement=test_case.agreement, title='Intervention 1')
+    test_case.intervention_2 = InterventionFactory(agreement=test_case.agreement, title='Intervention 2',
+                                                   document_type=Intervention.PD)
+    test_case.active_intervention = InterventionFactory(
+        agreement=test_case.active_agreement,
+        title='Active Intervention',
+        document_type=Intervention.PD,
+        start=today - datetime.timedelta(days=1),
+        end=today + datetime.timedelta(days=90),
+        status='active',
+        signed_by_unicef_date=today - datetime.timedelta(days=1),
+        signed_by_partner_date=today - datetime.timedelta(days=1),
+        unicef_signatory=test_case.unicef_staff,
+        partner_authorized_officer_signatory=test_case.partner1.staff_members.all().first()
+    )
+
     test_case.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
     test_case.result = ResultFactory(result_type=test_case.result_type)
 
