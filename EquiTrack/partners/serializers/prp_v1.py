@@ -83,12 +83,12 @@ class PRPCPOutputResultSerializer(serializers.ModelSerializer):
 
 class PRPResultSerializer(serializers.ModelSerializer):
     # todo: figure out where this comes from / if this is right
-    title = serializers.CharField(source='parent.name', read_only=True)
-    indicators = PRPIndicatorSerializer(many=True, read_only=True, source='ll_indicators')
-    cp_output = PRPCPOutputResultSerializer(read_only=True)
+    title = serializers.CharField(source='name', read_only=True)
+    indicators = PRPIndicatorSerializer(many=True, read_only=True, source='applied_indicators')
+    cp_output = PRPCPOutputResultSerializer(source='result_link.cp_output', read_only=True)
 
     class Meta:
-        model = InterventionResultLink
+        model = LowerResult
         fields = (
             'id',
             'title',
@@ -116,7 +116,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     funds_received = serializers.DecimalField(source='total_budget', read_only=True,
                                               max_digits=20, decimal_places=2)
     funds_received_currency = serializers.CharField(source='default_budget_currency', read_only=True)
-    expected_results = PRPResultSerializer(many=True, read_only=True, required=False, source='result_links')
+    expected_results = serializers.SerializerMethodField()
 
     class Meta:
         model = Intervention
@@ -136,10 +136,9 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'expected_results',
         )
 
-    # expected_results = serializers.SerializerMethodField()
-    # def get_expected_results(self, intervention):
-    #     """
-    #     Get all lower level results associated with this Intervention.
-    #     """
-    #     results = LowerResult.objects.filter(result_link__intervention=intervention)
-    #     return PRPResultSerializer(results, many=True, read_only=True).data
+    def get_expected_results(self, intervention):
+        """
+        Get all lower level results associated with this Intervention.
+        """
+        results = LowerResult.objects.filter(result_link__intervention=intervention)
+        return PRPResultSerializer(results, many=True, read_only=True).data
