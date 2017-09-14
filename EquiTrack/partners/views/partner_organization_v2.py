@@ -347,7 +347,8 @@ class PartnerOrganizationDeleteView(DestroyAPIView):
         except PartnerOrganization.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if partner.agreements.count() > 0:
-            raise ValidationError("This partner has agreements associated to it")
+            raise ValidationError("There was a PCA/SSFA signed with this partner or a transaction was performed "
+                                  "against this partner. The Partner record cannot be deleted")
         elif TravelActivity.objects.filter(partner=partner).count() > 0:
             raise ValidationError("This partner has trips associated to it")
         elif partner.total_ct_cp > 0:

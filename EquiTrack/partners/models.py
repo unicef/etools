@@ -991,7 +991,10 @@ class Agreement(TimeStampedModel):
                 document_type__in=[Intervention.PD, Intervention.SHPD]
             )
             for item in interventions:
-                if item.status not in [Intervention.DRAFT, Intervention.CLOSED, Intervention.ENDED] and\
+                if item.status not in [Intervention.DRAFT,
+                                       Intervention.CLOSED,
+                                       Intervention.ENDED,
+                                       Intervention.TERMINATED] and\
                         item.status != self.status:
                     item.status = self.status
                     item.save()
@@ -1018,7 +1021,7 @@ class Agreement(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[SUSPENDED, TERMINATED, SIGNED],
+                source=[SUSPENDED, SIGNED],
                 target=[DRAFT],
                 conditions=[agreements_illegal_transition])
     def transition_to_cancelled(self):
@@ -1202,7 +1205,7 @@ class Intervention(TimeStampedModel):
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
         (SHPD, 'Simplified Humanitarian Programme Document'),
-        (SSFA, 'SSFA TOR'),
+        (SSFA, 'SSFA'),
     )
 
     tracker = FieldTracker()
@@ -1430,7 +1433,7 @@ class Intervention(TimeStampedModel):
         return False
 
     @transition(field=status,
-                source=[ACTIVE, IMPLEMENTED, SUSPENDED, TERMINATED],
+                source=[ACTIVE, IMPLEMENTED, SUSPENDED],
                 target=[DRAFT, CANCELLED],
                 conditions=[illegal_transitions])
     def basic_transition(self):
@@ -1514,7 +1517,7 @@ class Intervention(TimeStampedModel):
                 save_agreement = True
                 self.agreement.status = Agreement.SIGNED
 
-            elif self.status in [self.ENDED, self.SUSPENDED, self.TERMINATED] and self.status != self.agreement.status:
+            elif self.status in [self.ENDED, self.SUSPENDED] and self.status != self.agreement.status:
                 save_agreement = True
                 self.agreement.status = self.status
 

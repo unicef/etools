@@ -146,8 +146,7 @@ class AgreementValid(CompleteValidation):
     ]
 
     VALID_ERRORS = {
-        'one_pca_per_cp_per_partner': 'A different agreement of type PCA already exists '
-                                      'for this Partner for this Country Programme',
+        'one_pca_per_cp_per_partner': 'A PCA with this partner already exists for this Country Programme Cycle',
         'one_pca_per_partner_draft': 'Please note that there is already a Draft agreement for this partner. '
                                      'Please update the existing draft record.',
         'start_end_dates_valid': 'Agreement start date needs to be earlier than end date',
