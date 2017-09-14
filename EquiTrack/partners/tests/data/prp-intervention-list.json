@@ -2,7 +2,18 @@
   {
     "expected_results": [
       {
-        "indicators": [],
+        "indicators": [
+          {
+            "means_of_verification": null,
+            "target": 0,
+            "title": "The Blueprint",
+            "disaggregation": [],
+            "locations": [],
+            "cluster_id": null,
+            "id": 1,
+            "baseline": null
+          }
+        ],
         "cp_output": {
           "id": 177,
           "title": "Result 1"

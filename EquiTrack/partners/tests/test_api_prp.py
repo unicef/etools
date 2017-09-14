@@ -6,7 +6,7 @@ from EquiTrack.factories import ResultFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import InterventionResultLink
 from partners.tests.test_utils import setup_intervention_test_data
-from reports.models import LowerResult
+from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
 
 
 class TestInterventionsAPI(APITenantTestCase):
@@ -20,6 +20,13 @@ class TestInterventionsAPI(APITenantTestCase):
         self.result_link = InterventionResultLink.objects.create(
             intervention=self.active_intervention, cp_output=self.result)
         self.lower_result = LowerResult.objects.create(result_link=self.result_link, name='Lower Result 1')
+        self.indicator_blueprint = IndicatorBlueprint.objects.create(
+            title='The Blueprint'
+        )
+        self.applied_indicator = AppliedIndicator.objects.create(
+            indicator=self.indicator_blueprint,
+            lower_result=self.lower_result,
+        )
 
     def run_prp_v1(self, user=None, method='get'):
         response = self.forced_auth_req(
@@ -52,7 +59,9 @@ class TestInterventionsAPI(APITenantTestCase):
             for j in range(len(expected_intervention['expected_results'])):
                 del expected_intervention['expected_results'][j]['id']
                 del expected_intervention['expected_results'][j]['cp_output']['id']
+                del expected_intervention['expected_results'][j]['indicators'][0]['id']
                 del actual_intervention['expected_results'][j]['id']
                 del actual_intervention['expected_results'][j]['cp_output']['id']
+                del actual_intervention['expected_results'][j]['indicators'][0]['id']
 
         self.assertEqual(response, expected_interventions)
