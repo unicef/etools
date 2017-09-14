@@ -49,7 +49,8 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
 
-        print json.dumps(response, indent=2)
+        # uncomment if you need to see the response json / regenerate the test file
+        # print json.dumps(response, indent=2)
         json_filename = os.path.join(os.path.dirname(__file__), 'data', 'prp-intervention-list.json')
         with open(json_filename) as f:
             expected_interventions = json.loads(f.read())
