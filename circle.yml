@@ -17,8 +17,6 @@ dependencies:
     - pip install -r EquiTrack/requirements/production.txt
 
 test:
-  pre:
-    - psql -d template1 -c 'create extension hstore;' # needed for django hstore
   override:
     - >
       case $CIRCLE_BRANCH in
