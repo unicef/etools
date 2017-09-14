@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
+from locations.models import Location
 
 from partners.models import (
     Intervention,
@@ -47,12 +48,21 @@ class PartnerFocalPointSerializer(serializers.ModelSerializer):
         fields = ('name', 'email')
 
 
+class IndicatorLocationSerializer(serializers.ModelSerializer):
+    pcode = serializers.CharField(source='p_code', read_only=True)
+    location_type = serializers.CharField(source='gateway.name', read_only=True)
+
+    class Meta:
+        model = Location
+        depth = 1
+        fields = ('name', 'pcode', 'location_type')
+
+
 class PRPIndicatorSerializer(serializers.ModelSerializer):
     # todo: this class hasn't been tested at all because there are no `AppliedIndicator`s in the current DB
     # todo: need to validate these and fill in missing fields
-    title = serializers.CharField(source='indicator.name', read_only=True)
-    # type = serializers.CharField(source='result.type.name', read_only=True)
-    # parent_id = serializers.PrimaryKeyRelatedField(source='result.parent.id', read_only=True)
+    title = serializers.CharField(source='indicator.title', read_only=True)
+    locations = IndicatorLocationSerializer(read_only=True, many=True)
 
     class Meta:
         model = AppliedIndicator
@@ -60,6 +70,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             'id',
             'title',
             # 'is_cluster',
+            'cluster_id',
             # 'parent_id',
             # 'type',
             # 'pd_frequency',
@@ -67,6 +78,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             'means_of_verification',
             'baseline',
             'target',
+            'locations',
         )
 
 
