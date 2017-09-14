@@ -1,0 +1,103 @@
+[
+  {
+    "expected_results": [
+      {
+        "indicators": [
+          {
+            "means_of_verification": null,
+            "target": 0,
+            "title": "The Blueprint",
+            "disaggregation": [
+              {
+                "id": 4,
+                "name": "A Disaggregation"
+              }
+            ],
+            "locations": [
+              {
+                "pcode": "a-p-code",
+                "name": "A Location",
+                "location_type": "A Gateway"
+              }
+            ],
+            "cluster_id": null,
+            "id": 8,
+            "baseline": null
+          }
+        ],
+        "cp_output": {
+          "id": 207,
+          "title": "Result 1"
+        },
+        "id": 16,
+        "title": "Lower Result 1"
+      }
+    ],
+    "unicef_focal_points": [],
+    "end_date": "2017-12-13",
+    "agreement_auth_officers": [],
+    "title": "Active Intervention",
+    "funds_received": null,
+    "unicef_budget": null,
+    "unicef_budget_currency": null,
+    "number": "/PCA2017394/PD2017642",
+    "start_date": "2017-09-13",
+    "focal_points": [],
+    "offices": [],
+    "partner_org": {
+      "unicef_vendor_number": null,
+      "name": "Partner 2",
+      "short_name": ""
+    },
+    "funds_received_currency": null,
+    "cso_budget_currency": null,
+    "id": 642,
+    "cso_budget": null
+  },
+  {
+    "expected_results": [],
+    "unicef_focal_points": [],
+    "end_date": null,
+    "agreement_auth_officers": [],
+    "title": "Intervention 2",
+    "funds_received": null,
+    "unicef_budget": null,
+    "unicef_budget_currency": null,
+    "number": "/PCA2017393/PD2017641",
+    "start_date": null,
+    "focal_points": [],
+    "offices": [],
+    "partner_org": {
+      "unicef_vendor_number": null,
+      "name": "Partner 1",
+      "short_name": ""
+    },
+    "funds_received_currency": null,
+    "cso_budget_currency": null,
+    "id": 641,
+    "cso_budget": null
+  },
+  {
+    "expected_results": [],
+    "unicef_focal_points": [],
+    "end_date": null,
+    "agreement_auth_officers": [],
+    "title": "Intervention 1",
+    "funds_received": "300.00",
+    "unicef_budget": "100.00",
+    "unicef_budget_currency": null,
+    "number": "/PCA2017393/2017640",
+    "start_date": null,
+    "focal_points": [],
+    "offices": [],
+    "partner_org": {
+      "unicef_vendor_number": null,
+      "name": "Partner 1",
+      "short_name": ""
+    },
+    "funds_received_currency": null,
+    "cso_budget_currency": null,
+    "id": 640,
+    "cso_budget": "200.00"
+  }
+]

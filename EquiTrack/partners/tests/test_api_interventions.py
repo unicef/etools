@@ -8,19 +8,9 @@ from django.core.urlresolvers import reverse
 from django.utils import timezone
 from rest_framework import status
 
-from EquiTrack.factories import (
-    PartnerFactory,
-    UserFactory,
-    ResultFactory,
-    AgreementFactory,
-    InterventionFactory,
-    FundsReservationHeaderFactory,
-    GroupFactory)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from reports.models import ResultType, Sector
+from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
-    InterventionSectorLocationLink,
-    InterventionBudget,
     Intervention
 )
 from utils.common.utils import get_all_field_names
@@ -68,54 +58,7 @@ class TestInterventionsAPI(APITenantTestCase):
     ALL_FIELDS = get_all_field_names(Intervention)
 
     def setUp(self):
-        today = datetime.date.today()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.partnership_manager_user.groups.add(GroupFactory())
-        self.partner = PartnerFactory()
-        self.partner1 = PartnerFactory()
-        self.agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
-
-        self.active_agreement = AgreementFactory(partner=self.partner1,
-                                                 status='active',
-                                                 signed_by_unicef_date=datetime.date.today(),
-                                                 signed_by_partner_date=datetime.date.today())
-
-        self.intervention = InterventionFactory(agreement=self.agreement)
-        self.intervention_2 = InterventionFactory(agreement=self.agreement, document_type=Intervention.PD)
-        self.active_intervention = InterventionFactory(agreement=self.active_agreement,
-                                                       document_type=Intervention.PD,
-                                                       start=today - datetime.timedelta(days=1),
-                                                       end=today + datetime.timedelta(days=90),
-                                                       status='active',
-                                                       signed_by_unicef_date=today - datetime.timedelta(days=1),
-                                                       signed_by_partner_date=today - datetime.timedelta(days=1),
-                                                       unicef_signatory=self.unicef_staff,
-                                                       partner_authorized_officer_signatory=self.partner1.
-                                                       staff_members.all().first())
-        self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
-        self.result = ResultFactory(result_type=self.result_type)
-
-        self.pcasector = InterventionSectorLocationLink.objects.create(
-            intervention=self.intervention,
-            sector=Sector.objects.create(name="Sector 1")
-        )
-        self.partnership_budget = InterventionBudget.objects.create(
-            intervention=self.intervention,
-            unicef_cash=100,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
-        )
-
-        self.location = InterventionSectorLocationLink.objects.create(
-            intervention=self.intervention,
-            sector=Sector.objects.create(name="Sector 2")
-        )
-        # set up two frs not connected to any interventions
-        self.fr_1 = FundsReservationHeaderFactory(intervention=None)
-        self.fr_2 = FundsReservationHeaderFactory(intervention=None)
+        setup_intervention_test_data(self)
 
     def run_request_list_ep(self, data={}, user=None, method='post'):
         response = self.forced_auth_req(

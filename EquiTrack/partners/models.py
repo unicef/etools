@@ -145,6 +145,13 @@ def get_agreement_amd_file_path(instance, filename):
          filename]
     )
 
+
+def _get_currency_name_or_default(budget):
+    if budget and budget.currency:
+        return budget.currency.code
+    return None
+
+
 # TODO: move this to a workspace app for common configuration options
 
 
@@ -1351,6 +1358,18 @@ class Intervention(TimeStampedModel):
     def total_partner_contribution(self):
         # TODO: test this
         return self.planned_budget.partner_contribution if self.planned_budget else 0
+
+    @cached_property
+    def default_budget_currency(self):
+        # todo: this seems to always come from self.planned_budget so not splitting it out
+        # by different categories - e.g. partner vs unicef. is this valid?
+        return _get_currency_name_or_default(self.planned_budget)
+
+    @cached_property
+    def fr_currency(self):
+        # todo: implicit assumption here that there aren't conflicting currencies
+        # eventually, this should be checked/reconciled if there are conflicts
+        return self.frs.exclude(currency=None).values_list('currency', flat=True).first()
 
     @cached_property
     def total_unicef_cash(self):
