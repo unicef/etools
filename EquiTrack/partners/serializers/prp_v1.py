@@ -8,7 +8,7 @@ from partners.models import (
     Intervention,
     PartnerStaffMember,
     PartnerOrganization, InterventionResultLink)
-from reports.models import Result, AppliedIndicator, LowerResult
+from reports.models import Result, AppliedIndicator, LowerResult, Disaggregation
 
 
 class PartnerSerializer(serializers.ModelSerializer):
@@ -58,11 +58,24 @@ class IndicatorLocationSerializer(serializers.ModelSerializer):
         fields = ('name', 'pcode', 'location_type')
 
 
+class DisaggregationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Disaggregation
+        depth = 1
+        fields = (
+            'id',
+            # 'prp_id',
+            'name',
+            # 'parameter'
+        )
+
 class PRPIndicatorSerializer(serializers.ModelSerializer):
     # todo: this class hasn't been tested at all because there are no `AppliedIndicator`s in the current DB
     # todo: need to validate these and fill in missing fields
     title = serializers.CharField(source='indicator.title', read_only=True)
     locations = IndicatorLocationSerializer(read_only=True, many=True)
+    disaggregation = DisaggregationSerializer(read_only=True, many=True)
 
     class Meta:
         model = AppliedIndicator
@@ -79,6 +92,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             'baseline',
             'target',
             'locations',
+            'disaggregation'
         )
 
 
