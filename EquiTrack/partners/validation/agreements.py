@@ -4,7 +4,6 @@ import logging
 from datetime import date
 
 from django.utils.translation import ugettext as _
-from django.db.models import Q
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError, \
     check_required_fields, BasicValidationError
@@ -17,7 +16,8 @@ def agreement_transition_to_signed_valid(agreement):
             agreement.__class__.objects.filter(partner=agreement.partner,
                                                status=agreement.SIGNED,
                                                agreement_type=agreement.PCA,
-                                               country_programme=agreement.country_programme).count():
+                                               country_programme=agreement.country_programme,
+                                               start__gt=date(2015, 7, 1)).count():
 
         raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
 
