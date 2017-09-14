@@ -8,20 +8,9 @@ from django.core.urlresolvers import reverse
 from django.utils import timezone
 from rest_framework import status
 
-from EquiTrack.factories import (
-    PartnerFactory,
-    UserFactory,
-    ResultFactory,
-    AgreementFactory,
-    InterventionFactory,
-    FundsReservationHeaderFactory,
-    GroupFactory)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.tests.test_utils import setup_intervention_test_data
-from reports.models import ResultType, Sector
 from partners.models import (
-    InterventionSectorLocationLink,
-    InterventionBudget,
     Intervention
 )
 from utils.common.utils import get_all_field_names
