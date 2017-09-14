@@ -269,8 +269,8 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
             'visit_information', 'report_reject_comments',
         ]
         extra_kwargs = {
-            'tpm_partner': {'required': True},
-            'unicef_focal_points': {'required': True, 'label': _('TPM Name')},
+            'tpm_partner': {'required': True, 'label': _('TPM Name')},
+            'unicef_focal_points': {'required': True},
         }
 
 
@@ -278,3 +278,4 @@ class TPMVisitDraftSerializer(TPMVisitSerializer):
     class Meta(TPMVisitSerializer.Meta):
         extra_kwargs = copy(TPMVisitSerializer.Meta.extra_kwargs)
         extra_kwargs['tpm_partner']['required'] = False
+        extra_kwargs['unicef_focal_points']['required'] = False
