@@ -7,7 +7,8 @@ from locations.models import Location
 from partners.models import (
     Intervention,
     PartnerStaffMember,
-    PartnerOrganization, InterventionResultLink)
+    PartnerOrganization
+)
 from reports.models import Result, AppliedIndicator, LowerResult, Disaggregation
 
 
