@@ -1366,6 +1366,12 @@ class Intervention(TimeStampedModel):
         return _get_currency_name_or_default(self.planned_budget)
 
     @cached_property
+    def fr_currency(self):
+        # todo: implicit assumption here that there aren't conflicting currencies
+        # eventually, this should be checked/reconciled if there are conflicts
+        return self.frs.exclude(currency=None).values_list('currency', flat=True).first()
+
+    @cached_property
     def total_unicef_cash(self):
         # TODO: test this
         return self.planned_budget.unicef_cash if self.planned_budget else 0

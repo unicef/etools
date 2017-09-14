@@ -142,7 +142,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     # todo: is this the right field?
     funds_received = serializers.DecimalField(source='total_budget', read_only=True,
                                               max_digits=20, decimal_places=2)
-    funds_received_currency = serializers.CharField(source='default_budget_currency', read_only=True)
+    funds_received_currency = serializers.CharField(source='fr_currency', read_only=True)
     expected_results = serializers.SerializerMethodField()
 
     class Meta:
