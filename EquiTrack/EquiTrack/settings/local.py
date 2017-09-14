@@ -14,6 +14,29 @@ POST_OFFICE = {
     }
 }
 
+
+# change config to remove CSRF verification in localhost in order to enable testing from postman.
+REST_FRAMEWORK = {
+    # this setting fixes the bug where user can be logged in as AnonymousUser
+    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework_csv.renderers.CSVRenderer',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'EquiTrack.mixins.CsrfExemptSessionAuthentication',
+        'EquiTrack.mixins.EToolsTenantJWTAuthentication',
+        'EquiTrack.mixins.EtoolsTokenAuthentication',
+    ),
+    'TEST_REQUEST_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework_csv.renderers.CSVRenderer',
+        'rest_framework_xml.renderers.XMLRenderer',
+    )
+}
 # No SAML for local dev
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
