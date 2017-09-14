@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.apps import apps
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils import six
@@ -7,6 +8,7 @@ from django.utils import six
 from model_utils import Choices
 
 from .conditions import BaseCondition
+from .utils import collect_child_models, collect_parent_models
 
 
 class PermissionQuerySet(models.QuerySet):
@@ -18,6 +20,24 @@ class PermissionQuerySet(models.QuerySet):
         return self.filter(condition__contained_by=context)
 
     def filter_by_targets(self, targets):
+        targets = list(targets)
+
+        i = 0
+        parent_map = dict()
+        while i < len(targets):
+            target = targets[i]
+
+            model, field_name = Permission.parse_target(target)
+            if model in parent_map:
+                parents = parent_map[model]
+            else:
+                parents = collect_parent_models(model, levels=1)
+                parent_map[model] = parents
+
+            targets.extend([Permission.get_target(parent, field_name) for parent in parents])
+
+            i += 1
+
         wildcards = list(set(map(lambda target: target.rsplit('.', 1)[0] + '.*', targets)))
         targets = targets + wildcards
 
@@ -59,11 +79,36 @@ class Permission(models.Model):
         elif hasattr(field, 'field_name'):
             field = field.field_name
 
-        return '{}_{}.{}'.format(model._meta.app_label, model._meta.model_name, field)
+        return '{}.{}.{}'.format(model._meta.app_label, model._meta.model_name, field)
+
+    @staticmethod
+    def parse_target(target):
+        app_label, model_name, field = target.split('.')
+        model = apps.get_model(app_label, model_name)
+        return model, field
 
     @classmethod
     def apply_permissions(cls, permissions, targets, kind):
         permissions = list(permissions)
+
+        i = 0
+        children_map = dict()
+        while i < len(permissions):
+            perm = permissions[i]
+
+            model, field_name = Permission.parse_target(perm.target)
+            if model in children_map:
+                children = children_map[model]
+            else:
+                children = collect_child_models(model, levels=1)
+                children_map[model] = children
+
+            permissions.extend([Permission(permission=perm.permission, permission_type=perm.permission_type,
+                                           condition=perm.condition, target=Permission.get_target(child, field_name))
+                                for child in children])
+
+            i += 1
+
         permissions.sort(key=lambda perm: (-len(perm.condition), '*' in perm.target))
 
         allowed_targets = []

@@ -10,3 +10,7 @@ class Child1(models.Model):
     parent = models.ForeignKey(Parent, related_name='children1')
     field1 = models.IntegerField()
     field2 = models.IntegerField(null=True)
+
+
+class Parent2(Parent):
+    field3 = models.IntegerField(null=True)

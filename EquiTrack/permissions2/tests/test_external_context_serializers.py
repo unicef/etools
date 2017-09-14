@@ -37,11 +37,11 @@ class SerializersTestCase(TestCase):
         ]
 
         Permission.objects.bulk_create([
-            Permission(permission='edit', target='permissions2_parent.field1'),
-            Permission(permission='edit', target='permissions2_parent.children1'),
-            Permission(permission='edit', target='permissions2_child1.field1'),
-            Permission(permission='edit', target='permissions2_parent.field2', condition=['user.group="PME"']),
-            Permission(permission='edit', target='permissions2_child1.field2', condition=['user.group="PME"']),
+            Permission(permission='edit', target='permissions2.parent.field1'),
+            Permission(permission='edit', target='permissions2.parent.children1'),
+            Permission(permission='edit', target='permissions2.child1.field1'),
+            Permission(permission='edit', target='permissions2.parent.field2', condition=['user.group="PME"']),
+            Permission(permission='edit', target='permissions2.child1.field2', condition=['user.group="PME"']),
         ])
 
     def test_representation(self):

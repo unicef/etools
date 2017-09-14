@@ -5,7 +5,6 @@ from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
 
 from utils.common.serializers.fields import SeparatedReadWriteField
-from .utils import collect_parent_models
 from .models import Permission
 
 
@@ -33,11 +32,7 @@ class PermissionsBasedSerializerMixin(object):
 
             for field in node_fields:
                 if isinstance(node, PermissionsBasedSerializerMixin):
-                    related_models = collect_parent_models(node.Meta.model)
-                    targets.extend(map(
-                        lambda model: Permission.get_target(model, field),
-                        related_models
-                    ))
+                    targets.append(Permission.get_target(node.Meta.model, field))
 
                 if isinstance(field, SeparatedReadWriteField):
                     if isinstance(field.read_field, serializers.BaseSerializer):
@@ -78,9 +73,6 @@ class PermissionsBasedSerializerMixin(object):
             self.root._permissions = list(self._collect_permissions())
 
         permissions = self.root._permissions
-        related_models = tuple(map(lambda model: Permission.get_target(model, ''),
-                                   collect_parent_models(self.Meta.model)))
-        permissions = filter(lambda p: p.target.startswith(related_models), permissions)
 
         context = set(self._get_permission_context())
         permissions = filter(lambda p: set(p.condition).issubset(context), permissions)
