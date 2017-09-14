@@ -32,6 +32,34 @@ class PartnerOrganizationCsvRenderer(r.CSVRenderer):
     }
 
 
+class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
+    header = ["name", "partner_type", "shared_partner", "shared_with", "total_ct_cp",
+              "hact_values.planned_cash_transfer", "total_ct_cy", "hact_values.micro_assessment_needed", "rating",
+              "hact_values.planned_visits", "hact_min_requirements.programme_visits", "hact_values.programmatic_visits",
+              "hact_min_requirements.spot_checks", "hact_values.spot_checks", "hact_values.audits_mr",
+              "hact_values.audits_done", "hact_values.follow_up_flags"]
+
+    labels = {
+        'name': 'Implementing Partnerr',
+        'partner_type': 'Partner Type',
+        'shared_partner': 'Shared',
+        'shared_with': 'Shared IP',
+        'total_ct_cp': 'TOTAL for current CP cycle',
+        'hact_values.planned_cash_transfer': 'PLANNED for current year',
+        'total_ct_cy': 'ACTUAL for current year',
+        'hact_values.micro_assessment_needed': 'Micro Assessment',
+        'rating': 'Risk Rating',
+        'hact_values.planned_visits': 'Programmatic Visits Planned',
+        'hact_min_requirements.programme_visits': 'Programmatic Visits M.R',
+        'hact_values.programmatic_visits': 'Programmatic Visits Done',
+        'hact_min_requirements.spot_checks': 'Spot Checks M.R',
+        'hact_values.spot_checks': 'Spot Checks Done',
+        'hact_values.audits_mr': 'Audits M.R',
+        'hact_values.audits_done': 'Audits Done',
+        'hact_values.follow_up_flags': 'Flag for Follow up',
+    }
+
+
 class AgreementCvsRenderer(r.CSVRenderer):
     header = [
         "agreement_number",
@@ -68,14 +96,14 @@ class AgreementCvsRenderer(r.CSVRenderer):
 
 class InterventionCvsRenderer(r.CSVRenderer):
     header = [
-        "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
-        "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
-        "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
+        "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
+        "title", "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
+        "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
         "planned_budget_local", "unicef_budget", "cso_contribution",
         "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
         "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
-        "url",
+        "url", "migration_error_msg"
     ]
 
     labels = {
@@ -95,11 +123,9 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "unicef_focal_points": "UNICEF Focal Points",
         "partner_focal_points": "CSO Authorized Officials",
         "population_focus": "Population Focus",
-        "hrp_name": "Humanitarian Response Plan",
         "cp_outputs": "CP Outputs",
         "ram_indicators": "RAM Indicators",
         "fr_numbers": "FR Number(s)",
-        "local_currency": "Local Currency of Planned Budget",
         "planned_budget_local": "Total UNICEF Budget (Local)",
         "unicef_budget": "Total UNICEF Budget (USD)",
         "cso_contribution": "Total CSO Budget (USD)",
@@ -117,18 +143,5 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "days_from_submission_to_signed": "Days from Submission to Signed",
         "days_from_review_to_signed": "Days from Review to Signed",
         "url": "URL",
-    }
-
-
-class GovernmentInterventionCvsRenderer(r.CSVRenderer):
-    header = [
-        "partner_name", "country_programme_name", "number", "cp_outputs", "url",
-    ]
-
-    labels = {
-        "partner_name": "Government Partner",
-        "country_programme_name": "Country Programme",
-        "number": "Reference Number",
-        "cp_outputs": "CP Output",
-        "url": "URL",
+        "migration_error_msg": "Migration messages"
     }

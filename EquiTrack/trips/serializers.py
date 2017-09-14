@@ -1,12 +1,8 @@
-__author__ = 'jcranwellward'
-
-#import logging
-
 from django.contrib.sites.models import Site
 
 from rest_framework import serializers
 
-from .models import (
+from trips.models import (
     Trip,
     TravelRoutes,
     TripFunds,
@@ -132,7 +128,7 @@ class TripSerializer(serializers.ModelSerializer):
     files = FileAttachmentSerializer(many=True, read_only=True)
 
     def get_partnerships(self, trip):
-        return [pca.__unicode__() for pca in trip.pcas.all()]
+        return [unicode(pca) for pca in trip.pcas.all()]
 
     def transform_traveller(self, obj):
         return obj.owner.get_full_name()
@@ -222,7 +218,7 @@ class TripSerializer(serializers.ModelSerializer):
                     ActionPoint.objects.filter(pk=ap_id).update(**ap_data)
 
                 else:
-                    #create a new action_point
+                    # create a new action_point
                     ActionPoint.objects.create(trip=instance, **ap_data)
 
         return instance

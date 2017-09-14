@@ -1,7 +1,6 @@
-
 from django.contrib import admin
 
-from .models import VisionSyncLog
+from vision.models import VisionSyncLog
 
 
 class VisionSyncLogAdmin(admin.ModelAdmin):
@@ -25,6 +24,7 @@ class VisionSyncLogAdmin(admin.ModelAdmin):
     )
     readonly_fields = (
         'country',
+        'details',
         'handler_name',
         'total_records',
         'total_processed',

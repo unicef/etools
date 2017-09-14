@@ -8,7 +8,6 @@ from rest_framework import serializers
 
 from publics.models import BusinessArea
 from t2f.helpers.misc import get_open_travels_for_check
-from t2f import UserTypes
 from t2f.helpers.permission_matrix import get_user_role_list
 
 log = logging.getLogger(__name__)

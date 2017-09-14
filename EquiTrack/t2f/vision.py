@@ -12,7 +12,6 @@ from django.core.mail.message import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.models.query_utils import Q
-from django.template.context import Context
 from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDict
 
@@ -86,8 +85,8 @@ class InvoiceExport(object):
         ET.SubElement(vendor, 'house_bank')
 
     def generate_expense_nodes(self, main, invoice):
-        for item_no, invoice_item in enumerate(invoice.items.all()):
-            self._generate_expense_node(main, invoice_item, item_no+1) # +1 to start from 1
+        for item_no, invoice_item in enumerate(invoice.items.all(), start=1):
+            self._generate_expense_node(main, invoice_item, item_no)
 
     def _generate_expense_node(self, main, invoice_item, item_no):
         expense = ET.SubElement(main, 'expense')
@@ -177,7 +176,7 @@ class InvoiceUpdater(object):
     @run_on_tenants
     def _update_invoices_in_tenants(self, workspace, invoice_grouping):
         if workspace.business_area_code not in invoice_grouping:
-            return 
+            return
 
         workspace_group = invoice_grouping.pop(workspace.business_area_code, [])
         for invoice_data in workspace_group:
@@ -200,9 +199,7 @@ class InvoiceUpdater(object):
     def send_mail_for_error(self, workspace, invoice):
         url = reverse('t2f:invoices:details', kwargs={'invoice_pk': invoice.id})
 
-        context = Context({'invoice': invoice,
-                           'url': url})
-        html_content = render_to_string('emails/failed_invoice_sync.html', context)
+        html_content = render_to_string('emails/failed_invoice_sync.html', {'invoice': invoice, 'url': url})
 
         recipients = User.objects.filter(profile__country=workspace,
                                          groups__name='Finance Focal Point').values_list('email', flat=True)

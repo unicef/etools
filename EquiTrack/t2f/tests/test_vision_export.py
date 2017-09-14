@@ -1,8 +1,5 @@
 from __future__ import unicode_literals
-
 from datetime import datetime
-from pytz import UTC
-
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -10,18 +7,20 @@ except ImportError:
 
 from django.core.urlresolvers import reverse
 
+from pytz import UTC
+
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from publics.models import TravelExpenseType
 from publics.tests.factories import DSARegionFactory, DSARateFactory
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.models import Travel, Expense, CostAssignment, Invoice
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory, \
-    IteneraryItemFactory
+    ItineraryItemFactory
 from t2f.vision import InvoiceUpdater
 
 
-class VisionXML(APITenantTestCase):
+class VisionXML(URLAssertionMixin, APITenantTestCase):
     def setUp(self):
         super(VisionXML, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -35,6 +34,14 @@ class VisionXML(APITenantTestCase):
         country = profile.country
         country.business_area_code = '0060'
         country.save()
+
+    def test_urls(self):
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        names_and_paths = (
+            ('vision_invoice_export', 'vision_invoice_export/', {}),
+            ('vision_invoice_update', 'vision_invoice_update/', {}),
+            )
+        self.assertReversal(names_and_paths, 't2f:', '/api/t2f/')
 
     def make_invoice_updater(self, status=Invoice.SUCCESS):
         root = ET.Element('ta_invoice_acks')
@@ -80,11 +87,11 @@ class VisionXML(APITenantTestCase):
                                currency=huf,
                                amount=35)
 
-        IteneraryItemFactory(travel=travel,
+        ItineraryItemFactory(travel=travel,
                              departure_date=datetime(2017, 5, 10, tzinfo=UTC),
                              arrival_date=datetime(2017, 5, 11, tzinfo=UTC),
                              dsa_region=dsa_region)
-        IteneraryItemFactory(travel=travel,
+        ItineraryItemFactory(travel=travel,
                              departure_date=datetime(2017, 5, 20, tzinfo=UTC),
                              arrival_date=datetime(2017, 5, 21, tzinfo=UTC),
                              dsa_region=dsa_region)
@@ -133,10 +140,10 @@ class VisionXML(APITenantTestCase):
 
         # Update invoices like vision would do it
         response = self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
-                             data=updater_xml_structure,
-                             user=self.unicef_staff,
-                             request_format=None,
-                             content_type='text/xml')
+                                        data=updater_xml_structure,
+                                        user=self.unicef_staff,
+                                        request_format=None,
+                                        content_type='text/xml')
         self.assertEqual(response.status_code, 200)
 
     def test_personal_number_usage(self):

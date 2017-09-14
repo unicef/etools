@@ -85,8 +85,8 @@ class CoverPageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CoverPage
-        fields = ('id', 'workplan_project', 'national_priority', 'responsible_government_entity', 'planning_assumptions',
-                  'budgets', 'logo')
+        fields = ('id', 'workplan_project', 'national_priority', 'responsible_government_entity',
+                  'planning_assumptions', 'budgets', 'logo')
 
 
 class WorkplanProjectSerializer(serializers.ModelSerializer):

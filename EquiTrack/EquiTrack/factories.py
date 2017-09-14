@@ -1,26 +1,21 @@
 """
 Model factories used for generating models dynamically for tests
 """
+from datetime import datetime, timedelta, date
 import json
 
-from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
-import decimal
-from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
-
 import factory
 from factory import fuzzy
 
 from users import models as user_models
 from trips import models as trip_models
-from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
-from funds.models import Grant, Donor
+from funds.models import Grant, Donor, FundsReservationHeader, FundsCommitmentHeader
 from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
@@ -56,11 +51,13 @@ class GroupFactory(factory.django.DjangoModelFactory):
 
     name = "Partnership Manager"
 
+
 class UnicefUserGroupFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Group
 
     name = "UNICEF User"
+
 
 class ProfileFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -84,7 +81,6 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Sequence(lambda n: "user{}@notanemail.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
-    #group = factory.SubFactory(UnicefUserGroupFactory)
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
     profile = factory.RelatedFactory(ProfileFactory, 'user')
@@ -103,6 +99,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     def groups(self, create, extracted, **kwargs):
         group, created = Group.objects.get_or_create(name='UNICEF User')
         self.groups.add(group)
+
 
 class TripFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -146,7 +143,7 @@ class PartnerFactory(factory.django.DjangoModelFactory):
         model = partner_models.PartnerOrganization
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
-    staff = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):
@@ -154,21 +151,25 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
         model = report_models.CountryProgramme
 
     name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
+    wbs = factory.Sequence(lambda n: '0000/A0/{:02d}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
 
 
 class AgreementFactory(factory.django.DjangoModelFactory):
+    '''Factory for Agreements. If the agreement type is PCA (the default), the agreement's end date is set from
+    the country_programme so any end date passed to this factory is ignored.
+    '''
     class Meta:
         model = partner_models.Agreement
 
     partner = factory.SubFactory(PartnerFactory)
     agreement_type = u'PCA'
     signed_by_unicef_date = date.today()
-    status = 'active'
+    signed_by_partner_date = date.today()
+    status = 'signed'
+    attached_agreement = factory.django.FileField(filename='test_file.pdf')
     country_programme = factory.SubFactory(CountryProgrammeFactory)
-
 
 
 class PartnershipFactory(factory.django.DjangoModelFactory):
@@ -202,7 +203,7 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     partner_contribution_local = 20.00
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
-    year = '2017'
+
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -211,20 +212,10 @@ class ResultTypeFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
 
 
-class ResultStructureFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.ResultStructure
-
-    name = factory.Sequence(lambda n: 'RSSP {}'.format(n))
-    from_date = date(date.today().year, 1, 1)
-    to_date = date(date.today().year, 12, 31)
-
-
 class ResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Result
 
-    result_structure = factory.SubFactory(ResultStructureFactory)
     result_type = factory.SubFactory(ResultTypeFactory)
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = date(date.today().year, 1, 1)
@@ -237,7 +228,6 @@ class GovernmentInterventionFactory(factory.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     country_programme = factory.SubFactory(CountryProgrammeFactory)
-    result_structure = factory.SubFactory(ResultStructureFactory)
     number = 'RefNumber'
 
 
@@ -328,6 +318,7 @@ class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
             for label in extracted:
                 self.labels.add(label)
 
+
 class MilestoneFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = workplan_models.Milestone
@@ -336,11 +327,13 @@ class MilestoneFactory(factory.django.DjangoModelFactory):
     description = factory.Sequence(lambda n: 'Description {}'.format(n))
     assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
 
+
 class CoverPageBudgetFactory(factory.DjangoModelFactory):
     class Meta:
         model = CoverPageBudget
 
-    date = factory.LazyAttribute(lambda o: datetime.now())
+    from_date = factory.LazyAttribute(lambda o: date.today())
+    to_date = factory.LazyAttribute(lambda o: date.today() + timedelta(days=3))
     total_amount = fuzzy.FuzzyText(length=50)
     funded_amount = fuzzy.FuzzyText(length=50)
     unfunded_amount = fuzzy.FuzzyText(length=50)
@@ -385,17 +378,36 @@ class GrantFactory(factory.DjangoModelFactory):
         model = Grant
 
 
-# class FundingCommitmentFactory(factory.django.DjangoModelFactory):
-#     class Meta:
-#         model = partner_models.FundingCommitment
-#
-#     grant = grant,
-#     intervention = factory.SubFactory(PartnershipFactory)
-#
-#
-#     fr_number = models.CharField(max_length=50)
-#     wbs = models.CharField(max_length=50)
-#     fc_type = models.CharField(max_length=50)
+class FundsReservationHeaderFactory(factory.DjangoModelFactory):
+    intervention = factory.SubFactory(InterventionFactory)
+    vendor_code = fuzzy.FuzzyText(length=20)
+    fr_number = fuzzy.FuzzyText(length=20)
+    document_date = date(date.today().year, 1, 1)
+    fr_type = fuzzy.FuzzyText(length=20)
+    currency = fuzzy.FuzzyText(length=20)
+    document_text = fuzzy.FuzzyText(length=20)
+
+    # this is the field required for validation
+    intervention_amt = fuzzy.FuzzyDecimal(1, 300)
+    # overall_amount
+    total_amt = fuzzy.FuzzyDecimal(1, 300)
+    actual_amt = fuzzy.FuzzyDecimal(1, 300)
+    outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
+
+    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1)-timedelta(days=10),
+                                 date(date.today().year, 1, 1))
+    end_date = fuzzy.FuzzyDate(date(date.today().year + 1, 1, 1),
+                               date(date.today().year + 1, 1, 1)+timedelta(days=10))
+
+    class Meta:
+        model = FundsReservationHeader
+
+
+class FundsCommitmentHeaderFactory(factory.DjangoModelFactory):
+
+    class Meta:
+        model = FundsCommitmentHeader
+
 
 # Credit goes to http://stackoverflow.com/a/41154232/2363915
 class JSONFieldFactory(factory.DictFactory):
@@ -416,4 +428,16 @@ class NotificationFactory(factory.django.DjangoModelFactory):
     sender = factory.SubFactory(AgreementFactory)
     template_name = 'trips/trip/TA_request'
     recipients = ['test@test.com', 'test1@test.com', 'test2@test.com']
-    template_data = factory.Dict({'url': 'www.unicef.org', 'pa_assistant': 'Test revised', 'owner_name': 'Tester revised'}, dict_factory=JSONFieldFactory)
+    template_data = factory.Dict({'url': 'www.unicef.org',
+                                  'pa_assistant': 'Test revised',
+                                  'owner_name': 'Tester revised'}, dict_factory=JSONFieldFactory)
+
+
+class AgreementAmendmentFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.AgreementAmendment
+
+    number = factory.Sequence(lambda n: '{:05}'.format(n))
+    agreement = factory.SubFactory(AgreementFactory)
+    types = [partner_models.AgreementAmendment.CLAUSE]

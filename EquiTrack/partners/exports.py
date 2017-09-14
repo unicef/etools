@@ -1,13 +1,9 @@
-from partners.models import GovernmentIntervention
-
-__author__ = 'jcranwellward'
-
 from collections import OrderedDict
 
 from import_export import resources
 
 from EquiTrack.utils import BaseExportResource
-from .models import (
+from partners.models import (
     PCA,
     PartnerOrganization,
     PartnershipBudget,
@@ -30,8 +26,7 @@ class PCAResource(BaseExportResource):
 
     def fill_pca_grants(self, row, pca):
 
-        for num, grant in enumerate(pca.grants.all()):
-            num += 1
+        for num, grant in enumerate(pca.grants.all(), start=1):
             values = OrderedDict()
 
             self.insert_column(values, 'Donor {}'.format(num), grant.grant.donor.name)
@@ -46,8 +41,7 @@ class PCAResource(BaseExportResource):
 
     def fill_sector_outputs(self, row, sector):
         sector_name = sector.sector.name
-        for num, output in enumerate(sector.pcasectoroutput_set.all()):
-            num += 1
+        for num, output in enumerate(sector.pcasectoroutput_set.all(), start=1):
             values = OrderedDict()
 
             self.insert_column(values, '{} RRP output {}'.format(sector_name, num), output.output.name)
@@ -61,8 +55,7 @@ class PCAResource(BaseExportResource):
 
     def fill_sector_goals(self, row, sector):
         sector_name = sector.sector.name
-        for num, goal in enumerate(sector.pcasectorgoal_set.all()):
-            num += 1
+        for num, goal in enumerate(sector.pcasectorgoal_set.all(), start=1):
             values = OrderedDict()
 
             self.insert_column(values, '{} CCC {}'.format(sector_name, num), goal.goal.name)
@@ -76,8 +69,7 @@ class PCAResource(BaseExportResource):
 
     def fill_sector_indicators(self, row, sector):
         sector_name = sector.sector.name
-        for num, indicator in enumerate(sector.indicatorprogress_set.all()):
-            num += 1
+        for num, indicator in enumerate(sector.indicatorprogress_set.all(), start=1):
             values = OrderedDict()
 
             self.insert_column(values, '{} Indicator {}'.format(sector_name, num), indicator.indicator.name)
@@ -102,8 +94,7 @@ class PCAResource(BaseExportResource):
             for wbs in ir.wbs_activities.all():
                 wbs_set.add(wbs.name)
 
-        for num, wbs in enumerate(wbs_set):
-            num += 1
+        for num, wbs in enumerate(wbs_set, start=1):
             values = OrderedDict()
 
             self.insert_column(values, '{} WBS/Activity {}'.format(sector_name, num), wbs)
@@ -117,8 +108,7 @@ class PCAResource(BaseExportResource):
 
     def fill_sector_activities(self, row, sector):
         sector_name = sector.sector.name
-        for num, activity in enumerate(sector.pcasectoractivity_set.all()):
-            num += 1
+        for num, activity in enumerate(sector.pcasectoractivity_set.all(), start=1):
             values = OrderedDict()
 
             self.insert_column(values, '{} Activity {}'.format(sector_name, num), activity.activity.name)
@@ -132,9 +122,7 @@ class PCAResource(BaseExportResource):
 
     def fill_pca_locations(self, row, pca):
 
-        for num, location in enumerate(pca.locations.all()):
-            num += 1
-
+        for num, location in enumerate(pca.locations.all(), start=1):
             self.insert_column(row, 'Location Type {}'.format(num), location.gateway.name)
             self.insert_column(row, 'Location Name {}'.format(num), location.location.name)
 
@@ -317,7 +305,7 @@ class InterventionExport(resources.ModelResource):
         #   FR Numbers (comma separated)
         #   Number of Active Action Points
         fields = ('title', 'reference_number', 'status', 'partner__name', 'partnership_type', 'sectors', 'start_date',
-                  'end_date', 'result_structure__name', 'locations', 'initiation_date', 'submission_date',
+                  'end_date', 'locations', 'initiation_date', 'submission_date',
                   'review_date', 'days_from_submission_to_signed', 'days_from_review_to_signed',
                   'signed_by_partner_date', 'partner_manager_name', 'signed_by_unicef_date', 'unicef_manager_name',
                   'total_unicef_cash', 'supplies', 'total_budget', 'planned_visits')
@@ -358,24 +346,3 @@ class InterventionExport(resources.ModelResource):
 
     def dehydrate_total_budget(self, intervention):
         return intervention.total_budget
-
-
-class GovernmentExport(resources.ModelResource):
-    sectors = resources.Field()
-    cash_transfer = resources.Field()
-    year = resources.Field()
-
-    class Meta:
-        model = GovernmentIntervention
-        fields = ('number', 'partner__name', 'result_structure__name', 'sectors', 'cash_transfer',
-                  'year')
-        export_order = fields
-
-    def dehydrate_sectors(self, government):
-        return ''
-
-    def dehydrate_cash_transfer(self, government):
-        return sum([r.planned_amount for r in government.results.all()])
-
-    def dehydrate_year(self, government):
-        return government.result_structure.to_date.year

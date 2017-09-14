@@ -1,5 +1,3 @@
-__author__ = 'unicef-leb-inn'
-
 import tablib
 
 from django import template

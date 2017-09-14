@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from tenant_schemas.management.commands import BaseTenantCommand
 
 

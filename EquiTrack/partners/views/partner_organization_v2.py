@@ -15,15 +15,14 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
-    CreateAPIView
-)
+    CreateAPIView,
+    ListAPIView)
 
 from EquiTrack.utils import get_data_from_insight
 from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import (
     PartnerStaffMember,
-    Intervention,
     PartnerOrganization,
     Assessment,
 )
@@ -38,9 +37,10 @@ from partners.serializers.partner_organization_v2 import (
     AssessmentDetailSerializer,
     MinimalPartnerOrganizationListSerializer,
 )
+from t2f.models import TravelActivity
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
-from partners.exports_v2 import PartnerOrganizationCsvRenderer
+from partners.exports_v2 import PartnerOrganizationCsvRenderer, PartnerOrganizationHactCsvRenderer
 
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):
@@ -189,18 +189,28 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
         return Response(PartnerOrganizationDetailSerializer(instance).data)
 
 
-class PartnerOrganizationHactAPIView(ListCreateAPIView):
+class PartnerOrganizationHactAPIView(ListAPIView):
 
     """
     Create new Partners.
     Returns a list of Partners.
     """
     permission_classes = (IsAdminUser,)
-    queryset = PartnerOrganization.objects.filter(
-        Q(agreements__interventions__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
-        (Q(partner_type=u'Government') & Q(total_ct_cp__gt=0))
-    ).distinct()
+    queryset = PartnerOrganization.objects.filter(total_ct_cp__gt=0).all()
     serializer_class = PartnerOrganizationHactSerializer
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
+
+    def list(self, request, format=None):
+        """
+        Checks for format query parameter
+        :returns: JSON or CSV file
+        """
+        query_params = self.request.query_params
+        response = super(PartnerOrganizationHactAPIView, self).list(request)
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                response['Content-Disposition'] = "attachment;filename=hact_dashboard.csv"
+        return response
 
 
 class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
@@ -211,6 +221,16 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
+
+
+class PartnerAuthorizedOfficersListAPIVIew(ListAPIView):
+    """
+    Returns a list of all signed officers for Partner
+    """
+    queryset = PartnerStaffMember.objects.filter(signed_interventions__isnull=False).distinct()
+    serializer_class = PartnerStaffMemberDetailSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter, )
 
 
 class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
@@ -312,3 +332,20 @@ class PartnerOrganizationAddView(CreateAPIView):
 
             headers = self.get_success_headers(po_serializer.data)
             return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class PartnerOrganizationDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            partner = PartnerOrganization.objects.get(id=int(kwargs['pk']))
+        except PartnerOrganization.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if partner.agreements.count() > 0:
+            raise ValidationError("This partner has agreements associated to it")
+        elif TravelActivity.objects.filter(partner=partner).count() > 0:
+            raise ValidationError("This partner has trips associated to it")
+        else:
+            partner.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)

@@ -45,14 +45,21 @@ E.g.::
 Per PEP-8, "You should put a blank line between each group of imports.".
 
 
+Author annotations
+~~~~~~~~~~~~~~~~~~
+
+Some editors add author annotations to files when they are created: ``__author__ = 'vkurup'`` We
+prefer that those not be added to new files, and they can be removed from existing files.
+
+
 Python 3 Prep
 -------------
 
 To make your code easier to port to Python 3, add the following to the top of
 all new files::
 
-	from __future__ import division
 	from __future__ import absolute_import
+	from __future__ import division
 	from __future__ import print_function
 	from __future__ import unicode_literals
 
@@ -84,3 +91,78 @@ Remember that code coverage is just one metric. It is possible to have 100% code
 have bugs because the tests are not asserting all of the various decisions that the code is making.
 An unfortunately common example is a test for a REST API endpoint that merely checks that the
 response code is 200. Don’t aim for coverage, aim for quality.
+
+
+Commented-out code
+------------------
+
+We prefer to avoid commenting out code. Keeping commented code lying around is often an attempt to
+do homemade version control, and it's better to use git for this. There are a few cases where it is
+reasonable to keep commented code in the codebase.
+
+1. To make it easy for developers to turn on rarely used development features. For example:
+   'Uncomment the next 4 lines to temporarily turn on local caching'
+2. To keep code that you know will be coming back soon. In this case, there should be a clear
+   comment at the top of the block indicating at what point the code will be uncommented. For
+   example: 'The following is commented out until issue #42 is resolved'.
+
+Even those cases are weak. There's often ways to implement developer switches using
+environment variables for case #1, and it is not guaranteed that the person who fixes issue #42 will
+remember to look for the commented-out code and uncomment it. It's usually better to remove the code
+and make it clear in issue #42 what steps need to be taken before the issue is marked done.
+
+
+Exception Handling
+------------------
+
+* Minimize what you ``try``
+* Minimize what you catch
+* Minimize what you ``except``
+* Don't forget the ``else``
+
+Code in ``try`` blocks should be limited to the code you suspect will raise an exception. Usually that's
+just one line of code. Limiting the code in a ``try`` block ensures that unexpected
+exceptions won't get mishandled. It also clarifies the intent of the ``try`` block to anyone reading
+the code.
+
+You should only catch the exceptions you expect will be raised. This can almost always be limited
+to one or two exceptions. Catching all exceptions can be the right thing to do, but that's rare.
+Catch-all handlers are misused far more often than they're used appropriately.
+
+Code in ``except`` blocks should be limited to the minimum required to handle the exception.
+Complicated ``except`` blocks run the risk of raising errors of their own.
+
+Exception handlers have an underused ``else`` clause that executes if no exception is raised. It's
+the appropriate place for the code you might be tempted to put in the ``try`` block after the
+suspect code.
+
+
+Django Settings
+---------------
+
+Add new Django settings to the `base.py` settings module. If a customization is needed for a
+specific environment, keep the production value in `base.py` and add an override for local
+development in `local.py`. This allows a developer to mimic a production environment by simply
+commenting out a setting in `local.py`. It may sometimes be reasonable to do the reverse, for
+example, if you want to avoid importing a package that is only needed on production. In those cases,
+you should add the override only to production.py. We should try to avoid having both local
+overrides and production overrides of the same setting.
+
+Order of settings
+~~~~~~~~~~~~~~~~~
+
+Within base.py, settings should be organized in the following order: Django core settings, Django
+contrib settings, Third-party app settings, and finally eTools-specific settings. You are strongly
+encouraged to add detailed comments, with links, explaining the intended purpose of the setting.
+
+Use str2bool for Boolean env vars
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using environment variables as settings is a good practice that allows flexibility in deployment.
+This is generally straightforward, unless the setting is a Boolean value. If you write: ``ENABLE_FOO
+= os.environ.get(‘ENABLE_FOO’, True)``, and then set ``ENABLE_FOO=False`` in the environment, the
+python variable ``ENABLE_FOO`` gets set to the string ``‘False’`` and if it is treated like a
+Boolean in other parts of the code then ``bool(‘False’)`` equals ``True``, which is probably not
+what you wanted. We have a helper function called ``str2bool`` that converts commonly used boolean
+representations from a string to a proper Python Boolean value, which allows us to write ``ENABLE_FOO
+= str2bool(os.environ.get(‘ENABLE_FOO’, True))``.

@@ -1,31 +1,31 @@
 from __future__ import unicode_literals
 
-from datetime import datetime, timedelta
+from datetime import timedelta
+
+from django.utils import timezone
+
 import factory
 from factory import fuzzy
-from pytz import timezone, UTC
 
-from django.conf import settings
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, ResultFactory, LocationFactory,\
     InterventionFactory
 from publics.tests.factories import DSARegionFactory, AirlineCompanyFactory, WBSFactory, GrantFactory, FundFactory, \
     CurrencyFactory, ExpenseTypeFactory
-from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
+from t2f.models import Travel, TravelActivity, ItineraryItem, Expense, Deduction, CostAssignment, Clearances,\
     ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
     TravelType, Invoice, InvoiceItem
 
-TZ = timezone(settings.TIME_ZONE)
-_FUZZY_START_DATE = TZ.localize(datetime.now() - timedelta(days=5))
-_FUZZY_END_DATE = TZ.localize(datetime.now() + timedelta(days=5))
+_FUZZY_START_DATE = timezone.now() - timedelta(days=5)
+_FUZZY_END_DATE = timezone.now() + timedelta(days=5)
 
 
-class TravelActivityFactory(factory.DjangoModelFactory):
-    travel_type = TravelType.ADVOCACY
+class TravelActivityFactory(factory.django.DjangoModelFactory):
+    travel_type = TravelType.PROGRAMME_MONITORING
     partner = factory.SelfAttribute('partnership.agreement.partner')
     partnership = factory.SubFactory(InterventionFactory)
     result = factory.SubFactory(ResultFactory)
-    date = factory.LazyAttribute(lambda o: datetime.now())
+    date = factory.LazyAttribute(lambda o: timezone.now())
 
     class Meta:
         model = TravelActivity
@@ -36,11 +36,11 @@ class TravelActivityFactory(factory.DjangoModelFactory):
         self.locations.add(location)
 
 
-class IteneraryItemFactory(factory.DjangoModelFactory):
+class ItineraryItemFactory(factory.DjangoModelFactory):
     origin = fuzzy.FuzzyText(length=32)
     destination = fuzzy.FuzzyText(length=32)
-    departure_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=TZ.localize(datetime.now()))
-    arrival_date = fuzzy.FuzzyDateTime(start_dt=TZ.localize(datetime.now()), end_dt=_FUZZY_END_DATE)
+    departure_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
+    arrival_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
     dsa_region = factory.SubFactory(DSARegionFactory)
     overnight_travel = False
     mode_of_travel = ModeOfTravel.BOAT
@@ -51,7 +51,7 @@ class IteneraryItemFactory(factory.DjangoModelFactory):
         self.airlines.add(airline)
 
     class Meta:
-        model = IteneraryItem
+        model = ItineraryItem
 
 
 class ExpenseFactory(factory.DjangoModelFactory):
@@ -97,11 +97,11 @@ class ClearanceFactory(factory.DjangoModelFactory):
 class ActionPointFactory(factory.DjangoModelFactory):
     action_point_number = factory.Sequence(lambda n: make_action_point_number())
     description = fuzzy.FuzzyText(length=128)
-    due_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=TZ.localize(datetime.now()))
+    due_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
     person_responsible = factory.SubFactory(UserFactory)
     assigned_by = factory.SubFactory(UserFactory)
     status = 'open'
-    created_at = datetime.now(tz=UTC)
+    created_at = timezone.now()
 
     class Meta:
         model = ActionPoint
@@ -112,8 +112,8 @@ class TravelFactory(factory.DjangoModelFactory):
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
     section = factory.SubFactory(SectionFactory)
-    start_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=TZ.localize(datetime.now()))
-    end_date = fuzzy.FuzzyDateTime(start_dt=TZ.localize(datetime.now()), end_dt=_FUZZY_END_DATE)
+    start_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
+    end_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
     international_travel = False
     ta_required = True
@@ -121,7 +121,7 @@ class TravelFactory(factory.DjangoModelFactory):
     currency = factory.SubFactory(CurrencyFactory)
     mode_of_travel = []
 
-    itinerary = factory.RelatedFactory(IteneraryItemFactory, 'travel')
+    itinerary = factory.RelatedFactory(ItineraryItemFactory, 'travel')
     expenses = factory.RelatedFactory(ExpenseFactory, 'travel')
     deductions = factory.RelatedFactory(DeductionFactory, 'travel')
     cost_assignments = factory.RelatedFactory(CostAssignmentFactory, 'travel')

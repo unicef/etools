@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import logging
 import csv
-import codecs
 from decimal import Decimal, InvalidOperation
 from collections import defaultdict
 from datetime import datetime, date
@@ -11,8 +10,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
 from storages.backends.azure_storage import AzureStorage
 
-
-from publics.models import TravelAgent, Country, Currency, ExchangeRate, WBS, Grant, Fund, TravelExpenseType, \
+from EquiTrack.celery import app
+from publics.models import TravelAgent, Currency, ExchangeRate, WBS, Grant, Fund, TravelExpenseType, \
     BusinessArea, DSARateUpload, Country, DSARegion, DSARate
 
 try:
@@ -20,7 +19,6 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 
-from EquiTrack.celery import app
 
 log = logging.getLogger(__name__)
 
@@ -68,6 +66,7 @@ def import_travel_agents(xml_structure):
         TravelExpenseType.objects.get_or_create(vendor_number=vendor_code, is_travel_agent=True,
                                                 defaults={'title': name})
 
+
 @app.task
 def import_exchange_rates(xml_structure):
     root = ET.fromstring(xml_structure)
@@ -106,68 +105,65 @@ def import_exchange_rates(xml_structure):
 
 
 def _fetch_business_areas(wbs_set):
-   business_area_codes = {wbs_code[:4] for wbs_code in wbs_set}
-   business_area_qs = BusinessArea.objects.filter(code__in=business_area_codes)
-   return {ba.code: ba for ba in business_area_qs}
+    business_area_codes = {wbs_code[:4] for wbs_code in wbs_set}
+    business_area_qs = BusinessArea.objects.filter(code__in=business_area_codes)
+    return {ba.code: ba for ba in business_area_qs}
 
 
 def create_wbs_objects(wbs_code_set):
-   business_area_cache = _fetch_business_areas(wbs_code_set)
+    business_area_cache = _fetch_business_areas(wbs_code_set)
 
-   existing_wbs_objects = WBS.objects.filter(name__in=wbs_code_set).select_related('business_area')
-   existing_wbs_codes = {wbs.name for wbs in existing_wbs_objects}
+    existing_wbs_objects = WBS.objects.filter(name__in=wbs_code_set).select_related('business_area')
+    existing_wbs_codes = {wbs.name for wbs in existing_wbs_objects}
 
-   wbs_to_create = wbs_code_set - existing_wbs_codes
-   bulk_wbs_list = []
-   for wbs_code in wbs_to_create:
-       business_area_code = wbs_code[:4]
-       wbs = WBS(name=wbs_code, business_area=business_area_cache[business_area_code])
-       bulk_wbs_list.append(wbs)
+    wbs_to_create = wbs_code_set - existing_wbs_codes
+    bulk_wbs_list = []
+    for wbs_code in wbs_to_create:
+        business_area_code = wbs_code[:4]
+        wbs = WBS(name=wbs_code, business_area=business_area_cache[business_area_code])
+        bulk_wbs_list.append(wbs)
 
-   WBS.objects.bulk_create(bulk_wbs_list)
+    WBS.objects.bulk_create(bulk_wbs_list)
 
-   wbs_mapping = {wbs.name: wbs for wbs in WBS.objects.filter(name__in=wbs_code_set)}
-   return wbs_mapping
+    wbs_mapping = {wbs.name: wbs for wbs in WBS.objects.filter(name__in=wbs_code_set)}
+    return wbs_mapping
 
 
 def create_grant_objects(grant_code_set):
-   grant_objects = Grant.objects.filter(name__in=grant_code_set)
-   existing_grants = {g.name for g in grant_objects}
+    grant_objects = Grant.objects.filter(name__in=grant_code_set)
+    existing_grants = {g.name for g in grant_objects}
 
-   grant_to_create = grant_code_set - existing_grants
-   bulk_grant_list = []
-   for grant_code in grant_to_create:
-       grant = Grant(name=grant_code)
-       bulk_grant_list.append(grant)
+    grant_to_create = grant_code_set - existing_grants
+    bulk_grant_list = []
+    for grant_code in grant_to_create:
+        grant = Grant(name=grant_code)
+        bulk_grant_list.append(grant)
 
-   Grant.objects.bulk_create(bulk_grant_list)
+    Grant.objects.bulk_create(bulk_grant_list)
 
-   grant_mapping = {g.name: g for g in Grant.objects.filter(name__in=grant_code_set)}
-   return grant_mapping
+    grant_mapping = {g.name: g for g in Grant.objects.filter(name__in=grant_code_set)}
+    return grant_mapping
 
 
 def create_fund_objects(fund_code_set):
-   fund_objects = Fund.objects.filter(name__in=fund_code_set)
-   existing_funds = {f.name for f in fund_objects}
+    fund_objects = Fund.objects.filter(name__in=fund_code_set)
+    existing_funds = {f.name for f in fund_objects}
 
-   fund_to_create = fund_code_set - existing_funds
-   bulk_fund_list = []
-   for fund_code in fund_to_create:
-       fund = Fund(name=fund_code)
-       bulk_fund_list.append(fund)
+    fund_to_create = fund_code_set - existing_funds
+    bulk_fund_list = []
+    for fund_code in fund_to_create:
+        fund = Fund(name=fund_code)
+        bulk_fund_list.append(fund)
 
-   Fund.objects.bulk_create(bulk_fund_list)
+    Fund.objects.bulk_create(bulk_fund_list)
 
-   fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_code_set)}
-   return fund_mapping
+    fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_code_set)}
+    return fund_mapping
 
 
 @app.task
 def import_cost_assignments(xml_structure):
     root = ET.fromstring(xml_structure)
-
-    # This will hold the wbs/grant/fund grouping
-    mapping = defaultdict(lambda: defaultdict(list))
 
     groups = []
     for row in root.iter('ROW'):
@@ -261,7 +257,6 @@ class DSARateUploader(object):
                 n = Decimal(raw)
             except InvalidOperation as e:
                 self.errors['{} (line {})'.format(field, line+1)] = e.message
-                has_error = True
                 return None
             else:
                 return n
@@ -275,7 +270,6 @@ class DSARateUploader(object):
                 d = date(year, month, day)
             except ValueError as e:
                 self.errors['{} (line {})'.format(field, line+1)] = e.message
-                has_error = True
                 return None
             else:
                 return d
@@ -293,20 +287,21 @@ class DSARateUploader(object):
 
         regions_to_delete = set(DSARegion.objects.all().values_list('id', flat=True))
 
-        for line, row in enumerate(rows):
-            has_error = False
-
+        for line, row in enumerate(rows, start=1):
             if '__extra_columns__' in row.keys():
-                self.errors['Misaligned csv (line {})'.format(line+1)] = 'There are more fields than header columns ({}).'.format(row['__extra_columns__'])
+                msg = 'There are more fields than header columns ({}).'.format(row['__extra_columns__'])
+                self.errors['Misaligned csv (line {})'.format(line)] = msg
                 continue
 
             if '__missing_columns__' in row.values():
-                self.errors['Misaligned csv (line {})'.format(line+1)] = 'There are missing fields compared to header columns.'
+                msg = 'There are missing fields compared to header columns.'
+                self.errors['Misaligned csv (line {})'.format(line)] = msg
                 continue
 
             country_qs = Country.objects.filter(dsa_code=row['Country Code'])
             if not country_qs.exists():
-                self.warnings['Country Code (line {})'.format(line+1)] = 'Cannot find country for country code {}. Skipping it.'.format(row['Country Code'])
+                msg = 'Cannot find country for country code {}. Skipping it.'.format(row['Country Code'])
+                self.warnings['Country Code (line {})'.format(line)] = msg
                 continue
 
             row['Local_60'] = process_number('Local_60')
@@ -317,7 +312,7 @@ class DSARateUploader(object):
             row['DSA_Eff_Date'] = process_date('DSA_Eff_Date')
             row['Finalization_Date'] = process_date('Finalization_Date')
 
-            if has_error:
+            if self.errors:
                 continue
 
             for country in country_qs:

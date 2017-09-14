@@ -3,6 +3,8 @@ import json
 from unittest import skip
 from actstream.models import model_stream
 
+from django.utils import timezone
+
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import PartnershipFactory, AgreementFactory, InterventionFactory, InterventionBudgetFactory
@@ -22,7 +24,6 @@ from partners.models import (
     PartnerOrganization,
     Assessment,
     Result,
-    ResultStructure,
     GovernmentIntervention,
     GovernmentInterventionResult,
     Intervention,
@@ -30,7 +31,14 @@ from partners.models import (
 )
 
 
-class TestRefNumberGeneration(TenantTestCase):
+def get_date_from_prior_year():
+    '''Return a date for which year < the current year'''
+    return datetime.date.today() - datetime.timedelta(days=700)
+
+
+class TestAgreementNumberGeneration(TenantTestCase):
+    '''Test that agreements have the expected base and reference numbers for all types of agreements'''
+
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -38,16 +46,16 @@ class TestRefNumberGeneration(TenantTestCase):
         self.tenant.country_short_code = 'LEBA'
         self.tenant.save()
 
-        self.text = 'LEBA/{{}}{}'.format(self.date.year)
-
-    @skip("Fix this")
-    def test_pca_ref_generation(self):
-
-        text = self.text.format('PCA')
+    def test_reference_number_pca(self):
+        '''Thoroughly exercise agreement reference numbers for PCA'''
+        # All of the agreements created here are PCAs, so id is the only part of the reference number that varies
+        # for this test.
+        reference_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
 
         # test basic sequence
         agreement1 = AgreementFactory()
-        self.assertEqual(agreement1.reference_number, text)
+        expected_reference_number = reference_number_template.format(id=agreement1.id)
+        self.assertEqual(agreement1.reference_number, expected_reference_number)
 
         # create amendment
         AgreementAmendmentLog.objects.create(
@@ -55,28 +63,87 @@ class TestRefNumberGeneration(TenantTestCase):
             amended_at=self.date,
             status=PCA.ACTIVE
         )
-        self.assertEqual(agreement1.reference_number, text + '-01')
+        # reference number should be unchanged.
+        self.assertEqual(agreement1.reference_number, expected_reference_number)
 
         # add another agreement
         agreement2 = AgreementFactory()
-        self.assertEqual(agreement2.reference_number, text[:-1] + '2')
-
-        # now sign the agreement and commit the number to the database
-        agreement2.signed_by_unicef_date = self.date
-        agreement2.save()
-        self.assertEqual(agreement2.reference_number, text[:-1] + '2')
+        expected_reference_number = reference_number_template.format(id=agreement2.id)
+        self.assertEqual(agreement2.reference_number, expected_reference_number)
 
         # agreement numbering remains the same even if previous agreement is deleted
-        agreement3 = AgreementFactory(signed_by_unicef_date=self.date)
+        agreement3 = AgreementFactory()
+        expected_reference_number = reference_number_template.format(id=agreement3.id)
         agreement1.delete()
-        self.assertEqual(agreement3.reference_number, text[:-1] + '3')
+        self.assertEqual(agreement3.reference_number, expected_reference_number)
 
-    def test_other_agreement_types(self):
+        # verify that the 'signed_by' date doesn't change the reference number.
+        # set signed_by date to a year that is not the current year.
+        expected_reference_number = reference_number_template.format(id=agreement2.id)
+        agreement2.signed_by_unicef_date = get_date_from_prior_year()
+        agreement2.save()
+        self.assertEqual(agreement2.reference_number, expected_reference_number)
 
-        for doc_type in [Agreement.MOU, Agreement.IC, Agreement.AWP, Agreement.SSFA]:
-            agreement = AgreementFactory(agreement_type=doc_type)
-            # test startswith only to avoid failing tests because of mismatching last digits
-            self.assertTrue(agreement.reference_number.startswith(self.text.format(doc_type)))
+        # Verify that reference_number is accessible (if a little strange) prior to the first save.
+        agreement4 = AgreementFactory.build()
+        self.assertEqual(agreement4.reference_number, reference_number_template.format(id=None))
+
+    def test_reference_number_other(self):
+        '''Verify simple agreement reference # generation for all agreement types'''
+        reference_number_template = 'LEBA/{agreement_type}' + str(self.date.year) + '{id}'
+        agreement_types = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
+        for agreement_type in agreement_types:
+            agreement = AgreementFactory(agreement_type=agreement_type)
+            expected_reference_number = reference_number_template.format(agreement_type=agreement_type, id=agreement.id)
+            self.assertEqual(agreement.reference_number, expected_reference_number)
+
+    def test_base_number_generation(self):
+        '''Verify correct values in the .base_number attribute'''
+        base_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
+        agreement = AgreementFactory()
+
+        expected_base_number = base_number_template.format(id=agreement.id)
+        self.assertEqual(agreement.base_number, expected_base_number)
+
+        # Ensure that changing the agreement number doesn't change the base number.
+        agreement.update_reference_number(amendment_number=42)
+        self.assertEqual(agreement.agreement_number, expected_base_number + '-42')
+        self.assertEqual(agreement.base_number, expected_base_number)
+
+        # Ensure base_number is OK to access even when the field it depends on is blank.
+        agreement.agreement_number = ''
+        self.assertEqual(agreement.base_number, '')
+
+    def test_update_reference_number(self):
+        '''Exercise Agreement.update_reference_number()'''
+        reference_number_template = 'LEBA/PCA' + str(self.date.year) + '{id}'
+
+        agreement = AgreementFactory.build()
+
+        # Prior to saving, base_number and agreement_number are blank.
+        self.assertEqual(agreement.base_number, '')
+        self.assertEqual(agreement.agreement_number, '')
+        self.assertEqual(agreement.reference_number, reference_number_template.format(id=None))
+
+        # Calling save should call update_reference_number(). Before calling save, I have to save the objects with
+        # which this agreement has a FK relationship.
+        agreement.partner.save()
+        agreement.partner_id = agreement.partner.id
+        agreement.country_programme.save()
+        agreement.country_programme_id = agreement.country_programme.id
+        agreement.save()
+
+        # Ensure base_number, agreement_number, and reference_number are what I expect
+        expected_reference_number = reference_number_template.format(id=agreement.id)
+        self.assertEqual(agreement.base_number, expected_reference_number)
+        self.assertEqual(agreement.agreement_number, expected_reference_number)
+        self.assertEqual(agreement.reference_number, expected_reference_number)
+
+        # Update ref number and ensure base_number, agreement_number, and reference_number are what I expect
+        agreement.update_reference_number(amendment_number=42)
+        self.assertEqual(agreement.base_number, expected_reference_number)
+        self.assertEqual(agreement.agreement_number, expected_reference_number + '-42')
+        self.assertEqual(agreement.reference_number, expected_reference_number)
 
     @skip("Fix this")
     def test_pd_numbering(self):
@@ -123,7 +190,7 @@ class TestHACTCalculations(TenantTestCase):
         self.intervention = InterventionFactory(
             status=u'active'
         )
-        current_cp = ResultStructure.objects.create(
+        current_cp = CountryProgramme.objects.create(
             name='Current Country Programme',
             from_date=datetime.date(year, 1, 1),
             to_date=datetime.date(year + 1, 12, 31)
@@ -136,28 +203,30 @@ class TestHACTCalculations(TenantTestCase):
             intervention=self.intervention,
             partner_contribution=10000,
             unicef_cash=60000,
-            in_kind_amount=5000,
-            year=str(year)
+            in_kind_amount=5000
         )
-        InterventionBudget.objects.create(
-            intervention=self.intervention,
-            partner_contribution=10000,
-            unicef_cash=40000,
-            in_kind_amount=5000,
-            year=str(year + 1)
-        )
+
+        tz = timezone.get_default_timezone()
+
+        start = datetime.datetime.combine(current_cp.from_date, datetime.time(0, 0, 1, tzinfo=tz))
+        end = current_cp.from_date + datetime.timedelta(days=200)
+        end = datetime.datetime.combine(end, datetime.time(23, 59, 59, tzinfo=tz))
         FundingCommitment.objects.create(
-            start=current_cp.from_date,
-            end=current_cp.from_date + datetime.timedelta(days=200),
+            start=start,
+            end=end,
             grant=grant,
             fr_number='0123456789',
             wbs='Test',
             fc_type='PCA',
             expenditure_amount=40000.00
         )
+
+        start = current_cp.from_date + datetime.timedelta(days=200)
+        start = datetime.datetime.combine(start, datetime.time(0, 0, 1, tzinfo=tz))
+        end = datetime.datetime.combine(current_cp.to_date, datetime.time(23, 59, 59, tzinfo=tz))
         FundingCommitment.objects.create(
-            start=current_cp.from_date + datetime.timedelta(days=200),
-            end=current_cp.to_date,
+            start=start,
+            end=end,
             grant=grant,
             fr_number='0123456789',
             wbs='Test',
@@ -168,9 +237,8 @@ class TestHACTCalculations(TenantTestCase):
     def test_planned_cash_transfers(self):
 
         PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner)
-        hact = json.loads(self.intervention.agreement.partner.hact_values) \
-            if isinstance(self.intervention.agreement.partner.hact_values, str) \
-            else self.intervention.agreement.partner.hact_values
+        hact = self.intervention.agreement.partner.hact_values
+        hact = json.loads(hact) if isinstance(hact, str) else hact
         self.assertEqual(hact['planned_cash_transfer'], 60000)
 
 
@@ -181,22 +249,31 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
+        self.cp = CountryProgramme.objects.create(
+            name="CP 1",
+            wbs="0001/A0/01",
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
+        )
         year = datetime.date.today().year
         self.pca_signed1 = Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
             signed_by_unicef_date=datetime.date(year - 1, 1, 1),
             signed_by_partner_date=datetime.date(year - 1, 1, 1),
+            country_programme=self.cp,
         )
         Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
             signed_by_unicef_date=datetime.date(year - 2, 1, 1),
             signed_by_partner_date=datetime.date(year - 2, 1, 1),
+            country_programme=self.cp,
         )
         Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
+            country_programme=self.cp,
         )
 
     def test_get_last_pca(self):
@@ -273,12 +350,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_needed_last_audit_is_in_current(self):
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         Assessment.objects.create(
             partner=self.partner_organization,
             type="Scheduled Audit report",
@@ -290,12 +361,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_needed_last_audit_is_not_in_current(self):
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         Assessment.objects.create(
             partner=self.partner_organization,
             type="Scheduled Audit report",
@@ -307,12 +372,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_needed_extra_assessment_after_last(self):
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         Assessment.objects.create(
             partner=self.partner_organization,
             type="Scheduled Audit report",
@@ -329,12 +388,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_needed_extra_assessment_only(self):
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         assessment = Assessment.objects.create(
             partner=self.partner_organization,
             type="Scheduled Audit report",
@@ -346,12 +399,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_done(self):
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         Assessment.objects.create(
             partner=self.partner_organization,
             type="Scheduled Audit report",
@@ -440,29 +487,22 @@ class TestPartnerOrganizationModel(TenantTestCase):
         }
         self.assertEqual(hact_min_req, data)
 
+    @skip('Deprecated Functionality')
     def test_planned_cash_transfers_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
-        cp = CountryProgramme.objects.create(
+        CountryProgramme.objects.create(
             name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
-        rs = ResultStructure.objects.create(
-            name="RS 1",
-            country_programme=cp,
+            wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
         gi = GovernmentIntervention.objects.create(
             partner=self.partner_organization,
-            result_structure=rs,
         )
         rt = ResultType.objects.get(id=1)
         r = Result.objects.create(
             result_type=rt,
-            result_structure=rs
         )
         GovernmentInterventionResult.objects.create(
             intervention=gi,
@@ -487,40 +527,35 @@ class TestPartnerOrganizationModel(TenantTestCase):
         agreement = Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
+            country_programme=self.cp,
         )
 
         intervention = InterventionFactory(
             status=u'active', agreement=agreement
         )
         InterventionBudgetFactory(intervention=intervention)
+
         hact = json.loads(self.partner_organization.hact_values) \
             if isinstance(self.partner_organization.hact_values, str) \
             else self.partner_organization.hact_values
         self.assertEqual(hact['planned_cash_transfer'], 100001)
 
+    @skip('Deprecated functionality -planned visits towards government')
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
-        cp = CountryProgramme.objects.create(
+        CountryProgramme.objects.create(
             name="CP 1",
             wbs="/A0/",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        rs = ResultStructure.objects.create(
-            name="RS 1",
-            country_programme=cp,
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
         gi = GovernmentIntervention.objects.create(
             partner=self.partner_organization,
-            result_structure=rs,
         )
         rt = ResultType.objects.get(id=1)
         r = Result.objects.create(
             result_type=rt,
-            result_structure=rs
         )
         GovernmentInterventionResult.objects.create(
             intervention=gi,
@@ -571,15 +606,21 @@ class TestAgreementModel(TenantTestCase):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
+        cp = CountryProgramme.objects.create(
+            name="CP 1",
+            wbs="0001/A0/01",
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
+        )
         self.agreement = Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
+            country_programme=cp
         )
         # Trigger created event activity stream
         create_snapshot_activity_stream(
             self.partner_organization, self.agreement, created=True)
 
-    @skip('no temp ref')
     def test_reference_number(self):
         self.assertIn("PCA", self.agreement.reference_number)
 
@@ -618,9 +659,16 @@ class TestInterventionModel(TenantTestCase):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
+        cp = CountryProgramme.objects.create(
+            name="CP 1",
+            wbs="0001/A0/01",
+            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
+            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
+        )
         agreement = Agreement.objects.create(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
+            country_programme=cp,
         )
         self.intervention = Intervention.objects.create(
             title="Intervention 1",
@@ -671,8 +719,24 @@ class TestInterventionModel(TenantTestCase):
         )
         self.assertEqual(int(self.intervention.total_budget), 100200)
 
+    def test_year(self):
+        '''Exercise the year property'''
+        self.assertIsNone(self.intervention.signed_by_unicef_date)
+        self.assertEqual(self.intervention.year, self.intervention.created.year)
+        self.intervention.signed_by_unicef_date = get_date_from_prior_year()
+        self.assertEqual(self.intervention.year, self.intervention.signed_by_unicef_date.year)
+
     def test_reference_number(self):
-        self.assertIn("TempRef:", self.intervention.reference_number)
+        '''Exercise the reference number property'''
+        expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
+        expected_reference_number += str(self.intervention.created.year) + str(self.intervention.id)
+        self.assertEqual(self.intervention.reference_number, expected_reference_number)
+
+        self.intervention.signed_by_unicef_date = get_date_from_prior_year()
+
+        expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
+        expected_reference_number += str(self.intervention.signed_by_unicef_date.year) + str(self.intervention.id)
+        self.assertEqual(self.intervention.reference_number, expected_reference_number)
 
     @skip("Fix when HACT available")
     def test_planned_cash_transfers(self):

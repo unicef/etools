@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Donor(models.Model):
@@ -6,7 +7,7 @@ class Donor(models.Model):
     Represents Donor for a Grant.
     """
 
-    name = models.CharField(max_length=45L, unique=True)
+    name = models.CharField(max_length=45, unique=True)
 
     class Meta:
         ordering = ['name']
@@ -28,7 +29,7 @@ class Grant(models.Model):
     """
 
     donor = models.ForeignKey(Donor)
-    name = models.CharField(max_length=128L, unique=True)
+    name = models.CharField(max_length=128, unique=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     expiry = models.DateField(null=True, blank=True)
 
@@ -45,12 +46,22 @@ class Grant(models.Model):
 
 
 class FundsReservationHeader(models.Model):
+    intervention = models.ForeignKey('partners.Intervention', related_name='frs', blank=True, null=True)
     vendor_code = models.CharField(max_length=20)
     fr_number = models.CharField(max_length=20, unique=True)
     document_date = models.DateField(null=True, blank=True)
     fr_type = models.CharField(max_length=50, null=True, blank=True)
     currency = models.CharField(max_length=50, null=True, blank=True)
     document_text = models.CharField(max_length=255, null=True, blank=True)
+
+    # this is the field required for validation, this is the 'current_amount'
+    intervention_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    # overall_amount
+    total_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    # actual is also referred to as "disbursment"
+    actual_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    outstanding_amt = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
 
@@ -63,11 +74,18 @@ class FundsReservationHeader(models.Model):
         ordering = ['fr_number']
         unique_together = ('vendor_code', 'fr_number')
 
+    @property
+    def expired(self):
+        today = timezone.now().date()
+        return self.end_date < today
+
 
 class FundsReservationItem(models.Model):
     fund_reservation = models.ForeignKey(FundsReservationHeader, related_name="fr_items")
     fr_ref_number = models.CharField(max_length=30, null=True, blank=True)
     line_item = models.CharField(max_length=5)
+
+    # grant and fund will be needed for filtering in the future
     wbs = models.CharField(max_length=30, null=True, blank=True)
     grant_number = models.CharField(max_length=20, null=True, blank=True)
     fund = models.CharField(max_length=10, null=True, blank=True)
@@ -133,7 +151,3 @@ class FundsCommitmentItem(models.Model):
         if not self.fc_ref_number:
             self.fc_ref_number = '{}-{}'.format(self.fund_commitment.fc_number, self.line_item)
         return super(FundsCommitmentItem, self).save(**kwargs)
-
-
-
-

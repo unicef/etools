@@ -1,9 +1,8 @@
-
 from rest_framework import viewsets, mixins
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework.permissions import IsAdminUser
+
 from reports.models import (
-    ResultStructure,
     ResultType,
     Result,
     Sector,
@@ -12,7 +11,6 @@ from reports.models import (
     CountryProgramme
 )
 from reports.serializers.v1 import (
-    ResultStructureSerializer,
     ResultTypeSerializer,
     ResultSerializer,
     SectorCreateSerializer,
@@ -20,15 +18,6 @@ from reports.serializers.v1 import (
     UnitSerializer,
     CountryProgrammeSerializer
 )
-
-
-class ResultStructureViewSet(mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
-    """
-    Returns a list of all Result Structures
-    """
-    queryset = ResultStructure.objects.all()
-    serializer_class = ResultStructureSerializer
 
 
 class ResultTypeViewSet(mixins.ListModelMixin,
@@ -49,18 +38,6 @@ class SectorViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Sector.objects.all()
     serializer_class = SectorCreateSerializer
-
-
-# class GoalViewSet(mixins.RetrieveModelMixin,
-#                   mixins.ListModelMixin,
-#                   mixins.CreateModelMixin,
-#                   viewsets.GenericViewSet):
-#     """
-#     Return a list of all Goals (CCCs)
-#     """
-#
-#     queryset = Goal.objects.all()
-#     serializer_class = GoalCreateSerializer
 
 
 class ResultViewSet(viewsets.ModelViewSet):

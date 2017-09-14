@@ -1,0 +1,1315 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize %}
+
+{% block style_base %}
+    {% comment %}
+        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+        for base style.
+    {% endcomment %}
+
+    {% block layout_style %}
+        <style type="text/css">
+            @page {
+                size: {{ pagesize|default:"letter" }};
+                margin-left: 2.0cm;
+                margin-right: 2.0cm;
+                margin-top: 2.4cm;
+                margin-bottom: 1.8cm;
+                @frame header {
+                    -pdf-frame-content: header_content;
+                    margin-top: 1cm;
+                    margin-right: 2.0cm;
+                    margin-bottom: 0.3cm;
+                    padding-bottom: 3cm;
+                    margin-left: 0cm;
+                    background-color: #0099ff;
+                    height: 2cm;
+                }
+                @frame footer_frame {
+                    /* Static frame */
+                    -pdf-frame-content:footer_content;
+                    left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+                }
+            }
+        </style>
+    {% endblock %}
+    {% block extra_style %}
+        <style type="text/css">
+            #page-header {
+            {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
+            }
+
+            {#        #page-footer{#}
+            {#            -pdf-frame-content: page-footer;#}
+            {#            bottom: 0cm;#}
+            {#            margin-left: 1cm;#}
+            {#            margin-right: 1cm;#}
+            {#            color: #0099ff;#}
+            {#            line-height: 1.0cm;#}
+            {#            background-color: #0099ff;#}
+            {#        }#}
+            .details div {
+            {#            background-color: #f1f1f1;#} border-radius: 25px;
+                border: 2px solid #f1f1f1;
+                padding: 20px;
+                width: 200px;
+                height: 150px;
+            }
+            ul {
+                list-style-type: none;
+            }
+            #officers_table {
+                width: 512pt;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
+            #officers_table tr {
+                /*height: 1.4cm;*/
+                /*line-height: 1cm;*/
+            }
+            #officers_table th {
+                width: 128pt;
+                text-align: center;
+                vertical-align: middle;
+                font-weight: normal;
+                border: 1px solid black;
+            }
+            #officers_table td {
+                width: 128pt;
+                text-align: center;
+                vertical-align: middle;
+                border: 1px solid black;
+                font-size:10pt;
+            }
+            #header_content {
+                font-family: "Times New Roman";
+                font-size: 12pt;
+            }
+            #content {
+                font-family: "Times New Roman";
+                font-size: 12pt;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+            .keep-with-next {
+                -pdf-keep-with-next: true;
+            }
+            .small-indent {
+                /*padding-left: 0.6cm;*/
+                text-indent: 0.8cm;
+            }
+            .indented {
+                /*list-style-position: inside;*/
+                /*text-indent: 12px;*/
+            }
+            .list-style-type-letter {
+                list-style-type: lower-alpha;
+            }
+            .list-style-type-roman {
+                list-style-type: lower-roman;
+            }
+        </style>
+    {% endblock %}
+{% endblock %}
+
+{% block content %}
+{% if error %}
+    PDF could not be generated properly: <br> {{ error }}
+{% else %}
+    <div id="header_content" style="text-align: right">
+        <u>PCA Référence: {{ agreement.agreement_number }}</u>
+    </div>
+    <div id="content">
+        <div id="title" style="text-align: center; padding-top: 0px">
+            <div style="font-size: 16pt;padding-top: 18px;"><b>ACCORD DE COOPÉRATION AU TITRE D’UN PROGRAMME</b></div>
+            <div><b>ENTRE</b></div>
+            <div><b>{{ agreement.partner|upper }}</b></div>
+            <div><b>ET LE</b></div>
+            <div><b>FONDS DES NATIONS UNIES POUR L'ENFANCE</b></div>
+            <div><b>PORTANT SUR</b></div>
+            <div><b>L’EXÉCUTION DU PROGRAMME FINANCÉ PAR L’UNICEF AU TITRE DU PROGRAMME DE PAYS DE L’UNICEF EN/AU {{ country|upper }}</b></div>
+            <div style="padding-top: 12px;">
+                {{ agreement.partner }} et le Fonds des Nations Unies pour l’enfance (désignés collectivement ci-après
+                les «Parties» et chacune d’elles individuellement une «Partie») conviennent par les présentes ce qui suit:
+            </div>
+        </div>
+
+        <div article-I>
+            <div class="keep-with-next" style="padding-top: 12px;text-align: center">
+                <b>ARTICLE I</b>
+            </div>
+            <div class="keep-with-next" style="padding-top: 0px;padding-bottom: 12px;text-align: center;">
+                <b>DÉFINITIONS</b>
+            </div>
+            <div class="keep-with-next" style="padding-bottom: 10px; padding-left: 5px">
+                Dans le présent accord:
+            </div>
+            <ol style="padding-bottom: 10px;">
+                <li>«<u>Fonds des Nations Unies pour l’enfance</u>», ou «l’UNICEF», désigne une division des Nations Unies
+                    fondée par son Assemblée générale conformément à la résolution 57(I) du 11 décembre 1946.
+                </li>
+                <li>«<u>Partenaire d’exécution</u>», ou «IP» (Implementing Partner), désigne
+                    {{ agreement.partner }}, {{ agreement.partner.address }}, {{ agreement.partner.city }} {{ agreement.partner.country }} </li>
+                <li>«<u>Programme de pays</u>» désigne le [programme de pays pour le/la {{ country }}],
+                    validé par le Conseil d’administration du Fonds des Nations Unies pour l’enfance pour la période
+                    [{{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}], y compris les eventuelles extensions du
+                    Programme en cours approuvés par le Directeur général ou le Conseil d’administration.
+                </li>
+                <li>«<u>Document du Programme</u>» (ou, dans certains cas, «<u>Document de programme</u>») désigne le
+                    document officiel (en format standard) joint au présent accord conclu par les Parties et indiquant les
+                    résultats attendus, le détail des activités, les calendriers et le budget du Programme et définissant ce
+                    qui doit être réalisé. Le Document du Programme constitue la référence concernant toute réquisition et
+                    tout engagement ou déboursement des fonds destinés aux activités planifiées, ainsi qu’au contrôle de
+                    telles activités et à la production de rapports afférents.
+                </li>
+                <li>«<u>Rapport de bilan du Document du Programme</u>» (Programme Document Progress Report, ci-après le «PDPR»)
+                    désigne le formulaire standard de l’UNICEF à utiliser pour produire un rapport sur l’état d’avancement
+                    du plan d’activités, et peut être consulté et téléchargé à l’adresse
+                    <u>http://www.unicef.org/about/partnerships/files/Programme_Document_Progress_Report.docx</u>
+                    ou à tout autre URL selon ce qui pourrait être fixé le cas échéant par l’UNICEF.
+                </li>
+                <li>«<u>Politique HACT</u>»  (Harmonized Approach to Cash Transfer) désigne la politique harmonisée
+                    concernant les transferts de fonds du Groupe des Nations Unies pour le développement
+                    (ci-après le «GNUD»), laquelle politique peut être consultée à l’adresse
+                    <u>https://undg.org/document/harmonized-approach-to-cash-transfer-framework/</u>,
+                    ou à tout autre URL selon ce qui pourrait être fixé le cas échéant par le GNUD.
+                </li>
+                <li>«<u>Formulaire FACE</u>»  désigne le formulaire standard d’autorisation de Transfert de fonds et
+                    d’attestation de dépenses (Funding Authorization and Certificate of Expenditure Form) du GNUD,
+                    dont une copie peut être consultée à
+                    <u>http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx</u>,
+                    ou à tout autre URL selon ce qui pourrait être fixé le cas échéant par le GNUD.
+                </li>
+                <li>«<u>e-FACE</u>» désigne le système informatique de l’UNICEF dédié à la saisie des données des
+                    formulaires FACE, lorsqu’un tel système est disponible ou accessible.
+                </li>
+                <li>«<u>Dépenses d’appui du siège</u>» désigne les frais de l’IP qui ne peuvent pas être imputés de
+                    manière non équivoque à une activité spécifiquement exécutée par l’IP conformément au présent accord,
+                    y compris tout Document du Programme.
+                </li>
+                <li>
+                    «<u>Dirigeant habilité</u>» désigne l’un des dirigeants suivants de l’IP:
+
+                    <table id="officers_table" repeat="1">
+                    <tr>
+                        <th><br>Prénom et nom</th>
+                        <th><br>Titre</th>
+                        <th><br>Adresse e-mail</th>
+                        <th><br>Spécimen de signature</th>
+                    </tr>
+                    {% for officer in auth_officers %}
+                    <tr>
+                        <td><br>{{ officer.first_name }}</td>
+                        <td><br>{{ officer.title }}</td>
+                        <td><br>{{ officer.email }}</td>
+                        <td><br></td>
+                    </tr>
+                    {% endfor %}
+                    </table>
+
+                    <div style="padding-top: 15px">
+                        Pour éviter le moindre doute, il est entendu que toute suppression ou modification réalisée au
+                        sein de la liste des dirigeants habilités ci-dessus peut uniquement l’être par modification
+                        écrite du présent accord conformément à la section 20.0 des Conditions générales des accords de
+                        coopération au titre de programmes ci-jointes.
+                    </div>
+                </li>
+
+                <li>«<u>Équipement exclu</u>» désigne tout article dont le coût est égal ou supérieur à deux mille cinq
+                    cents dollars US (2 500 USD) une fois comprises toutes dépenses de livraison et de manipulation
+                    initiales associées, et dont la période d’exploitation est au minimum de trois (3) ans.
+                </li>
+                <li>«<u>Gouvernement</u>» désigne le gouvernement de/du {{ country }}.</li>
+                <li>«<u>Pays</u>» désigne {{ country }}.</li>
+            </ol>
+        </div>
+        <div id="article-II" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-bottom: 0px"><b>ARTICLE II</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>DOCUMENTS DE L’ACCORD</b></div>
+            <ol>
+                <li>
+                    Le présent accord consiste des documents suivants:
+                    <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;Le présent accord;</div>
+                    <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Les Conditions générales des accords de coopération au titre de programmes, ci-jointes;</div>
+                    <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;Tous Documents du Programme signés aux termes du présent accord; et</div>
+                    <div class="small-indent">(d) &nbsp;&nbsp;&nbsp;Toutes Conditions spéciales fixées pour un programme, IP ou Document du Programme particulier,
+                        jointes au présent accord.
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-III" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE III</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>FINALITÉ ET PORTÉE DE L’ACCORD</b></div>
+            <ol>
+                <li>
+                    Le présent accord régit l’exécution, par l’IP, des volets du Programme concernés (y compris toute
+                    intervention humanitaire dans le Pays) par le biais d’un ou de plusieurs Documents du Programme.
+                    Il énonce la nature des relations entre les Parties, ainsi que les responsabilités de chacune de Parties.
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-IV" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE IV</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>RESPONSABILITÉS GÉNÉRALES DES PARTIES</b></div>
+            <ol>
+                <li>Les Parties travailleront ensemble dans un esprit de coopération et de partenariat, conformément aux
+                    responsabilités qui leur sont assignées aux termes du présent accord, aux fins de l’exécution des
+                    Documents du Programme dans les délais prévus de manière efficiente et effective.
+                </li>
+                <li>Les Parties conviennent de remplir leurs obligations respectives conformément aux dispositions du
+                    présent accord, y compris les Documents du Programme.
+                </li>
+                <li>Les Parties s’engagent à se tenir réciproquement informées de toutes activités pertinentes portant
+                    sur l’exécution des Documents du Programme, et à se consulter lorsque l’une d’elles le juge approprié,
+                    y compris dans toutes circonstances susceptibles d’affecter les résultats du Programme et
+                    des Documents du Programme.
+                </li>
+                <li>Les Parties tiendront leurs engagements en se conformant à la lettre à la fois aux Conditions
+                    générales du présent accord et aux principes des Nations Unies.
+                </li>
+            </ol>
+        </div>
+        <div id="article-V" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px">
+                <b>ARTICLE V</b>
+            </div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+                <b>RESPONSABILITÉS DE L’IP</b>
+            </div>
+            <ol>
+                <li>L’IP contribuera à l’exécution de chaque Document du Programme couvert par le présent accord en
+                    assumant ses responsabilités aux termes du présent accord, ce en parfaite coopération avec l’UNICEF
+                    et conformément au budget, au calendrier et aux autres détails stipulés dans le Document du Programme,
+                    y compris:
+                </li>
+                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;en engageant les travaux correspondant aux responsabilités qui lui ont été assignées dans le
+                    Document du Programme promptement après avoir signé le Document du Programme (mais en aucun cas avant
+                    la signature du présent accord), et, selon le cas, après avoir reçu le premier versement de fonds ou
+                    les premières fournitures ou premiers équipements que l’UNICEF doit lui transférer;
+                </div>
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;en contribuant en assistance technique, en services, en fournitures et en équipements à l’exécution
+                    du Document du Programme tel que prévu aux termes du présent accord et du Document du Programme;
+                </div>
+                <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;en remplissant ses obligations avec diligence et efficacité, et conformément aux exigences
+                    stipulées dans le Document du Programme (y compris en ce qui concerne le calendrier et le budget);
+                </div>
+                <div class="small-indent">(d) &nbsp;&nbsp;&nbsp;en soumettant les rapports requis aux termes du présent accord dans les délais prévus et d’une
+                    manière jugée satisfaisante par l’UNICEF, et en fournissant toute autre information que l’UNICEF est
+                    raisonnablement en droit de demander concernant le Document du Programme et l’utilisation de tous
+                    fonds, fournitures et équipements transférés par l’UNICEF; et
+                </div>
+                <div class="small-indent">(e) &nbsp;&nbsp;&nbsp;en appliquant les normes les plus strictes à la gestion et l’administration des fonds, des
+                    fournitures et des équipements fournis par l’UNICEF, et en veillant à ce que son personnel observe
+                    les normes de bonne conduite professionnelle les plus élevées qui soient en matière d’administration
+                    d’actifs publics, y compris toute somme d’argent;
+                </div>
+                <li>En plus des obligations stipulées au paragraphe 1 ci-dessus,</li>
+                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;L’IP maximisera l’utilisation de toutes exonérations fiscales ou exonérations de droits de
+                    douane et de taxes douanières ou d’importation dont il est en droit de bénéficier dans ce pays ou
+                    ailleurs et en rapport avec l’achat, l’importation, la déclaration ou l’utilisation de fournitures
+                    et équipements achetés avec des fonds fournis par l’UNICEF aux termes du présent accord,
+                    et consultera l’UNICEF à cet égard.
+                </div>
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;L’IP instaurera et tiendra à jour un système de contrôle de l’état d’avancement de l’exécution
+                    du Document du Programme par rapport aux objectifs fixés, notamment en matière de résultats,
+                    d’indicateurs et de cibles tel que stipulé dans le Document du Programme.
+                </div>
+                <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;L’IP permettra et facilitera les visites de contrôle de représentants de tout bailleur de fonds
+                    contribuant au financement des dépenses d’exécution du Document du Programme. L’UNICIF informera
+                    l’IP de telles visites suffisamment à l’avance.
+                </div>
+            </ol>
+        </div>
+        <div id="article-VI" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE VI</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>RESPONSABILITÉS DE L’UNICEF</b></div>
+            <ol>
+                <li>L’UNICEF contribuera à l’exécution de chaque Document du Programme couvert par le présent accord en
+                    assumant les responsabilités qui lui ont été assignées aux termes du présent accord, y compris:
+                </li>
+                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;en commençant et concluant le travail d’exécution de ses obligations telles que stipulées dans
+                    le Document du Programme dans les délais prévus, à condition que tous les rapports et autres
+                    documents de l’IP soient disponibles;
+                </div>
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;en réalisant tous les Transferts de fonds, de fournitures et d’équipements conformément aux
+                    dispositions du présent accord;
+                </div>
+                <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;en réalisant et en concluant ses activités de contrôle, d’évaluation, d’assurance, de mesure et
+                    de supervision stipulées dans le Document du Programme;
+                </div>
+                <div class="small-indent">(d) &nbsp;&nbsp;&nbsp;en se mettant en rapport, à intervalles plus ou moins réguliers selon les besoins, avec le
+                    gouvernement (selon le cas), d’autres membres de l’équipe pays des Nations Unies, des bailleurs de
+                    fonds et d’autres parties prenantes;
+                </div>
+                <div class="small-indent">(e) &nbsp;&nbsp;&nbsp;en fournissant des conseils, une supervision, une assistance technique et un leadership,
+                    selon le cas, dans le cadre de l’exécution du Document du Programme, et en étant disponible à des
+                    fins de consultations, telles que raisonnablement sollicitées; et
+                </div>
+                <div class="small-indent">(f) &nbsp;&nbsp;&nbsp;en organisant des réunions communes de contrôle et de bilan, qui se tiendront au minimum à
+                    mi-parcours et à la fin de la période d’exécution du Document du Programme, afin de convenir en
+                    commun de la façon de répondre à toutes conclusions de rapports soumis et de mettre à profit les
+                    enseignements qui en ont été tirés dans le but de mieux répondre aux besoins des enfants. De
+                    telles réunions de bilan avec le partenaire prendront en compte: (a) les progrès réalisés en ce
+                    qui concerne le Document du Programme; (b) la relation de travail des Parties; (c) le degré de
+                    conformité des Parties aux dispositions du présent accord; et (d) les progrès réalisés et les
+                    difficultés rencontrées par l’IP pour atteindre les objectifs fixés et obtenir les résultats
+                    recherchés tels que stipulés dans le Document du Programme;
+                </div>
+                <li>Les Dépenses d’appui du siège se rapportant à un quelconque Document de programme et au budget
+                    associé sont remboursables par l’UNICEF à l’IP au taux de sept pour cent (7%) des dépenses
+                    réelles en lien avec ce Document du Programme et le budget associé. Toutes les Dépenses d’appui
+                    du siège sont enregistrées par l’IP dans les formulaires FACE à soumettre à l’UNICEF conformément
+                    aux termes du présent accord.
+                </li>
+            </ol>
+        </div>
+        <div id="article-VII" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE VII</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>DOCUMENTS DU PROGRAMME</b></div>
+            <ol>
+                <li>Les Parties signeront un ou plusieurs Documents de programme, selon le cas. Les Documents du
+                    Programme seront signés par des mandataires des Parties dûment habilités.
+                </li>
+                <li>Les Documents du Programme peuvent exclusivement être modifiés par accord écrit entre les Parties.</li>
+            </ol>
+        </div>
+        <div id="article-VIII" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px">
+                <b>ARTICLE VIII</b>
+            </div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+                <b>PARTICIPATION DE L’UNICEF À L’EXÉCUTION</b>
+            </div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+                <b>DES DISPOSITIONS DES DOCUMENTS DU PROGRAMME</b>
+            </div>
+
+            <div class="keep-with-next" ><b>(A) Transferts de fonds par l’UNICEF au bénéfice/au nom de l’IP</b></div>
+            <div class="keep-with-next" ><p><u>Dispositions générales:</u></p></div>
+            <ol>
+                <li>L’UNICEF fournira à l’IP une assistance financière en espèces destinée aux activités stipulées dans
+                    les Documents du Programme (ci-après le «Transfert de fonds»), sous réserve que de tels fonds
+                    soient disponibles, conformément aux termes du présent accord. L’assistance de l’UNICEF à l’IP ne
+                    pourra en aucun cas être supérieure au montant spécifié dans les Documents du Programme. L’UNICEF
+                    fournira une telle assistance financière à l’IP selon trois modalités de Transfert de fonds différentes
+                    (ci-après les «Modalités de Transfert de fonds», et chacune d’elle un «Mode de Transfert de fonds»):
+                </li>
+                <div class="small-indent">
+                    (a) &nbsp;&nbsp;&nbsp;Un paiement anticipé, versé par l’UNICEF à l’IP (appelé un «<u>Transfert de fonds direct</u>»
+                    dans la Politique HACT);
+                </div>
+                <div class="small-indent">
+                    (b) &nbsp;&nbsp;&nbsp;Un remboursement par l’UNICEF à l’IP (appelé un «<u>Remboursement</u>» dans la Politique HACT); ou
+                </div>
+                <div class="small-indent">
+                    (c) &nbsp;&nbsp;&nbsp;Un paiement effectué par l’UNICEF au profit de l’IP au nom d’un partenaire commercial ou d’un
+                    fournisseur de l’IP (appelé un «<u>Paiement direct</u>» dans le présent accord).
+                </div>
+                <li>Tout Transfert de fonds est effectué en plusieurs paiements, selon les informations fournies par l’IP
+                    sur le formulaire FACE et sur l’estimation de ses dépenses détaillées fournie à l’appui, de telles
+                    dépenses représentant les montants nécessaires pour mener à bien les activités de l’IP stipulées dans
+                    les Documents du Programme, ou tel qu’autrement fixé par l’UNICEF (ci-après les
+                    «<u>Paiements par Transfert de fonds</u>», et chacun d’eux individuellement un
+                    «<u>Paiement par Transfert de fonds</u>»).
+                </li>
+                <li>Pour chaque Transfert de fonds sollicité, l’IP soumettra à l’UNICEF une demande écrite de Paiement
+                    par Transfert de fonds d’un montant égal aux besoins en fonds de l’IP pour le trimestre relatif aux
+                    activités spécifiées dans le Document du Programme. La première de ces demandes sera soumise à
+                    l’UNICEF au moment où l’IP renvoie à l’UNICEF le présent accord et le Document du Programme signés.
+                    Chaque demande doit être signée par un Dirigeant habilité.
+                </li>
+                <div class="keep-with-next"><p><u>Procédures de Transfert de fonds:</u></p></div>
+                <li>Tout Paiement par Transfert de fonds sera réalisé directement au profit de l’IP, ou, en cas de
+                    Paiement direct, au nom de l’IP exclusivement dans le but de contribuer à l’exécution des Documents
+                    du Programme. L’IP convient que les fonds ainsi transférés seront exclusivement utilisés pour exécuter
+                    les Documents du Programme.
+                </li>
+                <li>Tout Paiement par Transfert de fonds effectué par l’UNICEF sera réalisé directement au profit de l’IP,
+                    ou, en cas de Paiement direct, au nom de l’IP en réponse à une demande écrite de l’IP, conformément
+                    aux procédures suivantes:
+                </li>
+                <div class="keep-with-next"><p><u>Procédures de demande de Paiement par Transfert
+                    de fonds applicables aux trois Modes de Transfert de fonds:</u></p></div>
+                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;Sauf indication contraire de l’UNICEF par écrit, tous les trois mois civils pendant la durée du
+                    présent accord (un «Trimestre»), l’IP soumettra à l’UNICEF une demande écrite de paiement partiel du
+                    Transfert de fonds d’un montant égal aux besoins financiers de l’IP pour le Trimestre concerné en
+                    rapport avec les activités spécifiées dans le Document du Programme. À cette fin, l’IP utilisera le
+                    formulaire FACE et fournira une estimation détaillée de ses dépenses. Une telle demande devra être
+                    signée par un Dirigeant habilité.
+                </div>
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;La première de ces demandes écrites soumises à l’aide du formulaire FACE peut l’être dès que
+                    le présent accord et le Document du Programme ont été signés par les Parties. Si une telle demande
+                    est complète et soumise en bonne et due forme, l’UNICEF calculera le montant à transférer et
+                    transférera un tel montant à l’IP, ou, en cas de Paiement direct, au nom de l’IP dans des délais
+                    raisonnables.
+                </div>
+                <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;Sauf décision contraire de l’UNICEF, la deuxième demande écrite ainsi que chacune des demandes
+                    ultérieures soumises à l’aide du formulaire FACE ne peuvent pas être soumises avant que des dépenses
+                    aient été déclarées à l’UNICEF à l’aide du formulaire FACE et avant qu’un bilan de l’état d’avancement
+                    des activités n’ait été soumis à l’aide du PDPR. Si cette deuxième demande ainsi que les demandes
+                    ultérieures sont complètes, remplies en bonne et due forme et reçues dans les délais impartis,
+                    l’UNICEF calculera le montant à transférer et transférera ledit montant à l’IP, ou, en cas de
+                    Paiement direct, au nom de l’IP, dans des délais raisonnables.
+                </div>
+                <div class="keep-with-next"><p><u>Procédures supplémentaires applicables exclusivement aux Paiements directs:</u></p></div>
+                <div class="small-indent">(d) &nbsp;&nbsp;&nbsp;Toute demande de Paiement direct est soumise à l’aide du formulaire FACE et comprend dans tous
+                    les cas les coordonnées complètes du partenaire commercial de l’IP qui en sera le bénéficiaire,
+                    ainsi que ses coordonnées bancaires, dans un format spécifié par l’UNICEF lors de l’ultime mise
+                    au point du Document du Programme.
+                </div>
+                <div>En cas de Paiement direct ou de Remboursement, les dépenses indiquées doivent avoir été préalablement
+                    autorisées par l’UNICEF par le biais du formulaire FACE.
+                </div>
+                <div class="keep-with-next"><p><u>Conditions spéciales applicables aux paiements partiels du Transfert de fonds:</u></p></div>
+                <li>Toute demande de Paiement partiel du Transfert de fonds soumise par l’IP doit satisfaire les critères
+                    suivants d’une manière jugée satisfaisante par l’UNICEF, à défaut de quoi l’UNICEF pourrait décider
+                    de ne pas honorer une telle demande, que ce soit en totalité ou en partie:
+                </li>
+                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;Le montant et l’objet d’une telle demande doivent correspondre aux dispositions du Document du
+                    Programme, y compris celles concernant ses activités, son calendrier et son budget;
+                </div>
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Une telle demande sera raisonnable et justifiée au regard des principes de bonne gestion financière,
+                    en particulier les principes de rapport coût-efficacité et de rapport qualité-prix;
+                </div>
+                <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;Il n’existe aucune autre raison de penser que de telles dépenses contreviennent aux dispositions
+                    du présent accord, y compris celles du Document du Programme; et
+                </div>
+                <div class="small-indent">(d) &nbsp;&nbsp;&nbsp;Sous réserve du paragraphe 4(d) ci-dessus, tous Paiements par Transfert de fonds antérieurs
+                    doivent avoir été signalés d’une manière jugée satisfaisante par l’UNICEF conformément à l’article
+                    X du présent accord.
+                </div>
+                <li>L’UNICEF est en droit d’ajuster le montant des Paiements par Transfert de fonds si elle l’estime, y compris afin de:
+                </li>
+                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;prendre en compte les progrès réalisés de manière générale à ce jour aux termes du Document du Programme; ou
+                </div>
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;compenser tout solde non dépensé ou non déclaré de l’IP résultant de tout paiement partiel antérieur du Transfert de fonds.
+                </div>
+                <li>L’UNICEF devra uniquement transférer à l’IP, ou, en cas de Paiement direct, au nom de l’IP, le
+                    montant que l’UNICEF estime dû aux termes du présent accord. L’IP convient que l’UNICEF ne peut
+                    en aucun cas être tenue responsable envers le pays ou un quelconque tiers, y compris de quelconques
+                    partenaires commerciaux ou fournisseurs de l’IP, concernant tout montant que l’UNICEF estime ne pas
+                    être conforme aux termes du présent accord.
+                </li>
+                <li><div class="small-indent">(a) &nbsp;&nbsp;&nbsp;Tout Transfert de fonds est administré par l’IP conformément à ses propres règles, procédures
+                    et règlements financiers, tels qu’examinés, évalués et jugés idoines par l’UNICEF.</div>
+                </li>
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Lorsque, conformément à la Politique HACT, l’UNICEF réalise un Transfert de fonds avant d’avoir
+                    examiné et analysé les règles, procédures et règlements financiers de l’IP, puis détermine
+                    ultérieurement que les règles, procédures et règlements financiers de l’IP ne sont pas idoines,
+                    l’UNICEF en avertit l’IP par écrit et est en droit d’exiger le remboursement de tous montants des
+                    Transferts de fonds non dépensés ayant été versés à l’IP. L’UNICEF peut en outre décider d’exécuter
+                    directement les dispositions du Document du Programme ou de l’une ou l’autre de ses sections (y compris
+                    toute activité d’achat).
+                </div>
+                <li>Lorsque l’IP achète des marchandises, des biens ou des services avec des fonds du Transfert de fonds,
+                    il agit ainsi en prenant dûment en considération les principes suivants
+                </li>
+                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;Rechercher systématiquement le meilleur rapport qualité-prix;</div>
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Agir en toutes circonstances de manière juste, intègre et transparente; et</div>
+                <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;Tenir compte de la concurrence.</div>
+                <li class="keep-with-next">Tout Transfert de fonds autre qu’un Paiement direct est réalisé par l’UNICEF sur le compte bancaire suivant de l’IP
+                </li>
+
+                <table style="border: 1px solid black;">
+                    <tr>
+                        <td colspan="2" style="text-align: center;vertical-align: middle"><br>Compte</td>
+                    </tr>
+                    {% for bank_detail in bank_details %}
+                    <tr>
+                        <td style="width: 33%;"><br>Nom de la banque</td>
+                        <td><br> {{ bank_detail.bank_name }}</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 33%;"><br>Adresse de la banque</td>
+                        <td><br>{{ bank_detail.bank_address }}</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 33%;"><br>Intitulé du compte</td>
+                        <td><br>{{ bank_detail.account_title }}</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 33%;"><br>Numéro de compte</td>
+                        <td><br>{{ bank_detail.account_number }}</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 33%;"><br>Compte de devises</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td style="width: 33%;"><br>Code SWIFT/IBAN<br/>(le cas échéant)</td>
+                        <td><br>{{ bank_detail.routing_details }}</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 33%;"><br>Chargé(e) de clientèle responsable du compte</td>
+                        <td><br>{{ bank_detail.bank_contact_person }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <div class="keep-with-next" style="padding-top: 24px;">
+                    <p><b>(B) Transferts de fournitures/d’équipements à l’IP par l’UNICEF</b></p>
+                </div>
+
+                <li>Toutes fournitures et tous équipements transférés à l’IP par l’UNICEF seront exclusivement utilisés
+                    aux fins de l’exécution du Document du Programme, sauf accord contraire conclu avec l’UNICEF.
+                </li>
+                <li>L’IP deviendra propriétaire des fournitures et des équipements dès leur livraison. Si l’UNICEF
+                    convient de stocker les fournitures et les équipements pour le compte de l’IP ou de les conserver
+                    au nom de l’IP, ce dernier deviendra propriétaire desdits équipements et fournitures tel que
+                    convenu entre l’UNICEF et l’IP. Dans certains cas exceptionnels, l’UNICEF peut stipuler par écrit
+                    qu’elle demeure propriétaire des fournitures et équipements transférés à l’IP.
+                </li>
+                <li>L’UNICEF est en droit, à son entière discrétion, de stipuler que les fournitures et équipements déjà
+                    transférés à IP doivent être déployés par l’IP aux fins de l’exécution d’un autre Document du Programme
+                    ou transférés à un autre partenaire d’exécution dans le cadre de l’exécution du Document du Programme
+                    ou d’un autre Document du Programme. L’IP se conformera promptement à la décision de l’UNICEF et,
+                    dans le cas d’un transfert à un autre partenaire d’exécution, l’IP convient, nonobstant les dispositions
+                    de l’article VIII, paragraphe 12 ci-dessus, et sur instructions écrites de l’UNICEF, de transférer
+                    les titres de propriété desdits équipements et fournitures au Partenaire d’exécution désigné par l’UNICEF
+                    pour lui succéder.
+                </li>
+                <li>L’IP s’engage à utiliser et gérer les fournitures et équipements avec le plus grand soin et en
+                    consultation avec l’UNICEF, à apposer le label UNICEF sur tous les équipements et fournitures transférés.
+                </li>
+                <li>Tous véhicules éventuellement placés à la disposition de l’IP par l’UNICEF seront exclusivement transférés
+                    sur la base d’un prêt. Ces véhicules ne pourront être fournis à l’IP qu’une fois que les Parties auront
+                    signé un contrat de prêt de véhicules UNICEF standard, dont un exemplaire sera fourni à l’IP.
+                </li>
+
+            </ol>
+        </div>
+
+        <div id="article-IX" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE IX</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>GESTION DES DOSSIERS</b></div>
+            <ol>
+                <li>L’IP s’engage à ce que ses livres comptables et ses dossiers financiers soient toujours exacts, exhaustifs et à jour.</li>
+                <div class="keep-with-next"><p><u>Transferts de fonds:</u></p></div>
+                <li>Les livres comptables et dossiers financiers de l’IP refléteront clairement tous les Paiements par
+                    Transfert de fonds qu’il aura reçus, ainsi que tous débours qu’il aura effectués aux termes du
+                    présent accord, y compris les montants de tous fonds non dépensés. Nonobstant ce qui précède,
+                    l’IP est tenu de conserver:
+                </li>
+                <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;les documents reflétant les transactions enregistrées dans son système comptable correspondant
+                    aux dépenses déclarées sur chacune des lignes des formulaires FACE, ainsi que les documents reflétant
+                    les revenus de l’IP relatifs aux Remboursements réalisés par l’UNICEF;
+                </div>
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Les originaux de l’ensemble de ses documents, y compris ses notes, factures, reçus et tous
+                    autres documents pertinents pendant cinq (5) ans à compter de la date de l’achèvement du Document
+                    du Programme ou de la date de résiliation du présent accord, la date la plus tardive étant retenue.
+                    Ces documents comprennent notamment les bons de commande, factures de fournisseurs, contrats, avis
+                    de livraison, baux, récépissés de paiement, relevés de compte bancaire, billets d’avion, coupons
+                    carburant, registres de paye, contrats de travail, feuilles de présence, notes de frais, reçus de
+                    petite caisse, récépissés de journal et dossiers d’achat démontrant que les procédures d’attribution
+                    de marchés sont fondées sur le principe de la concurrence loyale, ainsi que tout autre document
+                    justificatif pertinent. Sauf accord préalable contraire conclu avec l’UNICEF, l’IP veille à ce que
+                    la mention «Document du Programme» figure clairement sur chacun des récépissés relatifs à
+                    l’utilisation des Transferts de fonds. L’IP convient qu’une déclaration écrite de sa part indiquant
+                    que les fonds ont été dépensés n’est pas suffisante et ne peut en aucun cas remplacer les originaux
+                    des documents à fournir pour justifier les dépenses de l’IP
+                </div>
+                <div class="keep-with-next"><p><u>Fournitures/équipements:</u></p></div>
+                <li>L’IP indiquera dans ses dossiers tout achat de fournitures et d’équipements réalisé à l’aide d’
+                    un Transfert de fonds et toutes fournitures et tous équipements transférés à l’IP conformément à
+                    l’article VIII (B) du présent accord. L’IP enregistrera des inventaires détaillés qu’il conservera
+                    pendant une période de cinq (5) ans à compter de la date d’achèvement du dernier Document du Programme,
+                    ou de la date de résiliation du présent accord, la date la plus tardive étant retenue.
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-X" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE X</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>RAPPORTS</b></div>
+            <ol>
+                <li>L’IP remettra à l’UNICEF les rapports stipulés ci-dessous. Les rapports narratifs seront,
+                    si possible, soumis en anglais, en français ou en espagnol.
+                </li>
+                <div class="keep-with-next"><p><b>(A) Rapports financiers</b></p></div>
+                <div class="keep-with-next"><p><u>Rapports financiers utilisant le formulaire FACE:</u></p></div>
+                <li><div class="small-indent">(a)	&nbsp;&nbsp;&nbsp;Sauf accord contraire écrit entre les Parties, l’IP soumettra des formulaires FACE à la fin de
+                    chaque Trimestre à l’aide du formulaire FACE. En l’absence de soumission d’un formulaire FACE dans
+                    les six (6) mois à compter de la fin du Trimestre, l’UNICEF, sauf accord contraire, suspendra les
+                    Transferts de fonds réalisés au bénéfice ou au nom de l’IP.</div>
+                </li>
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Le dernier des formulaires FACE sera soumis au plus tard trente (30) jours civils après
+                    la fin de l’exécution du Document du Programme.
+                </div>
+                <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;Le formulaire FACE:</div>
+                <div class="small-indent" style="padding-left: 25px">(i) &nbsp;&nbsp;&nbsp;indiquera uniquement les dépenses identifiables et vérifiables.
+                    (Le mot «identifiables» signifie que de telles dépenses ont été enregistrées dans le système
+                    comptable de l’IP et que ce système comptable indique quelles transactions représentent les
+                    dépenses déclarées par l’IP sur chacune des lignes du formulaire FACE. Le mot «vérifiables»
+                    signifie que de telles dépenses peuvent être vérifiées en consultant les documents stipulés à
+                    l’article IX.)
+                </div>
+                <div class="small-indent" style="padding-left: 25px"> (ii) &nbsp;&nbsp;&nbsp;indiquera uniquement les dépenses directement imputables à
+                    l’exécution des activités incluses dans le Document du Programme;
+                </div>
+                <div class="small-indent" style="padding-left: 25px"> (iii) &nbsp;&nbsp;&nbsp;indiquera uniquement les dépenses effectivement engagées
+                    ou supportées par l’IP;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(iv) &nbsp;&nbsp;&nbsp;n’indiquera aucune dépense sans rapport avec les Transferts de fonds
+                    (les «<u>Dépenses exclues</u>», tel que stipulé au paragraphe 2(c) du présent article X;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(v) &nbsp;&nbsp;&nbsp;indiquera le solde de tous fonds provenant de tout Transfert de
+                    fonds antérieur; et
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(vi) &nbsp;&nbsp;&nbsp;indiquera tout remboursement ou ajustement dont l’IP a
+                    bénéficié en rapport avec un quelconque Transfert de fonds antérieur.
+                </div>
+                <div class="small-indent">(d) &nbsp;&nbsp;&nbsp;L’UNICEF aura accès à tous documents et dossiers justificatifs, ou éventuellement considérés
+                    comme appuyant les informations figurant sur le formulaire FACE.
+                </div>
+
+                <div class="keep-with-next"><p><u>Dépenses exclues:</u></p></div>
+                <div class="small-indent">(e) &nbsp;&nbsp;&nbsp;Sont indiquées ci-dessous les Dépenses exclues (telles que fixées par l’UNICEF à son entière
+                    discrétion), qui ne doivent par conséquent pas figurer sur le formulaire FACE:
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(i) &nbsp;&nbsp;&nbsp;Toutes dépenses qui n’ont pas été effectuées pour des activités incluses
+                    au Programme ou qui ne sont pas nécessaires à l’exécution de ces activités;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(ii) &nbsp;&nbsp;&nbsp;Toutes dépenses en taxe sur la valeur ajoutée («TVA»),
+                    sauf si l’IP peut raisonnablement démontrer à l’UNICEF qu’il n’est pas en mesure de recouvrer ladite TVA;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(iii) &nbsp;&nbsp;&nbsp;Toutes dépenses couvertes par un autre Document du Programme ou
+                    relatives à un tel autre Document du Programme;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(iv) &nbsp;&nbsp;&nbsp;Toutes dépenses payées ou remboursées à l’IP par un autre bâilleur
+                    de fonds ou une autre entité;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(v) &nbsp;&nbsp;&nbsp;Toutes dépenses pour lesquelles l’IP a reçu une contribution en nature
+                    d’un autre bailleur de fonds ou d’une autre entité;
+                </div>
+                <div class="small-indent"style="padding-left: 25px">(vi) &nbsp;&nbsp;&nbsp;Toutes dépenses d’assistance, le cas échéant, au-delà du taux
+                    applicable aux dépenses d’assistance stipulées à l’article VI, paragraphe 2, du présent accord;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(vii) &nbsp;&nbsp;&nbsp;Toutes dépenses non vérifiables en l’absence de quelconques
+                    justificatifs, tel que prévu à l’article IX du présent accord (autres que les dépenses d’assistance,
+                    le cas échéant, indiquées à l’article VI, paragraphe 2, du présent accord);
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(viii) &nbsp;&nbsp;&nbsp;Les salaires des employés de l’IP lorsque ceux-ci sont supérieurs
+                    aux montants payables par l’UNICEF pour des fonctions comparables exécutées par des membres de son
+                    personnel recrutés localement par son bureau dans la région concernée;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(ix) &nbsp;&nbsp;&nbsp;Les salaires des employés de l’IP recrutés internationalement lorsque
+                    de tels salaires sont supérieurs aux taux payables par l’UNICEF pour des fonctions comparables
+                    exécutées par des membres de son personnel recrutés internationalement et travaillant dans son
+                    bureau dans la région concernée;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(x) &nbsp;&nbsp;&nbsp;Toutes dépenses en honoraires de consultants individuels auxquels l’IP
+                    a fait appel, lorsque de tels honoraires sont supérieurs à ceux payables par l’UNICEF à des consultants
+                    individuels pour des services comparables;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(xi) &nbsp;&nbsp;&nbsp;Toutes dépenses de déplacement ou de subsistance journalière,
+                    ainsi que toutes indemnités associées, concernant les employés ou consultants de l’IP lorsque de
+                    telles dépenses sont supérieures à celles payables par l’UNICEF aux membres de son personnel ou à
+                    ses consultants, selon le cas;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(xii) &nbsp;&nbsp;&nbsp;Toutes sommes correspondant exclusivement à des provisions de
+                    dépenses qui n’ont pas effectivement été engagées par l’IP;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(xiii) &nbsp;&nbsp;&nbsp;Toutes dépenses représentant exclusivement des transferts
+                    financiers entre de quelconques unités ou sites administratifs de l’IP, par exemple à des fins de
+                    paiement de services fournis par une unité administrative de l’IP à une autre;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(xiv) &nbsp;&nbsp;&nbsp;Toutes dépenses qui ne sont pas raisonnables ou justifiées en
+                    vertu des principes de bonne gestion financière, en particulier les principes de rapport
+                    coût-efficacité et de rapport qualité-prix;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(xv) &nbsp;&nbsp;&nbsp;Toutes dépenses relatives à des obligations contractées après
+                    la date de fin du Document du Programme;
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(xvi) &nbsp;&nbsp;&nbsp;Tous frais de dette et de service de dette;</div>
+                <div class="small-indent" style="padding-left: 25px">(xvii) &nbsp;&nbsp;&nbsp;Toutes pertes d’opérations de change;</div>
+                <div class="small-indent" style="padding-left: 25px">(xviii) &nbsp;&nbsp;&nbsp;Tous droits ou amendes payables aux autorités en cas de retard
+                    de paiement de toute TVA ou droits de douane requis par la loi; et
+                </div>
+                <div class="small-indent" style="padding-left: 25px">(xix) &nbsp;&nbsp;&nbsp;Toutes dépenses réalisées en infraction à l’un ou l’autre des termes du présent accord.
+                </div>
+                <li>Tous rapports financiers soumis à l’UNICEF par l’IP devront l’être dans la monnaie dans laquelle les
+                    Transferts de fonds ont été réalisés. L’IP n’est pas tenu de convertir les montants des transactions
+                    en dollars américains ou dans toute autre monnaie.
+                </li>
+                <div class="keep-with-next" ><p><u>Utilisation de l’outil électronique FACE:</u></p></div>
+                <li>En complément du formulaire FACE sur papier, l’IP peut utiliser l’outil électronique FACE, une fois
+                    celui-ci disponible, en y saisissant les informations contenues dans le formulaire FACE, si l’UNICEF
+                    en fait la demande.
+                </li>
+                <div class="keep-with-next" ><p><b>(B) Rapports d’avancement</b></p></div>
+                <li>Par le biais du formulaire PDPR (<i>Program Document Progress Report</i>), l’IP soumettra à l’UNICEF des
+                    rapports narratifs sur les progrès réalisés par rapport aux activités prévues par le Document du Programme.
+                    Sauf accord contraire écrit entre les Parties. Ces rapports seront soumis à la fin de chaque Trimestre.
+                    Le rapport final doit être soumis au plus tard trente (30) jours civils après la fin du Programme
+                    et accompagné du formulaire FACE.
+                </li>
+                <div class="keep-with-next" ><p><b>(C) Autres rapports</b></p></div>
+                <li> 6. Les obligations de l’IP en matière de rapports seront spécifiées dans le Document du Programme.
+                    L’IP fournira des rapports ad hoc selon les exigences de l’UNICEF le cas échéant. L’UNICEF s’efforcera
+                    de minimiser le nombre de demandes de rapports ad hoc.
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-XI" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XI</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>OBLIGATIONS DES PARTIES UNE FOIS ACHEVÉES LES ACTIVITÉS</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>EXÉCUTÉES AUX TERMES DU DOCUMENT DU PROGRAMME</b></div>
+            <ol>
+                <li>
+                <div class="small-indent">(a)&nbsp;&nbsp;&nbsp; Une fois les activités de l’IP aux termes d’un Document de Programme achevées, l’IP rembourse à
+                    l’UNICEF les sommes non dépensées de tous Transferts de fonds réalisés aux termes dudit Document du
+                    Programme (lesquelles sommes doivent être déclarées sur le dernier formulaire FACE soumis par l’IP),
+                    ainsi que toutes autres sommes que l’IP n’est pas autorisé à utiliser.</div>
+                <div class="small-indent">(b)&nbsp;&nbsp;&nbsp; Une fois les activités de l’IP aux termes d’un Document de Programme achevées, l’IP renvoie à
+                    l’UNICEF toutes fournitures et tous équipements fournis par l’UNICEF en tant que contributions à
+                    l’exécution du Programme, mais qui n’ont pas été utilisés.
+                </div>
+                <div class="small-indent">(c)&nbsp;&nbsp;&nbsp; De tels remboursements et renvois doivent être réalisés au plus tard quatre-vingt-dix (90)
+                    jours civils après la date de fin du Document du Programme, ou la date à laquelle les activités ont
+                    effectivement, la date la plus proche étant retenue.
+                </div>
+                <li>Lors de la conclusion des activités de l’IP aux termes d’un Document du Programme, les Parties se
+                consultent pour déterminer la destination des biens durables fournis par l’UNICEF ou achetés grâce à un
+                Transfert de fonds au bénéfice de l’IP ou, en cas de Paiement direct, au nom de l’IP, et en rapport à un
+                tel Document de Programme. L’UNICEF est en droit de décider que lesdits biens durables doivent être
+                transférés pour être utilisés par un autre partenaire d’exécution. Dans ce cas, l’IP, sur instructions
+                écrites de l’UNICEF, transfère le titre de propriété de chacun de ces biens au partenaire d’exécution
+                désigné par l’UNICEF.
+                </li>
+            </ol>
+        </div>
+
+        <div id="article-XII" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XII</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>PRIVILÈGES ET IMMUNITÉS; RÉSOLUTION DE LITIGES</b></div>
+            <ol>
+                <li>Conformément à l’article 17 des Conditions générales des accords de partenaire d’exécution,
+                    rien dans le présent accord ni rien de relatif au présent accord n’est réputé constituer une
+                    autorisation expresse ou implicite à déroger à de quelconques privilèges ou immunités des
+                    Nations Unies, y compris de l’UNICEF.
+                </li>
+                <li>Les Parties s’engagent à tout mettre en œuvre pour régler à l’amiable tout litige ou contentieux ou
+                    toute plainte découlant du présent accord ou résultant d’une infraction à ce dernier ou de sa
+                    résiliation ou invalidation. Si les Parties cherchent à obtenir un tel règlement à l’amiable par
+                    voie de conciliation, une telle conciliation doit être conforme au Règlement de conciliation de la
+                    Commission des Nations Unies pour le droit commercial international («<u>CNUDCI</u>»),
+                    ou à toute autre procédure selon ce qui pourrait être convenu par écrit par les Parties.
+                </li>
+                <li>Tout litige, contentieux ou plainte entre les Parties découlant du présent accord ou résultant
+                    d’une infraction à ce dernier ou de sa résiliation ou invalidation, sauf en cas de règlement à
+                    l’amiable aux termes du paragraphe précédent dans les soixante (60) jours qui suivent la date de
+                    réception par l’une des Parties de la demande écrite de règlement à l’amiable de l’autre Partie,
+                    sera référé par l’une ou l’autre des Parties à une instance d’arbitrage conformément au Règlement
+                    d’arbitrage de la CNUDCI en vigueur à cette date. Les sentences du tribunal d’arbitrage sont fondées
+                    sur les principes généraux du droit commercial international. Le tribunal d’arbitrage est investi du
+                    pouvoir d’ordonner le renvoi à l’expéditeur ou la destruction de marchandises ou de tous biens, qu’ils
+                    soient corporels ou incorporels, ou de toutes informations confidentielles fournies aux termes du présent
+                    accord, ou d’ordonner que toutes autres mesures de protection soient prises concernant les biens,
+                    services ou autres propriétés, qu’ils soient corporels ou incorporels, ou de toutes informations
+                    confidentielles fournies aux termes du présent accord, selon le cas et en toutes circonstances
+                    conformément au pouvoir du tribunal d’arbitrage en vertu de l’article 26 («Mesures provisoires»)
+                    et de l’article 34 («Forme et effet de la sentence») du Règlement d’arbitrage de la CNUDCI.
+                    Le tribunal d’arbitrage n’est aucunement habilité à octroyer des dommages-intérêts. De plus, sauf
+                    stipulation contraire figurant dans l’accord, le tribunal d’arbitrage n’est aucunement habilité à
+                    accorder des intérêts supérieurs au taux Libor alors en vigueur, et tous intérêts accordés sont
+                    exclusivement de simples intérêts. Les Parties sont liées par toute sentence arbitrale rendue suite
+                    à un tel arbitrage, laquelle sentence constituant une sentence finale et sans appel concernant
+                    le litige, le contentieux ou la plainte en question.
+                </li>
+            </ol>
+        </div>
+        <div id="article-XIII" style="padding-bottom: 10px">
+            <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XIII</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>DISPOSITIONS FINALES</b></div>
+            <ol>
+                <li>Le présent accord entre en vigueur à la date à laquelle il est signé par les deux Parties.
+                    Il expire le dernier jour du Programme, sauf s’il est résilié avant conformément à l’article 11
+                    des Conditions générales ci-jointes et incorporées au présent accord.
+                </li>
+                <div class="keep-with-next" ><p>EN FOI DE QUOI, les soussignés dûment habilités par chacune des
+                    Parties ont signé le présent accord.</p></div>
+                <div style="padding-top: 3px">
+                    <table border="0" style="border: none;">
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px; border:none;"><b>Pour le Partenaire d’exécution:</b></td>
+                            <td style="padding-top: 8px; padding-bottom: 0px"><b>Pour le Fonds des Nations Unies pour l’enfance:</b></td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Nom:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Nom:</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Titre:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Titre:</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Signature: ______________________</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Signature: ______________________</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Date:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Date:</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Adresse e-mail:</td>
+                            <td style="padding-top: 8px; padding-bottom: 0px">Adresse e-mail:</td>
+                        </tr>
+                    </table>
+                </div>
+            </ol>
+        </div>
+        <div class="page-break"></div>
+        <div id="general-terms" style="font: 10pt; padding-bottom: 10px">
+            <div class="keep-with-next" style="padding-bottom: 0px; text-align: center"><b>CONDITIONS GÉNÉRALES DES ACCORDS DE COOPÉRATION</b></div>
+            <div class="keep-with-next" style="text-align: center; padding-top: 0px"><b>AU TITRE DE PROGRAMMES</b></div>
+            <ol>
+                <li><b>STATUT JURIDIQUE:</b> vis-à-vis de l’UNICEF, l’IP a un statut juridique de société indépendante.
+                    Les employés, le personnel et les sous-traitants de l’IP ne sont en aucun cas considérés comme des
+                    employés ou agents de l’UNICEF.
+                </li>
+                <li><b>RESPONSABILITÉS DE l’IP ENVERS SES EMPLOYÉS, SON PERSONNEL ET SES SOUS-TRAITANTS:</b>
+                    l’IP est responsable des compétences professionnelles et techniques de ses employés, de son
+                    personnel et de ses sous-traitants et, concernant les activités à exécuter aux termes du présent
+                    accord, il sélectionnera des personnes fiables qui exécuteront le présent accord de manière efficace,
+                    respecteront les coutumes locales et adopteront une conduite morale et éthique très stricte.
+                </li>
+                <li><b>CESSION:</b>  l’IP ne peut en aucun cas céder, transférer ou promettre de céder le présent
+                    accord ou de quelconques portions de celui-ci, y compris tous Documents du Programme, ni s’en
+                    séparer de toute autre manière, et il en est de même concernant tous droits, réclamations ou
+                    obligations de l’IP aux termes du présent accord, excepté avec l’autorisation écrite de l’UNICEF.
+                </li>
+                <li><b>SOUS-TRAITANCE:</b> l’IP ne peut utiliser des services de sous-traitants avant d’en avoir obtenu
+                    l’autorisation écrite auprès de l’UNICEF au cas par cas. Si l’UNICEF approuve l’utilisation d’un
+                    prestataire de services donné, l’IP veille à ce que les sous-traitants de l’IP n’utilisent pas
+                    eux-mêmes des chaînes de sous-traitants tiers, y compris leurs propres sous-traitants, avant d’avoir
+                    reçu l’autorisation écrite de l’UNICEF, laquelle autorisation est délivrée au cas par cas. Aucune
+                    utilisation de sous-traitants par l’IP, ou d’une chaîne de sous-traitants au cas où l’UNICEF
+                    l’aurait autorisé par écrit conformément à la phrase précédente, ne libère l’IP de l’une ou
+                    l’autre de ses obligations aux termes du présent accord. Les termes d’une quelconque sous-traitance,
+                    sous-sous-traitance, etc. sont soumis aux dispositions du présent accord, s’y conforment et leur
+                    donnent plein effet.
+                </li>
+                <li class="keep-with-next"><b>INTERDICTION AUX AGENTS DE LA FONCTION PUBLIQUE DE PROFITER;
+                    RESTRICTIONS EN MATIÈRE DE RECRUTEMENT DU PERSONNEL DE L’UNICEF:</b></li>
+                <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
+                    <li>L’IP certifie qu’aucun agent de l’UNICEF n’a reçu ni ne se verra proposé, par l’IP, de
+                        quelconques avantages directs ou indirects découlant du présent accord, et qu’aucun avantage de la
+                        sorte n’a été octroyé. L’IP convient que toute infraction à cette disposition constitue une infraction
+                        à une condition essentielle du présent accord.
+                    </li>
+                    <li>L’IP déclare et certifie que ce qui suit concernant d’anciens agents de l’UNICEF a été
+                        respecté ou sera respecté: (i) pendant la période d’un an suivant le départ d’un agent donné
+                        de l’UNICEF, l’IP ne peut proposer directement ou indirectement un emploi à cet ancien agent de
+                        l’UNICEF si ce dernier, pendant les trois années précédant son départ de l’UNICEF, a participé
+                        à un quelconque égard au processus conduisant à la sélection de l’IP ou à l’exécution du Programme;
+                        et (ii) pendant les deux années suivant son départ de l’UNICEF, cet ancien agent de l’UNICEF ne peut
+                        communiquer avec l’UNICEF ou présenter des informations à l’UNICEF au nom de l’IP concernant toute
+                        question qui relevait de ses responsabilités à l’époque où il travaillait à l’UNICEF.
+                    </li>
+                </ol>
+                <li><b>INDEMNISATION:</b> l’IP s’engage à indemniser, dégager de toutes responsabilités et défendre à
+                    ses propres frais l’UNICEF, ainsi que ses dirigeants, agents, serviteurs et employés, contre et envers
+                    tout procès, plainte, demande ou responsabilité civile ou pénale, de quelque nature que ce soit,
+                    y compris leurs dépenses et frais résultant d’actes ou d’omissions de l’IP ou d’employés, de
+                    dirigeants, d’agents ou de sous-traitants de l’IP dans le cadre de l’exécution du présent accord
+                    et des Documents du Programme. Cette disposition est étendue, entre autres, à toutes plaintes et
+                    responsabilités civiles ou pénales sous forme de réparation d’accidents ou de maladies du travail,
+                    de responsabilité produits ou de responsabilité découlant de l’utilisation d’inventions ou d’appareils
+                    brevetés, de documents protégés par le droit d’auteur ou d’autres propriétés intellectuelles de l’IP
+                    ou de ses employés, agents, serviteurs ou sous-traitants. Les obligations des Parties aux termes du
+                    présent article demeurent en vigueur en cas de résiliation du présent accord.
+                </li>
+                <li><b>CHARGES/PRIVILÈGES:</b>  l’IP ne peut en aucun cas causer ou permettre qu’un quelconque privilège
+                    ou autre charge de la part de quiconque entre en vigueur ou demeure en vigueur au sein d’un quelconque
+                    service de la fonction publique concernant tout montant dû ou qui sera dû, soit en contrepartie de
+                    quelconques travaux effectués, services rendus ou matériaux, fournitures ou équipements fournis aux
+                    termes du présent accord, soit en raison de tout autre plainte ou demande visant l’IP.
+                </li>
+                <li class="keep-with-next"><b>DROIT D’AUTEUR, BREVETS ET AUTRES DROITS DE PROPRIÉTÉ; CONFIDENTIALITÉ:</b></li>
+                <div style="padding-top: 2px;">8.1 &nbsp;&nbsp;&nbsp;Sauf stipulation contraire figurant dans l’accord, l’UNICEF détient l’intégralité des propriétés
+                    intellectuelles et autres droits de propriété, notamment tous brevets, droits d’auteur et marques de
+                    commerce en rapport avec tous produits, procédés, inventions, idées, savoir-faire, documents et autres
+                    éléments que l’IP a développés aux termes de l’accord et qui sont directement liés à l’exécution des
+                    dispositions de l’accord, ou qui ont été produits ou préparés ou collectés suite à, ou pendant une
+                    telle exécution. En outre, l’IP reconnaît et convient que de tels produits, documents et autres
+                    éléments ont été réalisés ou produits contre rémunération.
+                </div>
+                <div style="padding-top: 16px;">8.2 &nbsp;&nbsp;&nbsp;À la demande de l’UNICEF, l’IP s’engage à prendre toutes mesures nécessaires, à signer tous
+                    documents nécessaires et à contribuer de manière générale à l’obtention de tels droits de propriété,
+                    ainsi qu’à leur cession ou utilisation sous licence, auprès de l’UNICEF et conformément aux dispositions
+                    du droit applicable.
+                </div>
+                <div style="padding-top: 16px;">8.3 &nbsp;&nbsp;&nbsp;Sous réserve des dispositions précédentes, tous croquis, cartes, photos, mosaïques, plans, rapports,
+                    estimations, recommandations, documents et autres données rassemblés par l’IP ou reçus par celui-ci
+                    aux termes du présent accord appartiennent à l’UNICEF, sont mis à la disposition de l’UNICEF à des
+                    fins d’utilisation ou d’inspection par l’UNICEF à des dates et dans des lieux raisonnables, sont
+                    traités avec confidentialité et sont exclusivement remis à des dirigeants habilités de l’UNICEF une
+                    fois que sont achevées les activités prévues aux termes de l’accord.
+                </div>
+                <div style="padding-top: 16px;">8.4 &nbsp;&nbsp;&nbsp;L’IP s’engage à respecter la confidentialité de toutes informations désignées comme telle par
+                    l’UNICEF et à traiter de telles informations avec le même niveau de confidentialité que ce qu’il
+                    applique à ses informations les plus confidentielles. Lorsque l’IP est contraint, de par la loi,
+                    de divulguer des informations confidentielles de l’UNICEF, il doit en informer l’UNICEF suffisamment
+                    à l’avance pour que ce dernier dispose d’une opportunité raisonnable pour prendre des mesures de
+                    protection ou engager toutes autres actions, selon le cas concernant toute divulgation à effectuer.
+                </div>
+                <div style="padding-top: 16px;">8.5 &nbsp;&nbsp;&nbsp;Lorsque la collecte et l’utilisation de données concernant des bénéficiaires (à savoir toutes
+                    informations personnelles, y compris des informations sur l’identité de personnes, telles que leur nom,
+                    numéro d’identité ou de passeport, numéro de téléphone portable, adresse électronique, et détails de
+                    toutes transactions de fonds) sont du ressort de l’IP aux termes du présent accord, de telles
+                    informations sont réputées constituer des informations confidentielles de l’UNICEF et sont régies par
+                    le règlement de l’UNICEF en matière de divulgation d’informations, qui peut être consulté à l’adresse
+                    <u>http://www.unicef.org/about/legal_disclosure.html</u>. L’IP s’engage à utiliser de telles données
+                    exclusivement aux fins de l’exécution du Document du Programme et à notifier promptement l’UNICEF en
+                    cas de tout incident réel, soupçonné ou probable de destruction accidentelle ou illicite, ou de
+                    toute perte accidentelle, altération ou divulgation ou consultation non autorisée ou accidentelle
+                    de telles données.
+                </div>
+                <li><b>UTILISATION DES NOMS, LOGOS ET EMBLÈMES DE L’UNICEF ET DE L’IP:</b>
+                     Chacune des Parties est autorisée à utiliser les nom, logo et emblème de l’autre Partie, selon le cas,
+                    et ce exclusivement en lien avec le présent accord et avec l’exécution des Documents du Programme,
+                    sauf si une telle permission est retirée dans un quelconque cas particulier par l’une ou l’autre
+                    des Parties sur préavis à l’autre Partie. Lorsqu’il présente à des tiers et/ou rend publics ses
+                    résultats, l’IP imputera ces derniers au financement fourni par l’UNICEF. À la demande de l’UNICEF,
+                    l’IP fournit aux bailleurs de fonds de l’UNICEF contribuant à financer le Document du Programme le
+                    niveau de visibilité spécifié par l’UNICEF. Lorsqu’une telle visibilité menace la sûreté et la
+                    sécurité du personnel de l’IP, ce dernier propose d’autres dispositions idoines.
+                </li>
+                <li class="keep-with-next"><b>FORCE MAJEURE; AUTRES CHANGEMENTS DE SITUATION:</b></li>
+                <div style="padding-top: 2px">10.1 &nbsp;&nbsp;&nbsp;Dans tout cas de force majeure, et dès que possible en cas de problème constituant un cas de
+                    force majeure, l’IP avertit par écrit et de manière détaillée l’UNICEF d’un tel événement ou changement
+                    de situation s’il en résulte que l’IP est désormais incapable de remplir tout ou partie de ses
+                    obligations et d’assumer ses responsabilités aux termes du présent accord. L’IP notifie également
+                    l’UNICEF en cas d’autres changements de situation ou d’événement perturbant ou menaçant de perturber
+                    ses activités d’exécution du présent accord. Après avoir reçu l’avis requis à cet égard aux termes du
+                    présent article, l’UNICEF prend toutes les mesures qu’elle juge, à son entière discrétion, adaptées
+                    ou nécessaires dans les circonstances, y compris l’octroi d’un délai supplémentaire raisonnable à
+                    l’IP pour remplir ses obligations aux termes du présent accord.
+                </div>
+                <div style="padding-top: 16px">10.2 &nbsp;&nbsp;&nbsp;Si l’IP devient, de façon permanente, incapable de remplir ses obligations et d’assumer
+                    ses responsabilités aux termes du présent accord, que ce soit en partie ou en totalité, en raison
+                    d’un cas de force majeure, l’UNICEF est habilitée à suspendre ou résilier le présent accord selon
+                    les termes de l’article 11, «Résiliation», auquel cas la période de préavis est alors de sept (7)
+                    jours et non de trente (30).
+                </div>
+                <div style="padding-top: 16px">10.3 &nbsp;&nbsp;&nbsp;Le terme «force majeure», tel qu’utilisé dans le présent article, désigne tout acte naturel
+                    imprévisible et incontournable, tout acte de guerre (que celle-ci ait été ou non déclarée) et
+                    toute invasion, révolution ou insurrection, ainsi que tout acte de terrorisme, ou tout autre acte
+                    d’une force ou nature similaire, à condition que de tels actes résultent de causes indépendantes
+                    de la volonté de la Partie concernée et ne résultent pas d’une faute ou négligence de sa part.
+                </div>
+                <div style="padding-top: 16px">10.4 &nbsp;&nbsp;&nbsp;L’IP reconnaît et convient, concernant toutes obligations aux termes du présent accord,
+                    être contraint de travailler dans et des quelconques zones ou régions dans lesquelles l’UNICEF travaille,
+                    se prépare à travailler ou met fin à de quelconques opérations de maintien de la paix, opérations
+                    humanitaires ou opérations similaires, tous retards d’exécution ou manquements à remplir de telles
+                    obligations en raison de conditions difficiles ou en rapport à des conditions difficiles dans de
+                    telles zones ou régions, ou en raison de quelconques troubles causés à l’ordre public dans de
+                    telles zones ou régions, ne pourront pas constituer en tant que tels des cas de force majeure.
+                </div>
+
+                <li class="keep-with-next"><b>RÉSILIATION:</b></li>
+                <div style="padding-top: 2px" class="keep-with-next">11.1 &nbsp;&nbsp;&nbsp;Chacune des Parties est habilitée à résilier
+                    le présent accord par préavis écrit de trente (30) jours civils à l’autre Partie dans chacune des
+                    situations suivantes:
+                </div>
+                <!--
+                <div style="padding-left: 15px">a. &nbsp;&nbsp;&nbsp;Si elle conclut que l’autre Partie a manqué à ses obligations aux termes
+                    du présent accord ou d’un quelconque Document du Programme, et n’a pas rectifié un tel manquement
+                    après qu’il lui ait été demandé de le faire par préavis écrit d’un minimum quatorze (14) jours civils,
+                    laquelle demande prend effet à compter de la date spécifiée dans un tel avis; et
+                </div>
+                <div style="padding-left: 15px">b. &nbsp;&nbsp;&nbsp;Si elle conclut que l’autre Partie n’est pas en mesure de remplir
+                    ses obligations aux termes du présent accord.
+                </div>
+                -->
+                <div style="padding-left: 25px">
+                    <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
+                        <li>Si elle conclut que l’autre Partie a manqué à ses obligations aux termes
+                            du présent accord ou d’un quelconque Document du Programme, et n’a pas rectifié un tel manquement
+                            après qu’il lui ait été demandé de le faire par préavis écrit d’un minimum quatorze (14) jours civils,
+                            laquelle demande prend effet à compter de la date spécifiée dans un tel avis; et
+                        </li>
+                        <li>Si elle conclut que l’autre Partie n’est pas en mesure de remplir
+                            ses obligations aux termes du présent accord.
+                        </li>
+                    </ol>
+                </div>
+
+                <div style="padding-top: 16px">11.2 &nbsp;&nbsp;&nbsp;L’UNICEF est également en droit de suspendre ou résilier immédiatement le présent accord dans
+                    chacune des situations suivantes:
+                </div>
+                <!--
+                <div style="padding-left: 15px">a. &nbsp;&nbsp;&nbsp;Si l’exécution d’un quelconque Document du Programme n’a pas commencé dans un délai raisonnable;
+                </div>
+                <div style="padding-left: 15px">b. &nbsp;&nbsp;&nbsp;Si l’UNICEF décide que l’IP ou l’un ou l’autre de ses employés ou membres de
+                    son personnel a agi de quelque façon que ce soit de manière corrompue, frauduleuse, collusoire, coercitive
+                    ou obstructionniste (selon le sens assigné à de ces termes à la clause 14.3 b.);
+                </div>
+                <div style="padding-left: 15px">c. &nbsp;&nbsp;&nbsp;En cas de diminution, réduction ou résiliation du financement de l’UNICEF; ou
+                </div>
+                <div style="padding-left: 15px">d. &nbsp;&nbsp;&nbsp;Si l’IP est jugé en faillite ou si son organisation est liquidée ou
+                    devient insolvable, ou si l’IP réalise une cession au bénéfice de ses créditeurs, ou si un
+                    administrateur judiciaire a été nommé en raison de l’insolvabilité de l’IP, auxquels cas l’IP
+                    doit en informer immédiatement l’UNICEF.
+                </div>
+                -->
+                <div style="padding-left: 25px">
+                    <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
+                        <li>Si l’exécution d’un quelconque Document du Programme n’a pas commencé dans un délai raisonnable;
+                        </li>
+                        <li>Si l’UNICEF décide que l’IP ou l’un ou l’autre de ses employés ou membres de
+                            son personnel a agi de quelque façon que ce soit de manière corrompue, frauduleuse, collusoire, coercitive
+                            ou obstructionniste (selon le sens assigné à de ces termes à la clause 14.3 b.);
+                        </li>
+                        <li>En cas de diminution, réduction ou résiliation du financement de l’UNICEF; ou
+                        </li>
+                        <li>Si l’IP est jugé en faillite ou si son organisation est liquidée ou
+                            devient insolvable, ou si l’IP réalise une cession au bénéfice de ses créditeurs, ou si un
+                            administrateur judiciaire a été nommé en raison de l’insolvabilité de l’IP, auxquels cas l’IP
+                            doit en informer immédiatement l’UNICEF.
+                        </li>
+                    </ol>
+                </div>
+
+                <div style="padding-top: 16px">11.3 &nbsp;&nbsp;&nbsp;La Partie recevant un avis de suspension ou de résiliation prendra immédiatement toutes mesures
+                    nécessaires pour suspendre ou résilier (selon le cas) ses activités de manière ordonnée, afin que ses
+                    dépenses courantes soient réduites au strict minimum.
+                </div>
+                <div style="padding-top: 16px">11.4 &nbsp;&nbsp;&nbsp;Immédiatement après avoir envoyé ou reçu un avis de résiliation, l’UNICEF cessera tout paiement
+                    de quelconques fonds aux termes du présent accord, et l’IP ne prendra plus aucun engagement à court
+                    ou long terme, financier ou autre, en rapport avec le présent accord.
+                </div>
+                <div style="padding-top: 16px">11.5 &nbsp;&nbsp;&nbsp;En cas de résiliation du présent accord conformément à la présente clause 11, l’IP transférera
+                    à l’UNICEF, ou suivra les instructions de l’UNICEF à ce sujet, tout solde de fonds non dépensés détenus
+                    par l’IP et provenant de Transferts de fonds, ainsi que tous les équipements et fournitures non utilisés
+                    fournis par l’UNICEF aux termes du présent accord, et tous biens durables fournis par l’UNICEF aux
+                    termes du présent accord ou achetés par l’IP à l’aide de fonds fournis par l’UNICEF aux termes du
+                    présent accord.
+                </div>
+                <div style="padding-top: 16px">11.6 &nbsp;&nbsp;&nbsp;Si l’UNICEF exerce son droit de résilier le présent accord, elle est en droit d’exiger de l’IP
+                    qu’il lui rembourse une telle somme d’argent, à hauteur du montant total versé à l’IP par l’UNICEF avant
+                    la date du préavis de résiliation, selon ce que l’UNICEF fixera. Il est entendu que le remboursementdes
+                    dépenses engagées par l’IP conformément au présent accord avant la date d’un tel préavis de résiliation
+                    n’est pas obligatoire. La somme due par l’IP sera remboursée promptement à réception de la demande de
+                    remboursement émise par l’UNICEF.
+                </div>
+                <div style="padding-top: 16px">11.7 &nbsp;&nbsp;&nbsp;Si l’UNICEF exerce son droit de résilier le présent accord et décide que le Document du
+                    Programme doit être exécuté par une autre organisation que l’IP, l’IP s’engage à coopérer
+                    promptement avec l’UNICEF et cette autre organisation afin que ledit transfert de l’intégralité des
+                    fournitures et équipements non utilisés fournis à l’IP par l’UNICEF soit réalisé de manière ordonnée,
+                    auquel cas les dispositions du paragraphe 11.5 ci-dessus s’appliquent.
+                </div>
+                <!--
+                <div>
+                    <div style="float: left;width: 50pt;">11.7 &nbsp;&nbsp;&nbsp;</div>
+                    <div style="padding-left: 35px;float: left;width: 300pt;">
+                        Si l’UNICEF exerce son droit de résilier le présent accord et décide que le Document du
+                        Programme doit être exécuté par une autre organisation que l’IP, l’IP s’engage à coopérer
+                        promptement avec l’UNICEF et cette autre organisation afin que ledit transfert de l’intégralité des
+                        fournitures et équipements non utilisés fournis à l’IP par l’UNICEF soit réalisé de manière ordonnée,
+                        auquel cas les dispositions du paragraphe 11.5 ci-dessus s’appliquent.
+                    </div>
+                </div>
+                -->
+                <li><b>ÉVALUATION:</b> toute évaluation des activités exécutées aux termes du présent accord est visée par
+                    les dispositions du Règlement de l’UNICEF en matière d’évaluation, tel que validé ou modifié le cas
+                    échéant par le Conseil d’administration de l’UNICEF.
+                </li>
+                <li><b>CONFORMITÉ AUX RÈGLEMENTS DE L’UNICEF:</b>  l’IP est tenu de se conformer aux dispositions applicables
+                    du règlement de l’UNICEF en matière d’interdiction et de lutte contre la fraude et la corruption, qui
+                    peut être consulté à l’adresse
+                    http://www.unicef.org/publicpartnerships/files/Policy_Prohibiting_and_Combatting_Fraud_and_Corruption.pdf,
+                    ou à tout autre URL, selon ce qui pourrait être décidé le cas échéant par l’UNICEF.
+                </li>
+                <li class="keep-with-next"><b>ACTIVITÉS DE CONTRÔLE:</b></li>
+                <div class="keep-with-next" style="padding-top: 2px;padding-bottom: 2px;">
+                    14.1 &nbsp;&nbsp;&nbsp;Audits:
+                </div>
+                <div style="padding-left: 25px">
+                    <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
+                        <li>À la demande de l’UNICEF et à des dates fixées exclusivement par
+                            l’UNICEF, les activités de l’IP aux termes du présent accord seront auditées. De tels audits
+                            seront réalisés conformément aux normes, au périmètre, à la fréquence et aux dates fixées par
+                            l’UNICEF (et peuvent notamment couvrir toutes transactions financières et tous contrôles internes
+                            liés avec les activités exécutées par l’IP).
+                        </li>
+                        <li>Les audits prévus aux termes du paragraphe 1 du présent article
+                            sont réalisés par des commissaires aux comptes individuels ou un cabinet de commissaires aux comptes
+                            désignés par l’UNICEF, tels que, par exemple, un cabinet d’audit ou un cabinet comptable. L’IP
+                            s’engage à coopérer pleinement et dans les délais impartis avec tout audit réalisé. Une telle
+                            coopération comprend, sans y être limitée, l’obligation de l’IP de mettre son personnel à la
+                            disposition des commissaires aux comptes, de même que tous documents ou dossiers concernés à cette fin,
+                            ce à des moments raisonnables et selon des conditions raisonnables, et d’autoriser les commissaires aux
+                            comptes à pénétrer dans les locaux et/ou sur les sites de l’IP où le programme est exécuté à des
+                            dates et heures raisonnables et dans des conditions raisonnables en ce qui concerne l’accès au
+                            personnel et aux documents/dossiers pertinents de l’IP. L’IP exige de ses agents, notamment ses
+                            avocats, comptables et autres conseillers, ainsi que ses sous-traitants, qu’ils coopèrent de manière
+                            raisonnable dans le cadre de tout audit réalisé aux termes du présent accord.
+                        </li>
+                        <li>Lorsqu’un audit est réalisé par des commissaires aux comptes désignés par
+                            l’UNICEF, l’UNICEF fournit, ou de tels commissaires aux comptes fourniront sans délai un exemplaire
+                            du rapport d’audit final à l’IP.
+                        </li>
+                    </ol>
+                </div>
+                <div class="keep-with-next" style="padding-top: 12px;padding-bottom: 12px;">
+                    14.2 &nbsp;&nbsp;&nbsp;Contrôles ponctuels et visites relatives au programme:
+                </div>
+                <div>L’IP convient que L’UNICEF peut réaliser de temps à autre des contrôles sur site (ci-après des «contrôles ponctuels»
+                    et des visites relatives au programme), sous réserve des standards, du périmètre, de la fréquence et des
+                    dates et heures fixées par l’UNICEF à cette fin. L’IP s’engage à coopérer pleinement et dans les délais
+                    impartis avec de tels contrôles ponctuels ou visites relatives au programme, ce qui inclut l’obligation
+                    de l’IP de mettre son personnel à la disposition des commissaires aux comptes, de même que tous documents
+                    ou dossiers concernés à cette fin, ce à des moments raisonnables et selon des conditions raisonnables,
+                    et d’autoriser l’UNICEF à pénétrer dans les locaux et/ou sur les sites de l’IP où le programme est exécuté
+                    à des dates et heures raisonnables et dans des conditions raisonnables. L’IP exige de ses agents, notamment
+                    ses avocats, comptables et autres conseillers, ainsi que ses sous-traitants, qu’ils coopèrent de manière
+                    raisonnable dans le cadre de tout contrôle ponctuel réalisé aux termes du présent accord. Il est entendu
+                    que l’UNICEF est en droit, à sa seule discrétion, de contracter les services d’une personne physique ou
+                    morale ou de faire appel à son personnel, ses employés ou agents pour effectuer les contrôles ponctuels
+                    ou les visites relatives au programme.
+                </div>
+                <div class="keep-with-next" style="padding-top: 12px;padding-bottom: 12px;">
+                    14.3 &nbsp;&nbsp;&nbsp;Investigations:
+                </div>
+                <div style="padding-left: 25px">
+                    <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
+                        <li>L’IP convient que l’UNICEF est en droit de mener des investigations,
+                            à des dates et heures fixées exclusivement par l’UNICEF, à propos de tout aspect du présent accord ou
+                            de son octroi, des obligations de l’IP exécutées aux termes de l’accord et des activités et du
+                            fonctionnement de l’IP en rapport avec l’exécution du présent accord. Le droit de l’UNICEF de mener
+                            des investigations survit à toute expiration ou résiliation du présent accord. L’IP s’engage à coopérer
+                            pleinement et dans les délais impartis avec de telles investigations. Une telle coopération comprend,
+                            sans y être limitée, l’obligation de l’IP de permettre l’accès à son personnel et à tous documents ou
+                            dossiers à des dates et heures raisonnables et dans des conditions raisonnables, et de mettre son personnel
+                            à la disposition de l’UNICEF, de même que tous documents ou dossiers concernés à cette fin, ce à des moments
+                            raisonnables et selon des conditions raisonnables, et d’autoriser l’UNICEF à pénétrer dans les locaux et/ou
+                            sur les sites de l’IP où le programme est exécuté à des dates et heures raisonnables et dans des conditions
+                            raisonnables. L’IP exige de ses agents, notamment ses avocats, comptables et autres conseillers, ainsi que
+                            ses sous-traitants, qu’ils coopèrent de manière raisonnable dans le cadre de toute investigation effectuée
+                            par l’UNICEF aux termes du présent accord. Il est entendu que l’UNICEF est en droit, à sa seule discrétion,
+                            de contracter les services d’investigation d’une personne physique ou morale de faire appel à son personnel,
+                            ses employés ou agents pour mener des investigations.
+                        </li>
+                        <li>L’IP convient de porter rapidement à l’attention du directeur du
+                            Bureau de l’audit interne et des investigations de l’UNICEF toutes allégations de corruption,
+                            fraude, collusion, coercition ou obstructionnisme en relation avec le présent accord et dont l’IP a
+                            été informé ou dont il a pris connaissance autrement. Aux fins du présent accord, les définitions
+                            suivantes s’appliquent:
+                        </li>
+                        <div style="padding-left: 30px">
+                            (i)&nbsp;&nbsp;&nbsp; «<u>Corruption</u>» &nbsp;désigne tout don, offre, réception ou sollicitation,
+                            que ce soit directement ou indirectement, de toute chose de valeur visant à influencer indument les
+                            actes ou actions d’un agent de la fonction publique;
+        {#                </div>#}
+        {#                <div style="padding-left: 30px">#}
+                            <br />
+                            (ii)&nbsp;&nbsp;&nbsp; «<u>Fraude</u>» &nbsp;désigne tout acte ou omission, y compris toutes fausses déclarations, trompant
+                            sciemment ou de manière irresponsable, ou tentant de tromper une quelconque partie dans le but
+                            d’obtenir un avantage financier ou autre, ou dans le but de contourner une obligation;
+        {#                </div>#}
+                            <br />
+        {#                <div style="padding-left: 30px">#}
+                            (iii)&nbsp;&nbsp;&nbsp; «<u>Collusion</u>» &nbsp;désigne tout arrangement entre deux parties ou plus et dont la finalité
+                            est inappropriée, y compris toute influence indue sur les actes ou actions d’une autre partie;
+        {#                </div>#}
+                            <br />
+        {#                <div style="padding-left: 30px">#}
+                            (iv)&nbsp;&nbsp;&nbsp; «<u>Coercition</u>»&nbsp; signifie diminuer ou nuire à, ou menacer de diminuer ou de nuire à une
+                            quelconque partie ou à un quelconque bien d’une telle partie, que ce soit directement ou indirectement,
+                            dans le but d’influencer indument les actes ou actions d’une quelconque partie;
+        {#                </div>#}
+                            <br />
+        {#                <div style="padding-left: 30px">#}
+                            (v)&nbsp;&nbsp;&nbsp; «<u>Obstructionnisme</u>»&nbsp; désigne tout acte commis avec l’intention de limiter de manière significative
+                            l’exercice des droits contractuels de l’UNICEF en matière d’audit, d’investigations et d’accès aux
+                            informations, y compris en rapport avec toute destruction, falsification, altération ou dissimulation
+                            de preuves déterminantes dans le cadre d’une investigation de l’UNICEF suite à des allégations de fraude
+                            ou de corruption.
+                        </div>
+                    </ol>
+                </div>
+                <div style="padding-top: 12px;padding-bottom: 12px;">
+                    14.4 &nbsp;&nbsp;&nbsp;L’IP consent à ce que l’UNICEF rende publics les rapports des audits mentionnés à l’article
+                    14.1, les rapports des inspections ponctuelles et des visites relatives au programme mentionnés à
+                    l’article 14.2, ainsi que les rapports des investigations mentionnées à l’article 14.3.
+                </div>
+                <li><b>MISSIONS D’ÉVALUATION:</b>  l’IP convient que l’UNICEF est en droit d’effectuer des missions
+                    d’évaluation de temps à autre, y compris concernant le cadre de capacité et de contrôle interne
+                    (ci-après une «mission d’évaluation»). L’UNICEF est en droit d’effectuer de telles missions
+                    d’évaluation conformément aux normes, au périmètre, à la fréquence et aux dates fixées par l’UNICEF
+                    et en informera l’IP raisonnablement à l’avance. L’IP s’engage à coopérer pleinement et dans les délais
+                    impartis avec ces missions d’évaluation. Une telle coopération comprend, sans y être limitée,
+                    l’obligation de l’IP de mettre son personnel à la disposition des commissaires aux comptes,
+                    de même que tous documents ou dossiers concernés à cette fin, ce à des moments raisonnables et
+                    selon des conditions raisonnables, et d’autoriser l’UNICEF à pénétrer dans les locaux et/ou sur
+                    les sites de l’IP à des dates et heures raisonnables et dans des conditions raisonnables. L’IP exige
+                    de ses agents, notamment ses avocats, comptables et autres conseillers, ainsi que ses sous-traitants,
+                    qu’ils coopèrent de manière raisonnable dans le cadre de ces missions d’évaluation réalisées par l’UNICEF
+                    aux termes du présent accord. Il est entendu que l’UNICEF est en droit, à sa seule discrétion, de
+                    contracter les services d’une personne physique ou morale ou de faire appel à son personnel, ses employés
+                    ou agents pour effectuer une quelconque Mission d’évaluation. L’IP consent à ce que les rapports
+                    d’évaluation mentionnés au présent article 15 soient rendus publics par l’UNICEF.
+                </li>
+                <li><b>REMBOURSEMENTS/COMPENSATIONS:</b> l’UNICEF est en droit d’être remboursée, par l’IP, ou de
+                    compenser tous montants payables à l’IP concernant: tous montants versés par l’UNICEF ou utilisés
+                    par l’IP autrement que conformément aux Conditions générales du présent accord, y compris tous
+                    montants dont un audit, une inspection ponctuelle ou une investigation a révélé qu’ils ont
+                    effectivement été versés ou utilisés; tous montants versés par l’UNICEF ou utilisés par l’IP en
+                    raison d’un quelconque acte de corruption, fraude, collusion, coercition ou obstructionnisme de la
+                    part de l’IP ou de l’un ou l’autre de ses employés ou membres de son personnel (selon les définitions
+                    de l’article 13.3 b.); tous montants non dépensés; tous montants transférés à l’IP par l’UNICEF,
+                    mais qui ne sont mentionnés ou correctement reflétés dans un rapport financier (soumis à l’aide du
+                    formulaire FACE) ou qui ne sont appuyés ou justifiés par des documents ou dossiers idoines;
+                    tous montants versés par l’UNICEF concernant des Dépenses exclues; ou tous montants autrement visés
+                    par un remboursement conformément aux termes du présent accord. L’IP remboursera de tels fonds
+                    promptement après avoir reçu de l’UNICEF une demande de remboursement écrite à cette fin.
+                </li>
+                <li><b>PRIVILÈGES ET IMMUNITÉS:</b> rien dans le présent accord ni rien de relatif au présent accord
+                    n’est réputé constituer une autorisation, expresse ou implicite, à déroger à de quelconques
+                    privilèges ou immunités des Nations Unies, y compris de l’UNICEF.
+                </li>
+                <li><b>RESPECT DE LA LOI:</b> l’IP se conforme à toutes lois, ordonnances, règles et réglementations
+                    applicables à l’exécution de ses obligations aux termes du présent accord.
+                </li>
+                <li><b>EXPLOITATION SEXUELLE ET PROTECTION DES ENFANTS:</b> l’IP veille à ce que tous ses employés et
+                    les membres de son personnel se conforment aux dispositions de la circulaire ST/SGB/2003/13
+                    intitulée «Dispositions spéciales visant à prévenir l’exploitation et les abus sexuels», qui
+                    peut être consultée à http://www.un.org/Docs/journal/asp/ws.asp?m=ST/SGB/2003/13 . L’IP veille par
+                    ailleurs à ce qu’aucun de ses employés ou membres de son personnel n’expose de quelconques
+                    bénéficiaires du Programme, y compris de quelconques enfants, à de quelconques formes de
+                    discrimination, d’abus ou d’exploitation, et à ce que chaque employé et membre de son personnel
+                    se conforme aux dispositions des autres règlements de l’UNICEF concernant la protection des enfants,
+                    tel qu’instruit par l’UNICEF à cet égard le cas échéant.
+                </li>
+                <li><b>POUVOIR DE MODIFICATION:</b> aucune modification ni aucun changement apporté au présent accord
+                    ne sera valide et applicable à l’UNICEF à moins d’avoir été réalisé par avenant écrit au présent
+                    accord signé à la fois par un dirigeant dûment habilité de l’UNICEF et par un dirigeant habilité
+                    de l’IP.
+                </li>
+                <li><b>ASSISTANCE AU TERRORISME:</b> l’IP convient d’appliquer les normes prudentielles raisonnables les
+                    plus strictes afin de garantir que tous fonds, fournitures et équipements sous son contrôle,
+                    notamment tous fonds, fournitures et équipements transférés à l’IP par l’UNICEF: (a) ne sont pas
+                    utilisés dans le but d’apporter une assistance à des personnes ou des entités associées au terrorisme;
+                    (b) ne sont pas transférés par l’IP à une quelconque personne ou entité figurant sur la Liste
+                    récapitulative du Comité du Conseil de sécurité de l’ONU, qui peut être consultée à l’adresse
+                    https://www.un.org/sc/suborg/en/sanctions/un-sc-consolidated-list; et (c) ne sont pas utilisés,
+                    en ce qui concerne les fonds, dans le but de réaliser un quelconque paiement à des personnes ou entités,
+                    ou en contrepartie d’une quelconque importation de quelconques biens ou de marchandises, lorsque de
+                    tels paiements ou une telle importation sont interdits par une décision du Conseil de sécurité des
+                    Nations Unies adoptée en vertu du Chapitre VII de la Charte des Nations Unies.
+                </li>
+
+            </ol>
+        </div>
+        <div id="footer_content" style="text-align: right">
+            <pdf:pagenumber>
+                {#        of <pdf:pagecount>#}
+
+{% endif %}
+{% endblock %}

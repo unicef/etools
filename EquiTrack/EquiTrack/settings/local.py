@@ -1,31 +1,71 @@
-from local_base import *
+import logging
+import sys
 
-########## TOOLBAR CONFIGURATION
-# See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
-INSTALLED_APPS += (
-    'debug_toolbar',
-    'django_extensions',
-)
+from EquiTrack.settings.base import *  # noqa: F403
 
-# See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
-INTERNAL_IPS = ('127.0.0.1',)
-
-# See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
-MIDDLEWARE_CLASSES += (
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
-)
-
-# See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
-DEBUG_TOOLBAR_CONFIG = {
-    'INTERCEPT_REDIRECTS': False,
-    'SHOW_TEMPLATE_CONTEXT': True,
-}
-########## END TOOLBAR CONFIGURATION
+DEBUG = True
+CELERY_ALWAYS_EAGER = True
 
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now',
     'BACKENDS': {
-        # Will ensure email is sent async
+        # Send email to console for local dev
         'default': 'django.core.mail.backends.console.EmailBackend'
     }
 }
+
+# No SAML for local dev
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+# No Redis for local dev
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
+# local override for django-allauth
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
+
+# local override for django-cors-headers
+CORS_ORIGIN_ALLOW_ALL = True
+
+if 'test' in sys.argv:
+    # Settings for automated tests
+
+    # All mail sent out through this backend is stored at django.core.mail.outbox
+    # https://docs.djangoproject.com/en/1.9/topics/email/#in-memory-backend
+    POST_OFFICE['BACKENDS']['default'] = 'django.core.mail.backends.locmem.EmailBackend'
+
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
+
+    TEST_NON_SERIALIZED_APPS = [
+        # These apps contains test models that haven't been created by migration.
+        # So on the serialization stage these models do not exist.
+        'utils.common',
+        'utils.writable_serializers',
+    ]
+
+    # Disable logging output during tests
+    logging.disable(logging.CRITICAL)
+else:
+    # Settings which should NOT be active during automated tests
+
+    # django-debug-toolbar: https://django-debug-toolbar.readthedocs.io/en/stable/configuration.html
+    INSTALLED_APPS += (  # noqa
+        'debug_toolbar',
+        'django_extensions',
+    )
+    INTERNAL_IPS = ('127.0.0.1',)
+    MIDDLEWARE_CLASSES += (  # noqa
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    )
+    DEBUG_TOOLBAR_CONFIG = {
+        'INTERCEPT_REDIRECTS': False,
+        'SHOW_TEMPLATE_CONTEXT': True,
+    }

@@ -3,9 +3,6 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext
 from rest_framework import serializers
 
-from t2f.models import Travel
-from t2f.serializers.travel import TravelListSerializer
-
 
 class YesOrEmptyField(serializers.BooleanField):
     def to_representation(self, value):
@@ -95,6 +92,7 @@ class FinanceExportSerializer(serializers.Serializer):
             ret.append('{amount:.{currency.decimal_places}f} {currency.code}'.format(amount=expense['amount'],
                                                                                      currency=expense['currency']))
         return '+'.join(ret)
+
 
 class TravelAdminExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number')

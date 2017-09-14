@@ -1,0 +1,1580 @@
+[
+    {
+        "model": "audit.riskcategory",
+        "pk": 1,
+        "fields": {
+            "order": 0,
+            "header": "Micro Assesment Questionarie",
+            "parent": null,
+            "category_type": "primary",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 2,
+        "fields": {
+            "order": 1,
+            "header": "Tested Subject Areas",
+            "parent": null,
+            "category_type": "primary",
+            "code": "ma_subject_areas"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 11,
+        "fields": {
+            "order": 0,
+            "header": "1. Implementing Partner",
+            "parent": 1,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 12,
+        "fields": {
+            "order": 1,
+            "header": "2. Programme Management",
+            "parent": 1,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 13,
+        "fields": {
+            "order": 2,
+            "header": "3. Organizational Structure and Staffing",
+            "parent": 1,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 14,
+        "fields": {
+            "order": 3,
+            "header": "4. Accounting Policies and Procedures",
+            "parent": 1,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 15,
+        "fields": {
+            "order": 4,
+            "header": "5. Fixed Assets and Inventory",
+            "parent": 1,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 16,
+        "fields": {
+            "order": 5,
+            "header": "6. Financial Reporting and Monitoring",
+            "parent": 1,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 17,
+        "fields": {
+            "order": 6,
+            "header": "7. Procurement and Contract Administration",
+            "parent": 1,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 18,
+        "fields": {
+            "order": 0,
+            "header": "4a. General",
+            "parent": 14,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 19,
+        "fields": {
+            "order": 1,
+            "header": "4b. Segregation of duties",
+            "parent": 14,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 20,
+        "fields": {
+            "order": 2,
+            "header": "4c. Budgeting system",
+            "parent": 14,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 21,
+        "fields": {
+            "order": 3,
+            "header": "4d. Payments",
+            "parent": 14,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 22,
+        "fields": {
+            "order": 4,
+            "header": "4e. Policies and procedures",
+            "parent": 14,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 23,
+        "fields": {
+            "order": 5,
+            "header": "4f. Cash and bank",
+            "parent": 14,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 24,
+        "fields": {
+            "order": 6,
+            "header": "4g. Other offices or entities",
+            "parent": 14,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 25,
+        "fields": {
+            "order": 7,
+            "header": "4h. Internal audit",
+            "parent": 14,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 26,
+        "fields": {
+            "order": 0,
+            "header": "5a. Safeguards over assets",
+            "parent": 15,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 27,
+        "fields": {
+            "order": 1,
+            "header": "5b. Warehousing and inventory management",
+            "parent": 15,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 28,
+        "fields": {
+            "order": 0,
+            "header": "7a. Procurement",
+            "parent": 17,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 29,
+        "fields": {
+            "order": 1,
+            "header": "7b. Contract Management - <span class='light-text'>To be completed only for the IPs  managing contracts as part of programme implementation. </span><span class='red-text'>Otherwise select N/A for risk assessment</span>",
+            "parent": 17,
+            "category_type": "default",
+            "code": "ma_questionnaire"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 30,
+        "fields": {
+            "order": 2,
+            "header": "Key Internal Controls Weaknesses",
+            "parent": null,
+            "category_type": "primary",
+            "code": "audit_key_weakness"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 1,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "1.1 Is the IP legally registered? If so, is it in compliance with registration requirements? Please note the legal status and date of registration of the entity.",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 2,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "1.2 If the IP received United Nations resources in the past, were significant issues reported in managing the resources, including from previous assurance activities.",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 3,
+        "fields": {
+            "order": 2,
+            "weight": 2,
+            "is_key": true,
+            "header": "1.3 Does the IP have statutory reporting requirements? If so, are they in compliance with such requirements in the prior three fiscal years?",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 4,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "1.4 Does the governing body meet on a regular basis and perform oversight functions?",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 5,
+        "fields": {
+            "order": 4,
+            "weight": 2,
+            "is_key": true,
+            "header": "1.5 If any other offices/ external entities participate in implementation, does the IP have policies and process to ensure appropriate oversight and monitoring of implementation?",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 6,
+        "fields": {
+            "order": 5,
+            "weight": 2,
+            "is_key": true,
+            "header": "1.6 Does the IP show basic financial stability in-country (core resources; funding trend).",
+            "description": "Provide the amount of total assets, total liabilities, income and expenditure for the current and prior three fiscal years.",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 7,
+        "fields": {
+            "order": 6,
+            "weight": 1,
+            "is_key": false,
+            "header": "1.7 Can the IP easily receive funds? Have there been any major problems in the past in the receipt of funds, particularly where the funds flow from government ministries?",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 8,
+        "fields": {
+            "order": 7,
+            "weight": 1,
+            "is_key": false,
+            "header": "1.8 Does the IP have any pending legal actions against it or outstanding material/significant disputes with vendors/contractors?",
+            "description": "If so, provide details and actions taken by the IP to resolve the legal action.",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 9,
+        "fields": {
+            "order": 8,
+            "weight": 1,
+            "is_key": false,
+            "header": "1.9 Does the IP have an anti-fraud and corruption policy?",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 10,
+        "fields": {
+            "order": 9,
+            "weight": 1,
+            "is_key": false,
+            "header": "1.10 Has the IP advised employees, beneficiaries and other recipients to whom they should report if they suspect fraud, waste or misuse of agency resources or property? If so, does the IP have a policy against retaliation relating to such reporting?",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 11,
+        "fields": {
+            "order": 10,
+            "weight": 1,
+            "is_key": false,
+            "header": "1.11 Does the IP have any key financial or operational risks that are not covered by this questionnaire? If so, please describe.",
+            "description": "Examples: foreign exchange risk; cash receipts.",
+            "category": 11
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 12,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "2.1 Does the IP have and use sufficiently detailed written policies, procedures and other tools (e.g. project development checklist, work planning templates, work planning schedule) to develop programmes and plans?",
+            "category": 12
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 13,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "2.2 Do work plans specify expected results and the activities to be carried out to achieve results, with a time frame and budget for the activities?",
+            "category": 12
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 14,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "2.3 Does the IP identify the potential risks for programme delivery and mechanisms to mitigate them?",
+            "category": 12
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 15,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "2.4 Does the IP have and use sufficiently detailed policies, procedures, guidelines and other tools (checklists, templates) for monitoring and evaluation?",
+            "category": 12
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 16,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "2.5 Does the IP have M&E frameworks for its programmes, with indicators, baselines, and targets to monitor achievement of programme results?  ",
+            "category": 12
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 17,
+        "fields": {
+            "order": 5,
+            "weight": 2,
+            "is_key": true,
+            "header": "2.6 Does the IP carry out and document regular monitoring activities such as review meetings, on-site project visits, etc.",
+            "category": 12
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 18,
+        "fields": {
+            "order": 6,
+            "weight": 1,
+            "is_key": false,
+            "header": "2.7 Does the IP systematically collect, monitor and evaluate data on the achievement of project results?",
+            "category": 12
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 19,
+        "fields": {
+            "order": 7,
+            "weight": 1,
+            "is_key": false,
+            "header": "2.8 Is it evident that the IP followed up on independent evaluation recommendations?",
+            "category": 12
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 20,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "3.1 Are the IP’s recruitment, employment and personnel practices clearly defined and followed, and do they embrace transparency and competition?",
+            "category": 13
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 21,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "3.2 Does the IP have clearly defined job descriptions?",
+            "category": 13
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 22,
+        "fields": {
+            "order": 2,
+            "weight": 2,
+            "is_key": true,
+            "header": "3.3 Is the organizational structure of the finance and programme management departments, and competency of staff, appropriate for the complexity of the IP and the scale of activities? Identify the key staff, including job titles, responsibilities, educational backgrounds and professional experience.",
+            "category": 13
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 23,
+        "fields": {
+            "order": 3,
+            "weight": 2,
+            "is_key": true,
+            "header": "3.4 Is the IP’s accounting/finance function staffed adequately to ensure sufficient controls are in place to manage agency funds?",
+            "category": 13
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 24,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "3.5 Does the IP have training policies for accounting/finance/ programme management staff? Are necessary training activities undertaken?",
+            "category": 13
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 25,
+        "fields": {
+            "order": 5,
+            "weight": 1,
+            "is_key": false,
+            "header": "3.6 Does the IP perform background verification/checks on all new accounting/finance and management positions?",
+            "category": 13
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 26,
+        "fields": {
+            "order": 6,
+            "weight": 1,
+            "is_key": false,
+            "header": "3.7 Has there been significant turnover in key finance positions the past five years? If so, has the rate improved or worsened and appears to be a problem? ",
+            "category": 13
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 27,
+        "fields": {
+            "order": 7,
+            "weight": 1,
+            "is_key": false,
+            "header": "3.8 Does the IP have a documented internal control framework? Is this framework distributed and made available to staff and updated periodically? If so, please describe.",
+            "category": 13
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 28,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.1 Does the IP have an accounting system that allows for proper recording of financial transactions from United Nations agencies, including allocation of expenditures in accordance with the respective components, disbursement categories and sources of funds? ",
+            "category": 18
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 29,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.2 Does the IP have an appropriate cost allocation methodology that ensures accurate cost allocations to the various funding sources in accordance with established agreements?",
+            "category": 18
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 30,
+        "fields": {
+            "order": 2,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.3 Are all accounting and supporting documents retained in an organized system that allows authorized users easy access?",
+            "category": 18
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 31,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.4 Are the general ledger and subsidiary ledgers reconciled at least monthly? Are explanations provided for significant reconciling items?",
+            "category": 18
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 32,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.5 Are the following functional responsibilities performed by different units or individuals: (a) authorization to execute a transaction; (b) recording of the transaction; and (c) custody of assets involved in the transaction?",
+            "category": 19
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 33,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.6 Are the functions of ordering, receiving, accounting for and paying for goods and services appropriately segregated?",
+            "category": 19
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 34,
+        "fields": {
+            "order": 2,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.7 Are bank reconciliations prepared by individuals other than those who make or approve payments?",
+            "category": 19
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 35,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.8 Are budgets prepared for all activities in sufficient detail to provide a meaningful tool for monitoring subsequent performance?",
+            "category": 20
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 36,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.9 Are actual expenditures compared to the budget with reasonable frequency? Are explanations required for significant variations from the budget?",
+            "category": 20
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 37,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.10 Is prior approval sought for budget amendments in a timely way?",
+            "category": 20
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 38,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.11 Are IP budgets approved formally at an appropriate level?",
+            "category": 20
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 39,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.12 Do invoice processing procedures provide for:<br /><ul><li>Copies of purchase orders and receiving reports to be obtained directly from issuing departments?</li><li>Comparison of invoice quantities, prices and terms with those indicated on the purchase order and with records of goods/services actually received?</li><li>Checking the accuracy of calculations?</li></ul>",
+            "category": 21
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 40,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.13 Are payments authorized at an appropriate level? Does the IP have a table of payment approval thresholds?",
+            "category": 21
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 41,
+        "fields": {
+            "order": 2,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.14 Are all invoices stamped ‘PAID’, approved, and marked with the project code and account code?",
+            "category": 21
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 42,
+        "fields": {
+            "order": 3,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.15 Do controls exist for preparation and approval of payroll expenditures? Are payroll changes properly authorized?",
+            "category": 21
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 43,
+        "fields": {
+            "order": 4,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.16 Do controls exist to ensure that direct staff salary costs reflects the actual amount of staff time spent on a project?",
+            "category": 21
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 44,
+        "fields": {
+            "order": 5,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.17 Do controls exist for expense categories that do not originate from invoice payments, such as DSAs, travel, and internal cost allocations?",
+            "category": 21
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 45,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.18 Does the IP have a stated basis of accounting (i.e. cash or accrual) and does it allow for compliance with the agency's requirement?",
+            "category": 22
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 46,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.19 Does the IP have an adequate policies and procedures manual and is it distributed to relevant staff?",
+            "category": 22
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 47,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.20 Does the IP require dual signatories / authorization for bank transactions? Are new signatories approved at an appropriate level and timely updates made when signatories depart?",
+            "category": 23
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 48,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.21 Does the IP maintain an adequate, up‑to‑date cashbook, recording receipts and payments?",
+            "category": 23
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 49,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.22 If the partner is participating in micro-finance advances, do controls exist for the collection, timely deposit and recording of receipts at each collection location?",
+            "category": 23
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 50,
+        "fields": {
+            "order": 3,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.23 Are bank balances and cash ledger reconciled monthly and properly approved? Are explanations provided for significant, unusual and aged reconciling items?",
+            "category": 23
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 51,
+        "fields": {
+            "order": 4,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.24 Is substantial expenditure paid in cash? If so, does the IP have adequate controls over cash payments?",
+            "category": 23
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 52,
+        "fields": {
+            "order": 5,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.25 Does the IP carry out a regular petty cash reconciliation?",
+            "category": 23
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 53,
+        "fields": {
+            "order": 6,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.26 Are cash and cheques maintained in a secure location with restricted access? Are bank accounts protected with appropriate remote access controls? ",
+            "category": 23
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 54,
+        "fields": {
+            "order": 7,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.27 Are there adequate controls over submission of electronic payment files that ensure no unauthorized amendments once payments are approved and files are transmitted over secure/encrypted  networks?",
+            "category": 23
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 55,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "4.28 Does the IP have a process to ensure expenditures of subsidiary offices/ external entities are in compliance with the work plan and/or contractual agreement?",
+            "category": 24
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 56,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.29 Is the internal auditor sufficiently independent to make critical assessments? To whom does the internal auditor report?",
+            "category": 25
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 57,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.30 Does the IP have stated qualifications and experience requirements for internal audit department staff?",
+            "category": 25
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 58,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.31 Are the activities financed by the agencies included in the internal audit department’s work programme?",
+            "category": 25
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 59,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "4.32 Does the IP act on the internal auditor's recommendations?",
+            "category": 25
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 60,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "5.1 Is there a system of adequate safeguards to protect assets from fraud, waste and abuse?",
+            "category": 26
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 61,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "5.2 Are subsidiary records of fixed assets and inventory kept up to date and reconciled with control accounts?",
+            "category": 26
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 62,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "5.3 Are there periodic physical verification and/or count of fixed assets and inventory? If so, please describe?",
+            "category": 26
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 63,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "5.4 Are fixed assets and inventory adequately covered by insurance policies?",
+            "category": 26
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 64,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "5.5 Do warehouse facilities have adequate physical security?",
+            "category": 27
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 65,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "5.6 Is inventory stored so that it is identifiable, protected from damage, and countable?",
+            "category": 27
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 66,
+        "fields": {
+            "order": 2,
+            "weight": 2,
+            "is_key": true,
+            "header": "5.7 Does the IP have an inventory management system that enables monitoring of supply distribution?",
+            "category": 27
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 67,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "5.8 Is responsibility for receiving and issuing inventory segregated from that for updating the inventory records?",
+            "category": 27
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 68,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "5.9 Are regular physical counts of inventory carried out?",
+            "category": 27
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 69,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "6.1 Does the IP have established financial reporting procedures that specify what reports are to be prepared, the source system for key reports, the frequency of preparation, what they are to contain and how they are to be used?",
+            "category": 16
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 70,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "6.2 Does the IP prepare overall financial statements?one",
+            "category": 16
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 71,
+        "fields": {
+            "order": 2,
+            "weight": 2,
+            "is_key": true,
+            "header": "6.3 Are the IP’s overall financial statements audited regularly by an independent auditor in accordance with appropriate national or international auditing standards? If so, please describe the auditor.",
+            "category": 16
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 72,
+        "fields": {
+            "order": 3,
+            "weight": 2,
+            "is_key": true,
+            "header": "6.4 Were there any major issues related to ineligible expenditure involving donor funds reported in the audit reports of the IP over the past five years?",
+            "category": 16
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 73,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "6.5 Have any significant recommendations made by auditors in the prior five audit reports and/or management letters over the past five years and have not yet been implemented?",
+            "category": 16
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 74,
+        "fields": {
+            "order": 5,
+            "weight": 2,
+            "is_key": true,
+            "header": "6.6 Is the financial management system computerized?",
+            "category": 16
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 75,
+        "fields": {
+            "order": 6,
+            "weight": 1,
+            "is_key": false,
+            "header": "6.7 Can the computerized financial management system produce the necessary financial reports?",
+            "category": 16
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 76,
+        "fields": {
+            "order": 7,
+            "weight": 1,
+            "is_key": false,
+            "header": "6.8 Does the IP have appropriate safeguards to ensure the confidentiality, integrity and availability of the financial data? <i>E.g. password access controls; regular data back-up.</i>",
+            "category": 16
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 77,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.1 Does the IP have written procurement policies and procedures?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 78,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.2 Are exceptions to procurement procedures approved by management and documented ? ",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 79,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.3 Does the IP have a computerized procurement system with adequate access controls and segration of duties between entering purchase orders, approval and receipting of goods? Provide a description of the procurement system.",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 80,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.4 Are procurement reports generated and reviewed regularly? Describe reports generated, frequency and review & approvers.",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 81,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.5 Does the IP have a structured procuremet unit with defined reporting lines that foster efficiency and accountability?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 82,
+        "fields": {
+            "order": 5,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.6 Is the IP’s procurement unit resourced with qualified staff who are trained and certified and considered experts in procurement and conversant with UN / World Bank / European Union procurement requirements in addition to the a IP's procuredment rules and regulations?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 83,
+        "fields": {
+            "order": 6,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.7 Have any significant recommendations related to procurement made by auditors in the prior five audit reports and/or management letters over the past five years and have not yet been implemented?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 84,
+        "fields": {
+            "order": 7,
+            "weight": 2,
+            "is_key": true,
+            "header": "7.8 Does the IP require written or system authorizations for purchases? If so, evaluate if the authorization thresholds are appropriate?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 85,
+        "fields": {
+            "order": 8,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.9 Do the procurement procedures and templates of contracts integrate references to ethical procurement principles and exclusion and ineligibility criteria?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 86,
+        "fields": {
+            "order": 9,
+            "weight": 2,
+            "is_key": true,
+            "header": "7.10 oneDoes the IP obtain sufficient approvals before signing a contract?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 87,
+        "fields": {
+            "order": 10,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.11 Does the IP have and apply formal guidelines and procedures to assist in identifying, monitoring and dealing with potential conflicts of interest with potential suppliers/procurement agents? If so, how does the IP proceed in cases of conflict of interest?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 88,
+        "fields": {
+            "order": 11,
+            "weight": 2,
+            "is_key": true,
+            "header": "7.12 Does the IP follow a well-defined process for sourcing suppliers? Do formal procurement methods include wide broadcasting of procurement opportunities?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 89,
+        "fields": {
+            "order": 12,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.13 Does the IP keep track of past performance of suppliers? E.g. database of trusted suppliers.",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 90,
+        "fields": {
+            "order": 13,
+            "weight": 2,
+            "is_key": true,
+            "header": "7.14 Does the IP follow a well-defined process to ensure a secure and transparent bid and evaluation process? If so, describe the process.",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 91,
+        "fields": {
+            "order": 14,
+            "weight": 2,
+            "is_key": true,
+            "header": "7.15 When a formal invitation to bid has been issued, does the IP award the contract on a pre-defined basis set out in the solicitation documentation taking into account technical responsiveness and price?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 92,
+        "fields": {
+            "order": 15,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.16 If the IP is managing major contracts, does the IP have a policy on contracts management / administration?",
+            "category": 28
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 93,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.17 Are there personnel specifically designated to manage contracts or monitor contract expirations?",
+            "category": 29
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 94,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.18 Are there staff designated to monitor expiration of performance securities, warranties, liquidated damages and other risk management instruments?",
+            "category": 29
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 95,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.19 Does the IP have a policy on post-facto actions on contracts?",
+            "category": 29
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 96,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "7.20 How frequent do post-facto contract actions occur?",
+            "category": 29
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 97,
+        "fields": {
+            "order": 0,
+            "header": "Implementing partner",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 98,
+        "fields": {
+            "order": 1,
+            "header": "Programme Management",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 99,
+        "fields": {
+            "order": 2,
+            "header": "Organizational structure and staffing",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 100,
+        "fields": {
+            "order": 3,
+            "header": "Accounting policies and procedures",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 101,
+        "fields": {
+            "order": 4,
+            "header": "Accounting policies and procedures: Segregation of duties",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 102,
+        "fields": {
+            "order": 5,
+            "header": "Accounting policies and procedures: Budgeting",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 103,
+        "fields": {
+            "order": 6,
+            "header": "Accounting policies and procedures: Payments",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 104,
+        "fields": {
+            "order": 7,
+            "header": "Accounting policies and procedures: Cash and bank",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 105,
+        "fields": {
+            "order": 8,
+            "header": "Accounting policies and procedures: Other offices and entities",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 106,
+        "fields": {
+            "order": 9,
+            "header": "Fixed Assets and inventory",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 107,
+        "fields": {
+            "order": 10,
+            "header": "Financial Reporting and Monitoring",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 108,
+        "fields": {
+            "order": 11,
+            "header": "Procurement and Contract Administration",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 109,
+        "fields": {
+            "order": 12,
+            "header": "Other internal control weaknesses",
+            "category": 30
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 31,
+        "fields": {
+            "order": 0,
+            "header": "Overall Risk Assessment",
+            "parent": 2,
+            "category_type": "primary",
+            "code": "ma_subject_areas"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 110,
+        "fields": {
+            "order": 0,
+            "header": "Overall Risk Assessment",
+            "category": 31
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 32,
+        "fields": {
+            "order": 1,
+            "header": "Implementing partner",
+            "parent": 2,
+            "category_type": "default",
+            "code": "ma_subject_areas"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 111,
+        "fields": {
+            "order": 0,
+            "header": "Implementing partner",
+            "category": 32
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 33,
+        "fields": {
+            "order": 2,
+            "header": "Programme Management",
+            "parent": 2,
+            "category_type": "default",
+            "code": "ma_subject_areas"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 112,
+        "fields": {
+            "order": 0,
+            "header": "Programme Management",
+            "category": 33
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 34,
+        "fields": {
+            "order": 3,
+            "header": "Organizational structure and staffing",
+            "parent": 2,
+            "category_type": "default",
+            "code": "ma_subject_areas"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 113,
+        "fields": {
+            "order": 0,
+            "header": "Organizational structure and staffing",
+            "category": 34
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 35,
+        "fields": {
+            "order": 4,
+            "header": "Accounting policies and procedures",
+            "parent": 2,
+            "category_type": "default",
+            "code": "ma_subject_areas"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 114,
+        "fields": {
+            "order": 0,
+            "header": "Accounting policies and procedures",
+            "category": 35
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 36,
+        "fields": {
+            "order": 5,
+            "header": "Fixed Assets and Inventory",
+            "parent": 2,
+            "category_type": "default",
+            "code": "ma_subject_areas"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 115,
+        "fields": {
+            "order": 0,
+            "header": "Fixed Assets and Inventory",
+            "category": 36
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 37,
+        "fields": {
+            "order": 6,
+            "header": "Financial Reporting and Monitoring",
+            "parent": 2,
+            "category_type": "default",
+            "code": "ma_subject_areas"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 116,
+        "fields": {
+            "order": 0,
+            "header": "Financial Reporting and Monitoring",
+            "category": 37
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 38,
+        "fields": {
+            "order": 7,
+            "header": "Procurement",
+            "parent": 2,
+            "category_type": "default",
+            "code": "ma_subject_areas"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 117,
+        "fields": {
+            "order": 0,
+            "header": "Procurement",
+            "category": 38
+        }
+    }
+]

@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from django.db import connection
 from django.contrib import admin
 from django.db.models import Q
@@ -55,6 +53,7 @@ class UserStaffFliterMixin(object):
             (user.id, user)
             for user in User.objects.filter(is_staff=True).all()
         ]
+
     def queryset(self, request, queryset):
 
         if self.value():

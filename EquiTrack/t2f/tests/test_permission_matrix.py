@@ -100,19 +100,20 @@ class TestPermissionMatrix(APITenantTestCase):
 
     @mock.patch('t2f.helpers.permission_matrix.get_permission_matrix')
     def test_permission_aggregation(self, permission_matrix_getter):
-        permission_matrix_getter.return_value = {'travel':
-                                                     {UserTypes.TRAVELER:
-                                                          {Travel.PLANNED:
-                                                               {'baseDetails':
-                                                                    {'ta_required':
-                                                                         {'edit': True,
-                                                                          'view': True}}}},
-                                                      UserTypes.SUPERVISOR:
-                                                          {Travel.PLANNED:
-                                                               {'baseDetails':
-                                                                    {'ta_required':
-                                                                         {'edit': False,
-                                                                          'view': True}}}}}}
+        permission_matrix_getter.return_value = {
+            'travel': {
+                UserTypes.TRAVELER: {
+                    Travel.PLANNED: {
+                        'baseDetails': {
+                            'ta_required': {
+                                'edit': True,
+                                'view': True}}}},
+                UserTypes.SUPERVISOR: {
+                    Travel.PLANNED: {
+                        'baseDetails': {
+                            'ta_required': {
+                                'edit': False,
+                                'view': True}}}}}}
 
         travel = TravelFactory(traveler=self.traveler,
                                supervisor=self.unicef_staff)
@@ -156,12 +157,12 @@ class TestPermissionMatrix(APITenantTestCase):
                                 'dinner': False,
                                 'accomodation': False,
                                 'no_dsa': False},
-                                {'date': '2016-12-16',
-                                 'breakfast': False,
-                                 'lunch': False,
-                                 'dinner': False,
-                                 'accomodation': False,
-                                 'no_dsa': False}],
+                               {'date': '2016-12-16',
+                                'breakfast': False,
+                                'lunch': False,
+                                'dinner': False,
+                                'accomodation': False,
+                                'no_dsa': False}],
                 'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
                                'departure_date': '2017-04-14T17:06:55.821490',

@@ -22,7 +22,6 @@ from partners.models import (
     RISK_RATINGS,
     CSO_TYPES,
     PartnerType,
-    GovernmentIntervention,
 )
 
 
@@ -229,12 +228,6 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
         serializers.ValidationError({'result_chain': "Deprecated"})
 
 
-class GovernmentInterventionSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = GovernmentIntervention
-
-
 class GWLocationSerializer(serializers.ModelSerializer):
 
     pca_title = serializers.CharField(source='pca.title', read_only=True)
@@ -337,7 +330,6 @@ class InterventionExportFilterSerializer(serializers.Serializer):
     search = serializers.CharField(default='', required=False)
     document_type = serializers.ChoiceField(PCA.PARTNERSHIP_TYPES, required=False)
     country_programme = serializers.CharField(required=False)
-    result_structure = serializers.CharField(required=False)
     sector = serializers.CharField(required=False)
     status = serializers.ChoiceField(PCA.PCA_STATUS, required=False)
     unicef_focal_point = serializers.CharField(required=False)
@@ -345,10 +337,3 @@ class InterventionExportFilterSerializer(serializers.Serializer):
     grant = serializers.CharField(required=False)
     starts_after = serializers.DateField(required=False)
     ends_before = serializers.DateField(required=False)
-
-
-class GovernmentInterventionExportFilterSerializer(serializers.Serializer):
-    search = serializers.CharField(default='', required=False)
-    result_structure = serializers.CharField(required=False)
-    country_programme = serializers.CharField(required=False)
-    year = serializers.IntegerField(required=False)

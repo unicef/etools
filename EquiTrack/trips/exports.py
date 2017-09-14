@@ -1,10 +1,8 @@
-__author__ = 'jcranwellward'
-
 from django.conf import settings
 
 from EquiTrack.utils import BaseExportResource
 from users.models import UserProfile
-from .models import Trip, ActionPoint
+from trips.models import Trip, ActionPoint
 
 
 class TripResource(BaseExportResource):
@@ -34,10 +32,10 @@ class TripResource(BaseExportResource):
         return row
 
     def fill_trip_pcas(self, row, trip):
-        pcas = set(lp.intervention.__unicode__() for lp in trip.linkedpartner_set.all() if lp.intervention)
+        pcas = set(unicode(lp.intervention) for lp in trip.linkedpartner_set.all() if lp.intervention)
 
         pcas.union(
-            set(lgp.intervention.__unicode__() for lgp in trip.linkedgovernmentpartner_set.all() if lgp.intervention)
+            set(unicode(lgp.intervention) for lgp in trip.linkedgovernmentpartner_set.all() if lgp.intervention)
         )
         self.insert_column(
             row,
@@ -63,7 +61,9 @@ class TripResource(BaseExportResource):
         self.insert_column(
             row,
             'Locations',
-            ', '.join([' - '.join((tl.location.name, tl.location.p_code)) for tl in trip.triplocation_set.all() if tl.location and tl.location.name and tl.location.p_code])
+            ', '.join([' - '.join((tl.location.name, tl.location.p_code))
+                       for tl in trip.triplocation_set.all()
+                       if tl.location and tl.location.name and tl.location.p_code])
         )
 
     def fill_trip_row(self, row, trip):
@@ -100,7 +100,7 @@ class ActionPointResource(BaseExportResource):
 
     def fill_row(self, action, row):
 
-        self.insert_column(row, 'Trip', action.trip.__unicode__())
+        self.insert_column(row, 'Trip', unicode(action.trip))
         self.insert_column(row, 'Traveller', action.trip.owner)
         self.insert_column(row, 'Section', action.trip.section)
         self.insert_column(row, 'Office', action.trip.office)
@@ -110,7 +110,7 @@ class ActionPointResource(BaseExportResource):
         if UserProfile.objects.filter(user_id=action.person_responsible.id).exists():
             self.insert_column(row, 'Responsible Section', action.person_responsible.profile.section)
             self.insert_column(row, 'Responsible Office', action.person_responsible.profile.office)
-        
+
         self.insert_column(row, 'Actions Taken', action.actions_taken)
         self.insert_column(
             row,
