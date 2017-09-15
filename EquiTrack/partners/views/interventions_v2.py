@@ -222,6 +222,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'amendments': InterventionAmendmentCUSerializer,
+        # to be removed
         'sector_locations': InterventionSectorLocationCUSerializer,
         'result_links': InterventionResultCUSerializer
     }

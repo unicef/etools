@@ -335,6 +335,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     distributions = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
+    # to be removed
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
@@ -358,6 +359,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "offices", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
             "created", "modified", "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd',
             "amendments", "planned_visits", "attachments", "supplies", "distributions", 'permissions', 'partner_id',
+            "sections"
         )
 
 

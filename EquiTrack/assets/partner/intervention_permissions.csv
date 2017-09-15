@@ -18,7 +18,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.2,start,Partnership Manager,,Signed,Edit,TRUE
 3.3.3,end,Partnership Manager,,Draft,Edit,TRUE
 3.3.3,end,Partnership Manager,,Signed,Edit,TRUE
-3.3.5,sector_locations,Partnership Manager,,Draft,Edit,TRUE
+3.3.5,sections,Partnership Manager,,Draft,Edit,TRUE
 3.4.1,result_links,Partnership Manager,,Draft,Edit,TRUE
 3.5,planned_budget,Partnership Manager,,Draft,Edit,TRUE
 3.5,planned_budget,Partnership Manager,,Signed,Edit,TRUE
@@ -52,7 +52,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.7,contingency_pd,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.3.2,start,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.3.3,end,Partnership Manager,user adds amendment,*,Edit,TRUE
-3.3.5,sector_locations,Partnership Manager,user adds amendment,*,Edit,TRUE
+3.3.5,sections,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.4.1,result_links,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.5,planned_budget,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.5,planned_budget,Partnership Manager,user adds amendment,*,Edit,TRUE
@@ -69,8 +69,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,end,UNICEF User,,Draft,Required,FALSE
 3.3.2,start,UNICEF User,contingency on,Signed,Required,FALSE
 3.3.3,end,UNICEF User,contingency on,Signed,Required,FALSE
-3.3.5,sector_locations,UNICEF User,,Draft,Required,FALSE
-3.3.6,sector_locations,UNICEF User,,Draft,Required,FALSE
+3.3.5,sections,UNICEF User,,Draft,Required,FALSE
+3.3.6,sections,UNICEF User,,Draft,Required,FALSE
 3.9.11,signed_pd_document,UNICEF User,,Draft,Required,FALSE
 3.9.5,partner_authorized_officer_signatory,UNICEF User,,Draft,Required,FALSE
 3.9.6,signed_by_partner_date,UNICEF User,,Draft,Required,FALSE
