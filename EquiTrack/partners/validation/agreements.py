@@ -16,7 +16,8 @@ def agreement_transition_to_signed_valid(agreement):
             agreement.__class__.objects.filter(partner=agreement.partner,
                                                status=agreement.SIGNED,
                                                agreement_type=agreement.PCA,
-                                               country_programme=agreement.country_programme).count():
+                                               country_programme=agreement.country_programme,
+                                               start__gt=date(2015, 7, 1)).count():
 
         raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
 
@@ -108,11 +109,12 @@ def ssfa_static(agreement):
 
 def one_pca_per_cp_per_partner(agreement):
     if agreement.agreement_type == agreement.PCA:
-        # see if there are any PCAs in the CP other than this for this partner
+        # see if there are any PCAs in the CP other than this for this partner and started after july 2015
         if agreement.__class__.objects.filter(partner=agreement.partner,
                                               agreement_type=agreement.PCA,
-                                              country_programme=agreement.country_programme) \
-                                      .exclude(pk=agreement.id).count():
+                                              country_programme=agreement.country_programme,
+                                              start__gt=date(2015, 7, 1)
+                                              ).exclude(pk=agreement.id).count():
             return False
     return True
 
@@ -132,8 +134,8 @@ class AgreementValid(CompleteValidation):
     ]
 
     VALID_ERRORS = {
-        'one_pca_per_cp_per_partner': 'A different agreement of type PCA already exists '
-                                      'for this Partner for this Country Programme',
+        'one_pca_per_cp_per_partner': 'A PCA with this partner already exists for this Country Programme Cycle. '
+                                      'If the record is in "Draft" status please edit that record.',
         'start_end_dates_valid': 'Agreement start date needs to be earlier than end date',
         'signatures_valid': 'Agreement needs to be signed by UNICEF and Partner; '
                             'None of the dates can be in the future; '
