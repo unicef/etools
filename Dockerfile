@@ -27,8 +27,7 @@ RUN apt-get install -y --no-install-recommends \
     libgdal1-dev \
     libxml2-dev \
     libxslt-dev \
-    xmlsec1 \
-    wkhtmltopdf
+    xmlsec1
 
 RUN pip install --upgrade \
     setuptools \
@@ -51,9 +50,3 @@ WORKDIR /code/
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 RUN SECRET_KEY=not-so-secret-key-just-for-collectstatic python manage.py collectstatic --noinput
-
-#overwrite the existing wkhtmltopdf binary with a pre-compiled one with QT support.
-#the precompiled binary was downloaded from the official github repo
-#this is a debian specific issue with wkhtmltopdf - the official library does not have QT support
-#the binary was downloaded from the official github repo https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz
-ADD ./bin/wkhtmltopdf /usr/bin/wkhtmltopdf
