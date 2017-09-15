@@ -1,9 +1,9 @@
 from django.conf.urls import url
 
-from .views import check_everything
+from .views import CheckView
 
 
 urlpatterns = (
     # api
-    url(r'^$', check_everything),
+    url(r'^$', CheckView.as_view()),
 )
