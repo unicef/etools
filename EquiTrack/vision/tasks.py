@@ -34,7 +34,6 @@ SYNC_HANDLERS = [
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
     # DCTSynchronizer,
-    POSynchronizer
 ]
 
 

@@ -145,7 +145,8 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'A different agreement of type PCA already exists for this Partner for this Country Programme'
+            'A PCA with this partner already exists for this Country Programme Cycle. '
+            'If the record is in "Draft" status please edit that record.'
             )
 
     def test_create_ok_non_PCA_with_same_programme_and_partner(self):
