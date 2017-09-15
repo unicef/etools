@@ -148,11 +148,8 @@ class AgreementValid(CompleteValidation):
         'signatures_valid': 'None of the dates can be in the future; '
                             'If dates are set, signatories are required',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
-        'suspended_invalid': 'Cant suspend an agreement that was supposed to be ended',
-        'agreement_transition_to_active_invalid': "You can't transition to active without having the proper signatures",
         'agreement_transition_to_active_invalid_PCA': "You cannot have more than 1 PCA active per Partner within 1 CP",
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
-        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.',
         'amendments_valid': {'signed_amendment': ['Please check that the Document is attached and'
                                                   ' signatures are not in the future']},
     }
