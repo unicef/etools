@@ -114,6 +114,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
             'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
         ]
         extra_kwargs = {
+            'id': {'label': _('Activity ID')},
             'date': {'required': True}
         }
 
@@ -269,6 +270,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
             'visit_information', 'report_reject_comments',
         ]
         extra_kwargs = {
+            'tpm_activities': {'label': _('Activities Information')},
             'tpm_partner': {'required': True, 'label': _('TPM Name')},
             'unicef_focal_points': {'required': True},
         }

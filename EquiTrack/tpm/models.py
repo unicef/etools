@@ -86,7 +86,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         ('tpm_accepted', _('TPM Accepted')),
         ('tpm_rejected', _('TPM Rejected')),
         ('tpm_reported', _('TPM Reported')),
-        ('tpm_report_rejected', _('TPM Report Rejected')),
+        ('tpm_report_rejected', _('Sent Back to TPM')),
         ('unicef_approved', _('UNICEF Approved')),
     )
 
