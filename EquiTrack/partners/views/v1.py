@@ -5,7 +5,6 @@ from collections import namedtuple
 from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponse
-from django.template import Context
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
