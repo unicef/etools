@@ -405,7 +405,7 @@ class Disaggregation(TimeStampedModel):
     """
     Disaggregation module. For example: <Gender, Age>
     """
-    name = models.CharField(max_length=255, verbose_name="Disaggregation by", null=True, blank=True, unique=True)
+    name = models.CharField(max_length=255, verbose_name="Disaggregation by", unique=True)
     active = models.BooleanField(default=False)
 
     def __str__(self):
@@ -420,8 +420,8 @@ class DisaggregationValue(TimeStampedModel):
     related models:
         indicator.Disaggregation (ForeignKey): "disaggregation"
     """
-    disaggregation = models.ForeignKey(Disaggregation, related_name="disaggregation_value")
-    value = models.CharField(max_length=15, null=True, blank=True)
+    disaggregation = models.ForeignKey(Disaggregation, related_name="disaggregation_values")
+    value = models.CharField(max_length=15, blank=True)
     active = models.BooleanField(default=False)
 
     def __str__(self):
@@ -443,7 +443,7 @@ class AppliedIndicator(TimeStampedModel):
 
     section = models.ForeignKey(Section, null=True, blank=True)
 
-    cluster_id = models.PositiveIntegerField(blank=True, null=True)
+    cluster_indicator_id = models.PositiveIntegerField(blank=True, null=True)
     cluster_indicator_title = models.CharField(max_length=1024, blank=True, null=True)
 
     # the result this indicator is contributing to.

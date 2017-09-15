@@ -22,14 +22,14 @@ class DisaggregationSerializer(serializers.ModelSerializer):
     This is a nested writable serializer based on:
     http://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
     """
-    values = DisaggregationValueSerializer(many=True)
+    disaggregation_values = DisaggregationValueSerializer(many=True)
 
     class Meta:
         model = Disaggregation
-        fields = ('name', 'active', )
+        fields = ('name', 'active', 'disaggregation_values', )
 
     def create(self, validated_data):
-        values_data = validated_data.pop('values')
+        values_data = validated_data.pop('disaggregation_values')
         disaggregation = Disaggregation.objects.create(**validated_data)
         for value_data in values_data:
             DisaggregationValue.objects.create(disaggregation=disaggregation, **value_data)
@@ -94,7 +94,7 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                                       'please remove this indicator and add another or contact the eTools Focal Point in '
                                       'your office for assistance')
 
-        elif not attrs.get('cluster_id'):
+        elif not attrs.get('cluster_indicator_id'):
             print "no cluster id"
             indicator_blueprint = IndicatorBlueprintCUSerializer(data=blueprint_data)
             indicator_blueprint.is_valid(raise_exception=True)

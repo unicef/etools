@@ -84,7 +84,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             'id',
             'title',
             # 'is_cluster',
-            'cluster_id',
+            'cluster_indicator_id',
             # 'parent_id',
             # 'type',
             # 'pd_frequency',
