@@ -16,9 +16,6 @@ class DisaggregationSerializer(serializers.ModelSerializer):
     """
     Serializer for the Disaggregation (i.e. the feature on which data is being disaggregated).
 
-    As an example, the Disaggregation could be 'Age', and it would have multiple categories
-    such as: <1, 1-5, 5-18, 18-64, 65+. Each of those categories would be a DisaggregationValue.
-
     This is a nested writable serializer based on:
     http://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
     """
