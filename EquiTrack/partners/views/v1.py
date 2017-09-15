@@ -80,7 +80,6 @@ class PCAPDFView(PDFTemplateView):
         "ifrc_french": "partners/pca/ifrc_french_pdf.html"
     }
 
-
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
         lang = self.request.GET.get('lang', None)
