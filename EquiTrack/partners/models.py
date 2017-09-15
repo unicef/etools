@@ -1310,6 +1310,9 @@ class Intervention(TimeStampedModel):
 
     offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
     population_focus = models.CharField(max_length=130, null=True, blank=True)
+
+    sections = models.ManyToManyField(Section, blank=True, related_name='sector_interventions+')
+
     # Flag if this has been migrated to a status that is not correct
     # previous status
     metadata = JSONField(blank=True, null=True, default=dict)
@@ -1780,6 +1783,7 @@ class InterventionAttachment(TimeStampedModel):
         return self.attachment.name
 
 
+# to be removed
 class InterventionSectorLocationLink(models.Model):
     intervention = models.ForeignKey(Intervention, related_name='sector_locations')
     sector = models.ForeignKey(Sector, related_name='intervention_locations')
