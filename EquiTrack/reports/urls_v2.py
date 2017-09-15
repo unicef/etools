@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from reports.views.v2 import OutputListAPIView, OutputDetailAPIView, ResultIndicatorListAPIView, LowerResultsDeleteView
+from reports.views.v2 import OutputListAPIView, OutputDetailAPIView, ResultIndicatorListAPIView, LowerResultsDeleteView, DisaggregationListCreateView
 from reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView
 
 
@@ -17,4 +17,6 @@ urlpatterns = (
     url(r'^reports/results/(?P<pk>\d+)/indicators/$',
         view=ResultIndicatorListAPIView.as_view(http_method_names=['get']),
         name='result-indicator-list'),
+    url(r'reports/disaggregations/$', view=DisaggregationListCreateView.as_view(),
+        name='disaggregation-list'),
 )
