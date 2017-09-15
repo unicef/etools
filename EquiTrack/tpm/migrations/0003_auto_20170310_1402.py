@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         ('reports', '0007_auto_20170215_1706'),
         ('locations', '0004_auto_20170112_2051'),
         ('partners', '0023_auto_20170301_2324'),
-        ('tpm', '0002_auto_20170906_1417'),
+        ('tpm', '0002_auto_20170310_1401'),
     ]
 
     operations = [
