@@ -24,7 +24,7 @@ def agreement_transition_to_signed_valid(agreement):
                                                status=agreement.SIGNED,
                                                agreement_type=agreement.PCA,
                                                country_programme=agreement.country_programme,
-                                               start__gt=date(2015, 7, 1)).count():
+                                               start__gt=date(2015, 7, 1)).exists():
 
         raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
 
@@ -107,7 +107,7 @@ def partner_type_valid_cso(agreement):
 
 def ssfa_static(agreement):
     if agreement.agreement_type == agreement.SSFA:
-        if agreement.interventions.all().count():
+        if agreement.interventions.all().exists():
             # there should be only one.. there is a different validation that ensures this
             intervention = agreement.interventions.all().first()
             if intervention.start != agreement.start or intervention.end != agreement.end:
@@ -122,7 +122,7 @@ def one_pca_per_cp_per_partner(agreement):
                                               agreement_type=agreement.PCA,
                                               country_programme=agreement.country_programme,
                                               start__gt=date(2015, 7, 1)
-                                              ).exclude(pk=agreement.id).count():
+                                              ).exclude(pk=agreement.id).exists():
             return False
     return True
 
