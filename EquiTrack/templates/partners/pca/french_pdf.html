@@ -34,6 +34,7 @@
         </style>
     {% endblock %}
     {% block extra_style %}
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <style type="text/css">
             #page-header {
             {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
@@ -55,40 +56,87 @@
                 width: 200px;
                 height: 150px;
             }
+            /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
+            /*dejavu*/
+            @font-face {
+                font-family: "DejaVuSans";
+                src: url("{{font_path}}truetype/dejavu/DejaVuSans.ttf");
+            }
+            @font-face {
+                font-family: "DejaVuSansMono";
+                src: url("{{font_path}}truetype/dejavu/DejaVuSansMono.ttf");
+            }
+            @font-face {
+                font-family: "DejaVuSerif";
+                src: url("{{font_path}}truetype/dejavu/DejaVuSerif.ttf");
+            }
+
+            /*times new roman*/
+            @font-face {
+                font-family: "Times_New_Roman";
+                src: url("{{font_path}}truetype/times_new_roman/Times_New_Roman.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Italic";
+                src: url("{{font_path}}truetype/times_new_roman/Times_New_Roman_Italic.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Bold";
+                src: url("{{font_path}}truetype/times_new_roman/Times_New_Roman_Bold.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Bold_Italic";
+                src: url("{{font_path}}truetype/times_new_roman/Times_New_Roman_Bold_Italic.ttf");
+            }
+
             ul {
                 list-style-type: none;
             }
             #officers_table {
                 width: 512pt;
+                margin-top: 24px;
+                margin-bottom: 12px;
                 border-collapse: collapse;
                 table-layout: fixed;
             }
-            #officers_table tr {
-                /*height: 1.4cm;*/
-                /*line-height: 1cm;*/
-            }
+            #officers_table tr {width: 512pt;}
             #officers_table th {
-                width: 128pt;
                 text-align: center;
                 vertical-align: middle;
                 font-weight: normal;
                 border: 1px solid black;
             }
             #officers_table td {
-                width: 128pt;
                 text-align: center;
                 vertical-align: middle;
                 border: 1px solid black;
                 font-size:10pt;
             }
+
+            /*fonts*/
             #header_content {
-                font-family: "Times New Roman";
+                font-family: "Times_New_Roman";
                 font-size: 12pt;
             }
             #content {
-                font-family: "Times New Roman";
+                font-family: "Times_New_Roman";
                 font-size: 12pt;
             }
+            /*bold fix*/
+            #header_content b, #content b, #header_content strong, #content strong {
+                font-family: "Times_New_Roman_bold";
+            }
+            /*italic fix*/
+            #header_content i, #content i {
+                font-family: "Times_New_Roman_italic";
+            }
+            /*TODO: does not seem to work, investigate why.*/
+            /*italic bold. no observed occurences in the template.*/
+            #header_content b i, #content b i, #header_content strong i, #content strong i,
+            #header_content i b, #content i b, #header_content i strong, #content i strong {
+                font-family: "Times_New_Roman_Bold_Italic"!important;
+            }
+
             .page-break {
                 page-break-after: always;
             }
@@ -96,13 +144,9 @@
                 -pdf-keep-with-next: true;
             }
             .small-indent {
-                /*padding-left: 0.6cm;*/
                 text-indent: 0.8cm;
             }
-            .indented {
-                /*list-style-position: inside;*/
-                /*text-indent: 12px;*/
-            }
+            .indented {}
             .list-style-type-letter {
                 list-style-type: lower-alpha;
             }
@@ -123,12 +167,15 @@
     <div id="content">
         <div id="title" style="text-align: center; padding-top: 0px">
             <div style="font-size: 16pt;padding-top: 18px;"><b>ACCORD DE COOPÉRATION AU TITRE D’UN PROGRAMME</b></div>
-            <div><b>ENTRE</b></div>
+            <div><b>entre</b></div>
             <div><b>{{ agreement.partner|upper }}</b></div>
-            <div><b>ET LE</b></div>
-            <div><b>FONDS DES NATIONS UNIES POUR L'ENFANCE</b></div>
-            <div><b>PORTANT SUR</b></div>
-            <div><b>L’EXÉCUTION DU PROGRAMME FINANCÉ PAR L’UNICEF AU TITRE DU PROGRAMME DE PAYS DE L’UNICEF EN/AU {{ country|upper }}</b></div>
+            <div><b>et le</b></div>
+            <div><b>Fonds des Nations Unies pour l’enfance</b></div>
+            <div><b>portant sur</b></div>
+            <div><b>
+                l’exécution du programme financé par l’UNICEF au titre du PROGRAMME DE PAYS DE L’UNICEF en/au
+                {{ country|upper }}
+            </b></div>
             <div style="padding-top: 12px;">
                 {{ agreement.partner }} et le Fonds des Nations Unies pour l’enfance (désignés collectivement ci-après
                 les «Parties» et chacune d’elles individuellement une «Partie») conviennent par les présentes ce qui suit:
@@ -190,7 +237,7 @@
                 </li>
                 <li>
                     «<u>Dirigeant habilité</u>» désigne l’un des dirigeants suivants de l’IP:
-
+                    <!--
                     <table id="officers_table" repeat="1">
                     <tr>
                         <th><br>Prénom et nom</th>
@@ -206,6 +253,28 @@
                         <td><br></td>
                     </tr>
                     {% endfor %}
+                    </table>
+                    -->
+
+                    <table id="officers_table">
+                        {% for officer in auth_officers %}
+                        <tr>
+                            <td style="width: 33%;"><br>Prénom et nom</td>
+                            <td><br> {{ officer.first_name }} {{ officer.last_name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Titre</td>
+                            <td><br>{{ officer.title }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Adresse e-mail</td>
+                            <td><br>{{ officer.email }}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%;"><br>Spécimen de signature</td>
+                            <td><br></td>
+                        </tr>
+                        {% endfor %}
                     </table>
 
                     <div style="padding-top: 15px">
@@ -1043,21 +1112,6 @@
                 <div style="padding-top: 16px">11.2 &nbsp;&nbsp;&nbsp;L’UNICEF est également en droit de suspendre ou résilier immédiatement le présent accord dans
                     chacune des situations suivantes:
                 </div>
-                <!--
-                <div style="padding-left: 15px">a. &nbsp;&nbsp;&nbsp;Si l’exécution d’un quelconque Document du Programme n’a pas commencé dans un délai raisonnable;
-                </div>
-                <div style="padding-left: 15px">b. &nbsp;&nbsp;&nbsp;Si l’UNICEF décide que l’IP ou l’un ou l’autre de ses employés ou membres de
-                    son personnel a agi de quelque façon que ce soit de manière corrompue, frauduleuse, collusoire, coercitive
-                    ou obstructionniste (selon le sens assigné à de ces termes à la clause 14.3 b.);
-                </div>
-                <div style="padding-left: 15px">c. &nbsp;&nbsp;&nbsp;En cas de diminution, réduction ou résiliation du financement de l’UNICEF; ou
-                </div>
-                <div style="padding-left: 15px">d. &nbsp;&nbsp;&nbsp;Si l’IP est jugé en faillite ou si son organisation est liquidée ou
-                    devient insolvable, ou si l’IP réalise une cession au bénéfice de ses créditeurs, ou si un
-                    administrateur judiciaire a été nommé en raison de l’insolvabilité de l’IP, auxquels cas l’IP
-                    doit en informer immédiatement l’UNICEF.
-                </div>
-                -->
                 <div style="padding-left: 25px">
                     <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
                         <li>Si l’exécution d’un quelconque Document du Programme n’a pas commencé dans un délai raisonnable;
@@ -1104,18 +1158,6 @@
                     fournitures et équipements non utilisés fournis à l’IP par l’UNICEF soit réalisé de manière ordonnée,
                     auquel cas les dispositions du paragraphe 11.5 ci-dessus s’appliquent.
                 </div>
-                <!--
-                <div>
-                    <div style="float: left;width: 50pt;">11.7 &nbsp;&nbsp;&nbsp;</div>
-                    <div style="padding-left: 35px;float: left;width: 300pt;">
-                        Si l’UNICEF exerce son droit de résilier le présent accord et décide que le Document du
-                        Programme doit être exécuté par une autre organisation que l’IP, l’IP s’engage à coopérer
-                        promptement avec l’UNICEF et cette autre organisation afin que ledit transfert de l’intégralité des
-                        fournitures et équipements non utilisés fournis à l’IP par l’UNICEF soit réalisé de manière ordonnée,
-                        auquel cas les dispositions du paragraphe 11.5 ci-dessus s’appliquent.
-                    </div>
-                </div>
-                -->
                 <li><b>ÉVALUATION:</b> toute évaluation des activités exécutées aux termes du présent accord est visée par
                     les dispositions du Règlement de l’UNICEF en matière d’évaluation, tel que validé ou modifié le cas
                     échéant par le Conseil d’administration de l’UNICEF.
