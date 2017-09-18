@@ -22,6 +22,7 @@ class PRPInterventionListAPIView(ListAPIView):
         q = Intervention.objects.prefetch_related(
             'result_links__cp_output',
             'result_links__ll_results',
+            'frs',
             # 'unicef_focal_points',
         )
         return q

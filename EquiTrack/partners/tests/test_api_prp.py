@@ -2,7 +2,7 @@ import json
 import os
 from django.core.urlresolvers import reverse
 from rest_framework import status
-from EquiTrack.factories import ResultFactory, LocationFactory, GatewayTypeFactory
+from EquiTrack.factories import ResultFactory, LocationFactory, GatewayTypeFactory, InterventionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import InterventionResultLink
 from partners.tests.test_utils import setup_intervention_test_data
@@ -73,15 +73,16 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(response, expected_interventions)
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 27
+        EXPECTED_QUERIES = 24
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'
             )
         # make a bunch more stuff, make sure queries don't go up.
+        intervention = InterventionFactory(agreement=self.agreement, title='New Intervention')
         result = ResultFactory()
         result_link = InterventionResultLink.objects.create(
-            intervention=self.active_intervention, cp_output=result)
+            intervention=intervention, cp_output=result)
         lower_result = LowerResult.objects.create(result_link=result_link, name='Lower Result 1')
         indicator_blueprint = IndicatorBlueprint.objects.create(
             title='The Blueprint'
