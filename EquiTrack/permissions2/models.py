@@ -103,18 +103,26 @@ class Permission(models.Model):
                 children = collect_child_models(model, levels=1)
                 children_map[model] = children
 
-            permissions.extend([Permission(permission=perm.permission, permission_type=perm.permission_type,
-                                           condition=perm.condition, target=Permission.get_target(child, field_name))
-                                for child in children])
+            imaginary_permissions = [Permission(permission=perm.permission,
+                                                permission_type=perm.permission_type,
+                                                condition=perm.condition,
+                                                target=Permission.get_target(child, field_name))
+                                     for child in children]
+
+            perm.image_level = getattr(perm, 'image_level', 0)
+            for imaginary_perm in imaginary_permissions:
+                imaginary_perm.image_level = perm.image_level + 1
+
+            permissions.extend(imaginary_permissions)
 
             i += 1
 
-        permissions.sort(key=lambda perm: (-len(perm.condition), '*' in perm.target))
+        permissions.sort(key=lambda perm: (perm.image_level, -len(perm.condition), '*' in perm.target))
 
         allowed_targets = []
         targets = set(targets)
         for perm in permissions:
-            if kind == cls.PERMISSIONS.view:
+            if kind == cls.PERMISSIONS.view and perm.permission_type == cls.TYPES.allow:
                 # If you can edit field you can view it too.
                 if perm.permission not in [cls.PERMISSIONS.view, cls.PERMISSIONS.edit]:
                     continue

@@ -53,6 +53,12 @@ class TestPermissionModel(TestCase):
         self.assertSequenceEqual(allowed_targets, ['permissions2.parent.2', 'permissions2.parent.3'])
 
 
+class ParentSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = Parent
+        fields = ['id', 'field1', 'field2']
+
+
 class Parent2Serializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Parent2
@@ -67,7 +73,7 @@ class TestInheritedModel(TestCase):
             editor.create_model(Parent)
             editor.create_model(Parent2)
 
-    def test_permissions(self):
+    def test_inherited_permissions(self):
         Permission.objects.create(permission='view', target='permissions2.parent.field1')
         Permission.objects.create(permission='view', target='permissions2.parent2.field3')
 
@@ -79,3 +85,42 @@ class TestInheritedModel(TestCase):
             'field1': 1,
             'field3': 3,
         })
+
+    def test_overridden_permissions(self):
+        parent = Parent2.objects.create(field1=1, field2=2, field3=3)
+
+        Permission.objects.create(permission='view', target='permissions2.parent.field1')
+
+        serializer = Parent2Serializer(instance=parent)
+        self.assertDictEqual(serializer.data, {
+            'id': parent.id,
+            'field1': 1,
+        })
+
+        Permission.objects.create(permission='view', target='permissions2.parent2.field1', permission_type='disallow')
+
+        serializer = Parent2Serializer(instance=parent)
+        self.assertDictEqual(serializer.data, {})
+
+        serializer = ParentSerializer(instance=parent)
+        self.assertDictEqual(serializer.data, {
+            'id': parent.id,
+            'field1': 1
+        })
+
+    def test_forbid_permissions(self):
+        parent = Parent2.objects.create(field1=1, field2=2, field3=3)
+
+        Permission.objects.create(permission='edit', target='permissions2.parent.field1')
+        Permission.objects.create(permission='edit', target='permissions2.parent2.field1', permission_type='disallow')
+
+        serializer = Parent2Serializer(instance=parent)
+        self.assertDictEqual(serializer.data, {
+            'id': parent.id,
+            'field1': 1,
+        })
+
+        Permission.objects.create(permission='view', target='permissions2.parent2.field1', permission_type='disallow')
+
+        serializer = Parent2Serializer(instance=parent)
+        self.assertDictEqual(serializer.data, {})

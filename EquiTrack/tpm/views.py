@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from permissions2.conditions import ObjectStatusCondition, NewObjectCondition
+from permissions2.drf_permissions import NestedPermission
 from permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from utils.common.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
@@ -16,9 +17,11 @@ from .conditions import TPMModuleCondition, TPMStaffMemberCondition, TPMVisitUNI
     TPMVisitTPMFocalPointCondition, TPMRoleCondition
 from .filters import ReferenceNumberOrderingFilter
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity
+from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity, \
+    TPMActionPoint
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
-from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
+from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer, \
+    TPMActionPointSerializer
 from .export.renderers import TPMVisitCSVRenderer
 from .export.serializers import TPMVisitExportSerializer
 
@@ -209,3 +212,19 @@ class TPMVisitViewSet(
         return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context={
             "activities": self.get_object().tpm_activities.all(),
         })
+
+
+class ActionPointViewSet(BaseTPMViewSet,
+                         mixins.ListModelMixin,
+                         mixins.CreateModelMixin,
+                         mixins.RetrieveModelMixin,
+                         NestedViewSetMixin,
+                         viewsets.GenericViewSet):
+    metadata_class = TPMPermissionBasedMetadata
+    queryset = TPMActionPoint.objects.all()
+    serializer_class = TPMActionPointSerializer
+
+    permission_classes = (IsAuthenticated, NestedPermission)
+
+    def perform_create(self, serializer):
+        serializer.save(tpm_visit=self.get_parent_object())
