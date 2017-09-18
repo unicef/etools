@@ -32,7 +32,6 @@ class TestInterventionsAPI(APITenantTestCase):
                                                              p_code='a-p-code'))
         self.applied_indicator.disaggregation.create(name='A Disaggregation')
 
-
     def run_prp_v1(self, user=None, method='get'):
         response = self.forced_auth_req(
             method,
@@ -42,7 +41,6 @@ class TestInterventionsAPI(APITenantTestCase):
         return response.status_code, json.loads(response.rendered_content)
 
     def test_prp_api(self):
-        # with self.assertNumQueries(22):
         status_code, response = self.run_prp_v1(
             user=self.unicef_staff, method='get'
         )
@@ -73,3 +71,30 @@ class TestInterventionsAPI(APITenantTestCase):
                 del actual_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
 
         self.assertEqual(response, expected_interventions)
+
+    def test_prp_api_performance(self):
+        EXPECTED_QUERIES = 29
+        with self.assertNumQueries(EXPECTED_QUERIES):
+            self.run_prp_v1(
+                user=self.unicef_staff, method='get'
+            )
+        # make a bunch more stuff, make sure queries don't go up.
+        result = ResultFactory()
+        result_link = InterventionResultLink.objects.create(
+            intervention=self.active_intervention, cp_output=result)
+        lower_result = LowerResult.objects.create(result_link=result_link, name='Lower Result 1')
+        indicator_blueprint = IndicatorBlueprint.objects.create(
+            title='The Blueprint'
+        )
+        applied_indicator = AppliedIndicator.objects.create(
+            indicator=indicator_blueprint,
+            lower_result=lower_result,
+        )
+        applied_indicator.locations.add(LocationFactory(name='A Location',
+                                                        gateway=GatewayTypeFactory(name='Another Gateway'),
+                                                        p_code='a-p-code'))
+        applied_indicator.disaggregation.create(name='Another Disaggregation')
+        with self.assertNumQueries(EXPECTED_QUERIES):
+            self.run_prp_v1(
+                user=self.unicef_staff, method='get'
+            )
