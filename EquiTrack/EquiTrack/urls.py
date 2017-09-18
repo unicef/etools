@@ -148,6 +148,7 @@ urlpatterns = [
         JSONActivityFeedWithCustomData.as_view(name='custom_data_model_detail_stream'),
         name='custom_data_model_detail_stream'),
     url('^activity/', include('actstream.urls')),
+    url('^monitoring/', include('monitoring.urls')),
 ]
 
 
