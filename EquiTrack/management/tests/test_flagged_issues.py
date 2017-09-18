@@ -21,5 +21,5 @@ class FlaggedIssueTest(FastTenantTestCase):
         issue = FlaggedIssue.objects.create(content_object=partner, issue_id=issue_id, message='test message')
         self.assertTrue(issue.pk is not None)
         issue_back = FlaggedIssue.get_or_new(partner, issue_id)
-        # make sure we got a new one
+        # make sure we got the same one back
         self.assertEqual(issue.pk, issue_back.pk)
