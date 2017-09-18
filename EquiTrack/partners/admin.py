@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from django.db import connection, models
 from django.contrib import admin
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
 
@@ -12,7 +13,6 @@ from generic_links.admin import GenericLinkStackedInline
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
-from EquiTrack.utils import get_staticfile_link
 from supplies.models import SupplyItem
 from reports.models import Result
 from users.models import Section
@@ -468,7 +468,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     def work_plan_template(self, obj):
         return u'<a class="btn btn-primary default" ' \
                u'href="{}" >Download Template</a>'.format(
-                   get_staticfile_link(
+                   static(
                        'partner/templates/workplan_template.xlsx')
                )
     work_plan_template.allow_tags = True
@@ -612,8 +612,18 @@ class AssessmentAdmin(admin.ModelAdmin):
 class PartnerStaffMemberAdmin(admin.ModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
+
+    # display_staff_member_name() is used only in list_display. It could be replaced by this simple lambda --
+    #     lambda instance: unicode(instance)
+    # However, creating a function allows me to put a title on the column in the admin by populating the function's
+    # 'short_description' attribute.
+    # https://docs.djangoproject.com/en/1.11/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_display
+    def display_staff_member_name(instance):
+        return unicode(instance)
+    display_staff_member_name.short_description = 'Partner Staff Member'
+
     list_display = (
-        '__unicode__',
+        display_staff_member_name,
         'title',
         'email',
     )

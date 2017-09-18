@@ -14,12 +14,6 @@ from users.models import User, UserProfile, Country, Section
 from vision.vision_data_synchronizer import VisionException
 from vision.models import VisionSyncLog
 
-try:
-    from django.contrib.auth.models import SiteProfileNotAvailable
-except ImportError:
-    class SiteProfileNotAvailable(Exception):
-        pass
-
 
 class UserMapper(object):
 
@@ -139,9 +133,6 @@ class UserMapper(object):
             profile = user.profile
         except ObjectDoesNotExist:
             print 'No profile for user {}'.format(user)
-            return
-        except SiteProfileNotAvailable:
-            print 'No profile for user SPNA {}'.format(user)
             return
 
         profile_modified = False

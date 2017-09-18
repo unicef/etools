@@ -14,7 +14,6 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
 from t2f.models import Travel, Invoice, ModeOfTravel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
-
 from .factories import TravelFactory
 
 
@@ -170,7 +169,6 @@ class StateMachineTest(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
         self.assertEqual(travel.report_note, '')
-
         # None should be handled as empty string
         travel.report_note = None   # This has to be set explicitly since serializer does not accept None
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',

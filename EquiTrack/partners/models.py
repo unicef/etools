@@ -595,6 +595,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 travel_type=TravelType.PROGRAMME_MONITORING,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
+                travels__completed_at__year=datetime.datetime.now().year(),
                 partner=partner,
             ).count() or 0
 
@@ -614,6 +615,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 travel_type=TravelType.SPOT_CHECK,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
+                travels__completed_at__year=datetime.datetime.now().year(),
                 partner=partner,
             ).count() or 0
 
@@ -998,7 +1000,10 @@ class Agreement(TimeStampedModel):
                 document_type__in=[Intervention.PD, Intervention.SHPD]
             )
             for item in interventions:
-                if item.status not in [Intervention.DRAFT, Intervention.CLOSED, Intervention.ENDED] and\
+                if item.status not in [Intervention.DRAFT,
+                                       Intervention.CLOSED,
+                                       Intervention.ENDED,
+                                       Intervention.TERMINATED] and\
                         item.status != self.status:
                     item.status = self.status
                     item.save()
@@ -1025,7 +1030,7 @@ class Agreement(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[SUSPENDED, TERMINATED, SIGNED],
+                source=[SUSPENDED, SIGNED],
                 target=[DRAFT],
                 conditions=[agreements_illegal_transition])
     def transition_to_cancelled(self):
@@ -1209,7 +1214,7 @@ class Intervention(TimeStampedModel):
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
         (SHPD, 'Simplified Humanitarian Programme Document'),
-        (SSFA, 'SSFA TOR'),
+        (SSFA, 'SSFA'),
     )
 
     tracker = FieldTracker()
@@ -1449,7 +1454,7 @@ class Intervention(TimeStampedModel):
         return False
 
     @transition(field=status,
-                source=[ACTIVE, IMPLEMENTED, SUSPENDED, TERMINATED],
+                source=[ACTIVE, IMPLEMENTED, SUSPENDED],
                 target=[DRAFT, CANCELLED],
                 conditions=[illegal_transitions])
     def basic_transition(self):
@@ -1482,7 +1487,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ENDED],
                 target=[CLOSED],
-                conditions=[intervention_validation.transition_ok])
+                conditions=[intervention_validation.transition_to_closed])
     def transition_to_closed(self):
         pass
 
@@ -1736,6 +1741,7 @@ class FileType(models.Model):
     FACE = 'FACE'
     PROGRESS_REPORT = 'Progress Report'
     PARTNERSHIP_REVIEW = 'Partnership Review'
+    FINAL_PARTNERSHIP_REVIEW = 'Final Partnership Review'
     CORRESPONDENCE = 'Correspondence'
     SUPPLY_PLAN = 'Supply/Distribution Plan'
     OTHER = 'Other'
@@ -1744,6 +1750,7 @@ class FileType(models.Model):
         (FACE, FACE),
         (PROGRESS_REPORT, PROGRESS_REPORT),
         (PARTNERSHIP_REVIEW, PARTNERSHIP_REVIEW),
+        (FINAL_PARTNERSHIP_REVIEW, FINAL_PARTNERSHIP_REVIEW),
         (CORRESPONDENCE, CORRESPONDENCE),
         (SUPPLY_PLAN, SUPPLY_PLAN),
         (OTHER, OTHER),
@@ -2513,7 +2520,7 @@ class PCA(AdminURLMixin, models.Model):
         recipients = [user.email for user in managers]
 
         email_context = {
-            'number': instance.__unicode__(),
+            'number': unicode(instance),
             'state': 'Created',
             'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
         }
@@ -2580,7 +2587,7 @@ class RAMIndicator(models.Model):
     def __unicode__(self):
         return '{} -> {}'.format(
             self.result.sector.name if self.result.sector else '',
-            self.result.__unicode__(),
+            unicode(self.result),
         )
 
 
@@ -2726,7 +2733,7 @@ class GwPCALocation(models.Model):
         verbose_name = 'Partnership Location'
 
     def __unicode__(self):
-        return self.location.__unicode__() if self.location else ''
+        return unicode(self.location) if self.location else ''
 
     def view_location(self):
         return get_changeform_link(self)
@@ -2930,7 +2937,7 @@ class AuthorizedOfficer(models.Model):
     tracker = FieldTracker()
 
     def __unicode__(self):
-        return self.officer.__unicode__()
+        return unicode(self.officer)
 
     @classmethod
     def create_officer(cls, sender, instance, created, **kwargs):
