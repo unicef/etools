@@ -59,7 +59,7 @@ class TestInterventionsAPI(APITenantTestCase):
         for i in range(len(response)):
             expected_intervention = expected_interventions[i]
             actual_intervention = response[i]
-            for dynamic_key in ['id', 'number']:
+            for dynamic_key in ['id', 'number', 'start_date', 'end_date']:
                 del expected_intervention[dynamic_key]
                 del actual_intervention[dynamic_key]
             for j in range(len(expected_intervention['expected_results'])):
