@@ -22,6 +22,10 @@ class Command(BaseCommand):
 # pd frs not found
 # run before migrations
 def pd_frs_not_found():
+    if not hasattr(Intervention, 'fr_numbers'):
+        # this attribute doesn't seem to exist
+        print('No fr_numbers attribute found. Skipping this step.')
+        return
     for i in Intervention.objects.all():
         fr_numbers = i.fr_numbers if i.fr_numbers else []
         for fr in fr_numbers:
