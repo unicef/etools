@@ -4,6 +4,7 @@ from users.models import Country, User
 from partners.models import *
 from funds.models import *
 from EquiTrack.util_scripts import *
+from management.models import FlaggedIssue
 
 
 class Command(BaseCommand):
@@ -42,9 +43,15 @@ def pd_frs_not_found():
 
 # pca no attachment
 def active_pca_no_signed_doc():
+    issue_id = 'active_pca_no_signed_doc'
     for agr in Agreement.objects.filter(agreement_type=Agreement.PCA).exclude(status='draft'):
         if not agr.attached_agreement:
-            print('{} Agreement [{}] does not have a signed PCA attached'.format(agr.agreement_type, agr.id))
+            issue = FlaggedIssue.get_or_new(content_object=agr, issue_id=issue_id)
+            message = '{} Agreement [{}] does not have a signed PCA attached'.format(agr.agreement_type, agr.id)
+            issue.message = message
+            issue.save()
+            print(message)
+
 
 # pd wrong cp outputs
 def pd_outputs_wrong():
