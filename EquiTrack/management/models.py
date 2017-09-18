@@ -10,6 +10,15 @@ ISSUE_CATEGORY_CHOICES = (
     (ISSUE_CATEGORY_COMPLIANCE, 'Compliance Issue'),
 )
 
+ISSUE_STATUS_NEW = 'new'
+ISSUE_STATUS_PENDING = 'pending'
+ISSUE_STATUS_RESOLVED = 'resolved'
+ISSUE_STATUS_CHOICES = (
+    (ISSUE_STATUS_NEW, 'New (untriaged)'),
+    (ISSUE_STATUS_PENDING, 'Pending (triaged, not resolved)'),
+    (ISSUE_STATUS_RESOLVED, 'Resolved'),
+)
+
 
 class FlaggedIssue(models.Model):
     # generic foreign key to any object in the DB
@@ -18,10 +27,10 @@ class FlaggedIssue(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
-
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     issue_category = models.CharField(max_length=32, choices=ISSUE_CATEGORY_CHOICES, default=ISSUE_CATEGORY_DATA)
+    issue_status = models.CharField(max_length=32, choices=ISSUE_STATUS_CHOICES, default=ISSUE_STATUS_NEW)
     issue_id = models.CharField(
         max_length=100,
         help_text='A readable ID associated with the specific issue, e.g. "pca-no-attachment"',
