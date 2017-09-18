@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
+from django.db import connection
 
 from rest_framework import serializers
 from locations.models import Location
@@ -127,6 +128,7 @@ class PRPResultSerializer(serializers.ModelSerializer):
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')  # todo: do these need to be lowercased?
+    business_area_code = serializers.SerializerMethodField()
     partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
     agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True, source='agreement.authorized_officers')
@@ -145,10 +147,13 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     funds_received_currency = serializers.CharField(source='fr_currency', read_only=True)
     expected_results = serializers.SerializerMethodField()
 
+    def get_business_area_code(self, obj):
+        return connection.tenant.business_area_code
+
     class Meta:
         model = Intervention
         fields = (
-            'id', 'title',
+            'id', 'title', 'business_area_code',
             'offices',  # todo: convert to names, not ids
             'number',
             'partner_org',
