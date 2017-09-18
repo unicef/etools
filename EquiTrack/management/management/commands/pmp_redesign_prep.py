@@ -8,7 +8,8 @@ from management.models import FlaggedIssue
 
 
 class Command(BaseCommand):
-    help = 'Update audit permissions'
+    help = 'A set of scripts that checks the data models for anything that ' \
+           'does not fit within the new pmp redesign models'
 
     def handle(self, *args, **options):
         run(active_pca_no_signed_doc)
