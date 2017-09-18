@@ -25,6 +25,7 @@ class PRPInterventionListAPIView(ListAPIView):
             'frs',
             'partner_focal_points',
             'unicef_focal_points',
+            'agreement__authorized_officers',
         )
         return q
 
