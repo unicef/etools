@@ -19,8 +19,11 @@ class PRPInterventionListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
 
     def get_queryset(self, format=None):
-        q = Intervention.objects.detail_qs().all()
-        # todo: add filters
+        q = Intervention.objects.prefetch_related(
+            'result_links__cp_output',
+            'result_links__ll_results',
+            # 'unicef_focal_points',
+        )
         return q
 
     def list(self, request):

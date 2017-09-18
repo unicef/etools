@@ -1416,6 +1416,15 @@ class Intervention(TimeStampedModel):
         return 0
 
     @cached_property
+    def all_lower_results(self):
+        # todo: it'd be nice to be able to do this as a queryset but that may not be possible
+        # with prefetch_related
+        return [
+            lower_result for link in self.result_links.all()
+            for lower_result in link.ll_results.all()
+        ]
+
+    @cached_property
     def total_frs(self):
         r = {
             'total_frs_amt': 0,

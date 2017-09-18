@@ -132,7 +132,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
     agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True, source='agreement.authorized_officers')
-    focal_points = PartnerFocalPointSerializer(many=True, read_only=True,source='partner_focal_points')
+    focal_points = PartnerFocalPointSerializer(many=True, read_only=True, source='partner_focal_points')
     start_date = serializers.DateField(source='start')
     end_date = serializers.DateField(source='end')
     cso_budget = serializers.DecimalField(source='total_partner_contribution', read_only=True,
@@ -145,7 +145,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     funds_received = serializers.DecimalField(source='total_budget', read_only=True,
                                               max_digits=20, decimal_places=2)
     funds_received_currency = serializers.CharField(source='fr_currency', read_only=True)
-    expected_results = serializers.SerializerMethodField()
+    expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
 
     def get_business_area_code(self, obj):
         return connection.tenant.business_area_code
@@ -167,10 +167,3 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             # 'reporting_frequencies',  # todo: figure out where this comes from
             'expected_results',
         )
-
-    def get_expected_results(self, intervention):
-        """
-        Get all lower level results associated with this Intervention.
-        """
-        results = LowerResult.objects.filter(result_link__intervention=intervention)
-        return PRPResultSerializer(results, many=True, read_only=True).data
