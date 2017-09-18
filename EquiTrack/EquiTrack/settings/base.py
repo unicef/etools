@@ -177,7 +177,6 @@ SHARED_APPS = (
     'ordered_model',
 
     'vision',
-    'management',
     'publics',
     # you must list the app where your tenant model resides in
     'users',
@@ -205,6 +204,7 @@ TENANT_APPS = (
     'tpm',
     'audit',
     'firms',
+    'management',
 )
 INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
 
