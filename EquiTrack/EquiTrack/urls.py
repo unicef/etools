@@ -8,6 +8,8 @@ from django.contrib import admin
 
 # 3rd party imports
 from rest_framework_swagger.views import get_swagger_view
+from rest_framework_swagger.renderers import OpenAPIRenderer
+from rest_framework.schemas import get_schema_view
 import rest_framework_jwt.views
 from rest_framework_nested import routers
 import djangosaml2.views
@@ -51,7 +53,14 @@ from workplan.views import (
 )
 
 
+# ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
+
+# coreapi+json (http://www.coreapi.org/)
+schema_view_json_coreapi = get_schema_view(title="eTools API")
+# openapi+json (https://openapis.org/ aka swagger 2.0)
+schema_view_json_openapi = get_schema_view(title="eTools API",
+        renderer_classes=[OpenAPIRenderer])
 
 api = routers.SimpleRouter()
 
@@ -127,6 +136,8 @@ urlpatterns = [
 
 
     url(r'^api/docs/', schema_view),
+    url(r'^api/schema/coreapi', schema_view_json_coreapi),
+    url(r'^api/schema/openapi', schema_view_json_openapi),
     url(r'^admin/', include(admin.site.urls)),
 
     # helper urls
