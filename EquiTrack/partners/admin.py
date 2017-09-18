@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from django.db import connection, models
 from django.contrib import admin
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
 
@@ -12,9 +13,7 @@ from generic_links.admin import GenericLinkStackedInline
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
-from EquiTrack.utils import get_staticfile_link
 from supplies.models import SupplyItem
-from tpm.models import TPMVisit
 from reports.models import Result
 from users.models import Section
 
@@ -469,7 +468,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     def work_plan_template(self, obj):
         return u'<a class="btn btn-primary default" ' \
                u'href="{}" >Download Template</a>'.format(
-                   get_staticfile_link(
+                   static(
                        'partner/templates/workplan_template.xlsx')
                )
     work_plan_template.allow_tags = True
@@ -493,27 +492,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
             form.base_fields['location_sector'].queryset = obj.sector_children
 
         return form
-
-    def save_formset(self, request, form, formset, change):
-        """
-        Overriding this to create TPM visits on location records
-        """
-        formset.save()
-        if change:
-            for form in formset.forms:
-                obj = form.instance
-                if isinstance(obj, GwPCALocation) and obj.tpm_visit:
-                    visits = TPMVisit.objects.filter(
-                        pca=obj.pca,
-                        pca_location=obj,
-                        completed_date__isnull=True
-                    )
-                    if not visits:
-                        TPMVisit.objects.create(
-                            pca=obj.pca,
-                            pca_location=obj,
-                            assigned_by=request.user
-                        )
 
     def save_model(self, request, obj, form, change):
         created = False if change else True
@@ -609,42 +587,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(InterventionAdmin, self).save_model(request, obj, form, change)
-
-    # def get_form(self, request, obj=None, **kwargs):
-    #     """
-    #     Set up the form with extra data and initial values
-    #     """
-    #     form = super(PartnershipAdmin, self).get_form(request, obj, **kwargs)
-    #
-    #     # add the current request and object to the form
-    #     form.request = request
-    #     form.obj = obj
-    #
-    #     if obj and obj.sector_children:
-    #         form.base_fields['location_sector'].queryset = obj.sector_children
-    #
-    #     return form
-    #
-    # def save_formset(self, request, form, formset, change):
-    #     """
-    #     Overriding this to create TPM visits on location records
-    #     """
-    #     formset.save()
-    #     if change:
-    #         for form in formset.forms:
-    #             obj = form.instance
-    #             if isinstance(obj, GwPCALocation) and obj.tpm_visit:
-    #                 visits = TPMVisit.objects.filter(
-    #                     pca=obj.pca,
-    #                     pca_location=obj,
-    #                     completed_date__isnull=True
-    #                 )
-    #                 if not visits:
-    #                     TPMVisit.objects.create(
-    #                         pca=obj.pca,
-    #                         pca_location=obj,
-    #                         assigned_by=request.user
-    #                     )
 
     def has_module_permission(self, request):
         return request.user.is_superuser
