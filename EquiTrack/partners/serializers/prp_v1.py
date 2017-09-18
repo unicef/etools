@@ -72,6 +72,7 @@ class DisaggregationSerializer(serializers.ModelSerializer):
             # 'parameter'
         )
 
+
 class PRPIndicatorSerializer(serializers.ModelSerializer):
     # todo: this class hasn't been tested at all because there are no `AppliedIndicator`s in the current DB
     # todo: need to validate these and fill in missing fields
