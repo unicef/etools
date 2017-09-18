@@ -89,8 +89,6 @@ api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_p
 api.register(r'labels', LabelViewSet, base_name='labels')
 
 urlpatterns = [
-    # TODO: overload login_required to staff_required to automatically re-route partners to the parter portal
-
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
@@ -150,6 +148,7 @@ urlpatterns = [
         JSONActivityFeedWithCustomData.as_view(name='custom_data_model_detail_stream'),
         name='custom_data_model_detail_stream'),
     url('^activity/', include('actstream.urls')),
+    url('^monitoring/', include('monitoring.urls')),
 ]
 
 
