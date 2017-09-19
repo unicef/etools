@@ -34,6 +34,10 @@ class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
     class Meta(WritableNestedSerializerMixin.Meta):
         model = User
         fields = ['first_name', 'last_name', 'email', 'is_active', 'profile']
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+        }
 
     def create(self, validated_data):
         validated_data.setdefault('username', generate_username())

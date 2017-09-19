@@ -22,8 +22,8 @@ from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMP
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer, \
     TPMActionPointSerializer
-from .export.renderers import TPMVisitCSVRenderer
-from .export.serializers import TPMVisitExportSerializer
+from .export.renderers import TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer
+from .export.serializers import TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer
 
 from .permissions import IsPMEorReadonlyPermission
 
@@ -70,8 +70,8 @@ class TPMPartnerViewSet(
     # TODO: Get rid of it
     permission_classes = (IsAuthenticated, IsPMEorReadonlyPermission,)
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
-    search_fields = ('vendor_number', 'name')
-    ordering_fields = ('vendor_number', 'name', 'country')
+    search_fields = ('vendor_number', 'name', 'phone_number', 'email')
+    ordering_fields = ('vendor_number', 'name', 'phone_number', 'email')
     filter_fields = (
         'status', 'blocked', 'hidden', 'deleted_flag',
     )
@@ -110,6 +110,14 @@ class TPMPartnerViewSet(
 
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
+    def export(self, request, *args, **kwargs):
+        tpm_partners = TPMPartner.objects.all().order_by('vendor_number')
+        serializer = TPMPartnerExportSerializer(tpm_partners, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_vendors_{}.csv'.format(timezone.now())
+        })
 
 
 class TPMStaffMembersViewSet(
@@ -151,7 +159,6 @@ class TPMVisitViewSet(
     queryset = TPMVisit.objects.all().prefetch_related(
         'tpm_partner',
         'unicef_focal_points',
-        'attachments',
     )
     serializer_class = TPMVisitSerializer
     serializer_action_classes = {
@@ -197,14 +204,28 @@ class TPMVisitViewSet(
             TPMVisitTPMFocalPointCondition(obj, self.request.user),
         ]
 
-    @list_route(methods=['get'], renderer_classes=(TPMVisitCSVRenderer,))
-    def export(self, request, *args, **kwargs):
+    @list_route(methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
+    def activities_export(self, request, *args, **kwargs):
         tpm_activities = TPMActivity.objects.filter(
             tpm_visit__in=self.get_queryset(),
-        )
-        serializer = TPMVisitExportSerializer(tpm_activities, many=True)
+        ).prefetch_related(
+            'tpm_visit', 'section', 'locations', 'cp_output'
+        ).order_by('tpm_visit', 'id')
+        serializer = TPMActivityExportSerializer(tpm_activities, many=True)
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now())
+            'Content-Disposition': 'attachment;filename=tpm_attachments_{}.csv'.format(timezone.now())
+        })
+
+    @list_route(methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
+    def locations_export(self, request, *args, **kwargs):
+        tpm_locations = TPMActivity.locations.through.objects.filter(
+            tpmactivity__tpm_visit__in=self.get_queryset(),
+        ).prefetch_related(
+            'tpmactivity', 'location', 'tpmactivity__tpm_visit', 'tpmactivity__section', 'tpmactivity__cp_output'
+        ).order_by('tpmactivity__tpm_visit', 'tpmactivity', 'id')
+        serializer = TPMLocationExportSerializer(tpm_locations, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now())
         })
 
     @detail_route(methods=['get'])

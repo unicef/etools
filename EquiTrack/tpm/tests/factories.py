@@ -3,7 +3,6 @@ import datetime
 import factory
 import factory.fuzzy
 from django.contrib.auth.models import Group
-from django.contrib.contenttypes.models import ContentType
 from factory import fuzzy
 from django.db import connection
 from django.utils import timezone, six
@@ -89,6 +88,9 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     date = fuzzy.FuzzyDate(_FUZZY_START_DATE, _FUZZY_END_DATE)
     section = factory.SubFactory(SectionFactory)
 
+    attachments__count = 0
+    report_attachments__count = 0
+
     @factory.post_generation
     def cp_output(self, create, extracted, **kwargs):
         if create:
@@ -104,6 +106,22 @@ class TPMActivityFactory(factory.DjangoModelFactory):
 
         if extracted:
             self.locations.add(*extracted)
+
+    @factory.post_generation
+    def attachments(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        for i in range(count):
+            AttachmentFactory(code='activity_attachments', content_object=self)
+
+    @factory.post_generation
+    def report_attachments(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        for i in range(count):
+            AttachmentFactory(code='activity_report', content_object=self)
 
 
 class InheritedTrait(factory.Trait):
@@ -185,9 +203,6 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
     tpm_activities__count = 0
 
-    attachments__count = 0
-    report__count = 0
-
     report_reject_comments__count = 0
 
     class Params:
@@ -204,7 +219,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
             tpm_activities__count=3,
 
-            attachments__count=3,
+            tpm_activities__attachments__count=3,
         )
 
         cancelled = factory.Trait(
@@ -234,7 +249,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             status=TPMVisit.STATUSES.tpm_reported,
             date_of_tpm_reported=factory.LazyFunction(timezone.now),
 
-            report__count=3,
+            tpm_activities__report_attachments__count=3,
         )
 
         tpm_report_rejected = InheritedTrait(
@@ -243,7 +258,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             status=TPMVisit.STATUSES.tpm_report_rejected,
             date_of_tpm_report_rejected=factory.LazyFunction(timezone.now),
 
-            report_reject_comments=1,
+            report_reject_comments__count=1,
         )
 
         unicef_approved = InheritedTrait(
@@ -297,24 +312,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             return
 
         for i in range(count):
-            TPMActivityFactory(tpm_visit=self)
-
-    @factory.post_generation
-    def attachments(self, create, extracted, count, **kwargs):
-        if not create:
-            return
-
-        for i in range(count):
-            AttachmentFactory(code='attach', object_id=self.pk,
-                              content_type=ContentType.objects.get_for_model(self._meta.model))
-
-    @factory.post_generation
-    def report(self, create, extracted, count, **kwargs):
-        if not create:
-            return
-
-        for i in range(count):
-            AttachmentFactory(code='report', content_object=self)
+            TPMActivityFactory(tpm_visit=self, **kwargs)
 
     @factory.post_generation
     def report_reject_comments(self, create, extracted, count, **kwargs):

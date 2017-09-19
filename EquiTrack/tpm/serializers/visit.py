@@ -1,8 +1,11 @@
 import itertools
+
+from copy import copy
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from locations.models import Location
 from partners.models import InterventionResultLink, Intervention, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from permissions2.serializers import PermissionsBasedSerializerMixin
@@ -97,14 +100,19 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         required=True,
     )
 
-    pd_files = TPMAttachmentsSerializer(many=True, required=False)
+    attachments = TPMAttachmentsSerializer(many=True, required=False)
+    report_attachments = TPMReportAttachmentsSerializer(many=True, required=False)
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
             'id', 'implementing_partner', 'partnership', 'cp_output', 'section',
-            'date', 'locations', 'pd_files', 'additional_information',
+            'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
         ]
+        extra_kwargs = {
+            'id': {'label': _('Activity ID')},
+            'date': {'required': True}
+        }
 
     def validate(self, attrs):
         validated_data = super(TPMActivitySerializer, self).validate(attrs)
@@ -151,30 +159,13 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
                     )
                 })
 
-        if 'locations' in validated_data:
-            locations = set(map(lambda x: x.id, validated_data['locations']))
-            diff = locations - set(Location.objects.filter(
-                id__in=locations,
-                intervention_sector_locations__intervention_id=partnership.id
-            ).values_list('id', flat=True))
-
-            if diff:
-                raise ValidationError({
-                    'locations': [
-                        self.fields['locations'].write_field.child_relation.error_messages['does_not_exist'].format(
-                            pk_value=pk
-                        )
-                        for pk in diff
-                    ]
-                })
-
         return validated_data
 
 
 class TPMVisitLightSerializer(WritableNestedSerializerMixin,
                               serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(
-        read_field=TPMPartnerLightSerializer(read_only=True),
+        read_field=TPMPartnerLightSerializer(label=_('TPM Name'), read_only=True),
     )
 
     offices = SeparatedReadWriteField(
@@ -238,20 +229,21 @@ class TPMVisitLightSerializer(WritableNestedSerializerMixin,
 class TPMVisitSerializer(PermissionsBasedSerializerMixin, TPMVisitLightSerializer):
     tpm_activities = TPMActivitySerializer(many=True, required=False)
 
-    attachments = TPMAttachmentsSerializer(many=True, required=False)
-    report = TPMReportAttachmentsSerializer(many=True, required=False)
+    report_attachments = TPMAttachmentsSerializer(many=True, required=False)
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
-    action_points = TPMActionPointSerializer(many=True, required=False)
+    action_points = TPMActionPointSerializer(label=_('Activity information'), many=True, required=False)
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [
-            'tpm_activities', 'attachments', 'report', 'action_points',
-            'reject_comment', 'report_reject_comments',
+            'tpm_activities', 'report_attachments', 'action_points',
+            'reject_comment', 'approval_comment',
+            'visit_information', 'report_reject_comments',
         ]
         extra_kwargs = {
-            'tpm_partner': {'required': True},
+            'tpm_activities': {'label': _('Activities Information')},
+            'tpm_partner': {'required': True, 'label': _('TPM Name')},
             'unicef_focal_points': {'required': True},
         }
 
@@ -281,6 +273,6 @@ class TPMVisitSerializer(PermissionsBasedSerializerMixin, TPMVisitLightSerialize
 
 class TPMVisitDraftSerializer(TPMVisitSerializer):
     class Meta(TPMVisitSerializer.Meta):
-        extra_kwargs = {
-            'tpm_partner': {'required': False},
-        }
+        extra_kwargs = copy(TPMVisitSerializer.Meta.extra_kwargs)
+        extra_kwargs['tpm_partner']['required'] = False
+        extra_kwargs['unicef_focal_points']['required'] = False

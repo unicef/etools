@@ -81,7 +81,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         ('tpm_accepted', _('TPM Accepted')),
         ('tpm_rejected', _('TPM Rejected')),
         ('tpm_reported', _('TPM Reported')),
-        ('tpm_report_rejected', _('TPM Report Rejected')),
+        ('tpm_report_rejected', _('Sent Back to TPM')),
         ('unicef_approved', _('UNICEF Approved')),
     )
 
@@ -101,9 +101,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     status = FSMField(verbose_name=_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
     reject_comment = models.TextField(verbose_name=_('Request for more information'), blank=True)
+    approval_comment = models.TextField(verbose_name=_('Approval comments'), blank=True)
 
-    attachments = CodedGenericRelation(Attachment, verbose_name=_('Related Documents'), code='attach', blank=True)
-    report = CodedGenericRelation(Attachment, verbose_name=_('Report'), code='report', blank=True)
+    report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Visit Report'),
+                                              code='visit_report', blank=True)
 
     visit_information = models.TextField(verbose_name=_('Visit Information'), blank=True)
 
@@ -200,21 +201,31 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             ).values_list('partnership__partner_focal_points__email', flat=True)
         )
 
-    @transition(status, source=[STATUSES.draft, STATUSES.tpm_rejected], target=STATUSES.assigned,
-                conditions=[
-                    TPMVisitAssignRequiredFieldsCheck.as_condition(),
-                    ValidateTPMVisitActivities.as_condition(),
-                ],
-                permission=has_action_permission(action='assign'))
+    @transition(
+        status, source=[STATUSES.draft, STATUSES.tpm_rejected], target=STATUSES.assigned,
+        conditions=[
+            TPMVisitAssignRequiredFieldsCheck.as_condition(),
+            ValidateTPMVisitActivities.as_condition(),
+        ],
+        permission=has_action_permission(action='assign')),
+        custom={
+            'name': lambda obj: _('Re-assign') if obj.status == TPMVisit.STATUSES.tpm_rejected else _('Assign')
+        }
+    )
     def assign(self):
         self.date_of_assigned = timezone.now()
         self._send_email(self._get_tpm_focal_points_as_email_recipients(), 'tpm/visit/assign',
                          cc=self._get_unicef_focal_points_as_email_recipients())
 
-    @transition(status, source=[
-        STATUSES.draft, STATUSES.assigned, STATUSES.tpm_accepted, STATUSES.tpm_rejected,
-        STATUSES.tpm_reported, STATUSES.tpm_report_rejected,
-    ], target=STATUSES.cancelled, permission=has_action_permission(action='cancel'))
+    @transition(
+        status, source=[
+            STATUSES.draft, STATUSES.assigned, STATUSES.tpm_accepted, STATUSES.tpm_rejected,
+            STATUSES.tpm_reported, STATUSES.tpm_report_rejected,
+        ], target=STATUSES.cancelled, permission=has_action_permission(action='cancel')),
+        custom={
+            'name': _('Cancel Visit')
+        }
+    )
     def cancel(self):
         self.date_of_cancelled = timezone.now()
 
@@ -235,19 +246,29 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/accept',
                          cc=self._get_tpm_focal_points_as_email_recipients())
 
-    @transition(status, source=[STATUSES.tpm_accepted, STATUSES.tpm_report_rejected], target=STATUSES.tpm_reported,
-                conditions=[
-                    TPMVisitReportValidations.as_condition(),
-                ],
-                permission=has_action_permission(action='send_report'))
+    @transition(
+        status, source=[STATUSES.tpm_accepted, STATUSES.tpm_report_rejected], target=STATUSES.tpm_reported,
+        conditions=[
+            TPMVisitReportValidations.as_condition(),
+        ],
+        permission=has_action_permission(action='send_report')),
+        custom={
+            'name': _('Submit Report')
+        }
+    )
     def send_report(self):
         self.date_of_tpm_reported = timezone.now()
         self._send_email(self._get_unicef_focal_points_as_email_recipients(), 'tpm/visit/report',
                          cc=self._get_tpm_focal_points_as_email_recipients())
 
-    @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.tpm_report_rejected,
-                custom={'serializer': TPMVisitRejectSerializer},
-                permission=has_action_permission(action='reject_report'))
+    @transition(
+        status, source=[STATUSES.tpm_reported], target=STATUSES.tpm_report_rejected,
+        permission=has_action_permission(action='reject_report')),
+        custom={
+            'serializer': TPMVisitRejectSerializer,
+            'name': _('Send back to TPM')
+        }
+    )
     def reject_report(self, reject_comment):
         self.date_of_tpm_report_rejected = timezone.now()
         TPMVisitReportRejectComment.objects.create(reject_reason=reject_comment, tpm_visit=self)
@@ -257,7 +278,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
                 custom={'serializer': TPMVisitApproveSerializer},
                 permission=has_action_permission(action='approve'))
-    def approve(self, mark_as_programmatic_visit=None, notify_focal_point=True, notify_tpm_partner=True):
+    def approve(self, mark_as_programmatic_visit=None, approval_comment=None, notify_focal_point=True,
+                notify_tpm_partner=True):
         mark_as_programmatic_visit = mark_as_programmatic_visit or []
 
         pv_activities = self.tpm_activities.filter(id__in=mark_as_programmatic_visit)  # noqa
@@ -270,6 +292,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         if notify_tpm_partner:
             # TODO: Generate report as PDF attachment.
             self._send_email(self._get_tpm_focal_points_as_email_recipients(), 'tpm/visit/approve_report_tpm')
+
+        if approval_comment:
+            self.approval_comment = approval_comment
 
     def get_object_url(self):
         return build_frontend_url('tpm', 'visits', self.id, 'details')
@@ -304,7 +329,10 @@ class TPMActivity(models.Model):
 
     additional_information = models.TextField(verbose_name=_('Additional Information'), blank=True)
 
-    pd_files = CodedGenericRelation(Attachment, verbose_name=_('Programme Documents'), code='visit_pd', blank=True)
+    attachments = CodedGenericRelation(Attachment, verbose_name=_('Activity Attachments'),
+                                       code='activity_attachments', blank=True)
+    report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Activity Report'),
+                                              code='activity_report', blank=True)
 
     is_pv = models.BooleanField(default=False)
 

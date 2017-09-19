@@ -128,7 +128,7 @@ class TripSerializer(serializers.ModelSerializer):
     files = FileAttachmentSerializer(many=True, read_only=True)
 
     def get_partnerships(self, trip):
-        return [pca.__unicode__() for pca in trip.pcas.all()]
+        return [unicode(pca) for pca in trip.pcas.all()]
 
     def transform_traveller(self, obj):
         return obj.owner.get_full_name()

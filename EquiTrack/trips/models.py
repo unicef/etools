@@ -80,7 +80,7 @@ class Trip(AdminURLMixin, models.Model):
     )
 
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         choices=TRIP_STATUS,
         default=PLANNED,
     )
@@ -93,7 +93,7 @@ class Trip(AdminURLMixin, models.Model):
         max_length=254
     )
     travel_type = models.CharField(
-        max_length=32L,
+        max_length=32,
         choices=TRAVEL_TYPE,
         default=PROGRAMME_MONITORING
     )
@@ -404,7 +404,7 @@ class Trip(AdminURLMixin, models.Model):
                 instance.get_admin_url()),
             'purpose_of_travel': instance.purpose_of_travel,
             'environment': get_environment(),
-            'action_points': ('\n'.join([action.__unicode__() for action in instance.actionpoint_set.all()]))
+            'action_points': ('\n'.join([unicode(action) for action in instance.actionpoint_set.all()]))
         }
 
         if instance.status == Trip.SUBMITTED:

@@ -95,6 +95,7 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -108,7 +109,7 @@ WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 # DJANGO: LOGGING
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': str2bool(os.environ.get('DJANGO_DISABLE_EXISTING_LOGGERS', 'True')),
     'handlers': {
         # Send all messages to console
         'console': {
@@ -141,7 +142,6 @@ SHARED_APPS = (
     'dal_select2',
     'django.contrib.gis',
     'django.contrib.postgres',
-    'suit',
     'django.contrib.admin',
     'django.contrib.humanize',
     'mathfilters',
@@ -153,7 +153,6 @@ SHARED_APPS = (
     'rest_framework.authtoken',
     'import_export',
     'smart_selects',
-    'suit_ckeditor',
     'generic_links',
     'gunicorn',
     'post_office',
@@ -239,12 +238,12 @@ TEMPLATES = [
 
                 # `allauth` needs this from django
                 'django.contrib.auth.context_processors.auth',
-                'django.core.context_processors.request',
-                'django.core.context_processors.debug',
-                'django.core.context_processors.i18n',
-                'django.core.context_processors.media',
-                'django.core.context_processors.static',
-                'django.core.context_processors.tz',
+                'django.template.context_processors.request',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
@@ -294,25 +293,6 @@ STATICFILES_FINDERS = (
 
 
 # Third party library settings ################################
-
-# django-suit: http://django-suit.readthedocs.io/en/develop/configuration.html
-SUIT_CONFIG = {
-    'ADMIN_NAME': 'eTools',
-    'SEARCH_URL': '/admin/partners/pca/',
-    'CONFIRM_UNSAVED_CHANGES': False,
-    'MENU': (
-        {'app': 'auth', 'label': 'Users', 'icon': 'icon-user'},
-        {'label': 'Dashboard', 'icon': 'icon-globe', 'url': 'dashboard'},
-        {'app': 'funds', 'icon': 'icon-briefcase'},
-        {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign', 'models': [
-            {'model': 'reports.sector'},
-            {'model': 'reports.result'},
-            {'model': 'reports.indicator'},
-            {'model': 'reports.goal'},
-        ]},
-        {'app': 'locations', 'icon': 'icon-map-marker'},
-    )
-}
 
 # django-post_office: https://github.com/ui/django-post_office
 POST_OFFICE = {
