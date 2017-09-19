@@ -15,7 +15,7 @@ from django.http.response import HttpResponseRedirect
 
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
@@ -211,8 +211,6 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         # if we need to add any other login validation, here would be the place.
         return super(CustomAccountAdapter, self).login(request, user)
 
-
-from rest_framework.authentication import SessionAuthentication
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 

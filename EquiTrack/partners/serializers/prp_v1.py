@@ -128,11 +128,13 @@ class PRPResultSerializer(serializers.ModelSerializer):
 
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
-    offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')  # todo: do these need to be lowercased?
+    # todo: do these need to be lowercased?
+    offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     business_area_code = serializers.SerializerMethodField()
     partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
-    agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True, source='agreement.authorized_officers')
+    agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True,
+                                                    source='agreement.authorized_officers')
     focal_points = PartnerFocalPointSerializer(many=True, read_only=True, source='partner_focal_points')
     start_date = serializers.DateField(source='start')
     end_date = serializers.DateField(source='end')
