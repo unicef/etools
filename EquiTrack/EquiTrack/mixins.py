@@ -101,6 +101,7 @@ class EToolsTenantMiddleware(TenantMiddleware):
                 u'login',
                 u'saml',
                 u'accounts',
+                u'monitoring',
             ]):
                 return None  # let them pass
             else:

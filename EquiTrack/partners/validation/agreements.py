@@ -11,20 +11,28 @@ from partners.permissions import AgreementPermissions
 
 
 def agreement_transition_to_signed_valid(agreement):
+    '''Returns True if it's valid for the agreement to transition to signed, otherwise raises a TransitionError.
+
+    TransitionErrors are raised under 3 circumstances --
+      - If the agreement is of type PCA and matches certain criteria (see code)
+      - If the start date is empty or in the future
+      - If the end date is empty or in the past
+    '''
     today = date.today()
     if agreement.agreement_type == agreement.PCA and \
             agreement.__class__.objects.filter(partner=agreement.partner,
                                                status=agreement.SIGNED,
                                                agreement_type=agreement.PCA,
                                                country_programme=agreement.country_programme,
-                                               start__gt=date(2015, 7, 1)).count():
+                                               start__gt=date(2015, 7, 1)).exists():
 
         raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
 
     if not agreement.start or agreement.start > today:
-        raise TransitionError(['Agreement cannot transition to signed until start date greater or equal to today'])
+        raise TransitionError(['Agreement cannot transition to signed until '
+                               'the start date is less than or equal to today'])
     if not agreement.end or agreement.end < today:
-        raise TransitionError(['Agreement cannot transition to signed end date has passed'])
+        raise TransitionError(['Agreement cannot transition to signed unless the end date is today or after'])
 
     return True
 
@@ -78,7 +86,7 @@ def signatures_valid(agreement):
     partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
     if agreement.agreement_type == agreement.SSFA:
         if any(unicef_signing_requirements + partner_signing_requirements):
-            raise BasicValidationError(_('SSFA signatures are captured at the Document (TOR) level, please clear the'
+            raise BasicValidationError(_('SSFA signatures are captured at the Document (TOR) level, please clear the '
                                          'signatures and dates and add them to the TOR'))
     unicef_signing_requirements = [agreement.signed_by_unicef_date, agreement.signed_by]
     partner_signing_requirements = [agreement.signed_by_partner_date, agreement.partner_manager]
@@ -99,7 +107,7 @@ def partner_type_valid_cso(agreement):
 
 def ssfa_static(agreement):
     if agreement.agreement_type == agreement.SSFA:
-        if agreement.interventions.all().count():
+        if agreement.interventions.all().exists():
             # there should be only one.. there is a different validation that ensures this
             intervention = agreement.interventions.all().first()
             if intervention.start != agreement.start or intervention.end != agreement.end:
@@ -114,7 +122,7 @@ def one_pca_per_cp_per_partner(agreement):
                                               agreement_type=agreement.PCA,
                                               country_programme=agreement.country_programme,
                                               start__gt=date(2015, 7, 1)
-                                              ).exclude(pk=agreement.id).count():
+                                              ).exclude(pk=agreement.id).exists():
             return False
     return True
 
@@ -136,16 +144,12 @@ class AgreementValid(CompleteValidation):
     VALID_ERRORS = {
         'one_pca_per_cp_per_partner': 'A PCA with this partner already exists for this Country Programme Cycle. '
                                       'If the record is in "Draft" status please edit that record.',
-        'start_end_dates_valid': 'Agreement start date needs to be earlier than end date',
-        'signatures_valid': 'Agreement needs to be signed by UNICEF and Partner; '
-                            'None of the dates can be in the future; '
+        'start_end_dates_valid': 'Agreement start date needs to be earlier than or the same as the end date',
+        'signatures_valid': 'None of the dates can be in the future; '
                             'If dates are set, signatories are required',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
-        'suspended_invalid': 'Cant suspend an agreement that was supposed to be ended',
-        'agreement_transition_to_active_invalid': "You can't transition to active without having the proper signatures",
         'agreement_transition_to_active_invalid_PCA': "You cannot have more than 1 PCA active per Partner within 1 CP",
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
-        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.',
         'amendments_valid': {'signed_amendment': ['Please check that the Document is attached and'
                                                   ' signatures are not in the future']},
     }
