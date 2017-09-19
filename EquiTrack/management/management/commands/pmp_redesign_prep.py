@@ -13,9 +13,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         run(active_pca_no_signed_doc)  # ported
         run(pd_outputs_wrong)  # ported
-        run(pd_frs_not_found)  # skipped
+        run(pd_frs_not_found)  # skipped - fails locally
         run(interventions_associated_ssfa)  # ported
-        run(intervention_update_task)
+        run(intervention_update_task)  # ported validation parts, skipped migration part
         run(interventions_amendments_no_file)
         run(agreement_amendments_no_file)
 

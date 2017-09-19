@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db.models import Q
 from .checks import BaseIssueCheck, ModelCheckData
 from management.issues.exceptions import IssueFoundException
@@ -6,6 +7,7 @@ from partners.models import Agreement, Intervention
 
 # todo: these can probably move closer to the models they are associated with, but just
 # starting with them here as a proof of concept
+from partners.validation.interventions import InterventionValid
 from reports.models import CountryProgramme
 
 
@@ -79,5 +81,26 @@ class InterventionsAssociatedSSFACheck(BaseIssueCheck):
                 'intervention {} type {} status {} has agreement type {}'.format(
                     model_instance.id, model_instance.document_type,
                     model_instance.agreement.agreement_type, model_instance.status
+                )
+            )
+
+
+class InterventionsAreValidCheck(BaseIssueCheck):
+    model = Intervention
+    issue_id = 'interventions_are_valid'
+
+    def get_objects_to_check(self):
+        master_user = User.objects.get(username='etools_task_admin')
+        for intervention in Intervention.objects.filter(status__in=['draft', 'signed', 'active', 'ended']):
+            yield ModelCheckData(intervention, {'master_user': master_user})
+
+    def run_check(self, model_instance, metadata):
+        master_user = metadata['master_user']
+        validator = InterventionValid(model_instance, master_user)
+        if not validator.is_valid:
+            raise IssueFoundException(
+                'intervention {} of type {} is invalid: (Status:{}), Errors: {}'.format(
+                    model_instance.id, model_instance.document_type, model_instance.status,
+                    ', '.join(validator.errors)
                 )
             )
