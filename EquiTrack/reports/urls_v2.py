@@ -1,6 +1,7 @@
 from django.conf.urls import url
 
-from reports.views.v2 import OutputListAPIView, OutputDetailAPIView, ResultIndicatorListAPIView, LowerResultsDeleteView, DisaggregationListCreateView
+from reports.views.v2 import OutputListAPIView, OutputDetailAPIView, ResultIndicatorListAPIView, \
+    LowerResultsDeleteView, DisaggregationListCreateView
 from reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView
 
 
