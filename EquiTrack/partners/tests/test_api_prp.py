@@ -2,7 +2,7 @@ import json
 import os
 from django.core.urlresolvers import reverse
 from rest_framework import status
-from EquiTrack.factories import ResultFactory, LocationFactory, GatewayTypeFactory
+from EquiTrack.factories import ResultFactory, LocationFactory, GatewayTypeFactory, InterventionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import InterventionResultLink
 from partners.tests.test_utils import setup_intervention_test_data
@@ -16,7 +16,7 @@ class TestInterventionsAPI(APITenantTestCase):
         super(TestInterventionsAPI, self).setUp()
         setup_intervention_test_data(self)
         # setup data specific to PRP API
-        self.result = ResultFactory()
+        self.result = ResultFactory(name='A Result')
         self.result_link = InterventionResultLink.objects.create(
             intervention=self.active_intervention, cp_output=self.result)
         self.lower_result = LowerResult.objects.create(result_link=self.result_link, name='Lower Result 1')
@@ -32,7 +32,6 @@ class TestInterventionsAPI(APITenantTestCase):
                                                              p_code='a-p-code'))
         self.applied_indicator.disaggregation.create(name='A Disaggregation')
 
-
     def run_prp_v1(self, user=None, method='get'):
         response = self.forced_auth_req(
             method,
@@ -42,7 +41,6 @@ class TestInterventionsAPI(APITenantTestCase):
         return response.status_code, json.loads(response.rendered_content)
 
     def test_prp_api(self):
-        # with self.assertNumQueries(22):
         status_code, response = self.run_prp_v1(
             user=self.unicef_staff, method='get'
         )
@@ -59,7 +57,7 @@ class TestInterventionsAPI(APITenantTestCase):
         for i in range(len(response)):
             expected_intervention = expected_interventions[i]
             actual_intervention = response[i]
-            for dynamic_key in ['id', 'number']:
+            for dynamic_key in ['id', 'number', 'start_date', 'end_date']:
                 del expected_intervention[dynamic_key]
                 del actual_intervention[dynamic_key]
             for j in range(len(expected_intervention['expected_results'])):
@@ -73,3 +71,31 @@ class TestInterventionsAPI(APITenantTestCase):
                 del actual_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
 
         self.assertEqual(response, expected_interventions)
+
+    def test_prp_api_performance(self):
+        EXPECTED_QUERIES = 18
+        with self.assertNumQueries(EXPECTED_QUERIES):
+            self.run_prp_v1(
+                user=self.unicef_staff, method='get'
+            )
+        # make a bunch more stuff, make sure queries don't go up.
+        intervention = InterventionFactory(agreement=self.agreement, title='New Intervention')
+        result = ResultFactory(name='Another Result')
+        result_link = InterventionResultLink.objects.create(
+            intervention=intervention, cp_output=result)
+        lower_result = LowerResult.objects.create(result_link=result_link, name='Lower Result 1')
+        indicator_blueprint = IndicatorBlueprint.objects.create(
+            title='The Blueprint'
+        )
+        applied_indicator = AppliedIndicator.objects.create(
+            indicator=indicator_blueprint,
+            lower_result=lower_result,
+        )
+        applied_indicator.locations.add(LocationFactory(name='A Location',
+                                                        gateway=GatewayTypeFactory(name='Another Gateway'),
+                                                        p_code='a-p-code'))
+        applied_indicator.disaggregation.create(name='Another Disaggregation')
+        with self.assertNumQueries(EXPECTED_QUERIES):
+            self.run_prp_v1(
+                user=self.unicef_staff, method='get'
+            )

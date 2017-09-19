@@ -13,7 +13,6 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 
 from rest_framework.generics import (
-    GenericAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
@@ -49,8 +48,7 @@ from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter, I
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from reports.models import LowerResult, AppliedIndicator
-from reports.serializers.v2 import LowerResultSerializer, LowerResultSimpleCUSerializer, AppliedIndicatorSerializer, \
-    IndicatorBlueprintCUSerializer
+from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicatorSerializer
 
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):

@@ -87,9 +87,11 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
         blueprint_data = attrs.get('indicator')
         if self.partial:
             if not isinstance(blueprint_data, IndicatorBlueprint):
-                raise ValidationError('Indicator blueprint cannot be updated after first use, '
-                                      'please remove this indicator and add another or contact the eTools Focal Point in '
-                                      'your office for assistance')
+                raise ValidationError(
+                    'Indicator blueprint cannot be updated after first use, '
+                    'please remove this indicator and add another or contact the eTools Focal Point in '
+                    'your office for assistance'
+                )
 
         elif not attrs.get('cluster_indicator_id'):
             print "no cluster id"
@@ -101,13 +103,10 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
             if lower_result.applied_indicators.filter(indicator__id=attrs['indicator'].id).exists():
                 raise ValidationError('This indicator is already being monitored for this Result')
 
-
         return super(AppliedIndicatorSerializer, self).validate(attrs)
 
     def create(self, validated_data):
-
         return super(AppliedIndicatorSerializer, self).create(validated_data)
-
 
 
 class AppliedIndicatorCUSerializer(serializers.ModelSerializer):

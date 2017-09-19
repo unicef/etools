@@ -119,7 +119,7 @@ def show_fr_fc(value):
 
     for commit in commitments:
         row = SortedDict()
-        row['Grant'] = commit.grant.__unicode__()
+        row['Grant'] = unicode(commit.grant)
         row['FR Number'] = commit.fr_number
         row['WBS'] = commit.wbs
         row['FC Type'] = commit.fc_type

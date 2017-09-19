@@ -145,7 +145,8 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'A different agreement of type PCA already exists for this Partner for this Country Programme'
+            'A PCA with this partner already exists for this Country Programme Cycle. '
+            'If the record is in "Draft" status please edit that record.'
             )
 
     def test_create_ok_non_PCA_with_same_programme_and_partner(self):
@@ -190,7 +191,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement start date needs to be earlier than end date'
+            'Agreement start date needs to be earlier than or the same as the end date'
             )
 
     def test_create_ok_with_start_date_equal_end_date(self):
@@ -300,7 +301,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'SSFA signatures are captured at the Document (TOR) level, please clear the'
+            'SSFA signatures are captured at the Document (TOR) level, please clear the '
             'signatures and dates and add them to the TOR'
             )
 
@@ -361,7 +362,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; '
+            'None of the dates can be in the future; '
             'If dates are set, signatories are required'
             )
 
@@ -379,7 +380,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; '
+            'None of the dates can be in the future; '
             'If dates are set, signatories are required'
             )
 
@@ -394,7 +395,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; '
+            'None of the dates can be in the future; '
             'If dates are set, signatories are required'
             )
 
@@ -412,7 +413,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement needs to be signed by UNICEF and Partner; None of the dates can be in the future; '
+            'None of the dates can be in the future; '
             'If dates are set, signatories are required'
             )
 
@@ -586,8 +587,8 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
 class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
     '''Exercise the transition validations of AgreementCreateUpdateSerializer.'''
-    def test_fail_transition_to_signed(self):
-        '''Exercise transition to signed.'''
+    def test_fail_transition_to_signed_start_and_end_dates(self):
+        '''Exercise transition to signed, and validation related to start and end dates.'''
         agreement = AgreementFactory(agreement_type=Agreement.MOU,
                                      status=Agreement.DRAFT,
                                      signed_by_unicef_date=None,
@@ -597,21 +598,34 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
             "status": Agreement.SIGNED,
         }
         serializer = AgreementCreateUpdateSerializer()
-        # If I don't set serializer.instance, the validator gets confused. I guess (?) this is ordinarily set by DRF?
-        # # during an update?
+        # If I don't set serializer.instance, the validator gets confused. I guess (?) this is ordinarily set by DRF
+        # during an update?
         serializer.instance = agreement
         serializer.context['request'] = self.fake_request
+        # Should fail because start date is empty.
         with self.assertRaises(serializers.ValidationError) as context_manager:
             serializer.validate(data=data)
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement cannot transition to signed until start date greater or equal to today'
+            'Agreement cannot transition to signed until the start date is less than or equal to today'
             )
 
-        # Fix problem with start date, now break end date.
+        # Populate start date, but with a date that's still invalid (in the future)
+        agreement.start = self.today + datetime.timedelta(days=5)
+        agreement.save()
+
+        # Should fail because start date is in the future
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'Agreement cannot transition to signed until the start date is less than or equal to today'
+            )
+
+        # Fix problem with start date, now allow blank end date to cause a failure.
         agreement.start = self.today - datetime.timedelta(days=5)
-        agreement.end = self.today - datetime.timedelta(days=3)
         agreement.save()
 
         with self.assertRaises(serializers.ValidationError) as context_manager:
@@ -619,7 +633,17 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement cannot transition to signed end date has passed'
+            'Agreement cannot transition to signed unless the end date is today or after'
+            )
+
+        # Populate end date, but with an invalid date.
+        agreement.end = self.today - datetime.timedelta(days=3)
+        with self.assertRaises(serializers.ValidationError) as context_manager:
+            serializer.validate(data=data)
+
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            'Agreement cannot transition to signed unless the end date is today or after'
             )
 
         # Fix end date
