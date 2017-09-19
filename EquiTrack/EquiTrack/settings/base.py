@@ -544,4 +544,5 @@ ISSUE_CHECKS = [
     'management.issues.project_checks.InterventionsAssociatedSSFACheck',
     'management.issues.project_checks.InterventionsAreValidCheck',
     'management.issues.project_checks.PDAmendmentsMissingFilesCheck',
+    'management.issues.project_checks.PCAAmendmentsMissingFilesCheck',
 ]

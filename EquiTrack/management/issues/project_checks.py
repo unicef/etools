@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from .checks import BaseIssueCheck, ModelCheckData
 from management.issues.exceptions import IssueFoundException
-from partners.models import Agreement, Intervention, InterventionAmendment
+from partners.models import Agreement, Intervention, InterventionAmendment, AgreementAmendment
 
 
 # todo: these can probably move closer to the models they are associated with, but just
@@ -122,3 +122,20 @@ class PDAmendmentsMissingFilesCheck(BaseIssueCheck):
                     model_instance.intervention.status)
             )
 
+
+class PCAAmendmentsMissingFilesCheck(BaseIssueCheck):
+    model = AgreementAmendment
+    issue_id = 'agreement_amendments_no_file'
+
+    def get_queryset(self):
+        return AgreementAmendment.objects.filter(signed_amendment='')
+
+    def run_check(self, model_instance, metadata):
+        if not model_instance.signed_amendment:
+            raise IssueFoundException(
+                'agreement {} type {} status {} has missing amendment file'.format(
+                    model_instance.agreement.id,
+                    model_instance.agreement.agreement_type,
+                    model_instance.agreement.status
+                )
+            )
