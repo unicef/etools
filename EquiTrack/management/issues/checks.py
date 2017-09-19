@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from collections import namedtuple
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
@@ -6,6 +7,9 @@ from django.utils.module_loading import import_string
 from EquiTrack.util_scripts import run
 from .exceptions import IssueFoundException
 from management.models import FlaggedIssue
+
+
+ModelCheckData = namedtuple('ModelCheckData', 'object metadata')
 
 
 class BaseIssueCheck(object):
@@ -27,9 +31,9 @@ class BaseIssueCheck(object):
         Check all objects for issues.
         """
         def _inner():
-            for model_instance in self.get_queryset():
+            for model_instance, metadata in self.get_objects_to_check():
                 try:
-                    self.run_check(model_instance)
+                    self.run_check(model_instance, metadata)
                 except IssueFoundException as e:
                     issue = FlaggedIssue.get_or_new(content_object=model_instance, issue_id=self.issue_id)
                     issue.message = unicode(e)
@@ -39,13 +43,23 @@ class BaseIssueCheck(object):
 
     def get_queryset(self):
         """
-        The queryset over which this check should be performed.
-        Defaults to all matching models.
+        The default queryset of data to be checked.
         """
         return self.model.objects.all()
 
+    def get_objects_to_check(self):
+        """
+        An iterable returning the ModelCheckData objects over which this check should be performed.
+        Should return an iterable/queryset of ModelCheckData with object being an instance of self.model
+        and metadata being an optional dictionary of additional data needed by the check.
+
+        The default just returns the results of self.get_queryset with empty metadata
+        """
+        for object in self.get_queryset():
+            yield ModelCheckData(object, {})
+
     @abstractmethod
-    def run_check(self, model_instance):
+    def run_check(self, model_instance, metadata):
         """
         This method should raise an IssueFoundException if the check fails.
         """

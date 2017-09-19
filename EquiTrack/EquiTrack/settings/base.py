@@ -540,4 +540,5 @@ VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
 
 ISSUE_CHECKS = [
     'management.issues.project_checks.ActivePCANoSignedDocCheck',
+    'management.issues.project_checks.PdOutputsWrongCheck',
 ]
