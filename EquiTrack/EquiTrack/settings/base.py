@@ -537,3 +537,7 @@ TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
 VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
+
+ISSUE_CHECKS = [
+    'management.issues.project_checks.ActivePCANoSignedDocCheck',
+]

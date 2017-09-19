@@ -4,7 +4,6 @@ from users.models import Country, User
 from partners.models import *
 from funds.models import *
 from EquiTrack.util_scripts import *
-from management.models import FlaggedIssue
 
 
 class Command(BaseCommand):
@@ -12,7 +11,7 @@ class Command(BaseCommand):
            'does not fit within the new pmp redesign models'
 
     def handle(self, *args, **options):
-        run(active_pca_no_signed_doc)
+        run(active_pca_no_signed_doc)  # ported
         run(pd_outputs_wrong)
         run(pd_frs_not_found)
         run(interventions_associated_ssfa)
@@ -42,15 +41,12 @@ def pd_frs_not_found():
                     printtf('#### {}, FR {} connected to a different Intervention {}... current Intervention {}'.
                             format(i.status, fr_obj.fr_number, fr_obj.intervention.id, i.id))
 
+
 # pca no attachment
 def active_pca_no_signed_doc():
     issue_id = 'active_pca_no_signed_doc'
     for agr in Agreement.objects.filter(agreement_type=Agreement.PCA).exclude(status='draft'):
         if not agr.attached_agreement:
-            issue = FlaggedIssue.get_or_new(content_object=agr, issue_id=issue_id)
-            message = '{} Agreement [{}] does not have a signed PCA attached'.format(agr.agreement_type, agr.id)
-            issue.message = message
-            issue.save()
             print(message)
 
 
@@ -65,6 +61,7 @@ def pd_outputs_wrong():
                 if rl.cp_output.country_programme != cp:
                     wrong_cp.append(rl.cp_output.wbs)
             if len(wrong_cp) > 0:
+
                 print ("PD [P{}] STATUS [{}] CP [{}] has wrongly mapped outputs {}".format(intervention.id, intervention.status, cp.wbs, wrong_cp))
 
 

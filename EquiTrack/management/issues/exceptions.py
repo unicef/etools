@@ -1,0 +1,4 @@
+
+
+class IssueFoundException(Exception):
+    pass
