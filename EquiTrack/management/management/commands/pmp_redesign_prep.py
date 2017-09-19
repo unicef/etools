@@ -16,7 +16,7 @@ class Command(BaseCommand):
         run(pd_frs_not_found)  # skipped - fails locally
         run(interventions_associated_ssfa)  # ported
         run(intervention_update_task)  # ported validation parts, skipped migration part
-        run(interventions_amendments_no_file)
+        run(interventions_amendments_no_file)  # ported
         run(agreement_amendments_no_file)
 
 
