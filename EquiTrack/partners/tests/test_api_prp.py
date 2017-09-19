@@ -16,7 +16,7 @@ class TestInterventionsAPI(APITenantTestCase):
         super(TestInterventionsAPI, self).setUp()
         setup_intervention_test_data(self)
         # setup data specific to PRP API
-        self.result = ResultFactory()
+        self.result = ResultFactory(name='A Result')
         self.result_link = InterventionResultLink.objects.create(
             intervention=self.active_intervention, cp_output=self.result)
         self.lower_result = LowerResult.objects.create(result_link=self.result_link, name='Lower Result 1')
@@ -80,7 +80,7 @@ class TestInterventionsAPI(APITenantTestCase):
             )
         # make a bunch more stuff, make sure queries don't go up.
         intervention = InterventionFactory(agreement=self.agreement, title='New Intervention')
-        result = ResultFactory()
+        result = ResultFactory('Another Result')
         result_link = InterventionResultLink.objects.create(
             intervention=intervention, cp_output=result)
         lower_result = LowerResult.objects.create(result_link=result_link, name='Lower Result 1')
