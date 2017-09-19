@@ -13,8 +13,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         run(active_pca_no_signed_doc)  # ported
         run(pd_outputs_wrong)  # ported
-        run(pd_frs_not_found)
-        run(interventions_associated_ssfa)
+        run(pd_frs_not_found)  # skipped
+        run(interventions_associated_ssfa)  # ported
         run(intervention_update_task)
         run(interventions_amendments_no_file)
         run(agreement_amendments_no_file)

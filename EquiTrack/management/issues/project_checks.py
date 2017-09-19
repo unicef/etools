@@ -1,3 +1,4 @@
+from django.db.models import Q
 from .checks import BaseIssueCheck, ModelCheckData
 from management.issues.exceptions import IssueFoundException
 from partners.models import Agreement, Intervention
@@ -10,7 +11,7 @@ from reports.models import CountryProgramme
 
 class ActivePCANoSignedDocCheck(BaseIssueCheck):
     model = Agreement
-    issue_id = 'active-pca-no-signed-doc'
+    issue_id = 'active_pca_no_signed_doc'
 
     def get_queryset(self):
         return Agreement.objects.filter(agreement_type=Agreement.PCA).exclude(status='draft')
@@ -46,4 +47,37 @@ class PdOutputsWrongCheck(BaseIssueCheck):
             raise IssueFoundException(
                 "PD [P{}] STATUS [{}] CP [{}] has wrongly mapped outputs {}".format(
                     model_instance.id, model_instance.status, cp.wbs, wrong_cp)
+            )
+
+
+class InterventionsAssociatedSSFACheck(BaseIssueCheck):
+    model = Intervention
+    issue_id = 'interventions_associated_ssfa'
+
+    def get_queryset(self):
+        return Intervention.objects.filter(
+            Q(agreement__agreement_type=Agreement.SSFA, document_type=Intervention.PD) |
+            Q(agreement__agreement_type=Agreement.PCA, document_type=Intervention.SSFA)
+        ).prefetch_related('agreement')
+
+    def run_check(self, model_instance, metadata):
+        # in this case the queryset controls the issue, so all relevant objects should fail,
+        # but we still need the test to be inside `run_check` so that objects can be rechecked
+        # in the future
+        fails_test = (
+            (
+                model_instance.agreement.agreement_type == Agreement.SSFA
+                and model_instance.document_type == Intervention.PD
+            )
+            or (
+                model_instance.agreement.agreement_type == Agreement.PCA
+                and model_instance.document_type == Intervention.SSFA
+            )
+        )
+        if fails_test:
+            raise IssueFoundException(
+                'intervention {} type {} status {} has agreement type {}'.format(
+                    model_instance.id, model_instance.document_type,
+                    model_instance.agreement.agreement_type, model_instance.status
+                )
             )
