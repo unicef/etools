@@ -80,7 +80,7 @@ class TestInterventionsAPI(APITenantTestCase):
             )
         # make a bunch more stuff, make sure queries don't go up.
         intervention = InterventionFactory(agreement=self.agreement, title='New Intervention')
-        result = ResultFactory('Another Result')
+        result = ResultFactory(name='Another Result')
         result_link = InterventionResultLink.objects.create(
             intervention=intervention, cp_output=result)
         lower_result = LowerResult.objects.create(result_link=result_link, name='Lower Result 1')
