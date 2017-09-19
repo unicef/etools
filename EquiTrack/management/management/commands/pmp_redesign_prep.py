@@ -47,7 +47,7 @@ def active_pca_no_signed_doc():
     issue_id = 'active_pca_no_signed_doc'
     for agr in Agreement.objects.filter(agreement_type=Agreement.PCA).exclude(status='draft'):
         if not agr.attached_agreement:
-            print(message)
+            print('{} Agreement [{}] does not have a signed PCA attached'.format(agr.agreement_type, agr.id))
 
 
 # pd wrong cp outputs
