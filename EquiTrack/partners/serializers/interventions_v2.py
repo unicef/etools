@@ -218,6 +218,7 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
             'll_results'
         )
 
+
 class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
@@ -228,6 +229,7 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
+
 
 class InterventionResultCUSerializer(serializers.ModelSerializer):
 

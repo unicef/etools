@@ -1374,7 +1374,9 @@ class Intervention(TimeStampedModel):
     def fr_currency(self):
         # todo: implicit assumption here that there aren't conflicting currencies
         # eventually, this should be checked/reconciled if there are conflicts
-        return self.frs.exclude(currency=None).values_list('currency', flat=True).first()
+        # also, this doesn't do filtering in the db so that it can be used efficiently with `prefetch_related`
+        if self.frs.exists():
+            return self.frs.all()[0].currency
 
     @cached_property
     def total_unicef_cash(self):
@@ -1414,6 +1416,15 @@ class Intervention(TimeStampedModel):
         if self.planned_budget:
             return self.planned_budget.in_kind_amount_local
         return 0
+
+    @cached_property
+    def all_lower_results(self):
+        # todo: it'd be nice to be able to do this as a queryset but that may not be possible
+        # with prefetch_related
+        return [
+            lower_result for link in self.result_links.all()
+            for lower_result in link.ll_results.all()
+        ]
 
     @cached_property
     def total_frs(self):
