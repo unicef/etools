@@ -33,11 +33,14 @@ class FlaggedIssue(models.Model):
 
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
-    issue_category = models.CharField(max_length=32, choices=ISSUE_CATEGORY_CHOICES, default=ISSUE_CATEGORY_DATA)
-    issue_status = models.CharField(max_length=32, choices=ISSUE_STATUS_CHOICES, default=ISSUE_STATUS_NEW)
+    issue_category = models.CharField(max_length=32, choices=ISSUE_CATEGORY_CHOICES, default=ISSUE_CATEGORY_DATA,
+                                      db_index=True)
+    issue_status = models.CharField(max_length=32, choices=ISSUE_STATUS_CHOICES, default=ISSUE_STATUS_NEW,
+                                    db_index=True)
     issue_id = models.CharField(
         max_length=100,
         help_text='A readable ID associated with the specific issue, e.g. "pca-no-attachment"',
+        db_index=True,
     )
     message = models.TextField()
 
