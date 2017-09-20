@@ -9,13 +9,15 @@ from unittest import skip, TestCase
 from urlparse import urlparse
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, resolve
 from django.db import connection
 from django.utils import timezone
 
 from actstream.models import model_stream
 from rest_framework import status
+from rest_framework.test import APIRequestFactory
 
 from EquiTrack.factories import (
     AgreementAmendmentFactory,
@@ -49,6 +51,7 @@ from partners.models import (
     PartnerOrganization,
     PartnerType,
 )
+from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.serializers.partner_organization_v2 import PartnerOrganizationExportSerializer
 import partners.views.partner_organization_v2
 
@@ -113,6 +116,31 @@ class TestPartnerOrganizationListView(APITenantTestCase):
     def test_simple(self):
         '''exercise simple fetch'''
         response = self.forced_auth_req('get', self.url)
+        self.assertResponseFundamentals(response)
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self.forced_auth_req('get', self.url, user=UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.get(self.url)
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_group_permission(self):
+        '''Ensure a non-staff user in the correct group has access'''
+        user = UserFactory()
+        user.groups.add(Group.objects.get(name=READ_ONLY_API_GROUP_NAME))
+        response = self.forced_auth_req('get', self.url, user=user)
+        self.assertResponseFundamentals(response)
+
+    def test_staff_access(self):
+        '''Ensure a staff user has access'''
+        response = self.forced_auth_req('get', self.url, user=self.user)
         self.assertResponseFundamentals(response)
 
     def test_verbosity_minimal(self):
@@ -273,6 +301,11 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
     def setUp(self):
         self.user = UserFactory(is_staff=True)
         self.url = reverse('partners_api:partner-list')
+        self.data = {"name": "PO 1",
+                     "partner_type": PartnerType.GOVERNMENT,
+                     "vendor_number": "AAA",
+                     "staff_members": [],
+                     }
 
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response. Return the id of the new object.'''
@@ -285,30 +318,39 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
 
     def test_create_simple(self):
         '''Exercise simple create'''
-        data = {
-            "name": "PO 1",
-            "partner_type": PartnerType.GOVERNMENT,
-            "vendor_number": "AAA",
-            "staff_members": [],
-        }
-        response = self.forced_auth_req('post', self.url, data=data)
+        response = self.forced_auth_req('post', self.url, data=self.data)
         self.assertResponseFundamentals(response)
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self.forced_auth_req('post', self.url, data=self.data, user=UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.post(self.url, data=self.data, format='json')
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_group_permission(self):
+        '''Ensure a non-staff user in the 'special' group still gets 403 when attempting to create/POST'''
+        user = UserFactory()
+        user.groups.add(Group.objects.get(name=READ_ONLY_API_GROUP_NAME))
+        response = self.forced_auth_req('post', self.url, data=self.data, user=user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_with_staff_members(self):
         '''Exercise create with staff members'''
-        staff_members = [{
-            "title": "Some title",
-            "first_name": "Jane",
-            "last_name": "Doe",
-            "email": "a@example.com",
-            "active": True,
-        }]
-        data = {
-            "name": "PO 1",
-            "partner_type": PartnerType.GOVERNMENT,
-            "vendor_number": "AAA",
-            "staff_members": staff_members,
-        }
+        data = self.data.copy()
+        data["staff_members"] = [{"title": "Some title",
+                                  "first_name": "Jane",
+                                  "last_name": "Doe",
+                                  "email": "a@example.com",
+                                  "active": True,
+                                  }]
+
         response = self.forced_auth_req('post', self.url, data=data)
         new_id = self.assertResponseFundamentals(response)
         partner = PartnerOrganization.objects.get(pk=new_id)
