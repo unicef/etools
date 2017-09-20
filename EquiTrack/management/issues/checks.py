@@ -67,7 +67,14 @@ class BaseIssueCheck(object):
 
 
 def get_issue_checks():
+    check_ids = set()
     for check_path in settings.ISSUE_CHECKS:
+        check = get_issue_check(check_path)
+        if check.issue_id in check_ids:
+            raise ImproperlyConfigured(
+                'Duplicate Issue Check ID {} is not allowed! See settings.ISSUE_CHECKS'.format(check.issue_id)
+            )
+        check_ids.add(check.issue_id)
         yield get_issue_check(check_path)
 
 
