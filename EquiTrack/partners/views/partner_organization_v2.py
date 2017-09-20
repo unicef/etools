@@ -26,6 +26,7 @@ from partners.models import (
     PartnerOrganization,
     Assessment,
 )
+from partners.permissions import ListCreateAPIMixedPermission
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
     PartnerOrganizationListSerializer,
@@ -50,7 +51,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     """
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationListSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (ListCreateAPIMixedPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, PartnerOrganizationCsvRenderer)
 
