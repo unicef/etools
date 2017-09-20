@@ -46,6 +46,9 @@ def agreement_transition_to_ended_valid(agreement):
 
 
 def agreements_illegal_transition(agreement):
+    if agreement.agreement_type == agreement.SSFA and agreement.status == agreement.SUSPENDED:
+        raise TransitionError(['Please unsuspend the SSFA on the PD/SSFA Page and the record on the Agreement page ' \
+                               'will be unsuspended automatically'])
     return False
 
 
@@ -186,13 +189,6 @@ class AgreementValid(CompleteValidation):
         self.check_required_fields(agreement)
         self.check_rigid_fields(agreement, related=True)
         return True
-
-    def state_suspended_valid(self, agreement, user=None):
-        # for SSFAs there will be no states valid since the states are forced by the Interventions
-        # Once signed, nothing will be editable on the agreement level
-        if agreement.agreement_type == agreement.SSFA:
-            raise StateValidError([_('Please unsuspend the SSFA on the PD/SSFA Page and the record on the Agreement '
-                                     'page will be unsuspended automatically.')])
 
     def state_ended_valid(self, agreement, user=None):
         # for SSFAs there will be no states valid since the states are forced by the Interventions
