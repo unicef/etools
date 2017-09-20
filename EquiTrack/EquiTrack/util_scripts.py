@@ -850,13 +850,16 @@ def create_test_user(email, password):
 
 
 class every_country:
+    original_country = None
+
     def __enter__(self):
+        self.original_country = connection.tenant
         for c in Country.objects.exclude(name='Global').all():
             connection.set_tenant(c)
             yield c
 
     def __exit__(self, type, value, traceback):
-        connection.set_tenant(Country.objects.get(name='Global'))
+        connection.set_tenant(self.original_country)
 
 
 def run(function):
