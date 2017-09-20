@@ -3,12 +3,12 @@ from django.db.models import Q
 from .checks import BaseIssueCheck, ModelCheckData
 from management.issues.exceptions import IssueFoundException
 from partners.models import Agreement, Intervention, InterventionAmendment, AgreementAmendment
+from partners.validation.interventions import InterventionValid
+from reports.models import CountryProgramme
 
 
 # todo: these can probably move closer to the models they are associated with, but just
 # starting with them here as a proof of concept
-from partners.validation.interventions import InterventionValid
-from reports.models import CountryProgramme
 
 
 class ActivePCANoSignedDocCheck(BaseIssueCheck):
