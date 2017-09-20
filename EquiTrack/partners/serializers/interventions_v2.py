@@ -213,10 +213,12 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
             'id', 'intervention', 'cp_output', 'ram_indicators', 'll_results'
         )
 
+
 class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
+
 
 class InterventionResultCUSerializer(serializers.ModelSerializer):
 
@@ -551,5 +553,5 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
         fields = (
             "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
             "start", "end", "offices",
-            "sector_locations", # TODO intervention sector locations cleanup
+            "sector_locations",     # TODO intervention sector locations cleanup
         )

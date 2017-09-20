@@ -16,9 +16,9 @@ def setup_intervention_test_data(test_case):
     test_case.agreement = AgreementFactory(partner=test_case.partner, signed_by_unicef_date=datetime.date.today())
 
     test_case.active_agreement = AgreementFactory(partner=test_case.partner1,
-                                             status='active',
-                                             signed_by_unicef_date=datetime.date.today(),
-                                             signed_by_partner_date=datetime.date.today())
+                                                  status='active',
+                                                  signed_by_unicef_date=datetime.date.today(),
+                                                  signed_by_partner_date=datetime.date.today())
 
     test_case.intervention = InterventionFactory(agreement=test_case.agreement, title='Intervention 1')
     test_case.intervention_2 = InterventionFactory(agreement=test_case.agreement, title='Intervention 2',

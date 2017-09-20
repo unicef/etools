@@ -12,11 +12,9 @@ from django.contrib.auth.models import User, Group
 
 from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
-# TODO intervention sector locations cleanup
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, \
     InterventionResultLink, InterventionBudget, InterventionAttachment, PCAFile, \
-    Sector, InterventionSectorLocationLink, \
     SupplyPlan, DistributionPlan, Agreement, PartnerOrganization, PartnerStaffMember, \
     Assessment
 from t2f.models import TravelActivity

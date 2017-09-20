@@ -366,7 +366,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
         # TODO intervention sector locations location rewrite
-        self.location = {}
+        self.location = LocationFactory()
 
         self.cp = CountryProgrammeFactory(__sequence=10)
         self.cp_output = ResultFactory(result_type=self.output_res_type)
@@ -680,7 +680,7 @@ class TestPartnershipViews(APITenantTestCase):
             types=[InterventionAmendment.RESULTS],
         )
         # TODO intervention sector locations location rewrite
-        self.location = {}
+        self.location = LocationFactory()
 
     def test_api_partners_list(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)

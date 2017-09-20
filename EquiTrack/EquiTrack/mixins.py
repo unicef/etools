@@ -27,6 +27,8 @@ from allauth.account.utils import perform_login
 
 from EquiTrack.utils import set_country
 
+from rest_framework.authentication import SessionAuthentication
+
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 logger = logging.getLogger(__name__)
 
@@ -210,8 +212,6 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         # if we need to add any other login validation, here would be the place.
         return super(CustomAccountAdapter, self).login(request, user)
 
-
-from rest_framework.authentication import SessionAuthentication
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 

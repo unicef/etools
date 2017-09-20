@@ -58,7 +58,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = ('intervention_id', 'partner_id', 'partner_name', 'number', 'status', 'start', 'end',
-                  'sectors', # TODO intervention sector locations cleanup
+                  'sectors',    # TODO intervention sector locations cleanup
                   'sections', 'offices_names',
                   'total_budget', 'cso_contribution', 'unicef_cash', 'unicef_supplies',
                   'frs_total_frs_amt', 'disbursement',
