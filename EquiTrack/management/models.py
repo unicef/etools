@@ -1,6 +1,8 @@
+from __future__ import absolute_import
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from management.issues.exceptions import IssueFoundException
 
 
 ISSUE_CATEGORY_DATA = 'data'
@@ -12,10 +14,12 @@ ISSUE_CATEGORY_CHOICES = (
 
 ISSUE_STATUS_NEW = 'new'
 ISSUE_STATUS_PENDING = 'pending'
+ISSUE_STATUS_REACTIVATED = 'reactivated'
 ISSUE_STATUS_RESOLVED = 'resolved'
 ISSUE_STATUS_CHOICES = (
     (ISSUE_STATUS_NEW, 'New (untriaged)'),
     (ISSUE_STATUS_PENDING, 'Pending (triaged, not resolved)'),
+    (ISSUE_STATUS_REACTIVATED, 'Reactivated (was resolved but not fixed)'),
     (ISSUE_STATUS_RESOLVED, 'Resolved'),
 )
 
@@ -36,6 +40,21 @@ class FlaggedIssue(models.Model):
         help_text='A readable ID associated with the specific issue, e.g. "pca-no-attachment"',
     )
     message = models.TextField()
+
+    def recheck(self):
+        from management.issues.checks import get_issue_check_by_id  # noqa
+        check = get_issue_check_by_id(self.issue_id)
+        try:
+            check.run_check(self.content_object, metadata=None)  # todo: figure out how to pass metadata
+        except IssueFoundException as e:
+            # don't change status unless it was marked resolved
+            if self.issue_status == ISSUE_STATUS_RESOLVED:
+                self.issue_status = ISSUE_STATUS_REACTIVATED
+            self.message = unicode(e)
+            self.save()
+        else:
+            self.issue_status = ISSUE_STATUS_RESOLVED
+            self.save()
 
     @classmethod
     def get_or_new(cls, content_object, issue_id):
