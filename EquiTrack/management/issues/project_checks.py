@@ -60,6 +60,7 @@ class PdOutputsWrongCheck(BaseIssueCheck):
                     "This will be ignored and any associated issues may be resolved."
                 ).format(model_instance.pk)
             )
+            return
         for rl in model_instance.result_links.all():
             if rl.cp_output.country_programme != cp:
                 wrong_cp.append(rl.cp_output.wbs)
