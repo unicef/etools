@@ -6,33 +6,6 @@ from reports.models import Result, AppliedIndicator, IndicatorBlueprint, LowerRe
     Disaggregation, DisaggregationValue
 
 
-class DisaggregationValueSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DisaggregationValue
-        fields = ('value', 'active', )
-
-
-class DisaggregationSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Disaggregation (i.e. the feature on which data is being disaggregated).
-
-    This is a nested writable serializer based on:
-    http://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
-    """
-    disaggregation_values = DisaggregationValueSerializer(many=True)
-
-    class Meta:
-        model = Disaggregation
-        fields = ('name', 'active', 'disaggregation_values', )
-
-    def create(self, validated_data):
-        values_data = validated_data.pop('disaggregation_values')
-        disaggregation = Disaggregation.objects.create(**validated_data)
-        for value_data in values_data:
-            DisaggregationValue.objects.create(disaggregation=disaggregation, **value_data)
-        return disaggregation
-
-
 class OutputListSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source="output_name")
     result_type = serializers.SlugRelatedField(slug_field="name", read_only=True)
@@ -69,6 +42,33 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
         # always try to get first
         validated_data['title'] = validated_data['title'].title()
         return IndicatorBlueprint.objects.get_or_create(**validated_data)[0]
+
+
+class DisaggregationValueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DisaggregationValue
+        fields = ('value', 'active', )
+
+
+class DisaggregationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Disaggregation (i.e. the feature on which data is being disaggregated).
+
+    This is a nested writable serializer based on:
+    http://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
+    """
+    disaggregation_values = DisaggregationValueSerializer(many=True)
+
+    class Meta:
+        model = Disaggregation
+        fields = ('name', 'active', 'disaggregation_values', )
+
+    def create(self, validated_data):
+        values_data = validated_data.pop('disaggregation_values')
+        disaggregation = Disaggregation.objects.create(**validated_data)
+        for value_data in values_data:
+            DisaggregationValue.objects.create(disaggregation=disaggregation, **value_data)
+        return disaggregation
 
 
 class AppliedIndicatorSerializer(serializers.ModelSerializer):
