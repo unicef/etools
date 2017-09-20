@@ -50,3 +50,6 @@ class FlaggedIssue(models.Model):
             return cls.objects.get(content_type=ct, object_id=content_object.pk, issue_id=issue_id)
         except FlaggedIssue.DoesNotExist:
             return cls(content_object=content_object, issue_id=issue_id)
+
+    def __unicode__(self):
+        return self.message
