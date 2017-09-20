@@ -114,7 +114,6 @@ class IssueCheckTest(FastTenantTestCase):
         self.assertEqual(ISSUE_STATUS_REACTIVATED, issue.issue_status)
         self.assertNotEqual(update_date, issue.date_updated)
 
-
     @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersNameMustBeFooTestCheck'])
     def test_recheck_with_metadata(self):
         partner_bad = PartnerFactory(name='bar')

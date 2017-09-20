@@ -10,8 +10,6 @@ def run_all_checks_task():
     run_all_checks()
 
 
-
-
 @app.task
 def recheck_all_open_issues_task():
     """

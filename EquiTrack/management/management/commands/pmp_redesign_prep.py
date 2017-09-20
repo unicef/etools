@@ -1,3 +1,4 @@
+# flake8: noqa
 from django.core.management import BaseCommand
 from datetime import date, datetime, timedelta
 from users.models import Country, User
@@ -74,11 +75,13 @@ def interventions_associated_ssfa():
     for i in interventions:
         print('intervention {} type {} status {} has agreement type {}'.format(i.id, i.document_type, i.status, i.agreement.agreement_type))
 
+
 # PD amendments missing files
 def interventions_amendments_no_file():
     ias = InterventionAmendment.objects.filter(signed_amendment='')
     for amd in ias:
         print('intervention {} type {} status {} has missing amendment file'.format(amd.intervention.id, amd.intervention.document_type, amd.intervention.status))
+
 
 # PCA amendments missing files
 def agreement_amendments_no_file():

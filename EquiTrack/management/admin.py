@@ -7,4 +7,4 @@ class FlaggedIssueAdmin(admin.ModelAdmin):
     list_display = ['content_object', 'issue_category', 'issue_id', 'issue_status', 'date_created',
                     'date_updated', 'message']
     list_filter = ['issue_category', 'issue_id', 'issue_status', 'date_created', 'date_updated']
-    search_fields = ['message',]
+    search_fields = ['message']
