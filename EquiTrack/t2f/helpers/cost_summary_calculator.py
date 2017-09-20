@@ -259,10 +259,10 @@ class DSACalculator(object):
             return dsa_dto_list
 
         same_day_travels = list(self.travel.itinerary.all())
-        for i, sdt in enumerate(same_day_travels[:-1]):
+        for i, sdt in enumerate(same_day_travels[:-1], start=1):
             # If it was less than 8 hours long, skip it
             arrival = sdt.arrival_date
-            departure = same_day_travels[i+1].departure_date
+            departure = same_day_travels[i].departure_date
             if (departure - arrival) >= timedelta(hours=8):
                 break
         else:
@@ -300,10 +300,10 @@ class DSACalculator(object):
 
         same_day_travels = list(same_day_travels)
         same_day_travels.append(dto.itinerary_item)
-        for i, sdt in enumerate(same_day_travels[:-1]):
+        for i, sdt in enumerate(same_day_travels[:-1], start=1):
             # If it was less than 8 hours long, skip it
             arrival = sdt.arrival_date
-            departure = same_day_travels[i+1].departure_date
+            departure = same_day_travels[i].departure_date
             if (departure - arrival) < timedelta(hours=8):
                 continue
 

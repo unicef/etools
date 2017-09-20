@@ -14,7 +14,7 @@ from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, DSARateFactory, ExpenseTypeFactory
 from t2f.models import ModeOfTravel, make_travel_reference_number, Travel
-from t2f.tests.factories import CurrencyFactory, IteneraryItemFactory
+from t2f.tests.factories import CurrencyFactory, ItineraryItemFactory
 
 from .factories import TravelFactory
 
@@ -41,8 +41,8 @@ class OverlappingTravelsTest(APITenantTestCase):
                                     start_date=datetime(2017, 4, 4, 12, 00, tzinfo=UTC),
                                     end_date=datetime(2017, 4, 14, 16, 00, tzinfo=UTC))
         self.travel.expenses.all().delete()
-        IteneraryItemFactory(travel=self.travel)
-        IteneraryItemFactory(travel=self.travel)
+        ItineraryItemFactory(travel=self.travel)
+        ItineraryItemFactory(travel=self.travel)
         self.travel.submit_for_approval()
         self.travel.approve()
         self.travel.send_for_payment()

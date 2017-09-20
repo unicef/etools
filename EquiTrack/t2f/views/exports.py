@@ -10,7 +10,7 @@ from t2f.filters import travel_list
 from t2f.serializers.export import TravelActivityExportSerializer, FinanceExportSerializer, \
     TravelAdminExportSerializer, InvoiceExportSerializer
 
-from t2f.models import Travel, IteneraryItem, InvoiceItem, TravelActivity
+from t2f.models import Travel, ItineraryItem, InvoiceItem, TravelActivity
 from t2f.views import T2FPagePagination
 
 
@@ -73,7 +73,7 @@ class TravelAdminExport(ExportBaseView):
 
     def get(self, request):
         travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = IteneraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number', 'id')
+        queryset = ItineraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number', 'id')
         queryset = queryset.select_related('travel', 'travel__office', 'travel__section', 'travel__traveler',
                                            'dsa_region')
         serializer = self.get_serializer(queryset, many=True)
