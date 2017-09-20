@@ -45,12 +45,6 @@ class Migration(migrations.Migration):
                     Intervention.objects.get(pk=interventionsector.intervention.id).sections.add(
                         sectionSectorMatch
                     )
-
-                    '''
-                    Intervention.objects.get(pk=interventionsector.intervention.id).sections.create(
-                        section_id=sectionSectorMatch.id
-                    )
-                    '''
                 except Section.DoesNotExist:
                     print "################################################### " \
                           "Could not find the corresponding section for sector %s" % (interventionsector.sector.name)
@@ -60,20 +54,9 @@ class Migration(migrations.Migration):
                 try:
                     sectionSectorMatch = Section.objects.get(name=interventionsector.sector.name)
 
-                    # print "------ \n"
-                    # print Intervention.objects.get(pk=interventionsector.intervention.id).sections
-                    # print Section.objects.get(pk=sectionSectorMatch.id).name
-                    # print "------ \n"
-
                     Intervention.objects.get(pk=interventionsector.intervention.id).sections.add(
                         sectionSectorMatch
                     )
-
-                    '''
-                    Intervention.objects.get(pk=interventionsector.intervention.id).sections.create(
-                        section_id=sectionSectorMatch.id
-                    )
-                    '''
                 except Section.DoesNotExist:
                     print "################################################### " \
                           "Could not find the corresponding section for sector %s" % (interventionsector.sector.name)

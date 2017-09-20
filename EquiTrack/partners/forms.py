@@ -61,9 +61,9 @@ class LocationForm(forms.ModelForm):
         }
 
 
+# TODO intervention sector locations cleanup
 class SectorLocationForm(forms.ModelForm):
     class Meta:
-        # TODO intervention sector locations cleanup
         model = InterventionSectorLocationLink
         # fields = ('locations',)
         fields = ('sector', 'locations')
