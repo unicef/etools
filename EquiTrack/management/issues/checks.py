@@ -5,7 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
 from django.utils.module_loading import import_string
 from EquiTrack.util_scripts import run
-from .exceptions import IssueFoundException
+from .exceptions import IssueFoundException, IssueCheckNotFoundException
 from management.models import FlaggedIssue
 
 
@@ -76,6 +76,14 @@ def get_issue_checks():
             )
         check_ids.add(check.issue_id)
         yield get_issue_check(check_path)
+
+
+def get_issue_check_by_id(issue_id):
+    # todo: might make sense to cache this if it's going to be called frequently
+    for check in get_issue_checks():
+        if check.issue_id == issue_id:
+            return check
+    raise IssueCheckNotFoundException('No issue check with ID {} found.'.format(issue_id))
 
 
 # todo: should probably cache this with something like lru_cache
