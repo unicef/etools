@@ -18,6 +18,7 @@ from partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
+    # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
     InterventionResultLink,
 )
@@ -123,8 +124,6 @@ class InterventionListSerializer(serializers.ModelSerializer):
     total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    # probably to be removed
-    sectors = serializers.SerializerMethodField()
     sections = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
@@ -149,10 +148,6 @@ class InterventionListSerializer(serializers.ModelSerializer):
     def get_cp_outputs(self, obj):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
-    # probably to be removed
-    def get_sectors(self, obj):
-        return [l.sector.name for l in obj.sector_locations.all()]
-
     def get_sections(self, obj):
         return [l.name for l in obj.sections.all()]
 
@@ -161,7 +156,6 @@ class InterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end', 'frs_total_frs_amt',
             'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
-            'sectors', # probably to be removed
             'sections', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt', 'frs_total_outstanding_amt',
             'offices', 'actual_amount', 'offices_names', 'total_unicef_budget', 'total_budget', 'metadata',
         )
@@ -177,6 +171,7 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         )
 
 
+# TODO intervention sector locations cleanup
 class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
     locations = LocationLightSerializer(many=True)
     sector = SectorLightSerializer()
@@ -188,6 +183,7 @@ class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
         )
 
 
+# TODO intervention sector locations cleanup
 class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionSectorLocationLink
@@ -375,8 +371,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     agreement_name = serializers.CharField(source='agreement.agreement_number')
     country_programme = serializers.CharField(source='agreement.country_programme.name')
     offices = serializers.SerializerMethodField()
-    # to be removed
-    sectors = serializers.SerializerMethodField()
     sections = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
     fr_numbers = serializers.SerializerMethodField()
@@ -419,7 +413,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
-            "title", "start", "end", "offices", "sectors", "sections", "locations", "planned_budget_local",
+            "title", "start", "end", "offices", "sections", "locations", "planned_budget_local",
             "unicef_focal_points", "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators",
             "fr_numbers", "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
@@ -434,14 +428,10 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_offices(self, obj):
         return ', '.join([o.name for o in obj.offices.all()])
 
-    # to be removed
-    def get_sectors(self, obj):
-        return ', '.join([l.sector.name for l in obj.sector_locations.all()])
-
     def get_sections(self, obj):
         return [l.name for l in obj.sections.all()]
 
-    # TODO: needs rewrite after the removal of intervention sectors and inclusion of indicator locations
+    # TODO: needs rewrite after the removal of intervention sector locations and inclusion of indicator locations
     def get_locations(self, obj):
         ll = Location.objects.filter(intervention_sector_locations__intervention=obj.id).order_by('name')
         return ', '.join([l.name for l in ll.all()])
@@ -502,8 +492,6 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    # probably to be removed
-    sectors = serializers.SerializerMethodField()
     sections = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
@@ -528,10 +516,6 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     def get_cp_outputs(self, obj):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
-    # probably to be removed
-    def get_sectors(self, obj):
-        return [l.sector.name for l in obj.sector_locations.all()]
-
     def get_sections(self, obj):
         return [l.name for l in obj.sections.all()]
 
@@ -539,12 +523,13 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'unicef_cash', 'cso_contribution',
-            'total_unicef_budget',
-            'total_budget', 'sectors', 'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
+            'total_unicef_budget', 'total_budget',
+            'sections', 'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
             'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount'
         )
 
 
+# TODO intervention sector locations cleanup
 class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer):
     sector = SectorLightSerializer()
 
@@ -558,11 +543,13 @@ class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer)
 class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
+    # TODO intervention sector locations cleanup
+    sector_locations = InterventionLocationSectorMapNestedSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = Intervention
         fields = (
             "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
-            "start", "end",
-            "offices",
+            "start", "end", "offices",
+            "sector_locations", # TODO intervention sector locations cleanup
         )

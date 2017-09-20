@@ -28,7 +28,6 @@ class URLsTestCase(URLAssertionMixin, TestCase):
             ('intervention-attachments-del', 'attachments/1/', {'pk': 1}),
             ('intervention-results-del', 'results/1/', {'pk': 1}),
             ('intervention-amendments-del', 'amendments/1/', {'pk': 1}),
-            ('intervention-sector-locations-del', 'sector-locations/1/', {'pk': 1}),
             ('intervention-map', 'map/', {}),
             )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/interventions/')
@@ -38,7 +37,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 class TestInterventionsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
     EDITABLE_FIELDS = {
-        'draft': ["status", "sector_locations", "attachments", "prc_review_document", 'travel_activities',
+        'draft': ["status", "sections", "attachments", "prc_review_document", 'travel_activities',
                   "partner_authorized_officer_signatory", "partner_focal_points", "distributions", "id",
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
                   "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start", "supplies",

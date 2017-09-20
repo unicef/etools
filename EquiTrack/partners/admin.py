@@ -42,6 +42,7 @@ from partners.models import (
     Intervention,
     AgreementAmendment,
     InterventionAmendment,
+    # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
     InterventionResultLink,
     InterventionBudget,
@@ -65,6 +66,7 @@ from partners.forms import (
     PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
     LocationForm,
+    # TODO intervention sector locations cleanup
     SectorLocationForm
 )
 
@@ -288,6 +290,7 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
 
 class InterventionSectorLocationAdmin(admin.ModelAdmin):
     form = SectorLocationForm
+    # TODO intervention sector locations cleanup
     model = InterventionSectorLocationLink
     fields = (
         'intervention',
@@ -881,6 +884,7 @@ admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(SupplyPlan, SupplyPlanAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
+# TODO intervention sector locations cleanup
 admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
 
 

@@ -1135,7 +1135,6 @@ class InterventionManager(models.Manager):
 
     def get_queryset(self):
         return super(InterventionManager, self).get_queryset().prefetch_related('agreement__partner',
-                                                                                'sector_locations__sector',
                                                                                 'frs',
                                                                                 'offices',
                                                                                 'planned_budget')
@@ -1783,7 +1782,7 @@ class InterventionAttachment(TimeStampedModel):
         return self.attachment.name
 
 
-# to be removed
+# TODO intervention sector locations cleanup
 class InterventionSectorLocationLink(models.Model):
     intervention = models.ForeignKey(Intervention, related_name='sector_locations')
     sector = models.ForeignKey(Sector, related_name='intervention_locations')

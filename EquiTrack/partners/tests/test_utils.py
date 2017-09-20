@@ -1,6 +1,7 @@
 import datetime
 from EquiTrack.factories import UserFactory, GroupFactory, PartnerFactory, AgreementFactory, InterventionFactory, \
     ResultFactory, FundsReservationHeaderFactory
+# TODO intervention sector locations cleanup
 from partners.models import Intervention, InterventionSectorLocationLink, InterventionBudget
 from reports.models import ResultType, Sector
 
@@ -38,6 +39,7 @@ def setup_intervention_test_data(test_case):
     test_case.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
     test_case.result = ResultFactory(result_type=test_case.result_type)
 
+    # TODO intervention sector locations cleanup
     test_case.pcasector = InterventionSectorLocationLink.objects.create(
         intervention=test_case.intervention,
         sector=Sector.objects.create(name="Sector 1")
@@ -51,6 +53,7 @@ def setup_intervention_test_data(test_case):
         in_kind_amount_local=10,
     )
 
+    # TODO intervention sector locations cleanup
     test_case.location = InterventionSectorLocationLink.objects.create(
         intervention=test_case.intervention,
         sector=Sector.objects.create(name="Sector 2")

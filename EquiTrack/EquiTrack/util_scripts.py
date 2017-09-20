@@ -12,10 +12,12 @@ from django.contrib.auth.models import User, Group
 
 from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
+# TODO intervention sector locations cleanup
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, \
-    InterventionResultLink, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
-    InterventionSectorLocationLink, SupplyPlan, DistributionPlan, Agreement, PartnerOrganization, PartnerStaffMember, \
+    InterventionResultLink, InterventionBudget, InterventionAttachment, PCAFile, \
+    Sector, InterventionSectorLocationLink, \
+    SupplyPlan, DistributionPlan, Agreement, PartnerOrganization, PartnerStaffMember, \
     Assessment
 from t2f.models import TravelActivity
 
@@ -678,32 +680,6 @@ def copy_pca_attachments_to_intervention():
                                                          attachment=pca_file.attachment)
 
 
-def copy_pca_sector_locations_to_intervention():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry)
-        for pca in PCA.objects.all():
-            sector_ids = pca.locations.order_by().values_list('sector__id', flat=True).distinct()
-            for sector_id in sector_ids:
-                if not sector_id:
-                    continue
-                sector = Sector.objects.get(id=sector_id)
-                gwpc_locations = pca.locations.filter(sector=sector).all()
-                locations = []
-                for gwpc_loc in gwpc_locations:
-                    if gwpc_loc.location:
-                        locations.append(gwpc_loc.location)
-                try:
-                    intervention = Intervention.objects.get(number=pca.number)
-                except Intervention.DoesNotExist:
-                    log_to_file('copy_pca_sector_locations_to_intervention: Indervention.DoesNotExist',
-                                pca.id, pca.number)
-                    continue
-                isl, created = InterventionSectorLocationLink.objects.get_or_create(intervention=intervention,
-                                                                                    sector=sector)
-                isl.locations.add(*locations)
-
-
 def copy_pca_supply_plan_to_intervention():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
@@ -797,7 +773,6 @@ def after_partner_migration():
     #
     # # copy_pca_amendments_to_intervention() # this needs to be manual since we can't map type of amendment
     # copy_pca_budgets_to_intervention()
-    # copy_pca_sector_locations_to_intervention()
     # copy_pca_supply_plan_to_intervention()
     # copy_pca_distribution_plan_to_intervention()
 
