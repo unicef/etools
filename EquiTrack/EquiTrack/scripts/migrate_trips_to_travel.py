@@ -172,7 +172,6 @@ def migrate_trips(country):
                     "departure_date": route.depart,
                     "arrival_date": route.arrive,
                 }
-                # TODO this goddamn model is misspelled
                 itinerary_item = ItineraryItem(**itinerary_payload)
                 itinerary_item.save()
 
