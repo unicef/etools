@@ -1143,12 +1143,10 @@ class InterventionManager(models.Manager):
                                                     'unicef_focal_points')
 
 
-def side_effect_one(i, old_instance=None, user=None):
-    logging.debug('Side effect 1 is executing for instance: {}'.format(i.id))
-    # print i.status
-    # print old_instance.status
-    # print user.get_full_name()
-    pass
+def side_effect_ssfa_signed(i, old_instance=None, user=None):
+    if i.document_type in ['SSFA']:
+        i.agreement.status = Agreement.SIGNED
+        i.agreement.save()
 
 
 def side_effect_two(i, old_instance=None, user=None):
@@ -1183,7 +1181,7 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
-        SIGNED: [side_effect_one, side_effect_two],
+        SIGNED: [side_effect_ssfa_signed, side_effect_two],
         ACTIVE: [],
         SUSPENDED: [],
         ENDED: [],
