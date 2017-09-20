@@ -4,7 +4,8 @@ import factory
 from django.contrib.auth.models import Group
 from factory import fuzzy
 
-from EquiTrack.factories import PartnerFactory
+from EquiTrack.factories import PartnerFactory as OriginalPartnerFactory, AgreementFactory as OriginalAgreementFactory, \
+    InterventionFactory
 from audit.models import AuditorFirm, PurchaseOrder, Engagement, RiskCategory, \
     RiskBluePrint, Risk, AuditorStaffMember, MicroAssessment, \
     Audit, SpotCheck, Auditor
@@ -14,6 +15,14 @@ from firms.factories import BaseStaffMemberFactory, BaseFirmFactory
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
     def fuzz(self):
         return bool(random.getrandbits(1))
+
+
+class AgreementFactory(OriginalAgreementFactory):
+    interventions = factory.RelatedFactory(InterventionFactory, 'agreement')
+
+
+class PartnerFactory(OriginalPartnerFactory):
+    agreements = factory.RelatedFactory(AgreementFactory, 'partner')
 
 
 class AuditorStaffMemberFactory(BaseStaffMemberFactory):
@@ -49,6 +58,11 @@ class EngagementFactory(factory.DjangoModelFactory):
 
     agreement = factory.SubFactory(PurchaseOrderFactory)
     partner = factory.SubFactory(PartnerFactory)
+
+    @factory.post_generation
+    def active_pd(self, create, extracted, **kwargs):
+        if create:
+            self.active_pd.add(*self.partner.agreements.first().interventions.all())
 
     @factory.post_generation
     def staff_members(self, create, extracted, **kwargs):
