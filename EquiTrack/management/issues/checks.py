@@ -1,12 +1,13 @@
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
+import logging
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
 from django.utils.module_loading import import_string
 from EquiTrack.util_scripts import run
 from .exceptions import IssueFoundException, IssueCheckNotFoundException
-from management.models import FlaggedIssue
+from management.models import FlaggedIssue, ISSUE_STATUS_RESOLVED
 
 
 ModelCheckData = namedtuple('ModelCheckData', 'object metadata')
@@ -112,3 +113,19 @@ def run_all_checks():
     """
     for issue_check in get_issue_checks():
         issue_check.check_all()
+
+
+def recheck_all_open_issues():
+    """
+    Recheck all unresolved FlaggedIssue objects for resolution.
+    """
+    def _check():
+        for issue in FlaggedIssue.objects.exclude(issue_status=ISSUE_STATUS_RESOLVED):
+            try:
+                issue.recheck()
+            except IssueCheckNotFoundException as e:
+                # todo: should this fail hard?
+                logging.error(unicode(e))
+
+    # todo: is it always valid to run all checks against all tenants?
+    run(_check)
