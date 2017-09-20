@@ -20,7 +20,7 @@
                 "location_type": "A Gateway"
               }
             ],
-            "cluster_id": null,
+            "cluster_indicator_id": null,
             "id": 8,
             "baseline": null
           }

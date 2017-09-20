@@ -3,13 +3,13 @@ import operator
 
 from django.db.models import Q
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 
-from reports.models import Result, CountryProgramme, Indicator, LowerResult
-from reports.serializers.v2 import OutputListSerializer,  MinimalOutputListSerializer
+from reports.models import Result, CountryProgramme, Indicator, LowerResult, Disaggregation
+from reports.serializers.v2 import OutputListSerializer,  MinimalOutputListSerializer, DisaggregationSerializer
 from reports.serializers.v1 import IndicatorSerializer
 from partners.models import Intervention
 from partners.permissions import PartneshipManagerRepPermission
@@ -118,3 +118,8 @@ class LowerResultsDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete a lower result")
+
+
+class DisaggregationListCreateView(ListCreateAPIView):
+    serializer_class = DisaggregationSerializer
+    queryset = Disaggregation.objects.all()
