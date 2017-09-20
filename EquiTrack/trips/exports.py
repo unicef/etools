@@ -1,8 +1,87 @@
-from django.conf import settings
+from collections import OrderedDict as SortedDict
 
-from EquiTrack.utils import BaseExportResource
+from django.conf import settings
+from import_export.resources import ModelResource
+import tablib
+
 from users.models import UserProfile
 from trips.models import Trip, ActionPoint
+
+
+class BaseExportResource(ModelResource):
+
+    headers = []
+
+    def insert_column(self, row, field_name, value):
+        """
+        Inserts a column into a row with a given value
+        or sets a default value of empty string if none
+        """
+        row[field_name] = value
+
+    def insert_columns_inplace(self, row, fields, after_column):
+        """
+        Inserts fields with values into a row inplace
+        and after a specific named column
+        """
+        keys = row.keys()
+        before_column = None
+        if after_column in row:
+            index = keys.index(after_column)
+            offset = index + 1
+            if offset < len(row):
+                before_column = keys[offset]
+
+        for key, value in fields.items():
+            if before_column:
+                row.insert(offset, key, value)
+                offset += 1
+            else:
+                row[key] = value
+
+    def fill_row(self, resource, fields):
+        """
+        This performs the actual work of translating
+        a model into a fields dictionary for exporting.
+        Inheriting classes must implement this.
+        """
+        return NotImplementedError()
+
+    def export(self, queryset=None):
+        """
+        Exports a resource.
+        """
+
+        # TODO quickly patched.. this whole code needs to be rewritten to for performance (streaming)
+
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        if getattr(self, 'up_queryset', None):
+            queryset = self.up_queryset(queryset)
+
+        fields = SortedDict()
+        data = tablib.Dataset(headers=fields.keys())
+
+        for model in queryset.iterator():
+            # first pass creates table shape
+            self.fill_row(model, fields)
+            data.append(fields.keys())
+            # run only once for the headers
+            break
+
+        self.headers = fields
+
+        # Iterate without the queryset cache, to avoid wasting memory when
+        # exporting large datasets.
+
+        for model in queryset.all():
+            # second pass creates rows from the known table shape
+            row = fields.copy()
+            self.fill_row(model, row)
+            data.append(row.values())
+
+        return data
 
 
 class TripResource(BaseExportResource):
@@ -32,10 +111,10 @@ class TripResource(BaseExportResource):
         return row
 
     def fill_trip_pcas(self, row, trip):
-        pcas = set(lp.intervention.__unicode__() for lp in trip.linkedpartner_set.all() if lp.intervention)
+        pcas = set(unicode(lp.intervention) for lp in trip.linkedpartner_set.all() if lp.intervention)
 
         pcas.union(
-            set(lgp.intervention.__unicode__() for lgp in trip.linkedgovernmentpartner_set.all() if lgp.intervention)
+            set(unicode(lgp.intervention) for lgp in trip.linkedgovernmentpartner_set.all() if lgp.intervention)
         )
         self.insert_column(
             row,
@@ -100,7 +179,7 @@ class ActionPointResource(BaseExportResource):
 
     def fill_row(self, action, row):
 
-        self.insert_column(row, 'Trip', action.trip.__unicode__())
+        self.insert_column(row, 'Trip', unicode(action.trip))
         self.insert_column(row, 'Traveller', action.trip.owner)
         self.insert_column(row, 'Section', action.trip.section)
         self.insert_column(row, 'Office', action.trip.office)

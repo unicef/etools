@@ -1,7 +1,6 @@
 [
     {
         "model": "post_office.emailtemplate",
-        "pk": 18,
         "fields": {
             "name": "base",
             "description": "Base template for emails.",
@@ -16,7 +15,6 @@
     },
     {
         "model": "post_office.emailtemplate",
-        "pk": 19,
         "fields": {
             "name": "organisations/staff_member/set_password",
             "description": "The email that is sent to partner staff member when he have been registered in the system.",
@@ -31,7 +29,6 @@
     },
     {
         "model": "post_office.emailtemplate",
-        "pk": 20,
         "fields": {
             "name": "audit/engagement/submit_to_auditor",
             "description": "Email that send to auditor when engagement have been created.",
@@ -46,7 +43,6 @@
     },
     {
         "model": "post_office.emailtemplate",
-        "pk": 21,
         "fields": {
             "name": "audit/engagement/reported_by_auditor",
             "description": "Email that send when auditor fill engagement's report.",
@@ -61,7 +57,6 @@
     },
     {
         "model": "post_office.emailtemplate",
-        "pk": 22,
         "fields": {
             "name": "audit/engagement/action_point_assigned",
             "description": "",

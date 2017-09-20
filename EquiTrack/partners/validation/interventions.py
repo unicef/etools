@@ -31,14 +31,14 @@ def transition_to_closed(i):
     if i.end > today:
         raise TransitionError([_('End date is in the future')])
 
-    if i.total_frs_amt['total_intervention_amt'] != i.total_frs_amt['total_actual_amt'] or \
-            i.total_frs_amt['total_outstanding_amt'] != 0:
+    if i.total_frs['total_intervention_amt'] != i.total_frs['total_actual_amt'] or \
+            i.total_frs['total_outstanding_amt'] != 0:
         raise TransitionError([_('Total FR amount needs to equal total actual amount, and'
                                  'Total Outstanding DCTs need to equal to 0')])
 
     # If total_actual_amt >100,000 then attachments has to include
     # at least 1 record with type: "Final Partnership Review"
-    if i.total_frs_amt['total_actual_amt'] > 100000:
+    if i.total_frs['total_actual_amt'] > 100000:
         if i.attachments.filter(type__name='final partnership review').count() < 1:
             raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
                                      'was attached')])
@@ -69,7 +69,7 @@ def start_end_dates_valid(i):
 
 def start_date_signed_valid(i):
     # i = intervention
-    if i.signed_by_unicef_date and i.signed_by_partner_date and i.start:
+    if i.signed_by_unicef_date and i.signed_by_partner_date and i.start and i.signed_pd_document:
         if i.start < max([i.signed_by_unicef_date, i.signed_by_partner_date]):
             return False
     return True
@@ -78,7 +78,7 @@ def start_date_signed_valid(i):
 def start_date_related_agreement_valid(i):
     # i = intervention
     if i.document_type in [i.PD, i.SHPD] and not i.contingency_pd and i.start and i.agreement.start and\
-                    i.start < i.agreement.start:
+                    i.signed_pd_document and i.start < i.agreement.start:
         return False
     return True
 

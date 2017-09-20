@@ -1,5 +1,6 @@
 from decimal import Decimal
 import logging
+import sys
 
 from django.conf import settings
 from django.db import models, transaction, connection
@@ -11,9 +12,12 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from djangosaml2.signals import pre_user_save
 from tenant_schemas.models import TenantMixin
 
-User.__unicode__ = lambda user: user.get_full_name()
+if sys.version_info.major == 3:
+    User.__str__ = lambda user: user.get_full_name()
+else:
+    # Python 2.7
+    User.__unicode__ = lambda user: user.get_full_name()
 User._meta.ordering = ['first_name']
-
 logger = logging.getLogger(__name__)
 
 

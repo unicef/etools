@@ -1,4 +1,4 @@
-
+from __future__ import unicode_literals
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
@@ -125,11 +125,11 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
         agreement_type = data.get('agreement_type', None) or self.instance.agreement_type
 
         if agreement_type == Agreement.PCA:
-            try:
-                country_programme = data.get('country_programme', None) or self.instance.country_programme
-            except AttributeError:
-                raise ValidationError({'country_programme': 'Country Programme is required for PCAs!'})
-            # if for some reason agreement_type is none because agreement type changed, raise
+            # Look for country programme in data and on instance.
+            country_programme = data.get('country_programme')
+            if not country_programme and self.instance:
+                country_programme = self.instance.country_programme
+
             if country_programme is None:
                 raise ValidationError({'country_programme': 'Country Programme is required for PCAs!'})
 
