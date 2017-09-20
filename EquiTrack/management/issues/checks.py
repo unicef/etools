@@ -58,6 +58,12 @@ class BaseIssueCheck(object):
         for object in self.get_queryset():
             yield ModelCheckData(object, {})
 
+    def get_object_metadata(self, model_instance):
+        """
+        Return any necessary metadata associated with an object. Necessary during rechecks.
+        """
+        return {}
+
     @abstractmethod
     def run_check(self, model_instance, metadata):
         """

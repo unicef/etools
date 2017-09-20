@@ -45,7 +45,7 @@ class FlaggedIssue(models.Model):
         from management.issues.checks import get_issue_check_by_id  # noqa
         check = get_issue_check_by_id(self.issue_id)
         try:
-            check.run_check(self.content_object, metadata=None)  # todo: figure out how to pass metadata
+            check.run_check(self.content_object, metadata=check.get_object_metadata(self.content_object))
         except IssueFoundException as e:
             # don't change status unless it was marked resolved
             if self.issue_status == ISSUE_STATUS_RESOLVED:

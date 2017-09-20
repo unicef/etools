@@ -1,3 +1,4 @@
+import logging
 from django.contrib.auth.models import User
 from django.db.models import Q
 from .checks import BaseIssueCheck, ModelCheckData
@@ -39,9 +40,26 @@ class PdOutputsWrongCheck(BaseIssueCheck):
             for intervention in interventions:
                 yield ModelCheckData(intervention, {'cp': cp})
 
+    def get_object_metadata(self, model_instance):
+        # todo: confirm this logic is always valid
+        cp = CountryProgramme.objects.filter(
+            invalid=False,
+            wbs__contains='/A0/',
+            from_date__lte=model_instance.start,
+            to_date__gte=model_instance.end,
+        ).first()
+        return {'cp': cp}
+
     def run_check(self, model_instance, metadata):
         wrong_cp = []
         cp = metadata['cp']
+        if cp is None:
+            logging.error(
+                (
+                    "Tried to check PD Outputs without a linked CountryProgramme for Intervention {}. "
+                    "This will be ignored and any associated issues may be resolved."
+                ).format(model_instance.pk)
+            )
         for rl in model_instance.result_links.all():
             if rl.cp_output.country_programme != cp:
                 wrong_cp.append(rl.cp_output.wbs)
@@ -89,10 +107,17 @@ class InterventionsAreValidCheck(BaseIssueCheck):
     model = Intervention
     issue_id = 'interventions_are_valid'
 
+    @staticmethod
+    def _get_master_user():
+        return User.objects.get(username='etools_task_admin')
+
     def get_objects_to_check(self):
-        master_user = User.objects.get(username='etools_task_admin')
+        master_user = self._get_master_user()
         for intervention in Intervention.objects.filter(status__in=['draft', 'signed', 'active', 'ended']):
             yield ModelCheckData(intervention, {'master_user': master_user})
+
+    def get_object_metadata(self, model_instance):
+        return {'master_user': self._get_master_user()}
 
     def run_check(self, model_instance, metadata):
         master_user = metadata['master_user']

@@ -2,7 +2,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings
 from EquiTrack.factories import PartnerFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
-from management.issues.checks import BaseIssueCheck, get_issue_checks, get_issue_check_by_id, run_all_checks
+from management.issues.checks import BaseIssueCheck, get_issue_checks, get_issue_check_by_id, run_all_checks, \
+    ModelCheckData
 from management.issues.exceptions import IssueFoundException, IssueCheckNotFoundException
 from management.models import FlaggedIssue, ISSUE_STATUS_NEW, ISSUE_STATUS_RESOLVED, ISSUE_STATUS_REACTIVATED
 from partners.models import PartnerOrganization
@@ -19,6 +20,25 @@ class PartnersMustHaveShortNameTestCheck(BaseIssueCheck):
         if not model_instance.short_name:
             raise IssueFoundException(
                 'Partner {} must specify a short name!'.format(model_instance.name)
+            )
+
+
+class PartnersNameMustBeFooTestCheck(BaseIssueCheck):
+    model = PartnerOrganization
+    issue_id = 'partners_must_have_short_name'
+
+    def get_object_metadata(self, model_instance):
+        return {'expected_name': 'foo'}
+
+    def get_objects_to_check(self):
+        for org in PartnerOrganization.objects.all():
+            yield ModelCheckData(org, self.get_object_metadata(org))
+
+    def run_check(self, model_instance, metadata):
+        if model_instance.name != metadata['expected_name']:
+            raise IssueFoundException(
+                'Partner name "{}" does not match expected name "{}"!'.format(
+                    model_instance.name, metadata['expected_name'])
             )
 
 
@@ -93,3 +113,20 @@ class IssueCheckTest(FastTenantTestCase):
         issue.recheck()
         self.assertEqual(ISSUE_STATUS_REACTIVATED, issue.issue_status)
         self.assertNotEqual(update_date, issue.date_updated)
+
+
+    @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersNameMustBeFooTestCheck'])
+    def test_recheck_with_metadata(self):
+        partner_bad = PartnerFactory(name='bar')
+        run_all_checks()
+        self.assertEqual(1, FlaggedIssue.objects.count())
+        issue = FlaggedIssue.objects.first()
+        self.assertEqual(PartnersNameMustBeFooTestCheck.issue_id, issue.issue_id)
+        self.assertEqual(partner_bad, issue.content_object)
+        self.assertEqual(ISSUE_STATUS_NEW, issue.issue_status)
+
+        partner_bad.name = 'foo'
+        partner_bad.save()
+        issue = FlaggedIssue.objects.get(pk=issue.pk)
+        issue.recheck()
+        self.assertEqual(ISSUE_STATUS_RESOLVED, issue.issue_status)
