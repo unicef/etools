@@ -70,7 +70,7 @@ else:
         'SHOW_TEMPLATE_CONTEXT': True,
     }
 
-
+LOGGING = LOGGING  # noqa - just here for flake purposes. should be imported from EquiTrack.settings.base
 # log updates for more info in local environment
 LOGGING['disable_existing_loggers'] = False  # don't disable any existing loggers
 
