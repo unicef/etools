@@ -1,7 +1,6 @@
 import random
 
 from rest_framework import status
-from rest_framework.status import is_success
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerType

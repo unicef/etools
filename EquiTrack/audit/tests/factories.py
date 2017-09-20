@@ -4,8 +4,9 @@ import factory
 from django.contrib.auth.models import Group
 from factory import fuzzy
 
-from EquiTrack.factories import PartnerFactory as OriginalPartnerFactory, AgreementFactory as OriginalAgreementFactory, \
-    InterventionFactory
+from EquiTrack.factories import InterventionFactory, AgreementFactory as OriginalAgreementFactory, \
+    PartnerFactory as OriginalPartnerFactory
+
 from audit.models import AuditorFirm, PurchaseOrder, Engagement, RiskCategory, \
     RiskBluePrint, Risk, AuditorStaffMember, MicroAssessment, \
     Audit, SpotCheck, Auditor

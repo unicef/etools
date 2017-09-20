@@ -65,6 +65,10 @@ class SeparatedReadWriteField(Field):
         extra_kwargs, hidden_fields = self.parent.get_uniqueness_extra_kwargs(
             [self.field_name], [self], extra_kwargs
         )
+        extra_field_kwargs = {
+            key: value for key, value in self._kwargs.items()
+            if key not in ['read_field']
+        }
 
         # Determine the serializer field class and keyword arguments.
         field_class, field_kwargs = self.parent.build_field(
@@ -72,7 +76,9 @@ class SeparatedReadWriteField(Field):
         )
 
         # Include any kwargs defined in `Meta.extra_kwargs`
-        extra_field_kwargs = extra_kwargs.get(self.field_name, {})
+        extra_field_kwargs.update(
+            extra_kwargs.get(self.field_name, {})
+        )
         field_kwargs = self.parent.include_extra_kwargs(
             field_kwargs, extra_field_kwargs
         )
