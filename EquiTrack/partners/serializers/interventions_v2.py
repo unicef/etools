@@ -509,7 +509,7 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    sections = serializers.SerializerMethodField()
+    section_names = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
@@ -533,15 +533,15 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     def get_cp_outputs(self, obj):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
-    def get_sections(self, obj):
+    def get_section_names(self, obj):
         return [l.name for l in obj.sections.all()]
 
     class Meta:
         model = Intervention
         fields = (
             'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'unicef_cash', 'cso_contribution',
-            'total_unicef_budget', 'total_budget',
-            'sections', 'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
+            'total_unicef_budget', 'total_budget', 'sections', 'section_names',
+            'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
             'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount'
         )
 
@@ -561,7 +561,7 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
     # TODO: remember to add locations as locations
-    
+
 
     class Meta:
         model = Intervention
