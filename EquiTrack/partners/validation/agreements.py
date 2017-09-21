@@ -46,9 +46,6 @@ def agreement_transition_to_ended_valid(agreement):
 
 
 def agreements_illegal_transition(agreement):
-    if agreement.agreement_type == agreement.SSFA and agreement.status == agreement.SUSPENDED:
-        raise TransitionError(['Please unsuspend the SSFA on the PD/SSFA Page and the record on the Agreement page '
-                               'will be unsuspended automatically'])
     return False
 
 

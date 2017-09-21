@@ -1142,16 +1142,12 @@ class InterventionManager(models.Manager):
                                                     'unicef_focal_points')
 
 
-def side_effect_ssfa_signed(i, old_instance=None, user=None):
-    if i.document_type in ['SSFA']:
-        i.agreement.status = Agreement.SIGNED
-        i.agreement.save()
+def side_effect_one(i, old_instance=None, user=None):
+    pass
 
 
-def side_effect_ssfa_suspend(i, old_instance=None, user=None):
-    if i.document_type in ['SSFA']:
-        i.agreement.status = Agreement.SUSPENDED
-        i.agreement.save()
+def side_effect_two(i, old_instance=None, user=None):
+    pass
 
 
 class Intervention(TimeStampedModel):
@@ -1182,9 +1178,9 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
-        SIGNED: [side_effect_ssfa_signed],
+        SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
-        SUSPENDED: [side_effect_ssfa_suspend],
+        SUSPENDED: [],
         ENDED: [],
         CLOSED: [],
         TERMINATED: []
@@ -1514,7 +1510,7 @@ class Intervention(TimeStampedModel):
                 self.agreement.start = self.start
                 self.agreement.end = self.end
 
-            if self.status == self.ACTIVE and self.agreement.status != Agreement.SIGNED:
+            if self.status == self.SIGNED and self.agreement.status != Agreement.SIGNED:
                 save_agreement = True
                 self.agreement.status = Agreement.SIGNED
 
