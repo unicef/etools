@@ -39,7 +39,6 @@ EXCLUDED_PACKAGES = (
     'trips',
     't2f',
     'users',
-    'utils',
     'vision',
     'workplan',
     )
@@ -58,10 +57,11 @@ class TestStrMethods(TestCase):
         '''Ensure all models have a __str__() method, and that the __unicode__() method is implemented as expected'''
         models = apps.get_models()
         for model in models:
-            # model.__module__ is a string, not an actual module instance. It's something like 'funds.models' or
-            # 'django.contrib.auth.models'.
-            if model.__module__.split('.')[0] in EXCLUDED_PACKAGES:
-                # skip this model
+            # model.__module__ is the module name (a string), not an actual module instance. It's something like
+            # 'funds.models' or 'django.contrib.auth.models'.
+            package_hierarchy = model.__module__.split('.')
+            if (package_hierarchy[0] in EXCLUDED_PACKAGES) or ('tests' in package_hierarchy):
+                # Skip this model. It's in a 3rd party package or a model that's only used in test.
                 pass
             else:
                 # Get the module that holds the __unicode__ implementation. inspect.getmodule() returns an actual
