@@ -135,6 +135,17 @@ class LocationFactory(factory.django.DjangoModelFactory):
     p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
 
 
+class CartoDBTableFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = location_models.CartoDBTable
+
+    domain = factory.Sequence(lambda n: 'Domain {}'.format(n))
+    api_key = factory.Sequence(lambda n: 'API Key {}'.format(n))
+    table_name = factory.Sequence(lambda n: 'table_name_{}'.format(n))
+    location_type = factory.SubFactory(GatewayTypeFactory)
+    domain = factory.Sequence(lambda n: 'Domain {}'.format(n))
+
+
 class PartnerStaffFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PartnerStaffMember
