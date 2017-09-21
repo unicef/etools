@@ -13,7 +13,8 @@ MAPPER = {
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0049_intervention_sections'),
+        ('users', '0008_workspacecounter'),
+        ('partners', '0051_intervention_sections'),
     ]
 
     def reverse(apps, schema_editor):

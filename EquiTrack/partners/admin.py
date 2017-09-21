@@ -591,11 +591,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     created_date.admin_order_field = '-created'
 
     def section_names(self, Intervention):
-        sections = []
-        for section in Intervention.sections.all():
-            sections.append(section.name)
-
-        return ' '.join(sections)
+        return ' '.join([section.name for section in Intervention.sections.all()])
 
     section_names.short_description = "Sections"
 

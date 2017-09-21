@@ -124,7 +124,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
     total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    sections = serializers.SerializerMethodField()
+    section_names = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
@@ -148,7 +148,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
     def get_cp_outputs(self, obj):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
-    def get_sections(self, obj):
+    def get_section_names(self, obj):
         return [l.name for l in obj.sections.all()]
 
     class Meta:
@@ -158,6 +158,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
             'sections', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt', 'frs_total_outstanding_amt',
             'offices', 'actual_amount', 'offices_names', 'total_unicef_budget', 'total_budget', 'metadata',
+            'section_names',
         )
 
 
@@ -559,13 +560,12 @@ class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer)
 class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
-    # TODO intervention sector locations cleanup
-    sector_locations = InterventionLocationSectorMapNestedSerializer(many=True, read_only=True, required=False)
+    # TODO: remember to add locations as locations
+    
 
     class Meta:
         model = Intervention
         fields = (
             "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
-            "start", "end", "offices",
-            "sector_locations",     # TODO intervention sector locations cleanup
+            "start", "end", "offices", "sections",
         )

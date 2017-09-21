@@ -29,7 +29,8 @@ from EquiTrack.factories import (
     GroupFactory,
     InterventionFactory,
     GovernmentInterventionFactory,
-    FundsReservationHeaderFactory)
+    FundsReservationHeaderFactory,
+    SectionFactory)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from reports.models import ResultType
 from users.models import Section
@@ -1470,7 +1471,7 @@ class TestInterventionViews(APITenantTestCase):
             data=data
         )
         self.intervention = response.data
-        self.section = Section.objects.create(name="Section 1")
+        self.section = SectionFactory()
 
         self.fund_commitment_header = FundsCommitmentHeader.objects.create(
             vendor_code="test1",
@@ -1555,6 +1556,7 @@ class TestInterventionViews(APITenantTestCase):
             user=self.partnership_manager_user,
             data=self.intervention_data
         )
+        
         self.intervention_data = response.data
         self.intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         self.planned_visit = InterventionPlannedVisits.objects.create(

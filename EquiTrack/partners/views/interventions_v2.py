@@ -337,19 +337,19 @@ class InterventionListMapView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        # TODO intervention sector locations cleanup
-        q = Intervention.objects.detail_qs()\
-            .filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)\
-            .prefetch_related('sector_locations__locations')
+        q = Intervention.objects.detail_qs()
+        # TODO: remember to add back the location filter after the PRP integration related structural changes are final
+        # .filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)\
+        # .prefetch_related('sector_locations__locations')
+
         query_params = self.request.query_params
 
         if query_params:
             queries = []
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
-            # TODO intervention sector locations cleanup
-            if "sector" in query_params.keys():
-                queries.append(Q(sector_locations__sector__id=query_params.get("sector")))
+            if "section" in query_params.keys():
+                queries.append(Q(sections__section__id=query_params.get("section")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "partner" in query_params.keys():

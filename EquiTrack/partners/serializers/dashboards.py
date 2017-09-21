@@ -12,8 +12,6 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     intervention_id = serializers.CharField(source='id', read_only=True)
     partner_name = serializers.CharField(source='agreement.partner.name', read_only=True)
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
-    # TODO intervention sector locations cleanup
-    sectors = serializers.SerializerMethodField()
     sections = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
 
@@ -45,10 +43,6 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     def get_offices_names(self, obj):
         return [o.name for o in obj.offices.all()]
 
-    # TODO intervention sector locations cleanup
-    def get_sectors(self, obj):
-        return [l.sector.name for l in obj.sector_locations.all()]
-
     def get_sections(self, obj):
         return [l.name for l in obj.sections.all()]
 
@@ -58,7 +52,6 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = ('intervention_id', 'partner_id', 'partner_name', 'number', 'status', 'start', 'end',
-                  'sectors',    # TODO intervention sector locations cleanup
                   'sections', 'offices_names',
                   'total_budget', 'cso_contribution', 'unicef_cash', 'unicef_supplies',
                   'frs_total_frs_amt', 'disbursement',
