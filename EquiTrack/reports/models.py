@@ -403,9 +403,12 @@ class IndicatorBlueprint(TimeStampedModel):
 @python_2_unicode_compatible
 class Disaggregation(TimeStampedModel):
     """
-    Disaggregation module. For example: <Gender, Age>
+    Disaggregation model. For example: <Gender, Age>
+
+    As an example, the Disaggregation could be <Age>, and it would have multiple "categories"
+    such as: <1, 1-5, 5-18, 18-64, 65+. Each of those categories would be a DisaggregationValue.
     """
-    name = models.CharField(max_length=255, verbose_name="Disaggregation by", null=True, blank=True, unique=True)
+    name = models.CharField(max_length=255, unique=True)
     active = models.BooleanField(default=False)
 
     def __str__(self):
@@ -415,13 +418,13 @@ class Disaggregation(TimeStampedModel):
 @python_2_unicode_compatible
 class DisaggregationValue(TimeStampedModel):
     """
-    Disaggregation Value module. For example: Gender <Male, Female, Other>
+    Disaggregation Value model. For example: Gender <Male, Female, Other>
 
     related models:
-        indicator.Disaggregation (ForeignKey): "disaggregation"
+        Disaggregation (ForeignKey): "disaggregation"
     """
-    disaggregation = models.ForeignKey(Disaggregation, related_name="disaggregation_value")
-    value = models.CharField(max_length=15, null=True, blank=True)
+    disaggregation = models.ForeignKey(Disaggregation, related_name="disaggregation_values")
+    value = models.CharField(max_length=15)
     active = models.BooleanField(default=False)
 
     def __str__(self):
@@ -443,7 +446,7 @@ class AppliedIndicator(TimeStampedModel):
 
     section = models.ForeignKey(Section, null=True, blank=True)
 
-    cluster_id = models.PositiveIntegerField(blank=True, null=True)
+    cluster_indicator_id = models.PositiveIntegerField(blank=True, null=True)
     cluster_indicator_title = models.CharField(max_length=1024, blank=True, null=True)
 
     # the result this indicator is contributing to.

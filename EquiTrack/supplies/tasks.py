@@ -64,7 +64,7 @@ def set_unisupply_distribution(distribution_plan_id):
     doc = distribution_plan.document if distribution_plan.document else {
         "country": connection.schema_name,
         "distribution_id": distribution_plan.id,
-        "intervention": distribution_plan.partnership.__unicode__(),
+        "intervention": unicode(distribution_plan.partnership),
         "partner_name": distribution_plan.partnership.partner.short_name,
         "icon": "institution",
         "criticality": "0",

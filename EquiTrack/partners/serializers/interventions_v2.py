@@ -205,16 +205,30 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
     # cp_output = ResultLightSerializer()
     # ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
+    cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    ram_indicator_names = serializers.SerializerMethodField(read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)
+
+    def get_ram_indicator_names(self, obj):
+        return [i.name for i in obj.ram_indicators.all()]
 
     class Meta:
         model = InterventionResultLink
         fields = (
-            'id', 'intervention', 'cp_output', 'ram_indicators', 'll_results'
+            'id', 'intervention',
+            'cp_output', 'cp_output_name',
+            'ram_indicators', 'ram_indicator_names',
+            'll_results'
         )
 
 
 class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
+    cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    ram_indicator_names = serializers.SerializerMethodField(read_only=True)
+
+    def get_ram_indicator_names(self, obj):
+        return [i.name for i in obj.ram_indicators.all()]
+
     class Meta:
         model = InterventionResultLink
         fields = "__all__"

@@ -2,7 +2,8 @@ from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from reports.models import Result, AppliedIndicator, IndicatorBlueprint, LowerResult
+from reports.models import Result, AppliedIndicator, IndicatorBlueprint, LowerResult, \
+    Disaggregation, DisaggregationValue
 
 
 class OutputListSerializer(serializers.ModelSerializer):
@@ -43,6 +44,33 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
         return IndicatorBlueprint.objects.get_or_create(**validated_data)[0]
 
 
+class DisaggregationValueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DisaggregationValue
+        fields = ('value', 'active', )
+
+
+class DisaggregationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Disaggregation (i.e. the feature on which data is being disaggregated).
+
+    This is a nested writable serializer based on:
+    http://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
+    """
+    disaggregation_values = DisaggregationValueSerializer(many=True)
+
+    class Meta:
+        model = Disaggregation
+        fields = ('name', 'active', 'disaggregation_values', )
+
+    def create(self, validated_data):
+        values_data = validated_data.pop('disaggregation_values')
+        disaggregation = Disaggregation.objects.create(**validated_data)
+        for value_data in values_data:
+            DisaggregationValue.objects.create(disaggregation=disaggregation, **value_data)
+        return disaggregation
+
+
 class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
     indicator = IndicatorBlueprintCUSerializer(required=False)
@@ -59,11 +87,13 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
         blueprint_data = attrs.get('indicator')
         if self.partial:
             if not isinstance(blueprint_data, IndicatorBlueprint):
-                raise ValidationError('Indicator blueprint cannot be updated after first use, '
-                                      'please remove this indicator and add another or contact the eTools Focal Point in '
-                                      'your office for assistance')
+                raise ValidationError(
+                    'Indicator blueprint cannot be updated after first use, '
+                    'please remove this indicator and add another or contact the eTools Focal Point in '
+                    'your office for assistance'
+                )
 
-        elif not attrs.get('cluster_id'):
+        elif not attrs.get('cluster_indicator_id'):
             print "no cluster id"
             indicator_blueprint = IndicatorBlueprintCUSerializer(data=blueprint_data)
             indicator_blueprint.is_valid(raise_exception=True)
@@ -73,13 +103,10 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
             if lower_result.applied_indicators.filter(indicator__id=attrs['indicator'].id).exists():
                 raise ValidationError('This indicator is already being monitored for this Result')
 
-
         return super(AppliedIndicatorSerializer, self).validate(attrs)
 
     def create(self, validated_data):
-
         return super(AppliedIndicatorSerializer, self).create(validated_data)
-
 
 
 class AppliedIndicatorCUSerializer(serializers.ModelSerializer):

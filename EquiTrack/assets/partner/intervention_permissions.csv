@@ -7,13 +7,12 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.7,partner_focal_points,Partnership Manager,,Signed,Edit,TRUE
 3.2.7,partner_focal_points,Partnership Manager,,Active,Edit,TRUE
 3.2.8,offices,Partnership Manager,,Draft,Edit,TRUE
-3.2.8,offices,Partnership Manager,,Signed,Edit,TRUE
-3.2.8,offices,Partnership Manager,,Active,Edit,TRUE
 3.2.9,unicef_focal_points,Partnership Manager,,Draft,Edit,TRUE
 3.2.9,unicef_focal_points,Partnership Manager,,Signed,Edit,TRUE
 3.2.9,unicef_focal_points,Partnership Manager,,Active,Edit,TRUE
 3.3.1,country_programme,Partnership Manager,,Draft,Edit,TRUE
 3.3.7,contingency_pd,Partnership Manager,,Draft,Edit,TRUE
+3.3.7,contingency_pd,Partnership Manager,,Signed,Edit,TRUE
 3.3.2,start,Partnership Manager,,Draft,Edit,TRUE
 3.3.2,start,Partnership Manager,,Signed,Edit,TRUE
 3.3.3,end,Partnership Manager,,Draft,Edit,TRUE
@@ -42,8 +41,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.11,amendments,Partnership Manager,,Signed,Edit,TRUE
 3.11,amendments,Partnership Manager,,Active,Edit,TRUE
 3.11,amendments,Partnership Manager,,Ended,Edit,TRUE
-3.2.2,agreement,Partnership Manager,user adds amendment,*,Edit,TRUE
-3.2.3,document_type,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.2.5,title,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.2.7,partner_focal_points,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.2.8,offices,Partnership Manager,user adds amendment,*,Edit,TRUE

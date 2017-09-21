@@ -20,14 +20,14 @@
                 "location_type": "A Gateway"
               }
             ],
-            "cluster_id": null,
+            "cluster_indicator_id": null,
             "id": 8,
             "baseline": null
           }
         ],
         "cp_output": {
           "id": 207,
-          "title": "Result 1"
+          "title": "A Result"
         },
         "id": 16,
         "title": "Lower Result 1"
@@ -36,6 +36,7 @@
     "unicef_focal_points": [],
     "end_date": "2017-12-13",
     "agreement_auth_officers": [],
+    "business_area_code": null,
     "title": "Active Intervention",
     "funds_received": null,
     "unicef_budget": null,
@@ -59,6 +60,7 @@
     "unicef_focal_points": [],
     "end_date": null,
     "agreement_auth_officers": [],
+    "business_area_code": null,
     "title": "Intervention 2",
     "funds_received": null,
     "unicef_budget": null,
@@ -82,6 +84,7 @@
     "unicef_focal_points": [],
     "end_date": null,
     "agreement_auth_officers": [],
+    "business_area_code": null,
     "title": "Intervention 1",
     "funds_received": "300.00",
     "unicef_budget": "100.00",

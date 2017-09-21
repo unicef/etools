@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
+from django.db import connection
 
 from rest_framework import serializers
 from locations.models import Location
@@ -71,6 +72,7 @@ class DisaggregationSerializer(serializers.ModelSerializer):
             # 'parameter'
         )
 
+
 class PRPIndicatorSerializer(serializers.ModelSerializer):
     # todo: this class hasn't been tested at all because there are no `AppliedIndicator`s in the current DB
     # todo: need to validate these and fill in missing fields
@@ -84,7 +86,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             'id',
             'title',
             # 'is_cluster',
-            'cluster_id',
+            'cluster_indicator_id',
             # 'parent_id',
             # 'type',
             # 'pd_frequency',
@@ -126,11 +128,14 @@ class PRPResultSerializer(serializers.ModelSerializer):
 
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
-    offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')  # todo: do these need to be lowercased?
+    # todo: do these need to be lowercased?
+    offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
+    business_area_code = serializers.SerializerMethodField()
     partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
-    agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True, source='agreement.authorized_officers')
-    focal_points = PartnerFocalPointSerializer(many=True, read_only=True,source='partner_focal_points')
+    agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True,
+                                                    source='agreement.authorized_officers')
+    focal_points = PartnerFocalPointSerializer(many=True, read_only=True, source='partner_focal_points')
     start_date = serializers.DateField(source='start')
     end_date = serializers.DateField(source='end')
     cso_budget = serializers.DecimalField(source='total_partner_contribution', read_only=True,
@@ -143,12 +148,15 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     funds_received = serializers.DecimalField(source='total_budget', read_only=True,
                                               max_digits=20, decimal_places=2)
     funds_received_currency = serializers.CharField(source='fr_currency', read_only=True)
-    expected_results = serializers.SerializerMethodField()
+    expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
+
+    def get_business_area_code(self, obj):
+        return connection.tenant.business_area_code
 
     class Meta:
         model = Intervention
         fields = (
-            'id', 'title',
+            'id', 'title', 'business_area_code',
             'offices',  # todo: convert to names, not ids
             'number',
             'partner_org',
@@ -162,10 +170,3 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             # 'reporting_frequencies',  # todo: figure out where this comes from
             'expected_results',
         )
-
-    def get_expected_results(self, intervention):
-        """
-        Get all lower level results associated with this Intervention.
-        """
-        results = LowerResult.objects.filter(result_link__intervention=intervention)
-        return PRPResultSerializer(results, many=True, read_only=True).data

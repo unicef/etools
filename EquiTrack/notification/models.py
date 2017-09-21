@@ -59,7 +59,7 @@ class Notification(models.Model):
     template_data = JSONField()
 
     def __unicode__(self):
-        return "{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
+        return u"{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
 
     def send_notification(self):
         """

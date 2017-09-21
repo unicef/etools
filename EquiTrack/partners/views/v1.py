@@ -83,12 +83,13 @@ class PCAPDFView(PDFTemplateView):
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
         lang = self.request.GET.get('lang', None)
-        if lang:
-            try:
-                self.template_name = self.language_templates_mapping[lang]
-            except KeyError:
-                return {"error": "Cannot find document with given query parameter lang={}".format(lang)}
         error = None
+
+        try:
+            self.template_name = self.language_templates_mapping[lang]
+        except KeyError:
+            return {"error": "Cannot find document with given query parameter lang={}".format(lang)}
+
         try:
             agreement = Agreement.objects.get(id=agr_id)
         except Agreement.DoesNotExist:
@@ -129,6 +130,8 @@ class PCAPDFView(PDFTemplateView):
                  'title': officer.title}
             )
 
+        font_path = settings.SITE_ROOT + '/assets/fonts/'
+
         return super(PCAPDFView, self).get_context_data(
             error=error,
             pagesize="Letter",
@@ -138,6 +141,7 @@ class PCAPDFView(PDFTemplateView):
             cp=agreement.country_programme,
             auth_officers=officers_list,
             country=self.request.tenant.long_name,
+            font_path=font_path,
             **kwargs
         )
 
