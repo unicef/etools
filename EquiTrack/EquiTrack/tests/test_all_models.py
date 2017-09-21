@@ -39,6 +39,7 @@ EXCLUDED_PACKAGES = (
     'trips',
     't2f',
     'users',
+    'utils',
     'vision',
     'workplan',
     )
