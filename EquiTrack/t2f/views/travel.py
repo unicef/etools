@@ -193,7 +193,6 @@ class ActionPointViewSet(mixins.ListModelMixin,
     filter_backends = (action_points.ActionPointSearchFilter,
                        action_points.ActionPointSortFilter,
                        action_points.ActionPointFilterBoxFilter)
-    # filter_class = BaseStatusFilter
     renderer_classes = (renderers.JSONRenderer, ActionPointCSVRenderer)
     lookup_url_kwarg = 'action_point_pk'
 
