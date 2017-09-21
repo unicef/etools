@@ -11,12 +11,11 @@ from EquiTrack.factories import (
     GatewayTypeFactory,
     InterventionFactory,
     LocationFactory,
-    PartnerFactory,
     ResultFactory,
     UserFactory,
     )
 from EquiTrack.tests.mixins import APITenantTestCase
-from partners.models import InterventionResultLink, PartnerType
+from partners.models import InterventionResultLink
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.tests.test_utils import setup_intervention_test_data
 from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
