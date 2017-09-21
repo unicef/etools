@@ -1540,7 +1540,8 @@ class TestInterventionViews(APITenantTestCase):
                     "in_kind_amount_local": "0.00",
                     "total": "6.00"
                 },
-            "sections": [self.section.id],
+            # TODO intervention sector locations location rewrite
+            # "sections": [self.section.id],
             "result_links": [
                 {
                     "cp_output": ResultFactory().id,
@@ -1556,7 +1557,7 @@ class TestInterventionViews(APITenantTestCase):
             user=self.partnership_manager_user,
             data=self.intervention_data
         )
-        
+
         self.intervention_data = response.data
         self.intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         self.planned_visit = InterventionPlannedVisits.objects.create(
@@ -1805,7 +1806,8 @@ class TestInterventionViews(APITenantTestCase):
             "start": "2016-10-28",
             "end": "2016-10-28",
             "location": "Location",
-            "section": self.section.id,
+            # TODO intervention sector locations location rewrite
+            # "section": self.section.id,
             "search": "2009",
         }
         response = self.forced_auth_req(
