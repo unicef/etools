@@ -39,7 +39,7 @@ from partners.serializers.partner_organization_v2 import (
     MinimalPartnerOrganizationListSerializer,
 )
 from t2f.models import TravelActivity
-from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
+from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer, PartnerOrganizationHactCsvRenderer
 
@@ -235,7 +235,7 @@ class PartnerAuthorizedOfficersListAPIVIew(ListAPIView):
 
 
 class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -255,7 +255,7 @@ class PartnerOrganizationAddView(CreateAPIView):
         Returns a list of Partners.
         """
     serializer_class = PartnerOrganizationCreateUpdateSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
 
     # TODO: let's aim to standardize where mapping goes
     MAPPING = {
@@ -340,7 +340,7 @@ class PartnerOrganizationAddView(CreateAPIView):
 
 
 class PartnerOrganizationDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:

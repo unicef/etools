@@ -701,7 +701,7 @@ class Assessment(models.Model):
     Relates to :model:`auth.User`
     """
 
-    ASSESMENT_TYPES = (
+    ASSESSMENT_TYPES = (
         ('Micro Assessment', 'Micro Assessment'),
         ('Simplified Checklist', 'Simplified Checklist'),
         ('Scheduled Audit report', 'Scheduled Audit report'),
@@ -715,7 +715,7 @@ class Assessment(models.Model):
     )
     type = models.CharField(
         max_length=50,
-        choices=ASSESMENT_TYPES,
+        choices=ASSESSMENT_TYPES,
     )
     names_of_other_agencies = models.CharField(
         max_length=255,
