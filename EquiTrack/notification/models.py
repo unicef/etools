@@ -11,6 +11,7 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.template.base import Template, VariableNode
+from django.utils.encoding import python_2_unicode_compatible
 
 from model_utils import Choices
 from post_office import mail
@@ -20,6 +21,7 @@ from post_office.models import EmailTemplate
 logger = logging.getLogger(__name__)
 
 
+@python_2_unicode_compatible
 class Notification(models.Model):
     """
     Represents a notification instance from sender to recipients
@@ -58,7 +60,7 @@ class Notification(models.Model):
     template_name = models.CharField(max_length=255)
     template_data = JSONField()
 
-    def __unicode__(self):
+    def __str__(self):
         return u"{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
 
     def send_notification(self):
