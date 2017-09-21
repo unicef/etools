@@ -1,10 +1,22 @@
 import json
 import os
+
+from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
+
 from rest_framework import status
-from EquiTrack.factories import ResultFactory, LocationFactory, GatewayTypeFactory, InterventionFactory
+
+from EquiTrack.factories import (
+    GatewayTypeFactory,
+    InterventionFactory,
+    LocationFactory,
+    PartnerFactory,
+    ResultFactory,
+    UserFactory,
+    )
 from EquiTrack.tests.mixins import APITenantTestCase
-from partners.models import InterventionResultLink
+from partners.models import InterventionResultLink, PartnerType
+from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.tests.test_utils import setup_intervention_test_data
 from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
 
@@ -99,3 +111,51 @@ class TestInterventionsAPI(APITenantTestCase):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'
             )
+
+
+class TestInterventionsAPIListPermissions(APITenantTestCase):
+    '''Exercise the list view for PartnerOrganization'''
+    def setUp(self):
+        self.staff_user = UserFactory(is_staff=True)
+
+        self.partner = PartnerFactory(
+            name='List View Test Partner',
+            short_name='List View Test Partner Short Name',
+            partner_type=PartnerType.UN_AGENCY,
+            cso_type='International',
+        )
+
+        self.url = reverse('prp_api_v1:prp-intervention-list')
+
+        Group.objects.get_or_create(name='Partnership Manager')
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self.forced_auth_req('get', self.url, user=UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self.forced_auth_req('get', self.url, user=UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_staff_access(self):
+        '''Ensure a staff user has access'''
+        response = self.forced_auth_req('get', self.url, user=self.staff_user)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        #self.assertResponseFundamentals(response)
+
+    def test_group_permission(self):
+        '''Ensure a non-staff user must be in 2 groups in order to have access'''
+        user = UserFactory()
+        user.groups.add(Group.objects.get(name=READ_ONLY_API_GROUP_NAME))
+        response = self.forced_auth_req('get', self.url, user=user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        user.groups.add(Group.objects.get(name='Partnership Manager'))
+        response = self.forced_auth_req('get', self.url, user=user)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        user.groups.remove(name=READ_ONLY_API_GROUP_NAME)
+        response = self.forced_auth_req('get', self.url, user=user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
