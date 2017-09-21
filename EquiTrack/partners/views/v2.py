@@ -213,7 +213,7 @@ class PMPDropdownsListApiView(APIView):
         country_programmes = list(CountryProgramme.objects.all_active_and_future.values('id', 'wbs', 'name',
                                                                                         'from_date', 'to_date'))
         cp_outputs = [{"id": r.id, "name": r.output_name, "wbs": r.wbs, "country_programme": r.country_programme.id}
-                      for r in Result.objects.filter(result_type__name=ResultType.OUTPUT,wbs__isnull=False)]
+                      for r in Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False)]
         supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
                           .all().values())
