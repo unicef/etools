@@ -222,6 +222,22 @@ class ResultFactory(factory.django.DjangoModelFactory):
     to_date = date(date.today().year, 12, 31)
 
 
+class DisaggregationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Disaggregation
+        django_get_or_create = ('name', )  # so Factory doesn't try to create nonunique instances
+
+    name = factory.Sequence(lambda n: 'Disaggregation {}'.format(n))
+
+
+class DisaggregationValueFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.DisaggregationValue
+
+    disaggregation = factory.SubFactory(DisaggregationFactory)
+    value = factory.Sequence(lambda n: 'Value {}'.format(n))
+
+
 class GovernmentInterventionFactory(factory.DjangoModelFactory):
     class Meta:
         model = partner_models.GovernmentIntervention
