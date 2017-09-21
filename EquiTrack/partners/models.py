@@ -1,5 +1,4 @@
 from __future__ import absolute_import, unicode_literals
-import logging
 import datetime
 import json
 
@@ -1149,8 +1148,10 @@ def side_effect_ssfa_signed(i, old_instance=None, user=None):
         i.agreement.save()
 
 
-def side_effect_two(i, old_instance=None, user=None):
-    pass
+def side_effect_ssfa_suspend(i, old_instance=None, user=None):
+    if i.document_type in ['SSFA']:
+        i.agreement.status = Agreement.SUSPENDED
+        i.agreement.save()
 
 
 class Intervention(TimeStampedModel):
@@ -1181,9 +1182,9 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
-        SIGNED: [side_effect_ssfa_signed, side_effect_two],
+        SIGNED: [side_effect_ssfa_signed],
         ACTIVE: [],
-        SUSPENDED: [],
+        SUSPENDED: [side_effect_ssfa_suspend],
         ENDED: [],
         CLOSED: [],
         TERMINATED: []
