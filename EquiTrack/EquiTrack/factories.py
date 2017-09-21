@@ -15,7 +15,14 @@ from trips import models as trip_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
-from funds.models import Grant, Donor, FundsReservationHeader, FundsCommitmentHeader
+from funds.models import (
+    Donor,
+    FundsCommitmentHeader,
+    FundsCommitmentItem,
+    FundsReservationHeader,
+    FundsReservationItem,
+    Grant,
+    )
 from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
@@ -378,6 +385,14 @@ class GrantFactory(factory.DjangoModelFactory):
         model = Grant
 
 
+class FundsCommitmentItemFactory(factory.DjangoModelFactory):
+    fund_commitment = factory.SubFactory('EquiTrack.factories.FundsCommitmentHeaderFactory')
+    line_item = fuzzy.FuzzyText(length=5)
+
+    class Meta:
+        model = FundsCommitmentItem
+
+
 class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     intervention = factory.SubFactory(InterventionFactory)
     vendor_code = fuzzy.FuzzyText(length=20)
@@ -401,6 +416,14 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = FundsReservationHeader
+
+
+class FundsReservationItemFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = FundsReservationItem
+
+    fund_reservation = factory.SubFactory(FundsReservationHeaderFactory)
+    line_item = fuzzy.FuzzyText(length=5)
 
 
 class FundsCommitmentHeaderFactory(factory.DjangoModelFactory):
