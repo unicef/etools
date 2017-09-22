@@ -562,7 +562,6 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_id = serializers.CharField(source='agreement.partner.id')
     # TODO: remember to add locations as locations
 
-
     class Meta:
         model = Intervention
         fields = (
