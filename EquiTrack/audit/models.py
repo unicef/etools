@@ -99,17 +99,17 @@ class Engagement(TimeStampedModel, models.Model):
     )
 
     STATUSES = Choices(
-        ('partner_contacted', _('Partner Contacted')),
+        ('partner_contacted', _('IP Contacted')),
         ('report_submitted', _('Report Submitted')),
         ('final', _('Final Report')),
         ('cancelled', _('Cancelled')),
     )
 
     DISPLAY_STATUSES = Choices(
-        ('partner_contacted', _('Partner Contacted')),
+        ('partner_contacted', _('IP Contacted')),
         ('field_visit', _('Field Visit')),
-        ('draft_issued_to_partner', _('Draft Report Issued to Partner')),
-        ('comments_received_by_partner', _('Comments Received from Partner')),
+        ('draft_issued_to_partner', _('Draft Report Issued to IP')),
+        ('comments_received_by_partner', _('Comments Received from IP')),
         ('draft_issued_to_unicef', _('Draft Report Issued to UNICEF')),
         ('comments_received_by_unicef', _('Comments Received from UNICEF')),
         ('report_submitted', _('Report Submitted')),
@@ -134,7 +134,7 @@ class Engagement(TimeStampedModel, models.Model):
     agreement = models.ForeignKey(PurchaseOrder, verbose_name=_('purchase order'))
 
     partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('partner'))
-    partner_contacted_at = models.DateField(_('date partner was contacted'), blank=True, null=True)
+    partner_contacted_at = models.DateField(_('Date IP was contacted'), blank=True, null=True)
     engagement_type = models.CharField(_('Engagement type'), max_length=10, choices=TYPES)
     start_date = models.DateField(_('period start date'), blank=True, null=True)
     end_date = models.DateField(_('period end date'), blank=True, null=True)
@@ -146,15 +146,15 @@ class Engagement(TimeStampedModel, models.Model):
     report_attachments = CodedGenericRelation(Attachment, verbose_name=_('report attachments'), code='audit_report',
                                               blank=True)
 
-    date_of_field_visit = models.DateField(_('date of field visit'), null=True, blank=True)
-    date_of_draft_report_to_ip = models.DateField(_('date draft report issued to IP'), null=True, blank=True)
-    date_of_comments_by_ip = models.DateField(_('date comments received by IP'), null=True, blank=True)
-    date_of_draft_report_to_unicef = models.DateField(_('date draft report issued to UNICEF'), null=True, blank=True)
-    date_of_comments_by_unicef = models.DateField(_('date comments received by UNICEF'), null=True, blank=True)
+    date_of_field_visit = models.DateField(_('Date of field visit'), null=True, blank=True)
+    date_of_draft_report_to_ip = models.DateField(_('Date draft report issued to IP'), null=True, blank=True)
+    date_of_comments_by_ip = models.DateField(_('Date comments received from IP'), null=True, blank=True)
+    date_of_draft_report_to_unicef = models.DateField(_('Date draft report issued to UNICEF'), null=True, blank=True)
+    date_of_comments_by_unicef = models.DateField(_('Date comments received from UNICEF'), null=True, blank=True)
 
-    date_of_report_submit = models.DateField(_('date report submitted'), null=True, blank=True)
-    date_of_final_report = models.DateField(_('date report finalized'), null=True, blank=True)
-    date_of_cancel = models.DateField(_('date report cancelled'), null=True, blank=True)
+    date_of_report_submit = models.DateField(_('Date report submitted'), null=True, blank=True)
+    date_of_final_report = models.DateField(_('Date report finalized'), null=True, blank=True)
+    date_of_cancel = models.DateField(_('Date report cancelled'), null=True, blank=True)
 
     amount_refunded = models.DecimalField(_('amount refunded'), null=True, blank=True, decimal_places=2, max_digits=20)
     additional_supporting_documentation_provided = models.DecimalField(
