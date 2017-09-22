@@ -6,6 +6,10 @@ from EquiTrack.utils import HashableDict
 from EquiTrack.validation_mixins import check_rigid_related
 from utils.common.utils import get_all_field_names
 
+# READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
+# Initially, this is only being used for PRP-related endpoints.
+READ_ONLY_API_GROUP_NAME = 'Read-Only API'
+
 
 class PMPPermissions(object):
     actions_default_permissions = {
@@ -217,3 +221,25 @@ class ResultChainPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj)
+
+
+class ListCreateAPIMixedPermission(permissions.BasePermission):
+    '''Permission class for ListCreate views that want to allow read-only access to some groups and read-write
+    to others.
+
+    GET users must be either (a) staff or (b) in the Limited API group.
+
+    POST users must be staff.
+    '''
+    def has_permission(self, request, view):
+        if request.method == 'GET':
+            if request.user.is_authenticated():
+                if request.user.is_staff or request.user.groups.filter(name=READ_ONLY_API_GROUP_NAME).exists():
+                    return True
+            return False
+        elif request.method == 'POST':
+            # user must have have admin access
+            return request.user.is_authenticated() and request.user.is_staff
+        else:
+            # This class shouldn't see methods other than GET and POST, but regardless the answer is 'no you may not'.
+            return False
