@@ -36,6 +36,7 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
     MODEL_MAPPING = {}
     MAPPING = OrderedDict()
     DATE_FIELDS = []
+    DEFAULTS = {}
 
     def _convert_records(self, records):
         if isinstance(records, list):
@@ -74,6 +75,7 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                         [(field_name, value) for field_name, value in mapped_item.items()
                          if field_name not in kwargs.keys()]
                     )
+                    defaults.update(self.DEFAULTS.get(model, {}))
                     obj, created = model.objects.update_or_create(
                         defaults=defaults, **kwargs
                     )
