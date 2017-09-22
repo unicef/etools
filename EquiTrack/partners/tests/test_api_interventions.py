@@ -263,7 +263,7 @@ class TestInterventionsAPI(APITenantTestCase):
         required_permissions = response['permissions']['required']
 
         # TODO: REMOVE the following 3 lines after "sector_locations" are finally removed from the Intervention model
-        # having sector_locations in the Intervention model and not having it in the permissions matrix breaks the test
+        # having sector_locations in the Intervention model and not having it in the permissions matrix fails this test
         del edit_permissions["sector_locations"]
         del required_permissions["sector_locations"]
 
