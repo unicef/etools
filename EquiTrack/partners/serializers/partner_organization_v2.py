@@ -100,8 +100,8 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
         if existing_user and not self.instance and existing_user.profile.partner_staff_member:
             raise ValidationError(
-                {'active': 'The Partner Staff member you are '
-                           'trying to add is associated with a different partnership: {}'.format(email)})
+                {'active': 'The email for the partner contact is used by another partner contact. Email has to be '
+                           'unique to proceed {}'.format(email)})
 
         # make sure email addresses are not editable after creation.. user must be removed and re-added
         if self.instance:
