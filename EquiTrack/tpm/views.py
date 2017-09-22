@@ -1,3 +1,4 @@
+from collections import OrderedDict
 
 from django.http import Http404
 from django.utils import timezone
@@ -195,4 +196,10 @@ class TPMVisitViewSet(
     def export_pdf(self, request, *args, **kwargs):
         return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context={
             "activities": self.get_object().tpm_activities.all(),
+        })
+
+    @detail_route(methods=['get'], url_path='visit-letter')
+    def tpm_visit_letter(self, request, *args, **kwargs):
+        return render_to_pdf_response(request, "tpm/visit_letter_pdf.html", context={
+            "visit": self.get_object(),
         })
