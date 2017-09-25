@@ -33,11 +33,12 @@ class TPMLocationCSVRenderer(CSVRenderer):
 
 class TPMPartnerCSVRenderer(CSVRenderer):
     header = [
-        'vendor_number', 'street_address', 'postal_code', 'city',
+        'vendor_number', 'name', 'street_address', 'postal_code', 'city',
         'phone_number', 'email',
     ]
     labels = {
         'vendor_number': _('Vendor Number'),
+        'name': _('TPM Name'),
         'street_address': _('Address'),
         'postal_code': _('Postal Code'),
         'city': _('City'),
