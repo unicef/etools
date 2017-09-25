@@ -466,7 +466,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
         expected_call_args = [((intervention_, ), {'user': self.admin_user, 'disable_rigid_check': True})
                               for intervention_ in interventions]
-        # self._assertCalls(MockInterventionValid, expected_call_args)
+        self._assertCalls(MockInterventionValid, expected_call_args)
 
         # Verify logged messages.
         expected_call_args = [
