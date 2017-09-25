@@ -604,7 +604,7 @@ class FinancialFinding(models.Model):
 @python_2_unicode_compatible
 class EngagementActionPoint(models.Model):
     DESCRIPTION_CHOICES = Choices(
-        _('Invoice and recieve reimbursement of ineligible expenditure'),
+        _('Invoice and receive reimbursement of ineligible expenditure'),
         _('Change cash transfer modality (DCT, reimbursement or direct payment)'),
         _('IP to incur and report on additional expenditure'),
         _('Review and amend ICE or budget'),
