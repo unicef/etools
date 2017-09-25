@@ -7,3 +7,4 @@ exclude =
     load_initial_data.py,
     publics/management/commands/xml,
     t2f/management/commands/et2f_init.py,
+ignore = F405
