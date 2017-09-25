@@ -91,7 +91,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     )
 
     cp_output = SeparatedReadWriteField(
-        read_field=ResultSerializer(read_only=True),
+        read_field=ResultSerializer(read_only=True, label=_('CP Output')),
         required=False,
     )
 
@@ -173,15 +173,15 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
     )
 
     offices = SeparatedReadWriteField(
-        read_field=OfficeSerializer(read_only=True, many=True)
+        read_field=OfficeSerializer(read_only=True, many=True, label=_('Office(s) of UNICEF Focal Point(s)')),
     )
 
     unicef_focal_points = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True, many=True),
+        read_field=MinimalUserSerializer(read_only=True, many=True, label=_('UNICEF Focal Points')),
     )
 
     tpm_partner_focal_points = SeparatedReadWriteField(
-        read_field=TPMPartnerStaffMemberSerializer(read_only=True, many=True),
+        read_field=TPMPartnerStaffMemberSerializer(read_only=True, many=True, label=_('TPM Focal Points')),
     )
 
     status_date = serializers.ReadOnlyField()
