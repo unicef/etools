@@ -27,6 +27,7 @@ from .transitions.conditions import ValidateTPMVisitActivities, \
                                     TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
 
 
+@python_2_unicode_compatible
 class TPMPartner(BaseFirm):
     STATUSES = Choices(
         ('draft', _('Draft')),
@@ -45,6 +46,9 @@ class TPMPartner(BaseFirm):
 
     date_of_active = models.DateField(blank=True, null=True)
     date_of_cancel = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
 
     @property
     def date_created(self):
@@ -66,10 +70,14 @@ class TPMPartner(BaseFirm):
         self.date_of_cancel = timezone.now()
 
 
+@python_2_unicode_compatible
 class TPMPartnerStaffMember(BaseStaffMember):
     tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), related_name='staff_members')
 
     receive_tpm_notifications = models.BooleanField(verbose_name=_('Receive Notifications on TPM Tasks'), default=False)
+
+    def __str__(self):
+        return self.get_full_name()
 
 
 def _has_action_permission(action):
