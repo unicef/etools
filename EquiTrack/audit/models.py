@@ -196,17 +196,15 @@ class Engagement(TimeStampedModel, models.Model):
         if self.status != self.STATUSES.partner_contacted:
             return self.status
 
-        today = timezone.now().date()
-
-        if self.date_of_comments_by_unicef and today > self.date_of_comments_by_unicef:
+        if self.date_of_comments_by_unicef:
             return self.DISPLAY_STATUSES.comments_received_by_unicef
-        elif self.date_of_draft_report_to_unicef and today > self.date_of_draft_report_to_unicef:
+        elif self.date_of_draft_report_to_unicef:
             return self.DISPLAY_STATUSES.draft_issued_to_unicef
-        elif self.date_of_comments_by_ip and today > self.date_of_comments_by_ip:
+        elif self.date_of_comments_by_ip:
             return self.DISPLAY_STATUSES.comments_received_by_partner
-        elif self.date_of_draft_report_to_ip and today > self.date_of_draft_report_to_ip:
+        elif self.date_of_draft_report_to_ip:
             return self.DISPLAY_STATUSES.draft_issued_to_partner
-        elif self.date_of_field_visit and today > self.date_of_field_visit:
+        elif self.date_of_field_visit:
             return self.DISPLAY_STATUSES.field_visit
 
         return self.status
