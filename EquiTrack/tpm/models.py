@@ -207,7 +207,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             TPMVisitAssignRequiredFieldsCheck.as_condition(),
             ValidateTPMVisitActivities.as_condition(),
         ],
-        permission=has_action_permission(action='assign')),
+        permission=has_action_permission(action='assign'),
         custom={
             'name': lambda obj: _('Re-assign') if obj.status == TPMVisit.STATUSES.tpm_rejected else _('Assign')
         }
@@ -221,7 +221,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         status, source=[
             STATUSES.draft, STATUSES.assigned, STATUSES.tpm_accepted, STATUSES.tpm_rejected,
             STATUSES.tpm_reported, STATUSES.tpm_report_rejected,
-        ], target=STATUSES.cancelled, permission=has_action_permission(action='cancel')),
+        ], target=STATUSES.cancelled, permission=has_action_permission(action='cancel'),
         custom={
             'name': _('Cancel Visit')
         }
@@ -251,7 +251,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         conditions=[
             TPMVisitReportValidations.as_condition(),
         ],
-        permission=has_action_permission(action='send_report')),
+        permission=has_action_permission(action='send_report'),
         custom={
             'name': _('Submit Report')
         }
@@ -263,7 +263,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     @transition(
         status, source=[STATUSES.tpm_reported], target=STATUSES.tpm_report_rejected,
-        permission=has_action_permission(action='reject_report')),
+        permission=has_action_permission(action='reject_report'),
         custom={
             'serializer': TPMVisitRejectSerializer,
             'name': _('Send back to TPM')
