@@ -11,6 +11,7 @@ from django.db.models.query_utils import Q
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
 from django.contrib.postgres.fields import JSONField
+from django.utils.encoding import python_2_unicode_compatible
 
 # UTC have to be here to be able to directly compare with the values from the db (orm always returns tz aware values)
 EPOCH_ZERO = datetime(1970, 1, 1, tzinfo=UTC)
@@ -71,6 +72,7 @@ class TravelAgent(SoftDeleteMixin, models.Model):
     expense_type = models.OneToOneField('TravelExpenseType', related_name='travel_agent')
 
 
+@python_2_unicode_compatible
 class TravelExpenseType(SoftDeleteMixin, models.Model):
     # User related expense types have this placeholder as the vendor code
     USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
@@ -89,16 +91,17 @@ class TravelExpenseType(SoftDeleteMixin, models.Model):
         except ObjectDoesNotExist:
             return False
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
 
+@python_2_unicode_compatible
 class Currency(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=5)
     decimal_places = models.PositiveIntegerField(default=0)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -112,6 +115,7 @@ class ExchangeRate(SoftDeleteMixin, models.Model):
         ordering = ('valid_from',)
 
 
+@python_2_unicode_compatible
 class AirlineCompany(SoftDeleteMixin, models.Model):
     # This will be populated from vision
     name = models.CharField(max_length=255)
@@ -120,52 +124,58 @@ class AirlineCompany(SoftDeleteMixin, models.Model):
     icao = models.CharField(max_length=3)
     country = models.CharField(max_length=255)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class BusinessRegion(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=16)
     code = models.CharField(max_length=2)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class BusinessArea(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=32)
     region = models.ForeignKey('BusinessRegion', related_name='business_areas')
     default_currency = models.ForeignKey('Currency', related_name='+', null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class WBS(SoftDeleteMixin, models.Model):
     business_area = models.ForeignKey('BusinessArea', null=True)
     name = models.CharField(max_length=25)
     grants = models.ManyToManyField('Grant', related_name='wbs')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class Grant(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=25)
     funds = models.ManyToManyField('Fund', related_name='grants')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class Fund(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=25)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class Country(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=64)
     long_name = models.CharField(max_length=128)
@@ -178,7 +188,7 @@ class Country(SoftDeleteMixin, models.Model):
     valid_from = models.DateField(null=True)
     valid_to = models.DateField(null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -194,6 +204,7 @@ class DSARegionQuerySet(ValidityQuerySet):
         DSARate.objects.filter(region__in=self).expire()
 
 
+@python_2_unicode_compatible
 class DSARegion(SoftDeleteMixin, models.Model):
     country = models.ForeignKey('Country', related_name='dsa_regions')
     area_name = models.CharField(max_length=120)
@@ -214,7 +225,7 @@ class DSARegion(SoftDeleteMixin, models.Model):
     def unique_name(self):
         return '{}{}'.format(self.country.iso_3, self.area_name)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.label
 
     def delete(self, *args, **kwargs):
@@ -243,6 +254,7 @@ class DSARateQuerySet(QuerySet):
         rates_to_expire.update(effective_to_date=now().date() - timedelta(days=1))
 
 
+@python_2_unicode_compatible
 class DSARate(models.Model):
     DEFAULT_EFFECTIVE_TILL = date(2999, 12, 31)
 
@@ -282,7 +294,7 @@ class DSARate(models.Model):
 
         super(DSARate, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} ({} - {})'.format(self.region.label,
                                      self.effective_from_date.isoformat(),
                                      self.effective_to_date.isoformat())
