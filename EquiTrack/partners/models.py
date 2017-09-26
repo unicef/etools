@@ -177,10 +177,10 @@ RISK_RATINGS = (
     (LOW, 'Low'),
 )
 CSO_TYPES = Choices(
-   'International',
-   'National',
-   'Community Based Organization',
-   'Academic Institution',
+    'International',
+    'National',
+    'Community Based Organization',
+    'Academic Institution',
 )
 
 
@@ -277,10 +277,10 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     shared_partner = models.CharField(
         help_text='Partner shared with UNDP or UNFPA?',
         choices=Choices(
-           'No',
-           'with UNDP',
-           'with UNFPA',
-           'with UNDP & UNFPA',
+            'No',
+            'with UNDP',
+            'with UNFPA',
+            'with UNDP & UNFPA',
         ),
         default='No',
         max_length=50
