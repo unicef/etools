@@ -1582,8 +1582,7 @@ class TestInterventionViews(APITenantTestCase):
                     "in_kind_amount_local": "0.00",
                     "total": "6.00"
                 },
-            # TODO intervention sector locations location rewrite
-            # "sections": [self.section.id],
+            "sections": [self.section.id],
             "result_links": [
                 {
                     "cp_output": ResultFactory().id,
@@ -1593,6 +1592,7 @@ class TestInterventionViews(APITenantTestCase):
             "amendments": [],
             "attachments": [],
         }
+
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
@@ -2001,7 +2001,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
             data=data
         )
         self.intervention = response.data
-        self.section = Section.objects.create(name="Section 1")
+        self.section = SectionFactory()
 
         # Basic data to adjust in tests
         self.intervention_data = {

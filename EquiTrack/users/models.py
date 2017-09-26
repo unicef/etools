@@ -113,7 +113,7 @@ post_save.connect(WorkspaceCounter.create_counter_model, sender=Country)
 
 class CountryOfficeManager(models.Manager):
     def get_queryset(self):
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name not in ['public', 'test']:
             return super(CountryOfficeManager, self).get_queryset().filter(offices=connection.tenant)
         else:
             # this only gets called on initialization because FakeTenant does not have the model attrs
@@ -145,7 +145,7 @@ class Office(models.Model):
 
 class CountrySectionManager(models.Manager):
     def get_queryset(self):
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name not in ['public', 'test']:
             return super(CountrySectionManager, self).get_queryset().filter(sections=connection.tenant)
         else:
             # this only gets called on initialization because FakeTenant does not have the model attrs
