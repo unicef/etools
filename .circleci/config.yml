@@ -7,9 +7,10 @@ jobs:
       - image: unicef/etools:test-base
         environment:
           DATABASE_URL: "postgis://postgres@localhost:5432/circle_test"
-      - image: circleci/postgres:9.5
+      - image: mdillon/postgis:9.5
         environment:
-          POSTGRES_USER: postgres
+          POSTGRES_USER: postgres 
+          PGUSER: postgres
           POSTGRES_DB: circle_test
     steps:
       - checkout
