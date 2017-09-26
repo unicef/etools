@@ -15,7 +15,6 @@ jobs:
           key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
       - run:
           command: |
-            TES
             virtualenv env1
             . env1/bin/activate
             pip install -r requirements.txt
