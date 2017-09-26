@@ -18,6 +18,8 @@ jobs:
             virtualenv env1
             . env1/bin/activate
             pip install -r requirements.txt
+            # for tests to run
+            pip install django-extensions
       - save_cache:
           key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
           paths:
@@ -25,8 +27,6 @@ jobs:
       - run:
           command: |
             . env1/bin/activate
-            DJANGO_SETTINGS_MODULE=EquiTrack.settings.production
-            TEST_SETTINGS=EquiTrack.settings.production
             cd EquiTrack
             bash runtests.sh;
       - store_artifacts:
