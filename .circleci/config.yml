@@ -9,6 +9,8 @@ jobs:
         environment:
           POSTGRES_USER: root
           POSTGRES_DB: circle_test
+          DJANGO_SETTINGS_MODULE: EquiTrack.settings.production
+
     steps:
       - checkout
       - restore_cache:
