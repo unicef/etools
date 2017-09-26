@@ -36,7 +36,7 @@ from EquiTrack.factories import (
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from reports.models import ResultType
-from users.models import Section, Country
+from users.models import Country
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
 from partners.models import (
     Agreement,
