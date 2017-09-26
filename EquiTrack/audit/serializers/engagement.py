@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -61,6 +62,14 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
         fields = [
             'id', 'description', 'due_date', 'person_responsible', 'comments',
         ]
+
+    def validate(self, attrs):
+        if not self.instance and attrs.get('description') == _('Escalate to Investigation')\
+                and 'person_responsible' not in attrs:
+            email = 'integrity1@un.org'
+            attrs['person_responsible'] = User.objects.get_or_create(username=email, defaults={'email': email})[0]
+
+        return attrs
 
     def create(self, validated_data):
         validated_data['author'] = self.get_user()
