@@ -8,7 +8,7 @@ jobs:
         environment:
           PGHOST: 127.0.0.1 
           DATABASE_URL: "postgis://root@localhost:5432/circle_test"
-      - image: mdillon/postgis:9.5
+      - image: circleci/postgis:9.5
         environment:
           POSTGRES_USER: root 
           PGUSER: root
@@ -29,9 +29,11 @@ jobs:
           paths:
             - "env1"
       - run:
-          name: Postgres Extension
+          name: Postgres Extensions
           command: |
+            psql -d template1 -c 'create extension if not exists postgis;'
             psql -d template1 -c 'create extension hstore;'
+            
       - run:
           name: Run Tests
           command: |
