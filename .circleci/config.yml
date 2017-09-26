@@ -7,11 +7,11 @@ jobs:
       - image: unicef/etools:test-base
         environment:
           PGHOST: 127.0.0.1 
-          DATABASE_URL: "postgis://postgres@localhost:5432/circle_test"
+          DATABASE_URL: "postgis://root@localhost:5432/circle_test"
       - image: mdillon/postgis:9.5
         environment:
-          POSTGRES_USER: postgres 
-          PGUSER: postgres
+          POSTGRES_USER: root 
+          PGUSER: root
           POSTGRES_DB: circle_test
     steps:
       - checkout
@@ -47,9 +47,13 @@ jobs:
     # The primary container is an instance of the first list image listed. Your build commands run in this container.
     docker:
       - image: unicef/etools:test-base
-      - image: circleci/postgres:9.5
         environment:
-          POSTGRES_USER: root
+          PGHOST: 127.0.0.1 
+          DATABASE_URL: "postgis://root@localhost:5432/circle_test"
+      - image: mdillon/postgis:9.5
+        environment:
+          POSTGRES_USER: root 
+          PGUSER: root
           POSTGRES_DB: circle_test
     steps:
       - checkout
