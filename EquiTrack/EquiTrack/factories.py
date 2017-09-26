@@ -15,7 +15,14 @@ from trips import models as trip_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
-from funds.models import Grant, Donor, FundsReservationHeader, FundsCommitmentHeader
+from funds.models import (
+    Donor,
+    FundsCommitmentHeader,
+    FundsCommitmentItem,
+    FundsReservationHeader,
+    FundsReservationItem,
+    Grant,
+    )
 from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
@@ -126,6 +133,17 @@ class LocationFactory(factory.django.DjangoModelFactory):
     gateway = factory.SubFactory(GatewayTypeFactory)
     point = GEOSGeometry("POINT(20 20)")
     p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
+
+
+class CartoDBTableFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = location_models.CartoDBTable
+
+    domain = factory.Sequence(lambda n: 'Domain {}'.format(n))
+    api_key = factory.Sequence(lambda n: 'API Key {}'.format(n))
+    table_name = factory.Sequence(lambda n: 'table_name_{}'.format(n))
+    location_type = factory.SubFactory(GatewayTypeFactory)
+    domain = factory.Sequence(lambda n: 'Domain {}'.format(n))
 
 
 class PartnerStaffFactory(factory.django.DjangoModelFactory):
@@ -378,6 +396,14 @@ class GrantFactory(factory.DjangoModelFactory):
         model = Grant
 
 
+class FundsCommitmentItemFactory(factory.DjangoModelFactory):
+    fund_commitment = factory.SubFactory('EquiTrack.factories.FundsCommitmentHeaderFactory')
+    line_item = fuzzy.FuzzyText(length=5)
+
+    class Meta:
+        model = FundsCommitmentItem
+
+
 class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     intervention = factory.SubFactory(InterventionFactory)
     vendor_code = fuzzy.FuzzyText(length=20)
@@ -401,6 +427,14 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = FundsReservationHeader
+
+
+class FundsReservationItemFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = FundsReservationItem
+
+    fund_reservation = factory.SubFactory(FundsReservationHeaderFactory)
+    line_item = fuzzy.FuzzyText(length=5)
 
 
 class FundsCommitmentHeaderFactory(factory.DjangoModelFactory):
