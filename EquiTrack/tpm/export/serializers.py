@@ -45,6 +45,7 @@ class TPMLocationExportSerializer(serializers.Serializer):
 
 class TPMPartnerExportSerializer(serializers.Serializer):
     vendor_number = serializers.CharField()
+    name = serializers.CharField()
     street_address = serializers.CharField()
     postal_code = serializers.CharField()
     city = serializers.CharField()
