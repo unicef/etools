@@ -8,7 +8,7 @@ jobs:
         environment:
           PGHOST: 127.0.0.1 
           DATABASE_URL: "postgis://root@localhost:5432/circle_test"
-      - image: circleci/postgis:9.5
+      - image: circleci/postgres:9.5
         environment:
           POSTGRES_USER: root 
           PGUSER: root
