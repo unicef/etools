@@ -28,6 +28,11 @@ jobs:
           paths:
             - "env1"
       - run:
+          name: Postgres Extension
+          command: |
+            psql -d template1 -c 'create extension hstore;'
+      - run:
+          name: Run Tests
           command: |
             . env1/bin/activate
             cd EquiTrack
