@@ -29,13 +29,14 @@ from EquiTrack.factories import (
     PartnerStaffFactory,
     CountryProgrammeFactory,
     GroupFactory,
+    SectionFactory,
     InterventionFactory,
     GovernmentInterventionFactory,
-    FundsReservationHeaderFactory,
-    SectionFactory)
+    FundsReservationHeaderFactory
+)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from reports.models import ResultType
-from users.models import Section
+from users.models import Section, Country
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
 from partners.models import (
     Agreement,
@@ -1513,7 +1514,9 @@ class TestInterventionViews(APITenantTestCase):
             data=data
         )
         self.intervention = response.data
+
         self.section = SectionFactory()
+        Country.objects.get(schema_name="test").sections.add(self.section)
 
         self.fund_commitment_header = FundsCommitmentHeader.objects.create(
             vendor_code="test1",
@@ -1847,9 +1850,9 @@ class TestInterventionViews(APITenantTestCase):
             "status": Intervention.DRAFT,
             "start": "2016-10-28",
             "end": "2016-10-28",
+            # TODO: revisit 'location' filter after prp refactoring is done
             "location": "Location",
-            # TODO intervention sector locations location rewrite
-            # "section": self.section.id,
+            "section": self.section.id,
             "search": "2009",
         }
         response = self.forced_auth_req(
@@ -2001,7 +2004,9 @@ class TestPartnershipDashboardView(APITenantTestCase):
             data=data
         )
         self.intervention = response.data
+
         self.section = SectionFactory()
+        Country.objects.get(schema_name="test").sections.add(self.section)
 
         # Basic data to adjust in tests
         self.intervention_data = {

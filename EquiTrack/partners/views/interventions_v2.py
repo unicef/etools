@@ -148,7 +148,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "section" in query_params.keys():
-                queries.append(Q(sections__section__id=query_params.get("section")))
+                queries.append(Q(sections__pk=query_params.get("section")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "unicef_focal_points" in query_params.keys():
@@ -349,7 +349,7 @@ class InterventionListMapView(ListCreateAPIView):
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "section" in query_params.keys():
-                queries.append(Q(sections__section__id=query_params.get("section")))
+                queries.append(Q(sections__pk=query_params.get("section")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "partner" in query_params.keys():
