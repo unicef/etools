@@ -604,7 +604,7 @@ class FinancialFinding(models.Model):
 @python_2_unicode_compatible
 class EngagementActionPoint(models.Model):
     DESCRIPTION_CHOICES = Choices(
-        _('Invoice and recieve reimbursement of ineligible expenditure'),
+        _('Invoice and receive reimbursement of ineligible expenditure'),
         _('Change cash transfer modality (DCT, reimbursement or direct payment)'),
         _('IP to incur and report on additional expenditure'),
         _('Review and amend ICE or budget'),
@@ -630,12 +630,7 @@ class EngagementActionPoint(models.Model):
     def __str__(self):
         return '{} on {}'.format(self.get_description_display(), self.engagement)
 
-    def save(self, *args, **kwargs):
-        super(EngagementActionPoint, self).save(*args, **kwargs)
-
-        self._notify_person_responsible('audit/engagement/action_point_assigned')
-
-    def _notify_person_responsible(self, template_name):
+    def notify_person_responsible(self, template_name):
         context = {
             'engagement_url': self.engagement.get_object_url(),
             'environment': get_environment(),
