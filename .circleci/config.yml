@@ -9,6 +9,7 @@ jobs:
         environment:
           POSTGRES_USER: root
           POSTGRES_DB: circle_test
+          DATABASE_URL: postgis:///circle_test
     steps:
       - checkout
       - restore_cache:
@@ -58,7 +59,7 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             docker build -t unicef/etools:$TAG .
-            docker run -it -e "DATABASE_URL=postgis:///circle_test" -e SECRET_KEY unicef/etools:$TAG bash runtests.sh
+            docker run -it -e "DATABASE_URL=postgis://root@localhost:5432/circle_test" -e SECRET_KEY unicef/etools:$TAG bash runtests.sh
 #      - run:
 #          name: Pushing to Docker Hub
 #          command: |
