@@ -12,7 +12,7 @@ from reports.models import Result, CountryProgramme, Indicator, LowerResult, Dis
 from reports.serializers.v2 import OutputListSerializer,  MinimalOutputListSerializer, DisaggregationSerializer
 from reports.serializers.v1 import IndicatorSerializer
 from partners.models import Intervention
-from partners.permissions import PartneshipManagerRepPermission
+from partners.permissions import PartnershipManagerRepPermission
 
 
 class OutputListAPIView(ListAPIView):
@@ -103,7 +103,7 @@ class ResultIndicatorListAPIView(ListAPIView):
 
 
 class LowerResultsDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
