@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='indicator',
-            options={'ordering': ['active', 'name']},
+            options={'ordering': ['-active', 'name']},
         ),
     ]

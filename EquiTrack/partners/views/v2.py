@@ -44,7 +44,7 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberPropertiesSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
 )
-from partners.permissions import PartneshipManagerPermission, PartnerPermission
+from partners.permissions import PartnershipManagerPermission, PartnerPermission
 from partners.serializers.v1 import InterventionSerializer
 from partners.filters import PartnerScopeFilter
 
@@ -69,7 +69,7 @@ class PartnerInterventionListAPIView(ListAPIView):
 class AgreementInterventionsListAPIView(ListAPIView):
     serializer_class = InterventionSerializer
     filter_backends = (PartnerScopeFilter,)
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
 
     def list(self, request, partner_pk=None, pk=None, format=None):
         """
@@ -89,7 +89,7 @@ class AgreementInterventionsListAPIView(ListAPIView):
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self, format=None):
@@ -104,7 +104,7 @@ class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
     """
     serializer_class = PartnerStaffMemberPropertiesSerializer
     queryset = PartnerStaffMember.objects.all()
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
 
     def get_object(self):
         queryset = self.get_queryset()
@@ -162,7 +162,7 @@ class PmpStaticDropdownsListApiView(APIView):
                     flat=True).order_by('cso_type').distinct('cso_type')))
         partner_types = choices_to_json_ready(PartnerType.CHOICES)
         agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
-        assessment_types = choices_to_json_ready(Assessment.ASSESMENT_TYPES)
+        assessment_types = choices_to_json_ready(Assessment.ASSESSMENT_TYPES)
         agreement_types = choices_to_json_ready(
             [typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
@@ -212,14 +212,8 @@ class PMPDropdownsListApiView(APIView):
 
         country_programmes = list(CountryProgramme.objects.all_active_and_future.values('id', 'wbs', 'name',
                                                                                         'from_date', 'to_date'))
-        current_country_programme = CountryProgramme.main_active()
-        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT,
-                                                wbs__isnull=False,
-                                                country_programme=current_country_programme)
-                                        .values('id',
-                                                'name',
-                                                'wbs',
-                                                'country_programme'))
+        cp_outputs = [{"id": r.id, "name": r.output_name, "wbs": r.wbs, "country_programme": r.country_programme.id}
+                      for r in Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False)]
         supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
                           .all().values())

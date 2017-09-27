@@ -1,5 +1,4 @@
 from __future__ import absolute_import, unicode_literals
-import logging
 import datetime
 import json
 
@@ -701,7 +700,7 @@ class Assessment(models.Model):
     Relates to :model:`auth.User`
     """
 
-    ASSESMENT_TYPES = (
+    ASSESSMENT_TYPES = (
         ('Micro Assessment', 'Micro Assessment'),
         ('Simplified Checklist', 'Simplified Checklist'),
         ('Scheduled Audit report', 'Scheduled Audit report'),
@@ -715,7 +714,7 @@ class Assessment(models.Model):
     )
     type = models.CharField(
         max_length=50,
-        choices=ASSESMENT_TYPES,
+        choices=ASSESSMENT_TYPES,
     )
     names_of_other_agencies = models.CharField(
         max_length=255,
@@ -1151,10 +1150,6 @@ class InterventionManager(models.Manager):
 
 
 def side_effect_one(i, old_instance=None, user=None):
-    logging.debug('Side effect 1 is executing for instance: {}'.format(i.id))
-    # print i.status
-    # print old_instance.status
-    # print user.get_full_name()
     pass
 
 
@@ -1343,7 +1338,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def submitted_to_prc(self):
-        return True if self.submission_date else False
+        return True if self.submission_date_prc else False
 
     @property
     def days_from_review_to_signed(self):
@@ -1545,7 +1540,7 @@ class Intervention(TimeStampedModel):
                 self.agreement.start = self.start
                 self.agreement.end = self.end
 
-            if self.status == self.ACTIVE and self.agreement.status != Agreement.SIGNED:
+            if self.status == self.SIGNED and self.agreement.status != Agreement.SIGNED:
                 save_agreement = True
                 self.agreement.status = Agreement.SIGNED
 

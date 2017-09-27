@@ -22,7 +22,7 @@ test:
   override:
     - >
       case $CIRCLE_BRANCH in
-        develop|staging|master)
+        develop|staging|master|prp-refactoring)
           # build and run tests in docker
           docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
           HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`
@@ -35,7 +35,7 @@ test:
 
 deployment:
    hub:
-     branch: [develop, staging, master]
+     branch: [develop, staging, master, prp-refactoring]
      commands:
        - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
        - docker push unicef/etools:$CIRCLE_BRANCH

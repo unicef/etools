@@ -118,8 +118,8 @@ def _make_intervention_status_automatic_transitions(country_name):
         .filter(status=Intervention.ENDED)\
         .annotate(frs_total_outstanding=Sum('frs__outstanding_amt'),
                   frs_total_actual_amt=Sum('frs__actual_amt'),
-                  frs_total_amt=Sum('frs__total_amt'))\
-        .filter(frs_total_outstanding=0, frs_total_actual_amt=F('frs_total_amt'))
+                  frs_intervention_amt=Sum('frs__intervention_amt'))\
+        .filter(frs_total_outstanding=0, frs_total_actual_amt=F('frs_intervention_amt'))
 
     processed = 0
 
