@@ -12,7 +12,7 @@ from EquiTrack.validation_mixins import (
     BasicValidationError,
     StateValidError,
     TransitionError,
-    )
+)
 
 
 class TestExceptions(TestCase):

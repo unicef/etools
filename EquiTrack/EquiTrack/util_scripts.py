@@ -214,7 +214,7 @@ def cp_fix(country_name):
         today = today + timedelta(days=i)
         tomorrow = today + timedelta(days=365)
         cp, created = CountryProgramme.objects.get_or_create(
-            wbs=locpwbs[i], name='Country Programme '+str(i), from_date=today, to_date=tomorrow)
+            wbs=locpwbs[i], name='Country Programme ' + str(i), from_date=today, to_date=tomorrow)
 
     time.sleep(5)
 
@@ -398,7 +398,7 @@ def pca_unique_reference_number():
             cdupes = PCA.objects.filter(number=dup['number'])
             for cdup in cdupes:
                 if len(cdup.number) > 40:
-                    cdup.number = cdup.number[len(cdup.number)-40:]
+                    cdup.number = cdup.number[len(cdup.number) - 40:]
                 cdup.number = '{}|{}'.format(cdup.number, cdup.id)
                 print(cdup)
                 cdup.save()

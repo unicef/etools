@@ -36,7 +36,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
             ('details', '1/', {'action_point_pk': 1}),
             ('dashboard', 'dashboard/', {}),
             ('export', 'export/', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 't2f:action_points:', '/api/t2f/action_points/')
         self.assertIntParamRegexes(names_and_paths, 't2f:action_points:')
 

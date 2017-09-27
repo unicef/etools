@@ -459,9 +459,9 @@ class TripsDashboard(FormView):
         trips = Trip.objects.all()
         if month is not None:
             trips = trips.filter(
-                    from_date__year=month.year,
-                    from_date__month=month.month
-                )
+                from_date__year=month.year,
+                from_date__month=month.month
+            )
 
         kwargs.update({
             'months': months,

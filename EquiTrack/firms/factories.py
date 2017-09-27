@@ -42,7 +42,7 @@ class BaseFirmFactory(factory.DjangoModelFactory):
     class Meta:
         abstract = True
 
-    vendor_number = factory.Sequence(lambda n: '{}/{}'.format(datetime.datetime.now().year, n+1))
+    vendor_number = factory.Sequence(lambda n: '{}/{}'.format(datetime.datetime.now().year, n + 1))
     name = factory.Faker('company')
     street_address = factory.Faker('street_address')
     city = factory.Faker('city')

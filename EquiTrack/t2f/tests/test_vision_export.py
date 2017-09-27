@@ -40,7 +40,7 @@ class VisionXML(URLAssertionMixin, APITenantTestCase):
         names_and_paths = (
             ('vision_invoice_export', 'vision_invoice_export/', {}),
             ('vision_invoice_update', 'vision_invoice_update/', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 't2f:', '/api/t2f/')
 
     def make_invoice_updater(self, status=Invoice.SUCCESS):

@@ -23,10 +23,10 @@ class TestWorkplanViews(APITenantTestCase):
         self.result = ResultFactory(result_type=self.result_type)
 
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(
-                                            workplan=self.workplan,
-                                            result=self.result,
-                                            labels=self.labels
-                                        )
+            workplan=self.workplan,
+            result=self.result,
+            labels=self.labels
+        )
         self.extra_label = LabelFactory()
         self.user2 = UserFactory()
 

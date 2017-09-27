@@ -10,7 +10,7 @@ from EquiTrack.factories import (
     CartoDBTableFactory,
     GatewayTypeFactory,
     LocationFactory,
-    )
+)
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")

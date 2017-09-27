@@ -16,17 +16,17 @@ class TravelRelatedModelFilter(BaseFilterBackend):
 class TravelActivityPartnerFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         return queryset \
-                .filter(partner__pk=view.kwargs['partner_organization_pk']) \
-                .prefetch_related('travels') \
-                .filter(travels__traveler=F("primary_traveler"))
+            .filter(partner__pk=view.kwargs['partner_organization_pk']) \
+            .prefetch_related('travels') \
+            .filter(travels__traveler=F("primary_traveler"))
 
 
 class TravelActivityInterventionFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         return queryset \
-                .filter(partnership__pk=view.kwargs['partnership_pk']) \
-                .prefetch_related('travels') \
-                .filter(travels__traveler=F("primary_traveler"))
+            .filter(partnership__pk=view.kwargs['partnership_pk']) \
+            .prefetch_related('travels') \
+            .filter(travels__traveler=F("primary_traveler"))
 
 
 class BaseSearchFilter(BaseFilterBackend):

@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from reports.models import Result, CountryProgramme, Indicator, LowerResult, Disaggregation
-from reports.serializers.v2 import OutputListSerializer,  MinimalOutputListSerializer, DisaggregationSerializer
+from reports.serializers.v2 import OutputListSerializer, MinimalOutputListSerializer, DisaggregationSerializer
 from reports.serializers.v1 import IndicatorSerializer
 from partners.models import Intervention
 from partners.permissions import PartneshipManagerRepPermission

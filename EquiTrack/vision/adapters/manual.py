@@ -81,8 +81,8 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                     print ("Exception message: {} ")
                     print ("Exception type: {} ")
                     print ("Exception args: {} ".format(
-                            exp.message, type(exp).__name__, exp.args
-                        ))
+                        exp.message, type(exp).__name__, exp.args
+                    ))
 
         for record in filtered_records:
             _process_record(record)

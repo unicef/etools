@@ -1,5 +1,7 @@
 [flake8]
 max-line-length = 120
+# the following rules are ignored by default on the current flake version(3.3.0):
+#    - E121,E123,E126,E226,E24,E704,W503,W504
 ignore = F405
 exclude =
     # ignore auto-generated code

@@ -218,15 +218,15 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
                  u'approved_date',),
         }),
         (u'Travel/Admin', {
-            u'fields':
-                (
-                 (u'driver', u'driver_supervisor'),
-                 u'transport_booked',
-                 u'security_granted',
-                 u'ta_drafted',
-                 u'ta_reference',
-                 u'ta_drafted_date',
-                 u'vision_approver'),
+            u'fields': (
+                (u'driver', u'driver_supervisor'),
+                u'transport_booked',
+                u'security_granted',
+                u'ta_drafted',
+                u'ta_reference',
+                u'ta_drafted_date',
+                u'vision_approver'
+            ),
         }),
 
         (u'Report', {

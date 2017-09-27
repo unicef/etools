@@ -19,5 +19,5 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
             ('stats_user_counts', 'api/stats/usercounts/', {}),
             ('stats_trips', 'api/stats/trips/', {}),
             ('stats_agreements', 'api/stats/agreements/', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 'management:', '/api/management/')

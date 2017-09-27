@@ -151,5 +151,5 @@ def update_sites_from_cartodb(carto_table):
                 sites_updated)
 
     return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
-                carto_table.table_name, sites_created, sites_updated, sites_not_added
-            )
+        carto_table.table_name, sites_created, sites_updated, sites_not_added
+    )

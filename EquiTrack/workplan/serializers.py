@@ -48,26 +48,26 @@ class MilestoneSerializer(serializers.ModelSerializer):
 class ResultWorkplanPropertySerializer(serializers.ModelSerializer):
 
     sections = serializers.PrimaryKeyRelatedField(
-                many=True,
-                read_only=False,
-                queryset=Section.objects.all()
-            )
+        many=True,
+        read_only=False,
+        queryset=Section.objects.all()
+    )
     milestones = MilestoneSerializer(many=True)
     geotag = serializers.PrimaryKeyRelatedField(
-                many=True,
-                read_only=False,
-                queryset=Location.objects.all()
-            )
+        many=True,
+        read_only=False,
+        queryset=Location.objects.all()
+    )
     partners = serializers.PrimaryKeyRelatedField(
-                many=True,
-                read_only=False,
-                queryset=PartnerOrganization.objects.all()
-            )
+        many=True,
+        read_only=False,
+        queryset=PartnerOrganization.objects.all()
+    )
     responsible_persons = serializers.PrimaryKeyRelatedField(
-                many=True,
-                read_only=False,
-                queryset=User.objects.all()
-            )
+        many=True,
+        read_only=False,
+        queryset=User.objects.all()
+    )
 
     class Meta:
         model = ResultWorkplanProperty
