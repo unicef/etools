@@ -60,7 +60,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
           reusable: true
           exclusive: true
       - run:
