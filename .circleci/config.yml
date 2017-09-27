@@ -39,6 +39,8 @@ jobs:
           command: |
             . env1/bin/activate
             cd EquiTrack
+            pwd
+            ls media
             bash runtests.sh;
       - store_artifacts:
           path: test-reports/
