@@ -35,6 +35,7 @@ from .models import (
     DistributionPlan,
     PartnershipBudget,
     Intervention,
+    # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
 )
 
@@ -60,6 +61,7 @@ class LocationForm(forms.ModelForm):
         }
 
 
+# TODO intervention sector locations cleanup
 class SectorLocationForm(forms.ModelForm):
     class Meta:
         model = InterventionSectorLocationLink

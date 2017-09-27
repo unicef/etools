@@ -42,6 +42,7 @@ from partners.models import (
     Intervention,
     AgreementAmendment,
     InterventionAmendment,
+    # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
     InterventionResultLink,
     InterventionBudget,
@@ -65,10 +66,12 @@ from partners.forms import (
     PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
     LocationForm,
-    SectorLocationForm
+    # TODO intervention sector locations cleanup
+    SectorLocationForm,
 )
 
 
+# TODO intervention sector locations cleanup
 class PCALocationInlineAdmin(admin.TabularInline):
     form = LocationForm
     model = GwPCALocation
@@ -82,6 +85,7 @@ class PCALocationInlineAdmin(admin.TabularInline):
     extra = 5
 
 
+# TODO intervention sector locations cleanup
 class PCASectorInlineAdmin(admin.TabularInline):
     model = PCASector
     form = AmendmentForm
@@ -286,6 +290,7 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
     }
 
 
+# TODO intervention sector locations cleanup
 class InterventionSectorLocationAdmin(admin.ModelAdmin):
     form = SectorLocationForm
     model = InterventionSectorLocationLink
@@ -504,6 +509,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
 
 
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
+    model = Intervention
 
     date_hierarchy = 'start'
     list_display = (
@@ -514,7 +520,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         'signed_by_unicef_date',
         'start',
         'end',
-        'sector_names',
+        'section_names',
         'title',
         'total_unicef_cash',
         'total_budget',
@@ -533,6 +539,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         'total_budget',
     )
     filter_horizontal = (
+        'sections',
         'unicef_focal_points',
         'partner_focal_points'
     )
@@ -547,6 +554,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                     'status',
                     'country_programme',
                     'submission_date',
+                    'sections',
                     'metadata',
                 )
         }),
@@ -581,6 +589,11 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         return obj.created_at.strftime('%d-%m-%Y')
 
     created_date.admin_order_field = '-created'
+
+    def section_names(self, obj):
+        return ' '.join([section.name for section in obj.sections.all()])
+
+    section_names.short_description = "Sections"
 
     def save_model(self, request, obj, form, change):
         created = False if change else True
@@ -891,6 +904,7 @@ admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(SupplyPlan, SupplyPlanAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
+# TODO intervention sector locations cleanup
 admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
 
 

@@ -21,7 +21,6 @@ from partners.views.interventions_v2 import (
     InterventionAttachmentDeleteView,
     InterventionResultLinkDeleteView,
     InterventionAmendmentDeleteView,
-    InterventionSectorLocationLinkDeleteView,
     InterventionListMapView,
     InterventionLowerResultListCreateView, InterventionLowerResultUpdateView, InterventionResultLinkListCreateView,
     InterventionResultLinkUpdateView, InterventionIndicatorsListView, InterventionIndicatorsUpdateView)
@@ -140,9 +139,7 @@ urlpatterns = (
     url(r'^interventions/amendments/(?P<pk>\d+)/$',
         view=InterventionAmendmentDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-amendments-del'),
-    url(r'^interventions/sector-locations/(?P<pk>\d+)/$',
-        view=InterventionSectorLocationLinkDeleteView.as_view(http_method_names=['delete', ]),
-        name='intervention-sector-locations-del'),
+
     url(r'^interventions/map/$',
         view=InterventionListMapView.as_view(http_method_names=['get', ]),
         name='intervention-map'),

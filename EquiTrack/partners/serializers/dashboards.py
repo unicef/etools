@@ -12,7 +12,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     intervention_id = serializers.CharField(source='id', read_only=True)
     partner_name = serializers.CharField(source='agreement.partner.name', read_only=True)
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
-    sectors = serializers.SerializerMethodField()
+    sections = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
 
     unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
@@ -43,8 +43,8 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     def get_offices_names(self, obj):
         return [o.name for o in obj.offices.all()]
 
-    def get_sectors(self, obj):
-        return [l.sector.name for l in obj.sector_locations.all()]
+    def get_sections(self, obj):
+        return [l.name for l in obj.sections.all()]
 
     def get_partner_name(self, obj):
         return obj.partner_name
@@ -52,7 +52,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = ('intervention_id', 'partner_id', 'partner_name', 'number', 'status', 'start', 'end',
-                  'sectors', 'offices_names',
+                  'sections', 'offices_names',
                   'total_budget', 'cso_contribution', 'unicef_cash', 'unicef_supplies',
                   'frs_total_frs_amt', 'disbursement',
                   'last_pv_date', 'days_last_pv')
