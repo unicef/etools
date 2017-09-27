@@ -47,7 +47,7 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
 class DisaggregationValueSerializer(serializers.ModelSerializer):
     class Meta:
         model = DisaggregationValue
-        fields = ('value', 'active', )
+        fields = ('value', 'active',)
 
 
 class DisaggregationSerializer(serializers.ModelSerializer):
@@ -61,7 +61,7 @@ class DisaggregationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Disaggregation
-        fields = ('name', 'active', 'disaggregation_values', )
+        fields = ('id', 'name', 'active', 'disaggregation_values', )
 
     def create(self, validated_data):
         values_data = validated_data.pop('disaggregation_values')

@@ -1,9 +1,10 @@
 [flake8]
 max-line-length = 120
+ignore = F405,E121,E123,E126,E226,E24,E704,W503,W504
 exclude =
     # ignore auto-generated code
     migrations,
     # ignore data files
     load_initial_data.py,
     publics/management/commands/xml,
-    t2f/management/commands/et2f_init.py,
+    t2f/management/commands/et2f_init.py

@@ -25,7 +25,6 @@ from partners.models import (
     InterventionPlannedVisits,
     InterventionAttachment,
     InterventionAmendment,
-    InterventionSectorLocationLink,
     InterventionResultLink
 )
 from partners.serializers.interventions_v2 import (
@@ -37,7 +36,6 @@ from partners.serializers.interventions_v2 import (
     PlannedVisitsCUSerializer,
     InterventionAttachmentSerializer,
     InterventionAmendmentCUSerializer,
-    InterventionSectorLocationCUSerializer,
     InterventionResultCUSerializer,
     InterventionListMapSerializer,
     MinimalInterventionListSerializer,
@@ -46,7 +44,7 @@ from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter, InterventionFilter, \
     AppliedIndicatorsFilter
 from partners.validation.interventions import InterventionValid
-from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
+from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 from reports.models import LowerResult, AppliedIndicator
 from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicatorSerializer
 
@@ -57,7 +55,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     Returns a list of Interventions.
     """
     serializer_class = InterventionListSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, InterventionCvsRenderer)
 
@@ -66,7 +64,6 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'amendments': InterventionAmendmentCUSerializer,
-        'sector_locations': InterventionSectorLocationCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -102,7 +99,6 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
             'planned_visits',
             'attachments',
             'amendments',
-            'sector_locations',
             'result_links'
         ]
         nested_related_names = ['ll_results']
@@ -151,8 +147,8 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
                 queries.append(Q(document_type=query_params.get("document_type")))
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
-            if "sector" in query_params.keys():
-                queries.append(Q(sector_locations__sector__id=query_params.get("sector")))
+            if "section" in query_params.keys():
+                queries.append(Q(sections__pk=query_params.get("section")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "unicef_focal_points" in query_params.keys():
@@ -163,6 +159,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
                 queries.append(Q(end__lte=query_params.get("end")))
             if "office" in query_params.keys():
                 queries.append(Q(offices__in=[query_params.get("office")]))
+            # TODO: to be rewritten to use indicator locations
             if "location" in query_params.keys():
                 queries.append(Q(sector_locations__locations__name__icontains=query_params.get("location")))
             if "search" in query_params.keys():
@@ -213,14 +210,13 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     """
     queryset = Intervention.objects.detail_qs().all()
     serializer_class = InterventionDetailSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'amendments': InterventionAmendmentCUSerializer,
-        'sector_locations': InterventionSectorLocationCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -236,7 +232,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     def update(self, request, *args, **kwargs):
         related_fields = ['planned_budget', 'planned_visits',
                           'attachments', 'amendments',
-                          'sector_locations', 'result_links']
+                          'result_links']
         nested_related_names = ['ll_results']
         instance, old_instance, serializer = self.my_update(
             request,
@@ -258,7 +254,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
 
 class InterventionPlannedVisitsDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -277,7 +273,7 @@ class InterventionPlannedVisitsDeleteView(DestroyAPIView):
 
 
 class InterventionAttachmentDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -296,7 +292,7 @@ class InterventionAttachmentDeleteView(DestroyAPIView):
 
 
 class InterventionResultLinkDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -315,7 +311,7 @@ class InterventionResultLinkDeleteView(DestroyAPIView):
 
 
 class InterventionAmendmentDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -332,24 +328,6 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             raise ValidationError("You do not have permissions to delete an amendment")
 
 
-class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            intervention_sector_location = InterventionSectorLocationLink.objects.get(id=int(kwargs['pk']))
-        except InterventionSectorLocationLink.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_sector_location.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_sector_location.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_sector_location.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete a sector location")
-
-
 class InterventionListMapView(ListCreateAPIView):
     """
     Create new Interventions.
@@ -359,17 +337,19 @@ class InterventionListMapView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        q = Intervention.objects.detail_qs()\
-            .filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)\
-            .prefetch_related('sector_locations__locations')
+        q = Intervention.objects.detail_qs()
+        # TODO: remember to add back the location filter after the PRP integration related structural changes are final
+        # .filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)\
+        # .prefetch_related('sector_locations__locations')
+
         query_params = self.request.query_params
 
         if query_params:
             queries = []
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
-            if "sector" in query_params.keys():
-                queries.append(Q(sector_locations__sector__id=query_params.get("sector")))
+            if "section" in query_params.keys():
+                queries.append(Q(sections__pk=query_params.get("section")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "partner" in query_params.keys():
@@ -384,7 +364,7 @@ class InterventionListMapView(ListCreateAPIView):
 class InterventionLowerResultListCreateView(ListCreateAPIView):
 
     serializer_class = LowerResultSimpleCUSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionResultLinkFilter,)
     renderer_classes = (r.JSONRenderer,)
     queryset = LowerResult.objects.all()
@@ -403,7 +383,7 @@ class InterventionLowerResultListCreateView(ListCreateAPIView):
 class InterventionLowerResultUpdateView(RetrieveUpdateDestroyAPIView):
 
     serializer_class = LowerResultSimpleCUSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionResultLinkFilter,)
     renderer_classes = (r.JSONRenderer,)
     queryset = LowerResult.objects.all()
@@ -419,7 +399,7 @@ class InterventionLowerResultUpdateView(RetrieveUpdateDestroyAPIView):
 class InterventionResultLinkListCreateView(ListCreateAPIView):
 
     serializer_class = InterventionResultLinkSimpleCUSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionFilter,)
     renderer_classes = (r.JSONRenderer,)
     queryset = InterventionResultLink.objects.all()
@@ -438,7 +418,7 @@ class InterventionResultLinkListCreateView(ListCreateAPIView):
 class InterventionResultLinkUpdateView(RetrieveUpdateDestroyAPIView):
 
     serializer_class = InterventionResultLinkSimpleCUSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionFilter,)
     renderer_classes = (r.JSONRenderer,)
     queryset = InterventionResultLink.objects.all()
@@ -454,7 +434,7 @@ class InterventionResultLinkUpdateView(RetrieveUpdateDestroyAPIView):
 
 class InterventionIndicatorsListView(ListCreateAPIView):
     serializer_class = AppliedIndicatorSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (AppliedIndicatorsFilter,)
     renderer_classes = (r.JSONRenderer,)
     queryset = AppliedIndicator.objects.all()
@@ -475,7 +455,7 @@ class InterventionIndicatorsListView(ListCreateAPIView):
 class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
 
     serializer_class = AppliedIndicatorSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (AppliedIndicatorsFilter,)
     renderer_classes = (r.JSONRenderer,)
     queryset = AppliedIndicator.objects.all()

@@ -537,3 +537,11 @@ TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
 VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
+
+
+# ALLOW BASIC AUTH FOR DEMO SITE
+ALLOW_BASIC_AUTH = os.getenv('ALLOW_BASIC_AUTH', True)
+if ALLOW_BASIC_AUTH:
+    REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
+        'EquiTrack.mixins.DRFBasicAuthMixin',
+    )

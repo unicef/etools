@@ -28,7 +28,6 @@ class URLsTestCase(URLAssertionMixin, TestCase):
             ('intervention-attachments-del', 'attachments/1/', {'pk': 1}),
             ('intervention-results-del', 'results/1/', {'pk': 1}),
             ('intervention-amendments-del', 'amendments/1/', {'pk': 1}),
-            ('intervention-sector-locations-del', 'sector-locations/1/', {'pk': 1}),
             ('intervention-map', 'map/', {}),
             )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/interventions/')
@@ -38,7 +37,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 class TestInterventionsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
     EDITABLE_FIELDS = {
-        'draft': ["status", "sector_locations", "attachments", "prc_review_document", 'travel_activities',
+        'draft': ["status", "attachments", "prc_review_document", 'travel_activities',
                   "partner_authorized_officer_signatory", "partner_focal_points", "distributions", "id",
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
                   "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start", "supplies",
@@ -46,7 +45,7 @@ class TestInterventionsAPI(APITenantTestCase):
                   "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "actor_actions", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
-                  "offices", "population_focus", "country_programme_id", "engagement"],
+                  "offices", "population_focus", "country_programme_id", "engagement", "sections"],
         'signed': [],
         'active': ['']
     }
@@ -262,6 +261,12 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
+
+        # TODO: REMOVE the following 3 lines after "sector_locations" are finally removed from the Intervention model
+        # having sector_locations in the Intervention model and not having it in the permissions matrix fails this test
+        del edit_permissions["sector_locations"]
+        del required_permissions["sector_locations"]
+
         self.assertItemsEqual(self.EDITABLE_FIELDS['draft'],
                               [perm for perm in edit_permissions if edit_permissions[perm]])
         self.assertItemsEqual(self.REQUIRED_FIELDS['draft'],
@@ -286,7 +291,22 @@ class TestInterventionsAPI(APITenantTestCase):
                               [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
-        with self.assertNumQueries(10):
+        '''
+        list of queries executed/counted:
+         - partners_intervention - with IN() condition
+         - partners_agreement - with IN() condition
+         - partners_partnerorganization - with IN() condition
+         - funds_fundsreservationheader - with IN() condition
+         - users_office - with IN() condition
+         - partners_interventionbudget - with IN() condition
+         - partners_interventionresultlink - with IN() condition
+         - auth_user - with IN() condition
+         - users_section -> 3 * (sections by intervention id, section_names by intervention id)
+        ^ results in 14 queries
+        '''
+
+        EXPECTED_QUERIES = 8 + (2 * 3)
+        with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
@@ -303,8 +323,9 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
-        # even though we added a new intervention, the number of queries remained static
-        with self.assertNumQueries(10):
+        # if we add a new intervention, two extra queries are executed (sections, section_names)
+        EXPECTED_QUERIES += 2
+        with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)

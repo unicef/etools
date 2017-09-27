@@ -29,11 +29,14 @@ from EquiTrack.factories import (
     PartnerStaffFactory,
     CountryProgrammeFactory,
     GroupFactory,
+    SectionFactory,
     InterventionFactory,
     GovernmentInterventionFactory,
-    FundsReservationHeaderFactory)
+    FundsReservationHeaderFactory
+)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from reports.models import ResultType, Sector
+from reports.models import ResultType
+from users.models import Country
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
 from partners.models import (
     Agreement,
@@ -46,7 +49,6 @@ from partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionResultLink,
-    InterventionSectorLocationLink,
     FileType,
     PartnerOrganization,
     PartnerType,
@@ -393,10 +395,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
         self.result = ResultFactory(
             result_type=self.output_res_type,)
-        self.pcasector = InterventionSectorLocationLink.objects.create(
-            intervention=self.intervention,
-            sector=Sector.objects.create(name="Sector 1")
-        )
+
         self.partnership_budget = InterventionBudget.objects.create(
             intervention=self.intervention,
             unicef_cash=100,
@@ -409,10 +408,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             intervention=self.intervention,
             types=[InterventionAmendment.RESULTS]
         )
-        self.location = InterventionSectorLocationLink.objects.create(
-            intervention=self.intervention,
-            sector=Sector.objects.create(name="Sector 2")
-        )
+
+        # TODO intervention sector locations location rewrite
+        self.location = LocationFactory()
+
         self.cp = CountryProgrammeFactory(__sequence=10)
         self.cp_output = ResultFactory(result_type=self.output_res_type)
         self.govint = GovernmentInterventionFactory(
@@ -713,10 +712,6 @@ class TestPartnershipViews(APITenantTestCase):
 
         self.result_type = ResultType.objects.get(id=1)
         self.result = ResultFactory(result_type=self.result_type,)
-        self.pcasector = InterventionSectorLocationLink.objects.create(
-            intervention=self.intervention,
-            sector=Sector.objects.create(name="Sector 1")
-        )
         self.partnership_budget = InterventionBudget.objects.create(
             intervention=self.intervention,
             unicef_cash=100,
@@ -729,10 +724,8 @@ class TestPartnershipViews(APITenantTestCase):
             intervention=self.intervention,
             types=[InterventionAmendment.RESULTS],
         )
-        self.location = InterventionSectorLocationLink.objects.create(
-            intervention=self.intervention,
-            sector=Sector.objects.create(name="Sector 2")
-        )
+        # TODO intervention sector locations location rewrite
+        self.location = LocationFactory()
 
     def test_api_partners_list(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
@@ -1401,7 +1394,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
-            "The Partner Staff member you are trying to add is associated with a different partnership",
+            "The email for the partner contact is used by another partner contact. Email has to be unique to proceed",
             response.data["non_field_errors"][0])
 
     @skip("Skip staffmembers for now")
@@ -1522,14 +1515,9 @@ class TestInterventionViews(APITenantTestCase):
         )
         self.intervention = response.data
 
-        self.sector = Sector.objects.create(name="Sector 1")
-        self.location = LocationFactory()
-        self.isll = InterventionSectorLocationLink.objects.create(
-            intervention=Intervention.objects.get(id=self.intervention["id"]),
-            sector=self.sector,
-        )
-        self.isll.locations.add(LocationFactory())
-        self.isll.save()
+        self.section = SectionFactory()
+        Country.objects.get(schema_name="test").sections.add(self.section)
+
         self.fund_commitment_header = FundsCommitmentHeader.objects.create(
             vendor_code="test1",
             fc_number="3454354",
@@ -1597,12 +1585,7 @@ class TestInterventionViews(APITenantTestCase):
                     "in_kind_amount_local": "0.00",
                     "total": "6.00"
                 },
-            "sector_locations": [
-                {
-                    "sector": self.sector.id,
-                    "locations": [self.location.id],
-                }
-            ],
+            "sections": [self.section.id],
             "result_links": [
                 {
                     "cp_output": ResultFactory().id,
@@ -1612,12 +1595,14 @@ class TestInterventionViews(APITenantTestCase):
             "amendments": [],
             "attachments": [],
         }
+
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
             user=self.partnership_manager_user,
             data=self.intervention_data
         )
+
         self.intervention_data = response.data
         self.intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         self.planned_visit = InterventionPlannedVisits.objects.create(
@@ -1640,14 +1625,7 @@ class TestInterventionViews(APITenantTestCase):
             signed_date=datetime.date.today(),
             signed_amendment=amendment
         )
-        self.sector = Sector.objects.create(name="Sector 2")
-        self.location = LocationFactory()
-        self.isll = InterventionSectorLocationLink.objects.create(
-            intervention=self.intervention_obj,
-            sector=self.sector,
-        )
-        self.isll.locations.add(LocationFactory())
-        self.isll.save()
+
         self.intervention_obj.status = Intervention.DRAFT
         self.intervention_obj.save()
 
@@ -1783,26 +1761,6 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["Cannot change fields while intervention is active: unicef_cash"])
 
-    @skip('TODO: update test when new validation requirement is built')
-    def test_intervention_active_update_sector_locations(self):
-        intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention_obj.status = Intervention.DRAFT
-        intervention_obj.save()
-        InterventionSectorLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
-        self.intervention_data.update(sector_locations=[])
-        self.intervention_data.update(status="active")
-        response = self.forced_auth_req(
-            'patch',
-            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
-            user=self.unicef_staff,
-            data=self.intervention_data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data,
-            ["Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
-
     def test_intervention_validation(self):
         response = self.forced_auth_req(
             'post',
@@ -1892,8 +1850,9 @@ class TestInterventionViews(APITenantTestCase):
             "status": Intervention.DRAFT,
             "start": "2016-10-28",
             "end": "2016-10-28",
+            # TODO: revisit 'location' filter after prp refactoring is done
             "location": "Location",
-            "sector": self.sector.id,
+            "section": self.section.id,
             "search": "2009",
         }
         response = self.forced_auth_req(
@@ -2008,28 +1967,6 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["You do not have permissions to delete an amendment"])
 
-    def test_intervention_sector_locations_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            '/api/v2/interventions/sector-locations/{}/'.format(self.isll.id),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_intervention_sector_locations_delete_invalid(self):
-        intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = Intervention.ACTIVE
-        intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            '/api/v2/interventions/sector-locations/{}/'.format(self.isll.id),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete a sector location"])
-
     def test_api_interventions_values(self):
         params = {"values": "{}".format(self.intervention["id"])}
         response = self.forced_auth_req(
@@ -2068,14 +2005,8 @@ class TestPartnershipDashboardView(APITenantTestCase):
         )
         self.intervention = response.data
 
-        self.sector = Sector.objects.create(name="Sector 1")
-        self.location = LocationFactory()
-        self.isll = InterventionSectorLocationLink.objects.create(
-            intervention=Intervention.objects.get(id=self.intervention["id"]),
-            sector=self.sector,
-        )
-        self.isll.locations.add(LocationFactory())
-        self.isll.save()
+        self.section = SectionFactory()
+        Country.objects.get(schema_name="test").sections.add(self.section)
 
         # Basic data to adjust in tests
         self.intervention_data = {
@@ -2109,12 +2040,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
                     "in_kind_amount_local": "0.00",
                     "total": "6.00"
                 },
-            "sector_locations": [
-                {
-                    "sector": self.sector.id,
-                    "locations": [self.location.id],
-                }
-            ],
+            "sections": [self.section.id],
             "result_links": [
                 {
                     "cp_output": ResultFactory().id,

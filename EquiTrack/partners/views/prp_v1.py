@@ -6,7 +6,7 @@ from partners.models import (
     Intervention,
 )
 from partners.serializers.prp_v1 import PRPInterventionListSerializer
-from partners.permissions import PartneshipManagerPermission
+from partners.permissions import ListCreateAPIMixedPermission
 
 
 class PRPInterventionListAPIView(ListAPIView):
@@ -15,7 +15,7 @@ class PRPInterventionListAPIView(ListAPIView):
     Returns a list of Interventions.
     """
     serializer_class = PRPInterventionListSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (ListCreateAPIMixedPermission, )
     filter_backends = (PartnerScopeFilter,)
 
     def get_queryset(self, format=None):

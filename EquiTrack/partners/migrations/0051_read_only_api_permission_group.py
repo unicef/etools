@@ -7,11 +7,15 @@ from django.db import migrations
 
 def remove_permission_group(apps, schema_editor):
     Group = apps.get_model('auth', 'Group')
-    Group.objects.get(name='Read-Only API').delete()
+    try:
+        api_grp = Group.objects.get(name='Read-Only API')
+    except Group.DoesNotExist:
+        return
+    api_grp.delete()
 
 def add_permission_group(apps, schema_editor):
     Group = apps.get_model('auth', 'Group')
-    Group.objects.create(name='Read-Only API')
+    Group.objects.get_or_create(name='Read-Only API')
 
 
 class Migration(migrations.Migration):
