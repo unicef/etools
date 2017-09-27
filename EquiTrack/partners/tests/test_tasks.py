@@ -347,6 +347,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         intervention = InterventionFactory(status=Intervention.ENDED)
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
+                                          intervention_amt=_make_decimal(i),
                                           actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
         interventions.append(intervention)
 
@@ -359,12 +360,14 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(i),
+                                          intervention_amt=_make_decimal(i),
                                           actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
 
         # Ignored because funds totals don't match
         intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
+                                          intervention_amt=_make_decimal(i),
                                           actual_amt=_make_decimal(i + 1), total_amt=_make_decimal(i))
 
         # Mock InterventionValid() to always return True.
@@ -412,6 +415,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         intervention = InterventionFactory(status=Intervention.ENDED)
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
+                                          intervention_amt=_make_decimal(i),
                                           actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
         interventions.append(intervention)
 
@@ -424,11 +428,13 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(i),
+                                          intervention_amt=_make_decimal(i),
                                           actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
         # Ignored because funds totals don't match
         intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
         for i in range(3):
             FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
+                                          intervention_amt=_make_decimal(i),
                                           actual_amt=_make_decimal(i + 1), total_amt=_make_decimal(i))
 
         def mock_intervention_valid_class_side_effect(*args, **kwargs):
