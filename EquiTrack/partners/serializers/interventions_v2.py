@@ -561,6 +561,7 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
     # TODO: remember to add locations as locations
+    # TODO: intervention sector locations cleanup
 
     class Meta:
         model = Intervention
