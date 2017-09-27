@@ -60,7 +60,7 @@ schema_view = get_swagger_view(title='eTools API')
 schema_view_json_coreapi = get_schema_view(title="eTools API")
 # openapi+json (https://openapis.org/ aka swagger 2.0)
 schema_view_json_openapi = get_schema_view(title="eTools API",
-        renderer_classes=[OpenAPIRenderer])
+                                           renderer_classes=[OpenAPIRenderer])
 
 api = routers.SimpleRouter()
 
