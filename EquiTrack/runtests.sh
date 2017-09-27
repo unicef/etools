@@ -13,7 +13,7 @@ python manage.py makemigrations --dry-run | grep 'No changes detected' || (echo 
 
 # Run unittests and coverage report
 coverage erase
-coverage run manage.py test audit.tests.test_transitions.TestSCTransitionsTestCase.test_cancel_submitted_auditor --noinput --keepdb --settings="$TEST_SETTINGS" "$@"
+coverage run manage.py test --noinput --keepdb --settings="$TEST_SETTINGS" "$@"
 coverage report --include "$@/*.py"
 
 # Check code style
