@@ -51,12 +51,13 @@ jobs:
       - image: unicef/etools:test-base
         environment:
           PGHOST: 127.0.0.1 
-          DATABASE_URL: "postgis://root@localhost:5432/circle_test"
-      - image: circleci/postgres:9.5-postgis
+          DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
+      - image: circleci/postgres:9.5-alpine-postgis
         environment:
-          POSTGRES_USER: root 
-          PGUSER: root
+          POSTGRES_USER: postgres 
+          PGUSER: postgres
           POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: postgres
     steps:
       - checkout
       - setup_remote_docker
@@ -71,14 +72,14 @@ jobs:
       - run:
           name: Postgres Extensions
           command: |
-            psql -d template1 -c 'create extension if not exists hstore;'
+            psql -U postgres -d template1 -c 'create extension if not exists hstore;'
       - run:
           name: Building the image
           command: |
             TAG=${CIRCLE_BRANCH}
             docker build -t unicef/etools:$TAG .
             HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`
-            docker run -it -e "DATABASE_URL=postgis://root@localhost:5432/circle_test" -e SECRET_KEY --add-host=docker:${HOSTIP} unicef/etools:$TAG bash runtests.sh
+            docker run -it -e "DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"" -e SECRET_KEY --add-host=docker:${HOSTIP} unicef/etools:$TAG bash runtests.sh
 #      - run:
 #          name: Pushing to Docker Hub
 #          command: |
