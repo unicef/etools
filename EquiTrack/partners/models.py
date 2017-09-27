@@ -1139,7 +1139,6 @@ class InterventionManager(models.Manager):
 
     def get_queryset(self):
         return super(InterventionManager, self).get_queryset().prefetch_related('agreement__partner',
-                                                                                'sector_locations__sector',
                                                                                 'frs',
                                                                                 'offices',
                                                                                 'planned_budget')
@@ -1310,6 +1309,9 @@ class Intervention(TimeStampedModel):
 
     offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
     population_focus = models.CharField(max_length=130, null=True, blank=True)
+
+    sections = models.ManyToManyField(Section, blank=True, related_name='section_interventions+')
+
     # Flag if this has been migrated to a status that is not correct
     # previous status
     metadata = JSONField(blank=True, null=True, default=dict)
@@ -1793,6 +1795,7 @@ class InterventionAttachment(TimeStampedModel):
         return self.attachment.name
 
 
+# TODO intervention sector locations cleanup
 class InterventionSectorLocationLink(models.Model):
     intervention = models.ForeignKey(Intervention, related_name='sector_locations')
     sector = models.ForeignKey(Sector, related_name='intervention_locations')
