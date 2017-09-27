@@ -7,12 +7,13 @@ jobs:
       - image: unicef/etools:test-base
         environment:
           PGHOST: 127.0.0.1 
-          DATABASE_URL: "postgis://root@localhost:5432/circle_test"
+          DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
       - image: circleci/postgres:9.5-postgis
         environment:
-          POSTGRES_USER: root 
-          PGUSER: root
+          POSTGRES_USER: postgres 
+          PGUSER: postgres
           POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: postgres
     steps:
       - checkout
       - restore_cache:
@@ -31,7 +32,7 @@ jobs:
       - run:
           name: Postgres Extensions
           command: |
-            psql -d template1 -c 'create extension if not exists hstore;'
+            psql -U postgres -d template1 -c 'create extension if not exists hstore;'
             
       - run:
           name: Run Tests
