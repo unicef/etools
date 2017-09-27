@@ -24,6 +24,7 @@ class DisaggregationTest(FastTenantTestCase):
     def test_serialization(self):
         serializer = DisaggregationSerializer(self.disaggregation)
         expected = {
+            'id': self.disaggregation.id,
             'name': self.disaggregation.name,
             'active': self.disaggregation.active,
             'disaggregation_values': [],
@@ -35,6 +36,7 @@ class DisaggregationTest(FastTenantTestCase):
         value_2 = DisaggregationValueFactory(disaggregation=self.disaggregation)
         serializer = DisaggregationSerializer(self.disaggregation)
         expected = {
+            'id': self.disaggregation.id,
             'name': self.disaggregation.name,
             'active': self.disaggregation.active,
             'disaggregation_values': [
