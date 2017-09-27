@@ -24,6 +24,7 @@ from t2f.helpers.permission_matrix import PermissionMatrix, FakePermissionMatrix
 from t2f.helpers.clone_travel import CloneTravelHelper
 from t2f.views import T2FPagePagination, run_transition
 
+
 class TravelListViewSet(mixins.ListModelMixin,
                         mixins.CreateModelMixin,
                         viewsets.GenericViewSet):

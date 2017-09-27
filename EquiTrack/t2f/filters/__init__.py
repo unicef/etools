@@ -5,6 +5,7 @@ from django.db.models import F
 from rest_framework.filters import BaseFilterBackend
 from t2f.serializers.filters import SearchFilterSerializer
 
+
 class TravelRelatedModelFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         # This should be attached only to viewsets which gets travel_pk
@@ -76,7 +77,7 @@ class BaseFilterBoxFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
 
         data = self._get_filter_kwargs(request, queryset, view)
-        statuses = request.query_params.get('f_status',None)
+        statuses = request.query_params.get('f_status', None)
         if statuses is not None:
             statuses = statuses.split(',')
             queryset = queryset.filter(status__in=statuses)
