@@ -66,7 +66,7 @@ travel_list_patterns = ((
     url(r'^activities/(?P<partner_organization_pk>[0-9]+)/', TravelActivityViewSet.as_view({'get': 'list'}),
         name='activities'),
     url(r'^dashboard', travel_dashboard_list, name='dashboard'),
- ), 'list')
+), 'list')
 
 
 travel_patterns = ((

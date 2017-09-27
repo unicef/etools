@@ -37,7 +37,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
             ('attachment_details', 'attachments/1/', {'travel_pk': 1, 'attachment_pk': 1}),
             ('clone_for_driver', 'add_driver/', {'travel_pk': 1}),
             ('clone_for_secondary_traveler', 'duplicate_travel/', {'travel_pk': 1}),
-            )
+        )
         self.assertReversal(names_and_paths, 't2f:travels:details:', '/api/t2f/travels/1/')
         self.assertIntParamRegexes(names_and_paths, 't2f:travels:details:')
 
@@ -627,8 +627,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                'departure_date': '2017-01-20T23:00:01.892Z',
                                'arrival_date': '2017-01-27T23:00:01.905Z',
                                'mode_of_travel': 'car'},
-                              {
-                               'origin': 'a',
+                              {'origin': 'a',
                                'destination': 'b',
                                'dsa_region': dsa_2.id,
                                'departure_date': '2017-01-18T23:00:01.224Z',

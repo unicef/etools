@@ -22,7 +22,7 @@ from funds.models import (
     FundsReservationHeader,
     FundsReservationItem,
     Grant,
-    )
+)
 from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
@@ -420,10 +420,10 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     actual_amt = fuzzy.FuzzyDecimal(1, 300)
     outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
 
-    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1)-timedelta(days=10),
+    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1) - timedelta(days=10),
                                  date(date.today().year, 1, 1))
     end_date = fuzzy.FuzzyDate(date(date.today().year + 1, 1, 1),
-                               date(date.today().year + 1, 1, 1)+timedelta(days=10))
+                               date(date.today().year + 1, 1, 1) + timedelta(days=10))
 
     class Meta:
         model = FundsReservationHeader

@@ -42,17 +42,17 @@ TRIPTRAVEL_FIELDS_MAP = OrderedDict({
 })
 
 TRAVEL_TYPE_MAP = {
-        'programme_monitoring': 'Programmatic Visit',
-        'spot_check': 'Spot Check',
-        'advocacy': 'Advocacy',
-        'technical_support': 'Technical Support',
-        'meeting': 'Meeting',
-        'duty_travel': 'Technical Support',
-        'home_leave': 'Staff Entitlement',
-        'family_visit': 'Staff Entitlement',
-        'education_grant': 'Staff Entitlement',
-        'staff_development': 'Staff Development',
-        'staff_entitlement': 'Staff Entitlement',
+    'programme_monitoring': 'Programmatic Visit',
+    'spot_check': 'Spot Check',
+    'advocacy': 'Advocacy',
+    'technical_support': 'Technical Support',
+    'meeting': 'Meeting',
+    'duty_travel': 'Technical Support',
+    'home_leave': 'Staff Entitlement',
+    'family_visit': 'Staff Entitlement',
+    'education_grant': 'Staff Entitlement',
+    'staff_development': 'Staff Development',
+    'staff_entitlement': 'Staff Entitlement',
 }
 
 

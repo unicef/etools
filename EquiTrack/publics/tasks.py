@@ -199,19 +199,19 @@ def import_cost_assignments(xml_structure):
 
 class DSARateUploader(object):
     FIELDS = (
-         'Country Code',
-         'Country Name',
-         'DSA Area Name',
-         'Area Code',
-         'Unique Name',
-         'Unique ID',
-         'USD_60Plus',
-         'USD_60',
-         'Local_60',
-         'Local_60Plus',
-         'Room_Percentage',
-         'Finalization_Date',
-         'DSA_Eff_Date',
+        'Country Code',
+        'Country Name',
+        'DSA Area Name',
+        'Area Code',
+        'Unique Name',
+        'Unique ID',
+        'USD_60Plus',
+        'USD_60',
+        'Local_60',
+        'Local_60Plus',
+        'Room_Percentage',
+        'Finalization_Date',
+        'DSA_Eff_Date',
     )
 
     def __init__(self, dsa_rate_upload):
@@ -222,10 +222,13 @@ class DSARateUploader(object):
     def read_input_file(self, filename):
         storage = AzureStorage()
         with storage.open(filename) as input_file:
-            return [dict(r) for r in csv.DictReader(
-                                            input_file,
-                                            restkey='__extra_columns__',
-                                            restval='__missing_columns__')]
+            return [
+                dict(r) for r in csv.DictReader(
+                    input_file,
+                    restkey='__extra_columns__',
+                    restval='__missing_columns__'
+                )
+            ]
 
     @atomic
     def update_dsa_regions(self):
@@ -256,7 +259,7 @@ class DSARateUploader(object):
                 raw = raw.replace(' ', '')  # remove space delimiter
                 n = Decimal(raw)
             except InvalidOperation as e:
-                self.errors['{} (line {})'.format(field, line+1)] = e.message
+                self.errors['{} (line {})'.format(field, line + 1)] = e.message
                 return None
             else:
                 return n
@@ -269,7 +272,7 @@ class DSARateUploader(object):
                     year += 2000
                 d = date(year, month, day)
             except ValueError as e:
-                self.errors['{} (line {})'.format(field, line+1)] = e.message
+                self.errors['{} (line {})'.format(field, line + 1)] = e.message
                 return None
             else:
                 return d

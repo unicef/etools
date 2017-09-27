@@ -44,7 +44,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
             ('activities', 'activities/1/', {'partner_organization_pk': 1}),
             ('activities-intervention', 'activities/partnership/1/', {'partnership_pk': 1}),
             ('dashboard', 'dashboard', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 't2f:travels:list:', '/api/t2f/travels/')
         self.assertIntParamRegexes(names_and_paths, 't2f:travels:list:')
 
@@ -258,7 +258,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
 
         data = {
             'f_travel_type': TravelType.PROGRAMME_MONITORING,
-            'f_month': t2.start_date.month-1,  # Frontend sends 0-11
+            'f_month': t2.start_date.month - 1,  # Frontend sends 0-11
             'f_cp_output': result.id,
         }
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),

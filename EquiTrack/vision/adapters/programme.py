@@ -172,7 +172,7 @@ class ResultStructureSynchronizer(object):
         return {
             'details': '\n'.join([cps, outcomes, outputs, activities]),
             'total_records': sum([i[0] for i in [total_cps, total_outcomes, total_outputs, total_activities]]),
-            'processed': sum([i[1]+i[2] for i in [total_cps, total_outcomes, total_outputs, total_activities]])
+            'processed': sum([i[1] + i[2] for i in [total_cps, total_outcomes, total_outputs, total_activities]])
         }
 
 

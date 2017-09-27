@@ -243,8 +243,8 @@ class WritableNestedParentSerializerMixin(object):
         if isinstance(related_descriptor, related_descriptors.ReverseManyToOneDescriptor):
             return related_descriptor.field, 'forward'
 
-        if (isinstance(related_descriptor, related_descriptors.ForwardManyToOneDescriptor)
-                and isinstance(related_descriptor.field, related.OneToOneField)):
+        if (isinstance(related_descriptor, related_descriptors.ForwardManyToOneDescriptor) and
+                isinstance(related_descriptor.field, related.OneToOneField)):
             return related_descriptor.field, 'reverse'
 
         assert False, "We doen't support many to many relation and forward many to one " \

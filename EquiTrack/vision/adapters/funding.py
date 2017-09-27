@@ -239,7 +239,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
     }
     HEADER_FIELDS = ['VENDOR_CODE', 'FR_NUMBER', 'FR_DOC_DATE', 'FR_TYPE', 'CURRENCY',
                      'FR_DOCUMENT_TEXT', 'FR_START_DATE', 'FR_END_DATE', "FR_OVERALL_AMOUNT",
-                     "CURRENT_FR_AMOUNT",  "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT"]
+                     "CURRENT_FR_AMOUNT", "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT"]
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',

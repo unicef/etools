@@ -196,8 +196,8 @@ class EngagementSerializer(EngagementDatesValidation,
 
         if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0 and status == 'new':
             raise serializers.ValidationError({
-                    'active_pd': [_('This field is required.'), ],
-                })
+                'active_pd': [_('This field is required.'), ],
+            })
         return validated_data
 
 
