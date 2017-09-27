@@ -1,5 +1,4 @@
 from __future__ import absolute_import, unicode_literals
-import logging
 import datetime
 import json
 
@@ -153,7 +152,7 @@ class WorkspaceFileType(models.Model):
     Represents a file type
     """
 
-    name = models.CharField(max_length=64L, unique=True)
+    name = models.CharField(max_length=64, unique=True)
 
     def __unicode__(self):
         return self.name
@@ -261,7 +260,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         blank=True
     )
     description = models.CharField(
-        max_length=256L,
+        max_length=256,
         blank=True
     )
     shared_with = ArrayField(models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES), blank=True, null=True)
@@ -280,19 +279,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=50
     )
     street_address = models.CharField(
-        max_length=500L,
+        max_length=500,
         blank=True, null=True
     )
     city = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True, null=True
     )
     postal_code = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True, null=True
     )
     country = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True, null=True
     )
 
@@ -309,7 +308,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         blank=True, null=True
     )
     phone_number = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True, null=True
     )
     vendor_number = models.CharField(
@@ -588,6 +587,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 travel_type=TravelType.PROGRAMME_MONITORING,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
+                travels__completed_at__year=datetime.datetime.now().year(),
                 partner=partner,
             ).count() or 0
 
@@ -607,6 +607,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 travel_type=TravelType.SPOT_CHECK,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
+                travels__completed_at__year=datetime.datetime.now().year(),
                 partner=partner,
             ).count() or 0
 
@@ -639,11 +640,11 @@ class PartnerStaffMember(models.Model):
 
     partner = models.ForeignKey(
         PartnerOrganization, related_name='staff_members')
-    title = models.CharField(max_length=64L, null=True, blank=True)
-    first_name = models.CharField(max_length=64L)
-    last_name = models.CharField(max_length=64L)
-    email = models.CharField(max_length=128L, unique=True, blank=False)
-    phone = models.CharField(max_length=64L, blank=True, null=True)
+    title = models.CharField(max_length=64, null=True, blank=True)
+    first_name = models.CharField(max_length=64)
+    last_name = models.CharField(max_length=64)
+    email = models.CharField(max_length=128, unique=True, blank=False)
+    phone = models.CharField(max_length=64, blank=True, null=True)
     active = models.BooleanField(
         default=True
     )
@@ -805,7 +806,7 @@ class BankDetails(models.Model):
     partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details', null=True, blank=True)
     bank_name = models.CharField(max_length=255, null=True, blank=True)
     bank_address = models.CharField(
-        max_length=256L,
+        max_length=256,
         blank=True
     )
     account_title = models.CharField(max_length=255, null=True, blank=True)
@@ -882,7 +883,7 @@ class Agreement(TimeStampedModel):
         choices=AGREEMENT_TYPES
     )
     agreement_number = models.CharField(
-        max_length=45L,
+        max_length=45,
         blank=True,
         verbose_name='Reference Number',
         # TODO: write a script to insure this before merging.
@@ -991,7 +992,10 @@ class Agreement(TimeStampedModel):
                 document_type__in=[Intervention.PD, Intervention.SHPD]
             )
             for item in interventions:
-                if item.status not in [Intervention.DRAFT, Intervention.CLOSED, Intervention.ENDED] and\
+                if item.status not in [Intervention.DRAFT,
+                                       Intervention.CLOSED,
+                                       Intervention.ENDED,
+                                       Intervention.TERMINATED] and\
                         item.status != self.status:
                     item.status = self.status
                     item.save()
@@ -1018,7 +1022,7 @@ class Agreement(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[SUSPENDED, TERMINATED, SIGNED],
+                source=[SUSPENDED, SIGNED],
                 target=[DRAFT],
                 conditions=[agreements_illegal_transition])
     def transition_to_cancelled(self):
@@ -1139,10 +1143,6 @@ class InterventionManager(models.Manager):
 
 
 def side_effect_one(i, old_instance=None, user=None):
-    logging.debug('Side effect 1 is executing for instance: {}'.format(i.id))
-    # print i.status
-    # print old_instance.status
-    # print user.get_full_name()
     pass
 
 
@@ -1202,7 +1202,7 @@ class Intervention(TimeStampedModel):
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
         (SHPD, 'Simplified Humanitarian Programme Document'),
-        (SSFA, 'SSFA TOR'),
+        (SSFA, 'SSFA'),
     )
 
     tracker = FieldTracker()
@@ -1331,7 +1331,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def submitted_to_prc(self):
-        return True if self.submission_date else False
+        return True if self.submission_date_prc else False
 
     @property
     def days_from_review_to_signed(self):
@@ -1430,7 +1430,7 @@ class Intervention(TimeStampedModel):
         return False
 
     @transition(field=status,
-                source=[ACTIVE, IMPLEMENTED, SUSPENDED, TERMINATED],
+                source=[ACTIVE, IMPLEMENTED, SUSPENDED],
                 target=[DRAFT, CANCELLED],
                 conditions=[illegal_transitions])
     def basic_transition(self):
@@ -1463,7 +1463,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ENDED],
                 target=[CLOSED],
-                conditions=[intervention_validation.transition_ok])
+                conditions=[intervention_validation.transition_to_closed])
     def transition_to_closed(self):
         pass
 
@@ -1510,7 +1510,7 @@ class Intervention(TimeStampedModel):
                 self.agreement.start = self.start
                 self.agreement.end = self.end
 
-            if self.status == self.ACTIVE and self.agreement.status != Agreement.SIGNED:
+            if self.status == self.SIGNED and self.agreement.status != Agreement.SIGNED:
                 save_agreement = True
                 self.agreement.status = Agreement.SIGNED
 
@@ -1717,6 +1717,7 @@ class FileType(models.Model):
     FACE = 'FACE'
     PROGRESS_REPORT = 'Progress Report'
     PARTNERSHIP_REVIEW = 'Partnership Review'
+    FINAL_PARTNERSHIP_REVIEW = 'Final Partnership Review'
     CORRESPONDENCE = 'Correspondence'
     SUPPLY_PLAN = 'Supply/Distribution Plan'
     OTHER = 'Other'
@@ -1725,6 +1726,7 @@ class FileType(models.Model):
         (FACE, FACE),
         (PROGRESS_REPORT, PROGRESS_REPORT),
         (PARTNERSHIP_REVIEW, PARTNERSHIP_REVIEW),
+        (FINAL_PARTNERSHIP_REVIEW, FINAL_PARTNERSHIP_REVIEW),
         (CORRESPONDENCE, CORRESPONDENCE),
         (SUPPLY_PLAN, SUPPLY_PLAN),
         (OTHER, OTHER),
@@ -1794,7 +1796,7 @@ class GovernmentIntervention(models.Model):
         related_query_name='government_interventions'
     )
     number = models.CharField(
-        max_length=45L,
+        max_length=45,
         blank=True,
         verbose_name='Reference Number',
         unique=True
@@ -2155,11 +2157,11 @@ class PCA(AdminURLMixin, models.Model):
         verbose_name='Document type'
     )
     number = models.CharField(
-        max_length=45L,
+        max_length=45,
         blank=True, null=True,
         verbose_name='Reference Number'
     )
-    title = models.CharField(max_length=256L)
+    title = models.CharField(max_length=256)
     project_type = models.CharField(
         max_length=20,
         blank=True, null=True,
@@ -2494,7 +2496,7 @@ class PCA(AdminURLMixin, models.Model):
         recipients = [user.email for user in managers]
 
         email_context = {
-            'number': instance.__unicode__(),
+            'number': unicode(instance),
             'state': 'Created',
             'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
         }
@@ -2561,7 +2563,7 @@ class RAMIndicator(models.Model):
     def __unicode__(self):
         return '{} -> {}'.format(
             self.result.sector.name if self.result.sector else '',
-            self.result.__unicode__(),
+            unicode(self.result),
         )
 
 
@@ -2584,7 +2586,7 @@ class AmendmentLog(TimeStampedModel):
     amended_at = models.DateField(null=True, verbose_name='Signed At')
     amendment_number = models.IntegerField(default=0)
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True,
         choices=PCA.PCA_STATUS,
     )
@@ -2707,7 +2709,7 @@ class GwPCALocation(models.Model):
         verbose_name = 'Partnership Location'
 
     def __unicode__(self):
-        return self.location.__unicode__() if self.location else ''
+        return unicode(self.location) if self.location else ''
 
     def view_location(self):
         return get_changeform_link(self)
@@ -2860,7 +2862,7 @@ class AgreementAmendmentLog(TimeStampedModel):
         null=True,
     )
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True,
         choices=PCA.PCA_STATUS,
     )
@@ -2911,7 +2913,7 @@ class AuthorizedOfficer(models.Model):
     tracker = FieldTracker()
 
     def __unicode__(self):
-        return self.officer.__unicode__()
+        return unicode(self.officer)
 
     @classmethod
     def create_officer(cls, sender, instance, created, **kwargs):

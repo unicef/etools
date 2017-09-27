@@ -31,15 +31,15 @@ def transition_to_closed(i):
     if i.end > today:
         raise TransitionError([_('End date is in the future')])
 
-    if i.total_frs_amt['total_intervention_amt'] != i.total_frs_amt['total_actual_amt'] or \
-            i.total_frs_amt['total_outstanding_amt'] != 0:
+    if i.total_frs['total_intervention_amt'] != i.total_frs['total_actual_amt'] or \
+            i.total_frs['total_outstanding_amt'] != 0:
         raise TransitionError([_('Total FR amount needs to equal total actual amount, and'
                                  'Total Outstanding DCTs need to equal to 0')])
 
     # If total_actual_amt >100,000 then attachments has to include
     # at least 1 record with type: "Final Partnership Review"
-    if i.total_frs_amt['total_actual_amt'] > 100000:
-        if i.attachments.filter(type__name='final partnership review').count() < 1:
+    if i.total_frs['total_actual_amt'] > 100000:
+        if i.attachments.filter(type__name='Final Partnership Review').count() < 1:
             raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
                                      'was attached')])
 

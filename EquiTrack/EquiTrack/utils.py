@@ -2,22 +2,17 @@
 Project wide base classes and utility functions for apps
 """
 import csv
-from collections import OrderedDict as SortedDict
 from functools import wraps
 import json
 import requests
-import tablib
 import uuid
 
 from django.conf import settings
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
-from django.contrib.auth.decorators import user_passes_test
 from django.contrib.sites.models import Site
-from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import connection
 from django.utils.cache import patch_cache_control
-from import_export.resources import ModelResource
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -46,103 +41,6 @@ def get_changeform_link(model, link_name='View', action='change'):
         return u'<a class="btn btn-primary default" ' \
                u'href="{}" target="_blank">{}</a>'.format(changeform_url, link_name)
     return u''
-
-
-def get_staticfile_link(file_path):
-    """
-    Returns the full URL to a file in static files
-
-    :param file_path: path to file relative to static files root
-    :return: fully qualified URL to file
-    """
-    return static(file_path)
-
-
-class BaseExportResource(ModelResource):
-
-    headers = []
-
-    def insert_column(self, row, field_name, value):
-        """
-        Inserts a column into a row with a given value
-        or sets a default value of empty string if none
-        """
-        row[field_name] = value
-
-    def insert_columns_inplace(self, row, fields, after_column):
-        """
-        Inserts fields with values into a row inplace
-        and after a specific named column
-        """
-        keys = row.keys()
-        before_column = None
-        if after_column in row:
-            index = keys.index(after_column)
-            offset = index + 1
-            if offset < len(row):
-                before_column = keys[offset]
-
-        for key, value in fields.items():
-            if before_column:
-                row.insert(offset, key, value)
-                offset += 1
-            else:
-                row[key] = value
-
-    def fill_row(self, resource, fields):
-        """
-        This performs the actual work of translating
-        a model into a fields dictionary for exporting.
-        Inheriting classes must implement this.
-        """
-        return NotImplementedError()
-
-    def export(self, queryset=None):
-        """
-        Exports a resource.
-        """
-
-        # TODO quickly patched.. this whole code needs to be rewritten to for performance (streaming)
-
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        if getattr(self, 'up_queryset', None):
-            queryset = self.up_queryset(queryset)
-
-        fields = SortedDict()
-        data = tablib.Dataset(headers=fields.keys())
-
-        for model in queryset.iterator():
-            # first pass creates table shape
-            self.fill_row(model, fields)
-            data.append(fields.keys())
-            # run only once for the headers
-            break
-
-        self.headers = fields
-
-        # Iterate without the queryset cache, to avoid wasting memory when
-        # exporting large datasets.
-
-        for model in queryset.all():
-            # second pass creates rows from the known table shape
-            row = fields.copy()
-            self.fill_row(model, row)
-            data.append(row.values())
-
-        return data
-
-
-def staff_test(u):
-    if u.is_authenticated and u.email.endswith("unicef.org"):
-        return True
-    return False
-
-
-def staff_required(function, home_url="/partners/", redirect_field_name=None):
-    actual_decorator = user_passes_test(staff_test, home_url, redirect_field_name)
-    return actual_decorator(function)
 
 
 def set_country(user, request):
