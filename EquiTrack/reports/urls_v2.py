@@ -19,5 +19,5 @@ urlpatterns = (
         view=ResultIndicatorListAPIView.as_view(http_method_names=['get']),
         name='result-indicator-list'),
     url(r'reports/disaggregations/$', view=DisaggregationListCreateView.as_view(),
-        name='disaggregation-list'),
+        name='disaggregation-list-create'),
 )
