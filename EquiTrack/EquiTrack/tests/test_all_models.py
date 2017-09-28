@@ -28,8 +28,6 @@ EXCLUDED_PACKAGES = (
     # Python 3-compatible. As they're fixed one by one, they'll be removed from this list.
     'attachments',
     'audit',
-    'funds',
-    'locations',
     'notification',
     'partners',
     'publics',
@@ -46,15 +44,16 @@ EXCLUDED_PACKAGES = (
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
 class TestStrMethods(TestCase):
-    '''Ensure all models in this project have Python-3 compatible __str__() methods implemented by the Django
-    decorator python_2_unicode_compatible. Models from non-eTools packages are excluded; we're not interested in
+    '''Ensure all models in this project that implement __str__() or __unicode__() use the Django decorator
+    python_2_unicode_compatible. Models from non-eTools packages are excluded; we're not interested in
     testing them.
 
     This works on a whitelist concept; all models are tested unless their package is in EXCLUDED_PACKAGES. This
     ensures that if any new packages or models are added to eTools, they'll be caught by this test.
     '''
-    def test_for_non_default_str_method(self):
-        '''Ensure all models have a __str__() method, and that the __unicode__() method is implemented as expected'''
+    FAILURE_MESSAGE = "Model {} should use Django's @python_2_unicode_compatible decorator"
+
+    def test_for_python_3_incompatible_methods(self):
         models = apps.get_models()
         for model in models:
             # model.__module__ is the module name (a string), not an actual module instance. It's something like
@@ -64,20 +63,50 @@ class TestStrMethods(TestCase):
                 # Skip this model. It's in a 3rd party package or a model that's only used in test.
                 pass
             else:
-                # Get the module that holds the __unicode__ implementation. inspect.getmodule() returns an actual
-                # module instance.
-                unicode_implementation_module = inspect.getmodule(model.__unicode__)
-                # It's counterintuitive, but due to the way @python_2_unicode_compatible works, the __unicode__()
-                # method should be implemented by eTools model code. It should *not* be implemented by the Django
-                # model base class.
-                # Models that implement __unicode__() but don't use the @python_2_unicode_compatible decorator will
-                # pass this test but fail the next test.
-                self.assertEqual(model.__module__, unicode_implementation_module.__name__)
+                # An eTools model can be in one of 5 categories --
+                #   1. Has the @python_2_unicode_compatible decorator. These models are guaranteed to have both
+                #      __str__() and __unicode__() methods.
+                #   2. Does not have the decorator; implements __str__()
+                #   3. Does not have the decorator; implements __unicode__()
+                #   4. Does not have the decorator; implements __str__() and __unicode__()
+                #   5. Does not have the decorator; implements neither __str__() nor __unicode__()
+                #
+                # Category 1 is what we want most models to fall into. Those models pass this test.
+                #
+                # Categories 2, 3, and 4 models are failures from this test's perspective. All eTools models that
+                # implement __str__() or __unicode__() must use @python_2_unicode_compatible decorator.
+                #
+                # Category 5 models pass this test because they're already compatible with Python 3.
+                #
+                # I can tell which category a model is in by comparing the results of inspect.getmodule(model.__str__)
+                # and inspect.getmodule(model.__unicode__). Models in categories 2 and 5 don't have a __unicode__()
+                # method at all (i.e. hasattr(model, '__unicode__') == False).
+                #
+                #  Category |   inspect.getmodule(model.__str__)   | inspect.getmodule(model.__unicode__) |
+                #  ---------+--------------------------------------+--------------------------------------|
+                #     1     |        django's six.py               |        the model's module            |
+                #     2     |       the model's module             |                NA                    |
+                #     3     |        django's base.py              |        the model's module            |
+                #     4     |       the model's module             |        the model's module            |
+                #     5     |        django's base.py              |                NA                    |
 
-                str_implementation_module = inspect.getmodule(model.__str__)
-                # Again, counterintuitively, if the @python_2_unicode_compatible decorator is applied then the
-                # implementation of __str__() will be in Django, specifically in django/utils/six.pyc. I don't want
-                # to get too fussy about the name, though in case it changes from one Django verion to another.
-                self.assertTrue(str_implementation_module.__name__.startswith('django.'))
-                filename = str_implementation_module.__file__
-                self.assertTrue(filename.endswith('six.pyc') or filename.endswith('six.py'))
+                # inspect.getmodule() returns an actual module instance. The module name is something like
+                # 'django.utils.six', 'django.db.models.base', or 'partners.models'. I don't assume too much about
+                # the location of Django's base or six in case they move in some future Django version.
+                str_module_path = inspect.getmodule(model.__str__).__name__.split('.')
+                if str_module_path[0] == 'django' and str_module_path[-1] == 'six':
+                    # Category 1 -- you get a gold star!
+                    pass
+                else:
+                    # This model falls into category 2, 3, 4, or 5.
+                    if hasattr(model, '__unicode__'):
+                        # Category 3 or 4.
+                        raise AssertionError(self.FAILURE_MESSAGE.format(model))
+                    else:
+                        # Category 2 or 5.
+                        if str_module_path[0] == 'django' and str_module_path[-1] == 'base':
+                            # This is category 5. Good enough!
+                            pass
+                        else:
+                            # This is category 2.
+                            raise AssertionError(self.FAILURE_MESSAGE.format(model))
