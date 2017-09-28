@@ -61,6 +61,8 @@ class VisionDataSynchronizer:
     NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS = {}
     GLOBAL_CALL = False
+    LOADER_CLASS = VisionDataLoader
+    LOADER_EXTRA_KWARGS = []
 
     def __init__(self, country=None):
         if not country:
@@ -107,7 +109,15 @@ class VisionDataSynchronizer:
             handler_name=self.__class__.__name__
         )
         try:
-            data_getter = VisionDataLoader(country=self.country, endpoint=self.ENDPOINT)
+            loader_kwargs = {
+                'country': self.country,
+                'endpoint': self.ENDPOINT,
+            }
+            loader_kwargs.update({
+                kwarg_name: getattr(self, kwarg_name)
+                for kwarg_name in self.LOADER_EXTRA_KWARGS
+            })
+            data_getter = self.LOADER_CLASS(**loader_kwargs)
             original_records = data_getter.get()
 
             converted_records = self._convert_records(original_records)
