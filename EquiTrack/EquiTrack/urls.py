@@ -42,7 +42,6 @@ from reports.views.v1 import (
     UnitViewSet
 )
 from t2f.urls import urlpatterns as t2f_patterns
-from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
 from workplan.views import (
     CommentViewSet,
@@ -63,15 +62,6 @@ schema_view_json_openapi = get_schema_view(title="eTools API",
                                            renderer_classes=[OpenAPIRenderer])
 
 api = routers.SimpleRouter()
-
-# ******************  API version 1 - not used ******************************
-
-trips_api = routers.SimpleRouter()
-trips_api.register(r'trips', TripsViewSet, base_name='trips')
-tripsfiles_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
-tripsfiles_api.register(r'files', TripFileViewSet, base_name='files')
-actionpoint_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
-actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='actionpoints')
 
 # ******************  API version 1  ******************************
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
@@ -112,12 +102,6 @@ urlpatterns = [
     url(r'^api/', include(api.urls)),
     url(r'^api/', include(staffm_api.urls)),
     url(r'^api/', include(publics_patterns, namespace='public')),
-
-
-    # url(r'^trips/', include('trips.urls')),
-    url(r'^api/', include(trips_api.urls)),
-    url(r'^api/', include(tripsfiles_api.urls)),
-    url(r'^api/', include(actionpoint_api.urls)),
 
     # ***************  API version 2  ******************
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$',
