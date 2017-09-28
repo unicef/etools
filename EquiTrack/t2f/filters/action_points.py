@@ -15,4 +15,3 @@ class ActionPointSortFilter(BaseSortFilter):
 
 class ActionPointFilterBoxFilter(BaseFilterBoxFilter):
     serializer_class = ActionPointFilterBoxSerializer
-

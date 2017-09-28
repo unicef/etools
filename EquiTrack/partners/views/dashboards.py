@@ -21,6 +21,7 @@ class InterventionPartnershipDashView(ListCreateAPIView):
     """
     serializer_class = InterventionDashSerializer
     permission_classes = (IsAdminUser,)
+
     def get_queryset(self):
         today = datetime.now()
         delta = ExpressionWrapper(today - F('last_pv_date'), output_field=DurationField())
