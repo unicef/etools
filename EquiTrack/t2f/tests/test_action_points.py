@@ -140,7 +140,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
         self.assertEqual(len(response_json['data']), 3)
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
-                                        data={'f_person_responsible': self.traveler.id , 'f_status' : 'open,completed'},
+                                        data={'f_person_responsible': self.traveler.id , 'mf_status' : 'open,completed'},
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['data']), 2)
