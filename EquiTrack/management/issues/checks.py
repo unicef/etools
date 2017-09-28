@@ -18,8 +18,8 @@ class BaseIssueCheck(object):
     Base class for all Issue Checks
     """
     __metaclass__ = ABCMeta
-    model = None
-    issue_id = None
+    model = None  # the model class that this check runs against.
+    issue_id = None  # a unique id for the issue check type.
 
     def __init__(self):
         if self.model is None or not issubclass(self.model, Model):
@@ -74,6 +74,9 @@ class BaseIssueCheck(object):
 
 
 def get_issue_checks():
+    """
+    Get all issue checks from the configured settings.
+    """
     check_ids = set()
     for check_path in settings.ISSUE_CHECKS:
         check = get_issue_check(check_path)
