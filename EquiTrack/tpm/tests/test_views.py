@@ -15,7 +15,7 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_tpm_permissions', verbosity=0)
-        call_command('load_emails emails', verbosity=0)
+        call_command('load_emails', 'emails', verbosity=0)
 
         cls.pme_user = UserFactory(pme=True)
         cls.unicef_user = UserFactory(unicef_user=True)

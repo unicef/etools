@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from django.http import Http404
 from django.utils import timezone
 from easy_pdf.rendering import render_to_pdf_response
