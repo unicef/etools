@@ -166,5 +166,117 @@
       "language": "",
       "default_template": null
     }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "fields": {
+      "name": "tpm/visit/assign",
+      "description": "Visit assigned. TPM should be notified.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-28T09:08:55.557Z",
+      "subject": "[TPM Portal] TPM Visit Request for {{ implementing_partners|join:', ' }}; {{ visit.reference_number }}",
+      "content": "Dear {{ visit.tpm_partner.name }},\r\n\r\nUNICEF is requesting a Monitoring/Verification Visit for {{ implementing_partners|join:', ' }}. Please refer below for additional information.\r\n{% for activity in visit.tpm_activities.all %}\r\nPD/SSFA/ToR: {{ activity.partnership.title }}\r\nCP Output {{ activity.cp_output }}, {{ activity.locations.all|join:', ' }}\r\n\r\n{% endfor %}\r\nPlease click this link for additional information and documents relatied to the visit: {{ visit.get_object_url }}\r\n\r\nThank you.",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ visit.tpm_partner.name }},<br/>\r\n<br/>\r\nUNICEF is requesting a Monitoring/Verification Visit for <b>{{ implementing_partners|join:', ' }}</b>. <br/><br/>\r\nPlease refer below for additional information.<br/><br/>\r\n{% for activity in visit.tpm_activities.all %}\r\n<b>PD/SSFA/ToR</b>: {{ activity.partnership.title }}<br/>\r\n<b>CP Output</b> {{ activity.cp_output|default:\"unassigned\" }}<br/>\r\n<b>Locations</b>: {{ activity.locations.all|join:', ' }}</br>\r\n<b>Section</b>: {{ activity.section.name }}<br/><br/>\r\n{% endfor %}\r\n<br/>\r\nPlease click this link for additional information and documents relatied to the visit: <a href=\"{{ visit.get_object_url }}\">{{ visit.get_object_url }}</a><br/>\r\n<br/>\r\nThank you.\r\n{% endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "fields": {
+      "name": "tpm/visit/reject",
+      "description": "TPM rejected visit. Notify focal points.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-28T09:08:42.349Z",
+      "subject": "{{ visit.tpm_partner.name }} has rejected the Monitoring/Verification Visit Request {{ visit.reference_number }}",
+      "content": "Dear {{ recipient.get_full_name }},\r\n\r\nTPM {{ visit.tpm_partner.name }} has rejected your request for a Monitorin/Verifcation visit to Implementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} {{ implementing_partners|join:', ' }}\r\n\r\nPlease click this link for additional information and reason for rejection {{ visit.get_object_url }}\r\n\r\nThank you.",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ recipient.first_name }},<br/>\r\n<br/>\r\nTPM <b>{{ visit.tpm_partner.name }}</b> has rejected your request for a Monitorin/Verifcation visit to Implementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} <b>{{ implementing_partners|join:', ' }}</b>.<br/>\r\n<br/>\r\nPlease click this link for additional information and reason for rejection<a href=\"{{ visit.get_object_url }}\">{{ visit.get_object_url }}</a><br/>\r\n<br/>\r\nThank you.\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "fields": {
+      "name": "tpm/visit/accept",
+      "description": "TPM accepted visit. Notify focal points & PME.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-27T14:28:05.014Z",
+      "subject": "{{ visit.tpm_partner.name }} has accepted the Monitoring/Verification Visit Request {{ visit.reference_number }}",
+      "content": "Dear {{ recipient.get_full_name }},\r\n\r\nTPM {{ visit.tpm_partner.name }} has accepted your request for a Monitorin/Verifcation visit to Implementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} {{ implementing_partners|join:', ' }}\r\n\r\nPlease click this link for additional information {{ visit.get_object_url }}\r\n\r\nThank you.",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ recipient.first_name }},<br/>\r\n<br/>\r\nTPM <b>{{ visit.tpm_partner.name }}</b> has accepted your request for a Monitorin/Verifcation visit to Implementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} <b>{{ implementing_partners|join:', ' }}</b>.<br/>\r\n<br/>\r\nPlease click this link for additional information <a href=\"{{ visit.get_object_url }}\">{{ visit.get_object_url }}</a><br/>\r\n<br/>\r\nThank you.\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "fields": {
+      "name": "tpm/visit/report",
+      "description": "TPM finished with visit report.  Notify PME & focal points.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-28T09:08:20.475Z",
+      "subject": "{{ visit.tpm_partner.name }} has submited the final report for {{ visit.reference_number }}",
+      "content": "Dear {{ recipient.first_name }},\r\n\r\n{{ visit.tpm_partner.name }} has submited the final report for the Monitoring/Verification visit requested for {{ partnerships|join:', ' }}.\r\nPlease refer below for additional information.\r\n\r\n{% for activity in visit.tpm_activities.all %}\r\nPD/SSFA/ToR: {{ activity.partnership.title}}\r\nCP Output: {{ activity.cp_output }}\r\nLocation: {{ activity.locations.all|join:', ' }}\r\nSection: {{ activity.section.name }}\r\n{% endfor %}\r\n\r\nPlease click this link to view the final report: {{ visit.get_object_url }} and take the appropriate action {Accept/Request for more information}\r\nThank you.",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ recipient.first_name }},<br/>\r\n<br/>\r\n<b>{{ visit.tpm_partner.name }}</b> has submited the final report for the Monitoring/Verification visit requested for <b>{{ partnerships|join:', ' }}</b>.<br/>\r\nPlease refer below for additional information.<br/>\r\n<br/>\r\n{% for activity in visit.tpm_activities.all %}\r\n<b>PD/SSFA/ToR</b>: {{ activity.partnership.title }}<br/>\r\n<b>CP Output</b> {{ activity.cp_output|default:\"unassigned\" }}<br/>\r\n<b>Locations</b>: {{ activity.locations.all|join:', ' }}</br>\r\n<b>Section</b>: {{ activity.section.name }}<br/><br/>\r\n{% endfor %}\r\n<br/>\r\nPlease click this link to view the final report: <a href=\"{{ visit.get_object_url }}\">{{ visit.get_object_url }}</a> and take the appropriate action {Accept/Request for more information}<br/><br/>\r\nThank you.\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "fields": {
+      "name": "tpm/visit/report_rejected",
+      "description": "Report was rejected. Notify TPM.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-28T09:08:01.190Z",
+      "subject": "Request for more information on the Final report for the Monitoring/Verification Visit {{ visit.reference_number }}",
+      "content": "UNICEF has requested additional information on  the final report submited for the Monitoring/Verification visit to Implementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} {{ implementing_partners|join:', ' }}.\r\nPlease refer below for additional information.\r\n\r\n{% for activity in visit.tpm_activities.all %}\r\nPD/SSFA/ToR: {{ activity.partnership.title}}\r\nCP Output: {{ activity.cp_output }}\r\nLocation: {{ activity.locations.all|join:', ' }}\r\nSection: {{ activity.section.name }}\r\n\r\n{% endfor %}\r\n\r\nPlease click this link to view the additional information/clarifications requested: {{ visit.get_object_url }}\r\nThank you.",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ recipient.first_name }},<br/>\r\n<br/>\r\nUNICEF has requested additional information on  the final report submited for the Monitoring/Verification visit to Implementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} <b>{{ implementing_partners|join:', ' }}</b>.<br/>\r\nPlease refer below for additional information.<br/>\r\n<br/>\r\n{% for activity in visit.tpm_activities.all %}\r\n<b>PD/SSFA/ToR</b>: {{ activity.partnership.title }}<br/>\r\n<b>CP Output</b> {{ activity.cp_output|default:\"unassigned\" }}<br/>\r\n<b>Locations</b>: {{ activity.locations.all|join:', ' }}</br>\r\n<b>Section</b>: {{ activity.section.name }}<br/><br/>\r\n{% endfor %}\r\n<br/>\r\nPlease click this link to view the additional information/clarifications requested: <a href=\"{{ visit.get_object_url }}\">{{ visit.get_object_url }}</a><br/><br/>\r\nThank you.\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "fields": {
+      "name": "tpm/visit/approve_report_tpm",
+      "description": "Report was approved. Notify TPM.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-28T09:07:39.525Z",
+      "subject": "UNICEF approved Final report for the Monitoring/Verification Visit {{ visit.reference_number }}",
+      "content": "UNICEF approved final report submited for the Monitoring/Verification visit to Implementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} {{ implementing_partners|join:', ' }}.\r\nPlease refer below for additional information.\r\n\r\n{% for activity in visit.tpm_activities.all %}\r\nPD/SSFA/ToR: {{ activity.partnership.title}}\r\nCP Output: {{ activity.cp_output }}\r\nLocation: {{ activity.locations.all|join:', ' }}\r\nSection: {{ activity.section.name }}\r\n\r\n{% endfor %}\r\n\r\nPlease click this link for additional information: {{ visit.get_object_url }}\r\nThank you.",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ recipient.first_name }},<br/>\r\n<br/>\r\nUNICEF approved final report submited for the Monitoring/Verification visit to Implementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} <b>{{ implementing_partners|join:', ' }}</b>.<br/>\r\nPlease refer below for additional information.<br/>\r\n<br/>\r\n{% for activity in visit.tpm_activities.all %}\r\n<b>PD/SSFA/ToR</b>: {{ activity.partnership.title }}<br/>\r\n<b>CP Output</b> {{ activity.cp_output|default:\"unassigned\" }}<br/>\r\n<b>Locations</b>: {{ activity.locations.all|join:', ' }}</br>\r\n<b>Section</b>: {{ activity.section.name }}<br/><br/>\r\n{% endfor %}\r\n<br/>\r\nPlease click this link for additional information: <a href=\"{{ visit.get_object_url }}\">{{ visit.get_object_url }}</a><br/><br/>\r\nThank you.\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "fields": {
+      "name": "tpm/visit/approve_report",
+      "description": "Report was approved. Notify UNICEF focal points.",
+      "created": "2017-09-01T10:08:23.360Z",
+      "last_updated": "2017-09-28T09:07:19.977Z",
+      "subject": "UNICEF approved Final report for the Monitoring/Verification Visit {{ visit.reference_number }}",
+      "content": "UNICEF approved final report submited for the Monitoring/Verification visit to Implementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} {{ implementing_partners|join:', ' }}.\r\nPlease refer below for additional information.\r\n\r\n{% for activity in visit.tpm_activities.all %}\r\nPD/SSFA/ToR: {{ activity.partnership.title}}\r\nCP Output: {{ activity.cp_output }}\r\nLocation: {{ activity.locations.all|join:', ' }}\r\nSection: {{ activity.section.name }}\r\n{% endfor %}\r\n\r\nPlease click this link for additional information: {{ visit.get_object_url }}\r\nThank you.",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ recipient.first_name }},<br/>\r\n<br/>\r\nUNICEF approved final report submited for the Monitoring/Verification visit to Implementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} <b>{{ implementing_partners|join:', ' }}</b>.<br/>\r\nPlease refer below for additional information.<br/>\r\n<br/>\r\n{% for activity in visit.tpm_activities.all %}\r\n<b>PD/SSFA/ToR</b>: {{ activity.partnership.title }}<br/>\r\n<b>CP Output</b> {{ activity.cp_output|default:\"unassigned\" }}<br/>\r\n<b>Locations</b>: {{ activity.locations.all|join:', ' }}</br>\r\n<b>Section</b>: {{ activity.section.name }}<br/><br/>\r\n{% endfor %}\r\n<br/>\r\nPlease click this link for additional information: <a href=\"{{ visit.get_object_url }}\">{{ visit.get_object_url }}</a><br/><br/>\r\nThank you.\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
+  },
+  {
+    "model": "post_office.emailtemplate",
+    "fields": {
+      "name": "tpm/visit/action_point_assigned",
+      "description": "Action point assigned to visit. Person responsible should be notified.",
+      "created": "2017-09-26T14:20:05.725Z",
+      "last_updated": "2017-09-28T09:18:39.978Z",
+      "subject": "[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible.email }}",
+      "content": "Dear {{ action_point.person_responsible.first_name }},\r\n\r\n{{ action_point.author.get_full_name }} has assigned you an action point related to Monitoring/Verification Visit {{ visit.reference_number }}.\r\nImplementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} {{ implementing_partners|join:', ' }}.\r\nPlease refer below for additional information.\r\n\r\n{% for activity in visit.tpm_activities.all %}\r\nPD/SSFA/ToR: {{ activity.partnership.title}}\r\nCP Output: {{ activity.cp_output }}\r\nLocation: {{ activity.locations.all|join:', ' }}\r\nSection: {{ activity.section.name }}\r\n{% endfor %}\r\n\r\nPlease click this link for additional information: {{ visit.get_object_url }}\r\nThank you.",
+      "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ action_point.person_responsible.first_name }},<br/>\r\n<br/>\r\n<b>{{ action_point.author.get_full_name }}</b> has assigned you an action point related to Monitoring/Verification Visit {{ visit.reference_number }}.<br/>\r\nImplementing Partner{% if visit.tpm_activities.count > 1 %}s{% endif %} <b>{{ implementing_partners|join:', ' }}</b>.<br/>\r\nPlease refer below for additional information.<br/>\r\n<br/>\r\n{% for activity in visit.tpm_activities.all %}\r\n<b>PD/SSFA/ToR</b>: {{ activity.partnership.title }}<br/>\r\n<b>CP Output</b> {{ activity.cp_output|default:\"unassigned\" }}<br/>\r\n<b>Locations</b>: {{ activity.locations.all|join:', ' }}</br>\r\n<b>Section</b>: {{ activity.section.name }}<br/><br/>\r\n{% endfor %}\r\n\r\nPlease click this link for additional information: <a href=\"{{ visit.get_object_url }}\">{{ visit.get_object_url }}</a><br/><br/>\r\nThank you.\r\n{%endblock %}",
+      "language": "",
+      "default_template": null
+    }
   }
 ]
