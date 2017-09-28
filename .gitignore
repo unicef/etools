@@ -21,7 +21,7 @@ build
 *idea*
 
 EquiTrack/static/*
-
+EquiTrack/migration_errors.txt
 static/*
 media
 
