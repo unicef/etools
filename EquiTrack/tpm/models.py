@@ -13,6 +13,7 @@ from model_utils.models import TimeStampedModel
 from post_office import mail
 
 from EquiTrack.utils import get_environment
+from activities.models import Activity
 from attachments.models import Attachment
 from firms.models import BaseFirm, BaseStaffMember
 from publics.models import SoftDeleteMixin
@@ -368,14 +369,9 @@ class TPMVisitReportRejectComment(models.Model):
 
 
 @python_2_unicode_compatible
-class TPMActivity(models.Model):
+class TPMActivity(Activity):
     tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
 
-    implementing_partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Implementing Partner'))
-    partnership = models.ForeignKey('partners.Intervention', verbose_name=_('partnership'))
-    cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), null=True, blank=True)
-
-    locations = models.ManyToManyField('locations.Location', verbose_name=_('Locations'), related_name='tpm_activities')
     section = models.ForeignKey('users.Section', related_name='tpm_activities')
 
     additional_information = models.TextField(verbose_name=_('Additional Information'), blank=True)
@@ -386,8 +382,6 @@ class TPMActivity(models.Model):
                                               code='activity_report', blank=True)
 
     is_pv = models.BooleanField(default=False, verbose_name=_('Programmatic Visit'))
-
-    date = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
