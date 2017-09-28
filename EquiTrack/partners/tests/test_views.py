@@ -328,6 +328,13 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             vendor_number="DDD",
             short_name="Short name",
         )
+        self.partner2 = PartnerFactory(
+            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            cso_type="International",
+            hidden=False,
+            vendor_number="EEE",
+            short_name="Shorter name",
+        )
         report = "report.pdf"
         self.assessment1 = Assessment.objects.create(
             partner=self.partner,
@@ -345,6 +352,18 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         agreement = AgreementFactory(
             partner=self.partner,
             signed_by_unicef_date=datetime.date.today())
+
+        draft_agreement = AgreementFactory(
+            partner=self.partner,
+            signed_by_unicef_date=None,
+            signed_by_partner_date=None,
+            status='draft')
+
+        draft_agreement2 = AgreementFactory(
+            partner=self.partner2,
+            signed_by_unicef_date=None,
+            signed_by_partner_date=None,
+            status='draft')
 
         self.intervention = InterventionFactory(agreement=agreement)
         self.output_res_type, _ = ResultType.objects.get_or_create(name='Output')
@@ -620,7 +639,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
 
-    def test_api_partners_delete_with_agreements(self):
+    def test_api_partners_delete_with_signed_agreements(self):
         response = self.forced_auth_req(
             'delete',
             '/api/v2/partners/delete/{}/'.format(self.partner.id),
@@ -629,6 +648,14 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data[0], "There was a PCA/SSFA signed with this partner or a transaction "
                                            "was performed against this partner. The Partner record cannot be deleted")
+
+    def test_api_partners_delete_with_draft_agreements(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/delete/{}/'.format(self.partner2.id),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_api_partners_delete(self):
         partner = PartnerFactory()
