@@ -450,7 +450,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         for rs in obj.result_links.all():
             if rs.ram_indicators:
                 for ram in rs.ram_indicators.all():
-                    ram_indicators.append("{}, ".format(ram.name))
+                    ram_indicators.append("[{}] {}, ".format(rs.cp_output.name, ram.name))
+        return ' '.join([ram for ram in ram_indicators])
 
     def get_planned_visits(self, obj):
         return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
