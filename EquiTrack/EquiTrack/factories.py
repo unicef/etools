@@ -15,6 +15,7 @@ from trips import models as trip_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
+from supplies import models as supplies_models
 from funds.models import (
     Donor,
     FundsCommitmentHeader,
@@ -475,3 +476,162 @@ class AgreementAmendmentFactory(factory.django.DjangoModelFactory):
     number = factory.Sequence(lambda n: '{:05}'.format(n))
     agreement = factory.SubFactory(AgreementFactory)
     types = [partner_models.AgreementAmendment.CLAUSE]
+
+
+class WorkspaceFileTypeFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.WorkspaceFileType
+
+    name = factory.Sequence(lambda n: 'workspace file type {}'.format(n))
+
+
+class AssessmentFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.Assessment
+
+    # type must be in partner_models.Assessment.ASSESSMENT_TYPES
+    type = 'Micro Assessment'
+    partner = factory.SubFactory(PartnerFactory)
+
+
+class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionAmendment
+
+    intervention = factory.SubFactory(InterventionFactory)
+
+
+class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionResultLink
+
+    intervention = factory.SubFactory(InterventionFactory)
+    cp_output = factory.SubFactory(ResultFactory)
+
+
+class FileTypeFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.FileType
+
+    name = partner_models.FileType.PROGRESS_REPORT
+
+
+class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionAttachment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    type = factory.SubFactory(FileTypeFactory)
+
+
+class GovernmentInterventionResultFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.GovernmentInterventionResult
+
+    intervention = factory.SubFactory(GovernmentInterventionFactory)
+    result = factory.SubFactory(ResultFactory)
+    year = '2017'
+
+
+class SupplyItemFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = supplies_models.SupplyItem
+
+    name = factory.Sequence(lambda n: 'Supply item {}'.format(n))
+
+
+class DistributionPlanFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.DistributionPlan
+
+    intervention = factory.SubFactory(InterventionFactory)
+    item = factory.SubFactory(SupplyItemFactory)
+    quantity = 42
+
+
+class PCAFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.PCA
+
+    partner = factory.SubFactory(PartnerFactory)
+    title = factory.Sequence(lambda n: 'PCA {}'.format(n))
+    initiation_date = date.today()
+
+
+class RAMIndicatorFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.RAMIndicator
+
+    intervention = factory.SubFactory(PCAFactory)
+    result = factory.SubFactory(ResultFactory)
+
+
+class PCAFileFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.PCAFile
+
+    pca = factory.SubFactory(PCAFactory)
+    type = factory.SubFactory(FileTypeFactory)
+
+
+class PCAGrantFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.PCAGrant
+
+    partnership = factory.SubFactory(PCAFactory)
+    grant = factory.SubFactory(GrantFactory)
+
+
+class GwPCALocationFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.GwPCALocation
+
+    pca = factory.SubFactory(PCAFactory)
+
+
+class SectorFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = report_models.Sector
+
+    name = factory.Sequence(lambda n: 'Sector {}'.format(n))
+
+
+class PCASectorFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.PCASector
+
+    pca = factory.SubFactory(PCAFactory)
+    sector = factory.SubFactory(SectorFactory)
+
+
+class PartnershipBudgetFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.PartnershipBudget
+
+    partnership = factory.SubFactory(PCAFactory)
+
+
+class AuthorizedOfficerFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.AuthorizedOfficer
+
+    agreement = factory.SubFactory(AgreementFactory)
+    officer = factory.SubFactory(PartnerStaffFactory)
