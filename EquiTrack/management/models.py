@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.encoding import python_2_unicode_compatible
 from management.issues.exceptions import IssueFoundException
 
 
@@ -24,6 +25,7 @@ ISSUE_STATUS_CHOICES = (
 )
 
 
+@python_2_unicode_compatible
 class FlaggedIssue(models.Model):
     # generic foreign key to any object in the DB
     # https://docs.djangoproject.com/en/1.11/ref/contrib/contenttypes/#generic-relations
@@ -73,5 +75,5 @@ class FlaggedIssue(models.Model):
         except FlaggedIssue.DoesNotExist:
             return cls(content_object=content_object, issue_id=issue_id)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.message
