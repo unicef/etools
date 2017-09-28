@@ -31,6 +31,7 @@ class POSynchronizer(VisionDataSynchronizer):
     MAPPING = {
         'order': {
             "order_number": "PO_NUMBER",
+            "item_number": "PO_ITEM",
             "contract_start_date": "PO_DATE",
             "auditor_firm": "VENDOR_CODE",
         },

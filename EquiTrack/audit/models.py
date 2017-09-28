@@ -75,6 +75,7 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         unique=True,
         max_length=30
     )
+    item_number = models.IntegerField(_('PO Item Number'), null=True, blank=True)
     auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('auditor'), related_name='purchase_orders')
     contract_start_date = models.DateField(_('PO Date'), null=True, blank=True)
     contract_end_date = models.DateField(_('Contract Expiry Date'), null=True, blank=True)
