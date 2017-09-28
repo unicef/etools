@@ -202,8 +202,8 @@ class TestUserViewsV3(APITenantTestCase):
     def test_api_users_list(self):
         response = self.forced_auth_req('get', '/api/v3/users/', user=self.unicef_staff)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
     def test_users_api_list_values(self):
         response = self.forced_auth_req(
@@ -234,8 +234,8 @@ class TestUserViewsV3(APITenantTestCase):
             data={"partnership_managers": True}
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
     def test_api_users_retrieve_myprofile(self):
         response = self.forced_auth_req(
