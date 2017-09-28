@@ -328,13 +328,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             vendor_number="DDD",
             short_name="Short name",
         )
-        self.partner2 = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            cso_type="International",
-            hidden=False,
-            vendor_number="EEE",
-            short_name="Shorter name",
-        )
+
         report = "report.pdf"
         self.assessment1 = Assessment.objects.create(
             partner=self.partner,
@@ -352,18 +346,6 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         agreement = AgreementFactory(
             partner=self.partner,
             signed_by_unicef_date=datetime.date.today())
-
-        draft_agreement = AgreementFactory(
-            partner=self.partner,
-            signed_by_unicef_date=None,
-            signed_by_partner_date=None,
-            status='draft')
-
-        draft_agreement2 = AgreementFactory(
-            partner=self.partner2,
-            signed_by_unicef_date=None,
-            signed_by_partner_date=None,
-            status='draft')
 
         self.intervention = InterventionFactory(agreement=agreement)
         self.output_res_type, _ = ResultType.objects.get_or_create(name='Output')
@@ -640,6 +622,18 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertIn("Updated", response.data["name"])
 
     def test_api_partners_delete_with_signed_agreements(self):
+
+        # create draft agreement with partner
+        AgreementFactory(
+            partner=self.partner,
+            signed_by_unicef_date=None,
+            signed_by_partner_date=None,
+            attached_agreement=None,
+            status='draft')
+
+        # should have 1 signed and 1 draft agreement with self.partner
+        self.assertEqual(self.partner.agreements.count(), 2)
+
         response = self.forced_auth_req(
             'delete',
             '/api/v2/partners/delete/{}/'.format(self.partner.id),
@@ -650,9 +644,27 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
                                            "was performed against this partner. The Partner record cannot be deleted")
 
     def test_api_partners_delete_with_draft_agreements(self):
+        partner = PartnerFactory(
+            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            cso_type="International",
+            hidden=False,
+            vendor_number="EEE",
+            short_name="Shorter name",
+        )
+
+        # create draft agreement with partner
+        AgreementFactory(
+            partner=partner,
+            signed_by_unicef_date=None,
+            signed_by_partner_date=None,
+            attached_agreement=None,
+            status='draft')
+
+        self.assertEqual(partner.agreements.count(), 1)
+
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/partners/delete/{}/'.format(self.partner2.id),
+            '/api/v2/partners/delete/{}/'.format(partner.id),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
