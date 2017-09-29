@@ -53,5 +53,5 @@ class UniqueIDOrderingFilter(BaseFilterBackend):
 
         ordering_params = ['partner__name', 'engagement_type', 'created_year', 'id']
 
-        return queryset.extra(select={'created_year': 'EXTRACT(year FROM created)'})\
+        return queryset.extra(select={'created_year': 'EXTRACT(year FROM audit_engagement.created)'})\
             .order_by(*map(lambda param: ('' if ordering == 'unique_id' else '-') + param, ordering_params))
