@@ -92,7 +92,8 @@ jobs:
       - run:
           name: DB ready and seen from image
           command: |
-            ps_isready
+            HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`
+            docker run -it -e "DATABASE_URL=postgis://postgres:postgres@docker:5432/circle_test" -e SECRET_KEY --add-host=docker:${HOSTIP} unicef/etools:$TAG pg_isready
 #      - run:
 #          name: Test in the image
 #          command: |
