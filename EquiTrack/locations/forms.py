@@ -21,14 +21,13 @@ class CartoDBTableForm(forms.ModelForm):
     def clean(self):
 
         api_key = self.cleaned_data['api_key']
-        # domain = self.cleaned_data['domain']
+        domain = self.cleaned_data['domain']
         table_name = self.cleaned_data['table_name']
         name_col = self.cleaned_data['name_col']
         pcode_col = self.cleaned_data['pcode_col']
         parent_code_col = self.cleaned_data['parent_code_col']
 
-        # domain useful here?
-        auth_client = APIKeyAuthClient(api_key=api_key, base_url="https://equitrack.carto.com/")
+        auth_client = APIKeyAuthClient(api_key=api_key, base_url="https://{}.carto.com/".format(str(domain)))
         sql_client = SQLClient(auth_client)
         try:
             sites = sql_client.send('select * from {} limit 1'.format(table_name))
