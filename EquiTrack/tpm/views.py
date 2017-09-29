@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, \
     NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
+from vision.adapters.tpm_adapter import TPMPartnerManualSynchronizer
 from .filters import ReferenceNumberOrderingFilter
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity
@@ -72,8 +73,12 @@ class TPMPartnerViewSet(
         instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
         if not instance:
-            # todo: load from VISION by number
-            pass
+            handler = TPMPartnerManualSynchronizer(
+                country=request.user.profile.country,
+                object_number=kwargs.get('vendor_number')
+            )
+            handler.sync()
+            instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
         if not instance:
             raise Http404
