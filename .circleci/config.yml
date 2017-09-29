@@ -80,6 +80,9 @@ jobs:
           name: see all docker containers
           command: |
             docker ps -a
+      - restore_cache:
+          keys:
+            - docker-{{ .Branch }}-docker-cache
       - run:
           name: see if postgres is available locally
           command: |
@@ -89,9 +92,14 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             docker build -t unicef/etools:$TAG .
+      - save_cache:
+          key: docker-{{ .Branch }}-docker-cache
+          paths:
+            - /var/lib/docker/
       - run:
           name: DB ready and seen from image
           command: |
+            TAG=${CIRCLE_BRANCH}
             HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`
             docker run -it -e "DATABASE_URL=postgis://postgres:postgres@docker:5432/circle_test" -e SECRET_KEY --add-host=docker:${HOSTIP} unicef/etools:$TAG bash -c "echo $DATABASE_URL && python manage.py runserver"
 #      - run:
