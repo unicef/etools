@@ -116,7 +116,7 @@ class TPMPartnerViewSet(
         tpm_partners = TPMPartner.objects.all().order_by('vendor_number')
         serializer = TPMPartnerExportSerializer(tpm_partners, many=True)
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=tpm_vendors_{}.csv'.format(timezone.now())
+            'Content-Disposition': 'attachment;filename=tpm_vendors_{}.csv'.format(timezone.now().date())
         })
 
 
@@ -213,7 +213,7 @@ class TPMVisitViewSet(
         ).order_by('tpm_visit', 'id')
         serializer = TPMActivityExportSerializer(tpm_activities, many=True)
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=tpm_attachments_{}.csv'.format(timezone.now())
+            'Content-Disposition': 'attachment;filename=tpm_attachments_{}.csv'.format(timezone.now().date())
         })
 
     @list_route(methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
@@ -225,13 +225,19 @@ class TPMVisitViewSet(
         ).order_by('tpmactivity__tpm_visit', 'tpmactivity', 'id')
         serializer = TPMLocationExportSerializer(tpm_locations, many=True)
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now())
+            'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now().date())
         })
 
     @detail_route(methods=['get'])
     def export_pdf(self, request, *args, **kwargs):
         return render_to_pdf_response(request, "tpm/activities_list_pdf.html", context={
             "activities": self.get_object().tpm_activities.all(),
+        })
+
+    @detail_route(methods=['get'], url_path='visit-letter')
+    def tpm_visit_letter(self, request, *args, **kwargs):
+        return render_to_pdf_response(request, "tpm/visit_letter_pdf.html", context={
+            "visit": self.get_object(),
         })
 
 

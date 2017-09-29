@@ -223,16 +223,6 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
 
 
-class PartnerAuthorizedOfficersListAPIVIew(ListAPIView):
-    """
-    Returns a list of all signed officers for Partner
-    """
-    queryset = PartnerStaffMember.objects.filter(signed_interventions__isnull=False).distinct()
-    serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (IsAdminUser,)
-    filter_backends = (PartnerScopeFilter, )
-
-
 class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
     permission_classes = (PartneshipManagerRepPermission,)
 
@@ -274,6 +264,8 @@ class PartnerOrganizationAddView(CreateAPIView):
         'email': "EMAIL",
         'total_ct_cp': "TOTAL_CASH_TRANSFERRED_CP",
         'total_ct_cy': "TOTAL_CASH_TRANSFERRED_CY",
+        'deleted_flag': "MARKED_FOR_DELETION",
+        'blocked': "POSTING_BLOCK",
     }
 
     cso_type_mapping = {
@@ -326,6 +318,8 @@ class PartnerOrganizationAddView(CreateAPIView):
                     partner_resp[v]) if v in partner_resp.keys() else None for k,
                 v in self.MAPPING.items()}
             partner_org['vision_synced'] = True
+            partner_org['deleted_flag'] = True if self.MAPPING['deleted_flag'] in partner_resp.keys() else False
+            partner_org['blocked'] = True if self.MAPPING['blocked'] in partner_resp.keys() else False
             po_serializer = self.get_serializer(data=partner_org)
             po_serializer.is_valid(raise_exception=True)
             po_serializer.save()
@@ -343,9 +337,12 @@ class PartnerOrganizationDeleteView(DestroyAPIView):
         except PartnerOrganization.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if partner.agreements.count() > 0:
-            raise ValidationError("This partner has agreements associated to it")
+            raise ValidationError("There was a PCA/SSFA signed with this partner or a transaction was performed "
+                                  "against this partner. The Partner record cannot be deleted")
         elif TravelActivity.objects.filter(partner=partner).count() > 0:
             raise ValidationError("This partner has trips associated to it")
+        elif partner.total_ct_cp > 0:
+            raise ValidationError("This partner has cash transactions associated to it")
         else:
             partner.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

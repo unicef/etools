@@ -627,7 +627,8 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data[0], "This partner has agreements associated to it")
+        self.assertEqual(response.data[0], "There was a PCA/SSFA signed with this partner or a transaction "
+                                           "was performed against this partner. The Partner record cannot be deleted")
 
     def test_api_partners_delete(self):
         partner = PartnerFactory()
@@ -1260,7 +1261,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
     def test_agreement_generate_pdf_lang(self):
         params = {
-            "lang": "arabic",
+            "lang": "spanish",
         }
         response = self.forced_auth_req(
             'get',
@@ -1358,7 +1359,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
-            "The Partner Staff member you are trying to add is associated with a different partnership",
+            "The email for the partner contact is used by another partner contact. Email has to be unique to proceed",
             response.data["non_field_errors"][0])
 
     @skip("Skip staffmembers for now")

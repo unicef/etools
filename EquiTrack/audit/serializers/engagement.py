@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -61,6 +62,14 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
         fields = [
             'id', 'description', 'due_date', 'person_responsible', 'comments',
         ]
+
+    def validate(self, attrs):
+        if not self.instance and attrs.get('description') == _('Escalate to Investigation')\
+                and 'person_responsible' not in attrs:
+            email = 'integrity1@un.org'
+            attrs['person_responsible'] = User.objects.get_or_create(username=email, defaults={'email': email})[0]
+
+        return attrs
 
     def create(self, validated_data):
         validated_data['author'] = self.get_user()
@@ -127,7 +136,8 @@ class EngagementSerializer(EngagementDatesValidation,
         read_field=AuditorStaffMemberSerializer(many=True, required=False, label=_('Audit Team Members')),
     )
     active_pd = SeparatedReadWriteField(
-        read_field=InterventionListSerializer(many=True, required=False, label='Active PD'),
+        read_field=InterventionListSerializer(many=True, required=False, label=_('Programme Document(s)')),
+        required=False
     )
     authorized_officers = SeparatedReadWriteField(
         read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True)
@@ -179,6 +189,13 @@ class EngagementSerializer(EngagementDatesValidation,
         if not partner:
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
 
+        if self.instance and partner != self.instance.partner and 'active_pd' not in validated_data:
+            if partner.partner_type != PartnerType.GOVERNMENT:
+                raise serializers.ValidationError({
+                    'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ]
+                })
+            validated_data['active_pd'] = []
+
         active_pd = validated_data.get('active_pd', [])
         if not active_pd:
             active_pd = self.instance.active_pd.all() if self.instance else validated_data.get('active_pd', [])
@@ -196,7 +213,7 @@ class EngagementSerializer(EngagementDatesValidation,
 
         if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0 and status == 'new':
             raise serializers.ValidationError({
-                    'active_pd': [_('This field is required.'), ],
+                    'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
                 })
         return validated_data
 
