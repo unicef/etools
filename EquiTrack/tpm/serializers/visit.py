@@ -6,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from activities.serializers import ActivitySerializer
 from partners.models import InterventionResultLink, Intervention, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from reports.models import Result
@@ -82,7 +83,7 @@ class TPMActionPointSerializer(TPMPermissionsBasedSerializerMixin,
 
 
 class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
-                            serializers.ModelSerializer):
+                            ActivitySerializer):
     implementing_partner = SeparatedReadWriteField(
         read_field=PartnerOrganizationLightSerializer(read_only=True),
     )
@@ -115,55 +116,10 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         ]
         extra_kwargs = {
             'id': {'label': _('Activity ID')},
-            'date': {'required': True}
+            'date': {'required': True},
+            'implementing_partner': {'required': True},
+            'partnership': {'required': True},
         }
-
-    def validate(self, attrs):
-        validated_data = super(TPMActivitySerializer, self).validate(attrs)
-
-        if '_delete' in validated_data:
-            return validated_data
-
-        if 'id' in validated_data:
-            try:
-                self.instance = self.Meta.model.objects.get(id=validated_data['id'])
-            except self.Meta.model.DoesNotExist:
-                raise ValidationError('Activity does not exist')
-
-        implementing_partner = validated_data.get(
-            'implementing_partner',
-            self.instance.implementing_partner if self.instance else None
-        )
-        if not implementing_partner:
-            raise ValidationError({'implementing_partner': self.error_messages['required']})
-
-        if 'partnership' in validated_data:
-            if not Intervention.objects.filter(
-                id=validated_data['partnership'].id,
-                agreement__partner_id=implementing_partner.id
-            ).exists():
-                raise ValidationError({
-                    'partnership': self.fields['partnership'].error_messages['does_not_exist'].format(
-                        pk_value=validated_data['partnership'].id
-                    )
-                })
-
-        partnership = validated_data.get('partnership', self.instance.partnership if self.instance else None)
-        if not partnership:
-            raise ValidationError({'partnership': self.error_messages['required']})
-
-        if validated_data.get('cp_output'):
-            if not Result.objects.filter(
-                id=validated_data['cp_output'].id,
-                intervention_links__intervention_id=partnership.id
-            ).exists():
-                raise ValidationError({
-                    'cp_output': self.fields['cp_output'].write_field.error_messages['does_not_exist'].format(
-                        pk_value=validated_data['cp_output'].id
-                    )
-                })
-
-        return validated_data
 
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,

@@ -198,6 +198,7 @@ TENANT_APPS = (
     'partners',
     'trips',
     'supplies',
+    'activities',
     't2f',
     'workplan',
     'actstream',
