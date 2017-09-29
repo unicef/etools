@@ -22,7 +22,7 @@ class Command(BaseCommand):
                             'currently exist on the model.')
 
     def handle(self, *args, **options):
-        all_tenants = get_tenant_model().objects.all()
+        all_tenants = get_tenant_model().objects.exclude(schema_name='public')
 
         for tenant in all_tenants:
             connection.set_tenant(tenant)
