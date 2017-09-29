@@ -79,6 +79,7 @@ class TPMPartnerViewSet(
                 country=request.user.profile.country,
                 object_number=kwargs.get('vendor_number')
             )
+            handler.DEFAULTS[TPMPartner]["hidden"] = True
             handler.sync()
             instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
