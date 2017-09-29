@@ -66,6 +66,11 @@ class AuditorStaffMember(BaseStaffMember):
         )
 
 
+class PurchaseOrderManager(models.Manager):
+    def get_by_natural_key(self, order_number):
+        return self.get(order_number=order_number)
+
+
 @python_2_unicode_compatible
 class PurchaseOrder(TimeStampedModel, models.Model):
     order_number = models.CharField(
@@ -80,8 +85,13 @@ class PurchaseOrder(TimeStampedModel, models.Model):
     contract_start_date = models.DateField(_('PO Date'), null=True, blank=True)
     contract_end_date = models.DateField(_('Contract Expiry Date'), null=True, blank=True)
 
+    objects = PurchaseOrderManager()
+
     def __str__(self):
         return self.order_number
+
+    def natural_key(self):
+        return (self.order_number, )
 
 
 def _has_action_permission(action):
