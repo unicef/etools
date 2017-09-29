@@ -31,7 +31,6 @@ EXCLUDED_PACKAGES = (
     'notification',
     'partners',
     'publics',
-    'reports',
     'reversion',
     'supplies',
     'trips',
