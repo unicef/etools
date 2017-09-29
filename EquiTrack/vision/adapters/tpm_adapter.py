@@ -1,9 +1,21 @@
-import json
 from collections import OrderedDict
+
+from copy import deepcopy
 
 from .manual import ManualVisionSynchronizer
 from tpm.models import TPMPartner
 from publics.models import Country
+
+
+def _get_country_name(data=None, key_field=None):
+    data = data or {}
+    if key_field:
+        country = data.get(key_field, None)
+        if country:
+            country_obj = Country.objects.filter(vision_code=country).first()
+            if country_obj:
+                country = country_obj.name
+        return country
 
 
 class TPMPartnerSynchronizer(ManualVisionSynchronizer):
@@ -15,15 +27,6 @@ class TPMPartnerSynchronizer(ManualVisionSynchronizer):
         "EMAIL",
         "COUNTRY",
     )
-
-    def _get_country_name(data={}, key_field=None):
-        if key_field:
-            country = data.get(key_field, None)
-            if country:
-                country_obj = Country.objects.filter(vision_code=country).first()
-                if country_obj:
-                    country = country_obj.name
-            return country
 
     MAPPING = {
         'partner': {
@@ -52,10 +55,9 @@ class TPMPartnerSynchronizer(ManualVisionSynchronizer):
             "deleted_flag": lambda x: True if x else False,
         }
     }
-
-    def __init__(self, country=None, object_number=None, defaults={TPMPartner: {'vision_synced': True}}):
-        self.DEFAULTS = defaults
-        super(TPMPartnerSynchronizer, self).__init__(country, object_number)
+    DEFAULTS = {
+        TPMPartner: {'vision_synced': True},
+    }
 
     def _convert_records(self, records):
         records = super(TPMPartnerSynchronizer, self)._convert_records(records)
@@ -74,3 +76,8 @@ class TPMPartnerSynchronizer(ManualVisionSynchronizer):
             return True
 
         return filter(bad_record, records)
+
+
+class TPMPartnerManualSynchronizer(TPMPartnerSynchronizer):
+    DEFAULTS = deepcopy(TPMPartnerSynchronizer.DEFAULTS)
+    DEFAULTS[TPMPartner]['hidden'] = True
