@@ -211,14 +211,14 @@ def update_purchase_orders(country_name=None):
 
 @app.task
 def update_tpm_partners(country_name=None):
-    print ('Starting update values for purcase order')
+    print ('Starting update values for TPM partners')
     countries = Country.objects.filter(vision_sync_enabled=True)
     if country_name is not None:
         countries = countries.filter(name=country_name)
     for country in countries:
         connection.set_tenant(country)
         try:
-            logger.info('Starting purchase order update for country {}'.format(
+            logger.info('Starting TPM partners update for country {}'.format(
                 country.name
             ))
             for partner in TPMPartner.objects.all():
