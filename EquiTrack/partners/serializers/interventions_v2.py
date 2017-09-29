@@ -315,7 +315,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
             "created", "modified", "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd',
-            "amendments", "planned_visits", "attachments", "supplies", "distributions", 'permissions', 'partner_id',
+            "amendments", "planned_visits", "attachments", 'permissions', 'partner_id',
         )
 
 
