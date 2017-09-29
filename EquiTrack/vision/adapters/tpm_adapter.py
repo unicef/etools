@@ -52,11 +52,10 @@ class TPMPartnerSynchronizer(ManualVisionSynchronizer):
             "deleted_flag": lambda x: True if x else False,
         }
     }
-    DEFAULTS = {
-        TPMPartner: {
-            'vision_synced': True
-        }
-    }
+
+    def __init__(self, country=None, object_number=None, defaults={TPMPartner: {'vision_synced': True}}):
+        self.DEFAULTS = defaults
+        super(TPMPartnerSynchronizer, self).__init__(country, object_number)
 
     def _convert_records(self, records):
         records = super(TPMPartnerSynchronizer, self)._convert_records(records)

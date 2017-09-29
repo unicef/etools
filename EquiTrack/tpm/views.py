@@ -77,9 +77,9 @@ class TPMPartnerViewSet(
         if not instance:
             handler = TPMPartnerSynchronizer(
                 country=request.user.profile.country,
-                object_number=kwargs.get('vendor_number')
+                object_number=kwargs.get('vendor_number'),
+                defaults={TPMPartner: {"hidden": True, "vision_synced": True}}
             )
-            handler.DEFAULTS[TPMPartner]["hidden"] = True
             handler.sync()
             instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
