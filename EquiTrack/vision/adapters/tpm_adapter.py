@@ -7,15 +7,9 @@ from tpm.models import TPMPartner
 from publics.models import Country
 
 
-def _get_country_name(data=None, key_field=None):
-    data = data or {}
-    if key_field:
-        country = data.get(key_field, None)
-        if country:
-            country_obj = Country.objects.filter(vision_code=country).first()
-            if country_obj:
-                country = country_obj.name
-        return country
+def _get_country_name(value):
+        country_obj = Country.objects.filter(vision_code=value).first()
+        return country_obj.name if country_obj else value
 
 
 class TPMPartnerSynchronizer(ManualVisionSynchronizer):
@@ -23,9 +17,6 @@ class TPMPartnerSynchronizer(ManualVisionSynchronizer):
     REQUIRED_KEYS = (
         "VENDOR_CODE",
         "VENDOR_NAME",
-        "STREET",
-        "EMAIL",
-        "COUNTRY",
     )
 
     MAPPING = {
@@ -41,18 +32,15 @@ class TPMPartnerSynchronizer(ManualVisionSynchronizer):
             "blocked": "POSTING_BLOCK",
             "deleted_flag": "MARKED_FOR_DELETION",
         },
-        'country': {
-            "vision_code": "COUNTRY",
-        },
     }
     MODEL_MAPPING = OrderedDict({
         'partner': TPMPartner,
-        'country': _get_country_name
     })
     FIELD_HANDLERS = {
         'partner': {
             "blocked": lambda x: True if x else False,
             "deleted_flag": lambda x: True if x else False,
+            "country": _get_country_name,
         }
     }
     DEFAULTS = {

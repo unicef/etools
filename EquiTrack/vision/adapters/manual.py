@@ -43,7 +43,10 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
     def _convert_records(self, records):
         if isinstance(records, list):
             return records
-        return json.loads(records)
+        try:
+            return json.loads(records)
+        except ValueError:
+            return []
 
     def _save_records(self, records):
         processed = 0
@@ -83,21 +86,18 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                          for field_name, field_json_code in self.MAPPING[model_name].items()]
                     )
 
-                    if not isinstance(model, types.FunctionType):
-                        kwargs = dict(
-                            [(field_name, value) for field_name, value in mapped_item.items()
-                             if model._meta.get_field(field_name).unique]
-                        )
-                        defaults = dict(
-                            [(field_name, value) for field_name, value in mapped_item.items()
-                             if field_name not in kwargs.keys()]
-                        )
-                        defaults.update(self.DEFAULTS.get(model, {}))
-                        obj, created = model.objects.update_or_create(
-                            defaults=defaults, **kwargs
-                        )
-                    else:
-                        model(data=mapped_item)
+                    kwargs = dict(
+                        [(field_name, value) for field_name, value in mapped_item.items()
+                         if model._meta.get_field(field_name).unique]
+                    )
+                    defaults = dict(
+                        [(field_name, value) for field_name, value in mapped_item.items()
+                         if field_name not in kwargs.keys()]
+                    )
+                    defaults.update(self.DEFAULTS.get(model, {}))
+                    obj, created = model.objects.update_or_create(
+                        defaults=defaults, **kwargs
+                    )
             except Exception as exp:
                     print ("Exception message: {} ")
                     print ("Exception type: {} ")
