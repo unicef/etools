@@ -33,7 +33,7 @@ class TPMPartnerLightSerializer(serializers.ModelSerializer):
             for field in [
                 'vendor_number', 'name', 'status',
                 'street_address', 'city', 'postal_code', 'country',
-                'hidden', 'blocked', 'vision_synced', 'deleted_flag',
+                'blocked', 'vision_synced', 'deleted_flag',
             ]
         }
         extra_kwargs['name'].update({
