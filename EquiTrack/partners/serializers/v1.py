@@ -18,7 +18,6 @@ from partners.models import (
     PartnerOrganization,
     Agreement,
     IndicatorReport,
-    DistributionPlan,
     RISK_RATINGS,
     CSO_TYPES,
     PartnerType,
@@ -133,17 +132,6 @@ class LocationSerializer(serializers.Serializer):
         fields = '__all__'
 
 
-class DistributionPlanSerializer(serializers.ModelSerializer):
-    item = serializers.CharField(source='item.name')
-    site = serializers.CharField(source='site.name')
-    quantity = serializers.IntegerField()
-    delivered = serializers.IntegerField()
-
-    class Meta:
-        model = DistributionPlan
-        fields = ('item', 'site', 'quantity', 'delivered')
-
-
 class LowerOutputStructuredSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -160,7 +148,6 @@ class InterventionSerializer(serializers.ModelSerializer):
     partner_id = serializers.CharField(source='partner.id')
     pcasector_set = PCASectorSerializer(many=True, read_only=True)
     lowerresult_set = serializers.SerializerMethodField()
-    distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
     total_budget = serializers.CharField(read_only=True)
 
     def get_lowerresult_set(self, obj):

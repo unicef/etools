@@ -34,8 +34,6 @@ from reports.models import (
 )
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
-from supplies.models import SupplyItem
-from supplies.tasks import set_unisupply_distribution
 from users.models import Section, Office
 from notification.models import Notification
 from partners.validation.agreements import (
@@ -1975,74 +1973,6 @@ class SupplyPlan(models.Model):
     )
 
     tracker = FieldTracker()
-
-
-class DistributionPlan(models.Model):
-    """
-    Represents a distribution plan for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`supplies.SupplyItem`
-    Relates to :model:`locations.Location`
-    """
-    # TODO: remove partnership when model is ready
-    partnership = models.ForeignKey(
-        'partners.PCA',
-        related_name='distribution_plans', null=True, blank=True
-    )
-    intervention = models.ForeignKey(
-        Intervention,
-        related_name='distributions', null=True, blank=True
-    )
-    item = models.ForeignKey(SupplyItem)
-    site = models.ForeignKey(Location, null=True)
-    quantity = models.PositiveIntegerField(
-        help_text='Quantity required for this location'
-    )
-    send = models.BooleanField(
-        default=False,
-        verbose_name='Send to partner?'
-    )
-    sent = models.BooleanField(default=False)
-    document = JSONField(null=True, blank=True)
-    delivered = models.IntegerField(default=0)
-
-    tracker = FieldTracker()
-
-    def __unicode__(self):
-        return '{}-{}-{}-{}'.format(
-            self.intervention,
-            self.item,
-            self.site,
-            self.quantity
-        )
-    # TODO: this whole logic around supply plans and distribution plans needs
-    # to be revisited
-
-    def save(self, **kwargs):
-        if self.intervention and self.item:
-            sp_quantity = SupplyPlan.objects.filter(intervention=self.intervention, item=self.item)[0].quantity or 0
-            dp_quantity = DistributionPlan.objects.filter(
-                intervention=self.intervention, item=self.item).aggregate(
-                models.Sum('quantity'))['quantity__sum'] or 0
-            if not self.pk and self.quantity:
-                dp_quantity += self.quantity
-        if dp_quantity <= sp_quantity:
-            super(DistributionPlan, self).save(**kwargs)
-        else:
-            raise ValueError('Distribution plan quantity exceeds supply plan quantity')
-
-    @classmethod
-    def send_distribution(cls, sender, instance, created, **kwargs):
-
-        if instance.send and instance.sent is False:
-            set_unisupply_distribution.delay(instance.id)
-        elif instance.send and instance.sent:
-            instance.sent = False
-            instance.save()
-
-
-post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 
 # TODO: Move to funds

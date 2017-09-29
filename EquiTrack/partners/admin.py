@@ -35,7 +35,6 @@ from partners.models import (
     PartnerStaffMember,
     PartnershipBudget,
     SupplyPlan,
-    DistributionPlan,
     FundingCommitment,
     IndicatorDueDates,
     InterventionPlannedVisits,
@@ -60,8 +59,6 @@ from partners.forms import (
     PartnersAdminForm,
     AmendmentForm,
     AgreementForm,
-    DistributionPlanForm,
-    DistributionPlanFormSet,
     PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
     LocationForm,
@@ -328,44 +325,6 @@ class IndicatorDueDatesAdmin(admin.TabularInline):
     extra = 1
 
 
-class DistributionPlanInlineAdmin(admin.TabularInline):
-    model = DistributionPlan
-    form = DistributionPlanForm
-    formset = DistributionPlanFormSet
-    extra = 1
-    fields = [u'item', u'site', u'quantity', u'send', u'sent', u'delivered']
-    readonly_fields = [u'delivered', u'sent']
-
-    def get_max_num(self, request, obj=None, **kwargs):
-        """
-        Only show these inlines if we have supply plans
-        :param request:
-        :param obj: Intervention object
-        :param kwargs:
-        :return:
-        """
-        if isinstance(obj, Intervention):
-            if obj and obj.supplies.count():
-                return self.max_num
-        else:
-            if obj and obj.supply_plans.count():
-                return self.max_num
-        return 0
-
-    def get_readonly_fields(self, request, obj=None):
-        """
-        Prevent distributions being sent to partners before the intervention is saved
-        """
-        fields = super(DistributionPlanInlineAdmin,
-                       self).get_readonly_fields(request, obj)
-        if obj is None and u'send' not in fields:
-            fields.append(u'send')
-        elif obj and u'send' in fields:
-            fields.remove(u'send')
-
-        return fields
-
-
 class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
     form = PartnershipForm
     resource_class = InterventionExport
@@ -461,7 +420,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         LinksInlineAdmin,
         # ResultsInlineAdmin,
         # SupplyPlanInlineAdmin,
-        DistributionPlanInlineAdmin,
         IndicatorDueDatesAdmin,
     )
 
@@ -570,7 +528,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         # InterventionAmendmentsInlineAdmin,
         # BudgetInlineAdmin,
         # SupplyPlanInlineAdmin,
-        # DistributionPlanInlineAdmin,
         # PlannedVisitsInline,
         # ResultsLinkInline,
         # SectorLocationInline,
