@@ -294,9 +294,14 @@ class LowerResult(TimeStampedModel):
 
     def save(self, **kwargs):
         if not self.code:
+            try:
+                latest_ll_id = self.result_link.ll_results.latest('id').id
+            except LowerResult.DoesNotExist:
+                latest_ll_id = 0
+
             self.code = '{}-{}'.format(
                 self.result_link.intervention.id,
-                self.result_link.ll_results.count() + 1
+                latest_ll_id + 1
             )
         return super(LowerResult, self).save(**kwargs)
 
