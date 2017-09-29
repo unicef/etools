@@ -51,11 +51,6 @@ class TestSendNotification(FastTenantTestCase):
     this only tests that if a non-email type is created, we don't do anything
     with it.
     """
-
-    def test_unicode_method_safe(self):
-        "Smoke test for __unicode__ method"
-        self.assertIn('Notification from', str(NotificationFactory()))
-
     def test_send_not_email(self):
         """
         This just tests that if we currently send a non Email notification,

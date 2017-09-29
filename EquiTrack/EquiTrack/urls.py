@@ -8,6 +8,8 @@ from django.contrib import admin
 
 # 3rd party imports
 from rest_framework_swagger.views import get_swagger_view
+from rest_framework_swagger.renderers import OpenAPIRenderer
+from rest_framework.schemas import get_schema_view
 import rest_framework_jwt.views
 from rest_framework_nested import routers
 import djangosaml2.views
@@ -51,7 +53,14 @@ from workplan.views import (
 )
 
 
+# ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
+
+# coreapi+json (http://www.coreapi.org/)
+schema_view_json_coreapi = get_schema_view(title="eTools API")
+# openapi+json (https://openapis.org/ aka swagger 2.0)
+schema_view_json_openapi = get_schema_view(title="eTools API",
+                                           renderer_classes=[OpenAPIRenderer])
 
 api = routers.SimpleRouter()
 
@@ -89,8 +98,6 @@ api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_p
 api.register(r'labels', LabelViewSet, base_name='labels')
 
 urlpatterns = [
-    # TODO: overload login_required to staff_required to automatically re-route partners to the parter portal
-
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
@@ -129,6 +136,8 @@ urlpatterns = [
 
 
     url(r'^api/docs/', schema_view),
+    url(r'^api/schema/coreapi', schema_view_json_coreapi),
+    url(r'^api/schema/openapi', schema_view_json_openapi),
     url(r'^admin/', include(admin.site.urls)),
 
     # helper urls
@@ -150,6 +159,7 @@ urlpatterns = [
         JSONActivityFeedWithCustomData.as_view(name='custom_data_model_detail_stream'),
         name='custom_data_model_detail_stream'),
     url('^activity/', include('actstream.urls')),
+    url('^monitoring/', include('monitoring.urls')),
 ]
 
 

@@ -45,11 +45,9 @@ ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 ARG REQUIREMENTS_FILE
 
-
 ADD ./EquiTrack/requirements/*.txt /pip/
 ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
 RUN pip install -f /pip -r /pip/app_requirements.txt
-
 
 ENV PYTHONUNBUFFERED 1
 VOLUME "./:/code/"
