@@ -15,7 +15,7 @@ from reports.models import ResultType, Result, CountryProgramme, Indicator
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, \
     InterventionResultLink, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
-    InterventionSectorLocationLink, SupplyPlan, Agreement, PartnerOrganization, PartnerStaffMember, \
+    InterventionSectorLocationLink, Agreement, PartnerOrganization, PartnerStaffMember, \
     Assessment
 from t2f.models import TravelActivity
 
@@ -702,21 +702,6 @@ def copy_pca_sector_locations_to_intervention():
                 isl, created = InterventionSectorLocationLink.objects.get_or_create(intervention=intervention,
                                                                                     sector=sector)
                 isl.locations.add(*locations)
-
-
-def copy_pca_supply_plan_to_intervention():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry)
-        for sp in SupplyPlan.objects.all():
-            try:
-                intervention = Intervention.objects.get(number=sp.partnership.number)
-            except Intervention.DoesNotExist:
-                log_to_file('copy_pca_supply_plan_to_intervention: Indervention.DoesNotExist',
-                            sp.partnership.id, sp.partnership.number)
-                continue
-            sp.intervention = intervention
-            sp.save()
 
 
 def local_country_keep():

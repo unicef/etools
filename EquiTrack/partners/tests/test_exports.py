@@ -9,9 +9,8 @@ from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, \
     InterventionBudgetFactory, PartnerStaffFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory
-from partners.models import GovernmentInterventionResult, SupplyPlan
+from partners.models import GovernmentInterventionResult
 from reports.models import ResultType
-from supplies.models import SupplyItem
 
 
 class TestModelExport(APITenantTestCase):
@@ -66,12 +65,6 @@ class TestModelExport(APITenantTestCase):
             unicef_signatory=self.unicef_staff,
             population_focus="Population focus",
             partner_authorized_officer_signatory=self.partnerstaff,
-        )
-        self.supply_item = SupplyItem.objects.create(name="foo", description="bar")
-        self.supplyplan = SupplyPlan.objects.create(
-            intervention=self.intervention,
-            quantity=1,
-            item=self.supply_item
         )
         self.ib = InterventionBudgetFactory(intervention=self.intervention, currency=CurrencyFactory())
         self.government_intervention = GovernmentInterventionFactory(

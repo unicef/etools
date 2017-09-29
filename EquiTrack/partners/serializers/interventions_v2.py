@@ -12,7 +12,6 @@ from locations.models import Location
 
 from partners.models import (
     InterventionBudget,
-    SupplyPlan,
     InterventionPlannedVisits,
     Intervention,
     InterventionAmendment,
@@ -47,24 +46,6 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "in_kind_amount_local",
             "total",
             'currency'
-        )
-
-
-class SupplyPlanCreateUpdateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = SupplyPlan
-        fields = "__all__"
-
-
-class SupplyPlanNestedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = SupplyPlan
-        fields = (
-            'id',
-            "item",
-            "quantity",
         )
 
 
@@ -265,7 +246,6 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    supplies = SupplyPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
@@ -311,7 +291,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    supplies = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)

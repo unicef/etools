@@ -1951,30 +1951,6 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     tracker = FieldTracker()
 
 
-class SupplyPlan(models.Model):
-    """
-    Represents a supply plan for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`supplies.SupplyItem`
-    """
-    # TODO: remove partnership when model is ready
-    partnership = models.ForeignKey(
-        'partners.PCA',
-        related_name='supply_plans', null=True, blank=True
-    )
-    intervention = models.ForeignKey(
-        Intervention,
-        related_name='supplies', null=True, blank=True
-    )
-    item = models.ForeignKey(SupplyItem)
-    quantity = models.PositiveIntegerField(
-        help_text='Total quantity needed for this intervention'
-    )
-
-    tracker = FieldTracker()
-
-
 # TODO: Move to funds
 class FCManager(models.Manager):
 

@@ -13,7 +13,6 @@ from generic_links.admin import GenericLinkStackedInline
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
-from supplies.models import SupplyItem
 from reports.models import Result
 from users.models import Section
 
@@ -34,7 +33,6 @@ from partners.models import (
     RAMIndicator,
     PartnerStaffMember,
     PartnershipBudget,
-    SupplyPlan,
     FundingCommitment,
     IndicatorDueDates,
     InterventionPlannedVisits,
@@ -303,23 +301,6 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     )
 
 
-class SupplyPlanAdmin(admin.ModelAdmin):
-    model = SupplyPlan
-    fields = (
-        'intervention',
-        'item',
-        'quantity'
-    )
-    search_fields = (
-        'intervention__name',
-    )
-    list_display = (
-        'intervention',
-        'item',
-        'quantity'
-    )
-
-
 class IndicatorDueDatesAdmin(admin.TabularInline):
     model = IndicatorDueDates
     extra = 1
@@ -419,7 +400,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         PCAFileInline,
         LinksInlineAdmin,
         # ResultsInlineAdmin,
-        # SupplyPlanInlineAdmin,
         IndicatorDueDatesAdmin,
     )
 
@@ -527,7 +507,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     inlines = (
         # InterventionAmendmentsInlineAdmin,
         # BudgetInlineAdmin,
-        # SupplyPlanInlineAdmin,
         # PlannedVisitsInline,
         # ResultsLinkInline,
         # SectorLocationInline,
@@ -827,12 +806,6 @@ class FileTypeAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
 
-class SupplyItemAdmin(admin.ModelAdmin):
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser
-
-
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
@@ -846,12 +819,10 @@ admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(InterventionAmendment, InterventionAmendmentsAdmin)
 admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
-admin.site.register(SupplyPlan, SupplyPlanAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
 
 
-admin.site.register(SupplyItem, SupplyItemAdmin)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(FileType, FileTypeAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)

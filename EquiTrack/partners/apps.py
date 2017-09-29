@@ -26,6 +26,5 @@ class PartnersAppConfig(AppConfig):
         registry.register(self.get_model('RAMIndicator'))
         registry.register(self.get_model('IndicatorDueDates'))
         registry.register(self.get_model('IndicatorReport'))
-        registry.register(self.get_model('SupplyPlan'))
         registry.register(self.get_model('FundingCommitment'))
         registry.register(self.get_model('DirectCashTransfer'))
