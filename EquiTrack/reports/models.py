@@ -296,7 +296,7 @@ class LowerResult(TimeStampedModel):
         if not self.code:
             self.code = '{}-{}'.format(
                 self.result_link.intervention.id,
-                self.result_link.ll_results.count() + 1
+                self.result_link.ll_results.latest('id').id + 1
             )
         return super(LowerResult, self).save(**kwargs)
 
