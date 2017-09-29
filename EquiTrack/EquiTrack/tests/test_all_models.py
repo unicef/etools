@@ -33,7 +33,6 @@ EXCLUDED_PACKAGES = (
     'publics',
     'reports',
     'reversion',
-    'supplies',
     'trips',
     't2f',
     'users',
