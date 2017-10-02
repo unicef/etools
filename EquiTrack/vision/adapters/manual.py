@@ -3,7 +3,7 @@ import types
 import logging
 from collections import OrderedDict
 
-from django.db import connection, models
+from django.db import connection
 
 from vision.utils import wcf_json_date_as_datetime
 from vision.vision_data_synchronizer import VisionDataLoader, VisionException, VisionDataSynchronizer
