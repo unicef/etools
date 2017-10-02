@@ -270,6 +270,17 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         new_value = disaggregation.disaggregation_values.exclude(pk=value.pk)[0]
         self.assertEqual('a new value', new_value.value)
 
+    def test_disallow_modifying_unrelated_disaggregation_values(self):
+        disaggregation = DisaggregationFactory()
+        value = DisaggregationValueFactory()
+        data = DisaggregationSerializer(instance=disaggregation).data
+        data['disaggregation_values'].append({
+            "id": value.pk,
+            "value": "not allowed",
+        })
+        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_delete(self):
         """
         Test deleting a disaggregation is not allowed

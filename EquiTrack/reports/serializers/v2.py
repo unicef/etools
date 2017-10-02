@@ -88,10 +88,17 @@ class DisaggregationSerializer(serializers.ModelSerializer):
             for value_data in values_data:
                 value_id = value_data.get('id', None)
                 if value_id:
-                    value = DisaggregationValue.objects.get(id=value_id)
-                    for k, v in value_data.items():
-                        setattr(value, k, v)
-                    value.save()
+                    try:
+                        value = DisaggregationValue.objects.get(disaggregation=instance, id=value_id)
+                        for k, v in value_data.items():
+                            setattr(value, k, v)
+                        value.save()
+                    except DisaggregationValue.DoesNotExist:
+                        raise ValidationError(
+                            "Tried to modify DisaggregationValue {} that is not associated with {}".format(
+                                value_id, instance,
+                            )
+                        )
                 else:
                     DisaggregationValue.objects.create(disaggregation=instance, **value_data)
         return super(DisaggregationSerializer, self).update(instance, validated_data)
