@@ -280,6 +280,9 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         })
         response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # also try with patch
+        response = self.forced_auth_req('patch', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_delete(self):
         """
