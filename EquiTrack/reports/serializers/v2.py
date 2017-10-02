@@ -79,16 +79,20 @@ class DisaggregationSerializer(serializers.ModelSerializer):
         return disaggregation
 
     def update(self, instance, validated_data):
-        values_data = validated_data.pop('disaggregation_values')
-        for value_data in values_data:
-            value_id = value_data.get('id', None)
-            if value_id:
-                value = DisaggregationValue.objects.get(id=value_id)
-                for k, v in value_data.items():
-                    setattr(value, k, v)
-                value.save()
-            else:
-                DisaggregationValue.objects.create(disaggregation=instance, **value_data)
+        try:
+            values_data = validated_data.pop('disaggregation_values')
+        except KeyError:
+            pass
+        else:
+            for value_data in values_data:
+                value_id = value_data.get('id', None)
+                if value_id:
+                    value = DisaggregationValue.objects.get(id=value_id)
+                    for k, v in value_data.items():
+                        setattr(value, k, v)
+                    value.save()
+                else:
+                    DisaggregationValue.objects.create(disaggregation=instance, **value_data)
         return super(DisaggregationSerializer, self).update(instance, validated_data)
 
 

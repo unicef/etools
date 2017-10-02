@@ -213,6 +213,18 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
         self.assertEqual(new_name, disaggregation.name)
 
+    def test_patch_metadata(self):
+        """
+        Test patching a disaggregation's metadata
+        """
+        disaggregation = DisaggregationFactory()
+        new_name = 'patched via API'
+        response = self.forced_auth_req('patch', self._get_url(disaggregation),
+                                        data={'name': new_name})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(new_name, disaggregation.name)
+
     def test_update_values(self):
         """
         Test updating a disaggregation's values
