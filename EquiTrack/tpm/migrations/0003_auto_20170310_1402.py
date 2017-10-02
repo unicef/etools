@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         ('users', '0008_workspacecounter'),
         ('reports', '0013_auto_20170829_1727'),
         ('partners', '0050_auto_20170914_1510'),
-        ('tpm', '0002_auto_20170310_1401'),
+        ('tpm', '0002_auto_20170906_1417'),
     ]
 
     operations = [
