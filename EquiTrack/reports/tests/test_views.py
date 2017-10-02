@@ -174,6 +174,16 @@ class TestDisaggregationListCreateViews(APITenantTestCase):
         self.assertEqual(disaggregation.name, 'Gender')
         self.assertEqual(disaggregation.disaggregation_values.count(), 3)
 
+    def test_create_disallows_value_ids(self):
+        data = {
+            'name': 'Gender',
+            'disaggregation_values': [
+                {'id': 999, 'value': 'Female'},
+            ]
+        }
+        response = self.forced_auth_req('post', self.url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
     """

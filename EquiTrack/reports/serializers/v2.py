@@ -73,8 +73,9 @@ class DisaggregationSerializer(serializers.ModelSerializer):
         disaggregation = Disaggregation.objects.create(**validated_data)
         for value_data in values_data:
             if 'id' in value_data:
-                # todo: is this valid? silently create new DisaggregationValues if IDs are passed in
-                del value_data['id']
+                raise ValidationError(
+                    "You are not allowed to specify DisaggregationValues IDs when creating a new Disaggregation"
+                )
             DisaggregationValue.objects.create(disaggregation=disaggregation, **value_data)
         return disaggregation
 
