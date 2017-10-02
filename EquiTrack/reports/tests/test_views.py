@@ -9,7 +9,7 @@ from EquiTrack.factories import (
     ResultFactory,
     CountryProgrammeFactory,
     DisaggregationFactory,
-)
+    DisaggregationValueFactory)
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
@@ -135,7 +135,7 @@ class TestReportViews(APITenantTestCase):
         self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])
 
 
-class TestDisaggregationViews(APITenantTestCase):
+class TestDisaggregationListCreateViews(APITenantTestCase):
     """
     Very minimal testing, just to make sure things work.
     """
@@ -172,3 +172,30 @@ class TestDisaggregationViews(APITenantTestCase):
         disaggregation = Disaggregation.objects.get()
         self.assertEqual(disaggregation.name, 'Gender')
         self.assertEqual(disaggregation.disaggregation_values.count(), 3)
+
+
+class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
+    """
+    Very minimal testing, just to make sure things work.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)
+
+    @staticmethod
+    def _get_url(dissagregation):
+        return reverse('disaggregation-retrieve-update', args=[dissagregation.pk])
+
+    def test_get(self):
+        """
+        Test retrieving a single disaggregation
+        """
+        disaggregation = DisaggregationFactory()
+        num_values = 3
+        for i in range(num_values):
+            DisaggregationValueFactory(disaggregation=disaggregation)
+        response = self.forced_auth_req('get', self._get_url(disaggregation))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(disaggregation.name, response.data['name'])
+        self.assertEqual(num_values, len(response.data['disaggregation_values']))
