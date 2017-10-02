@@ -244,7 +244,7 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
 
     def test_create_values(self):
         """
-        Test updating a disaggregation's values
+        Test creating new disaggregation values
         """
         disaggregation = DisaggregationFactory()
         value = DisaggregationValueFactory(disaggregation=disaggregation)
@@ -259,3 +259,12 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         self.assertEqual(2, disaggregation.disaggregation_values.count())
         new_value = disaggregation.disaggregation_values.exclude(pk=value.pk)[0]
         self.assertEqual('a new value', new_value.value)
+
+    def test_delete(self):
+        """
+        Test deleting a disaggregation is not allowed
+        """
+        disaggregation = DisaggregationFactory()
+        response = self.forced_auth_req('delete', self._get_url(disaggregation))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertTrue(Disaggregation.objects.filter(pk=disaggregation.pk).exists())
