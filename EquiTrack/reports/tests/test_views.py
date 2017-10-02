@@ -11,6 +11,7 @@ from EquiTrack.factories import (
     DisaggregationFactory,
     DisaggregationValueFactory)
 from EquiTrack.tests.mixins import APITenantTestCase
+from reports.serializers.v2 import DisaggregationSerializer
 
 
 class TestReportViews(APITenantTestCase):
@@ -199,3 +200,50 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(disaggregation.name, response.data['name'])
         self.assertEqual(num_values, len(response.data['disaggregation_values']))
+
+    def test_update_metadata(self):
+        """
+        Test updating a disaggregation's metadata
+        """
+        disaggregation = DisaggregationFactory()
+        new_name = 'updated via API'
+        response = self.forced_auth_req('put', self._get_url(disaggregation),
+                                        data={'name': new_name, 'disaggregation_values': []})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(new_name, disaggregation.name)
+
+    def test_update_values(self):
+        """
+        Test updating a disaggregation's values
+        """
+        disaggregation = DisaggregationFactory()
+        value = DisaggregationValueFactory(disaggregation=disaggregation)
+        new_value = 'updated value'
+        data = DisaggregationSerializer(instance=disaggregation).data
+        data['disaggregation_values'][0]['value'] = new_value
+        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(1, disaggregation.disaggregation_values.count())
+        updated_value = disaggregation.disaggregation_values.all()[0]
+        self.assertEqual(value.pk, updated_value.pk)
+        self.assertEqual(new_value, updated_value.value)
+
+    def test_create_values(self):
+        """
+        Test updating a disaggregation's values
+        """
+        disaggregation = DisaggregationFactory()
+        value = DisaggregationValueFactory(disaggregation=disaggregation)
+        data = DisaggregationSerializer(instance=disaggregation).data
+        data['disaggregation_values'].append({
+            "value": "a new value",
+            "active": False
+        })
+        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(2, disaggregation.disaggregation_values.count())
+        new_value = disaggregation.disaggregation_values.exclude(pk=value.pk)[0]
+        self.assertEqual('a new value', new_value.value)
