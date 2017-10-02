@@ -328,6 +328,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             vendor_number="DDD",
             short_name="Short name",
         )
+
         report = "report.pdf"
         self.assessment1 = Assessment.objects.create(
             partner=self.partner,
@@ -620,7 +621,19 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
 
-    def test_api_partners_delete_with_agreements(self):
+    def test_api_partners_delete_with_signed_agreements(self):
+
+        # create draft agreement with partner
+        AgreementFactory(
+            partner=self.partner,
+            signed_by_unicef_date=None,
+            signed_by_partner_date=None,
+            attached_agreement=None,
+            status='draft')
+
+        # should have 1 signed and 1 draft agreement with self.partner
+        self.assertEqual(self.partner.agreements.count(), 2)
+
         response = self.forced_auth_req(
             'delete',
             '/api/v2/partners/delete/{}/'.format(self.partner.id),
@@ -629,6 +642,32 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data[0], "There was a PCA/SSFA signed with this partner or a transaction "
                                            "was performed against this partner. The Partner record cannot be deleted")
+
+    def test_api_partners_delete_with_draft_agreements(self):
+        partner = PartnerFactory(
+            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            cso_type="International",
+            hidden=False,
+            vendor_number="EEE",
+            short_name="Shorter name",
+        )
+
+        # create draft agreement with partner
+        AgreementFactory(
+            partner=partner,
+            signed_by_unicef_date=None,
+            signed_by_partner_date=None,
+            attached_agreement=None,
+            status='draft')
+
+        self.assertEqual(partner.agreements.count(), 1)
+
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/delete/{}/'.format(partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_api_partners_delete(self):
         partner = PartnerFactory()
