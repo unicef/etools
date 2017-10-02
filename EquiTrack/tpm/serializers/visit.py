@@ -183,13 +183,13 @@ class TPMVisitLightSerializer(WritableNestedSerializerMixin,
 
 
 class TPMVisitSerializer(PermissionsBasedSerializerMixin, TPMVisitLightSerializer):
-    tpm_activities = TPMActivitySerializer(many=True, required=False)
+    tpm_activities = TPMActivitySerializer(label=_('Activity information'), many=True, required=False)
 
     report_attachments = TPMAttachmentsSerializer(many=True, required=False)
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
-    action_points = TPMActionPointSerializer(label=_('Activity information'), many=True, required=False)
+    action_points = TPMActionPointSerializer(many=True, required=False)
 
     class Meta(TPMVisitLightSerializer.Meta):
         fields = TPMVisitLightSerializer.Meta.fields + [

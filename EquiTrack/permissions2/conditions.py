@@ -34,6 +34,22 @@ class TemplateCondition(BaseCondition):
         return self.predicate_template.format(**self.get_context())
 
 
+class GroupCondition(TemplateCondition):
+    predicate_template = 'user.group="{group}"'
+
+    def __init__(self, user):
+        self.user = user
+
+    def get_groups(self):
+        return self.user.groups.values_list('name', flat=True)
+
+    def to_internal_value(self):
+        return [
+            self.predicate_template.format(group=group)
+            for group in self.get_groups()
+        ]
+
+
 class BaseRoleCondition(TemplateCondition):
     user_roles = NotImplemented
     predicate_template = 'user.role="{role}"'

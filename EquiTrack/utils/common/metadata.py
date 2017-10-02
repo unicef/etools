@@ -54,16 +54,17 @@ class FSMTransitionActionMetadataMixin(object):
         if not instance:
             return actions
 
-        actions["allowed_FSM_transitions"] = []
-        for action in self._collect_actions(instance):
-            try:
-                view.check_transition_permission(action, request.user)
-            except (exceptions.PermissionDenied, exceptions.ValidationError):
-                pass
-            else:
-                actions["allowed_FSM_transitions"].append(action)
+        request.user._permission_context = view._collect_permission_context()
 
-                name = action.custom.get('name', action.name)
+        actions["allowed_FSM_transitions"] = []
+        current_state = instance.status
+        for action in self._collect_actions(instance):
+            meta = action._django_fsm
+
+            if meta.has_transition(current_state) and meta.has_transition_perm(instance, current_state, request.user):
+                transition = meta.get_transition(current_state)
+
+                name = transition.custom.get('name', transition.name)
                 if callable(name):
                     name = name(instance)
 
@@ -80,12 +81,6 @@ class CRUActionsMetadataMixin(object):
     Return "GET" with readable fields as allowed method.
     """
 
-    actions = {
-        'PUT': 'update',
-        'POST': 'create',
-        'GET': 'retrieve'
-    }
-
     def determine_actions(self, request, view):
         """
         For generic class based views we return information about
@@ -94,23 +89,30 @@ class CRUActionsMetadataMixin(object):
         actions = {}
         for method in {'PUT', 'POST', 'GET'} & set(view.allowed_methods):
             view.request = clone_request(request, method)
-            view.action = self.actions[method]
-            instance = None
+
+            if hasattr(view, 'action_map'):
+                view.action = view.action_map.get(method.lower(), None)
+
             try:
                 # Test global permissions
                 if hasattr(view, 'check_permissions'):
                     view.check_permissions(view.request)
+
                 # Test object permissions
+                instance = None
                 lookup_url_kwarg = view.lookup_url_kwarg or view.lookup_field
                 if lookup_url_kwarg in view.kwargs and hasattr(view, 'get_object'):
                     instance = view.get_object()
+
             except (exceptions.APIException, PermissionDenied, Http404):
                 pass
+
             else:
                 # If user has appropriate permissions for the view, include
                 # appropriate metadata about the fields that should be supplied.
                 serializer = view.get_serializer(instance=instance)
                 actions[method] = self.get_serializer_info(serializer)
+
             finally:
                 view.request = request
 

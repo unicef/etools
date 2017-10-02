@@ -8,13 +8,13 @@ from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBac
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from permissions2.conditions import ObjectStatusCondition, NewObjectCondition
+from permissions2.conditions import ObjectStatusCondition, NewObjectCondition, GroupCondition
 from permissions2.drf_permissions import NestedPermission
 from permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from utils.common.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
 from .conditions import TPMModuleCondition, TPMStaffMemberCondition, TPMVisitUNICEFFocalPointCondition, \
-    TPMVisitTPMFocalPointCondition, TPMRoleCondition
+    TPMVisitTPMFocalPointCondition
 from .filters import ReferenceNumberOrderingFilter
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
 from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity, \
@@ -40,7 +40,7 @@ class BaseTPMViewSet(
     def get_permission_context(self):
         context = [
             TPMModuleCondition(),
-            TPMRoleCondition(self.request.user),
+            GroupCondition(self.request.user),
         ]
 
         if getattr(self, 'action', None) == 'create':
