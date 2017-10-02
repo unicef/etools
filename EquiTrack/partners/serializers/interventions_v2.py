@@ -125,6 +125,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
     section_names = serializers.SerializerMethodField()
+    locations = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
@@ -151,6 +152,9 @@ class InterventionListSerializer(serializers.ModelSerializer):
     def get_section_names(self, obj):
         return [l.name for l in obj.sections.all()]
 
+    def get_locations(self, obj):
+        return [l.id for l in obj.intervention_locations]
+
     class Meta:
         model = Intervention
         fields = (
@@ -158,7 +162,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
             'sections', 'section_names', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt',
             'frs_total_outstanding_amt', 'offices', 'actual_amount', 'offices_names', 'total_unicef_budget',
-            'total_budget', 'metadata',
+            'total_budget', 'metadata', 'locations',
         )
 
 
@@ -359,12 +363,16 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     submitted_to_prc = serializers.ReadOnlyField()
     frs_details = FRsSerializer(source='frs', read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
+    locations = serializers.SerializerMethodField()
 
     def get_permissions(self, obj):
         user = self.context['request'].user
         ps = Intervention.permission_structure()
         permissions = InterventionPermissions(user=user, instance=self.instance, permission_structure=ps)
         return permissions.get_permissions()
+
+    def get_locations(self, obj):
+        return [l.id for l in obj.intervention_locations]
 
     class Meta:
         model = Intervention
@@ -375,7 +383,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
-            "planned_visits", "attachments", "supplies", "distributions", 'permissions', 'partner_id', "sections"
+            "planned_visits", "attachments", "supplies", "distributions", 'permissions', 'partner_id', "sections",
+            "locations"
         )
 
 

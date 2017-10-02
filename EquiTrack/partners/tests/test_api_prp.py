@@ -85,7 +85,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(response, expected_interventions)
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 16
+        EXPECTED_QUERIES = 17
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'

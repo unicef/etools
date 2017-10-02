@@ -1138,10 +1138,13 @@ class AgreementAmendment(TimeStampedModel):
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
-        return super(InterventionManager, self).get_queryset().prefetch_related('agreement__partner',
-                                                                                'frs',
-                                                                                'offices',
-                                                                                'planned_budget')
+        return super(InterventionManager, self).get_queryset().prefetch_related(
+            'agreement__partner',
+            'frs',
+            'offices',
+            'planned_budget',
+            'sections',
+        )
 
     def detail_qs(self):
         return self.get_queryset().prefetch_related('result_links__cp_output',
@@ -1422,6 +1425,16 @@ class Intervention(TimeStampedModel):
             lower_result for link in self.result_links.all()
             for lower_result in link.ll_results.all()
         ]
+
+    @cached_property
+    def intervention_locations(self):
+        locations = set()
+        for result_link in self.result_links.all():
+            for lower_result in result_link.ll_results.all():
+                for applied_indicator in lower_result.applied_indicators.all():
+                    locations.add(applied_indicator.locations)
+
+        return locations
 
     @cached_property
     def total_frs(self):
