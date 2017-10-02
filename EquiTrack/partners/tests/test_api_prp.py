@@ -13,7 +13,7 @@ from EquiTrack.factories import (
     LocationFactory,
     ResultFactory,
     UserFactory,
-    )
+)
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import InterventionResultLink
 from partners.permissions import READ_ONLY_API_GROUP_NAME
@@ -26,23 +26,7 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def setUp(self):
         super(TestInterventionsAPI, self).setUp()
-        setup_intervention_test_data(self)
-        # setup data specific to PRP API
-        self.result = ResultFactory(name='A Result')
-        self.result_link = InterventionResultLink.objects.create(
-            intervention=self.active_intervention, cp_output=self.result)
-        self.lower_result = LowerResult.objects.create(result_link=self.result_link, name='Lower Result 1')
-        self.indicator_blueprint = IndicatorBlueprint.objects.create(
-            title='The Blueprint'
-        )
-        self.applied_indicator = AppliedIndicator.objects.create(
-            indicator=self.indicator_blueprint,
-            lower_result=self.lower_result,
-        )
-        self.applied_indicator.locations.add(LocationFactory(name='A Location',
-                                                             gateway=GatewayTypeFactory(name='A Gateway'),
-                                                             p_code='a-p-code'))
-        self.applied_indicator.disaggregation.create(name='A Disaggregation')
+        setup_intervention_test_data(self, include_results_and_indicators=True)
 
     def run_prp_v1(self, user=None, method='get'):
         response = self.forced_auth_req(
