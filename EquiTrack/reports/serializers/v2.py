@@ -85,9 +85,11 @@ class DisaggregationSerializer(serializers.ModelSerializer):
         except KeyError:
             pass
         else:
+            found_values = []
             for value_data in values_data:
                 value_id = value_data.get('id', None)
                 if value_id:
+                    found_values.append(value_id)
                     try:
                         value = DisaggregationValue.objects.get(disaggregation=instance, id=value_id)
                         for k, v in value_data.items():
@@ -100,7 +102,10 @@ class DisaggregationSerializer(serializers.ModelSerializer):
                             )
                         )
                 else:
-                    DisaggregationValue.objects.create(disaggregation=instance, **value_data)
+                    value = DisaggregationValue.objects.create(disaggregation=instance, **value_data)
+                    found_values.append(value.id)
+            # delete any values that weren't specified
+            instance.disaggregation_values.exclude(id__in=found_values).delete()
         return super(DisaggregationSerializer, self).update(instance, validated_data)
 
 

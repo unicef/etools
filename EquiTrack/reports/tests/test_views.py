@@ -3,7 +3,7 @@ import datetime
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from reports.models import ResultType, CountryProgramme, Disaggregation
+from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
 from EquiTrack.factories import (
     UserFactory,
     ResultFactory,
@@ -269,6 +269,17 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         self.assertEqual(2, disaggregation.disaggregation_values.count())
         new_value = disaggregation.disaggregation_values.exclude(pk=value.pk)[0]
         self.assertEqual('a new value', new_value.value)
+
+    def test_removing_disaggregation_deletes_it(self):
+        disaggregation = DisaggregationFactory()
+        value = DisaggregationValueFactory(disaggregation=disaggregation)
+        data = DisaggregationSerializer(instance=disaggregation).data
+        data['disaggregation_values'] = []
+        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(0, disaggregation.disaggregation_values.count())
+        self.assertFalse(DisaggregationValue.objects.filter(pk=value.pk).exists())
 
     def test_disallow_modifying_unrelated_disaggregation_values(self):
         disaggregation = DisaggregationFactory()
