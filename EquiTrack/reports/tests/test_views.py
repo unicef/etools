@@ -293,6 +293,32 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         self.assertEqual(0, disaggregation.disaggregation_values.count())
         self.assertFalse(DisaggregationValue.objects.filter(pk=value.pk).exists())
 
+    def test_create_update_delete_value_single_call(self):
+        """
+        Just test that creation/update/deletion all play nice together.
+        """
+        disaggregation = DisaggregationFactory()
+        v1 = DisaggregationValueFactory(disaggregation=disaggregation)
+        v2 = DisaggregationValueFactory(disaggregation=disaggregation)
+        DisaggregationValueFactory(disaggregation=disaggregation)
+        data = DisaggregationSerializer(instance=disaggregation).data
+        # modify the first one
+        data['disaggregation_values'][0]['value'] = 'updated'
+        # remove the second one
+        data['disaggregation_values'] = data['disaggregation_values'][:1]
+        # add a new one
+        data['disaggregation_values'].append({
+            "value": "a new value",
+            "active": False
+        })
+        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(2, disaggregation.disaggregation_values.count())
+        self.assertEqual('updated', disaggregation.disaggregation_values.get(pk=v1.pk).value)
+        self.assertFalse(disaggregation.disaggregation_values.filter(pk=v2.pk).exists())
+        self.assertEqual('a new value', disaggregation.disaggregation_values.exclude(pk=v1.pk)[0].value)
+
     def test_disallow_modifying_unrelated_disaggregation_values(self):
         disaggregation = DisaggregationFactory()
         value = DisaggregationValueFactory()
