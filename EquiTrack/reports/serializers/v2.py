@@ -80,6 +80,10 @@ class DisaggregationSerializer(serializers.ModelSerializer):
         return disaggregation
 
     def update(self, instance, validated_data):
+        if instance.applied_indicators.count():
+            raise ValidationError(
+                'You cannot update a Disaggregation that is already associated with an Indicator.'
+            )
         try:
             values_data = validated_data.pop('disaggregation_values')
         except KeyError:

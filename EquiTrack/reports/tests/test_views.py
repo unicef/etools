@@ -2,8 +2,10 @@ import datetime
 
 from django.core.urlresolvers import reverse
 from rest_framework import status
+from partners.tests.test_utils import setup_intervention_test_data
 
-from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
+from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue, IndicatorBlueprint, \
+    AppliedIndicator
 from EquiTrack.factories import (
     UserFactory,
     ResultFactory,
@@ -251,6 +253,16 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         updated_value = disaggregation.disaggregation_values.all()[0]
         self.assertEqual(value.pk, updated_value.pk)
         self.assertEqual(new_value, updated_value.value)
+
+    def test_disallow_modifying_referenced_disaggregations(self):
+        # this bootstraps a bunch of stuff, including self.disaggregation referenced by an AppliedIndicator
+        setup_intervention_test_data(self, include_results_and_indicators=True)
+        data = DisaggregationSerializer(instance=self.disaggregation).data
+        response = self.forced_auth_req('put', self._get_url(self.disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # also try with patch
+        response = self.forced_auth_req('patch', self._get_url(self.disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_values(self):
         """
