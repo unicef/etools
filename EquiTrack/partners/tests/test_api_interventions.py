@@ -13,6 +13,10 @@ from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
     Intervention
 )
+from users.models import Country
+from EquiTrack.factories import (
+    SectionFactory,
+)
 from utils.common.utils import get_all_field_names
 
 
@@ -298,6 +302,12 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEquals(len(response), 3)
 
+        section1 = SectionFactory()
+        Country.objects.get(schema_name="test").sections.add(section1)
+
+        section2 = SectionFactory()
+        Country.objects.get(schema_name="test").sections.add(section2)
+
         # add another intervention to make sure that the queries are constant
         data = {
             "document_type": Intervention.PD,
@@ -305,8 +315,9 @@ class TestInterventionsAPI(APITenantTestCase):
             "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
-            # TODO: include result links & others in the request
+            "sections": [section1.id, section2.id],
         }
+
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 

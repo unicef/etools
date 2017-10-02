@@ -1146,9 +1146,23 @@ class InterventionManager(models.Manager):
             'sections',
         )
 
+    '''
+        'result_links__cp_output',
+        'result_links__ll_results',
+        'result_links__ll_results__applied_indicators__indicator',
+        'result_links__ll_results__applied_indicators__disaggregation',
+        'result_links__ll_results__applied_indicators__locations',
+        'frs',
+        'partner_focal_points',
+        'unicef_focal_points',
+        'agreement__authorized_officers',
+    '''
     def detail_qs(self):
-        return self.get_queryset().prefetch_related('result_links__cp_output',
-                                                    'unicef_focal_points')
+        return self.get_queryset().prefetch_related(
+            'result_links__cp_output',
+            'unicef_focal_points',
+            'sections',
+        )
 
 
 def side_effect_one(i, old_instance=None, user=None):
