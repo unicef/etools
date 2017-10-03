@@ -26,11 +26,8 @@ EXCLUDED_PACKAGES = (
 
     # These are the eTools packages that aren't yet using @python_2_unicode_compatible and therefore aren't yet
     # Python 3-compatible. As they're fixed one by one, they'll be removed from this list.
-    'attachments',
     'audit',
     'partners',
-    'reports',
-    'reversion',
     'supplies',
     'trips',
     't2f',

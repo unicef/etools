@@ -224,6 +224,13 @@ class ResultTypeFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
 
 
+class SectorFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Sector
+
+    name = factory.Sequence(lambda n: 'Sector {}'.format(n))
+
+
 class ResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Result
@@ -232,6 +239,43 @@ class ResultFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
+
+
+class LowerResultFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.LowerResult
+
+    name = factory.Sequence(lambda n: 'Lower Result {}'.format(n))
+    code = factory.Sequence(lambda n: 'Lower Result Code {}'.format(n))
+
+
+class GoalFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Goal
+
+    name = factory.Sequence(lambda n: 'Goal {}'.format(n))
+    sector = factory.SubFactory(SectorFactory)
+
+
+class UnitFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Unit
+
+    type = factory.Sequence(lambda n: 'Unit {}'.format(n))
+
+
+class IndicatorBlueprintFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.IndicatorBlueprint
+
+    name = factory.Sequence(lambda n: 'Indicator Blueprint {}'.format(n))
+
+
+class IndicatorFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Indicator
+
+    name = factory.Sequence(lambda n: 'Indicator {}'.format(n))
 
 
 class GovernmentInterventionFactory(factory.DjangoModelFactory):
