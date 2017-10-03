@@ -1850,8 +1850,8 @@ class TestInterventionViews(APITenantTestCase):
             "status": Intervention.DRAFT,
             "start": "2016-10-28",
             "end": "2016-10-28",
-            # TODO: revisit 'location' filter after prp refactoring is done
             "location": "Location",
+            "cluster": "Cluster",
             "section": self.section.id,
             "search": "2009",
         }
