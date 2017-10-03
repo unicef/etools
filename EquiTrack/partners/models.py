@@ -1141,27 +1141,27 @@ class InterventionManager(models.Manager):
         return super(InterventionManager, self).get_queryset().prefetch_related(
             'agreement__partner',
             'frs',
+            'partner_focal_points',
+            'unicef_focal_points',
             'offices',
             'planned_budget',
             'sections',
         )
 
-    '''
-        'result_links__cp_output',
-        'result_links__ll_results',
-        'result_links__ll_results__applied_indicators__indicator',
-        'result_links__ll_results__applied_indicators__disaggregation',
-        'result_links__ll_results__applied_indicators__locations',
-        'frs',
-        'partner_focal_points',
-        'unicef_focal_points',
-        'agreement__authorized_officers',
-    '''
     def detail_qs(self):
         return self.get_queryset().prefetch_related(
-            'result_links__cp_output',
+            'agreement__partner',
+            'frs',
+            'partner_focal_points',
             'unicef_focal_points',
+            'offices',
+            'planned_budget',
             'sections',
+            'result_links__cp_output',
+            'result_links__ll_results',
+            'result_links__ll_results__applied_indicators__indicator',
+            'result_links__ll_results__applied_indicators__disaggregation',
+            'result_links__ll_results__applied_indicators__locations',
         )
 
 
@@ -1446,9 +1446,21 @@ class Intervention(TimeStampedModel):
         for result_link in self.result_links.all():
             for lower_result in result_link.ll_results.all():
                 for applied_indicator in lower_result.applied_indicators.all():
-                    locations.add(applied_indicator.locations)
+                    for location in applied_indicator.locations.all():
+                        locations.add(location)
 
         return locations
+
+    @cached_property
+    def intervention_clusters(self):
+        clusters = []
+        for result_link in self.result_links.all():
+            for lower_result in result_link.ll_results.all():
+                for applied_indicator in lower_result.applied_indicators.all():
+                    if applied_indicator.cluster_indicator_title:
+                        clusters.append(applied_indicator.cluster_indicator_title)
+
+        return clusters
 
     @cached_property
     def total_frs(self):
