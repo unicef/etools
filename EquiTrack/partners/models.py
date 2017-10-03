@@ -4,7 +4,7 @@ import json
 
 from django.conf import settings
 from django.contrib.auth.models import Group
-from django.contrib.postgres.fields import JSONField, ArrayField, HStoreField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
 from django.db.models import F
 from django.db.models.signals import post_save, pre_delete
@@ -1851,9 +1851,6 @@ class GovernmentInterventionResult(models.Model):
     planned_amount = models.IntegerField(
         default=0,
         verbose_name='Planned Cash Transfers'
-    )
-    activities = HStoreField(
-        blank=True, null=True
     )
     activity = JSONField(blank=True, null=True, default=activity_default)
     unicef_managers = models.ManyToManyField(
