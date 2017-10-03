@@ -4,8 +4,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
 
-from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue, IndicatorBlueprint, \
-    AppliedIndicator
+from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
 from EquiTrack.factories import (
     UserFactory,
     ResultFactory,
