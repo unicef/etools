@@ -1,7 +1,7 @@
 # eTools and GitHub Best Practices - Contributing Guide
 
 
-##Pull Requests
+## Pull Requests
 
 * To be followed strictly
 
@@ -26,7 +26,7 @@ In order to not freak other devs out.. If you’re writing some spectacularly ou
 KEEP YOUR PRs SLIM. If you’re changing code in 10 files, unless it’s comments or enhancements that probably means you should have split your work….
 
 
-##Commiting
+## Commiting
 
 * guide, although we understand it's hard to keep commit messages on track, on big changes proper messaging is required.
 
@@ -59,13 +59,13 @@ reference any GitHub issues or pull requests that this commit fixes/closes.
 
 Any line of the commit message (including the header) should be no longer than 100 characters.
 
-###Reverting a Commit
+### Reverting a Commit
 
 If the commit reverts a previous commit, the **type** should be `revert: ` followed by the entire header of the reverted commit in quotes. So to revert the example above you would write `revert: "fix(copy): fix handling of typed subarrays"`
 In the body it should say: `This reverts commit <hash>.` where the hash is the SHA of the commit being reverted.
 
 
-##Issues
+## Issues
 
 Do not start work on any issues unless they have been confirmed and assigned to you. The only person with the authority to confirm or assign an issue is the Technical Lead, or a developer that has consulted the Technical Lead prior to confirming or assigning.
 
