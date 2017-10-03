@@ -28,9 +28,7 @@ EXCLUDED_PACKAGES = (
     # Python 3-compatible. As they're fixed one by one, they'll be removed from this list.
     'attachments',
     'audit',
-    'notification',
     'partners',
-    'publics',
     'reports',
     'reversion',
     'supplies',

@@ -2,7 +2,9 @@ import logging
 
 from django.db import IntegrityError
 
-from cartodb import CartoDBAPIKey, CartoDBException
+from carto.auth import APIKeyAuthClient
+from carto.exceptions import CartoException
+from carto.sql import SQLClient
 
 from EquiTrack.celery import app
 from .models import Location
@@ -85,7 +87,9 @@ def create_location(pcode, carto_table, parent, parent_instance,
 @app.task
 def update_sites_from_cartodb(carto_table):
 
-    client = CartoDBAPIKey(carto_table.api_key, carto_table.domain)
+    auth_client = APIKeyAuthClient(api_key=carto_table.api_key,
+                                   base_url="https://{}.carto.com/".format(carto_table.domain))
+    sql_client = SQLClient(auth_client)
 
     sites_created = sites_updated = sites_not_added = 0
     try:
@@ -103,9 +107,9 @@ def update_sites_from_cartodb(carto_table):
                 carto_table.pcode_col,
                 carto_table.table_name)
 
-        sites = client.sql(qry)
-    except CartoDBException:
-        logging.exception("CartoDB exception occured")
+        sites = sql_client.send(qry)
+    except CartoException as exc:
+        logging.exception("CartoDB exception occured {}".format(exc))
     else:
 
         for row in sites['rows']:
