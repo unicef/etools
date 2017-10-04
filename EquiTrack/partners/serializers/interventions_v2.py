@@ -12,8 +12,6 @@ from locations.models import Location
 
 from partners.models import (
     InterventionBudget,
-    SupplyPlan,
-    DistributionPlan,
     InterventionPlannedVisits,
     Intervention,
     InterventionAmendment,
@@ -49,38 +47,6 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "total",
             'currency'
         )
-
-
-class SupplyPlanCreateUpdateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = SupplyPlan
-        fields = "__all__"
-
-
-class SupplyPlanNestedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = SupplyPlan
-        fields = (
-            'id',
-            "item",
-            "quantity",
-        )
-
-
-class DistributionPlanCreateUpdateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = DistributionPlan
-        fields = "__all__"
-
-
-class DistributionPlanNestedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = DistributionPlan
-        fields = "__all__"
 
 
 class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
@@ -280,8 +246,6 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    supplies = SupplyPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
-    distributions = DistributionPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
@@ -327,8 +291,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    supplies = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
-    distributions = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
@@ -353,7 +315,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
             "created", "modified", "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd',
-            "amendments", "planned_visits", "attachments", "supplies", "distributions", 'permissions', 'partner_id',
+            "amendments", "planned_visits", "attachments", 'permissions', 'partner_id',
         )
 
 
