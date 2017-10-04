@@ -107,7 +107,6 @@ urlpatterns = [
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
     url(r'^users/', include('users.urls')),
-    url(r'^supplies/', include('supplies.urls')),
     url(r'^api/management/', include(management_urls)),
     url(r'^api/', include(api.urls)),
     url(r'^api/', include(staffm_api.urls)),

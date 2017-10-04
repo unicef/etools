@@ -49,9 +49,9 @@ class TestInterventionsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
     EDITABLE_FIELDS = {
         'draft': ["status", "sector_locations", "attachments", "prc_review_document", 'travel_activities',
-                  "partner_authorized_officer_signatory", "partner_focal_points", "distributions", "id",
+                  "partner_authorized_officer_signatory", "partner_focal_points", "id",
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
-                  "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start", "supplies",
+                  "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start",
                   "metadata", "submission_date", "action_object_actions", "agreement", "unicef_signatory_id",
                   "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "actor_actions", "created", "planned_visits",
