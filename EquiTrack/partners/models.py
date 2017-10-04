@@ -1442,6 +1442,7 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def intervention_locations(self):
+        # return intervention locations as a set of Location objects
         locations = set()
         for result_link in self.result_links.all():
             for lower_result in result_link.ll_results.all():
@@ -1453,6 +1454,7 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def intervention_clusters(self):
+        # return intervention clusters as an array of strings
         clusters = []
         for result_link in self.result_links.all():
             for lower_result in result_link.ll_results.all():

@@ -24,7 +24,6 @@ from EquiTrack.factories import (
     PartnerFactory,
     UserFactory,
     ResultFactory,
-    LocationFactory,
     AgreementFactory,
     PartnerStaffFactory,
     CountryProgrammeFactory,
@@ -409,9 +408,6 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             types=[InterventionAmendment.RESULTS]
         )
 
-        # TODO intervention sector locations location rewrite
-        self.location = LocationFactory()
-
         self.cp = CountryProgrammeFactory(__sequence=10)
         self.cp_output = ResultFactory(result_type=self.output_res_type)
         self.govint = GovernmentInterventionFactory(
@@ -724,8 +720,6 @@ class TestPartnershipViews(APITenantTestCase):
             intervention=self.intervention,
             types=[InterventionAmendment.RESULTS],
         )
-        # TODO intervention sector locations location rewrite
-        self.location = LocationFactory()
 
     def test_api_partners_list(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)

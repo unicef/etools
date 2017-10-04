@@ -1,9 +1,8 @@
 import datetime
 from EquiTrack.factories import UserFactory, GroupFactory, PartnerFactory, AgreementFactory, InterventionFactory, \
     ResultFactory, FundsReservationHeaderFactory
-# TODO intervention sector locations cleanup
-from partners.models import Intervention, InterventionSectorLocationLink, InterventionBudget
-from reports.models import ResultType, Sector
+from partners.models import Intervention, InterventionBudget
+from reports.models import ResultType
 
 
 def setup_intervention_test_data(test_case):
@@ -41,11 +40,6 @@ def setup_intervention_test_data(test_case):
     test_case.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
     test_case.result = ResultFactory(result_type=test_case.result_type)
 
-    # TODO intervention sector locations cleanup
-    test_case.pcasector = InterventionSectorLocationLink.objects.create(
-        intervention=test_case.intervention,
-        sector=Sector.objects.create(name="Sector 1")
-    )
     test_case.partnership_budget = InterventionBudget.objects.create(
         intervention=test_case.intervention,
         unicef_cash=100,
@@ -55,11 +49,6 @@ def setup_intervention_test_data(test_case):
         in_kind_amount_local=10,
     )
 
-    # TODO intervention sector locations cleanup
-    test_case.location = InterventionSectorLocationLink.objects.create(
-        intervention=test_case.intervention,
-        sector=Sector.objects.create(name="Sector 2")
-    )
     # set up two frs not connected to any interventions
     test_case.fr_1 = FundsReservationHeaderFactory(intervention=None)
     test_case.fr_2 = FundsReservationHeaderFactory(intervention=None)

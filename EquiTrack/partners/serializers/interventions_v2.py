@@ -8,7 +8,6 @@ from funds.serializers import FRsSerializer
 from partners.permissions import InterventionPermissions
 from reports.serializers.v1 import SectorLightSerializer
 from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
-from locations.models import Location
 
 from partners.models import (
     InterventionBudget,
@@ -23,7 +22,7 @@ from partners.models import (
     InterventionResultLink,
 )
 from reports.models import LowerResult
-from locations.serializers import LocationLightSerializer
+from locations.serializers import LocationSerializer, LocationLightSerializer
 from funds.models import FundsCommitmentItem, FundsReservationHeader
 
 
@@ -473,10 +472,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_sections(self, obj):
         return [l.name for l in obj.sections.all()]
 
-    # TODO: needs rewrite after the removal of intervention sector locations and inclusion of indicator locations
     def get_locations(self, obj):
-        ll = Location.objects.filter(intervention_sector_locations__intervention=obj.id).order_by('name')
-        return ', '.join([l.name for l in ll.all()])
+        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
 
     def get_partner_authorized_officer_signatory(self, obj):
         if obj.partner_authorized_officer_signatory:
@@ -571,26 +568,17 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
         )
 
 
-# TODO intervention sector locations cleanup
-class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer):
-    sector = SectorLightSerializer()
-
-    class Meta:
-        model = InterventionSectorLocationLink
-        fields = (
-            'id', 'sector', 'locations'
-        )
-
-
 class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
-    # TODO: remember to add locations as locations
-    # TODO: intervention sector locations cleanup
+    locations = serializers.SerializerMethodField()
+
+    def get_locations(self, obj):
+        return [LocationSerializer().to_representation(l) for l in obj.intervention_locations]
 
     class Meta:
         model = Intervention
         fields = (
             "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
-            "start", "end", "offices", "sections",
+            "start", "end", "offices", "sections", "locations"
         )
