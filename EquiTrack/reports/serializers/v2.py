@@ -45,9 +45,13 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
 
 
 class DisaggregationValueSerializer(serializers.ModelSerializer):
+    # this is here explicitly to allow for passing IDs as nested values in the update function
+    # https://stackoverflow.com/a/37275096/8207
+    id = serializers.IntegerField(required=False)
+
     class Meta:
         model = DisaggregationValue
-        fields = ('value', 'active',)
+        fields = ('id', 'value', 'active',)
 
 
 class DisaggregationSerializer(serializers.ModelSerializer):
@@ -57,6 +61,7 @@ class DisaggregationSerializer(serializers.ModelSerializer):
     This is a nested writable serializer based on:
     http://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
     """
+
     disaggregation_values = DisaggregationValueSerializer(many=True)
 
     class Meta:
@@ -67,8 +72,45 @@ class DisaggregationSerializer(serializers.ModelSerializer):
         values_data = validated_data.pop('disaggregation_values')
         disaggregation = Disaggregation.objects.create(**validated_data)
         for value_data in values_data:
+            if 'id' in value_data:
+                raise ValidationError(
+                    "You are not allowed to specify DisaggregationValues IDs when creating a new Disaggregation"
+                )
             DisaggregationValue.objects.create(disaggregation=disaggregation, **value_data)
         return disaggregation
+
+    def update(self, instance, validated_data):
+        if instance.applied_indicators.count():
+            raise ValidationError(
+                'You cannot update a Disaggregation that is already associated with an Indicator.'
+            )
+        try:
+            values_data = validated_data.pop('disaggregation_values')
+        except KeyError:
+            pass
+        else:
+            found_values = []
+            for value_data in values_data:
+                value_id = value_data.get('id', None)
+                if value_id:
+                    found_values.append(value_id)
+                    try:
+                        value = DisaggregationValue.objects.get(disaggregation=instance, id=value_id)
+                        for k, v in value_data.items():
+                            setattr(value, k, v)
+                        value.save()
+                    except DisaggregationValue.DoesNotExist:
+                        raise ValidationError(
+                            "Tried to modify DisaggregationValue {} that is not associated with {}".format(
+                                value_id, instance,
+                            )
+                        )
+                else:
+                    value = DisaggregationValue.objects.create(disaggregation=instance, **value_data)
+                    found_values.append(value.id)
+            # delete any values that weren't specified
+            instance.disaggregation_values.exclude(id__in=found_values).delete()
+        return super(DisaggregationSerializer, self).update(instance, validated_data)
 
 
 class AppliedIndicatorSerializer(serializers.ModelSerializer):
