@@ -1,8 +1,9 @@
 from rest_framework.metadata import SimpleMetadata
 
 from attachments.metadata import ModelChoiceFieldMixin
-from utils.common.metadata import FSMTransitionActionMetadataMixin, CRUActionsMetadataMixin, \
-    ReadOnlyFieldWithChoicesMixin, SeparatedReadWriteFieldMetadata
+from permissions2.metadata import PermittedFSMTransitionActionMetadataMixin
+from utils.common.metadata import CRUActionsMetadataMixin, ReadOnlyFieldWithChoicesMixin, \
+    SeparatedReadWriteFieldMetadata
 from utils.permissions.metadata import PermissionsBasedMetadataMixin
 
 
@@ -17,7 +18,7 @@ class TPMBaseMetadata(
 
 
 class TPMPermissionBasedMetadata(
-    FSMTransitionActionMetadataMixin,
+    PermittedFSMTransitionActionMetadataMixin,
     PermissionsBasedMetadataMixin,
     TPMBaseMetadata
 ):

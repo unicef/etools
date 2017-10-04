@@ -54,8 +54,6 @@ class FSMTransitionActionMetadataMixin(object):
         if not instance:
             return actions
 
-        request.user._permission_context = view._collect_permission_context()
-
         actions["allowed_FSM_transitions"] = []
         current_state = instance.status
         for action in self._collect_actions(instance):
