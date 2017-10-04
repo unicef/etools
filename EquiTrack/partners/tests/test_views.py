@@ -49,7 +49,6 @@ from partners.models import (
     InterventionAttachment,
     InterventionBudget,
     InterventionPlannedVisits,
-    InterventionResultLink,
     FileType,
     PartnerOrganization,
     PartnerType,
@@ -82,7 +81,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestPartnerOrganizationListView(APITenantTestCase):
+class TestAPIPartnerOrganizationListView(APITenantTestCase):
     '''Exercise the list view for PartnerOrganization'''
     def setUp(self):
         self.user = UserFactory(is_staff=True)
@@ -250,8 +249,10 @@ class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
     setUp() that I want to do as infrequently as necessary.
     '''
     def setUp(self):
-        # Monkey patch the serializer that I expect to be called with a wrapper that will set a flag here on
-        # my test case class before passing control to the normal serializer.
+        # Monkey patch the serializer that I expect to be called. I monkey patch with a wrapper that will set a
+        # flag here on my test case class before passing control to the normal serializer. I do this so that I can
+        # see whether or not the serializer was called. It allows me to perform the equivalent of
+        # assertSerializerUsed().
         class Wrapper(PartnerOrganizationExportSerializer):
             def __init__(self, *args, **kwargs):
                 TestPartnerOrganizationListViewForCSV.wrapper_called = True
@@ -1621,10 +1622,7 @@ class TestInterventionViews(APITenantTestCase):
             attachment=attachment,
             type=FileType.objects.create(name="pdf")
         )
-        self.result = InterventionResultLink.objects.create(
-            intervention=self.intervention_obj,
-            cp_output=ResultFactory(),
-        )
+        self.result = InterventionResultLinkFactory(intervention=self.intervention_obj)
         amendment = "amendment.pdf"
         self.amendment = InterventionAmendment.objects.create(
             intervention=self.intervention_obj,
