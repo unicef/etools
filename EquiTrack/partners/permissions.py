@@ -11,6 +11,16 @@ from utils.common.utils import get_all_field_names
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
 
 
+def _is_user_in_groups(user, group_names):
+    '''Utility function; returns True if user is in ANY of the groups in the group_names list, False if the user
+    is in none of them. Note that group_names should be a tuple or list, not a single string.
+    '''
+    if isinstance(group_names, basestring):
+        # Anticipate common programming oversight.
+        raise ValueError('group_names parameter must be a tuple or list, not a string')
+    return user.groups.filter(name__in=group_names).exists()
+
+
 class PMPPermissions(object):
     actions_default_permissions = {
         'edit': True,
@@ -156,6 +166,22 @@ class PartnerPermission(permissions.BasePermission):
 
 
 class PartnershipManagerPermission(permissions.BasePermission):
+    '''Applies general and object-based permissions.
+
+    - For list views --
+      - user must be staff or in 'Partnership Manager' group
+
+    - For create views --
+      - user must be in 'Partnership Manager' group
+
+    - For retrieve views --
+      - user must be (staff or in 'Partnership Manager' group) AND
+                     (staff or listed as a partner staff member on the object)
+
+    - For update/delete views --
+      - user must be (in 'Partnership Manager' group) AND
+                     (listed as a partner staff member on the object)
+    '''
     message = 'Accessing this item is not allowed.'
 
     def _has_access_permissions(self, user, object):
@@ -170,7 +196,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
         """
         if request.method in permissions.SAFE_METHODS:
             # Check permissions for read-only request
-            return request.user.is_staff
+            return request.user.is_staff or _is_user_in_groups(request.user, ['Partnership Manager'])
         else:
             return request.user.groups.filter(name='Partnership Manager').exists()
 
