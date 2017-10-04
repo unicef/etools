@@ -3,7 +3,8 @@ import operator
 
 from django.db.models import Q
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView, ListCreateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView, ListCreateAPIView, \
+    RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
@@ -121,5 +122,10 @@ class LowerResultsDeleteView(DestroyAPIView):
 
 
 class DisaggregationListCreateView(ListCreateAPIView):
+    serializer_class = DisaggregationSerializer
+    queryset = Disaggregation.objects.all()
+
+
+class DisaggregationRetrieveUpdateView(RetrieveUpdateAPIView):
     serializer_class = DisaggregationSerializer
     queryset = Disaggregation.objects.all()

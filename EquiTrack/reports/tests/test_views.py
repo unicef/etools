@@ -2,15 +2,17 @@ import datetime
 
 from django.core.urlresolvers import reverse
 from rest_framework import status
+from partners.tests.test_utils import setup_intervention_test_data
 
-from reports.models import ResultType, CountryProgramme, Disaggregation
+from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
 from EquiTrack.factories import (
     UserFactory,
     ResultFactory,
     CountryProgrammeFactory,
     DisaggregationFactory,
-)
+    DisaggregationValueFactory)
 from EquiTrack.tests.mixins import APITenantTestCase
+from reports.serializers.v2 import DisaggregationSerializer
 
 
 class TestReportViews(APITenantTestCase):
@@ -135,7 +137,7 @@ class TestReportViews(APITenantTestCase):
         self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])
 
 
-class TestDisaggregationViews(APITenantTestCase):
+class TestDisaggregationListCreateViews(APITenantTestCase):
     """
     Very minimal testing, just to make sure things work.
     """
@@ -172,3 +174,169 @@ class TestDisaggregationViews(APITenantTestCase):
         disaggregation = Disaggregation.objects.get()
         self.assertEqual(disaggregation.name, 'Gender')
         self.assertEqual(disaggregation.disaggregation_values.count(), 3)
+
+    def test_create_disallows_value_ids(self):
+        data = {
+            'name': 'Gender',
+            'disaggregation_values': [
+                {'id': 999, 'value': 'Female'},
+            ]
+        }
+        response = self.forced_auth_req('post', self.url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
+    """
+    Very minimal testing, just to make sure things work.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)
+
+    @staticmethod
+    def _get_url(dissagregation):
+        return reverse('disaggregation-retrieve-update', args=[dissagregation.pk])
+
+    def test_get(self):
+        """
+        Test retrieving a single disaggregation
+        """
+        disaggregation = DisaggregationFactory()
+        num_values = 3
+        for i in range(num_values):
+            DisaggregationValueFactory(disaggregation=disaggregation)
+        response = self.forced_auth_req('get', self._get_url(disaggregation))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(disaggregation.name, response.data['name'])
+        self.assertEqual(num_values, len(response.data['disaggregation_values']))
+
+    def test_update_metadata(self):
+        """
+        Test updating a disaggregation's metadata
+        """
+        disaggregation = DisaggregationFactory()
+        new_name = 'updated via API'
+        response = self.forced_auth_req('put', self._get_url(disaggregation),
+                                        data={'name': new_name, 'disaggregation_values': []})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(new_name, disaggregation.name)
+
+    def test_patch_metadata(self):
+        """
+        Test patching a disaggregation's metadata
+        """
+        disaggregation = DisaggregationFactory()
+        new_name = 'patched via API'
+        response = self.forced_auth_req('patch', self._get_url(disaggregation),
+                                        data={'name': new_name})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(new_name, disaggregation.name)
+
+    def test_update_values(self):
+        """
+        Test updating a disaggregation's values
+        """
+        disaggregation = DisaggregationFactory()
+        value = DisaggregationValueFactory(disaggregation=disaggregation)
+        new_value = 'updated value'
+        data = DisaggregationSerializer(instance=disaggregation).data
+        data['disaggregation_values'][0]['value'] = new_value
+        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(1, disaggregation.disaggregation_values.count())
+        updated_value = disaggregation.disaggregation_values.all()[0]
+        self.assertEqual(value.pk, updated_value.pk)
+        self.assertEqual(new_value, updated_value.value)
+
+    def test_disallow_modifying_referenced_disaggregations(self):
+        # this bootstraps a bunch of stuff, including self.disaggregation referenced by an AppliedIndicator
+        setup_intervention_test_data(self, include_results_and_indicators=True)
+        data = DisaggregationSerializer(instance=self.disaggregation).data
+        response = self.forced_auth_req('put', self._get_url(self.disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # also try with patch
+        response = self.forced_auth_req('patch', self._get_url(self.disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_values(self):
+        """
+        Test creating new disaggregation values
+        """
+        disaggregation = DisaggregationFactory()
+        value = DisaggregationValueFactory(disaggregation=disaggregation)
+        data = DisaggregationSerializer(instance=disaggregation).data
+        data['disaggregation_values'].append({
+            "value": "a new value",
+            "active": False
+        })
+        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(2, disaggregation.disaggregation_values.count())
+        new_value = disaggregation.disaggregation_values.exclude(pk=value.pk)[0]
+        self.assertEqual('a new value', new_value.value)
+
+    def test_removing_disaggregation_deletes_it(self):
+        disaggregation = DisaggregationFactory()
+        value = DisaggregationValueFactory(disaggregation=disaggregation)
+        data = DisaggregationSerializer(instance=disaggregation).data
+        data['disaggregation_values'] = []
+        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(0, disaggregation.disaggregation_values.count())
+        self.assertFalse(DisaggregationValue.objects.filter(pk=value.pk).exists())
+
+    def test_create_update_delete_value_single_call(self):
+        """
+        Just test that creation/update/deletion all play nice together.
+        """
+        disaggregation = DisaggregationFactory()
+        v1 = DisaggregationValueFactory(disaggregation=disaggregation)
+        v2 = DisaggregationValueFactory(disaggregation=disaggregation)
+        DisaggregationValueFactory(disaggregation=disaggregation)
+        data = DisaggregationSerializer(instance=disaggregation).data
+        # modify the first one
+        data['disaggregation_values'][0]['value'] = 'updated'
+        # remove the second one
+        data['disaggregation_values'] = data['disaggregation_values'][:1]
+        # add a new one
+        data['disaggregation_values'].append({
+            "value": "a new value",
+            "active": False
+        })
+        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        disaggregation = Disaggregation.objects.get(pk=disaggregation.pk)
+        self.assertEqual(2, disaggregation.disaggregation_values.count())
+        self.assertEqual('updated', disaggregation.disaggregation_values.get(pk=v1.pk).value)
+        self.assertFalse(disaggregation.disaggregation_values.filter(pk=v2.pk).exists())
+        self.assertEqual('a new value', disaggregation.disaggregation_values.exclude(pk=v1.pk)[0].value)
+
+    def test_disallow_modifying_unrelated_disaggregation_values(self):
+        disaggregation = DisaggregationFactory()
+        value = DisaggregationValueFactory()
+        data = DisaggregationSerializer(instance=disaggregation).data
+        data['disaggregation_values'].append({
+            "id": value.pk,
+            "value": "not allowed",
+        })
+        response = self.forced_auth_req('put', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # also try with patch
+        response = self.forced_auth_req('patch', self._get_url(disaggregation), data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_delete(self):
+        """
+        Test deleting a disaggregation is not allowed
+        """
+        disaggregation = DisaggregationFactory()
+        response = self.forced_auth_req('delete', self._get_url(disaggregation))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertTrue(Disaggregation.objects.filter(pk=disaggregation.pk).exists())

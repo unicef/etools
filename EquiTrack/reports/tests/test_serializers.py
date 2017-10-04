@@ -41,9 +41,11 @@ class DisaggregationTest(FastTenantTestCase):
             'active': self.disaggregation.active,
             'disaggregation_values': [
                 {
+                    'id': value_1.id,
                     'value': value_1.value,
                     'active': value_1.active,
                 }, {
+                    'id': value_2.id,
                     'value': value_2.value,
                     'active': value_2.active,
                 }
