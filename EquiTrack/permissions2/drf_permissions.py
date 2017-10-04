@@ -7,7 +7,7 @@ class NestedPermission(BasePermission):
     def has_permission(self, request, view):
         parent_model = view.get_parent().get_queryset().model
 
-        model = view.queryset.model
+        model = view.get_queryset().model
         field = getattr(model, view.parent_lookup_field).field
 
         target = Permission.get_target(parent_model, field.rel.get_accessor_name())

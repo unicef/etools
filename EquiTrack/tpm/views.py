@@ -34,7 +34,7 @@ class BaseTPMViewSet(
 ):
     metadata_class = TPMBaseMetadata
     pagination_class = DynamicPageNumberPagination
-    permission_classes = (IsAuthenticated, )
+    permission_classes = [IsAuthenticated]
 
     def get_permission_context(self):
         context = [
@@ -143,6 +143,8 @@ class TPMStaffMembersViewSet(
     metadata_class = TPMPermissionBasedMetadata
     queryset = TPMPartnerStaffMember.objects.all()
     serializer_class = TPMPartnerStaffMemberSerializer
+    permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
+
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
@@ -269,7 +271,7 @@ class ActionPointViewSet(BaseTPMViewSet,
     queryset = TPMActionPoint.objects.all()
     serializer_class = TPMActionPointSerializer
 
-    permission_classes = (IsAuthenticated, NestedPermission)
+    permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
 
     def perform_create(self, serializer):
         serializer.save(tpm_visit=self.get_parent_object())

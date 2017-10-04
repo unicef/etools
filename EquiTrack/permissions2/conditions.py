@@ -50,39 +50,6 @@ class GroupCondition(TemplateCondition):
         ]
 
 
-class BaseRoleCondition(TemplateCondition):
-    user_roles = NotImplemented
-    predicate_template = 'user.role="{role}"'
-
-    def __init__(self, user):
-        self.user = user
-
-    @classmethod
-    def _get_user_type(cls, user):
-        """
-        Return user type based on user's groups.
-        :param user:
-        :return:
-        """
-        when_mapping = [
-            models.When(name=name, then=models.Value(i))
-            for i, name in enumerate(reversed(cls.user_roles))
-        ]
-        group = user.groups.annotate(
-            order=models.Case(*when_mapping, default=models.Value(-1), output_field=models.IntegerField())
-        ).order_by('-order').first()
-
-        if not group:
-            return None
-
-        return group.name
-
-    def get_context(self):
-        return {
-            'role': self._get_user_type(self.user)
-        }
-
-
 class ObjectStatusCondition(TemplateCondition):
     predicate_template = '{obj}.status="{status}"'
     status_field = 'status'

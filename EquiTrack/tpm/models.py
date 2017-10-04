@@ -170,8 +170,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         context = context or {}
 
         base_context = {
-            '>': self,
-             'url': site_url(),
+            'visit': self,
+            'url': site_url(),
             'environment': get_environment(),
             'implementing_partners': set(map(lambda a: a.implementing_partner.name, self.tpm_activities.all())),
             'partnerships': set(map(lambda a: a.partnership.title, self.tpm_activities.all())),

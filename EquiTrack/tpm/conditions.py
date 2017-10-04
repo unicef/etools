@@ -1,4 +1,4 @@
-from permissions2.conditions import ModuleCondition, SimpleCondition, BaseRoleCondition
+from permissions2.conditions import ModuleCondition, SimpleCondition
 
 
 class TPMModuleCondition(ModuleCondition):
@@ -36,11 +36,3 @@ class TPMVisitTPMFocalPointCondition(SimpleCondition):
 
     def is_satisfied(self):
         return self.user.pk in self.visit.tpm_partner_focal_points.values_list('user', flat=True)
-
-
-class TPMRoleCondition(BaseRoleCondition):
-    user_roles = [
-        'PME',
-        'Third Party Monitor',
-        'UNICEF User',
-    ]
