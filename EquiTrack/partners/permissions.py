@@ -232,7 +232,7 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
     POST users must be staff.
     '''
     def has_permission(self, request, view):
-        if request.method == 'GET':
+        if request.method in permissions.SAFE_METHODS:
             if request.user.is_authenticated():
                 if request.user.is_staff or request.user.groups.filter(name=READ_ONLY_API_GROUP_NAME).exists():
                     return True
