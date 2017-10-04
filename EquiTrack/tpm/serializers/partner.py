@@ -18,7 +18,7 @@ class TPMPartnerStaffMemberSerializer(PermissionsBasedSerializerMixin, BaseStaff
         ]
 
 
-class TPMPartnerLightSerializer(serializers.ModelSerializer):
+class TPMPartnerLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     status_date = serializers.ReadOnlyField()
 
     class Meta:
@@ -45,7 +45,7 @@ class TPMPartnerLightSerializer(serializers.ModelSerializer):
         })
 
 
-class TPMPartnerSerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin, TPMPartnerLightSerializer):
+class TPMPartnerSerializer(WritableNestedSerializerMixin, TPMPartnerLightSerializer):
     staff_members = TPMPartnerStaffMemberSerializer(label=_('TPM Contacts'), many=True, required=False, read_only=True)
     attachments = TPMPartnerAttachmentsSerializer(many=True)
 

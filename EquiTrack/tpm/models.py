@@ -21,8 +21,6 @@ from publics.models import SoftDeleteMixin
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import site_url, build_frontend_url
 from utils.groups.wrappers import GroupWrapper
-from utils.permissions.models.models import StatusBasePermission
-from utils.permissions.models.query import StatusBasePermissionQueryset
 from .transitions.serializers import TPMVisitRejectSerializer, TPMVisitApproveSerializer
 from .transitions.conditions import ValidateTPMVisitActivities, \
                                     TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
@@ -440,56 +438,3 @@ ThirdPartyMonitor = GroupWrapper(code='third_party_monitor',
 
 UNICEFUser = GroupWrapper(code='unicef_user',
                           name='UNICEF User')
-
-
-class TPMPermissionsQueryset(StatusBasePermissionQueryset):
-    def filter(self, *args, **kwargs):
-        if 'user' in kwargs and 'instance' in kwargs and kwargs['instance']:
-            kwargs['user_type'] = self.model._get_user_type(kwargs.pop('user'), instance=kwargs['instance'])
-            return self.filter(**kwargs)
-
-        if 'user' in kwargs and 'instance__in' in kwargs:
-            user_type = self.model._get_user_type(kwargs.pop('user'))
-            if user_type == UNICEFUser:
-                return self.filter(models.Q(user_type=UNICEFUser.code)
-                                   | models.Q(user_type=self.model.USER_TYPES.unicef_focal_point)).filter(**kwargs)
-
-            kwargs['user_type'] = user_type
-            return self.filter(**kwargs)
-
-        return super(TPMPermissionsQueryset, self).filter(**kwargs)
-
-
-@python_2_unicode_compatible
-class TPMPermission(StatusBasePermission):
-    STATUSES = StatusBasePermission.STATUSES + TPMVisit.STATUSES
-
-    USER_TYPES = Choices(
-        ('unicef_focal_point', 'UNICEF Focal Point'),
-        PME.as_choice(),
-        ThirdPartyMonitor.as_choice(),
-        UNICEFUser.as_choice(),
-    )
-
-    objects = TPMPermissionsQueryset.as_manager()
-
-    def __str__(self):
-        return '{} can {} {} in {} visit'.format(self.user_type, self.permission, self.target, self.instance_status)
-
-    @classmethod
-    def _get_user_type(cls, user, instance=None):
-        if instance and instance.unicef_focal_points.filter(id=user.id).exists():
-            return cls.USER_TYPES.unicef_focal_point
-
-        user_type = super(TPMPermission, cls)._get_user_type(user)
-        if user_type == ThirdPartyMonitor:
-            if not instance:
-                return user_type
-
-            try:
-                if user.tpm_tpmpartnerstaffmember not in instance.tpm_partner.staff_members.all():
-                    return None
-            except TPMPartnerStaffMember.DoesNotExist:
-                return None
-
-        return user_type

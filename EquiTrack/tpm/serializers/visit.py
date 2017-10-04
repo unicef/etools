@@ -119,6 +119,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
 
 
 class TPMVisitLightSerializer(WritableNestedSerializerMixin,
+                              PermissionsBasedSerializerMixin,
                               serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(
         read_field=TPMPartnerLightSerializer(label=_('TPM Name'), read_only=True),
@@ -182,7 +183,7 @@ class TPMVisitLightSerializer(WritableNestedSerializerMixin,
         ).data
 
 
-class TPMVisitSerializer(PermissionsBasedSerializerMixin, TPMVisitLightSerializer):
+class TPMVisitSerializer(TPMVisitLightSerializer):
     tpm_activities = TPMActivitySerializer(label=_('Activity information'), many=True, required=False)
 
     report_attachments = TPMAttachmentsSerializer(many=True, required=False)

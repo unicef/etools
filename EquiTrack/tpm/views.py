@@ -17,15 +17,13 @@ from .conditions import TPMModuleCondition, TPMStaffMemberCondition, TPMVisitUNI
     TPMVisitTPMFocalPointCondition
 from .filters import ReferenceNumberOrderingFilter
 from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity, \
+from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPartnerStaffMember, TPMActivity, \
     TPMActionPoint
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer, \
     TPMActionPointSerializer
 from .export.renderers import TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer
 from .export.serializers import TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer
-
-from .permissions import IsPMEorReadonlyPermission
 
 
 class BaseTPMViewSet(
@@ -67,8 +65,6 @@ class TPMPartnerViewSet(
     serializer_action_classes = {
         'list': TPMPartnerLightSerializer
     }
-    # TODO: Get rid of it
-    permission_classes = (IsAuthenticated, IsPMEorReadonlyPermission,)
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('vendor_number', 'name', 'phone_number', 'email')
     ordering_fields = ('vendor_number', 'name', 'phone_number', 'email')
@@ -79,11 +75,20 @@ class TPMPartnerViewSet(
     def get_queryset(self):
         queryset = super(TPMPartnerViewSet, self).get_queryset()
 
-        user_type = TPMPermission._get_user_type(self.request.user)
-        if not user_type or user_type == ThirdPartyMonitor:
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
             queryset = queryset.filter(staff_members__user=self.request.user)
 
         return queryset
+
+    def get_permission_context(self):
+        context = super(TPMPartnerViewSet, self).get_permission_context()
+
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+            context += [
+                TPMStaffMemberCondition(self.request.user.tpm_tpmpartnerstaffmember.tpm_partner, self.request.user),
+            ]
+
+        return context
 
     def get_obj_permission_context(self, obj):
         return [
@@ -133,13 +138,13 @@ class TPMStaffMembersViewSet(
     metadata_class = TPMPermissionBasedMetadata
     queryset = TPMPartnerStaffMember.objects.all()
     serializer_class = TPMPartnerStaffMemberSerializer
-    # TODO: Get rid of it
-    permission_classes = (IsAuthenticated, IsPMEorReadonlyPermission, )
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
 
     def perform_create(self, serializer, **kwargs):
+        self.check_serializer_permissions(serializer, edit=True)
+
         instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
         instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.save()
@@ -180,13 +185,11 @@ class TPMVisitViewSet(
     def get_queryset(self):
         queryset = super(TPMVisitViewSet, self).get_queryset()
 
-        user_type = TPMPermission._get_user_type(self.request.user)
-        if not user_type:
-            return queryset.none()
-        if user_type == ThirdPartyMonitor:
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
             queryset = queryset.filter(
                 tpm_partner=self.request.user.tpm_tpmpartnerstaffmember.tpm_partner,
             ).exclude(status=TPMVisit.STATUSES.draft)
+
         return queryset
 
     def get_serializer_class(self):
@@ -195,6 +198,16 @@ class TPMVisitViewSet(
                 self.get_object().status == TPMVisit.STATUSES.draft:
             return TPMVisitDraftSerializer
         return super(TPMVisitViewSet, self).get_serializer_class()
+
+    def get_permission_context(self):
+        context = super(TPMVisitViewSet, self).get_permission_context()
+
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+            context += [
+                TPMStaffMemberCondition(self.request.user.tpm_tpmpartnerstaffmember.tpm_partner, self.request.user),
+            ]
+
+        return context
 
     def get_obj_permission_context(self, obj):
         return [

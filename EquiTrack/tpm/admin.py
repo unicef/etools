@@ -20,13 +20,6 @@ class TPMVisitAdmin(AdminListMixin, admin.ModelAdmin):
     )
 
 
-@admin.register(models.TPMPermission)
-class TPMPermissionAdmin(admin.ModelAdmin):
-    list_display = ['target', 'user_type', 'permission_type', 'permission', 'instance_status']
-    list_filter = ['user_type', 'permission_type', 'permission', 'instance_status']
-    search_fields = ['target']
-
-
 class TPMPartnerStaffMemberInlineAdmin(admin.StackedInline):
     model = models.TPMPartnerStaffMember
     extra = 1

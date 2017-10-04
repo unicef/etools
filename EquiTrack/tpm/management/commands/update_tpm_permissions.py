@@ -15,6 +15,15 @@ class Command(BaseCommand):
         'tpm.tpmpartnerstaffmember.*',
     ]
 
+    tpm_visit_list = [
+        'tpm.tpmvisit.offices',
+        'tpm.tpmvisit.unicef_focal_points',
+        'tpm.tpmvisit.tpm_partner_focal_points',
+        'tpm.tpmvisit.implementing_partners',
+        'tpm.tpmvisit.locations',
+        'tpm.tpmvisit.sections',
+    ]
+
     tpm_visit_details = [
         'tpm.tpmvisit.reference_number',
         'tpm.tpmvisit.tpm_partner',
@@ -22,6 +31,7 @@ class Command(BaseCommand):
         'tpm.tpmvisit.end_date',
         'tpm.tpmvisit.tpm_activities',
         'tpm.tpmvisit.status',
+        'tpm.tpmvisit.status_date',
         'tpm.tpmvisit.unicef_focal_points',
         'tpm.tpmvisit.tpm_partner_focal_points',
         'tpm.tpmvisit.offices',
@@ -131,7 +141,8 @@ class Command(BaseCommand):
 
         self.add_permission(self.pme, 'action', ['tpm.tpmpartner.activate', 'tpm.tpmpartner.cancel'])
 
-        self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.tpm_visit_details)
+        self.add_permission([self.unicef_user, self.third_party_monitor], 'view',
+                            self.tpm_visit_list + self.tpm_visit_details)
 
         self.add_permission(self.pme, 'edit', self.tpm_visit_details,
                             condition=self.new_visit())
