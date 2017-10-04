@@ -1,4 +1,3 @@
-from django.core.management import call_command
 from django.utils import six
 
 from rest_framework import status

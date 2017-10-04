@@ -1,5 +1,3 @@
-import six
-
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.db import ProgrammingError
 from django.http import Http404
