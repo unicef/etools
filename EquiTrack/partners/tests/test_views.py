@@ -20,19 +20,20 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
 from EquiTrack.factories import (
-    AgreementAmendmentFactory,
-    PartnerFactory,
-    UserFactory,
-    ResultFactory,
-    LocationFactory,
     AgreementFactory,
-    PartnerStaffFactory,
+    AgreementAmendmentFactory,
     CountryProgrammeFactory,
-    GroupFactory,
-    SectionFactory,
-    InterventionFactory,
+    FundsReservationHeaderFactory,
+    LocationFactory,
     GovernmentInterventionFactory,
-    FundsReservationHeaderFactory
+    GroupFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+    ResultFactory,
+    SectionFactory,
+    UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from reports.models import ResultType
@@ -56,6 +57,12 @@ from partners.models import (
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.serializers.partner_organization_v2 import PartnerOrganizationExportSerializer
 import partners.views.partner_organization_v2
+
+
+def _add_user_to_partnership_manager_group(user):
+    '''Utility function to add a user to the 'Partnership Manager' group which may or may not exist'''
+    group = Group.objects.get_or_create(name='Partnership Manager')[0]
+    user.groups.add(group)
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -2057,3 +2064,67 @@ class TestPartnershipDashboardView(APITenantTestCase):
             data=self.intervention_data
         )
         self.intervention_data = response.data
+
+
+class TestAPIInterventionResultLinkListView(APITenantTestCase):
+    '''Exercise the list view for InterventionResultLink'''
+    def setUp(self):
+        self.intervention = InterventionFactory()
+
+        self.result_link1 = InterventionResultLinkFactory(intervention=self.intervention)
+        self.result_link2 = InterventionResultLinkFactory(intervention=self.intervention)
+
+        self.url = reverse('partners_api:intervention-result-links-list',
+                           kwargs={'intervention_pk': self.intervention.id})
+
+        # self.expected_field_names is the list of field names expected in responses.
+        self.expected_field_names = sorted(
+            ('cp_output', 'ram_indicators', 'cp_output_name', 'ram_indicator_names', 'id', 'intervention', ))
+
+    def assertResponseFundamentals(self, response, expected_keys=None):
+        '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
+        response dict are compared to self.normal_field_names. Otherwise, they're compared to whatever is passed in
+        expected_keys.
+        '''
+        if expected_keys is None:
+            expected_keys = self.expected_field_names
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertEqual(len(response_json), 2)
+        for obj in response_json:
+            self.assertIsInstance(obj, dict)
+        if expected_keys:
+            for d in response_json:
+                self.assertEqual(sorted(d.keys()), expected_keys)
+
+        actual_ids = sorted([d.get('id') for d in response_json])
+        expected_ids = sorted((self.result_link1.id, self.result_link2.id))
+
+        self.assertEqual(actual_ids, expected_ids)
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self.forced_auth_req('get', self.url, user=UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.get(self.url)
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_staff_access_ok(self):
+        '''Ensure a staff user has access'''
+        response = self.forced_auth_req('get', self.url, user=UserFactory(is_staff=True))
+        self.assertResponseFundamentals(response)
+
+    def test_group_permission(self):
+        '''A non-staff user has read access if in the correct group'''
+        user = UserFactory()
+        _add_user_to_partnership_manager_group(user)
+        response = self.forced_auth_req('get', self.url, user=user)
+        self.assertResponseFundamentals(response)
