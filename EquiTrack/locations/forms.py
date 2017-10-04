@@ -3,7 +3,9 @@ import logging
 from django import forms
 from django.core.exceptions import ValidationError
 
-from cartodb import CartoDBAPIKey, CartoDBException
+from carto.auth import APIKeyAuthClient
+from carto.exceptions import CartoException
+from carto.sql import SQLClient
 
 from .models import CartoDBTable
 
@@ -25,12 +27,11 @@ class CartoDBTableForm(forms.ModelForm):
         pcode_col = self.cleaned_data['pcode_col']
         parent_code_col = self.cleaned_data['parent_code_col']
 
-        client = CartoDBAPIKey(api_key, domain)
+        auth_client = APIKeyAuthClient(api_key=api_key, base_url="https://{}.carto.com/".format(str(domain)))
+        sql_client = SQLClient(auth_client)
         try:
-            sites = client.sql(
-                'select * from {} limit 1'.format(table_name)
-            )
-        except CartoDBException:
+            sites = sql_client.send('select * from {} limit 1'.format(table_name))
+        except CartoException:
             logger.exception("CartoDB exception occured")
             raise ValidationError("Couldn't connect to CartoDB table: {}".format(table_name))
         else:
