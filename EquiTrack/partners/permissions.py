@@ -198,7 +198,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
             # Check permissions for read-only request
             return request.user.is_staff or _is_user_in_groups(request.user, ['Partnership Manager'])
         else:
-            return request.user.groups.filter(name='Partnership Manager').exists()
+            return _is_user_in_groups(request.user, ['Partnership Manager'])
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -207,7 +207,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                request.user.groups.filter(name='Partnership Manager').exists()
+                _is_user_in_groups(request.user, ['Partnership Manager'])
 
 
 class PartnershipManagerRepPermission(permissions.BasePermission):
@@ -226,8 +226,8 @@ class PartnershipManagerRepPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                request.user.groups.filter(name__in=['Partnership Manager', 'Senior Management Team',
-                                                     'Representative Office']).exists()
+                _is_user_in_groups(request.user, ['Partnership Manager', 'Senior Management Team',
+                                                  'Representative Office'])
 
 
 class ResultChainPermission(permissions.BasePermission):
@@ -260,7 +260,7 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             if request.user.is_authenticated():
-                if request.user.is_staff or request.user.groups.filter(name=READ_ONLY_API_GROUP_NAME).exists():
+                if request.user.is_staff or _is_user_in_groups(request.user, [READ_ONLY_API_GROUP_NAME]):
                     return True
             return False
         elif request.method == 'POST':
