@@ -56,6 +56,8 @@ class ActivitySerializer(serializers.ModelSerializer):
                 partnership=partnership
             ))
 
+        return attrs
+
     def validate(self, attrs):
         attrs = super(ActivitySerializer, self).validate(attrs)
         attrs = self._validate_partnership_and_partner(attrs)

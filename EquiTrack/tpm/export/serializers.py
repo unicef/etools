@@ -44,7 +44,7 @@ class TPMLocationExportSerializer(serializers.Serializer):
     section = serializers.CharField(source='tpmactivity.section')
     cp_output = serializers.CharField(source='tpmactivity.cp_output')
     partnership = serializers.CharField(source='tpmactivity.partnership')
-    location = serializers.CharField(source='location')
+    location = serializers.CharField()
     date = serializers.DateField(source='tpmactivity.date', format='%d/%m/%Y')
     unicef_focal_points = UsersExportField(source='tpmactivity.tpm_visit.unicef_focal_points')
 

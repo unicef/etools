@@ -67,7 +67,11 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
         if not self.instance and attrs.get('description') == _('Escalate to Investigation')\
                 and 'person_responsible' not in attrs:
             email = 'integrity1@un.org'
-            attrs['person_responsible'] = User.objects.get_or_create(username=email, defaults={'email': email})[0]
+            attrs['person_responsible'] = User.objects.get_or_create(username=email, defaults={
+                'email': email,
+                'first_name': 'Integrity',
+                'last_name': 'Staff User',
+            })[0]
 
         return attrs
 

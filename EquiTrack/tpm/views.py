@@ -13,6 +13,7 @@ from permissions2.drf_permissions import NestedPermission
 from permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from utils.common.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
+from vision.adapters.tpm_adapter import TPMPartnerManualSynchronizer
 from .conditions import TPMModuleCondition, TPMStaffMemberCondition, TPMVisitUNICEFFocalPointCondition, \
     TPMVisitTPMFocalPointCondition
 from .filters import ReferenceNumberOrderingFilter
@@ -105,8 +106,12 @@ class TPMPartnerViewSet(
         instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
         if not instance:
-            # todo: load from VISION by number
-            pass
+            handler = TPMPartnerManualSynchronizer(
+                country=request.user.profile.country,
+                object_number=kwargs.get('vendor_number')
+            )
+            handler.sync()
+            instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
         if not instance:
             raise Http404

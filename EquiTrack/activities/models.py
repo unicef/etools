@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 class Activity(models.Model):
     implementing_partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Implementing Partner'),
-                                null=True, related_name='+')
+                                             null=True, related_name='+')
     partnership = models.ForeignKey('partners.Intervention', verbose_name=_('partnership'), null=True)
     cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'),
                                   null=True, blank=True, related_name='+')

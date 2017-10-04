@@ -7,12 +7,14 @@ from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app, send_to_slack
 from partners.models import PartnerOrganization
+from tpm.models import TPMPartner
 from users.models import Country
 from vision.adapters.publics_adapter import CurrencySyncronizer, TravelAgenciesSyncronizer, CostAssignmentSynch
 from vision_data_synchronizer import VisionException
 from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.purchase_order import POSynchronizer
+from vision.adapters.tpm_adapter import TPMPartnerSynchronizer
 from vision.adapters.funding import (
     FundingSynchronizer,
     FundReservationsSynchronizer,
@@ -204,4 +206,28 @@ def update_purchase_orders(country_name=None):
         except VisionException as e:
                 logger.error("{} sync failed, Reason: {}".format(
                     POSynchronizer.__name__, e.message
+                ))
+
+
+@app.task
+def update_tpm_partners(country_name=None):
+    print ('Starting update values for TPM partners')
+    countries = Country.objects.filter(vision_sync_enabled=True)
+    if country_name is not None:
+        countries = countries.filter(name=country_name)
+    for country in countries:
+        connection.set_tenant(country)
+        try:
+            logger.info('Starting TPM partners update for country {}'.format(
+                country.name
+            ))
+            for partner in TPMPartner.objects.all():
+                TPMPartnerSynchronizer(
+                    country=country,
+                    object_number=partner.vendor_number
+                ).sync()
+            logger.info("Update finished successfully for {}".format(country.name))
+        except VisionException as e:
+                logger.error("{} sync failed, Reason: {}".format(
+                    TPMPartnerSynchronizer.__name__, e.message
                 ))

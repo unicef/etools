@@ -7,10 +7,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from activities.serializers import ActivitySerializer
-from partners.models import InterventionResultLink, Intervention, PartnerOrganization
+from partners.models import InterventionResultLink, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from permissions2.serializers import PermissionsBasedSerializerMixin
-from reports.models import Result
 from tpm.models import TPMVisit, TPMActivity, TPMVisitReportRejectComment, TPMActionPoint, \
     TPMPartnerStaffMember
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
