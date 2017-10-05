@@ -54,5 +54,3 @@ class InterventionPartnershipDashView(ListCreateAPIView):
                 response['Content-Disposition'] = "attachment;filename=partnership-dash.csv"
 
         return response
-
-
