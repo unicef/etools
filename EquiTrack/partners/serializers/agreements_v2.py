@@ -82,6 +82,40 @@ class AgreementExportSerializer(serializers.ModelSerializer):
         return 'https://{}/pmp/agreements/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
 
+class AgreementExportFlatSerializer(AgreementExportSerializer):
+
+    attached_agreement_file = serializers.FileField(
+        source="attached_agreement",
+        read_only=True
+    )
+    country_programme_name = serializers.CharField(
+        source='country_programme.name',
+        read_only=True
+    )
+
+    class Meta:
+        model = Agreement
+        fields = (
+            "id",
+            "agreement_number",
+            "attached_agreement_file",
+            "status",
+            "partner_name",
+            "agreement_type",
+            "start",
+            "end",
+            "partner_manager_name",
+            "signed_by_partner_date",
+            "signed_by_name",
+            "signed_by_unicef_date",
+            "staff_members",
+            "amendments",
+            "country_programme_name",
+            "created",
+            "modified",
+        )
+
+
 class AgreementDetailSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
