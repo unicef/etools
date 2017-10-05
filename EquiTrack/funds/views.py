@@ -1,5 +1,3 @@
-import datetime
-
 from django.utils.translation import ugettext as _
 from django.db.models import Q
 from rest_framework import (
@@ -26,8 +24,7 @@ class FRsView(APIView):
         if not values[0]:
             return Response(data={'error': _('Values are required')}, status=status.HTTP_400_BAD_REQUEST)
 
-        today = datetime.datetime.utcnow().date()
-        qs = FundsReservationHeader.objects.filter(end_date__gte=today, fr_number__in=values)
+        qs = FundsReservationHeader.objects.filter(fr_number__in=values)
 
         if intervention_id:
             qs = qs.filter((Q(intervention__id=intervention_id) | Q(intervention__isnull=True)))
