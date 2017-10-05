@@ -1019,6 +1019,12 @@ class Agreement(TimeStampedModel):
         return super(Agreement, self).save()
 
 
+class AgreementAmendmentManager(models.Manager):
+
+    def get_queryset(self):
+        return super(AgreementAmendmentManager, self).get_queryset().select_related('agreement__partner')
+
+
 class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement
@@ -1048,6 +1054,8 @@ class AgreementAmendment(TimeStampedModel):
     signed_date = models.DateField(null=True, blank=True)
 
     tracker = FieldTracker()
+    view_objects = AgreementAmendmentManager()
+    objects = models.Manager()
 
     def __unicode__(self):
         return "{} {}".format(
