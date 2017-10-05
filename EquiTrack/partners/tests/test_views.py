@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import csv
 import datetime
-from datetime import date, timedelta
 from decimal import Decimal
 import json
 from unittest import skip, TestCase
@@ -537,7 +536,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_partners_update_assessments_yesterday(self):
-        completed_date = datetime.date.today() - timedelta(days=1)
+        completed_date = datetime.date.today() - datetime.timedelta(days=1)
         assessments = [{
                 "id": self.assessment2.id,
                 "completed_date": completed_date,
@@ -587,7 +586,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.data["staff_members"][1]["phone"], None)
 
     def test_api_partners_update_assessments_tomorrow(self):
-        completed_date = datetime.date.today() + timedelta(days=1)
+        completed_date = datetime.date.today() + datetime.timedelta(days=1)
         assessments = [{
                 "id": self.assessment2.id,
                 "completed_date": completed_date,
@@ -1015,8 +1014,8 @@ class TestAgreementAPIView(APITenantTestCase):
 
         today = datetime.date.today()
         self.country_programme = CountryProgrammeFactory(
-            from_date=date(today.year - 1, 1, 1),
-            to_date=date(today.year + 1, 1, 1))
+            from_date=datetime.date(today.year - 1, 1, 1),
+            to_date=datetime.date(today.year + 1, 1, 1))
 
         attached_agreement = "agreement.pdf"
         self.agreement = AgreementFactory(
@@ -1071,7 +1070,7 @@ class TestAgreementAPIView(APITenantTestCase):
         for r in response_json:
             self.assertEqual(r['end'], self.country_programme.to_date.isoformat())
 
-        self.country_programme.to_date = self.country_programme.to_date + timedelta(days=1)
+        self.country_programme.to_date = self.country_programme.to_date + datetime.timedelta(days=1)
         self.country_programme.save()
         response = self.forced_auth_req(
             'get',
