@@ -31,6 +31,7 @@ from EquiTrack.factories import (
     GroupFactory,
     SectionFactory,
     InterventionFactory,
+    InterventionReportingPeriodFactory,
     GovernmentInterventionFactory,
     FundsReservationHeaderFactory
 )
@@ -49,6 +50,7 @@ from partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionResultLink,
+    InterventionReportingPeriod,
     FileType,
     PartnerOrganization,
     PartnerType,
@@ -1979,6 +1981,153 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.intervention["id"])
+
+
+class TestInterventionReportingPeriodViews(APITenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        # create a staff user in the Partnership Manager group
+        cls.user = UserFactory(is_staff=True)
+        cls.user.groups.add(GroupFactory())
+        cls.intervention = InterventionFactory()
+        cls.list_url = reverse('partners_api:intervention-reporting-periods-list', args=[cls.intervention.pk])
+        cls.num_periods = 3
+        InterventionReportingPeriodFactory.create_batch(cls.num_periods, intervention=cls.intervention)
+        cls.params = {
+            'start_date': datetime.date.today(),
+            'end_date': datetime.date.today() + datetime.timedelta(days=1),
+            'due_date': datetime.date.today() + datetime.timedelta(days=2),
+            'intervention': cls.intervention.pk,
+        }
+        cls.reporting_period = InterventionReportingPeriod.objects.first()
+        cls.detail_url = reverse('partners_api:intervention-reporting-periods-detail',
+                                 args=[cls.reporting_period.pk])
+
+    # List
+
+    def test_list(self):
+        response = self.forced_auth_req('get', self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(len(data), self.num_periods)
+        # check that our keys match our expectation
+        self.assertEqual(set(data[0]), {'start_date', 'end_date', 'due_date', 'intervention'})
+        self.assertEqual(data[0]['intervention'], self.intervention.pk)
+
+    def test_list_empty(self):
+        InterventionReportingPeriod.objects.all().delete()
+        response = self.forced_auth_req('get', self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data, [])
+
+    def test_list_only_our_intervention_periods(self):
+        other_intervention = InterventionReportingPeriodFactory()
+        response = self.forced_auth_req('get', self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        # only ``num_periods`` items are retrieved ...
+        self.assertEqual(len(data), self.num_periods)
+        for period in data:
+            # ... and other_intervention isn't in there
+            self.assertNotEqual(period['intervention'], other_intervention.pk)
+
+    # Create
+
+    def test_create(self):
+        response = self.forced_auth_req('post', self.list_url, data=self.params)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+        for key in ['start_date', 'end_date', 'due_date', 'intervention']:
+            self.assertEqual(str(data[key]), str(self.params[key]))
+
+    def test_create_required_fields(self):
+        params = {}
+        response = self.forced_auth_req('post', self.list_url, data=params)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = json.loads(response.content)
+        for key in ['start_date', 'end_date', 'due_date', 'intervention']:
+            self.assertEqual(data[key], ["This field is required."])
+
+    def test_create_start_must_be_before_end(self):
+        self.params['end_date'] = self.params['start_date']
+        response = self.forced_auth_req('post', self.list_url, data=self.params)
+        self.assertContains(response, 'end_date must be after start_date',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+
+    def test_create_end_must_be_before_due(self):
+        self.params['due_date'] = self.params['end_date']
+        response = self.forced_auth_req('post', self.list_url, data=self.params)
+        self.assertContains(response, 'due_date must be after end_date',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+
+    def test_create_start_must_be_before_due(self):
+        self.params['due_date'] = self.params['start_date']
+        response = self.forced_auth_req('post', self.list_url, data=self.params)
+        self.assertContains(response, 'due_date must be after end_date',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+
+    # Get
+
+    def test_get(self):
+        response = self.forced_auth_req('get', self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(set(data.keys()),
+                         {'intervention', 'start_date', 'end_date', 'due_date'})
+
+    def test_get_404(self):
+        nonexistent_pk = 0
+        url = reverse('partners_api:intervention-reporting-periods-detail',
+                      args=[nonexistent_pk])
+        response = self.forced_auth_req('get', url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    # Patch
+
+    def test_patch(self):
+        params = {
+            'due_date': self.reporting_period.due_date + datetime.timedelta(days=1)
+        }
+        response = self.forced_auth_req('patch', self.detail_url, data=params)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data['due_date'], str(params['due_date']))
+
+    def test_patch_change_multiple_fields(self):
+        params = {
+            'end_date': self.reporting_period.end_date + datetime.timedelta(days=1),
+            'due_date': self.reporting_period.due_date + datetime.timedelta(days=1),
+        }
+        response = self.forced_auth_req('patch', self.detail_url, data=params)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data['end_date'], str(params['end_date']))
+        self.assertEqual(data['due_date'], str(params['due_date']))
+
+    def test_patch_order_must_still_be_valid(self):
+        params = {
+            'end_date': self.reporting_period.start_date
+        }
+        response = self.forced_auth_req('patch', self.detail_url, data=params)
+        self.assertContains(response, 'end_date must be after start_date',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+
+    def test_patch_cannot_change_intervention(self):
+        new_intervention = InterventionFactory()
+        params = {
+            'intervention': new_intervention.pk
+        }
+        response = self.forced_auth_req('patch', self.detail_url, data=params)
+        self.assertContains(response, 'Cannot change the intervention',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+
+    # Delete
+
+    def test_delete(self):
+        response = self.forced_auth_req('delete', self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class TestPartnershipDashboardView(APITenantTestCase):

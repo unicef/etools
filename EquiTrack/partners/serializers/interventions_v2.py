@@ -21,6 +21,7 @@ from partners.models import (
     # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
     InterventionResultLink,
+    InterventionReportingPeriod,
 )
 from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
@@ -281,6 +282,38 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
         ll_results = self.context.pop('ll_results', [])
         self.update_ll_results(instance, ll_results)
         return super(InterventionResultCUSerializer, self).update(instance, validated_data)
+
+
+class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReportingPeriod
+        fields = ('intervention', 'start_date', 'end_date', 'due_date')
+
+    def validate_intervention(self, value):
+        """
+        Changing the intervention is not allowed. Users should delete this
+        reporting period and create a new one associated with the desired
+        intervention.
+        """
+        if self.instance and value != self.instance.intervention:
+            raise ValidationError(
+                'Cannot change the intervention that this reporting period is associated with.')
+        return value
+
+    def validate(self, data):
+        """
+        Validate that start_date < end_date < due_date.
+        """
+        # If we're creating, we'll have all these values in ``data``. If we're
+        # patching, we might not, so get missing values from the existing DB instance
+        start_date = data.get('start_date') or self.instance.start_date
+        end_date = data.get('end_date') or self.instance.end_date
+        due_date = data.get('due_date') or self.instance.due_date
+        if start_date >= end_date:
+            raise ValidationError('end_date must be after start_date')
+        if end_date >= due_date:
+            raise ValidationError('due_date must be after end_date')
+        return data
 
 
 class FundingCommitmentNestedSerializer(serializers.ModelSerializer):

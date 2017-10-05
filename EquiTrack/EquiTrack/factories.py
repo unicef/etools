@@ -223,6 +223,17 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     in_kind_amount_local = 10.00
 
 
+class InterventionReportingPeriodFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionReportingPeriod
+
+    intervention = factory.SubFactory(InterventionFactory)
+    start_date = factory.fuzzy.FuzzyDate(date(date.today().year, 1, 1))
+    # use LazyAttribute to make sure that start_date, end_date and due_date are in order
+    end_date = factory.LazyAttribute(lambda o: o.start_date + timedelta(days=3))
+    due_date = factory.LazyAttribute(lambda o: o.end_date + timedelta(days=3))
+
+
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.ResultType

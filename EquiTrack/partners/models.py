@@ -1795,6 +1795,29 @@ class InterventionAttachment(TimeStampedModel):
         return self.attachment.name
 
 
+@python_2_unicode_compatible
+class InterventionReportingPeriod(TimeStampedModel):
+    """
+    Represents a set of 3 dates associated with an Intervention (start, end,
+    and due).
+
+    There can be multiple sets of these dates for each intervention, but
+    within each set, start < end < due.
+    """
+    intervention = models.ForeignKey(Intervention, related_name='reporting_periods')
+    start_date = models.DateField(verbose_name='Reporting Period Start Date')
+    end_date = models.DateField(verbose_name='Reporting Period End Date')
+    due_date = models.DateField(verbose_name='Report Due Date')
+
+    class Meta:
+        ordering = ['-created']
+
+    def __str__(self):
+        return '%s (%s-%s) due on %s' % (
+            self.intervention, self.start_date, self.end_date, self.due_date
+        )
+
+
 # TODO intervention sector locations cleanup
 class InterventionSectorLocationLink(models.Model):
     intervention = models.ForeignKey(Intervention, related_name='sector_locations')
