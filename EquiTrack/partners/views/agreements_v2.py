@@ -23,6 +23,7 @@ from partners.models import (
 from partners.serializers.agreements_v2 import (
     AgreementListSerializer,
     AgreementExportSerializer,
+    AgreementExportFlatSerializer,
     AgreementCreateUpdateSerializer,
     AgreementDetailSerializer,
     AgreementAmendmentCreateUpdateSerializer
@@ -31,6 +32,7 @@ from partners.serializers.agreements_v2 import (
 from partners.filters import PartnerScopeFilter
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 
+from partners.exports_flat import AgreementCvsFlatRenderer
 from partners.exports_v2 import AgreementCvsRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.agreements import AgreementValid
@@ -44,7 +46,11 @@ class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
     serializer_class = AgreementListSerializer
     filter_backends = (PartnerScopeFilter,)
     permission_classes = (PartneshipManagerPermission,)
-    renderer_classes = (r.JSONRenderer, AgreementCvsRenderer)
+    renderer_classes = (
+        r.JSONRenderer,
+        AgreementCvsRenderer,
+        AgreementCvsFlatRenderer,
+    )
 
     SERIALIZER_MAP = {
         'amendments': AgreementAmendmentCreateUpdateSerializer
@@ -59,6 +65,8 @@ class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return AgreementExportSerializer
+                if query_params.get("format") == 'csv_flat':
+                    return AgreementExportFlatSerializer
             return AgreementListSerializer
         elif self.request.method == "POST":
             return AgreementCreateUpdateSerializer
@@ -102,7 +110,7 @@ class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
         query_params = self.request.query_params
         response = super(AgreementListAPIView, self).list(request)
         if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
+            if query_params.get("format") in ['csv', 'csv_flat']:
                 response['Content-Disposition'] = "attachment;filename=agreements.csv"
 
         return response
