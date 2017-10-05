@@ -27,6 +27,7 @@ from partners.models import (
     Assessment,
 )
 from partners.serializers.partner_organization_v2 import (
+    PartnerOrganizationExportFlatSerializer,
     PartnerOrganizationExportSerializer,
     PartnerOrganizationListSerializer,
     PartnerOrganizationDetailSerializer,
@@ -40,6 +41,7 @@ from partners.serializers.partner_organization_v2 import (
 from t2f.models import TravelActivity
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
+from partners.exports_flat import PartnerOrganizationCsvFlatRenderer
 from partners.exports_v2 import PartnerOrganizationCsvRenderer, PartnerOrganizationHactCsvRenderer
 
 
@@ -52,7 +54,11 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     serializer_class = PartnerOrganizationListSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, PartnerOrganizationCsvRenderer)
+    renderer_classes = (
+        r.JSONRenderer,
+        PartnerOrganizationCsvRenderer,
+        PartnerOrganizationCsvFlatRenderer
+    )
 
     def get_serializer_class(self, format=None):
         """
@@ -63,6 +69,8 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return PartnerOrganizationExportSerializer
+                if query_params.get("format") == 'csv_flat':
+                    return PartnerOrganizationExportFlatSerializer
             if "verbosity" in query_params.keys():
                 if query_params.get("verbosity") == 'minimal':
                     return MinimalPartnerOrganizationListSerializer

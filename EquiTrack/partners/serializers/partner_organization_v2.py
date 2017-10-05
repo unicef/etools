@@ -183,6 +183,60 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
         return "{}".format(obj.partner_type)
 
 
+class HactValuesField(serializers.Field):
+    def to_representation(self, obj):
+        return "\n".join(
+            ["{}: {}".format(x, obj[x]) for x in sorted(list(obj))]
+        )
+
+
+class PartnerOrganizationExportFlatSerializer(PartnerOrganizationExportSerializer):
+    vision_synced = serializers.SerializerMethodField()
+    hidden = serializers.SerializerMethodField()
+    hact_values = HactValuesField()
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            'id',
+            'vendor_number',
+            'marked_for_deletion',
+            'blocked',
+            'vision_synced',
+            'hidden',
+            'organization_full_name',
+            'short_name',
+            'alternate_name',
+            'alternate_id',
+            'description',
+            'partner_type',
+            'shared_with',
+            'shared_partner',
+            'hact_values',
+            'address',
+            'street_address',
+            'city',
+            'postal_code',
+            'country',
+            'email_address',
+            'phone_number',
+            'risk_rating',
+            'type_of_assessment',
+            'date_assessed',
+            'actual_cash_transfer_for_cp',
+            'actual_cash_transfer_for_current_year',
+            'staff_members',
+            'date_last_assessment_against_core_values',
+            'assessments',
+        )
+
+    def get_vision_synced(self, obj):
+        return "Yes" if obj.vision_synced else "No"
+
+    def get_hidden(self, obj):
+        return "Yes" if obj.hidden else "No"
+
+
 class AssessmentDetailSerializer(serializers.ModelSerializer):
 
     report_file = serializers.FileField(source='report', read_only=True)
