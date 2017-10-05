@@ -13,6 +13,7 @@ from EquiTrack.factories import (
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
+
 class TestPartnerModelExport(APITenantTestCase):
     def setUp(self):
         super(TestPartnerModelExport, self).setUp()
@@ -37,7 +38,7 @@ class TestPartnerModelExport(APITenantTestCase):
         )
         self.partnerstaff = PartnerStaffFactory(partner=self.partner)
 
-    def test_partners_export_api(self):
+    def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
             '/api/v2/partners/',
@@ -96,4 +97,90 @@ class TestPartnerModelExport(APITenantTestCase):
             ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
                        for sm in self.partner.staff_members.filter(active=True).all()]),
             u'https://testserver/pmp/partners/{}/details/'.format(self.partner.id)
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            'Id',
+            'Vendor Number',
+            'Organizations Full Name',
+            'Short Name',
+            'Alternate Name',
+            'Alternate Id',
+            'Description',
+            'Partner Type',
+            'Shared Partner',
+            'Shared Partner (old)',
+            'HACT',
+            'Address',
+            'Street Address',
+            'City',
+            'Postal Code',
+            'Country',
+            'Phone Number',
+            'Email Address',
+            'Risk Rating',
+            'Date Last Assessed Against Core Values',
+            'Actual Cash Transfer for CP (USD)',
+            'Actual Cash Transfer for Current Year (USD)',
+            'Marked for Deletion',
+            'Blocked',
+            'Vision Synced',
+            'Hidden',
+            'Assessment Type',
+            'Date Assessed',
+            'Assessment Type (Date Assessed)',
+            'Staff Members',
+        ])
+        deleted_flag = "Yes" if self.partner.deleted_flag else "No"
+        blocked = "Yes" if self.partner.blocked else "No"
+        vision_synced = "Yes" if self.partner.vision_synced else "No"
+        hidden = "Yes" if self.partner.hidden else "No"
+
+        exported_partner_organization = dataset[0]
+        self.assertEqual(exported_partner_organization, (
+            '{}'.format(self.partner.pk),
+            self.partner.vendor_number,
+            unicode(self.partner.name),
+            self.partner.short_name,
+            self.partner.alternate_name,
+            u'',
+            u'',
+            "{}".format(self.partner.partner_type),
+            u', '.join([x for x in self.partner.shared_with]),
+            self.partner.shared_partner,
+            "\n".join(
+                ["{}: {}".format(x, self.partner.hact_values[x])
+                 for x in sorted(list(self.partner.hact_values))]
+            ),
+            self.partner.address,
+            u'',
+            u'',
+            u'',
+            u'',
+            self.partner.phone_number,
+            self.partner.email,
+            self.partner.rating,
+            u'{}'.format(self.partner.core_values_assessment_date),
+            u'{:.2f}'.format(self.partner.total_ct_cp),
+            u'{:.2f}'.format(self.partner.total_ct_cy),
+            deleted_flag,
+            blocked,
+            vision_synced,
+            hidden,
+            self.partner.type_of_assessment,
+            u'{}'.format(self.partner.last_assessment_date),
+            u'',
+            ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
+                       for sm in self.partner.staff_members.filter(active=True).all()]),
         ))
