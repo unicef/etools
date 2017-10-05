@@ -36,7 +36,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     last_pv_date = serializers.SerializerMethodField()
 
     def get_disbursement_percent(self, obj):
-        percent = obj.total_frs["total_frs_amt"] / obj.total_frs["total_actual_amt"] * 100 \
+        percent = obj.total_frs["total_actual_amt"] / obj.total_frs["total_frs_amt"] * 100 \
             if obj.total_frs["total_actual_amt"] > 0 else 0
         return "%.1f" % percent
 
