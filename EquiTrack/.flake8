@@ -1,9 +1,14 @@
 [flake8]
 max-line-length = 120
+
+# Don't include inline comments in the exclude list. It might break the
+# exclude list on CircleCI due to a bad interaction between flake8 and
+# the 'future' library
+# https://gitlab.com/pycqa/flake8/issues/221
+# https://github.com/danicarrion/pyrestcli/issues/20
+
 exclude =
-    # ignore auto-generated code
     migrations,
-    # ignore data files
     load_initial_data.py,
     publics/management/commands/xml,
     t2f/management/commands/et2f_init.py,
