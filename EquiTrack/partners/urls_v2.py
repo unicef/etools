@@ -9,6 +9,7 @@ from partners.views.partner_organization_v2 import (
     PartnerOrganizationDeleteView, PartnerAuthorizedOfficersListAPIVIew
 )
 from partners.views.agreements_v2 import (
+    AgreementAmendmentListAPIView,
     AgreementListAPIView,
     AgreementDetailAPIView,
     AgreementAmendmentDeleteView,
@@ -37,6 +38,10 @@ urlpatterns = (
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
     url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(), name='agreement-detail'),
     url(r'^agreements/(?P<agr>\d+)/generate_doc/$', PCAPDFView.as_view(), name='pca_pdf'),
+    url(r'^agreements/amendments/$',
+        view=AgreementAmendmentListAPIView.as_view(),
+        name='agreement-amendment-list'
+    ),
     url(r'^agreements/amendments/(?P<pk>\d+)/$',
         view=AgreementAmendmentDeleteView.as_view(http_method_names=['delete']),
         name='agreement-amendment-del'),

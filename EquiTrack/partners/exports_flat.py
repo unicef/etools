@@ -45,3 +45,27 @@ class AgreementCvsFlatRenderer(BaseCvsFlatRenderer):
         "created": "Created",
         "modified": "Modified",
     }
+
+
+class AgreementAmendmentCvsFlatRenderer(BaseCvsFlatRenderer):
+    header = [
+        "id",
+        "number",
+        "agreement_number",
+        "signed_amendment_file",
+        "types",
+        "signed_date",
+        "created",
+        "modified",
+    ]
+
+    labels = {
+        "id": "Id",
+        "number": "Number",
+        "agreement_number": "Reference Number",
+        "signed_amendment_file": "Signed Amendment",
+        "types": "Types",
+        "signed_date": "Signed Date",
+        "created": "Created",
+        "modified": "Modified",
+    }

@@ -11,6 +11,7 @@ from rest_framework.serializers import ValidationError
 
 from rest_framework_csv import renderers as r
 from rest_framework.generics import (
+    ListAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
@@ -21,6 +22,9 @@ from partners.models import (
     AgreementAmendment,
 )
 from partners.serializers.agreements_v2 import (
+    AgreementAmendmentListSerializer,
+    AgreementAmendmentExportSerializer,
+    AgreementAmendmentExportFlatSerializer,
     AgreementListSerializer,
     AgreementExportSerializer,
     AgreementExportFlatSerializer,
@@ -32,8 +36,14 @@ from partners.serializers.agreements_v2 import (
 from partners.filters import PartnerScopeFilter
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 
-from partners.exports_flat import AgreementCvsFlatRenderer
-from partners.exports_v2 import AgreementCvsRenderer
+from partners.exports_flat import (
+    AgreementCvsFlatRenderer,
+    AgreementAmendmentCvsFlatRenderer,
+)
+from partners.exports_v2 import (
+    AgreementCvsRenderer,
+    AgreementAmendmentCvsRenderer,
+)
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.agreements import AgreementValid
 
@@ -178,6 +188,65 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             instance = self.get_object()
 
         return Response(AgreementDetailSerializer(instance, context=self.get_serializer_context()).data)
+
+
+class AgreementAmendmentListAPIView(ListAPIView):
+    """Returns a list of Agreement Amendments"""
+    serializer_class = AgreementAmendmentListSerializer
+    filter_backends = (PartnerScopeFilter,)
+    permission_classes = (PartneshipManagerPermission, )
+    renderer_classes = (
+        r.JSONRenderer,
+        AgreementAmendmentCvsRenderer,
+        AgreementAmendmentCvsFlatRenderer,
+    )
+
+    def get_serializer_class(self, format=None):
+        """
+        Use restricted field set for listing
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return AgreementAmendmentExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return AgreementAmendmentExportFlatSerializer
+        return AgreementAmendmentListSerializer
+
+    def get_queryset(self, format=None):
+        q = AgreementAmendment.view_objects
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+
+            if "agreement_number" in query_params.keys():
+                queries.append(Q(agreement__agreement_number=query_params.get("agreement_number")))
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(number__icontains=query_params.get("search")) |
+                    Q(agreement__agreement_number__icontains=query_params.get("search"))
+                )
+
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+            else:
+                q = q.all()
+        return q
+
+    def list(self, request, partner_pk=None, format=None):
+        """
+            Checks for format query parameter
+            :returns: JSON or CSV file
+        """
+        query_params = self.request.query_params
+        response = super(AgreementAmendmentListAPIView, self).list(request)
+        if "format" in query_params.keys():
+            if query_params.get("format") in ['csv', 'csv_flat']:
+                response['Content-Disposition'] = "attachment;filename=agreement_amendments.csv"
+
+        return response
 
 
 class AgreementAmendmentDeleteView(DestroyAPIView):

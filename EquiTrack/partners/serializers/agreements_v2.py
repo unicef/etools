@@ -24,6 +24,61 @@ class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class AgreementAmendmentListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AgreementAmendment
+        fields = "__all__"
+
+
+class AmendmentTypeField(serializers.Field):
+    def get_attribute(self, obj):
+        return obj
+
+    def to_representation(self, obj):
+        return ", ".join(obj.types)
+
+
+class AgreementAmendmentExportSerializer(serializers.ModelSerializer):
+
+    agreement_number = serializers.CharField(
+        source="agreement.agreement_number",
+        read_only=True
+    )
+    types = AmendmentTypeField()
+
+    class Meta:
+        model = AgreementAmendment
+        fields = (
+            "number",
+            "agreement_number",
+            "signed_amendment",
+            "types",
+            "signed_date",
+        )
+
+
+class AgreementAmendmentExportFlatSerializer(AgreementAmendmentExportSerializer):
+
+    signed_amendment_file = serializers.FileField(
+        source="signed_amendment",
+        read_only=True
+    )
+
+    class Meta:
+        model = AgreementAmendment
+        fields = (
+            "id",
+            "number",
+            "agreement_number",
+            "signed_amendment_file",
+            "types",
+            "signed_date",
+            "created",
+            "modified",
+        )
+
+
 class AgreementListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)

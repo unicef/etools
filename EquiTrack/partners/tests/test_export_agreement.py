@@ -7,6 +7,7 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from EquiTrack.factories import (
+    AgreementAmendmentFactory,
     AgreementFactory,
     CountryProgrammeFactory,
     PartnerFactory,
@@ -16,9 +17,9 @@ from EquiTrack.factories import (
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
-class TestAgreementModelExport(APITenantTestCase):
+class BaseAgreementModelExportTestCase(APITenantTestCase):
     def setUp(self):
-        super(TestAgreementModelExport, self).setUp()
+        super(BaseAgreementModelExportTestCase, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         partner = PartnerFactory(
             partner_type='Government',
@@ -52,6 +53,9 @@ class TestAgreementModelExport(APITenantTestCase):
         )
         self.agreement.authorized_officers.add(partnerstaff)
         self.agreement.save()
+
+
+class TestAgreementModelExport(BaseAgreementModelExportTestCase):
 
     def test_csv_export_api(self):
         response = self.forced_auth_req(
@@ -158,3 +162,86 @@ class TestAgreementModelExport(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
+    def setUp(self):
+        super(TestAgreementAmendmentModelExport, self).setUp()
+        attachment = tempfile.NamedTemporaryFile(suffix=".pdf").name
+        self.amendment = AgreementAmendmentFactory(
+            agreement=self.agreement,
+            signed_amendment=attachment,
+            signed_date=datetime.date.today(),
+        )
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/amendments/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/amendments/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            'Number',
+            'Reference Number',
+            'Signed Amendment',
+            'Types',
+            'Signed Date',
+        ])
+
+        exported_agreement = dataset[0]
+        self.assertEqual(exported_agreement, (
+            self.amendment.number,
+            self.agreement.agreement_number,
+            'http://testserver{}'.format(self.amendment.signed_amendment.url),
+            ', '.join(self.amendment.types),
+            '{}'.format(self.amendment.signed_date),
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/amendments/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            'Id',
+            'Number',
+            'Reference Number',
+            'Signed Amendment',
+            'Types',
+            'Signed Date',
+            'Created',
+            'Modified',
+        ])
+
+        exported_agreement = dataset[0]
+        self.assertEqual(exported_agreement, (
+            '{}'.format(self.amendment.pk),
+            self.amendment.number,
+            self.agreement.agreement_number,
+            'http://testserver{}'.format(self.amendment.signed_amendment.url),
+            ', '.join(self.amendment.types),
+            '{}'.format(self.amendment.signed_date),
+            '{}'.format(self.amendment.created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
+            '{}'.format(self.amendment.modified.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
+        ))
