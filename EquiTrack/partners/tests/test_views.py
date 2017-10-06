@@ -2070,7 +2070,8 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         self.assertContains(response, 'due_date must be on or after end_date',
                             status_code=status.HTTP_400_BAD_REQUEST)
 
-    def set_date_order_and_create(self, old_start_order, old_end_order, new_start_order, new_end_order, expected_status):
+    def set_date_order_and_create(self, old_start_order, old_end_order, new_start_order, new_end_order,
+                                  expected_status):
         InterventionReportingPeriod.objects.all().delete()
         day_0 = datetime.date.today()
         days = [
@@ -2084,7 +2085,9 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         old_end = days[old_end_order]
         new_start = days[new_start_order]
         new_end = days[new_end_order]
-        old = InterventionReportingPeriodFactory(
+
+        # create the existing instance (old)
+        InterventionReportingPeriodFactory(
             intervention=self.intervention, due_date=due_date,
             start_date=old_start, end_date=old_end,
         )
