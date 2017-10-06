@@ -28,6 +28,7 @@ from partners.models import (
 )
 from partners.permissions import ListCreateAPIMixedPermission
 from partners.serializers.partner_organization_v2 import (
+    AssessmentDetailSerializer,
     PartnerOrganizationExportFlatSerializer,
     PartnerOrganizationExportSerializer,
     PartnerOrganizationListSerializer,
@@ -35,16 +36,24 @@ from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationCreateUpdateSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
+    PartnerStaffMemberExportFlatSerializer,
+    PartnerStaffMemberExportSerializer,
     PartnerOrganizationHactSerializer,
-    AssessmentDetailSerializer,
     MinimalPartnerOrganizationListSerializer,
 )
 from partners.views.helpers import set_tenant_or_fail
 from t2f.models import TravelActivity
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 from partners.filters import PartnerScopeFilter
-from partners.exports_flat import PartnerOrganizationCsvFlatRenderer
-from partners.exports_v2 import PartnerOrganizationCsvRenderer, PartnerOrganizationHactCsvRenderer
+from partners.exports_flat import (
+    PartnerOrganizationCsvFlatRenderer,
+    PartnerStaffMemberCsvFlatRenderer,
+)
+from partners.exports_v2 import (
+    PartnerOrganizationCsvRenderer,
+    PartnerOrganizationHactCsvRenderer,
+    PartnerStaffMemberCsvRenderer,
+)
 
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):
@@ -234,6 +243,26 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        PartnerStaffMemberCsvRenderer,
+        PartnerStaffMemberCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self, format=None):
+        """
+        Use restriceted field set for listing
+        """
+        if self.request.method == "GET":
+            query_params = self.request.query_params
+            if "format" in query_params.keys():
+                if query_params.get("format") == 'csv':
+                    return PartnerStaffMemberExportSerializer
+                if query_params.get("format") == 'csv_flat':
+                    return PartnerStaffMemberExportFlatSerializer
+        if self.request.method == "POST":
+            return PartnerStaffMemberCreateUpdateSerializer
+        return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
 
 
 class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
