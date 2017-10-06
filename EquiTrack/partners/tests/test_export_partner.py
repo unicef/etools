@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
 
 import datetime
+import tempfile
 
 from rest_framework import status
 from tablib.core import Dataset
 
 from EquiTrack.factories import (
+    AssessmentFactory,
     PartnerFactory,
     PartnerStaffFactory,
     UserFactory,
@@ -274,4 +276,116 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
             self.partnerstaff.email,
             u"",
             active,
+        ))
+
+
+class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
+    def setUp(self):
+        super(TestPartnerOrganizationAssessmentModelExport, self).setUp()
+        report = tempfile.NamedTemporaryFile(suffix=".pdf").name
+        self.assessment = AssessmentFactory(
+            partner=self.partner,
+            report=report
+        )
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/assessments/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/assessments/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Partner Name",
+            "Type",
+            "Other Agencies",
+            "Expected Budget",
+            "Notes",
+            "Date Requested",
+            "Requesting Officer",
+            "Approving Officer",
+            "Date Planned",
+            "Date Completed",
+            "Rating",
+            "Report File",
+            "Current",
+        ])
+        current = "Yes" if self.assessment.current else "No"
+
+        assessment = dataset[0]
+        self.assertEqual(assessment, (
+            self.assessment.partner.name,
+            self.assessment.type,
+            self.assessment.names_of_other_agencies,
+            u"{}".format(self.assessment.expected_budget),
+            self.assessment.notes,
+            u"{}".format(self.assessment.requested_date),
+            self.assessment.requesting_officer.email,
+            self.assessment.approving_officer.email,
+            u"{}".format(self.assessment.planned_date),
+            u"{}".format(self.assessment.completed_date),
+            self.assessment.rating,
+            'http://testserver{}'.format(self.assessment.report.url),
+            current,
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/assessments/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Id",
+            "Partner Name",
+            "Type",
+            "Other Agencies",
+            "Expected Budget",
+            "Notes",
+            "Date Requested",
+            "Requesting Officer",
+            "Approving Officer",
+            "Date Planned",
+            "Date Completed",
+            "Rating",
+            "Report File",
+            "Current",
+        ])
+        current = "Yes" if self.assessment.current else "No"
+
+        assessment = dataset[0]
+        self.assertEqual(assessment, (
+            u"{}".format(self.assessment.pk),
+            self.assessment.partner.name,
+            self.assessment.type,
+            self.assessment.names_of_other_agencies,
+            u"{}".format(self.assessment.expected_budget),
+            self.assessment.notes,
+            u"{}".format(self.assessment.requested_date),
+            self.assessment.requesting_officer.email,
+            self.assessment.approving_officer.email,
+            u"{}".format(self.assessment.planned_date),
+            u"{}".format(self.assessment.completed_date),
+            self.assessment.rating,
+            'http://testserver{}'.format(self.assessment.report.url),
+            current,
         ))

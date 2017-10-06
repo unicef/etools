@@ -28,6 +28,8 @@ from partners.models import (
 )
 from partners.serializers.partner_organization_v2 import (
     AssessmentDetailSerializer,
+    AssessmentExportFlatSerializer,
+    AssessmentExportSerializer,
     PartnerOrganizationExportFlatSerializer,
     PartnerOrganizationExportSerializer,
     PartnerOrganizationListSerializer,
@@ -44,10 +46,12 @@ from t2f.models import TravelActivity
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
 from partners.exports_flat import (
+    AssessmentCsvFlatRenderer,
     PartnerOrganizationCsvFlatRenderer,
     PartnerStaffMemberCsvFlatRenderer,
 )
 from partners.exports_v2 import (
+    AssessmentCsvRenderer,
     PartnerOrganizationCsvRenderer,
     PartnerOrganizationHactCsvRenderer,
     PartnerStaffMemberCsvRenderer,
@@ -268,6 +272,33 @@ class PartnerAuthorizedOfficersListAPIVIew(ListAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter, )
+
+
+class PartnerOrganizationAssessmentListView(ListAPIView):
+    """
+    Returns a list of all Partner staff members
+    """
+    queryset = Assessment.objects.all()
+    serializer_class = AssessmentDetailSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        AssessmentCsvRenderer,
+        AssessmentCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self, format=None):
+        """
+        Use restriceted field set for listing
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return AssessmentExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return AssessmentExportFlatSerializer
+        return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
 
 
 class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):

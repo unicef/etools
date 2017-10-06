@@ -4,9 +4,15 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from partners.views.dashboards import InterventionPartnershipDashView
 from partners.views.v1 import PCAPDFView
 from partners.views.partner_organization_v2 import (
-    PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView, PartnerStaffMemberListAPIVIew,
-    PartnerOrganizationHactAPIView, PartnerOrganizationAssessmentDeleteView, PartnerOrganizationAddView,
-    PartnerOrganizationDeleteView, PartnerAuthorizedOfficersListAPIVIew
+    PartnerAuthorizedOfficersListAPIVIew,
+    PartnerOrganizationAddView,
+    PartnerOrganizationAssessmentDeleteView,
+    PartnerOrganizationAssessmentListView,
+    PartnerOrganizationDeleteView,
+    PartnerOrganizationDetailAPIView,
+    PartnerOrganizationHactAPIView,
+    PartnerOrganizationListAPIView,
+    PartnerStaffMemberListAPIVIew,
 )
 from partners.views.agreements_v2 import (
     AgreementAmendmentListAPIView,
@@ -61,6 +67,9 @@ urlpatterns = (
     url(r'^partners/delete/(?P<pk>\d+)/$',
         view=PartnerOrganizationDeleteView.as_view(http_method_names=['delete']),
         name='partner-delete'),
+    url(r'^partners/assessments/$',
+        view=PartnerOrganizationAssessmentListView.as_view(http_method_names=['get', ]),
+        name='partner-assessment'),
     url(r'^partners/assessments/(?P<pk>\d+)/$',
         view=PartnerOrganizationAssessmentDeleteView.as_view(http_method_names=['delete', ]),
         name='partner-assessment-del'),

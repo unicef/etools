@@ -276,6 +276,38 @@ class AssessmentDetailSerializer(serializers.ModelSerializer):
         return data
 
 
+class AssessmentExportSerializer(AssessmentDetailSerializer):
+    partner = serializers.CharField(source="partner.name")
+    requesting_officer = serializers.CharField(source="requesting_officer.email")
+    approving_officer = serializers.CharField(source="approving_officer.email")
+    current = serializers.SerializerMethodField()
+
+    def get_current(self, obj):
+        return "Yes" if obj.current else "No"
+
+
+class AssessmentExportFlatSerializer(AssessmentExportSerializer):
+
+    class Meta:
+        model = Assessment
+        fields = (
+            "id",
+            "partner",
+            "type",
+            "names_of_other_agencies",
+            "expected_budget",
+            "notes",
+            "requested_date",
+            "requesting_officer",
+            "approving_officer",
+            "planned_date",
+            "completed_date",
+            "rating",
+            "report_file",
+            "current",
+        )
+
+
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
 
     class Meta:

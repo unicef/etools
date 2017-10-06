@@ -184,6 +184,25 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
+class AssessmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.Assessment
+
+    partner = factory.SubFactory(PartnerFactory)
+    type = u"Micro Assessment"
+    names_of_other_agencies = u"WFP"
+    expected_budget = 10000
+    notes = u"Random Notes"
+    requested_date = date.today()
+    requesting_officer = factory.SubFactory(UserFactory)
+    approving_officer = factory.SubFactory(UserFactory)
+    planned_date = date.today()
+    completed_date = date.today()
+    rating = "high"
+    report = factory.django.FileField(filename='test_file.pdf')
+    current = True
+
+
 class PartnershipFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PCA
