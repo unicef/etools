@@ -134,7 +134,7 @@ class EngagementSerializer(EngagementDatesValidation,
                            WritableNestedParentSerializerMixin,
                            EngagementLightSerializer):
     staff_members = SeparatedReadWriteField(
-        read_field=AuditorStaffMemberSerializer(many=True, required=False, label=_('Audit Team Members')),
+        read_field=AuditorStaffMemberSerializer(many=True, required=False, label=_('Audit Staff Team Members')),
     )
     active_pd = SeparatedReadWriteField(
         read_field=InterventionListSerializer(many=True, required=False, label=_('Programme Document(s)')),
