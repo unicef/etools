@@ -33,8 +33,8 @@ from partners.serializers.interventions_v2 import (
     InterventionDetailSerializer,
     InterventionCreateUpdateSerializer,
     InterventionExportSerializer,
+    InterventionExportFlatSerializer,
     InterventionBudgetCUSerializer,
-    PlannedVisitsCUSerializer,
     InterventionAttachmentSerializer,
     InterventionAmendmentCUSerializer,
     InterventionResultCUSerializer,
@@ -42,7 +42,9 @@ from partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
     InterventionResultLinkSimpleCUSerializer,
     InterventionReportingPeriodSerializer,
+    PlannedVisitsCUSerializer,
 )
+from partners.exports_flat import InterventionCvsFlatRenderer
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter, InterventionFilter, \
     AppliedIndicatorsFilter
@@ -60,7 +62,11 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     serializer_class = InterventionListSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, InterventionCvsRenderer)
+    renderer_classes = (
+        r.JSONRenderer,
+        InterventionCvsRenderer,
+        InterventionCvsFlatRenderer,
+    )
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
@@ -79,6 +85,8 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return InterventionExportSerializer
+                if query_params.get("format") == 'csv_flat':
+                    return InterventionExportFlatSerializer
             if "verbosity" in query_params.keys():
                 if query_params.get("verbosity") == 'minimal':
                     return MinimalInterventionListSerializer
@@ -183,7 +191,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
         query_params = self.request.query_params
         response = super(InterventionListAPIView, self).list(request)
         if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
+            if query_params.get("format") in ['csv', "csv_flat"]:
                 response['Content-Disposition'] = "attachment;filename=interventions.csv"
 
         return response

@@ -201,6 +201,13 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
     current = True
 
 
+class FileTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.FileType
+
+    name = partner_models.FileType.PROGRESS_REPORT
+
+
 class InterventionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.Intervention
@@ -235,11 +242,24 @@ class InterventionReportingPeriodFactory(factory.django.DjangoModelFactory):
     due_date = factory.LazyAttribute(lambda o: o.end_date + timedelta(days=3))
 
 
-class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
+class InterventionPlannedVisitFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.InterventionPlannedVisits
 
     intervention = factory.SubFactory(InterventionFactory)
+    year = datetime.today().year
+    programmatic = 1
+    spot_checks = 2
+    audit = 3
+
+
+class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAttachment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    type = factory.Iterator(partner_models.FileType.objects.all())
+    attachment = factory.django.FileField(filename='test_file.pdf')
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
