@@ -1,6 +1,40 @@
 from rest_framework_csv import renderers as r
 
 
+class AssessmentCsvRenderer(r.CSVRenderer):
+    header = [
+        "partner",
+        "type",
+        "names_of_other_agencies",
+        "expected_budget",
+        "notes",
+        "requested_date",
+        "requesting_officer",
+        "approving_officer",
+        "planned_date",
+        "completed_date",
+        "rating",
+        "report_file",
+        "current",
+    ]
+
+    labels = {
+        "partner": "Partner Name",
+        "type": "Type",
+        "names_of_other_agencies": "Other Agencies",
+        "expected_budget": "Expected Budget",
+        "notes": "Notes",
+        "requested_date": "Date Requested",
+        "requesting_officer": "Requesting Officer",
+        "approving_officer": "Approving Officer",
+        "planned_date": "Date Planned",
+        "completed_date": "Date Completed",
+        "rating": "Rating",
+        "report_file": "Report File",
+        "current": "Current",
+    }
+
+
 class PartnerOrganizationCsvRenderer(r.CSVRenderer):
     header = ['vendor_number', 'organization_full_name',
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',

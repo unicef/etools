@@ -5,6 +5,42 @@ class BaseCvsFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
 
+class AssessmentCsvFlatRenderer(BaseCvsFlatRenderer):
+    header = [
+        "id",
+        "partner",
+        "type",
+        "names_of_other_agencies",
+        "expected_budget",
+        "notes",
+        "requested_date",
+        "requesting_officer",
+        "approving_officer",
+        "planned_date",
+        "completed_date",
+        "rating",
+        "report_file",
+        "current",
+    ]
+
+    labels = {
+        "id": "Id",
+        "partner": "Partner Name",
+        "type": "Type",
+        "names_of_other_agencies": "Other Agencies",
+        "expected_budget": "Expected Budget",
+        "notes": "Notes",
+        "requested_date": "Date Requested",
+        "requesting_officer": "Requesting Officer",
+        "approving_officer": "Approving Officer",
+        "planned_date": "Date Planned",
+        "completed_date": "Date Completed",
+        "rating": "Rating",
+        "report_file": "Report File",
+        "current": "Current",
+    }
+
+
 class AgreementCvsFlatRenderer(BaseCvsFlatRenderer):
     header = [
         "id",
