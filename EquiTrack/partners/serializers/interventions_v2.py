@@ -8,7 +8,6 @@ from funds.serializers import FRsSerializer
 from partners.permissions import InterventionPermissions
 from reports.serializers.v1 import SectorLightSerializer
 from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
-from locations.models import Location
 
 from partners.models import (
     InterventionBudget,
@@ -21,7 +20,7 @@ from partners.models import (
     InterventionResultLink,
 )
 from reports.models import LowerResult
-from locations.serializers import LocationLightSerializer
+from locations.serializers import LocationSerializer, LocationLightSerializer
 from funds.models import FundsCommitmentItem, FundsReservationHeader
 
 
@@ -91,6 +90,9 @@ class InterventionListSerializer(serializers.ModelSerializer):
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
     section_names = serializers.SerializerMethodField()
+    locations = serializers.SerializerMethodField()
+    location_names = serializers.SerializerMethodField()
+    cluster_names = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
@@ -117,6 +119,15 @@ class InterventionListSerializer(serializers.ModelSerializer):
     def get_section_names(self, obj):
         return [l.name for l in obj.sections.all()]
 
+    def get_locations(self, obj):
+        return [l.id for l in obj.intervention_locations]
+
+    def get_location_names(self, obj):
+        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
+
+    def get_cluster_names(self, obj):
+        return [c for c in obj.intervention_clusters]
+
     class Meta:
         model = Intervention
         fields = (
@@ -124,7 +135,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
             'sections', 'section_names', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt',
             'frs_total_outstanding_amt', 'offices', 'actual_amount', 'offices_names', 'total_unicef_budget',
-            'total_budget', 'metadata',
+            'total_budget', 'metadata', 'locations', 'location_names', 'cluster_names'
         )
 
 
@@ -321,12 +332,24 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     submitted_to_prc = serializers.ReadOnlyField()
     frs_details = FRsSerializer(source='frs', read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
+    locations = serializers.SerializerMethodField()
+    location_names = serializers.SerializerMethodField()
+    cluster_names = serializers.SerializerMethodField()
 
     def get_permissions(self, obj):
         user = self.context['request'].user
         ps = Intervention.permission_structure()
         permissions = InterventionPermissions(user=user, instance=self.instance, permission_structure=ps)
         return permissions.get_permissions()
+
+    def get_locations(self, obj):
+        return [l.id for l in obj.intervention_locations]
+
+    def get_location_names(self, obj):
+        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
+
+    def get_cluster_names(self, obj):
+        return [c for c in obj.intervention_clusters]
 
     class Meta:
         model = Intervention
@@ -337,7 +360,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
-            "planned_visits", "attachments", 'permissions', 'partner_id', "sections"
+            "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
+            "locations", "location_names", "cluster_names"
         )
 
 
@@ -410,10 +434,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_sections(self, obj):
         return [l.name for l in obj.sections.all()]
 
-    # TODO: needs rewrite after the removal of intervention sector locations and inclusion of indicator locations
     def get_locations(self, obj):
-        ll = Location.objects.filter(intervention_sector_locations__intervention=obj.id).order_by('name')
-        return ', '.join([l.name for l in ll.all()])
+        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
 
     def get_partner_authorized_officer_signatory(self, obj):
         if obj.partner_authorized_officer_signatory:
@@ -509,26 +531,17 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
         )
 
 
-# TODO intervention sector locations cleanup
-class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer):
-    sector = SectorLightSerializer()
-
-    class Meta:
-        model = InterventionSectorLocationLink
-        fields = (
-            'id', 'sector', 'locations'
-        )
-
-
 class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
-    # TODO: remember to add locations as locations
-    # TODO: intervention sector locations cleanup
+    locations = serializers.SerializerMethodField()
+
+    def get_locations(self, obj):
+        return [LocationSerializer().to_representation(l) for l in obj.intervention_locations]
 
     class Meta:
         model = Intervention
         fields = (
             "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
-            "start", "end", "offices", "sections",
+            "start", "end", "offices", "sections", "locations"
         )
