@@ -31,7 +31,6 @@ from .models import (
     Agreement,
     PartnerStaffMember,
     PartnershipBudget,
-    Intervention,
     # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
 )

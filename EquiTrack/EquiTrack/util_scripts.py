@@ -14,7 +14,7 @@ from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, \
-    InterventionResultLink, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
+    InterventionResultLink, InterventionBudget, InterventionAttachment, PCAFile, \
     Agreement, PartnerOrganization, PartnerStaffMember, \
     Assessment
 from t2f.models import TravelActivity
