@@ -111,7 +111,7 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
         if expected_keys is None:
             expected_keys = self.normal_field_names
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
@@ -194,7 +194,7 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
         }
         response = self.forced_auth_req('get', self.url, data=params)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 0)
@@ -225,7 +225,7 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
 
         response = self.forced_auth_req('get', self.url, data={"values": "{},{},{}".format(p1.id, p2.id, unused_id)})
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 2)
@@ -239,7 +239,7 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
     def test_values_negative(self):
         '''Ensure that garbage values are handled properly'''
         response = self.forced_auth_req('get', self.url, data={"values": "banana"})
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
@@ -276,7 +276,7 @@ class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
         '''
         self.assertFalse(self.wrapper_called)
         response = self.forced_auth_req('get', self.url, data={"format": "csv"})
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Ensure my wrapper was called, which tells me that the proper serializer was invoked.
         self.assertTrue(self.wrapper_called)
 
@@ -303,7 +303,7 @@ class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
         '''Exercise passing an unrecognized format.'''
         # This returns 404, it should probably return 400 but anything in the 4xx series gets the point across.
         response = self.forced_auth_req('get', self.url, data={"format": "banana"})
-        self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class TestPartnerOrganizationCreateView(APITenantTestCase):
@@ -319,7 +319,7 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
 
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response. Return the id of the new object.'''
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
         self.assertIn('id', response_json.keys())
@@ -380,6 +380,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             vendor_number="DDD",
             short_name="Short name",
         )
+
         report = "report.pdf"
         self.assessment1 = Assessment.objects.create(
             partner=self.partner,
@@ -669,7 +670,19 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
 
-    def test_api_partners_delete_with_agreements(self):
+    def test_api_partners_delete_with_signed_agreements(self):
+
+        # create draft agreement with partner
+        AgreementFactory(
+            partner=self.partner,
+            signed_by_unicef_date=None,
+            signed_by_partner_date=None,
+            attached_agreement=None,
+            status='draft')
+
+        # should have 1 signed and 1 draft agreement with self.partner
+        self.assertEqual(self.partner.agreements.count(), 2)
+
         response = self.forced_auth_req(
             'delete',
             '/api/v2/partners/delete/{}/'.format(self.partner.id),
@@ -678,6 +691,32 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data[0], "There was a PCA/SSFA signed with this partner or a transaction "
                                            "was performed against this partner. The Partner record cannot be deleted")
+
+    def test_api_partners_delete_with_draft_agreements(self):
+        partner = PartnerFactory(
+            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            cso_type="International",
+            hidden=False,
+            vendor_number="EEE",
+            short_name="Shorter name",
+        )
+
+        # create draft agreement with partner
+        AgreementFactory(
+            partner=partner,
+            signed_by_unicef_date=None,
+            signed_by_partner_date=None,
+            attached_agreement=None,
+            status='draft')
+
+        self.assertEqual(partner.agreements.count(), 1)
+
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/delete/{}/'.format(partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_api_partners_delete(self):
         partner = PartnerFactory()
@@ -915,7 +954,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
             user=self.partnership_manager_user,
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
 
@@ -1073,7 +1112,7 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
         response_json = json.loads(response.rendered_content)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         for r in response_json:
             self.assertEqual(r['end'], self.country_programme.to_date.isoformat())
 
@@ -1086,7 +1125,7 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
         response_json = json.loads(response.rendered_content)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         for r in response_json:
             self.assertEqual(r['end'], self.country_programme.to_date.isoformat())
 
@@ -1230,7 +1269,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
-        # self.assertEquals(response.data[1]["agreement_number"], self.agreement.agreement_number)
+        # self.assertEqual(response.data[1]["agreement_number"], self.agreement.agreement_number)
 
     def test_agreements_update_set_to_active_on_save(self):
         '''Ensure that a draft agreement auto-transitions to signed when saved with signing info'''
@@ -1332,7 +1371,7 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data["amendments"][1]["types"]), 2)
+        self.assertEqual(len(response.data["amendments"][1]["types"]), 2)
 
 
 class TestPartnerStaffMemberAPIView(APITenantTestCase):

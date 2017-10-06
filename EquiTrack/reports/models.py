@@ -2,8 +2,9 @@ from __future__ import unicode_literals
 from datetime import date
 
 from django.db import models, transaction
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
-from django.utils.six import python_2_unicode_compatible
+
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
@@ -55,6 +56,7 @@ class CountryProgrammeManager(models.Manager):
         return self.get_queryset().filter(from_date__lte=today, to_date__gt=today)
 
 
+@python_2_unicode_compatible
 class CountryProgramme(models.Model):
     """
     Represents a country programme cycle
@@ -67,7 +69,7 @@ class CountryProgramme(models.Model):
 
     objects = CountryProgrammeManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return ' '.join([self.name, self.wbs])
 
     @cached_property
@@ -110,6 +112,7 @@ class CountryProgramme(models.Model):
         super(CountryProgramme, self).save(*args, **kwargs)
 
 
+@python_2_unicode_compatible
 class ResultType(models.Model):
     """
     Represents a result type
@@ -126,10 +129,11 @@ class ResultType(models.Model):
     )
     name = models.CharField(max_length=150, unique=True, choices=NAME_CHOICES)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class Sector(models.Model):
     """
     Represents a sector
@@ -158,7 +162,7 @@ class Sector(models.Model):
     class Meta:
         ordering = ['name']
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{} {}'.format(
             self.alternate_id if self.alternate_id else '',
             self.name
@@ -177,6 +181,7 @@ class OutputManager(models.Manager):
             'country_programme', 'result_type')
 
 
+@python_2_unicode_compatible
 class Result(MPTTModel):
     """
     Represents a result, wbs is unique
@@ -247,7 +252,7 @@ class Result(MPTTModel):
     def special(self):
         return self.country_programme.special
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{} {}: {}'.format(
             self.code if self.code else u'',
             self.result_type.name,
@@ -270,6 +275,7 @@ class Result(MPTTModel):
                 node.save()
 
 
+@python_2_unicode_compatible
 class LowerResult(TimeStampedModel):
 
     # Lower result is always an output
@@ -282,7 +288,7 @@ class LowerResult(TimeStampedModel):
     # automatically assigned unless assigned manually in the UI (Lower level WBS - like code)
     code = models.CharField(max_length=50)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{}: {}'.format(
             self.code,
             self.name
@@ -306,6 +312,7 @@ class LowerResult(TimeStampedModel):
         return super(LowerResult, self).save(**kwargs)
 
 
+@python_2_unicode_compatible
 class Goal(models.Model):
     """
     Represents a goal for the humanitarian response plan
@@ -321,10 +328,11 @@ class Goal(models.Model):
         verbose_name = 'CCC'
         ordering = ['name']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class Unit(models.Model):
     """
     Represents an unit of measurement
@@ -334,10 +342,11 @@ class Unit(models.Model):
     class Meta:
         ordering = ['type']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.type
 
 
+@python_2_unicode_compatible
 class IndicatorBlueprint(TimeStampedModel):
     """
     IndicatorBlueprint module is a pattern for indicator
@@ -403,6 +412,9 @@ class IndicatorBlueprint(TimeStampedModel):
 
     class Meta:
         ordering = ['-id']
+
+    def __str__(self):
+        return self.title
 
 
 @python_2_unicode_compatible
@@ -481,6 +493,7 @@ class AppliedIndicator(TimeStampedModel):
         unique_together = (("indicator", "lower_result"),)
 
 
+@python_2_unicode_compatible
 class Indicator(models.Model):
     """
     Represents an indicator
@@ -518,7 +531,7 @@ class Indicator(models.Model):
         ordering = ['-active', 'name']  # active indicators will show up first in the list
         unique_together = (("name", "result", "sector"),)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{}{} {} {}'.format(
             u'' if self.active else u'[Inactive] ',
             self.name,

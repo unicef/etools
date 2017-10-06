@@ -9,7 +9,7 @@ type_mapping = {
     "BILATERAL / MULTILATERAL": u'Bilateral / Multilateral',
     "Civil Society Organization": u'Civil Society Organization',
     "Government": u'Government',
-    "UN AGENCY": u'UN Agency',
+    "UN Agency": u'UN Agency',
 }
 
 cso_type_mapping = {
