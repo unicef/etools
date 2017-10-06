@@ -42,9 +42,9 @@ class TestInterventionsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
     EDITABLE_FIELDS = {
         'draft': ["status", "attachments", "prc_review_document", 'travel_activities',
-                  "partner_authorized_officer_signatory", "partner_focal_points", "distributions", "id",
+                  "partner_authorized_officer_signatory", "partner_focal_points", "id",
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
-                  "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start", "supplies",
+                  "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start",
                   "metadata", "submission_date", "action_object_actions", "agreement", "unicef_signatory_id",
                   "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "actor_actions", "created", "planned_visits",
@@ -156,14 +156,14 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
-        self.assertEquals(response['frs_details']['total_actual_amt'],
-                          float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
-        self.assertEquals(response['frs_details']['total_outstanding_amt'],
-                          float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
-        self.assertEquals(response['frs_details']['total_frs_amt'],
-                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
-        self.assertEquals(response['frs_details']['total_intervention_amt'],
-                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+        self.assertEqual(response['frs_details']['total_actual_amt'],
+                         float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
+        self.assertEqual(response['frs_details']['total_outstanding_amt'],
+                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+        self.assertEqual(response['frs_details']['total_frs_amt'],
+                         float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
+        self.assertEqual(response['frs_details']['total_intervention_amt'],
+                         float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
 
     def test_add_two_valid_frs_on_update_pd(self):
         frs_data = [self.fr_1.id, self.fr_2.id]
@@ -174,14 +174,14 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
-        self.assertEquals(response['frs_details']['total_actual_amt'],
-                          float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
-        self.assertEquals(response['frs_details']['total_outstanding_amt'],
-                          float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
-        self.assertEquals(response['frs_details']['total_frs_amt'],
-                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
-        self.assertEquals(response['frs_details']['total_intervention_amt'],
-                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+        self.assertEqual(response['frs_details']['total_actual_amt'],
+                         float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
+        self.assertEqual(response['frs_details']['total_outstanding_amt'],
+                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+        self.assertEqual(response['frs_details']['total_frs_amt'],
+                         float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
+        self.assertEqual(response['frs_details']['total_intervention_amt'],
+                         float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
 
     def test_remove_an_fr_from_pd(self):
         frs_data = [self.fr_1.id, self.fr_2.id]
@@ -255,7 +255,7 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def test_permissions_for_intervention_status_draft(self):
         # intervention is in Draft status
-        self.assertEquals(self.intervention.status, Intervention.DRAFT)
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
 
         # user is UNICEF User
         status_code, response = self.run_request(self.intervention.id, user=self.partnership_manager_user)
@@ -279,7 +279,7 @@ class TestInterventionsAPI(APITenantTestCase):
     @skip('add test after permissions file is ready')
     def test_permissions_for_intervention_status_active(self):
         # intervention is in Draft status
-        self.assertEquals(self.active_intervention.status, Intervention.ACTIVE)
+        self.assertEqual(self.active_intervention.status, Intervention.ACTIVE)
 
         # user is UNICEF User
         status_code, response = self.run_request(self.active_intervention.id, user=self.partnership_manager_user)
@@ -300,7 +300,7 @@ class TestInterventionsAPI(APITenantTestCase):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response), 3)
+        self.assertEqual(len(response), 3)
 
         section1 = SectionFactory()
         Country.objects.get(schema_name="test").sections.add(section1)
@@ -325,4 +325,4 @@ class TestInterventionsAPI(APITenantTestCase):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response), 4)
+        self.assertEqual(len(response), 4)
