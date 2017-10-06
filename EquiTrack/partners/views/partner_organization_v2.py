@@ -115,7 +115,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
                 if query_params.get("hidden").lower() == "true":
                     hidden = True
                     # return all partners when exporting and hidden=true
-                    if query_params.get("format", None) == 'csv':
+                    if query_params.get("format", None) in ['csv', 'csv_flat']:
                         hidden = None
                 if query_params.get("hidden").lower() == "false":
                     hidden = False
@@ -140,7 +140,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         query_params = self.request.query_params
         response = super(PartnerOrganizationListAPIView, self).list(request)
         if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
+            if query_params.get("format") in ['csv', 'csv_flat']:
                 response['Content-Disposition'] = "attachment;filename=partner.csv"
 
         return response
