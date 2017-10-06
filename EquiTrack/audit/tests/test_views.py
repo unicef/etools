@@ -21,7 +21,7 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
             user=self.auditor
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('results', response.data)
         self.assertTrue(isinstance(response.data['results'], list))
 
@@ -94,10 +94,10 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
                 field_name: category_dict
             }
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         new_risk_ids = list(self.engagement.risks.values_list('id', flat=True))
-        self.assertNotEquals(new_risk_ids, old_risk_ids)
+        self.assertNotEqual(new_risk_ids, old_risk_ids)
 
     def _update_unexisted_blueprint(self, field_name, category_code, allowed_user):
         category = RiskCategoryFactory(code=category_code)
@@ -122,7 +122,7 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
             user=allowed_user,
             data=data
         )
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def _test_category_update_by_user_without_permissions(self, category_code, field_name, not_allowed):
         old_risk_ids = list(self.engagement.risks.values_list('id', flat=True))
@@ -156,7 +156,7 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
         )
 
         new_risk_ids = list(self.engagement.risks.values_list('id', flat=True))
-        self.assertEquals(new_risk_ids, old_risk_ids)
+        self.assertEqual(new_risk_ids, old_risk_ids)
 
 
 class TestMARisksViewSet(BaseTestCategoryRisksViewSet, APITenantTestCase):
@@ -230,7 +230,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTe
             '/api/audit/engagements/',
             user=user
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('results', response.data)
         self.assertIsInstance(response.data['results'], list)
         self.assertListEqual(
@@ -263,7 +263,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, APITenantTestCase):
             user=user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
             sorted(map(lambda x: x['id'], response.data['results'])),
             sorted(map(lambda x: x.id, expected_firms))
@@ -286,14 +286,14 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
             '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             user=self.unicef_focal_point
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
             '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             user=self.usual_user
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_detail_view(self):
         response = self.forced_auth_req(
@@ -304,7 +304,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
             ),
             user=self.unicef_focal_point
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
@@ -314,7 +314,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
             ),
             user=self.usual_user
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_view(self):
         response = self.forced_auth_req(
@@ -332,7 +332,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
             },
             user=self.unicef_focal_point
         )
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response = self.forced_auth_req(
             'post',
@@ -349,7 +349,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
             },
             user=self.usual_user
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_view(self):
         response = self.forced_auth_req(
@@ -366,7 +366,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
             },
             user=self.unicef_focal_point
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'patch',
@@ -382,7 +382,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
             },
             user=self.usual_user
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
@@ -395,7 +395,7 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, APITena
             user=user
         )
 
-        self.assertEquals(response.status_code, status_code)
+        self.assertEqual(response.status_code, status_code)
         if status_code == status.HTTP_200_OK:
             self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
 

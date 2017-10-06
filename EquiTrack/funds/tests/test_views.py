@@ -112,15 +112,12 @@ class TestFRHeaderView(APITenantTestCase):
                          'One or more of the FRs selected is either expired, has been used by another '
                          'intervention or could not be found in eTools')
 
-    def test_get_fail_with_expired_fr(self):
+    def test_get_success_with_expired_fr(self):
         self.fr_1.end_date = timezone.now().date() - timedelta(days=1)
         self.fr_1.save()
         data = {'values': ','.join([self.fr_2.fr_number, self.fr_1.fr_number])}
         status_code, result = self.run_request(data)
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'],
-                         'One or more of the FRs selected is either expired, has been used by another '
-                         'intervention or could not be found in eTools')
+        self.assertEqual(status_code, status.HTTP_200_OK)
 
     def test_get_fail_with_intervention_fr(self):
         self.fr_1.intervention = self.intervention

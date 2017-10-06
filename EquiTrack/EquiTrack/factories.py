@@ -15,14 +15,8 @@ from trips import models as trip_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
-from funds.models import (
-    Donor,
-    FundsCommitmentHeader,
-    FundsCommitmentItem,
-    FundsReservationHeader,
-    FundsReservationItem,
-    Grant,
-    )
+from publics import models as publics_models
+from funds import models as funds_models
 from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
@@ -230,6 +224,13 @@ class ResultTypeFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
 
 
+class SectorFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Sector
+
+    name = factory.Sequence(lambda n: 'Sector {}'.format(n))
+
+
 class ResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Result
@@ -254,6 +255,43 @@ class DisaggregationValueFactory(factory.django.DjangoModelFactory):
 
     disaggregation = factory.SubFactory(DisaggregationFactory)
     value = factory.Sequence(lambda n: 'Value {}'.format(n))
+
+
+class LowerResultFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.LowerResult
+
+    name = factory.Sequence(lambda n: 'Lower Result {}'.format(n))
+    code = factory.Sequence(lambda n: 'Lower Result Code {}'.format(n))
+
+
+class GoalFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Goal
+
+    name = factory.Sequence(lambda n: 'Goal {}'.format(n))
+    sector = factory.SubFactory(SectorFactory)
+
+
+class UnitFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Unit
+
+    type = factory.Sequence(lambda n: 'Unit {}'.format(n))
+
+
+class IndicatorBlueprintFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.IndicatorBlueprint
+
+    name = factory.Sequence(lambda n: 'Indicator Blueprint {}'.format(n))
+
+
+class IndicatorFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Indicator
+
+    name = factory.Sequence(lambda n: 'Indicator {}'.format(n))
 
 
 class GovernmentInterventionFactory(factory.DjangoModelFactory):
@@ -401,7 +439,7 @@ class DonorFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=45)
 
     class Meta:
-        model = Donor
+        model = funds_models.Donor
 
 
 class GrantFactory(factory.DjangoModelFactory):
@@ -409,7 +447,7 @@ class GrantFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=32)
 
     class Meta:
-        model = Grant
+        model = funds_models.Grant
 
 
 class FundsCommitmentItemFactory(factory.DjangoModelFactory):
@@ -417,7 +455,7 @@ class FundsCommitmentItemFactory(factory.DjangoModelFactory):
     line_item = fuzzy.FuzzyText(length=5)
 
     class Meta:
-        model = FundsCommitmentItem
+        model = funds_models.FundsCommitmentItem
 
 
 class FundsReservationHeaderFactory(factory.DjangoModelFactory):
@@ -442,12 +480,12 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
                                date(date.today().year + 1, 1, 1)+timedelta(days=10))
 
     class Meta:
-        model = FundsReservationHeader
+        model = funds_models.FundsReservationHeader
 
 
 class FundsReservationItemFactory(factory.DjangoModelFactory):
     class Meta:
-        model = FundsReservationItem
+        model = funds_models.FundsReservationItem
 
     fund_reservation = factory.SubFactory(FundsReservationHeaderFactory)
     line_item = fuzzy.FuzzyText(length=5)
@@ -456,7 +494,7 @@ class FundsReservationItemFactory(factory.DjangoModelFactory):
 class FundsCommitmentHeaderFactory(factory.DjangoModelFactory):
 
     class Meta:
-        model = FundsCommitmentHeader
+        model = funds_models.FundsCommitmentHeader
 
 
 # Credit goes to http://stackoverflow.com/a/41154232/2363915
@@ -491,3 +529,114 @@ class AgreementAmendmentFactory(factory.django.DjangoModelFactory):
     number = factory.Sequence(lambda n: '{:05}'.format(n))
     agreement = factory.SubFactory(AgreementFactory)
     types = [partner_models.AgreementAmendment.CLAUSE]
+
+
+class TravelExpenseTypeFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = publics_models.TravelExpenseType
+
+    title = factory.Sequence(lambda n: 'Travel Expense Type {}'.format(n))
+    vendor_number = factory.Sequence(lambda n: 'Vendor Number {}'.format(n))
+
+
+class CurrencyFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = publics_models.Currency
+
+    name = factory.Sequence(lambda n: 'Currency {}'.format(n))
+    code = fuzzy.FuzzyText(length=5, chars='ABCDEFGHIJKLMNOPQRSTUVWYXZ')
+
+
+class AirlineCompanyFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = publics_models.AirlineCompany
+
+    name = factory.Sequence(lambda n: 'Airline {}'.format(n))
+    code = fuzzy.FuzzyInteger(1000)
+    iata = fuzzy.FuzzyText(length=3, chars='ABCDEFGHIJKLMNOPQRSTUVWYXZ')
+    icao = fuzzy.FuzzyText(length=3, chars='ABCDEFGHIJKLMNOPQRSTUVWYXZ')
+    country = 'Somewhere'
+
+
+class BusinessRegionFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = publics_models.BusinessRegion
+
+    name = factory.Sequence(lambda n: 'Business Region {}'.format(n))
+    code = fuzzy.FuzzyText(length=2, chars='ABCDEFGHIJKLMNOPQRSTUVWYXZ')
+
+
+class BusinessAreaFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = publics_models.BusinessArea
+
+    name = factory.Sequence(lambda n: 'Business Area {}'.format(n))
+    code = fuzzy.FuzzyText(length=32, chars='ABCDEFGHIJKLMNOPQRSTUVWYXZ')
+    region = factory.SubFactory(BusinessRegionFactory)
+
+
+class WBSFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = publics_models.WBS
+
+    name = factory.Sequence(lambda n: 'WBS {}'.format(n))
+    business_area = factory.SubFactory(BusinessAreaFactory)
+
+
+class FundFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = publics_models.Fund
+
+    name = factory.Sequence(lambda n: 'Fund {}'.format(n))
+
+
+class PublicsGrantFactory(factory.django.DjangoModelFactory):
+    '''Factory for publics.models.grant, named to avoid collision with funds.models.grant'''
+
+    class Meta:
+        model = publics_models.Grant
+
+    name = factory.Sequence(lambda n: 'Grant {}'.format(n))
+
+
+class PublicsCountryFactory(factory.django.DjangoModelFactory):
+    '''Factory for publics.models.grant, named to avoid collision with users.models.grant'''
+
+    class Meta:
+        model = publics_models.Country
+
+    name = factory.Sequence(lambda n: 'Country {}'.format(n))
+    long_name = factory.Sequence(lambda n: 'The United Lands {}'.format(n))
+    currency = factory.SubFactory(CurrencyFactory)
+
+
+class DSARegionFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = publics_models.DSARegion
+
+    area_name = factory.Sequence(lambda n: 'DSA Region {}'.format(n))
+    area_code = fuzzy.FuzzyText(length=2, chars='ABCDEFGHIJKLMNOPQRSTUVWYXZ')
+    country = factory.SubFactory(PublicsCountryFactory)
+
+
+class DSARateFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = publics_models.DSARate
+
+    region = factory.SubFactory(DSARegionFactory)
+    effective_from_date = date.today()
+    dsa_amount_usd = 1
+    dsa_amount_60plus_usd = 1
+    dsa_amount_local = 1
+    dsa_amount_60plus_local = 1
+    room_rate = 10
+    finalization_date = date.today()
