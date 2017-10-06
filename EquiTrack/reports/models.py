@@ -414,6 +414,9 @@ class IndicatorBlueprint(TimeStampedModel):
     class Meta:
         ordering = ['-id']
 
+    def __str__(self):
+        return self.title
+
 
 @python_2_unicode_compatible
 class Disaggregation(TimeStampedModel):
