@@ -5,7 +5,7 @@ from rest_framework import status
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerType
 from .factories import RiskCategoryFactory, RiskBluePrintFactory, \
-    MicroAssessmentFactory, AuditFactory, AuditPartnerFactory, PartnerFactory
+    MicroAssessmentFactory, AuditFactory, AuditPartnerFactory, PartnerWithAgreementsFactory
 from .base import EngagementTransitionsTestCaseMixin, AuditTestCaseMixin
 
 
@@ -318,7 +318,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenant
         return response
 
     def test_partner_changed_without_pd(self):
-        partner = PartnerFactory(partner_type=PartnerType.BILATERAL_MULTILATERAL)
+        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.BILATERAL_MULTILATERAL)
 
         response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
 
@@ -326,7 +326,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenant
         self.assertIn('active_pd', response.data)
 
     def test_partner_changed_with_pd(self):
-        partner = PartnerFactory(partner_type=PartnerType.BILATERAL_MULTILATERAL)
+        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.BILATERAL_MULTILATERAL)
         response = self._do_update(
             self.unicef_focal_point,
             {
@@ -341,7 +341,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenant
         )
 
     def test_government_partner_changed(self):
-        partner = PartnerFactory(partner_type=PartnerType.GOVERNMENT)
+        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.GOVERNMENT)
         response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['active_pd'], [])
