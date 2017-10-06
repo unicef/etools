@@ -16,5 +16,14 @@
             "email": "",
             "date_joined": "2014-03-25T09:27:16Z"
         }
+    },
+    {
+        "model": "auth.user",
+        "fields": {
+            "username": "integrity1@un.org",
+            "first_name": "Integrity",
+            "last_name": "Staff User",
+            "email": "integrity1@un.org"
+        }
     }
 ]

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
@@ -64,14 +65,10 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
         ]
 
     def validate(self, attrs):
-        if not self.instance and attrs.get('description') == _('Escalate to Investigation')\
+        if not self.instance and attrs.get('description') == _('Escalate to Investigation') \
                 and 'person_responsible' not in attrs:
-            email = 'integrity1@un.org'
-            attrs['person_responsible'] = User.objects.get_or_create(username=email, defaults={
-                'email': email,
-                'first_name': 'Integrity',
-                'last_name': 'Staff User',
-            })[0]
+            email = settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
+            attrs['person_responsible'] = User.objects.filter(email=email).first()
 
         return attrs
 
