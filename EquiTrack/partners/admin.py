@@ -13,7 +13,6 @@ from generic_links.admin import GenericLinkStackedInline
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
-from supplies.models import SupplyItem
 from reports.models import Result
 from users.models import Section
 
@@ -34,8 +33,6 @@ from partners.models import (
     RAMIndicator,
     PartnerStaffMember,
     PartnershipBudget,
-    SupplyPlan,
-    DistributionPlan,
     FundingCommitment,
     IndicatorDueDates,
     InterventionPlannedVisits,
@@ -60,8 +57,6 @@ from partners.forms import (
     PartnersAdminForm,
     AmendmentForm,
     AgreementForm,
-    DistributionPlanForm,
-    DistributionPlanFormSet,
     PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
     LocationForm,
@@ -306,64 +301,9 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     )
 
 
-class SupplyPlanAdmin(admin.ModelAdmin):
-    model = SupplyPlan
-    fields = (
-        'intervention',
-        'item',
-        'quantity'
-    )
-    search_fields = (
-        'intervention__name',
-    )
-    list_display = (
-        'intervention',
-        'item',
-        'quantity'
-    )
-
-
 class IndicatorDueDatesAdmin(admin.TabularInline):
     model = IndicatorDueDates
     extra = 1
-
-
-class DistributionPlanInlineAdmin(admin.TabularInline):
-    model = DistributionPlan
-    form = DistributionPlanForm
-    formset = DistributionPlanFormSet
-    extra = 1
-    fields = [u'item', u'site', u'quantity', u'send', u'sent', u'delivered']
-    readonly_fields = [u'delivered', u'sent']
-
-    def get_max_num(self, request, obj=None, **kwargs):
-        """
-        Only show these inlines if we have supply plans
-        :param request:
-        :param obj: Intervention object
-        :param kwargs:
-        :return:
-        """
-        if isinstance(obj, Intervention):
-            if obj and obj.supplies.count():
-                return self.max_num
-        else:
-            if obj and obj.supply_plans.count():
-                return self.max_num
-        return 0
-
-    def get_readonly_fields(self, request, obj=None):
-        """
-        Prevent distributions being sent to partners before the intervention is saved
-        """
-        fields = super(DistributionPlanInlineAdmin,
-                       self).get_readonly_fields(request, obj)
-        if obj is None and u'send' not in fields:
-            fields.append(u'send')
-        elif obj and u'send' in fields:
-            fields.remove(u'send')
-
-        return fields
 
 
 class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
@@ -460,8 +400,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         PCAFileInline,
         LinksInlineAdmin,
         # ResultsInlineAdmin,
-        # SupplyPlanInlineAdmin,
-        DistributionPlanInlineAdmin,
         IndicatorDueDatesAdmin,
     )
 
@@ -569,8 +507,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     inlines = (
         # InterventionAmendmentsInlineAdmin,
         # BudgetInlineAdmin,
-        # SupplyPlanInlineAdmin,
-        # DistributionPlanInlineAdmin,
         # PlannedVisitsInline,
         # ResultsLinkInline,
         # SectorLocationInline,
@@ -870,12 +806,6 @@ class FileTypeAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
 
-class SupplyItemAdmin(admin.ModelAdmin):
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser
-
-
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
@@ -889,12 +819,10 @@ admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(InterventionAmendment, InterventionAmendmentsAdmin)
 admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
-admin.site.register(SupplyPlan, SupplyPlanAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
 
 
-admin.site.register(SupplyItem, SupplyItemAdmin)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(FileType, FileTypeAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)

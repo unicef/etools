@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from django.db import connection
 from rest_framework import serializers
 
 from workplan.serializers import ResultWorkplanPropertySerializer
@@ -130,9 +132,12 @@ class UnitSerializer(serializers.ModelSerializer):
 class CountryProgrammeSerializer(serializers.ModelSerializer):
     expired = serializers.ReadOnlyField()
     active = serializers.ReadOnlyField()
-    special = serializers.ReadOnlyField()
+    special = serializers.SerializerMethodField()
     future = serializers.ReadOnlyField()
 
     class Meta:
         model = CountryProgramme
         fields = '__all__'
+
+    def get_special(self, cp):
+        return False if connection.schema_name in ['palestine'] else cp.special

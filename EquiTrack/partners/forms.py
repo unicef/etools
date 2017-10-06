@@ -16,7 +16,6 @@ from dal import autocomplete
 
 from EquiTrack.forms import (
     AutoSizeTextForm,
-    ParentInlineAdminFormSet,
     UserGroupForm,
 )
 
@@ -31,10 +30,7 @@ from .models import (
     AgreementAmendmentLog,
     Agreement,
     PartnerStaffMember,
-    SupplyItem,
-    DistributionPlan,
     PartnershipBudget,
-    Intervention,
     InterventionSectorLocationLink,
 )
 
@@ -207,76 +203,6 @@ class PartnerStaffMemberForm(forms.ModelForm):
                     if existing_user.partner_staff_member and \
                             existing_user.partner_staff_member != self.instance.pk:
                         raise ValidationError({'active': self.ERROR_MESSAGES['user_unavailable']})
-
-        return cleaned_data
-
-
-class DistributionPlanForm(forms.ModelForm):
-
-    class Meta:
-        model = DistributionPlan
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        """
-        Only show supply items already in the supply plan
-        """
-        if 'parent_object' in kwargs:
-            self.parent_partnership = kwargs.pop('parent_object')
-
-        super(DistributionPlanForm, self).__init__(*args, **kwargs)
-
-        queryset = SupplyItem.objects.none()
-        if hasattr(self, 'parent_partnership'):
-            if isinstance(self.parent_partnership, Intervention):
-                items = self.parent_partnership.supplies.all().values_list('item__id', flat=True)
-            else:
-                items = self.parent_partnership.supply_plans.all().values_list('item__id', flat=True)
-            queryset = SupplyItem.objects.filter(id__in=items)
-
-        self.fields['item'].queryset = queryset
-
-
-class DistributionPlanFormSet(ParentInlineAdminFormSet):
-
-    def clean(self):
-        """
-        Ensure distribution plans are inline with overall supply plan
-        """
-        cleaned_data = super(DistributionPlanFormSet, self).clean()
-
-        if isinstance(self.instance, Intervention):
-            if self.instance:
-                for plan in self.instance.supplies.all():
-                    total_quantity = 0
-                    for form in self.forms:
-                        if form.cleaned_data.get('DELETE', False):
-                            continue
-                        data = form.cleaned_data
-                        if plan.item == data.get('item', 0):
-                            total_quantity += data.get('quantity', 0)
-
-                    if total_quantity > plan.quantity:
-                        raise ValidationError(
-                            _(u'The total quantity ({}) of {} exceeds the planned amount of {}'.format(
-                                total_quantity, plan.item, plan.quantity))
-                        )
-        else:
-            if self.instance:
-                for plan in self.instance.supply_plans.all():
-                    total_quantity = 0
-                    for form in self.forms:
-                        if form.cleaned_data.get('DELETE', False):
-                            continue
-                        data = form.cleaned_data
-                        if plan.item == data.get('item', 0):
-                            total_quantity += data.get('quantity', 0)
-
-                    if total_quantity > plan.quantity:
-                        raise ValidationError(
-                            _(u'The total quantity ({}) of {} exceeds the planned amount of {}'.format(
-                                total_quantity, plan.item, plan.quantity))
-                        )
 
         return cleaned_data
 

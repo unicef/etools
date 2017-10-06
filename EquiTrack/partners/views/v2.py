@@ -24,7 +24,6 @@ from reports.models import (
     Result,
     ResultType,
 )
-from supplies.models import SupplyItem
 from funds.models import Donor
 
 from partners.models import (
@@ -212,15 +211,8 @@ class PMPDropdownsListApiView(APIView):
 
         country_programmes = list(CountryProgramme.objects.all_active_and_future.values('id', 'wbs', 'name',
                                                                                         'from_date', 'to_date'))
-        current_country_programme = CountryProgramme.main_active()
-        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT,
-                                                wbs__isnull=False,
-                                                country_programme=current_country_programme)
-                                        .values('id',
-                                                'name',
-                                                'wbs',
-                                                'country_programme'))
-        supply_items = list(SupplyItem.objects.all().values())
+        cp_outputs = [{"id": r.id, "name": r.output_name, "wbs": r.wbs, "country_programme": r.country_programme.id}
+                      for r in Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False)]
         file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
                           .all().values())
         donors = list(Donor.objects.all().values())
@@ -230,7 +222,6 @@ class PMPDropdownsListApiView(APIView):
                 'signed_by_unicef_users': signed_by_unicef,
                 'country_programmes': country_programmes,
                 'cp_outputs': cp_outputs,
-                'supply_items': supply_items,
                 'file_types': file_types,
                 'donors': donors,
 
