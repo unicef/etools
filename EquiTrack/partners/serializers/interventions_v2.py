@@ -325,7 +325,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_type = serializers.CharField(source='agreement.partner.partner_type')
-    agreement_name = serializers.CharField(source='agreement.agreement_number')
+    agreement_number = serializers.CharField(source='agreement.agreement_number')
     country_programme = serializers.CharField(source='agreement.country_programme.name')
     offices = serializers.SerializerMethodField()
     sectors = serializers.SerializerMethodField()
@@ -369,7 +369,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
+            "status", "partner_name", "partner_type", "agreement_number", "country_programme", "document_type", "number",
             "title", "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
             "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
             "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
@@ -438,6 +438,76 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_migration_error_msg(self, obj):
         return ', '.join([a for a in obj.metadata['error_msg']]) if 'error_msg' in obj.metadata.keys() else ''
+
+
+class InterventionExportFlatSerializer(InterventionExportSerializer):
+    planned_visits = serializers.SerializerMethodField()
+    attachments = serializers.SerializerMethodField()
+    country_programme = serializers.CharField(source='country_programme.name')
+    partner_contribution = serializers.CharField(source='planned_budget.partner_contribution')
+    unicef_cash = serializers.CharField(source='planned_budget.unicef_cash')
+    in_kind_amount = serializers.CharField(source='planned_budget.in_kind_amount')
+    partner_contribution_local = serializers.CharField(source='planned_budget.partner_contribution_local')
+    unicef_cash_local = serializers.CharField(source='planned_budget.unicef_cash_local')
+    in_kind_amount_local = serializers.CharField(source='planned_budget.in_kind_amount_local')
+    currency = serializers.CharField(source='planned_budget.currency')
+    total = serializers.CharField(source='planned_budget.total')
+
+    class Meta:
+        model = Intervention
+        fields = (
+            "id",
+            "document_type",
+            "number",
+            "country_programme",
+            "title",
+            "status",
+            "start",
+            "end",
+            "submission_date",
+            "submission_date_prc",
+            "review_date_prc",
+            "prc_review_document",
+            "signed_by_unicef_date",
+            "signed_by_partner_date",
+            "fr_numbers",
+            "population_focus",
+            "agreement_number",
+            "partner_authorized_officer_signatory",
+            "unicef_signatory",
+            "signed_pd_document",
+            "unicef_focal_points",
+            "partner_focal_points",
+            "offices",
+            "planned_visits",
+            "partner_contribution",
+            "unicef_cash",
+            "in_kind_amount",
+            "partner_contribution_local",
+            "unicef_cash_local",
+            "in_kind_amount_local",
+            "currency",
+            "total",
+            "attachments",
+            "created",
+            "modified",
+        )
+
+    def get_planned_visits(self, obj):
+        planned_visits = []
+        for planned_visit in obj.planned_visits.all():
+            planned_visits.append(
+                "Year: {}, Programmatic: {}, Spot Checks: {}, Audit: {}".format(
+                    planned_visit.year,
+                    planned_visit.programmatic,
+                    planned_visit.spot_checks,
+                    planned_visit.audit,
+                )
+            )
+        return "\n".join(planned_visits)
+
+    def get_attachments(self, obj):
+        return "\n".join(["{}: {}".format(a.type.name, a.attachment.url) for a in obj.attachments.all()])
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):

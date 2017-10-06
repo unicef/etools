@@ -11,7 +11,9 @@ from EquiTrack.factories import (
     CountryProgrammeFactory,
     CurrencyFactory,
     InterventionFactory,
+    InterventionAttachmentFactory,
     InterventionBudgetFactory,
+    InterventionPlannedVisitFactory,
     PartnerFactory,
     PartnerStaffFactory,
     UserFactory,
@@ -74,6 +76,12 @@ class TestInterventionModelExport(APITenantTestCase):
         self.ib = InterventionBudgetFactory(
             intervention=self.intervention,
             currency=CurrencyFactory()
+        )
+        self.planned_visit = InterventionPlannedVisitFactory(
+            intervention=self.intervention,
+        )
+        self.attachment = InterventionAttachmentFactory(
+            intervention=self.intervention,
         )
 
     def test_csv_export_api(self):
@@ -151,9 +159,9 @@ class TestInterventionModelExport(APITenantTestCase):
             u'{:.2f}'.format(self.intervention.total_unicef_budget),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
             u'{:.2f}'.format(self.intervention.total_partner_contribution_local),
-            u'',
-            u'',
-            u'',
+            u'{} ({})'.format(self.planned_visit.programmatic, self.planned_visit.year),
+            u'{} ({})'.format(self.planned_visit.spot_checks, self.planned_visit.year),
+            u'{} ({})'.format(self.planned_visit.audit, self.planned_visit.year),
             '{}'.format(self.intervention.submission_date),
             '{}'.format(self.intervention.submission_date_prc),
             '{}'.format(self.intervention.review_date_prc),
@@ -165,4 +173,91 @@ class TestInterventionModelExport(APITenantTestCase):
             '{}'.format(self.intervention.days_from_review_to_signed),
             u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
             u'',
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            'Id',
+            'Status',
+            'Agreement',
+            'Country Programme',
+            'Document Type',
+            'Reference Number',
+            'Document Title',
+            'Start Date',
+            'End Date',
+            'UNICEF Office',
+            'UNICEF Focal Points',
+            'CSO Authorized Officials',
+            'Population Focus',
+            'FR Number(s)',
+            'CSO Contribution',
+            'CSO Contribution (Local)',
+            'UNICEF Cash',
+            'UNICEF Cash (Local)',
+            'In Kind Amount',
+            'In Kind Amount (Local)',
+            'Currency',
+            'Total',
+            'Planned Visits',
+            'Document Submission Date by CSO',
+            'Submission Date to PRC',
+            'Review Date by PRC',
+            'Review Document by PRC',
+            'Signed by Partner',
+            'Signed by Partner Date',
+            'Signed by UNICEF',
+            'Signed by UNICEF Date',
+            'Signed PD Document',
+            'Attachments',
+            'Created',
+            'Modified',
+        ])
+
+        self.assertEqual(dataset[0], (
+            u'{}'.format(self.intervention.pk),
+            self.intervention.status,
+            self.intervention.agreement.agreement_number,
+            u'',
+            self.intervention.document_type,
+            self.intervention.reference_number,
+            unicode(self.intervention.title),
+            '{}'.format(self.intervention.start),
+            '{}'.format(self.intervention.end),
+            u'',
+            u'',
+            u'',
+            self.intervention.population_focus,
+            u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
+            u'{:.2f}'.format(self.intervention.planned_budget.partner_contribution),
+            u'{:.2f}'.format(self.intervention.planned_budget.partner_contribution_local),
+            u'{:.2f}'.format(self.intervention.planned_budget.unicef_cash),
+            u'{:.2f}'.format(self.intervention.planned_budget.unicef_cash_local),
+            u'{:.2f}'.format(self.intervention.planned_budget.in_kind_amount),
+            u'{:.2f}'.format(self.intervention.planned_budget.in_kind_amount_local),
+            u'{}'.format(self.intervention.planned_budget.currency),
+            u'{:.2f}'.format(self.intervention.planned_budget.total),
+            u'Year: {}, Programmatic: 1, Spot Checks: 2, Audit: 3'.format(datetime.datetime.today().year),
+            '{}'.format(self.intervention.submission_date),
+            '{}'.format(self.intervention.submission_date_prc),
+            '{}'.format(self.intervention.review_date_prc),
+            u'',
+            u'{}'.format(self.intervention.partner_authorized_officer_signatory.get_full_name()),
+            '{}'.format(self.intervention.signed_by_partner_date),
+            u'',
+            '{}'.format(self.intervention.signed_by_unicef_date),
+            u'',
+            u'{}: {}'.format(self.attachment.type.name, self.attachment.attachment.url),
+            u'{}'.format(self.intervention.created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
+            u'{}'.format(self.intervention.modified.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
         ))

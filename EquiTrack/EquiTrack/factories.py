@@ -203,6 +203,13 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
     current = True
 
 
+class FileTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.FileType
+
+    name = partner_models.FileType.PROGRESS_REPORT
+
+
 class PartnershipFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PCA
@@ -234,6 +241,26 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     partner_contribution_local = 20.00
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
+
+
+class InterventionPlannedVisitFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionPlannedVisits
+
+    intervention = factory.SubFactory(InterventionFactory)
+    year = datetime.today().year
+    programmatic = 1
+    spot_checks = 2
+    audit = 3
+
+
+class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAttachment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    type = factory.Iterator(partner_models.FileType.objects.all())
+    attachment = factory.django.FileField(filename='test_file.pdf')
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
