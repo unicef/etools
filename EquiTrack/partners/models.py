@@ -1810,7 +1810,7 @@ class InterventionReportingPeriod(TimeStampedModel):
     due_date = models.DateField(verbose_name='Report Due Date')
 
     class Meta:
-        ordering = ['-created']
+        ordering = ['-due_date']
 
     def __str__(self):
         return '%s (%s-%s) due on %s' % (

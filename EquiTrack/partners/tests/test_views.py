@@ -1993,15 +1993,18 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         cls.list_url = reverse('partners_api:intervention-reporting-periods-list', args=[cls.intervention.pk])
         cls.num_periods = 3
         InterventionReportingPeriodFactory.create_batch(cls.num_periods, intervention=cls.intervention)
-        cls.params = {
-            'start_date': datetime.date.today(),
-            'end_date': datetime.date.today() + datetime.timedelta(days=1),
-            'due_date': datetime.date.today() + datetime.timedelta(days=2),
-            'intervention': cls.intervention.pk,
-        }
         cls.reporting_period = InterventionReportingPeriod.objects.first()
         cls.detail_url = reverse('partners_api:intervention-reporting-periods-detail',
                                  args=[cls.reporting_period.pk])
+
+    def setUp(self):
+        self.params = {
+            'start_date': datetime.date.today(),
+            'end_date': datetime.date.today() + datetime.timedelta(days=1),
+            'due_date': datetime.date.today() + datetime.timedelta(days=20),
+            'intervention': self.intervention.pk,
+        }
+        self.one_day = datetime.timedelta(days=1)
 
     # List
 
@@ -2049,23 +2052,74 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         for key in ['start_date', 'end_date', 'due_date', 'intervention']:
             self.assertEqual(data[key], ["This field is required."])
 
-    def test_create_start_must_be_before_end(self):
-        self.params['end_date'] = self.params['start_date']
+    def test_create_start_must_be_on_or_before_end(self):
+        self.params['end_date'] = self.params['start_date'] - self.one_day
         response = self.forced_auth_req('post', self.list_url, data=self.params)
-        self.assertContains(response, 'end_date must be after start_date',
+        self.assertContains(response, 'end_date must be on or after start_date',
                             status_code=status.HTTP_400_BAD_REQUEST)
 
-    def test_create_end_must_be_before_due(self):
-        self.params['due_date'] = self.params['end_date']
+    def test_create_end_must_be_on_or_before_due(self):
+        self.params['due_date'] = self.params['end_date'] - self.one_day
         response = self.forced_auth_req('post', self.list_url, data=self.params)
-        self.assertContains(response, 'due_date must be after end_date',
+        self.assertContains(response, 'due_date must be on or after end_date',
                             status_code=status.HTTP_400_BAD_REQUEST)
 
-    def test_create_start_must_be_before_due(self):
-        self.params['due_date'] = self.params['start_date']
+    def test_create_start_must_be_on_or_before_due(self):
+        self.params['due_date'] = self.params['start_date'] - self.one_day
         response = self.forced_auth_req('post', self.list_url, data=self.params)
-        self.assertContains(response, 'due_date must be after end_date',
+        self.assertContains(response, 'due_date must be on or after end_date',
                             status_code=status.HTTP_400_BAD_REQUEST)
+
+    def set_date_order_and_create(self, old_start_order, old_end_order, new_start_order, new_end_order, expected_status):
+        InterventionReportingPeriod.objects.all().delete()
+        day_0 = datetime.date.today()
+        days = [
+            day_0,
+            day_0 + 1 * self.one_day,
+            day_0 + 2 * self.one_day,
+            day_0 + 3 * self.one_day,
+        ]
+        due_date = day_0 + 20 * self.one_day
+        old_start = days[old_start_order]
+        old_end = days[old_end_order]
+        new_start = days[new_start_order]
+        new_end = days[new_end_order]
+        old = InterventionReportingPeriodFactory(
+            intervention=self.intervention, due_date=due_date,
+            start_date=old_start, end_date=old_end,
+        )
+        new = self.params.copy()
+        new.update({
+            'start_date': new_start,
+            'end_date': new_end,
+        })
+        response = self.forced_auth_req('post', self.list_url, data=new)
+        self.assertEqual(response.status_code, expected_status)
+
+    def test_create_periods_dont_overlap(self):
+        # testcases
+        # ---------
+        # new_start < new_end < old_start < old_end: OK
+        # new_start < new_end = old_start < old_end: OK
+        # old_start < old_end < new_start < new_end: OK
+        # old_start < old_end = new_start < new_end: OK
+        # new_start < old_start < new_end < old_end: FAIL
+        # new_start < old_start < old_end < new_end: FAIL
+        # old_start < new_start < new_end < old_end: FAIL
+        # old_start < new_start < old_end < new_end: FAIL
+        first, second, third, fourth = range(4)
+        OK, FAIL = (status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST)
+
+        # arguments: (old_start_order, old_end_order, new_start_order, new_end_order, expected_status)
+        self.set_date_order_and_create(third, fourth, first, second, OK)
+        self.set_date_order_and_create(third, fourth, first, third, OK)
+        self.set_date_order_and_create(first, second, third, fourth, OK)
+        self.set_date_order_and_create(first, second, second, fourth, OK)
+
+        self.set_date_order_and_create(second, fourth, first, third, FAIL)
+        self.set_date_order_and_create(second, third, first, fourth, FAIL)
+        self.set_date_order_and_create(first, fourth, second, third, FAIL)
+        self.set_date_order_and_create(first, third, second, fourth, FAIL)
 
     # Get
 
@@ -2107,10 +2161,10 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
 
     def test_patch_order_must_still_be_valid(self):
         params = {
-            'end_date': self.reporting_period.start_date
+            'end_date': self.reporting_period.start_date - self.one_day
         }
         response = self.forced_auth_req('patch', self.detail_url, data=params)
-        self.assertContains(response, 'end_date must be after start_date',
+        self.assertContains(response, 'end_date must be on or after start_date',
                             status_code=status.HTTP_400_BAD_REQUEST)
 
     def test_patch_cannot_change_intervention(self):

@@ -302,17 +302,26 @@ class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """
-        Validate that start_date < end_date < due_date.
+        Validate that start_date <= end_date <= due_date.
+        Validate that new instance doesn't overlap existing periods.
         """
         # If we're creating, we'll have all these values in ``data``. If we're
         # patching, we might not, so get missing values from the existing DB instance
         start_date = data.get('start_date') or self.instance.start_date
         end_date = data.get('end_date') or self.instance.end_date
         due_date = data.get('due_date') or self.instance.due_date
-        if start_date >= end_date:
-            raise ValidationError('end_date must be after start_date')
-        if end_date >= due_date:
-            raise ValidationError('due_date must be after end_date')
+
+        if start_date > end_date:
+            raise ValidationError('end_date must be on or after start_date')
+        if end_date > due_date:
+            raise ValidationError('due_date must be on or after end_date')
+
+        intervention = data.get('intervention') or self.instance.intervention.pk
+        periods = InterventionReportingPeriod.objects.filter(intervention=intervention)
+        if self.instance:
+            periods = periods.exclude(pk=self.instance.pk)
+        if periods.filter(start_date__lt=end_date).filter(end_date__gt=start_date).exists():
+            raise ValidationError('This period overlaps an existing reporting period.')
         return data
 
 
