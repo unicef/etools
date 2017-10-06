@@ -36,19 +36,6 @@
     {% block extra_style %}
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <style type="text/css">
-            #page-header {
-            {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
-            }
-
-            {#        #page-footer{#}
-            {#            -pdf-frame-content: page-footer;#}
-            {#            bottom: 0cm;#}
-            {#            margin-left: 1cm;#}
-            {#            margin-right: 1cm;#}
-            {#            color: #0099ff;#}
-            {#            line-height: 1.0cm;#}
-            {#            background-color: #0099ff;#}
-            {#        }#}
             .details div {
             {#            background-color: #f1f1f1;#} border-radius: 25px;
                 border: 2px solid #f1f1f1;
@@ -58,19 +45,6 @@
             }
             /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
             /*dejavu*/
-            @font-face {
-                font-family: "DejaVuSans";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSans.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSansMono";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSansMono.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSerif";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSerif.ttf");
-            }
-
             /*times new roman*/
             @font-face {
                 font-family: "Times_New_Roman";
@@ -91,27 +65,6 @@
             ul {
                 list-style-type: none;
             }
-            #officers_table {
-                width: 512pt;
-                margin-top: 24px;
-                margin-bottom: 12px;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-            #officers_table tr {width: 512pt;}
-            #officers_table th {
-                text-align: center;
-                vertical-align: middle;
-                font-weight: normal;
-                border: 1px solid black;
-            }
-            #officers_table td {
-                text-align: center;
-                vertical-align: middle;
-                border: 1px solid black;
-                font-size:10pt;
-            }
-
             /*fonts*/
             #header_content {
                 font-family: "Times_New_Roman";
@@ -153,6 +106,34 @@
             .list-style-type-roman {
                 list-style-type: lower-roman;
             }
+            table {
+                line-height: 140%;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            table.bordered {
+                border: 0.1pt solid #999999;
+            }
+            tr, td, th { border: none; }
+            th {
+                font-size: 12pt;
+                padding: 5px 0 0 0;
+                line-height: 1;
+                font-weight: bold;
+            }
+            th.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td {
+                font-size: 12pt;
+                vertical-align: middle;
+                padding: 5px 0 0 0;
+            }
+            td.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td:first-child { padding-right: 0px; }
+            td:last-child { padding-bottom: 0; }
         </style>
     {% endblock %}
 {% endblock %}
@@ -170,15 +151,15 @@
         </div>
 
         <div id="title" style="text-align: center; padding-top: 0px">
-            <div style="font-size: 16pt;padding-top: 18px;"><b>PROGRAMME COOPERATION Agreement</b></div>
-            <div><b>between</b></div>
+            <div style="font-size: 16pt;padding-top: 18px;"><b>PROGRAMME COOPERATION AGREEMENT</b></div>
+            <div><b>BETWEEN</b></div>
             <div><b>
-                International Federation of Red Cross and Red Crescent Societies
+                INTERNATIONAL FEDERATION OF RED CROSS AND RED CRESCENT SOCIETIES
             </b></div>
-            <div><b>and the</b></div>
-            <div><b>United Nations Children’s Fund</b></div>
-            <div><b>for the</b></div>
-            <div><b>Implementation of UNICEF-funded Programme relating to the UNICEF Country Programme for
+            <div><b>AND THE</b></div>
+            <div><b>UNITED NATIONS CHILDREN’S FUND</b></div>
+            <div><b>FOR THE</b></div>
+            <div><b>IMPLEMENTATION OF UNICEF-FUNDED PROGRAMME RELATING TO THE UNICEF COUNTRY PROGRAMME FOR
                 {{ country|upper }}</b>
             </div>
             <!--
@@ -248,56 +229,36 @@
                     attributed to a specific activity implemented by the IP in accordance with this Agreement,
                     including any Programme Document.
                 </li>
-                <li class="keep-with-next">
+                <li>
                     “<u>Authorized Officer</u>” means one of the following officers of the IP:
-
-                    <!--
-                    <table id="officers_table" repeat="1">
-                    <tr>
-                        <th><br>Full name</th>
-                        <th><br>Title</th>
-                        <th><br>Email</th>
-                        <th><br>Sample signature</th>
-                    </tr>
+                </li>
+                <table id="officers_table">
                     {% for officer in auth_officers %}
                     <tr>
-                        <td><br>{{ officer.first_name }}</td>
-                        <td><br>{{ officer.title }}</td>
-                        <td><br>{{ officer.email }}</td>
-                        <td><br></td>
+                        <td class="bordered" style="width:35%">Full name</td>
+                        <td class="bordered">{{ officer.first_name }} {{ officer.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:3%">Title</td>
+                        <td class="bordered">{{ officer.title }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Email</td>
+                        <td class="bordered">{{ officer.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Sample signature</td>
+                        <td class="bordered"></td>
                     </tr>
                     {% endfor %}
-                    </table>
-                    -->
+                </table>
 
-                    <table id="officers_table">
-                        {% for officer in auth_officers %}
-                        <tr>
-                            <td style="width: 33%;"><br>Fullname</td>
-                            <td><br> {{ officer.first_name }} {{ officer.last_name }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Title</td>
-                            <td><br>{{ officer.title }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Email</td>
-                            <td><br>{{ officer.email }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Samplesignature</td>
-                            <td><br></td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-
-                    <div style="padding-top: 15px">
-                        It is understood, for the avoidance of doubt, that any removals from or
-                        amendments to the (list of) Authorized Officer(s) identified above shall require a written amendment
-                        to this Agreement in accordance with section 20.0 of the General Terms and Conditions for
-                        Programme Cooperation Agreements appended hereto.
-                    </div>
-                </li>
+                <div style="padding-top: 15px">
+                    It is understood, for the avoidance of doubt, that any removals from or
+                    amendments to the (list of) Authorized Officer(s) identified above shall require a written amendment
+                    to this Agreement in accordance with section 20.0 of the General Terms and Conditions for
+                    Programme Cooperation Agreements appended hereto.
+                </div>
 
                 <li>“<u>non-expendable equipment</u>” means any item that cost two thousand five hundred US dollars
                     (US$2,500) or more, including costs of initial delivery and handling, and which has a service
@@ -465,7 +426,7 @@
             </div>
 
             <div class="keep-with-next" ><b>(A) Cash Transfer by UNICEF to/on behalf of IP</b></div>
-            <div class="keep-with-next" ><p><u>General Provisions:</u></p></div>
+            <div class="" ><p><u>General Provisions:</u></p></div>
             <ol class="indented">
                 <li>UNICEF will provide the IP with cash assistance for the activities as stipulated in the Programme
                     Documents (the “<u>Cash Transfer</u>”), subject to the availability of funds and the terms of this
@@ -555,15 +516,19 @@
                     for any amounts that UNICEF determines are not in compliance with this Agreement.
                 </li>
                 <li>
-                    <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;&nbsp;The administration by the IP of the Cash Transfer shall be carried out under its own financial regulations,
-                        rules and procedures, which UNICEF has reviewed and assessed and found to be appropriate.</div>
+                    <div style="display: inline" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;&nbsp;
+                        The administration by the IP of the Cash Transfer shall be carried out under its own financial
+                        regulations, rules and procedures, which UNICEF has reviewed and assessed and found to be appropriate.
+                    </div>
+                    <br />
+                    <div style="display: inline">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;&nbsp;
+                        Where, in accordance with HACT, UNICEF provides a Cash Transfer prior to the review and assessment of
+                        the IP’s financial regulations, rules and procedures, then in the event UNICEF subsequently determines that
+                        the IP’s financial regulations, rules and procedures are not appropriate, UNICEF shall give written notice
+                        to the IP and in such case UNICEF may require return of unspent Cash Transfers already provided to the IP
+                        and may decide to implement the Programme Document or any parts thereof (including any procurement activities) directly.
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;&nbsp;Where, in accordance with HACT, UNICEF provides a Cash Transfer prior to the review and assessment of
-                    the IP’s financial regulations, rules and procedures, then in the event UNICEF subsequently determines that
-                    the IP’s financial regulations, rules and procedures are not appropriate, UNICEF shall give written notice
-                    to the IP and in such case UNICEF may require return of unspent Cash Transfers already provided to the IP
-                    and may decide to implement the Programme Document or any parts thereof (including any procurement activities) directly.
-                </div>
                 <li>Where the IP buys goods or services from the Cash Transfer, the IP shall do so giving due
                     consideration to the following principles:
                 </li>
@@ -573,39 +538,38 @@
                 <li class="keep-with-next">
                     The Cash Transfer other than Direct Payments shall be made by UNICEF to the following bank account of the IP:
                 </li>
-
-                <table style="border: 1px solid black;">
+                <table class="bordered">
                     <tr>
-                        <td colspan="2" style="text-align: center;vertical-align: middle"><br>Account</td>
+                        <td colspan="2" class="bordered" style="text-align: center;">Account</td>
                     </tr>
                     {% for bank_detail in bank_details %}
                     <tr>
-                        <td style="width: 33%;"><br>Bank Name</td>
-                        <td><br> {{ bank_detail.bank_name }}</td>
+                        <td class="bordered" style="width: 45%;">Bank Name</td>
+                        <td class="bordered">{{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Bank Address</td>
-                        <td><br>{{ bank_detail.bank_address }}</td>
+                        <td class="bordered" style="width: 45%;">Bank Address</td>
+                        <td class="bordered">{{ bank_detail.bank_address }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Account Title</td>
-                        <td><br>{{ bank_detail.account_title }}</td>
+                        <td class="bordered" style="width: 45%;">Account Title</td>
+                        <td class="bordered">{{ bank_detail.account_title }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Account No.</td>
-                        <td><br>{{ bank_detail.account_number }}</td>
+                        <td class="bordered" style="width: 45%;">Account No.</td>
+                        <td class="bordered">{{ bank_detail.account_number }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Account Currency</td>
-                        <td></td>
+                        <td class="bordered" style="width: 45%;">Account Currency</td>
+                        <td class="bordered"></td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Routing Details <br/> SWIFT/IBAN</td>
-                        <td><br>{{ bank_detail.routing_details }}</td>
+                        <td class="bordered" style="width: 45%;">Routing Details <br/> SWIFT/IBAN</td>
+                        <td class="bordered">{{ bank_detail.routing_details }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Bank Contact Person</td>
-                        <td><br>{{ bank_detail.bank_contact_person }}</td>
+                        <td class="bordered" style="width: 45%;">Bank Contact Person</td>
+                        <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
                     {% endfor %}
                 </table>
@@ -686,11 +650,13 @@
                 </li>
                 <div class="keep-with-next"><p><b>(A) Financial reporting</b></p></div>
                 <div class="keep-with-next"><p><u>Financial reporting using FACE form:</u></p></div>
-                <li><div class="small-indent">
-                    (a) &nbsp;&nbsp;&nbsp;&nbsp;Unless otherwise agreed between the Parties in writing, the IP will submit FACE forms at
-                    the end of every Quarter, using the FACE form. Should a FACE form not be submitted within six (6)
-                    months from the last Quarter, UNICEF will, unless agreed otherwise, suspend any further cash transfers
-                    to the IP, or on behalf of the IP.</div>
+                <li>
+                    <div  style="display: inline" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;&nbsp;
+                        Unless otherwise agreed between the Parties in writing, the IP will submit FACE forms at
+                        the end of every Quarter, using the FACE form. Should a FACE form not be submitted within six (6)
+                        months from the last Quarter, UNICEF will, unless agreed otherwise, suspend any further cash transfers
+                        to the IP, or on behalf of the IP.
+                    </div>
                 </li>
                 <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;&nbsp;The final FACE form will be submitted no later than thirty (30)
                     calendar days after the end of the Programme Document.
