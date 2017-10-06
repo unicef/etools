@@ -284,7 +284,7 @@ class IndicatorBlueprintFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.IndicatorBlueprint
 
-    name = factory.Sequence(lambda n: 'Indicator Blueprint {}'.format(n))
+    title = factory.Sequence(lambda n: 'Indicator Blueprint {}'.format(n))
 
 
 class IndicatorFactory(factory.django.DjangoModelFactory):
