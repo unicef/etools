@@ -1136,14 +1136,31 @@ class AgreementAmendment(TimeStampedModel):
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
-        return super(InterventionManager, self).get_queryset().prefetch_related('agreement__partner',
-                                                                                'frs',
-                                                                                'offices',
-                                                                                'planned_budget')
+        return super(InterventionManager, self).get_queryset().prefetch_related(
+            'agreement__partner',
+            'frs',
+            'partner_focal_points',
+            'unicef_focal_points',
+            'offices',
+            'planned_budget',
+            'sections',
+        )
 
     def detail_qs(self):
-        return self.get_queryset().prefetch_related('result_links__cp_output',
-                                                    'unicef_focal_points')
+        return self.get_queryset().prefetch_related(
+            'agreement__partner',
+            'frs',
+            'partner_focal_points',
+            'unicef_focal_points',
+            'offices',
+            'planned_budget',
+            'sections',
+            'result_links__cp_output',
+            'result_links__ll_results',
+            'result_links__ll_results__applied_indicators__indicator',
+            'result_links__ll_results__applied_indicators__disaggregation',
+            'result_links__ll_results__applied_indicators__locations',
+        )
 
 
 def side_effect_one(i, old_instance=None, user=None):
@@ -1420,6 +1437,30 @@ class Intervention(TimeStampedModel):
             lower_result for link in self.result_links.all()
             for lower_result in link.ll_results.all()
         ]
+
+    @cached_property
+    def intervention_locations(self):
+        # return intervention locations as a set of Location objects
+        locations = set()
+        for result_link in self.result_links.all():
+            for lower_result in result_link.ll_results.all():
+                for applied_indicator in lower_result.applied_indicators.all():
+                    for location in applied_indicator.locations.all():
+                        locations.add(location)
+
+        return locations
+
+    @cached_property
+    def intervention_clusters(self):
+        # return intervention clusters as an array of strings
+        clusters = []
+        for result_link in self.result_links.all():
+            for lower_result in result_link.ll_results.all():
+                for applied_indicator in lower_result.applied_indicators.all():
+                    if applied_indicator.cluster_indicator_title:
+                        clusters.append(applied_indicator.cluster_indicator_title)
+
+        return clusters
 
     @cached_property
     def total_frs(self):

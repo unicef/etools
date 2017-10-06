@@ -13,6 +13,10 @@ from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
     Intervention
 )
+from users.models import Country
+from EquiTrack.factories import (
+    SectionFactory,
+)
 from utils.common.utils import get_all_field_names
 
 
@@ -291,26 +295,18 @@ class TestInterventionsAPI(APITenantTestCase):
                               [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
-        '''
-        list of queries executed/counted:
-         - partners_intervention - with IN() condition
-         - partners_agreement - with IN() condition
-         - partners_partnerorganization - with IN() condition
-         - funds_fundsreservationheader - with IN() condition
-         - users_office - with IN() condition
-         - partners_interventionbudget - with IN() condition
-         - partners_interventionresultlink - with IN() condition
-         - auth_user - with IN() condition
-         - users_section -> 3 * (sections by intervention id, section_names by intervention id)
-        ^ results in 14 queries
-        '''
-
-        EXPECTED_QUERIES = 8 + (2 * 3)
+        EXPECTED_QUERIES = 10
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 3)
+
+        section1 = SectionFactory()
+        Country.objects.get(schema_name="test").sections.add(section1)
+
+        section2 = SectionFactory()
+        Country.objects.get(schema_name="test").sections.add(section2)
 
         # add another intervention to make sure that the queries are constant
         data = {
@@ -319,12 +315,12 @@ class TestInterventionsAPI(APITenantTestCase):
             "start": (timezone.now().date()).isoformat(),
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "agreement": self.agreement.id,
+            "sections": [section1.id, section2.id],
         }
+
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
-        # if we add a new intervention, two extra queries are executed (sections, section_names)
-        EXPECTED_QUERIES += 2
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
