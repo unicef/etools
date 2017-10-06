@@ -137,3 +137,27 @@ class PartnerOrganizationCsvFlatRenderer(BaseCvsFlatRenderer):
         'assessments': 'Assessment Type (Date Assessed)',
         'staff_members': 'Staff Members',
     }
+
+
+class PartnerStaffMemberCsvFlatRenderer(BaseCvsFlatRenderer):
+    header = [
+        "id",
+        "partner_name",
+        "title",
+        "first_name",
+        "last_name",
+        "email",
+        "phone",
+        "active",
+    ]
+
+    labels = {
+        "id": "Id",
+        "partner_name": "Partner Name",
+        "title": "Title",
+        "first_name": "First Name",
+        "last_name": "Last Name",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "active": "Active",
+    }

@@ -60,6 +60,28 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
     }
 
 
+class PartnerStaffMemberCsvRenderer(r.CSVRenderer):
+    header = [
+        "partner",
+        "title",
+        "first_name",
+        "last_name",
+        "email",
+        "phone",
+        "active",
+    ]
+
+    labels = {
+        "partner": "Partner",
+        "title": "Title",
+        "first_name": "First Name",
+        "last_name": "Last Name",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "active": "Active",
+    }
+
+
 class AgreementCvsRenderer(r.CSVRenderer):
     header = [
         "agreement_number",

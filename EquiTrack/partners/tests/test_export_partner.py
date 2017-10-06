@@ -13,10 +13,9 @@ from EquiTrack.factories import (
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
-
-class TestPartnerModelExport(APITenantTestCase):
+class PartnerModelExportTestCase(APITenantTestCase):
     def setUp(self):
-        super(TestPartnerModelExport, self).setUp()
+        super(PartnerModelExportTestCase, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory(
             partner_type='Government',
@@ -37,6 +36,18 @@ class TestPartnerModelExport(APITenantTestCase):
             last_assessment_date=datetime.date.today(),
         )
         self.partnerstaff = PartnerStaffFactory(partner=self.partner)
+
+
+class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_csv_export_api(self):
         response = self.forced_auth_req(
@@ -183,4 +194,84 @@ class TestPartnerModelExport(APITenantTestCase):
             u'',
             ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
                        for sm in self.partner.staff_members.filter(active=True).all()]),
+        ))
+
+
+class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/staff-members/'.format(self.partner.pk),
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/staff-members/'.format(self.partner.pk),
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 2)
+        self.assertEqual(dataset._get_headers(), [
+            "Partner",
+            "Title",
+            "First Name",
+            "Last Name",
+            "Email Address",
+            "Phone Number",
+            "Active",
+        ])
+        active = "Yes" if self.partnerstaff.active else "No"
+
+        partner_staff_member = dataset[0]
+        self.assertEqual(partner_staff_member, (
+            "{}".format(self.partner.pk),
+            self.partnerstaff.title,
+            self.partnerstaff.first_name,
+            self.partnerstaff.last_name,
+            self.partnerstaff.email,
+            u"",
+            active,
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/staff-members/'.format(self.partner.pk),
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 2)
+        self.assertEqual(dataset._get_headers(), [
+            "Id",
+            "Partner Name",
+            "Title",
+            "First Name",
+            "Last Name",
+            "Email Address",
+            "Phone Number",
+            "Active",
+        ])
+        active = "Yes" if self.partnerstaff.active else "No"
+
+        partner_staff_member = dataset[0]
+        self.assertEqual(partner_staff_member, (
+            "{}".format(self.partnerstaff.pk),
+            self.partner.name,
+            self.partnerstaff.title,
+            self.partnerstaff.first_name,
+            self.partnerstaff.last_name,
+            self.partnerstaff.email,
+            u"",
+            active,
         ))
