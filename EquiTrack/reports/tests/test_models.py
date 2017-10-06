@@ -98,7 +98,7 @@ class TestStrUnicode(TestCase):
         self.assertEqual(str(instance), b'xyz')
         self.assertEqual(unicode(instance), u'xyz')
 
-        instance = IndicatorBlueprintFactory.build(name=u'\xccsland')
+        instance = IndicatorBlueprintFactory.build(title=u'\xccsland')
         self.assertEqual(str(instance), b'\xc3\x8csland')
         self.assertEqual(unicode(instance), u'\xccsland')
 
