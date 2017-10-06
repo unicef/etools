@@ -232,16 +232,18 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
         ])
         active = "Yes" if self.partnerstaff.active else "No"
 
-        partner_staff_member = dataset[0]
-        self.assertEqual(partner_staff_member, (
-            "{}".format(self.partner.pk),
-            self.partnerstaff.title,
-            self.partnerstaff.first_name,
-            self.partnerstaff.last_name,
-            self.partnerstaff.email,
-            u"",
-            active,
-        ))
+        self.assertIn(
+            (
+                "{}".format(self.partner.pk),
+                self.partnerstaff.title,
+                self.partnerstaff.first_name,
+                self.partnerstaff.last_name,
+                self.partnerstaff.email,
+                u"",
+                active,
+            ),
+            dataset
+        )
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -266,17 +268,19 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
         ])
         active = "Yes" if self.partnerstaff.active else "No"
 
-        partner_staff_member = dataset[0]
-        self.assertEqual(partner_staff_member, (
-            "{}".format(self.partnerstaff.pk),
-            self.partner.name,
-            self.partnerstaff.title,
-            self.partnerstaff.first_name,
-            self.partnerstaff.last_name,
-            self.partnerstaff.email,
-            u"",
-            active,
-        ))
+        self.assertIn(
+            (
+                "{}".format(self.partnerstaff.pk),
+                self.partner.name,
+                self.partnerstaff.title,
+                self.partnerstaff.first_name,
+                self.partnerstaff.last_name,
+                self.partnerstaff.email,
+                u"",
+                active,
+            ),
+            dataset
+        )
 
 
 class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
