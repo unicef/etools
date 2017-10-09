@@ -1,11 +1,11 @@
 from rest_framework_csv import renderers as r
 
 
-class BaseCvsFlatRenderer(r.CSVRenderer):
+class BaseCsvFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
 
-class AssessmentCsvFlatRenderer(BaseCvsFlatRenderer):
+class AssessmentCsvFlatRenderer(BaseCsvFlatRenderer):
     header = [
         "id",
         "partner",
@@ -41,7 +41,7 @@ class AssessmentCsvFlatRenderer(BaseCvsFlatRenderer):
     }
 
 
-class AgreementCvsFlatRenderer(BaseCvsFlatRenderer):
+class AgreementCsvFlatRenderer(BaseCsvFlatRenderer):
     header = [
         "id",
         "agreement_number",
@@ -83,7 +83,7 @@ class AgreementCvsFlatRenderer(BaseCvsFlatRenderer):
     }
 
 
-class AgreementAmendmentCvsFlatRenderer(BaseCvsFlatRenderer):
+class AgreementAmendmentCsvFlatRenderer(BaseCsvFlatRenderer):
     header = [
         "id",
         "number",
@@ -107,7 +107,7 @@ class AgreementAmendmentCvsFlatRenderer(BaseCvsFlatRenderer):
     }
 
 
-class InterventionCvsFlatRenderer(BaseCvsFlatRenderer):
+class InterventionCsvFlatRenderer(BaseCsvFlatRenderer):
     header = [
             "id",
             "status",
@@ -185,7 +185,7 @@ class InterventionCvsFlatRenderer(BaseCvsFlatRenderer):
     }
 
 
-class InterventionAmendmentCvsFlatRenderer(BaseCvsFlatRenderer):
+class InterventionAmendmentCsvFlatRenderer(BaseCsvFlatRenderer):
     header = [
         "id",
         "intervention",
@@ -211,7 +211,7 @@ class InterventionAmendmentCvsFlatRenderer(BaseCvsFlatRenderer):
     }
 
 
-class PartnerOrganizationCsvFlatRenderer(BaseCvsFlatRenderer):
+class PartnerOrganizationCsvFlatRenderer(BaseCsvFlatRenderer):
     header = [
         'id',
         'vendor_number',
@@ -279,7 +279,7 @@ class PartnerOrganizationCsvFlatRenderer(BaseCvsFlatRenderer):
     }
 
 
-class PartnerStaffMemberCsvFlatRenderer(BaseCvsFlatRenderer):
+class PartnerStaffMemberCsvFlatRenderer(BaseCsvFlatRenderer):
     header = [
         "id",
         "partner_name",

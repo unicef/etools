@@ -37,12 +37,12 @@ from partners.filters import PartnerScopeFilter
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 
 from partners.exports_flat import (
-    AgreementCvsFlatRenderer,
-    AgreementAmendmentCvsFlatRenderer,
+    AgreementCsvFlatRenderer,
+    AgreementAmendmentCsvFlatRenderer,
 )
 from partners.exports_v2 import (
-    AgreementCvsRenderer,
-    AgreementAmendmentCvsRenderer,
+    AgreementCsvRenderer,
+    AgreementAmendmentCsvRenderer,
 )
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.agreements import AgreementValid
@@ -58,8 +58,8 @@ class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
     permission_classes = (PartnershipManagerPermission,)
     renderer_classes = (
         r.JSONRenderer,
-        AgreementCvsRenderer,
-        AgreementCvsFlatRenderer,
+        AgreementCsvRenderer,
+        AgreementCsvFlatRenderer,
     )
 
     SERIALIZER_MAP = {
@@ -197,8 +197,8 @@ class AgreementAmendmentListAPIView(ListAPIView):
     permission_classes = (PartneshipManagerPermission, )
     renderer_classes = (
         r.JSONRenderer,
-        AgreementAmendmentCvsRenderer,
-        AgreementAmendmentCvsFlatRenderer,
+        AgreementAmendmentCsvRenderer,
+        AgreementAmendmentCsvFlatRenderer,
     )
 
     def get_serializer_class(self, format=None):
