@@ -4,7 +4,7 @@ import json
 
 from django.conf import settings
 from django.contrib.auth.models import Group
-from django.contrib.postgres.fields import JSONField, ArrayField, HStoreField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
 from django.db.models import Q, F
 from django.db.models.signals import post_save, pre_delete
@@ -34,8 +34,6 @@ from reports.models import (
 )
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
-from supplies.models import SupplyItem
-from supplies.tasks import set_unisupply_distribution
 from users.models import Section, Office
 from notification.models import Notification
 from partners.validation.agreements import (
@@ -1138,14 +1136,31 @@ class AgreementAmendment(TimeStampedModel):
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
-        return super(InterventionManager, self).get_queryset().prefetch_related('agreement__partner',
-                                                                                'frs',
-                                                                                'offices',
-                                                                                'planned_budget')
+        return super(InterventionManager, self).get_queryset().prefetch_related(
+            'agreement__partner',
+            'frs',
+            'partner_focal_points',
+            'unicef_focal_points',
+            'offices',
+            'planned_budget',
+            'sections',
+        )
 
     def detail_qs(self):
-        return self.get_queryset().prefetch_related('result_links__cp_output',
-                                                    'unicef_focal_points')
+        return self.get_queryset().prefetch_related(
+            'agreement__partner',
+            'frs',
+            'partner_focal_points',
+            'unicef_focal_points',
+            'offices',
+            'planned_budget',
+            'sections',
+            'result_links__cp_output',
+            'result_links__ll_results',
+            'result_links__ll_results__applied_indicators__indicator',
+            'result_links__ll_results__applied_indicators__disaggregation',
+            'result_links__ll_results__applied_indicators__locations',
+        )
 
 
 def side_effect_one(i, old_instance=None, user=None):
@@ -1422,6 +1437,30 @@ class Intervention(TimeStampedModel):
             lower_result for link in self.result_links.all()
             for lower_result in link.ll_results.all()
         ]
+
+    @cached_property
+    def intervention_locations(self):
+        # return intervention locations as a set of Location objects
+        locations = set()
+        for result_link in self.result_links.all():
+            for lower_result in result_link.ll_results.all():
+                for applied_indicator in lower_result.applied_indicators.all():
+                    for location in applied_indicator.locations.all():
+                        locations.add(location)
+
+        return locations
+
+    @cached_property
+    def intervention_clusters(self):
+        # return intervention clusters as an array of strings
+        clusters = []
+        for result_link in self.result_links.all():
+            for lower_result in result_link.ll_results.all():
+                for applied_indicator in lower_result.applied_indicators.all():
+                    if applied_indicator.cluster_indicator_title:
+                        clusters.append(applied_indicator.cluster_indicator_title)
+
+        return clusters
 
     @cached_property
     def total_frs(self):
@@ -1922,9 +1961,6 @@ class GovernmentInterventionResult(models.Model):
         default=0,
         verbose_name='Planned Cash Transfers'
     )
-    activities = HStoreField(
-        blank=True, null=True
-    )
     activity = JSONField(blank=True, null=True, default=activity_default)
     unicef_managers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -2007,98 +2043,6 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     report_status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES.ontrack, max_length=15)
 
     tracker = FieldTracker()
-
-
-class SupplyPlan(models.Model):
-    """
-    Represents a supply plan for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`supplies.SupplyItem`
-    """
-    # TODO: remove partnership when model is ready
-    partnership = models.ForeignKey(
-        'partners.PCA',
-        related_name='supply_plans', null=True, blank=True
-    )
-    intervention = models.ForeignKey(
-        Intervention,
-        related_name='supplies', null=True, blank=True
-    )
-    item = models.ForeignKey(SupplyItem)
-    quantity = models.PositiveIntegerField(
-        help_text='Total quantity needed for this intervention'
-    )
-
-    tracker = FieldTracker()
-
-
-class DistributionPlan(models.Model):
-    """
-    Represents a distribution plan for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`supplies.SupplyItem`
-    Relates to :model:`locations.Location`
-    """
-    # TODO: remove partnership when model is ready
-    partnership = models.ForeignKey(
-        'partners.PCA',
-        related_name='distribution_plans', null=True, blank=True
-    )
-    intervention = models.ForeignKey(
-        Intervention,
-        related_name='distributions', null=True, blank=True
-    )
-    item = models.ForeignKey(SupplyItem)
-    site = models.ForeignKey(Location, null=True)
-    quantity = models.PositiveIntegerField(
-        help_text='Quantity required for this location'
-    )
-    send = models.BooleanField(
-        default=False,
-        verbose_name='Send to partner?'
-    )
-    sent = models.BooleanField(default=False)
-    document = JSONField(null=True, blank=True)
-    delivered = models.IntegerField(default=0)
-
-    tracker = FieldTracker()
-
-    def __unicode__(self):
-        return '{}-{}-{}-{}'.format(
-            self.intervention,
-            self.item,
-            self.site,
-            self.quantity
-        )
-    # TODO: this whole logic around supply plans and distribution plans needs
-    # to be revisited
-
-    def save(self, **kwargs):
-        if self.intervention and self.item:
-            sp_quantity = SupplyPlan.objects.filter(intervention=self.intervention, item=self.item)[0].quantity or 0
-            dp_quantity = DistributionPlan.objects.filter(
-                intervention=self.intervention, item=self.item).aggregate(
-                models.Sum('quantity'))['quantity__sum'] or 0
-            if not self.pk and self.quantity:
-                dp_quantity += self.quantity
-        if dp_quantity <= sp_quantity:
-            super(DistributionPlan, self).save(**kwargs)
-        else:
-            raise ValueError('Distribution plan quantity exceeds supply plan quantity')
-
-    @classmethod
-    def send_distribution(cls, sender, instance, created, **kwargs):
-
-        if instance.send and instance.sent is False:
-            set_unisupply_distribution.delay(instance.id)
-        elif instance.send and instance.sent:
-            instance.sent = False
-            instance.save()
-
-
-post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 
 # TODO: Move to funds

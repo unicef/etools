@@ -76,3 +76,22 @@ else:
         'INTERCEPT_REDIRECTS': False,
         'SHOW_TEMPLATE_CONTEXT': True,
     }
+
+LOGGING = LOGGING  # noqa - just here for flake purposes. should be imported from EquiTrack.settings.base
+# log updates for more info in local environment
+LOGGING['disable_existing_loggers'] = False  # don't disable any existing loggers
+
+# enable tenant logging http://django-tenant-schemas.readthedocs.io/en/latest/use.html#logging
+LOGGING['filters'] = {
+    'tenant_context': {
+        '()': 'tenant_schemas.log.TenantContextFilter'
+    }
+}
+LOGGING['formatters'] = {
+    'tenant_context': {
+        'format': '[%(schema_name)s:%(domain_url)s] '
+        '%(levelname)-7s %(asctime)s %(message)s',
+    },
+}
+LOGGING['handlers']['console']['filters'] = ['tenant_context']
+LOGGING['handlers']['console']['formatter'] = 'tenant_context'

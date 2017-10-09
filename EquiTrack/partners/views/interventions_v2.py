@@ -152,6 +152,10 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "section" in query_params.keys():
                 queries.append(Q(sections__pk=query_params.get("section")))
+            if "cluster" in query_params.keys():
+                queries.append(Q(
+                    result_links__ll_results__applied_indicators__cluster_indicator_title__icontains=query_params
+                    .get("cluster")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "unicef_focal_points" in query_params.keys():
@@ -162,9 +166,9 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
                 queries.append(Q(end__lte=query_params.get("end")))
             if "office" in query_params.keys():
                 queries.append(Q(offices__in=[query_params.get("office")]))
-            # TODO: to be rewritten to use indicator locations
             if "location" in query_params.keys():
-                queries.append(Q(sector_locations__locations__name__icontains=query_params.get("location")))
+                queries.append(Q(result_links__ll_results__applied_indicators__locations__name__icontains=query_params
+                                 .get("location")))
             if "search" in query_params.keys():
                 queries.append(
                     Q(title__icontains=query_params.get("search")) |

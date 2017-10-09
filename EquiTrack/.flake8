@@ -5,4 +5,4 @@ exclude =
     migrations,
     load_initial_data.py,
     publics/management/commands/xml,
-    t2f/management/commands/et2f_init.py
+    t2f/management/commands/et2f_init.py,

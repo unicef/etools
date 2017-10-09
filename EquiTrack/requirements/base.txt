@@ -49,7 +49,7 @@ psycopg2==2.6.2
 celery==3.1.23
 hiredis==0.2.0
 GDAL==1.10.0           # DO NOT USE GDAL <= 2.1.0
-cartodb==0.8.1
+carto==1.0.1
 gunicorn==19.6.0
 tenant-schemas-celery==0.1.5
 sqlparse==0.2.2  # for django debug toolbar to not break admin
@@ -66,7 +66,7 @@ django-debug-toolbar==1.6 # add debug-toolbar to be able to test in dev while we
 pyyaml==3.12
 django-ordered-model==1.3.0
 django-filter==1.0.2
-raven==5.27.1  # used for sentry config and dependencies
+raven==6.2.1  # used for sentry config and dependencies
 
 # Testing packages
 coverage==4.2

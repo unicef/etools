@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('users', '0008_workspacecounter'),
-        ('partners', '0052_intervention_sections'),
+        ('partners', '0054_intervention_sections'),
     ]
 
     def reverse(apps, schema_editor):
