@@ -116,7 +116,7 @@ class PartnerStaffMemberCsvRenderer(r.CSVRenderer):
     }
 
 
-class AgreementCvsRenderer(r.CSVRenderer):
+class AgreementCsvRenderer(r.CSVRenderer):
     header = [
         "agreement_number",
         "status",
@@ -150,7 +150,7 @@ class AgreementCvsRenderer(r.CSVRenderer):
     }
 
 
-class AgreementAmendmentCvsRenderer(r.CSVRenderer):
+class AgreementAmendmentCsvRenderer(r.CSVRenderer):
     header = [
         "number",
         "agreement_number",
@@ -168,7 +168,7 @@ class AgreementAmendmentCvsRenderer(r.CSVRenderer):
     }
 
 
-class InterventionCvsRenderer(r.CSVRenderer):
+class InterventionCsvRenderer(r.CSVRenderer):
     header = [
         "status", "partner_name", "partner_type", "agreement_number", "country_programme", "document_type", "number",
         "title", "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
@@ -221,7 +221,7 @@ class InterventionCvsRenderer(r.CSVRenderer):
     }
 
 
-class InterventionAmendmentCvsRenderer(r.CSVRenderer):
+class InterventionAmendmentCsvRenderer(r.CSVRenderer):
     header = [
         "intervention",
         "amendment_number",

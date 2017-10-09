@@ -46,12 +46,12 @@ from partners.serializers.interventions_v2 import (
     PlannedVisitsCUSerializer,
 )
 from partners.exports_flat import (
-    InterventionAmendmentCvsFlatRenderer,
-    InterventionCvsFlatRenderer,
+    InterventionAmendmentCsvFlatRenderer,
+    InterventionCsvFlatRenderer,
 )
 from partners.exports_v2 import (
-    InterventionAmendmentCvsRenderer,
-    InterventionCvsRenderer,
+    InterventionAmendmentCsvRenderer,
+    InterventionCsvRenderer,
 )
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
@@ -68,8 +68,8 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionCvsRenderer,
-        InterventionCvsFlatRenderer,
+        InterventionCsvRenderer,
+        InterventionCsvFlatRenderer,
     )
 
     SERIALIZER_MAP = {
@@ -336,8 +336,8 @@ class InterventionAmendmentListAPIView(ValidatorViewMixin, ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionAmendmentCvsRenderer,
-        InterventionAmendmentCvsFlatRenderer,
+        InterventionAmendmentCsvRenderer,
+        InterventionAmendmentCsvFlatRenderer,
     )
 
     def get_serializer_class(self):
