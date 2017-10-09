@@ -1,9 +1,12 @@
+import os
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.text import slugify
 from django.utils.translation import ugettext as _
 
 from model_utils.models import TimeStampedModel
@@ -24,11 +27,21 @@ class FileType(OrderedModel, models.Model):
         ordering = ('code', 'order')
 
 
+def generate_file_path(attachment, filename):
+    print(attachment.content_type.app_label, attachment.content_type.model)
+    return 'files/{}/{}/{}/{}'.format(
+        attachment.content_type.app_label,
+        slugify(attachment.content_type.model),
+        attachment.object_id,
+        os.path.split(filename)[-1]
+    )
+
+
 @python_2_unicode_compatible
 class Attachment(TimeStampedModel, models.Model):
     file_type = models.ForeignKey(FileType)
 
-    file = models.FileField(upload_to='files', blank=True, null=True)
+    file = models.FileField(upload_to=generate_file_path, blank=True, null=True)
     hyperlink = models.CharField(max_length=255, blank=True, null=True)
 
     content_type = models.ForeignKey(ContentType)
@@ -37,13 +50,16 @@ class Attachment(TimeStampedModel, models.Model):
 
     code = models.CharField(max_length=20, blank=True)
 
+    class Meta:
+        ordering = ['id', ]
+
+    def __str__(self):
+        return six.text_type(self.file)
+
     def clean(self):
         super(Attachment, self).clean()
         if bool(self.file) == bool(self.hyperlink):
             raise ValidationError(_('Please provide file or hyperlink.'))
-
-    def __str__(self):
-        return six.text_type(self.file)
 
     @property
     def url(self):

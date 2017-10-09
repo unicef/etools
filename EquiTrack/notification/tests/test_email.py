@@ -5,7 +5,7 @@ from mock import patch
 from post_office.models import EmailTemplate, Email
 
 from EquiTrack.tests.mixins import FastTenantTestCase
-from EquiTrack.factories import NotificationFactory, UserFactory, PartnerFactory, AgreementFactory
+from EquiTrack.factories import NotificationFactory, UserFactory
 from notification.models import Notification
 
 
@@ -51,17 +51,6 @@ class TestSendNotification(FastTenantTestCase):
     this only tests that if a non-email type is created, we don't do anything
     with it.
     """
-
-    def test_unicode_method_safe(self):
-        "Smoke test for __unicode__ method"
-        # Create a notification that will contain non-ASCII. Radda Barnen == Save the Children in Sweden.
-        agreement = AgreementFactory(partner=PartnerFactory(name=u'R\xe4dda Barnen'))
-        notification = NotificationFactory(sender=agreement)
-        # Conversion to Unicode shouldn't raise an error.
-        notification = unicode(notification)
-        self.assertIn('Notification from', notification)
-        self.assertIn(u'R\xe4dda', notification)
-
     def test_send_not_email(self):
         """
         This just tests that if we currently send a non Email notification,

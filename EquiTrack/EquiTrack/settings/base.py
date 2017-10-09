@@ -538,3 +538,7 @@ TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
 VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
+
+EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
+    'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@un.org'
+)

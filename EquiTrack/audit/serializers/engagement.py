@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
@@ -64,14 +65,10 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
         ]
 
     def validate(self, attrs):
-        if not self.instance and attrs.get('description') == _('Escalate to Investigation')\
+        if not self.instance and attrs.get('description') == _('Escalate to Investigation') \
                 and 'person_responsible' not in attrs:
-            email = 'integrity1@un.org'
-            attrs['person_responsible'] = User.objects.get_or_create(username=email, defaults={
-                'email': email,
-                'first_name': 'Integrity',
-                'last_name': 'Staff User',
-            })[0]
+            email = settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
+            attrs['person_responsible'] = User.objects.filter(email=email).first()
 
         return attrs
 
@@ -137,7 +134,7 @@ class EngagementSerializer(EngagementDatesValidation,
                            WritableNestedParentSerializerMixin,
                            EngagementLightSerializer):
     staff_members = SeparatedReadWriteField(
-        read_field=AuditorStaffMemberSerializer(many=True, required=False, label=_('Audit Team Members')),
+        read_field=AuditorStaffMemberSerializer(many=True, required=False, label=_('Audit Staff Team Members')),
     )
     active_pd = SeparatedReadWriteField(
         read_field=InterventionListSerializer(many=True, required=False, label=_('Programme Document(s)')),
