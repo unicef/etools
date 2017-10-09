@@ -2,12 +2,18 @@ from django.http import Http404
 from django.utils import timezone
 from easy_pdf.rendering import render_to_pdf_response
 
-from rest_framework import viewsets, mixins
+from rest_framework import generics, viewsets, mixins
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from partners.models import PartnerOrganization
+from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from reports.models import Result
+from reports.serializers.v1 import ResultLightSerializer
+from users.models import Section
+from users.serializers import SectionSerializer
 from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, \
     NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
@@ -120,6 +126,63 @@ class TPMStaffMembersViewSet(
         instance.user.profile.save()
 
 
+class ImplementingPartnerView(generics.ListAPIView):
+    queryset = PartnerOrganization.objects.filter(hidden=False)
+    serializer_class = MinimalPartnerOrganizationListSerializer
+    permission_classes = (IsAuthenticated,)
+
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+
+    visits = None
+
+    def get_queryset(self):
+        queryset = super(ImplementingPartnerView, self).get_queryset()
+
+        if self.visits is not None:
+            queryset = queryset.filter(tpmactivity__tpm_visit__in=self.visits).distinct()
+
+        return queryset
+
+
+class VisitsSectionView(generics.ListAPIView):
+    queryset = Section.objects.all()
+    serializer_class = SectionSerializer
+    permission_classes = (IsAuthenticated,)
+
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+
+    visits = None
+
+    def get_queryset(self):
+        queryset = super(VisitsSectionView, self).get_queryset()
+
+        if self.visits is not None:
+            queryset = queryset.filter(tpm_activities__tpm_visit__in=self.visits).distinct()
+
+        return queryset
+
+
+class VisitsCPOutputView(generics.ListAPIView):
+    queryset = Result.objects.filter(hidden=False)
+    serializer_class = ResultLightSerializer
+    permission_classes = (IsAuthenticated,)
+
+    filter_backends = (SearchFilter,)
+    search_fields = ('name', 'code', 'result_type__name')
+
+    visits = None
+
+    def get_queryset(self):
+        queryset = super(VisitsCPOutputView, self).get_queryset()
+
+        if self.visits is not None:
+            queryset = queryset.filter(tpmactivity__tpm_visit__in=self.visits).distinct()
+
+        return queryset
+
+
 class TPMVisitViewSet(
     BaseTPMViewSet,
     mixins.ListModelMixin,
@@ -170,6 +233,21 @@ class TPMVisitViewSet(
                 self.get_object().status == TPMVisit.STATUSES.draft:
             return TPMVisitDraftSerializer
         return super(TPMVisitViewSet, self).get_serializer_class()
+
+    @list_route(methods=['get'], url_path='activities/implementing-partners')
+    def implementing_partners(self, request, *args, **kwargs):
+        visits = self.get_queryset()
+        return ImplementingPartnerView.as_view(visits=visits)(request, *args, **kwargs)
+
+    @list_route(methods=['get'], url_path='activities/sections')
+    def sections(self, request, *args, **kwargs):
+        visits = self.get_queryset()
+        return VisitsSectionView.as_view(visits=visits)(request, *args, **kwargs)
+
+    @list_route(methods=['get'], url_path='activities/cp-outputs')
+    def cp_outputs(self, request, *args, **kwargs):
+        visits = self.get_queryset()
+        return VisitsCPOutputView.as_view(visits=visits)(request, *args, **kwargs)
 
     @list_route(methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
     def activities_export(self, request, *args, **kwargs):
