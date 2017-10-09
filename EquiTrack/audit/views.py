@@ -116,7 +116,7 @@ class EngagementPartnerView(generics.ListAPIView):
         queryset = super(EngagementPartnerView, self).get_queryset()
 
         if self.engagements is not None:
-            queryset = queryset.filter(engagement__in=self.engagements)
+            queryset = queryset.filter(engagement__in=self.engagements).distinct()
 
         return queryset
 
