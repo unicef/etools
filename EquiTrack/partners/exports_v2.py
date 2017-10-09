@@ -221,6 +221,26 @@ class InterventionCvsRenderer(r.CSVRenderer):
     }
 
 
+class InterventionAmendmentCvsRenderer(r.CSVRenderer):
+    header = [
+        "intervention",
+        "amendment_number",
+        "types",
+        "other_description",
+        "signed_amendment",
+        "signed_date",
+    ]
+
+    labels = {
+        "intervention": "Reference Number",
+        "amendment_number": "Number",
+        "types": "Types",
+        "other_description": "Description",
+        "signed_amendment": "Amendment File",
+        "signed_date": "Signed Date",
+    }
+
+
 class PartnershipDashCsvRenderer(r.CSVRenderer):
     header = [
         'partner_name', 'number', 'status', 'start', 'end', 'sectors', 'offices_names', 'total_budget',

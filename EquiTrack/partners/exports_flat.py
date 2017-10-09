@@ -184,6 +184,33 @@ class InterventionCvsFlatRenderer(BaseCvsFlatRenderer):
             "modified": "Modified",
     }
 
+
+class InterventionAmendmentCvsFlatRenderer(BaseCvsFlatRenderer):
+    header = [
+        "id",
+        "intervention",
+        "amendment_number",
+        "types",
+        "other_description",
+        "signed_amendment",
+        "signed_date",
+        "created",
+        "modified",
+    ]
+
+    labels = {
+        "id": "Id",
+        "intervention": "Reference Number",
+        "amendment_number": "Number",
+        "types": "Types",
+        "other_description": "Description",
+        "signed_amendment": "Amendment File",
+        "signed_date": "Signed Date",
+        "created": "Created",
+        "modified": "Modified",
+    }
+
+
 class PartnerOrganizationCsvFlatRenderer(BaseCvsFlatRenderer):
     header = [
         'id',

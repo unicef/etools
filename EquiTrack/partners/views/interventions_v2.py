@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 
 from rest_framework.generics import (
+    ListAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
@@ -29,6 +30,8 @@ from partners.models import (
     InterventionReportingPeriod,
 )
 from partners.serializers.interventions_v2 import (
+    InterventionAmendmentExportSerializer,
+    InterventionAmendmentExportFlatSerializer,
     InterventionListSerializer,
     InterventionDetailSerializer,
     InterventionCreateUpdateSerializer,
@@ -44,10 +47,20 @@ from partners.serializers.interventions_v2 import (
     InterventionReportingPeriodSerializer,
     PlannedVisitsCUSerializer,
 )
-from partners.exports_flat import InterventionCvsFlatRenderer
-from partners.exports_v2 import InterventionCvsRenderer
-from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter, InterventionFilter, \
-    AppliedIndicatorsFilter
+from partners.exports_flat import (
+    InterventionAmendmentCvsFlatRenderer,
+    InterventionCvsFlatRenderer,
+)
+from partners.exports_v2 import (
+    InterventionAmendmentCvsRenderer,
+    InterventionCvsRenderer,
+)
+from partners.filters import (
+    AppliedIndicatorsFilter,
+    InterventionFilter,
+    InterventionResultLinkFilter,
+    PartnerScopeFilter,
+)
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 from reports.models import LowerResult, AppliedIndicator
@@ -319,6 +332,48 @@ class InterventionResultLinkDeleteView(DestroyAPIView):
         else:
             raise ValidationError("You do not have permissions to delete a result")
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionAmendmentListAPIView(ValidatorViewMixin, ListAPIView):
+    """
+    Returns a list of InterventionAmendments.
+    """
+    serializer_class = InterventionAmendmentCUSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        InterventionAmendmentCvsRenderer,
+        InterventionAmendmentCvsFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return InterventionAmendmentExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return InterventionAmendmentExportFlatSerializer
+        return super(InterventionAmendmentListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = InterventionAmendment.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(intervention__name__icontains=query_params.get("search")) |
+                    Q(amendment_number__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+        return q
 
 
 class InterventionAmendmentDeleteView(DestroyAPIView):
