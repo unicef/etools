@@ -94,7 +94,8 @@ class AuditSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsC
 class ValidateMARiskCategories(ValidateRiskCategories):
     VALIDATE_CATEGORIES_BEFORE_SUBMIT = {
         'ma_questionnaire': 'questionnaire',
-        'ma_subject_areas': 'test_subject_areas'
+        'ma_subject_areas': 'test_subject_areas',
+        'ma_global_assessment': 'overall_risk_assessment',
     }
 
 
