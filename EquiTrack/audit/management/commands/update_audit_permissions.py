@@ -172,7 +172,6 @@ class Command(BaseCommand):
 
         # report submitted. focal point can finalize. all can view
         self.add_permissions(self.report_submitted, self.everybody, 'view', self.everything)
-        self.add_permissions(self.report_submitted, self.focal_point, 'edit', self.staff_members_block)
         self.add_permissions(self.report_submitted, self.focal_point, 'action', [
             'engagement.cancel',
             'engagement.finalize',
