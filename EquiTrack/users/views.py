@@ -111,6 +111,7 @@ class CountryView(ListAPIView):
             name=user.profile.country.name,
         )
 
+
 class CountriesViewSet(ListAPIView):
     """
     Gets the list of countries
