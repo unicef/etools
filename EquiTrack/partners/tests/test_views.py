@@ -2072,6 +2072,11 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
 
     def set_date_order_and_create(self, old_start_order, old_end_order, new_start_order, new_end_order,
                                   expected_status):
+        """
+        Helper method to test combinations of start & end date, making sure that
+        the view returns the ``expected_status``.
+        """
+        # delete existing objects which might interfere with this test
         InterventionReportingPeriod.objects.all().delete()
         day_0 = datetime.date.today()
         days = [
@@ -2080,17 +2085,18 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
             day_0 + 2 * self.one_day,
             day_0 + 3 * self.one_day,
         ]
-        due_date = day_0 + 20 * self.one_day
         old_start = days[old_start_order]
         old_end = days[old_end_order]
         new_start = days[new_start_order]
         new_end = days[new_end_order]
 
         # create the existing instance (old)
+        due_date = day_0 + 20 * self.one_day  # <- not important for this test
         InterventionReportingPeriodFactory(
             intervention=self.intervention, due_date=due_date,
             start_date=old_start, end_date=old_end,
         )
+        # Now try to create a new instance via the API
         new = self.params.copy()
         new.update({
             'start_date': new_start,
@@ -2100,6 +2106,12 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         self.assertEqual(response.status_code, expected_status)
 
     def test_create_periods_dont_overlap(self):
+        """
+        Test various combinations of start and end dates when creating a new
+        InterventionReportingPeriod instance. "Old" dates are dates for an
+        instance that already exists. "New" dates are dates for an instance
+        that we are trying to create.
+        """
         # testcases
         # ---------
         # new_start < new_end < old_start < old_end: OK

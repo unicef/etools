@@ -300,6 +300,27 @@ class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
                 'Cannot change the intervention that this reporting period is associated with.')
         return value
 
+    def check_date_order(self, start_date, end_date, due_date):
+        """
+        Validate that start_date <= end_date <= due_date.
+        """
+        if start_date > end_date:
+            raise ValidationError('end_date must be on or after start_date')
+        if end_date > due_date:
+            raise ValidationError('due_date must be on or after end_date')
+
+    def check_for_overlapping_periods(self, intervention_pk, start_date, end_date):
+        """
+        Validate that new instance doesn't overlap existing periods for this intervention.
+        """
+        periods = InterventionReportingPeriod.objects.filter(intervention=intervention_pk)
+        if self.instance:
+            # exclude ourself
+            periods = periods.exclude(pk=self.instance.pk)
+        # How to identify overlapping periods: https://stackoverflow.com/a/325939/347942
+        if periods.filter(start_date__lt=end_date).filter(end_date__gt=start_date).exists():
+            raise ValidationError('This period overlaps an existing reporting period.')
+
     def validate(self, data):
         """
         Validate that start_date <= end_date <= due_date.
@@ -310,18 +331,10 @@ class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
         start_date = data.get('start_date') or self.instance.start_date
         end_date = data.get('end_date') or self.instance.end_date
         due_date = data.get('due_date') or self.instance.due_date
+        intervention_pk = data.get('intervention') or self.instance.intervention.pk
 
-        if start_date > end_date:
-            raise ValidationError('end_date must be on or after start_date')
-        if end_date > due_date:
-            raise ValidationError('due_date must be on or after end_date')
-
-        intervention = data.get('intervention') or self.instance.intervention.pk
-        periods = InterventionReportingPeriod.objects.filter(intervention=intervention)
-        if self.instance:
-            periods = periods.exclude(pk=self.instance.pk)
-        if periods.filter(start_date__lt=end_date).filter(end_date__gt=start_date).exists():
-            raise ValidationError('This period overlaps an existing reporting period.')
+        self.check_date_order(start_date, end_date, due_date)
+        self.check_for_overlapping_periods(intervention_pk, start_date, end_date)
         return data
 
 
