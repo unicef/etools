@@ -111,6 +111,16 @@ class CountryView(ListAPIView):
             name=user.profile.country.name,
         )
 
+class CountriesViewSet(ListAPIView):
+    """
+    Gets the list of countries
+    """
+    model = Country
+    serializer_class = CountrySerializer
+
+    def get_queryset(self):
+        return Country.objects.all()
+
 
 class MyProfileAPIView(RetrieveUpdateAPIView):
     """
