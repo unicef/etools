@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
 from partners.permissions import AgreementPermissions
+from partners.serializers.fields import TypeArrayField
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
 from users.serializers import SimpleUserSerializer
 from partners.validation.agreements import AgreementValid
@@ -31,21 +32,13 @@ class AgreementAmendmentListSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AmendmentTypeField(serializers.Field):
-    def get_attribute(self, obj):
-        return obj
-
-    def to_representation(self, obj):
-        return ", ".join(obj.types)
-
-
 class AgreementAmendmentExportSerializer(serializers.ModelSerializer):
 
     agreement_number = serializers.CharField(
         source="agreement.agreement_number",
         read_only=True
     )
-    types = AmendmentTypeField()
+    types = TypeArrayField()
 
     class Meta:
         model = AgreementAmendment
