@@ -263,6 +263,18 @@ class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
     attachment = factory.django.FileField(filename='test_file.pdf')
 
 
+class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAmendment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    types = [partner_models.InterventionAmendment.BUDGET]
+    other_description = "Other description"
+    signed_date = date.today()
+    amendment_number = 123
+    signed_amendment = factory.django.FileField(filename='test_file.pdf')
+
+
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.ResultType

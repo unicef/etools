@@ -37,6 +37,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
             ('intervention-visits-del', 'planned-visits/1/', {'pk': 1}),
             ('intervention-attachments-del', 'attachments/1/', {'pk': 1}),
             ('intervention-results-del', 'results/1/', {'pk': 1}),
+            ('intervention-amendments', 'amendments/', {}),
             ('intervention-amendments-del', 'amendments/1/', {'pk': 1}),
             ('intervention-sector-locations-del', 'sector-locations/1/', {'pk': 1}),
             ('intervention-map', 'map/', {}),

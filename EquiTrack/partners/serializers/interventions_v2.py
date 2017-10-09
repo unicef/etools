@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from funds.serializers import FRsSerializer
 from partners.permissions import InterventionPermissions
+from partners.serializers.fields import TypeArrayField
 from reports.serializers.v1 import SectorLightSerializer
 from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 from locations.models import Location
@@ -56,6 +57,18 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
+
+
+class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
+    types = TypeArrayField()
+
+    class Meta:
+        model = InterventionAmendment
+        fields = "__all__"
+
+
+class InterventionAmendmentExportFlatSerializer(InterventionAmendmentExportSerializer):
+    intervention = serializers.CharField(source="intervention.number")
 
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):

@@ -11,6 +11,7 @@ from EquiTrack.factories import (
     CountryProgrammeFactory,
     CurrencyFactory,
     InterventionFactory,
+    InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionBudgetFactory,
     InterventionPlannedVisitFactory,
@@ -21,9 +22,9 @@ from EquiTrack.factories import (
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
-class TestInterventionModelExport(APITenantTestCase):
+class BaseInterventionModelExportTestCase(APITenantTestCase):
     def setUp(self):
-        super(TestInterventionModelExport, self).setUp()
+        super(BaseInterventionModelExportTestCase, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         partner = PartnerFactory(
             partner_type='Government',
@@ -83,6 +84,17 @@ class TestInterventionModelExport(APITenantTestCase):
         self.attachment = InterventionAttachmentFactory(
             intervention=self.intervention,
         )
+
+
+class TestInterventionModelExport(BaseInterventionModelExportTestCase):
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_csv_export_api(self):
         response = self.forced_auth_req(
@@ -260,4 +272,83 @@ class TestInterventionModelExport(APITenantTestCase):
             u'{}: {}'.format(self.attachment.type.name, self.attachment.attachment.url),
             u'{}'.format(self.intervention.created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
             u'{}'.format(self.intervention.modified.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
+        ))
+
+
+class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
+    def setUp(self):
+        super(TestInterventionAmendmentModelExport, self).setUp()
+        self.amendment = InterventionAmendmentFactory(
+            intervention=self.intervention,
+        )
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/amendments/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/amendments/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Reference Number",
+            "Number",
+            "Types",
+            "Description",
+            "Amendment File",
+            "Signed Date",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.intervention.pk),
+            u"{}".format(int(self.amendment.amendment_number)),
+            ",".join(self.amendment.types),
+            unicode(self.amendment.other_description),
+            u"http://testserver{}".format(self.amendment.signed_amendment.url),
+            u"{}".format(self.amendment.signed_date),
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/amendments/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Id",
+            "Reference Number",
+            "Number",
+            "Types",
+            "Description",
+            "Amendment File",
+            "Signed Date",
+            "Created",
+            "Modified",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.amendment.pk),
+            u"{}".format(self.intervention.number),
+            u"{}".format(int(self.amendment.amendment_number)),
+            ",".join(self.amendment.types),
+            unicode(self.amendment.other_description),
+            u"http://testserver{}".format(self.amendment.signed_amendment.url),
+            u"{}".format(self.amendment.signed_date),
+            u'{}'.format(self.amendment.created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
+            u'{}'.format(self.amendment.modified.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
         ))
