@@ -2071,6 +2071,8 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
     # Create
 
     def test_create(self):
+        # delete existing factory-created objects
+        InterventionReportingPeriod.objects.all().delete()
         response = self.forced_auth_req('post', self.list_url, data=self.params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
