@@ -241,6 +241,52 @@ class InterventionAmendmentCsvRenderer(r.CSVRenderer):
     }
 
 
+class InterventionResultCsvRenderer(r.CSVRenderer):
+    header = [
+        "intervention",
+        "country_programme",
+        "result_type",
+        "sector",
+        "name",
+        "code",
+        "from_date",
+        "to_date",
+        "humanitarian_tag",
+        "wbs",
+        "vision_id",
+        "gic_code",
+        "gic_name",
+        "sic_code",
+        "sic_name",
+        "activity_focus_code",
+        "activity_focus_name",
+        "hidden",
+        "ram",
+    ]
+
+    labels = {
+        "intervention": "Reference Number",
+        "country_programme": "Country Programme",
+        "result_type": "Result Type",
+        "sector": "Section",
+        "name": "Name",
+        "code": "Code",
+        "from_date": "From Date",
+        "to_date": "To Date",
+        "humanitarian_tag": "Humanitarian Tag",
+        "wbs": "WSB",
+        "vision_id": "Vision Id",
+        "gic_code": "GIC Code",
+        "gic_name": "GIC Name",
+        "sic_code": "SIC Code",
+        "sic_name": "SIC Name",
+        "activity_focus_code": "Activity Focus Code",
+        "activity_focus_name": "Activity Focus Name",
+        "hidden": "Hidden",
+        "ram": "RAM",
+    }
+
+
 class PartnershipDashCsvRenderer(r.CSVRenderer):
     header = [
         'partner_name', 'number', 'status', 'start', 'end',

@@ -10,11 +10,13 @@ from EquiTrack.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
     CurrencyFactory,
+    IndicatorFactory,
     InterventionFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionBudgetFactory,
     InterventionPlannedVisitFactory,
+    InterventionResultLinkFactory,
     PartnerFactory,
     PartnerStaffFactory,
     UserFactory,
@@ -152,7 +154,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             unicode(self.intervention.agreement.partner.name),
             self.intervention.agreement.partner.partner_type,
             self.intervention.agreement.agreement_number,
-            unicode(self.intervention.agreement.country_programme.name),
+            unicode(self.intervention.agreement.country_programme.name), 
             self.intervention.document_type,
             self.intervention.reference_number,
             unicode(self.intervention.title),
@@ -351,4 +353,139 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
             u"{}".format(self.amendment.signed_date),
             u'{}'.format(self.amendment.created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
             u'{}'.format(self.amendment.modified.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
+        ))
+
+
+class TestInterventionResultLinkModelExport(BaseInterventionModelExportTestCase):
+    def setUp(self):
+        super(TestInterventionResultLinkModelExport, self).setUp()
+        indicator = IndicatorFactory()
+        self.link = InterventionResultLinkFactory(
+            intervention=self.intervention,
+        )
+        self.link.ram_indicators.add(indicator)
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/results/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/results/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        humanitarian_tag = "Yes" if self.link.cp_output.humanitarian_tag else "No"
+        hidden = "Yes" if self.link.cp_output.hidden else "No"
+        ram = "Yes" if self.link.cp_output.ram else "No"
+        self.assertEqual(dataset._get_headers(), [
+            "Reference Number",
+            "Country Programme",
+            "Result Type",
+            "Section",
+            "Name",
+            "Code",
+            "From Date",
+            "To Date",
+            "Humanitarian Tag",
+            "WSB",
+            "Vision Id",
+            "GIC Code",
+            "GIC Name",
+            "SIC Code",
+            "SIC Name",
+            "Activity Focus Code",
+            "Activity Focus Name",
+            "Hidden",
+            "RAM",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.intervention.number),
+            u"",
+            unicode(self.link.cp_output.result_type),
+            u"",
+            unicode(self.link.cp_output.name),
+            u"",
+            u"{}".format(self.link.cp_output.from_date),
+            u"{}".format(self.link.cp_output.to_date),
+            humanitarian_tag,
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            hidden,
+            ram,
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/results/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        humanitarian_tag = "Yes" if self.link.cp_output.humanitarian_tag else "No"
+        hidden = "Yes" if self.link.cp_output.hidden else "No"
+        ram = "Yes" if self.link.cp_output.ram else "No"
+        self.assertEqual(dataset._get_headers(), [
+            "Id",
+            "Reference Number",
+            "Country Programme",
+            "Result Type",
+            "Section",
+            "Name",
+            "Code",
+            "From Date",
+            "To Date",
+            "Humanitarian Tag",
+            "WSB",
+            "Vision Id",
+            "GIC Code",
+            "GIC Name",
+            "SIC Code",
+            "SIC Name",
+            "Activity Focus Code",
+            "Activity Focus Name",
+            "Hidden",
+            "RAM",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.link.pk),
+            u"{}".format(self.intervention.number),
+            u"",
+            unicode(self.link.cp_output.result_type),
+            u"",
+            unicode(self.link.cp_output.name),
+            u"",
+            u"{}".format(self.link.cp_output.from_date),
+            u"{}".format(self.link.cp_output.to_date),
+            humanitarian_tag,
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            hidden,
+            ram,
         ))

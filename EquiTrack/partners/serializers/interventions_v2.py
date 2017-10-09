@@ -8,7 +8,11 @@ from funds.serializers import FRsSerializer
 from partners.permissions import InterventionPermissions
 from partners.serializers.fields import TypeArrayField
 from reports.serializers.v1 import SectorLightSerializer
-from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
+from reports.serializers.v2 import (
+    IndicatorSerializer,
+    LowerResultCUSerializer,
+    LowerResultSerializer,
+)
 from locations.models import Location
 
 from partners.models import (
@@ -236,6 +240,96 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
         ll_results = self.context.pop('ll_results', [])
         self.update_ll_results(instance, ll_results)
         return super(InterventionResultCUSerializer, self).update(instance, validated_data)
+
+
+class InterventionResultSerializer(serializers.ModelSerializer):
+    humanitarian_tag = serializers.SerializerMethodField()
+    hidden = serializers.SerializerMethodField()
+    ram = serializers.SerializerMethodField()
+    ram_indicators = IndicatorSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = InterventionResultLink
+        fields = "__all__"
+
+    def get_humanitarian_tag(self, obj):
+        return "Yes" if obj.cp_output.humanitarian_tag else "No"
+
+    def get_hidden(self, obj):
+        return "Yes" if obj.cp_output.hidden else "No"
+
+    def get_ram(self, obj):
+        return "Yes" if obj.cp_output.ram else "No"
+
+
+class InterventionResultExportSerializer(InterventionResultSerializer):
+    intervention = serializers.CharField(source="intervention.number")
+    country_programme = serializers.CharField(source="cp_output.country_programme.name")
+    result_type = serializers.CharField(source="cp_output.result_type.name")
+    sector = serializers.CharField(source="cp_output.sector.name")
+    name = serializers.CharField(source="cp_output.name")
+    code = serializers.CharField(source="cp_output.code")
+    from_date = serializers.CharField(source="cp_output.from_date")
+    to_date = serializers.CharField(source="cp_output.to_date")
+    wbs = serializers.CharField(source="cp_output.wbs")
+    vision_id = serializers.CharField(source="cp_output.vision_id")
+    gic_code = serializers.CharField(source="cp_output.gic_code")
+    gic_name = serializers.CharField(source="cp_output.gic_name")
+    sic_code = serializers.CharField(source="cp_output.sic_code")
+    sic_name = serializers.CharField(source="cp_output.sic_name")
+    activity_focus_code = serializers.CharField(source="cp_output.activity_focus_code")
+    activity_focus_name = serializers.CharField(source="cp_output.activity_focus_name")
+
+    class Meta:
+        model = InterventionResultLink
+        fields = (
+            "intervention",
+            "country_programme",
+            "result_type",
+            "sector",
+            "name",
+            "code",
+            "from_date",
+            "to_date",
+            "humanitarian_tag",
+            "wbs",
+            "vision_id",
+            "gic_code",
+            "gic_name",
+            "sic_code",
+            "sic_name",
+            "activity_focus_code",
+            "activity_focus_name",
+            "hidden",
+            "ram",
+        )
+
+
+class InterventionResultExportFlatSerializer(InterventionResultExportSerializer):
+    class Meta:
+        model = InterventionResultLink
+        fields = (
+            "id",
+            "intervention",
+            "country_programme",
+            "result_type",
+            "sector",
+            "name",
+            "code",
+            "from_date",
+            "to_date",
+            "humanitarian_tag",
+            "wbs",
+            "vision_id",
+            "gic_code",
+            "gic_name",
+            "sic_code",
+            "sic_name",
+            "activity_focus_code",
+            "activity_focus_name",
+            "hidden",
+            "ram",
+        )
 
 
 class FundingCommitmentNestedSerializer(serializers.ModelSerializer):

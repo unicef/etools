@@ -41,6 +41,9 @@ from partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
     InterventionSectorLocationCUSerializer,
     InterventionResultCUSerializer,
+    InterventionResultSerializer,
+    InterventionResultExportSerializer,
+    InterventionResultExportFlatSerializer,
     InterventionListMapSerializer,
     MinimalInterventionListSerializer,
     PlannedVisitsCUSerializer,
@@ -48,10 +51,12 @@ from partners.serializers.interventions_v2 import (
 from partners.exports_flat import (
     InterventionAmendmentCsvFlatRenderer,
     InterventionCsvFlatRenderer,
+    InterventionResultCsvFlatRenderer,
 )
 from partners.exports_v2 import (
     InterventionAmendmentCsvRenderer,
     InterventionCsvRenderer,
+    InterventionResultCsvRenderer,
 )
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
@@ -306,6 +311,49 @@ class InterventionAttachmentDeleteView(DestroyAPIView):
         else:
             raise ValidationError("You do not have permissions to delete an attachment")
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionResultListAPIView(ListAPIView):
+    """
+    Returns a list of InterventionResultLinks.
+    """
+    serializer_class = InterventionResultSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        InterventionResultCsvRenderer,
+        InterventionResultCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return InterventionResultExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return InterventionResultExportFlatSerializer
+        return super(InterventionResultListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = InterventionResultLink.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(intervention__name__icontains=query_params.get("search")) |
+                    Q(cp_output__name__icontains=query_params.get("search")) |
+                    Q(cp_output__code__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+        return q
 
 
 class InterventionResultLinkDeleteView(DestroyAPIView):

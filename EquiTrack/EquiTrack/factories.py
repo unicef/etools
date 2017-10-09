@@ -682,3 +682,12 @@ class DSARateFactory(factory.django.DjangoModelFactory):
     dsa_amount_60plus_local = 1
     room_rate = 10
     finalization_date = date.today()
+
+
+class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionResultLink
+
+    intervention = factory.SubFactory(InterventionFactory)
+    cp_output = factory.SubFactory(ResultFactory)
