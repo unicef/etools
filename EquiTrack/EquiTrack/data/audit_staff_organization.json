@@ -23,7 +23,7 @@
     "fields": {
       "created": "2017-09-29T11:40:50.678Z",
       "modified": "2017-09-29T11:40:50.710Z",
-      "order_number": "000",
+      "order_number": "0000000000",
       "item_number": 0,
       "auditor_firm": ["000"],
       "contract_start_date": "1946-12-11",
