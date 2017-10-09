@@ -32,7 +32,7 @@ from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from .transitions.conditions import AuditSubmitReportRequiredFieldsCheck, ValidateAuditRiskCategories, \
     EngagementHasReportAttachmentsCheck, SPSubmitReportRequiredFieldsCheck, ValidateMARiskCategories, \
-    EngagementSubmitReportRequiredFieldsCheck
+    EngagementSubmitReportRequiredFieldsCheck, ValidateMARiskExtra
 from .transitions.serializers import EngagementCancelSerializer
 
 
@@ -507,6 +507,7 @@ class MicroAssessment(Engagement):
         conditions=[
             EngagementSubmitReportRequiredFieldsCheck.as_condition(),
             ValidateMARiskCategories.as_condition(),
+            ValidateMARiskExtra.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
         permission=_has_action_permission(action='submit')
