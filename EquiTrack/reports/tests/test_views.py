@@ -250,3 +250,27 @@ class TestLowerResultExportList(APITenantTestCase):
             u"{}".format(self.lower_result.name),
             unicode(self.lower_result.code),
         ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/lower_results/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Id",
+            "Reference Number",
+            "Name",
+            "Code",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.lower_result.pk),
+            u"{}".format(self.result_link.intervention.number),
+            u"{}".format(self.lower_result.name),
+            unicode(self.lower_result.code),
+        ))
