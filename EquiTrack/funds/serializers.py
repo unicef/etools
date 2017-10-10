@@ -39,3 +39,13 @@ class FRsSerializer(serializers.Serializer):
 
     def get_total_actual_amt(self, obj):
         return sum([i.actual_amt for i in obj.all()])
+
+
+class FundsReservationHeaderExportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FundsReservationHeader
+        fields = '__all__'
+
+
+class FundsReservationHeaderExportFlatSerializer(FundsReservationHeaderExportSerializer):
+    intervention = serializers.CharField(source="intervention.number")
