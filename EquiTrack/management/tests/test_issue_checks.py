@@ -3,9 +3,10 @@ from django.test import override_settings
 from EquiTrack.factories import PartnerFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from management.issues.checks import BaseIssueCheck, get_issue_checks, get_issue_check_by_id, run_all_checks, \
-    ModelCheckData
+    ModelCheckData, bootstrap_checks, get_active_issue_checks
 from management.issues.exceptions import IssueFoundException, IssueCheckNotFoundException
-from management.models import FlaggedIssue, ISSUE_STATUS_NEW, ISSUE_STATUS_RESOLVED, ISSUE_STATUS_REACTIVATED
+from management.models import FlaggedIssue, ISSUE_STATUS_NEW, ISSUE_STATUS_RESOLVED, ISSUE_STATUS_REACTIVATED, \
+    IssueCheckConfig
 from partners.models import PartnerOrganization
 
 
@@ -46,11 +47,36 @@ class IssueCheckTest(FastTenantTestCase):
 
     def tearDown(self):
         FlaggedIssue.objects.all().delete()
+        IssueCheckConfig.objects.all().delete()
         super(IssueCheckTest, self).tearDown()
 
     @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
     def test_get_issue_checks(self):
         checks = list(get_issue_checks())
+        self.assertEqual(1, len(checks))
+        self.assertTrue(type(checks[0]) == PartnersMustHaveShortNameTestCheck)
+
+    @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+    def test_bootstrap_checks(self):
+        bootstrap_checks()
+        self.assertEqual(1, IssueCheckConfig.objects.count())
+        self.assertEqual(False,
+                         IssueCheckConfig.objects.get(check_id='partners_must_have_short_name').is_active)
+        # make sure rerunning doesn't recreate
+        bootstrap_checks(default_is_active=True)
+        self.assertEqual(1, IssueCheckConfig.objects.count())
+        # or modify existing checks
+        self.assertEqual(False,
+                         IssueCheckConfig.objects.get(check_id='partners_must_have_short_name').is_active)
+
+    @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
+    def test_get_active_issue_checks(self):
+        bootstrap_checks(default_is_active=False)
+        self.assertEqual([], list(get_active_issue_checks()))
+        check_config = IssueCheckConfig.objects.get(check_id='partners_must_have_short_name')
+        check_config.is_active = True
+        check_config.save()
+        checks = list(get_active_issue_checks())
         self.assertEqual(1, len(checks))
         self.assertTrue(type(checks[0]) == PartnersMustHaveShortNameTestCheck)
 
