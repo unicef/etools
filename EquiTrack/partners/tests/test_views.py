@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import csv
 import datetime
-from datetime import date, timedelta
 from decimal import Decimal
 import json
 from unittest import skip, TestCase
@@ -23,10 +22,11 @@ from EquiTrack.factories import (
     AgreementFactory,
     AgreementAmendmentFactory,
     CountryProgrammeFactory,
-    FundsReservationHeaderFactory,
-    GovernmentInterventionFactory,
     GroupFactory,
     InterventionFactory,
+    InterventionReportingPeriodFactory,
+    GovernmentInterventionFactory,
+    FundsReservationHeaderFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
     PartnerStaffFactory,
@@ -48,6 +48,7 @@ from partners.models import (
     InterventionAttachment,
     InterventionBudget,
     InterventionPlannedVisits,
+    InterventionReportingPeriod,
     FileType,
     PartnerOrganization,
     PartnerType,
@@ -540,7 +541,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_partners_update_assessments_yesterday(self):
-        completed_date = datetime.date.today() - timedelta(days=1)
+        completed_date = datetime.date.today() - datetime.timedelta(days=1)
         assessments = [{
                 "id": self.assessment2.id,
                 "completed_date": completed_date,
@@ -590,7 +591,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.data["staff_members"][1]["phone"], None)
 
     def test_api_partners_update_assessments_tomorrow(self):
-        completed_date = datetime.date.today() + timedelta(days=1)
+        completed_date = datetime.date.today() + datetime.timedelta(days=1)
         assessments = [{
                 "id": self.assessment2.id,
                 "completed_date": completed_date,
@@ -1054,8 +1055,8 @@ class TestAgreementAPIView(APITenantTestCase):
 
         today = datetime.date.today()
         self.country_programme = CountryProgrammeFactory(
-            from_date=date(today.year - 1, 1, 1),
-            to_date=date(today.year + 1, 1, 1))
+            from_date=datetime.date(today.year - 1, 1, 1),
+            to_date=datetime.date(today.year + 1, 1, 1))
 
         attached_agreement = "agreement.pdf"
         self.agreement = AgreementFactory(
@@ -1110,7 +1111,7 @@ class TestAgreementAPIView(APITenantTestCase):
         for r in response_json:
             self.assertEqual(r['end'], self.country_programme.to_date.isoformat())
 
-        self.country_programme.to_date = self.country_programme.to_date + timedelta(days=1)
+        self.country_programme.to_date = self.country_programme.to_date + datetime.timedelta(days=1)
         self.country_programme.save()
         response = self.forced_auth_req(
             'get',
@@ -2017,6 +2018,224 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.intervention["id"])
+
+
+class TestInterventionReportingPeriodViews(APITenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        # create a staff user in the Partnership Manager group
+        cls.user = UserFactory(is_staff=True)
+        cls.user.groups.add(GroupFactory())
+        cls.intervention = InterventionFactory()
+        cls.list_url = reverse('partners_api:intervention-reporting-periods-list', args=[cls.intervention.pk])
+        cls.num_periods = 3
+        InterventionReportingPeriodFactory.create_batch(cls.num_periods, intervention=cls.intervention)
+        cls.reporting_period = InterventionReportingPeriod.objects.first()
+        cls.detail_url = reverse('partners_api:intervention-reporting-periods-detail',
+                                 args=[cls.reporting_period.pk])
+
+    def setUp(self):
+        self.params = {
+            'start_date': datetime.date.today(),
+            'end_date': datetime.date.today() + datetime.timedelta(days=1),
+            'due_date': datetime.date.today() + datetime.timedelta(days=20),
+            'intervention': self.intervention.pk,
+        }
+        self.one_day = datetime.timedelta(days=1)
+
+    # List
+
+    def test_list(self):
+        response = self.forced_auth_req('get', self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(len(data), self.num_periods)
+        # check that our keys match our expectation
+        self.assertEqual(set(data[0]), {'start_date', 'end_date', 'due_date', 'intervention'})
+        self.assertEqual(data[0]['intervention'], self.intervention.pk)
+
+    def test_list_empty(self):
+        InterventionReportingPeriod.objects.all().delete()
+        response = self.forced_auth_req('get', self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data, [])
+
+    def test_list_only_our_intervention_periods(self):
+        other_intervention = InterventionReportingPeriodFactory()
+        response = self.forced_auth_req('get', self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        # only ``num_periods`` items are retrieved ...
+        self.assertEqual(len(data), self.num_periods)
+        for period in data:
+            # ... and other_intervention isn't in there
+            self.assertNotEqual(period['intervention'], other_intervention.pk)
+
+    # Create
+
+    def test_create(self):
+        # delete existing factory-created objects
+        InterventionReportingPeriod.objects.all().delete()
+        response = self.forced_auth_req('post', self.list_url, data=self.params)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+        for key in ['start_date', 'end_date', 'due_date', 'intervention']:
+            self.assertEqual(str(data[key]), str(self.params[key]))
+
+    def test_create_required_fields(self):
+        params = {}
+        response = self.forced_auth_req('post', self.list_url, data=params)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = json.loads(response.content)
+        for key in ['start_date', 'end_date', 'due_date', 'intervention']:
+            self.assertEqual(data[key], ["This field is required."])
+
+    def test_create_start_must_be_on_or_before_end(self):
+        self.params['end_date'] = self.params['start_date'] - self.one_day
+        response = self.forced_auth_req('post', self.list_url, data=self.params)
+        self.assertContains(response, 'end_date must be on or after start_date',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+
+    def test_create_end_must_be_on_or_before_due(self):
+        self.params['due_date'] = self.params['end_date'] - self.one_day
+        response = self.forced_auth_req('post', self.list_url, data=self.params)
+        self.assertContains(response, 'due_date must be on or after end_date',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+
+    def test_create_start_must_be_on_or_before_due(self):
+        self.params['due_date'] = self.params['start_date'] - self.one_day
+        response = self.forced_auth_req('post', self.list_url, data=self.params)
+        self.assertContains(response, 'due_date must be on or after end_date',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+
+    def set_date_order_and_create(self, old_start_order, old_end_order, new_start_order, new_end_order,
+                                  expected_status):
+        """
+        Helper method to test combinations of start & end date, making sure that
+        the view returns the ``expected_status``.
+        """
+        # delete existing objects which might interfere with this test
+        InterventionReportingPeriod.objects.all().delete()
+        day_0 = datetime.date.today()
+        days = [
+            day_0,
+            day_0 + 1 * self.one_day,
+            day_0 + 2 * self.one_day,
+            day_0 + 3 * self.one_day,
+        ]
+        old_start = days[old_start_order]
+        old_end = days[old_end_order]
+        new_start = days[new_start_order]
+        new_end = days[new_end_order]
+
+        # create the existing instance (old)
+        due_date = day_0 + 20 * self.one_day  # <- not important for this test
+        InterventionReportingPeriodFactory(
+            intervention=self.intervention, due_date=due_date,
+            start_date=old_start, end_date=old_end,
+        )
+        # Now try to create a new instance via the API
+        new = self.params.copy()
+        new.update({
+            'start_date': new_start,
+            'end_date': new_end,
+        })
+        response = self.forced_auth_req('post', self.list_url, data=new)
+        self.assertEqual(response.status_code, expected_status)
+
+    def test_create_periods_dont_overlap(self):
+        """
+        Test various combinations of start and end dates when creating a new
+        InterventionReportingPeriod instance. "Old" dates are dates for an
+        instance that already exists. "New" dates are dates for an instance
+        that we are trying to create.
+        """
+        # testcases
+        # ---------
+        # new_start < new_end < old_start < old_end: OK
+        # new_start < new_end = old_start < old_end: OK
+        # old_start < old_end < new_start < new_end: OK
+        # old_start < old_end = new_start < new_end: OK
+        # new_start < old_start < new_end < old_end: FAIL
+        # new_start < old_start < old_end < new_end: FAIL
+        # old_start < new_start < new_end < old_end: FAIL
+        # old_start < new_start < old_end < new_end: FAIL
+        first, second, third, fourth = range(4)
+        OK, FAIL = (status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST)
+
+        # arguments: (old_start_order, old_end_order, new_start_order, new_end_order, expected_status)
+        self.set_date_order_and_create(third, fourth, first, second, OK)
+        self.set_date_order_and_create(third, fourth, first, third, OK)
+        self.set_date_order_and_create(first, second, third, fourth, OK)
+        self.set_date_order_and_create(first, second, second, fourth, OK)
+
+        self.set_date_order_and_create(second, fourth, first, third, FAIL)
+        self.set_date_order_and_create(second, third, first, fourth, FAIL)
+        self.set_date_order_and_create(first, fourth, second, third, FAIL)
+        self.set_date_order_and_create(first, third, second, fourth, FAIL)
+
+    # Get
+
+    def test_get(self):
+        response = self.forced_auth_req('get', self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(set(data.keys()),
+                         {'intervention', 'start_date', 'end_date', 'due_date'})
+
+    def test_get_404(self):
+        nonexistent_pk = 0
+        url = reverse('partners_api:intervention-reporting-periods-detail',
+                      args=[nonexistent_pk])
+        response = self.forced_auth_req('get', url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    # Patch
+
+    def test_patch(self):
+        params = {
+            'due_date': self.reporting_period.due_date + datetime.timedelta(days=1)
+        }
+        response = self.forced_auth_req('patch', self.detail_url, data=params)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data['due_date'], str(params['due_date']))
+
+    def test_patch_change_multiple_fields(self):
+        params = {
+            'end_date': self.reporting_period.end_date + datetime.timedelta(days=1),
+            'due_date': self.reporting_period.due_date + datetime.timedelta(days=1),
+        }
+        response = self.forced_auth_req('patch', self.detail_url, data=params)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data['end_date'], str(params['end_date']))
+        self.assertEqual(data['due_date'], str(params['due_date']))
+
+    def test_patch_order_must_still_be_valid(self):
+        params = {
+            'end_date': self.reporting_period.start_date - self.one_day
+        }
+        response = self.forced_auth_req('patch', self.detail_url, data=params)
+        self.assertContains(response, 'end_date must be on or after start_date',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+
+    def test_patch_cannot_change_intervention(self):
+        new_intervention = InterventionFactory()
+        params = {
+            'intervention': new_intervention.pk
+        }
+        response = self.forced_auth_req('patch', self.detail_url, data=params)
+        self.assertContains(response, 'Cannot change the intervention',
+                            status_code=status.HTTP_400_BAD_REQUEST)
+
+    # Delete
+
+    def test_delete(self):
+        response = self.forced_auth_req('delete', self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class TestPartnershipDashboardView(APITenantTestCase):
