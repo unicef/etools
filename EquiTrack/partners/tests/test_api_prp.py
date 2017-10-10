@@ -62,6 +62,7 @@ class TestInterventionsAPI(APITenantTestCase):
                 del expected_intervention['expected_results'][j]['indicators'][0]['id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
                 del actual_intervention['expected_results'][j]['id']
+                del actual_intervention['expected_results'][j]['result_link']
                 del actual_intervention['expected_results'][j]['cp_output']['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']

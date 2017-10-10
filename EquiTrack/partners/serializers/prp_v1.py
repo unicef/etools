@@ -121,6 +121,7 @@ class PRPResultSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+            'result_link',
             'cp_output',
             'indicators',
         )
