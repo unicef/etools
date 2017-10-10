@@ -23,7 +23,10 @@ from partners.views.interventions_v2 import (
     InterventionAmendmentDeleteView,
     InterventionListMapView,
     InterventionLowerResultListCreateView, InterventionLowerResultUpdateView, InterventionResultLinkListCreateView,
-    InterventionResultLinkUpdateView, InterventionIndicatorsListView, InterventionIndicatorsUpdateView)
+    InterventionResultLinkUpdateView, InterventionIndicatorsListView, InterventionIndicatorsUpdateView,
+    InterventionReportingPeriodListCreateView,
+    InterventionReportingPeriodDetailView,
+)
 
 from partners.views.v2 import (
     PmpStaticDropdownsListApiView, PMPDropdownsListApiView,
@@ -146,6 +149,13 @@ urlpatterns = (
     url(r'^interventions/partnership-dash/$',
         view=InterventionPartnershipDashView.as_view(http_method_names=['get', ]),
         name='interventions-partnership-dash'),
+
+    url(r'^interventions/(?P<intervention_pk>\d+)/reporting-periods/$',
+        view=InterventionReportingPeriodListCreateView.as_view(http_method_names=['get', 'post']),
+        name='intervention-reporting-periods-list'),
+    url(r'^interventions/reporting-periods/(?P<pk>\d+)/$',
+        view=InterventionReportingPeriodDetailView.as_view(http_method_names=['get', 'patch', 'delete']),
+        name='intervention-reporting-periods-detail'),
 
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
