@@ -154,7 +154,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             unicode(self.intervention.agreement.partner.name),
             self.intervention.agreement.partner.partner_type,
             self.intervention.agreement.agreement_number,
-            unicode(self.intervention.agreement.country_programme.name), 
+            unicode(self.intervention.agreement.country_programme.name),
             self.intervention.document_type,
             self.intervention.reference_number,
             unicode(self.intervention.title),
@@ -356,9 +356,9 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         ))
 
 
-class TestInterventionResultLinkModelExport(BaseInterventionModelExportTestCase):
+class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
     def setUp(self):
-        super(TestInterventionResultLinkModelExport, self).setUp()
+        super(TestInterventionResultModelExport, self).setUp()
         indicator = IndicatorFactory()
         self.link = InterventionResultLinkFactory(
             intervention=self.intervention,
@@ -488,4 +488,130 @@ class TestInterventionResultLinkModelExport(BaseInterventionModelExportTestCase)
             u"",
             hidden,
             ram,
+        ))
+
+
+class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
+    def setUp(self):
+        super(TestInterventionIndicatorModelExport, self).setUp()
+        self.indicator = IndicatorFactory(
+            name="Name",
+            code="Code"
+        )
+        self.link = InterventionResultLinkFactory(
+            intervention=self.intervention,
+        )
+        self.link.ram_indicators.add(self.indicator)
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/indicators/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/indicators/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        ram_indicator = "Yes" if self.indicator.ram_indicator else "No"
+        active = "Yes" if self.indicator.active else "No"
+        view_on_dashboard = "Yes" if self.indicator.view_on_dashboard else "No"
+        self.assertEqual(dataset._get_headers(), [
+            "Reference Number",
+            "Sector",
+            "Result",
+            "Name",
+            "Code",
+            "Unit",
+            "UNICEF Target",
+            "Sector Target",
+            "Current",
+            "Sector Current",
+            "Assumptions",
+            "Target",
+            "Baseline",
+            "RAM Indicator",
+            "Active",
+            "View on Dashboard",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.intervention.pk),
+            u"",
+            u"",
+            unicode(self.indicator.name),
+            unicode(self.indicator.code),
+            u"",
+            u"",
+            u"",
+            u"{}".format(self.indicator.current),
+            u"",
+            u"",
+            u"",
+            u"",
+            ram_indicator,
+            active,
+            view_on_dashboard,
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/indicators/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        ram_indicator = "Yes" if self.indicator.ram_indicator else "No"
+        active = "Yes" if self.indicator.active else "No"
+        view_on_dashboard = "Yes" if self.indicator.view_on_dashboard else "No"
+        self.assertEqual(dataset._get_headers(), [
+            "Id",
+            "Reference Number",
+            "Sector",
+            "Result",
+            "Name",
+            "Code",
+            "Unit",
+            "UNICEF Target",
+            "Sector Target",
+            "Current",
+            "Sector Current",
+            "Assumptions",
+            "Target",
+            "Baseline",
+            "RAM Indicator",
+            "Active",
+            "View on Dashboard",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.indicator.pk),
+            u"{}".format(self.intervention.number),
+            u"",
+            u"",
+            unicode(self.indicator.name),
+            unicode(self.indicator.code),
+            u"",
+            u"",
+            u"",
+            u"{}".format(self.indicator.current),
+            u"",
+            u"",
+            u"",
+            u"",
+            ram_indicator,
+            active,
+            view_on_dashboard,
         ))
