@@ -52,7 +52,7 @@ class LocationSerializer(serializers.ModelSerializer):
             'p_code',
             'location_type',
             'parent',
-            'geo_point'
+            'geo_point',
         )
 
 
@@ -71,3 +71,43 @@ class LocationLightSerializer(serializers.ModelSerializer):
             'name',
             'p_code',
         )
+
+
+class LocationExportSerializer(serializers.ModelSerializer):
+    location_type = serializers.CharField(source='gateway.name')
+    geo_point = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Location
+        fields = (
+            'id',
+            'name',
+            'p_code',
+            'location_type',
+            'parent',
+            'geo_point',
+            'latitude',
+            'longitude',
+        )
+
+
+class LocationExportFlatSerializer(serializers.ModelSerializer):
+    location_type = serializers.CharField(source='gateway.name')
+    geom = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Location
+        fields = (
+            'id',
+            'name',
+            'p_code',
+            'location_type',
+            'parent',
+            'geom',
+            'point',
+            'latitude',
+            'longitude',
+        )
+
+    def get_geom(self, obj):
+        return obj.geom.point_on_surface if obj.geom else ""

@@ -32,6 +32,7 @@ from partners.views.interventions_v2 import (
     InterventionResultListAPIView,
     InterventionAmendmentDeleteView,
     InterventionSectorLocationLinkDeleteView,
+    InterventionSectorLocationLinkListAPIView,
     InterventionListMapView,
 )
 
@@ -139,6 +140,9 @@ urlpatterns = (
     url(r'^interventions/amendments/(?P<pk>\d+)/$',
         view=InterventionAmendmentDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-amendments-del'),
+    url(r'^interventions/sector-locations/$',
+        view=InterventionSectorLocationLinkListAPIView.as_view(http_method_names=['get', ]),
+        name='intervention-sector-locations'),
     url(r'^interventions/sector-locations/(?P<pk>\d+)/$',
         view=InterventionSectorLocationLinkDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-sector-locations-del'),

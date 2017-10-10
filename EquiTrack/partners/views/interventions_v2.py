@@ -47,6 +47,8 @@ from partners.serializers.interventions_v2 import (
     InterventionResultSerializer,
     InterventionResultExportSerializer,
     InterventionResultExportFlatSerializer,
+    InterventionSectorLocationLinkExportSerializer,
+    InterventionSectorLocationLinkExportFlatSerializer,
     InterventionListMapSerializer,
     MinimalInterventionListSerializer,
     PlannedVisitsCUSerializer,
@@ -56,12 +58,14 @@ from partners.exports_flat import (
     InterventionCsvFlatRenderer,
     InterventionIndicatorCsvFlatRenderer,
     InterventionResultCsvFlatRenderer,
+    InterventionSectorLocationLinkCsvFlatRenderer,
 )
 from partners.exports_v2 import (
     InterventionAmendmentCsvRenderer,
     InterventionCsvRenderer,
     InterventionIndicatorCsvRenderer,
     InterventionResultCsvRenderer,
+    InterventionSectorLocationLinkCsvRenderer,
 )
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
@@ -486,6 +490,55 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete an amendment")
+
+
+class InterventionSectorLocationLinkListAPIView(ListAPIView):
+    """
+    Returns a list of InterventionSectorLocationLinks.
+    """
+    serializer_class = InterventionSectorLocationCUSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        InterventionSectorLocationLinkCsvRenderer,
+        InterventionSectorLocationLinkCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return InterventionSectorLocationLinkExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return InterventionSectorLocationLinkExportFlatSerializer
+        return super(InterventionSectorLocationLinkListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = InterventionSectorLocationLink.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(intervention__number__icontains=query_params.get("search")) |
+                    Q(sector__name__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        if query_params.get("format") in ['csv', "csv_flat"]:
+            res = []
+            for i in q.all():
+                res = res + list(i.locations.all())
+            return res
+
+        return q
 
 
 class InterventionSectorLocationLinkDeleteView(DestroyAPIView):

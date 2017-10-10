@@ -691,3 +691,12 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     cp_output = factory.SubFactory(ResultFactory)
+
+
+class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionSectorLocationLink
+
+    intervention = factory.SubFactory(InterventionFactory)
+    sector = factory.SubFactory(SectorFactory)

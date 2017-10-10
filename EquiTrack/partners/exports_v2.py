@@ -327,6 +327,32 @@ class InterventionIndicatorCsvRenderer(r.CSVRenderer):
     }
 
 
+class InterventionSectorLocationLinkCsvRenderer(r.CSVRenderer):
+    header = [
+        "intervention",
+        "sector",
+        "name",
+        "location_type",
+        "p_code",
+        "geom",
+        "point",
+        "latitude",
+        "longitude",
+    ]
+
+    labels = {
+        "intervention": "Reference Number",
+        "sector": "Sector",
+        "name": "Name",
+        "location_type": "Location Type",
+        "p_code": "P Code",
+        "geom": "Geo Point",
+        "point": "Point",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+    }
+
+
 class PartnershipDashCsvRenderer(r.CSVRenderer):
     header = [
         'partner_name', 'number', 'status', 'start', 'end',
