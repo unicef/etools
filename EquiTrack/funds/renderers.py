@@ -71,3 +71,67 @@ class FundsReservationHeaderCsvFlatRenderer(r.CSVRenderer):
         "start_date": "Start Date",
         "end_date": "End Date",
     }
+
+
+class FundsReservationItemCsvRenderer(r.CSVRenderer):
+    header = [
+        "intervention",
+        "fund_reservation",
+        "fr_ref_number",
+        "line_item",
+        "line_item_text",
+        "wbs",
+        "grant_number",
+        "fund",
+        "overall_amount",
+        "overall_amount_dc",
+        "due_date",
+    ]
+
+    labels = {
+        "intervention": "Reference Number",
+        "fund_reservation": "Fund Reservation Number",
+        "fr_ref_number": "Item Number",
+        "line_item": "Line Item",
+        "line_item_text": "Description",
+        "wbs": "WBS",
+        "grant_number": "Grant Number",
+        "fund": "Fund",
+        "overall_amount": "Overall Amount",
+        "overall_amount_dc": "Overall Amount DC",
+        "due_date": "Due Date",
+    }
+
+
+class FundsReservationItemCsvFlatRenderer(r.CSVRenderer):
+    format = 'csv_flat'
+
+    header = [
+        "id",
+        "intervention",
+        "fund_reservation",
+        "fr_ref_number",
+        "line_item",
+        "line_item_text",
+        "wbs",
+        "grant_number",
+        "fund",
+        "overall_amount",
+        "overall_amount_dc",
+        "due_date",
+    ]
+
+    labels = {
+        "id": "Id",
+        "intervention": "Reference Number",
+        "fund_reservation": "Fund Reservation Number",
+        "fr_ref_number": "Item Number",
+        "line_item": "Line Item",
+        "line_item_text": "Description",
+        "wbs": "WBS",
+        "grant_number": "Grant Number",
+        "fund": "Fund",
+        "overall_amount": "Overall Amount",
+        "overall_amount_dc": "Overall Amount DC",
+        "due_date": "Due Date",
+    }

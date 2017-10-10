@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
-from .models import FundsReservationHeader
+from funds.models import FundsReservationHeader, FundsReservationItem
 
 
 class FRHeaderSerializer(serializers.ModelSerializer):
@@ -49,3 +49,18 @@ class FundsReservationHeaderExportSerializer(serializers.ModelSerializer):
 
 class FundsReservationHeaderExportFlatSerializer(FundsReservationHeaderExportSerializer):
     intervention = serializers.CharField(source="intervention.number")
+
+
+class FundsReservationItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FundsReservationItem
+        fields = "__all__"
+
+
+class FundsReservationItemExportSerializer(FundsReservationItemSerializer):
+    intervention = serializers.CharField(source="fund_reservation.intervention.pk")
+
+
+class FundsReservationItemExportFlatSerializer(FundsReservationItemExportSerializer):
+    intervention = serializers.CharField(source="fund_reservation.intervention.number")
+    fund_reservation = serializers.CharField(source="fund_reservation.fr_number")
