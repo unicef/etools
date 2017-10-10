@@ -126,7 +126,7 @@ def run_all_checks():
     Run all configured issue checks. Note that this function might take a long time to complete on a large
     database.
     """
-    for issue_check in get_issue_checks():
+    for issue_check in get_active_issue_checks():
         issue_check.check_all()
 
 
