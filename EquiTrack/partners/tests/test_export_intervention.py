@@ -17,6 +17,8 @@ from EquiTrack.factories import (
     InterventionBudgetFactory,
     InterventionPlannedVisitFactory,
     InterventionResultLinkFactory,
+    InterventionSectorLocationLinkFactory,
+    LocationFactory,
     PartnerFactory,
     PartnerStaffFactory,
     UserFactory,
@@ -614,4 +616,95 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
             ram_indicator,
             active,
             view_on_dashboard,
+        ))
+
+
+class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportTestCase):
+    def setUp(self):
+        super(TestInterventionSectorLocationLinkModelExport, self).setUp()
+        self.location = LocationFactory(
+            name="Name",
+        )
+        self.link = InterventionSectorLocationLinkFactory(
+            intervention=self.intervention,
+        )
+        self.link.locations.add(self.location)
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/sector-locations/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/sector-locations/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Reference Number",
+            "Sector",
+            "Name",
+            "Location Type",
+            "P Code",
+            "Geo Point",
+            "Point",
+            "Latitude",
+            "Longitude",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.intervention.pk),
+            u"{}".format(self.link.sector.pk),
+            unicode(self.location.name),
+            unicode(self.location.gateway.name),
+            u"{}".format(self.location.p_code),
+            u"",
+            u"{}".format(self.location.point),
+            u"",
+            u"",
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/sector-locations/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Id",
+            "Reference Number",
+            "Sector",
+            "Name",
+            "Location Type",
+            "P Code",
+            "Geo Point",
+            "Point",
+            "Latitude",
+            "Longitude",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.location.pk),
+            u"{}".format(self.intervention.number),
+            u"{}".format(self.link.sector.name),
+            unicode(self.location.name),
+            unicode(self.location.gateway.name),
+            u"{}".format(self.location.p_code),
+            u"",
+            u"{}".format(self.location.point),
+            u"",
+            u"",
         ))

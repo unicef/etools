@@ -28,8 +28,8 @@ from partners.models import (
     InterventionAmendment,
     InterventionResultLink,
     InterventionReportingPeriod,
+    InterventionSectorLocationLink,
 )
-from partners.permissions import PartnershipManagerPermission
 from partners.serializers.interventions_v2 import (
     InterventionAmendmentExportSerializer,
     InterventionAmendmentExportFlatSerializer,
@@ -48,6 +48,9 @@ from partners.serializers.interventions_v2 import (
     InterventionResultSerializer,
     InterventionResultExportSerializer,
     InterventionResultExportFlatSerializer,
+    InterventionSectorLocationCUSerializer,
+    InterventionSectorLocationLinkExportSerializer,
+    InterventionSectorLocationLinkExportFlatSerializer,
     InterventionListMapSerializer,
     MinimalInterventionListSerializer,
     InterventionResultLinkSimpleCUSerializer,
@@ -59,12 +62,14 @@ from partners.exports_flat import (
     InterventionCsvFlatRenderer,
     InterventionIndicatorCsvFlatRenderer,
     InterventionResultCsvFlatRenderer,
+    InterventionSectorLocationLinkCsvFlatRenderer,
 )
 from partners.exports_v2 import (
     InterventionAmendmentCsvRenderer,
     InterventionCsvRenderer,
     InterventionIndicatorCsvRenderer,
     InterventionResultCsvRenderer,
+    InterventionSectorLocationLinkCsvRenderer,
 )
 from partners.filters import (
     AppliedIndicatorsFilter,
@@ -331,7 +336,7 @@ class InterventionResultListAPIView(ListAPIView):
     Returns a list of InterventionResultLinks.
     """
     serializer_class = InterventionResultSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
@@ -374,7 +379,7 @@ class InterventionIndicatorListAPIView(ListAPIView):
     Returns a list of InterventionResultLink Indicators.
     """
     serializer_class = InterventionIndicatorSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
@@ -441,7 +446,7 @@ class InterventionAmendmentListAPIView(ValidatorViewMixin, ListAPIView):
     Returns a list of InterventionAmendments.
     """
     serializer_class = InterventionAmendmentCUSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
@@ -494,6 +499,73 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete an amendment")
+
+
+class InterventionSectorLocationLinkListAPIView(ListAPIView):
+    """
+    Returns a list of InterventionSectorLocationLinks.
+    """
+    serializer_class = InterventionSectorLocationCUSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        InterventionSectorLocationLinkCsvRenderer,
+        InterventionSectorLocationLinkCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return InterventionSectorLocationLinkExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return InterventionSectorLocationLinkExportFlatSerializer
+        return super(InterventionSectorLocationLinkListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = InterventionSectorLocationLink.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(intervention__number__icontains=query_params.get("search")) |
+                    Q(sector__name__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        if query_params.get("format") in ['csv', "csv_flat"]:
+            res = []
+            for i in q.all():
+                res = res + list(i.locations.all())
+            return res
+
+        return q
+
+
+class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
+    permission_classes = (PartnershipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_sector_location = InterventionSectorLocationLink.objects.get(id=int(kwargs['pk']))
+        except InterventionSectorLocationLink.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_sector_location.intervention.status in [Intervention.DRAFT] or \
+            request.user in intervention_sector_location.intervention.unicef_focal_points.all() or \
+            request.user.groups.filter(name__in=['Partnership Manager',
+                                                 'Senior Management Team']).exists():
+            intervention_sector_location.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete a sector location")
 
 
 class InterventionListMapView(ListCreateAPIView):

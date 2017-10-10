@@ -301,6 +301,34 @@ class InterventionIndicatorCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
+class InterventionSectorLocationLinkCsvFlatRenderer(BaseCsvFlatRenderer):
+    header = [
+        "id",
+        "intervention",
+        "sector",
+        "name",
+        "location_type",
+        "p_code",
+        "geom",
+        "point",
+        "latitude",
+        "longitude",
+    ]
+
+    labels = {
+        "id": "Id",
+        "intervention": "Reference Number",
+        "sector": "Sector",
+        "name": "Name",
+        "location_type": "Location Type",
+        "p_code": "P Code",
+        "geom": "Geo Point",
+        "point": "Point",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+    }
+
+
 class PartnerOrganizationCsvFlatRenderer(BaseCsvFlatRenderer):
     header = [
         'id',

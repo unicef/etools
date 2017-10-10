@@ -5,6 +5,10 @@ from django.db import transaction
 from rest_framework import serializers
 
 from funds.serializers import FRsSerializer
+from locations.serializers import (
+    LocationExportFlatSerializer,
+    LocationExportSerializer,
+)
 from partners.permissions import InterventionPermissions
 from partners.serializers.fields import TypeArrayField
 from reports.serializers.v1 import SectorSerializer
@@ -187,6 +191,57 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'intervention', 'sector', 'locations'
         )
+
+
+class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
+    intervention = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Location
+        fields = (
+            'intervention',
+            'sector',
+            'name',
+            'location_type',
+            'p_code',
+            'geom',
+            'point',
+            'latitude',
+            'longitude',
+        )
+
+    def get_intervention(self, obj):
+        return ",".join([str(x.intervention.pk) for x in obj.intervention_sector_locations.all()])
+
+    def get_sector(self, obj):
+        return ",".join([str(x.sector.pk) for x in obj.intervention_sector_locations.all()])
+
+
+class InterventionSectorLocationLinkExportFlatSerializer(LocationExportFlatSerializer):
+    intervention = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Location
+        fields = (
+            'id',
+            'intervention',
+            'sector',
+            'name',
+            'location_type',
+            'p_code',
+            'geom',
+            'point',
+            'latitude',
+            'longitude',
+        )
+
+    def get_intervention(self, obj):
+        return ",".join([str(x.intervention.number) for x in obj.intervention_sector_locations.all()])
+
+    def get_sector(self, obj):
+        return ",".join([str(x.sector.name) for x in obj.intervention_sector_locations.all()])
 
 
 class InterventionAttachmentSerializer(serializers.ModelSerializer):

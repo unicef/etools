@@ -736,3 +736,12 @@ class TravelActivityFactory(factory.django.DjangoModelFactory):
         if extracted:
             for travel in extracted:
                 self.travels.add(travel)
+
+
+class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionSectorLocationLink
+
+    intervention = factory.SubFactory(InterventionFactory)
+    sector = factory.SubFactory(SectorFactory)
