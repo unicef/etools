@@ -13,9 +13,6 @@ from users.models import (
     Section,
     UserProfile
 )
-from trips.models import (
-    Trip,
-)
 from partners.models import (
     Agreement,
 )
@@ -70,72 +67,6 @@ class ActiveUsersSection(APIView):
             results.append({'countryName': country,
                             'records': country_records[country]})
 
-        return Response(results)
-
-
-class TripsStatisticsView(APIView):
-    """
-    Get the list of all Trips in all countries
-    """
-    model = Trip
-
-    def get(self, request, **kwargs):
-        # get all the countries:
-        country_list = Country.objects.exclude(schema_name='public').all()
-        results = []
-        for country in country_list:
-            # set tenant for country
-            connection.set_tenant(country)
-            # get count for trips
-            country_planned_count = Trip.objects.filter(
-                status=Trip.PLANNED
-            ).count()
-            country_completed_count = Trip.objects.filter(
-                status=Trip.COMPLETED
-            ).count()
-            country_approved_count = Trip.objects.filter(
-                status=Trip.APPROVED
-            ).count()
-            country_all_count = Trip.objects.count()
-
-            # get all sections:
-            section_list = Section.objects.values_list('name', flat=True)
-            section_results = []
-            for section in section_list:
-                section_completed_count = Trip.objects.filter(
-                    section__name=section,
-                    status=Trip.COMPLETED
-                ).count()
-                section_approved_count = Trip.objects.filter(
-                    section__name=section,
-                    status=Trip.APPROVED
-                ).count()
-                section_planned_count = Trip.objects.filter(
-                    section__name=section,
-                    status=Trip.PLANNED
-                ).count()
-                section_total_count = Trip.objects.filter(
-                    section__name=section
-                ).count()
-                section_results.append({
-                    "name": section,
-                    "completed": section_completed_count,
-                    "approved": section_approved_count,
-                    "planned": section_planned_count,
-                    "total": section_total_count
-                })
-
-            trips_by_country = {
-                'planned': country_planned_count,
-                'completed': country_completed_count,
-                'approved': country_approved_count,
-                'total': country_all_count,
-            }
-            results.append({
-                'countryName': country.name,
-                'totals': trips_by_country,
-                'sections': section_results
-            })
         return Response(results)
 
 

@@ -36,19 +36,6 @@
     {% block extra_style %}
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <style type="text/css">
-            #page-header {
-            {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
-            }
-
-            {#        #page-footer{#}
-            {#            -pdf-frame-content: page-footer;#}
-            {#            bottom: 0cm;#}
-            {#            margin-left: 1cm;#}
-            {#            margin-right: 1cm;#}
-            {#            color: #0099ff;#}
-            {#            line-height: 1.0cm;#}
-            {#            background-color: #0099ff;#}
-            {#        }#}
             .details div {
             {#            background-color: #f1f1f1;#} border-radius: 25px;
                 border: 2px solid #f1f1f1;
@@ -57,20 +44,6 @@
                 height: 150px;
             }
             /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
-            /*dejavu*/
-            @font-face {
-                font-family: "DejaVuSans";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSans.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSansMono";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSansMono.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSerif";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSerif.ttf");
-            }
-
             /*times new roman*/
             @font-face {
                 font-family: "Times_New_Roman";
@@ -92,27 +65,6 @@
             ul {
                 list-style-type: none;
             }
-            #officers_table {
-                width: 512pt;
-                margin-top: 24px;
-                margin-bottom: 12px;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-            #officers_table tr {width: 512pt;}
-            #officers_table th {
-                text-align: center;
-                vertical-align: middle;
-                font-weight: normal;
-                border: 1px solid black;
-            }
-            #officers_table td {
-                text-align: center;
-                vertical-align: middle;
-                border: 1px solid black;
-                font-size:10pt;
-            }
-
             /*fonts*/
             #header_content {
                 font-family: "Times_New_Roman";
@@ -153,6 +105,36 @@
             .list-style-type-roman {
                 list-style-type: lower-roman;
             }
+            table {
+                line-height: 140%;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            table.bordered {
+                border: 0.1pt solid #999999;
+            }
+            tr, td, th { border: none; }
+            th {
+                font-size: 12pt;
+                padding: 5px 0 0 0;
+                line-height: 1;
+                font-weight: bold;
+            }
+            th.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td {
+                font-size: 12pt;
+                vertical-align: middle;
+                padding: 5px 0 0 0;
+            }
+            td.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td:first-child { padding-right: 0px; }
+            td:last-child { padding-bottom: 0; }
+            .capitalize{text-transform: capitalize;}
+            .uppercase{text-transform: uppercase;}
         </style>
     {% endblock %}
 {% endblock %}
@@ -164,16 +146,16 @@
     <div id="header_content" style="text-align: right">
         <u>PCA Référence: {{ agreement.agreement_number }}</u>
     </div>
-    <div id="content">
+    <li id="content">
         <div id="title" style="text-align: center; padding-top: 0px">
             <div style="font-size: 16pt;padding-top: 18px;"><b>ACCORD DE COOPÉRATION AU TITRE D’UN PROGRAMME</b></div>
-            <div><b>entre</b></div>
+            <div><b>ENTRE</b></div>
             <div><b>{{ agreement.partner|upper }}</b></div>
-            <div><b>et le</b></div>
-            <div><b>Fonds des Nations Unies pour l’enfance</b></div>
-            <div><b>portant sur</b></div>
+            <div><b>ET LE</b></div>
+            <div><b>FONDS DES NATIONS UNIES POUR L’ENFANCE</b></div>
+            <div><b>PORTANT SUR</b></div>
             <div><b>
-                l’exécution du programme financé par l’UNICEF au titre du PROGRAMME DE PAYS DE L’UNICEF en/au
+                L’EXÉCUTION DU PROGRAMME FINANCÉ PAR L’UNICEF AU TITRE DU PROGRAMME DE PAYS DE L’UNICEF EN/AU
                 {{ country|upper }}
             </b></div>
             <div style="padding-top: 12px;">
@@ -183,7 +165,7 @@
         </div>
 
         <div article-I>
-            <div class="keep-with-next" style="padding-top: 12px;text-align: center">
+            <div class="keep-with-next" style="padding-top: 24px;text-align: center">
                 <b>ARTICLE I</b>
             </div>
             <div class="keep-with-next" style="padding-top: 0px;padding-bottom: 12px;text-align: center;">
@@ -198,9 +180,9 @@
                 </li>
                 <li>«<u>Partenaire d’exécution</u>», ou «IP» (Implementing Partner), désigne
                     {{ agreement.partner }}, {{ agreement.partner.address }}, {{ agreement.partner.city }} {{ agreement.partner.country }} </li>
-                <li>«<u>Programme de pays</u>» désigne le [programme de pays pour le/la {{ country }}],
+                <li>«<u>Programme de pays</u>» désigne le programme de pays pour le/la {{ country }},
                     validé par le Conseil d’administration du Fonds des Nations Unies pour l’enfance pour la période
-                    [{{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}], y compris les eventuelles extensions du
+                    {{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}, y compris les eventuelles extensions du
                     Programme en cours approuvés par le Directeur général ou le Conseil d’administration.
                 </li>
                 <li>«<u>Document du Programme</u>» (ou, dans certains cas, «<u>Document de programme</u>») désigne le
@@ -237,53 +219,34 @@
                 </li>
                 <li>
                     «<u>Dirigeant habilité</u>» désigne l’un des dirigeants suivants de l’IP:
-                    <!--
-                    <table id="officers_table" repeat="1">
-                    <tr>
-                        <th><br>Prénom et nom</th>
-                        <th><br>Titre</th>
-                        <th><br>Adresse e-mail</th>
-                        <th><br>Spécimen de signature</th>
-                    </tr>
+                </li>
+                <table class="bordered"><tbody>
                     {% for officer in auth_officers %}
                     <tr>
-                        <td><br>{{ officer.first_name }}</td>
-                        <td><br>{{ officer.title }}</td>
-                        <td><br>{{ officer.email }}</td>
-                        <td><br></td>
+                        <td class="bordered" style="width:40%;">Prénom et nom</td>
+                        <td class="bordered">{{ officer.first_name }} {{ officer.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:40%;">Titre</td>
+                        <td class="bordered">{{ officer.title }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:40%;">Adresse e-mail</td>
+                        <td class="bordered">{{ officer.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:40%;">Spécimen de signature</td>
+                        <td class="bordered"></td>
                     </tr>
                     {% endfor %}
-                    </table>
-                    -->
+                </tbody></table>
 
-                    <table id="officers_table">
-                        {% for officer in auth_officers %}
-                        <tr>
-                            <td style="width: 33%;"><br>Prénom et nom</td>
-                            <td><br> {{ officer.first_name }} {{ officer.last_name }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Titre</td>
-                            <td><br>{{ officer.title }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Adresse e-mail</td>
-                            <td><br>{{ officer.email }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Spécimen de signature</td>
-                            <td><br></td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-
-                    <div style="padding-top: 15px">
-                        Pour éviter le moindre doute, il est entendu que toute suppression ou modification réalisée au
-                        sein de la liste des dirigeants habilités ci-dessus peut uniquement l’être par modification
-                        écrite du présent accord conformément à la section 20.0 des Conditions générales des accords de
-                        coopération au titre de programmes ci-jointes.
-                    </div>
-                </li>
+                <div style="padding-top: 15px">
+                    Pour éviter le moindre doute, il est entendu que toute suppression ou modification réalisée au
+                    sein de la liste des dirigeants habilités ci-dessus peut uniquement l’être par modification
+                    écrite du présent accord conformément à la section 20.0 des Conditions générales des accords de
+                    coopération au titre de programmes ci-jointes.
+                </div>
 
                 <li>«<u>Équipement exclu</u>» désigne tout article dont le coût est égal ou supérieur à deux mille cinq
                     cents dollars US (2 500 USD) une fois comprises toutes dépenses de livraison et de manipulation
@@ -376,7 +339,7 @@
                     les normes de bonne conduite professionnelle les plus élevées qui soient en matière d’administration
                     d’actifs publics, y compris toute somme d’argent;
                 </div>
-                <li>En plus des obligations stipulées au paragraphe 1 ci-dessus,</li>
+                <li class="keep-with-next">En plus des obligations stipulées au paragraphe 1 ci-dessus,</li>
                 <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;L’IP maximisera l’utilisation de toutes exonérations fiscales ou exonérations de droits de
                     douane et de taxes douanières ou d’importation dont il est en droit de bénéficier dans ce pays ou
                     ailleurs et en rapport avec l’achat, l’importation, la déclaration ou l’utilisation de fournitures
@@ -458,7 +421,7 @@
             </div>
 
             <div class="keep-with-next" ><b>(A) Transferts de fonds par l’UNICEF au bénéfice/au nom de l’IP</b></div>
-            <div class="keep-with-next" ><p><u>Dispositions générales:</u></p></div>
+            <div class="" ><p><u>Dispositions générales:</u></p></div>
             <ol>
                 <li>L’UNICEF fournira à l’IP une assistance financière en espèces destinée aux activités stipulées dans
                     les Documents du Programme (ci-après le «Transfert de fonds»), sous réserve que de tels fonds
@@ -563,58 +526,63 @@
                     partenaires commerciaux ou fournisseurs de l’IP, concernant tout montant que l’UNICEF estime ne pas
                     être conforme aux termes du présent accord.
                 </li>
-                <li><div class="small-indent">(a) &nbsp;&nbsp;&nbsp;Tout Transfert de fonds est administré par l’IP conformément à ses propres règles, procédures
-                    et règlements financiers, tels qu’examinés, évalués et jugés idoines par l’UNICEF.</div>
+                <li>
+                    <div style="display: inline">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                        Tout Transfert de fonds est administré par l’IP conformément à ses propres règles, procédures
+                        et règlements financiers, tels qu’examinés, évalués et jugés idoines par l’UNICEF.
+                    </div>
+                    <br />
+                    <div style="display:inline;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;
+                        Lorsque, conformément à la Politique HACT, l’UNICEF réalise un Transfert de fonds avant d’avoir
+                        examiné et analysé les règles, procédures et règlements financiers de l’IP, puis détermine
+                        ultérieurement que les règles, procédures et règlements financiers de l’IP ne sont pas idoines,
+                        l’UNICEF en avertit l’IP par écrit et est en droit d’exiger le remboursement de tous montants des
+                        Transferts de fonds non dépensés ayant été versés à l’IP. L’UNICEF peut en outre décider d’exécuter
+                        directement les dispositions du Document du Programme ou de l’une ou l’autre de ses sections (y compris
+                        toute activité d’achat).
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Lorsque, conformément à la Politique HACT, l’UNICEF réalise un Transfert de fonds avant d’avoir
-                    examiné et analysé les règles, procédures et règlements financiers de l’IP, puis détermine
-                    ultérieurement que les règles, procédures et règlements financiers de l’IP ne sont pas idoines,
-                    l’UNICEF en avertit l’IP par écrit et est en droit d’exiger le remboursement de tous montants des
-                    Transferts de fonds non dépensés ayant été versés à l’IP. L’UNICEF peut en outre décider d’exécuter
-                    directement les dispositions du Document du Programme ou de l’une ou l’autre de ses sections (y compris
-                    toute activité d’achat).
-                </div>
                 <li>Lorsque l’IP achète des marchandises, des biens ou des services avec des fonds du Transfert de fonds,
                     il agit ainsi en prenant dûment en considération les principes suivants
                 </li>
                 <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;Rechercher systématiquement le meilleur rapport qualité-prix;</div>
                 <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Agir en toutes circonstances de manière juste, intègre et transparente; et</div>
                 <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;Tenir compte de la concurrence.</div>
-                <li class="keep-with-next">Tout Transfert de fonds autre qu’un Paiement direct est réalisé par l’UNICEF sur le compte bancaire suivant de l’IP
+                <li class="">Tout Transfert de fonds autre qu’un Paiement direct est réalisé par l’UNICEF sur le compte bancaire suivant de l’IP
                 </li>
 
-                <table style="border: 1px solid black;">
+                <table class="bordered">
                     <tr>
-                        <td colspan="2" style="text-align: center;vertical-align: middle"><br>Compte</td>
+                        <td colspan="2" class="bordered" style="text-align: center;">Compte</td>
                     </tr>
                     {% for bank_detail in bank_details %}
                     <tr>
-                        <td style="width: 33%;"><br>Nom de la banque</td>
-                        <td><br> {{ bank_detail.bank_name }}</td>
+                        <td class="bordered" style="width: 45%;">Nom de la banque</td>
+                        <td class="bordered">{{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Adresse de la banque</td>
-                        <td><br>{{ bank_detail.bank_address }}</td>
+                        <td class="bordered" style="width: 45%;">Adresse de la banque</td>
+                        <td class="bordered">{{ bank_detail.bank_address}}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Intitulé du compte</td>
-                        <td><br>{{ bank_detail.account_title }}</td>
+                        <td class="bordered" style="width: 45%;">Intitulé du compte</td>
+                        <td class="bordered">{{ bank_detail.account_title}}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Numéro de compte</td>
-                        <td><br>{{ bank_detail.account_number }}</td>
+                        <td class="bordered" style="width: 45%;">Numéro de compte</td>
+                        <td class="bordered">{{ bank_detail.account_number}}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Compte de devises</td>
-                        <td></td>
+                        <td class="bordered" style="width: 45%;">Compte de devises</td>
+                        <td class="bordered"></td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Code SWIFT/IBAN<br/>(le cas échéant)</td>
-                        <td><br>{{ bank_detail.routing_details }}</td>
+                        <td class="bordered" style="width: 45%;">Code SWIFT/IBAN <br/> (le cas échéant)</td>
+                        <td class="bordered">{{bank_detail.routing_details}}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Chargé(e) de clientèle responsable du compte</td>
-                        <td><br>{{ bank_detail.bank_contact_person }}</td>
+                        <td class="bordered" style="width: 45%;">Chargé(e) de clientèle responsable du compte</td>
+                        <td class="bordered">{{bank_detail.bank_contact_person}}</td>
                     </tr>
                     {% endfor %}
                 </table>
@@ -700,12 +668,17 @@
                 </li>
                 <div class="keep-with-next"><p><b>(A) Rapports financiers</b></p></div>
                 <div class="keep-with-next"><p><u>Rapports financiers utilisant le formulaire FACE:</u></p></div>
-                <li><div class="small-indent">(a)	&nbsp;&nbsp;&nbsp;Sauf accord contraire écrit entre les Parties, l’IP soumettra des formulaires FACE à la fin de
-                    chaque Trimestre à l’aide du formulaire FACE. En l’absence de soumission d’un formulaire FACE dans
-                    les six (6) mois à compter de la fin du Trimestre, l’UNICEF, sauf accord contraire, suspendra les
-                    Transferts de fonds réalisés au bénéfice ou au nom de l’IP.</div>
+                <li>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                        Sauf accord contraire écrit entre les Parties, l’IP soumettra des formulaires FACE à la fin de
+                        chaque Trimestre à l’aide du formulaire FACE. En l’absence de soumission d’un formulaire FACE dans
+                        les six (6) mois à compter de la fin du Trimestre, l’UNICEF, sauf accord contraire, suspendra les
+                        Transferts de fonds réalisés au bénéfice ou au nom de l’IP.
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Le dernier des formulaires FACE sera soumis au plus tard trente (30) jours civils après
+                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;
+                    Le dernier des formulaires FACE sera soumis au plus tard trente (30) jours civils après
                     la fin de l’exécution du Document du Programme.
                 </div>
                 <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;Le formulaire FACE:</div>
@@ -817,7 +790,7 @@
                     et accompagné du formulaire FACE.
                 </li>
                 <div class="keep-with-next" ><p><b>(C) Autres rapports</b></p></div>
-                <li> 6. Les obligations de l’IP en matière de rapports seront spécifiées dans le Document du Programme.
+                <li> Les obligations de l’IP en matière de rapports seront spécifiées dans le Document du Programme.
                     L’IP fournira des rapports ad hoc selon les exigences de l’UNICEF le cas échéant. L’UNICEF s’efforcera
                     de minimiser le nombre de demandes de rapports ad hoc.
                 </li>
@@ -826,22 +799,29 @@
 
         <div id="article-XI" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XI</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>OBLIGATIONS DES PARTIES UNE FOIS ACHEVÉES LES ACTIVITÉS</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>EXÉCUTÉES AUX TERMES DU DOCUMENT DU PROGRAMME</b></div>
-            <ol>
+            <div class="" style="padding-top: 0px; text-align: center">
+                <b>OBLIGATIONS DES PARTIES UNE FOIS ACHEVÉES LES ACTIVITÉS</b>
+                <br/>
+                <b>EXÉCUTÉES AUX TERMES DU DOCUMENT DU PROGRAMME</b>
+            </div>
+            <ol style="padding-top: 16px;">
                 <li>
-                <div class="small-indent">(a)&nbsp;&nbsp;&nbsp; Une fois les activités de l’IP aux termes d’un Document de Programme achevées, l’IP rembourse à
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a)&nbsp;&nbsp;&nbsp;&nbsp;
+                    Une fois les activités de l’IP aux termes d’un Document de Programme achevées, l’IP rembourse à
                     l’UNICEF les sommes non dépensées de tous Transferts de fonds réalisés aux termes dudit Document du
                     Programme (lesquelles sommes doivent être déclarées sur le dernier formulaire FACE soumis par l’IP),
-                    ainsi que toutes autres sommes que l’IP n’est pas autorisé à utiliser.</div>
-                <div class="small-indent">(b)&nbsp;&nbsp;&nbsp; Une fois les activités de l’IP aux termes d’un Document de Programme achevées, l’IP renvoie à
+                    ainsi que toutes autres sommes que l’IP n’est pas autorisé à utiliser.
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b)&nbsp;&nbsp;&nbsp;&nbsp;
+                    Une fois les activités de l’IP aux termes d’un Document de Programme achevées, l’IP renvoie à
                     l’UNICEF toutes fournitures et tous équipements fournis par l’UNICEF en tant que contributions à
                     l’exécution du Programme, mais qui n’ont pas été utilisés.
-                </div>
-                <div class="small-indent">(c)&nbsp;&nbsp;&nbsp; De tels remboursements et renvois doivent être réalisés au plus tard quatre-vingt-dix (90)
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(c)&nbsp;&nbsp;&nbsp;&nbsp;
+                    De tels remboursements et renvois doivent être réalisés au plus tard quatre-vingt-dix (90)
                     jours civils après la date de fin du Document du Programme, ou la date à laquelle les activités ont
                     effectivement, la date la plus proche étant retenue.
-                </div>
+                </li>
                 <li>Lors de la conclusion des activités de l’IP aux termes d’un Document du Programme, les Parties se
                 consultent pour déterminer la destination des biens durables fournis par l’UNICEF ou achetés grâce à un
                 Transfert de fonds au bénéfice de l’IP ou, en cas de Paiement direct, au nom de l’IP, et en rapport à un
@@ -855,7 +835,7 @@
 
         <div id="article-XII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>PRIVILÈGES ET IMMUNITÉS; RÉSOLUTION DE LITIGES</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>PRIVILÈGES ET IMMUNITÉS; RÉSOLUTION DE LITIGES</b></div>
             <ol>
                 <li>Conformément à l’article 17 des Conditions générales des accords de partenaire d’exécution,
                     rien dans le présent accord ni rien de relatif au présent accord n’est réputé constituer une
@@ -894,7 +874,7 @@
         </div>
         <div id="article-XIII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XIII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>DISPOSITIONS FINALES</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>DISPOSITIONS FINALES</b></div>
             <ol>
                 <li>Le présent accord entre en vigueur à la date à laquelle il est signé par les deux Parties.
                     Il expire le dernier jour du Programme, sauf s’il est résilié avant conformément à l’article 11
@@ -935,7 +915,7 @@
         <div class="page-break"></div>
         <div id="general-terms" style="font: 10pt; padding-bottom: 10px">
             <div class="keep-with-next" style="padding-bottom: 0px; text-align: center"><b>CONDITIONS GÉNÉRALES DES ACCORDS DE COOPÉRATION</b></div>
-            <div class="keep-with-next" style="text-align: center; padding-top: 0px"><b>AU TITRE DE PROGRAMMES</b></div>
+            <div class="" style="text-align: center; padding-top: 0px"><b>AU TITRE DE PROGRAMMES</b></div>
             <ol>
                 <li><b>STATUT JURIDIQUE:</b> vis-à-vis de l’UNICEF, l’IP a un statut juridique de société indépendante.
                     Les employés, le personnel et les sous-traitants de l’IP ne sont en aucun cas considérés comme des
