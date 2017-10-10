@@ -3,7 +3,7 @@ from django.test import override_settings
 from EquiTrack.factories import PartnerFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from environment.models import IssueCheckConfig
-from management.issues.checks import BaseIssueCheck, get_issue_checks, get_issue_check_by_id, run_all_checks, \
+from management.issues.checks import BaseIssueCheck, get_available_issue_checks, get_issue_check_by_id, run_all_checks, \
     ModelCheckData, bootstrap_checks, get_active_issue_checks
 from management.issues.exceptions import IssueFoundException, IssueCheckNotFoundException
 from management.models import FlaggedIssue, ISSUE_STATUS_NEW, ISSUE_STATUS_RESOLVED, ISSUE_STATUS_REACTIVATED
@@ -51,8 +51,8 @@ class IssueCheckTest(FastTenantTestCase):
         super(IssueCheckTest, self).tearDown()
 
     @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
-    def test_get_issue_checks(self):
-        checks = list(get_issue_checks())
+    def test_get_available_issue_checks(self):
+        checks = list(get_available_issue_checks())
         self.assertEqual(1, len(checks))
         self.assertTrue(type(checks[0]) == PartnersMustHaveShortNameTestCheck)
 
@@ -82,9 +82,9 @@ class IssueCheckTest(FastTenantTestCase):
 
     @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck',
                                      'management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
-    def test_get_issue_checks_disallows_duplicates(self):
+    def test_get_available_issue_checks_disallows_duplicates(self):
         with self.assertRaises(ImproperlyConfigured):
-            list(get_issue_checks())
+            list(get_available_issue_checks())
 
     @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
     def test_get_issue_check_by_id(self):

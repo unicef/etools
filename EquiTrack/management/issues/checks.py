@@ -74,7 +74,7 @@ class BaseIssueCheck(object):
         raise ImproperlyConfigured('Issue checks must override the run_check function!')
 
 
-def get_issue_checks():
+def get_available_issue_checks():
     """
     Get all issue checks from the configured settings.
     """
@@ -95,14 +95,14 @@ def get_active_issue_checks():
     """
     bootstrap_checks(default_is_active=False)
     active_checks = set(IssueCheckConfig.objects.filter(is_active=True).values_list('check_id', flat=True))
-    for check in get_issue_checks():
+    for check in get_available_issue_checks():
         if check.issue_id in active_checks:
             yield check
 
 
 def get_issue_check_by_id(issue_id):
     # todo: might make sense to cache this if it's going to be called frequently
-    for check in get_issue_checks():
+    for check in get_available_issue_checks():
         if check.issue_id == issue_id:
             return check
     raise IssueCheckNotFoundException('No issue check with ID {} found.'.format(issue_id))
@@ -150,6 +150,6 @@ def bootstrap_checks(default_is_active=False):
     """
     Bootstraps the IssueCheckConfig objects for all IssueChecks in the database.
     """
-    for issue_check in get_issue_checks():
+    for issue_check in get_available_issue_checks():
         if not IssueCheckConfig.objects.filter(check_id=issue_check.issue_id).exists():
             IssueCheckConfig.objects.create(check_id=issue_check.issue_id, is_active=default_is_active)
