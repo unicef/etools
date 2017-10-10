@@ -287,6 +287,46 @@ class InterventionResultCsvRenderer(r.CSVRenderer):
     }
 
 
+class InterventionIndicatorCsvRenderer(r.CSVRenderer):
+    header = [
+        "intervention",
+        "sector",
+        "result",
+        "name",
+        "code",
+        "unit",
+        "total",
+        "sector_total",
+        "current",
+        "sector_current",
+        "assumptions",
+        "target",
+        "baseline",
+        "ram_indicator",
+        "active",
+        "view_on_dashboard",
+    ]
+
+    labels = {
+        "intervention": "Reference Number",
+        "sector": "Sector",
+        "result": "Result",
+        "name": "Name",
+        "code": "Code",
+        "unit": "Unit",
+        "total": "UNICEF Target",
+        "sector_total": "Sector Target",
+        "current": "Current",
+        "sector_current": "Sector Current",
+        "assumptions": "Assumptions",
+        "target": "Target",
+        "baseline": "Baseline",
+        "ram_indicator": "RAM Indicator",
+        "active": "Active",
+        "view_on_dashboard": "View on Dashboard",
+    }
+
+
 class PartnershipDashCsvRenderer(r.CSVRenderer):
     header = [
         'partner_name', 'number', 'status', 'start', 'end',

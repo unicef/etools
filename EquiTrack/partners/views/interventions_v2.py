@@ -39,6 +39,9 @@ from partners.serializers.interventions_v2 import (
     InterventionBudgetCUSerializer,
     InterventionAttachmentSerializer,
     InterventionAmendmentCUSerializer,
+    InterventionIndicatorExportSerializer,
+    InterventionIndicatorExportFlatSerializer,
+    InterventionIndicatorSerializer,
     InterventionSectorLocationCUSerializer,
     InterventionResultCUSerializer,
     InterventionResultSerializer,
@@ -51,11 +54,13 @@ from partners.serializers.interventions_v2 import (
 from partners.exports_flat import (
     InterventionAmendmentCsvFlatRenderer,
     InterventionCsvFlatRenderer,
+    InterventionIndicatorCsvFlatRenderer,
     InterventionResultCsvFlatRenderer,
 )
 from partners.exports_v2 import (
     InterventionAmendmentCsvRenderer,
     InterventionCsvRenderer,
+    InterventionIndicatorCsvRenderer,
     InterventionResultCsvRenderer,
 )
 from partners.filters import PartnerScopeFilter
@@ -346,13 +351,61 @@ class InterventionResultListAPIView(ListAPIView):
             queries = []
             if "search" in query_params.keys():
                 queries.append(
-                    Q(intervention__name__icontains=query_params.get("search")) |
+                    Q(intervention__number__icontains=query_params.get("search")) |
                     Q(cp_output__name__icontains=query_params.get("search")) |
                     Q(cp_output__code__icontains=query_params.get("search"))
                 )
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
+        return q
+
+
+class InterventionIndicatorListAPIView(ListAPIView):
+    """
+    Returns a list of InterventionResultLink Indicators.
+    """
+    serializer_class = InterventionIndicatorSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        InterventionIndicatorCsvRenderer,
+        InterventionIndicatorCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return InterventionIndicatorExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return InterventionIndicatorExportFlatSerializer
+        return super(InterventionIndicatorListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = InterventionResultLink.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(intervention__number__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        if query_params.get("format") in ['csv', "csv_flat"]:
+            res = []
+            for i in q.all():
+                res = res + list(i.ram_indicators.all())
+            return res
+
         return q
 
 
@@ -408,7 +461,7 @@ class InterventionAmendmentListAPIView(ValidatorViewMixin, ListAPIView):
             queries = []
             if "search" in query_params.keys():
                 queries.append(
-                    Q(intervention__name__icontains=query_params.get("search")) |
+                    Q(intervention__number__icontains=query_params.get("search")) |
                     Q(amendment_number__icontains=query_params.get("search"))
                 )
             if queries:

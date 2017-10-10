@@ -130,6 +130,36 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
 
 
 class IndicatorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Indicator
+        fields = "__all__"
+
+
+class IndicatorExportSerializer(serializers.ModelSerializer):
+    ram_indicator = serializers.SerializerMethodField()
+    active = serializers.SerializerMethodField()
+    view_on_dashboard = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Indicator
+        fields = "__all__"
+
+    def get_ram_indicator(self, obj):
+        return "Yes" if obj.ram_indicator else "No"
+
+    def get_active(self, obj):
+        return "Yes" if obj.active else "No"
+
+    def get_view_on_dashboard(self, obj):
+        return "Yes" if obj.view_on_dashboard else "No"
+
+
+class IndicatorExportFlatSerializer(IndicatorExportSerializer):
+    sector = serializers.CharField(source="sector.name")
+    result = serializers.CharField(source="result.name")
+    unit = serializers.CharField(source="unit.type")
+
     class Meta:
         model = Indicator
         fields = "__all__"

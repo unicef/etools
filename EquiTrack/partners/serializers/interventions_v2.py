@@ -9,6 +9,8 @@ from partners.permissions import InterventionPermissions
 from partners.serializers.fields import TypeArrayField
 from reports.serializers.v1 import SectorLightSerializer
 from reports.serializers.v2 import (
+    IndicatorExportSerializer,
+    IndicatorExportFlatSerializer,
     IndicatorSerializer,
     LowerResultCUSerializer,
     LowerResultSerializer,
@@ -24,7 +26,7 @@ from partners.models import (
     InterventionSectorLocationLink,
     InterventionResultLink,
 )
-from reports.models import LowerResult
+from reports.models import Indicator, LowerResult
 from locations.serializers import LocationLightSerializer
 from funds.models import FundsCommitmentItem, FundsReservationHeader
 
@@ -330,6 +332,74 @@ class InterventionResultExportFlatSerializer(InterventionResultExportSerializer)
             "hidden",
             "ram",
         )
+
+
+class InterventionIndicatorSerializer(serializers.ModelSerializer):
+    ram_indicators = IndicatorSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = InterventionResultLink
+        fields = (
+            "intervention",
+            "ram_indicators",
+        )
+
+
+class InterventionIndicatorExportSerializer(IndicatorExportSerializer):
+    intervention = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Indicator
+        fields = (
+            "intervention",
+            "sector",
+            "result",
+            "name",
+            "code",
+            "unit",
+            "total",
+            "sector_total",
+            "current",
+            "sector_current",
+            "assumptions",
+            "target",
+            "baseline",
+            "ram_indicator",
+            "active",
+            "view_on_dashboard",
+        )
+
+    def get_intervention(self, obj):
+        return ",".join([str(x.intervention.pk) for x in obj.interventionresultlink_set.all()])
+
+
+class InterventionIndicatorExportFlatSerializer(IndicatorExportFlatSerializer):
+    intervention = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Indicator
+        fields = (
+            "id",
+            "intervention",
+            "sector",
+            "result",
+            "name",
+            "code",
+            "unit",
+            "total",
+            "sector_total",
+            "current",
+            "sector_current",
+            "assumptions",
+            "target",
+            "baseline",
+            "ram_indicator",
+            "active",
+            "view_on_dashboard",
+        )
+
+    def get_intervention(self, obj):
+        return ",".join([x.intervention.number for x in obj.interventionresultlink_set.all()])
 
 
 class FundingCommitmentNestedSerializer(serializers.ModelSerializer):

@@ -259,6 +259,48 @@ class InterventionResultCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
+class InterventionIndicatorCsvFlatRenderer(BaseCsvFlatRenderer):
+    header = [
+        "id",
+        "intervention",
+        "sector",
+        "result",
+        "name",
+        "code",
+        "unit",
+        "total",
+        "sector_total",
+        "current",
+        "sector_current",
+        "assumptions",
+        "target",
+        "baseline",
+        "ram_indicator",
+        "active",
+        "view_on_dashboard",
+    ]
+
+    labels = {
+        "id": "Id",
+        "intervention": "Reference Number",
+        "sector": "Sector",
+        "result": "Result",
+        "name": "Name",
+        "code": "Code",
+        "unit": "Unit",
+        "total": "UNICEF Target",
+        "sector_total": "Sector Target",
+        "current": "Current",
+        "sector_current": "Sector Current",
+        "assumptions": "Assumptions",
+        "target": "Target",
+        "baseline": "Baseline",
+        "ram_indicator": "RAM Indicator",
+        "active": "Active",
+        "view_on_dashboard": "View on Dashboard",
+    }
+
+
 class PartnerOrganizationCsvFlatRenderer(BaseCsvFlatRenderer):
     header = [
         'id',
