@@ -20,12 +20,12 @@ class BaseIssueCheck(object):
     """
     __metaclass__ = ABCMeta
     model = None  # the model class that this check runs against.
-    issue_id = None  # a unique id for the issue check type.
+    check_id = None  # a unique id for the issue check type.
 
     def __init__(self):
         if self.model is None or not issubclass(self.model, Model):
             raise ImproperlyConfigured('Issue checks must define a model class that subclasses models.Model!')
-        if not self.issue_id:
+        if not self.check_id:
             raise ImproperlyConfigured('Issue checks must define a unique ID!')
 
     def check_all(self):
@@ -37,7 +37,7 @@ class BaseIssueCheck(object):
                 try:
                     self.run_check(model_instance, metadata)
                 except IssueFoundException as e:
-                    issue = FlaggedIssue.get_or_new(content_object=model_instance, issue_id=self.issue_id)
+                    issue = FlaggedIssue.get_or_new(content_object=model_instance, issue_id=self.check_id)
                     issue.message = unicode(e)
                     issue.save()
         # todo: is it always valid to run all checks against all tenants?
@@ -81,11 +81,11 @@ def get_available_issue_checks():
     check_ids = set()
     for check_path in settings.ISSUE_CHECKS:
         check = get_issue_check(check_path)
-        if check.issue_id in check_ids:
+        if check.check_id in check_ids:
             raise ImproperlyConfigured(
-                'Duplicate Issue Check ID {} is not allowed! See settings.ISSUE_CHECKS'.format(check.issue_id)
+                'Duplicate Issue Check ID {} is not allowed! See settings.ISSUE_CHECKS'.format(check.check_id)
             )
-        check_ids.add(check.issue_id)
+        check_ids.add(check.check_id)
         yield get_issue_check(check_path)
 
 
@@ -96,16 +96,16 @@ def get_active_issue_checks():
     bootstrap_checks(default_is_active=False)
     active_checks = set(IssueCheckConfig.objects.filter(is_active=True).values_list('check_id', flat=True))
     for check in get_available_issue_checks():
-        if check.issue_id in active_checks:
+        if check.check_id in active_checks:
             yield check
 
 
-def get_issue_check_by_id(issue_id):
+def get_issue_check_by_id(check_id):
     # todo: might make sense to cache this if it's going to be called frequently
     for check in get_available_issue_checks():
-        if check.issue_id == issue_id:
+        if check.check_id == check_id:
             return check
-    raise IssueCheckNotFoundException('No issue check with ID {} found.'.format(issue_id))
+    raise IssueCheckNotFoundException('No issue check with ID {} found.'.format(check_id))
 
 
 # todo: should probably cache this with something like lru_cache
@@ -151,5 +151,5 @@ def bootstrap_checks(default_is_active=False):
     Bootstraps the IssueCheckConfig objects for all IssueChecks in the database.
     """
     for issue_check in get_available_issue_checks():
-        if not IssueCheckConfig.objects.filter(check_id=issue_check.issue_id).exists():
-            IssueCheckConfig.objects.create(check_id=issue_check.issue_id, is_active=default_is_active)
+        if not IssueCheckConfig.objects.filter(check_id=issue_check.check_id).exists():
+            IssueCheckConfig.objects.create(check_id=issue_check.check_id, is_active=default_is_active)

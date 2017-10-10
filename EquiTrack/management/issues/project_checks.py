@@ -14,7 +14,7 @@ from reports.models import CountryProgramme
 
 class ActivePCANoSignedDocCheck(BaseIssueCheck):
     model = Agreement
-    issue_id = 'active_pca_no_signed_doc'
+    check_id = 'active_pca_no_signed_doc'
 
     def get_queryset(self):
         return Agreement.objects.filter(agreement_type=Agreement.PCA).exclude(status='draft')
@@ -29,7 +29,7 @@ class ActivePCANoSignedDocCheck(BaseIssueCheck):
 
 class PdOutputsWrongCheck(BaseIssueCheck):
     model = Intervention
-    issue_id = 'pd_outputs_wrong'
+    check_id = 'pd_outputs_wrong'
 
     def get_objects_to_check(self):
         cps = CountryProgramme.objects.filter(invalid=False, wbs__contains='/A0/')
@@ -73,7 +73,7 @@ class PdOutputsWrongCheck(BaseIssueCheck):
 
 class InterventionsAssociatedSSFACheck(BaseIssueCheck):
     model = Intervention
-    issue_id = 'interventions_associated_ssfa'
+    check_id = 'interventions_associated_ssfa'
 
     def get_queryset(self):
         return Intervention.objects.filter(
@@ -106,7 +106,7 @@ class InterventionsAssociatedSSFACheck(BaseIssueCheck):
 
 class InterventionsAreValidCheck(BaseIssueCheck):
     model = Intervention
-    issue_id = 'interventions_are_valid'
+    check_id = 'interventions_are_valid'
 
     @staticmethod
     def _get_master_user():
@@ -134,7 +134,7 @@ class InterventionsAreValidCheck(BaseIssueCheck):
 
 class PDAmendmentsMissingFilesCheck(BaseIssueCheck):
     model = InterventionAmendment
-    issue_id = 'interventions_amendments_no_file'
+    check_id = 'interventions_amendments_no_file'
 
     def get_queryset(self):
         return InterventionAmendment.objects.filter(signed_amendment='').prefetch_related('intervention')
@@ -151,7 +151,7 @@ class PDAmendmentsMissingFilesCheck(BaseIssueCheck):
 
 class PCAAmendmentsMissingFilesCheck(BaseIssueCheck):
     model = AgreementAmendment
-    issue_id = 'agreement_amendments_no_file'
+    check_id = 'agreement_amendments_no_file'
 
     def get_queryset(self):
         return AgreementAmendment.objects.filter(signed_amendment='')

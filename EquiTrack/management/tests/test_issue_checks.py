@@ -12,7 +12,7 @@ from partners.models import PartnerOrganization
 
 class PartnersMustHaveShortNameTestCheck(BaseIssueCheck):
     model = PartnerOrganization
-    issue_id = 'partners_must_have_short_name'
+    check_id = 'partners_must_have_short_name'
 
     def get_queryset(self):
         return PartnerOrganization.objects.all()
@@ -26,7 +26,7 @@ class PartnersMustHaveShortNameTestCheck(BaseIssueCheck):
 
 class PartnersNameMustBeFooTestCheck(BaseIssueCheck):
     model = PartnerOrganization
-    issue_id = 'partners_must_have_short_name'
+    check_id = 'partners_must_have_short_name'
 
     def get_object_metadata(self, model_instance):
         return {'expected_name': 'foo'}
@@ -88,7 +88,7 @@ class IssueCheckTest(FastTenantTestCase):
 
     @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
     def test_get_issue_check_by_id(self):
-        check = get_issue_check_by_id(PartnersMustHaveShortNameTestCheck.issue_id)
+        check = get_issue_check_by_id(PartnersMustHaveShortNameTestCheck.check_id)
         self.assertTrue(type(check) == PartnersMustHaveShortNameTestCheck)
 
     @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
@@ -100,19 +100,21 @@ class IssueCheckTest(FastTenantTestCase):
     def test_run_all_checks(self):
         PartnerFactory(short_name='A name')  # make a good one as well just to ensure it's not flagging everything
         partner_bad = PartnerFactory()
+        bootstrap_checks(default_is_active=True)
         run_all_checks()
         self.assertEqual(1, FlaggedIssue.objects.count())
         issue = FlaggedIssue.objects.first()
-        self.assertEqual(PartnersMustHaveShortNameTestCheck.issue_id, issue.issue_id)
+        self.assertEqual(PartnersMustHaveShortNameTestCheck.check_id, issue.issue_id)
         self.assertEqual(partner_bad, issue.content_object)
 
     @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersMustHaveShortNameTestCheck'])
     def test_recheck(self):
         partner_bad = PartnerFactory()
+        bootstrap_checks(default_is_active=True)
         run_all_checks()
         self.assertEqual(1, FlaggedIssue.objects.count())
         issue = FlaggedIssue.objects.first()
-        self.assertEqual(PartnersMustHaveShortNameTestCheck.issue_id, issue.issue_id)
+        self.assertEqual(PartnersMustHaveShortNameTestCheck.check_id, issue.issue_id)
         self.assertEqual(partner_bad, issue.content_object)
         self.assertEqual(ISSUE_STATUS_NEW, issue.issue_status)
         update_date = issue.date_updated
@@ -143,10 +145,11 @@ class IssueCheckTest(FastTenantTestCase):
     @override_settings(ISSUE_CHECKS=['management.tests.test_issue_checks.PartnersNameMustBeFooTestCheck'])
     def test_recheck_with_metadata(self):
         partner_bad = PartnerFactory(name='bar')
+        bootstrap_checks(default_is_active=True)
         run_all_checks()
         self.assertEqual(1, FlaggedIssue.objects.count())
         issue = FlaggedIssue.objects.first()
-        self.assertEqual(PartnersNameMustBeFooTestCheck.issue_id, issue.issue_id)
+        self.assertEqual(PartnersNameMustBeFooTestCheck.check_id, issue.issue_id)
         self.assertEqual(partner_bad, issue.content_object)
         self.assertEqual(ISSUE_STATUS_NEW, issue.issue_status)
 
