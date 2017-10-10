@@ -36,19 +36,6 @@
     {% block extra_style %}
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <style type="text/css">
-            #page-header {
-            {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
-            }
-
-            {#        #page-footer{#}
-            {#            -pdf-frame-content: page-footer;#}
-            {#            bottom: 0cm;#}
-            {#            margin-left: 1cm;#}
-            {#            margin-right: 1cm;#}
-            {#            color: #0099ff;#}
-            {#            line-height: 1.0cm;#}
-            {#            background-color: #0099ff;#}
-            {#        }#}
             .details div {
             {#            background-color: #f1f1f1;#} border-radius: 25px;
                 border: 2px solid #f1f1f1;
@@ -57,20 +44,6 @@
                 height: 150px;
             }
             /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
-            /*dejavu*/
-            @font-face {
-                font-family: "DejaVuSans";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSans.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSansMono";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSansMono.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSerif";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSerif.ttf");
-            }
-
             /*times new roman*/
             @font-face {
                 font-family: "Times_New_Roman";
@@ -124,6 +97,10 @@
             .small-indent {
                 text-indent: 0.8cm;
             }
+            .padded-indent {
+                padding-left: 2.8cm;
+                margin-left: 2.8cm;
+            }
             .indented {}
             .list-style-type-letter {
                 list-style-type: lower-alpha;
@@ -159,6 +136,10 @@
                 border: 0.1pt solid #999999;
             }
             td:last-child { padding-bottom: 0; }
+            td:first-child {
+                padding-right: 0px;
+                padding-left: 0px;
+            }
             .capitalize{text-transform: capitalize;}
             .uppercase{text-transform: uppercase;}
         </style>
@@ -189,7 +170,7 @@
         </div>
 
         <div article-I>
-            <div class="keep-with-next" style="padding-top: 12px;text-align: center">
+            <div class="keep-with-next" style="padding-top: 24px;text-align: center">
                 <b>ARTICLE I</b>
             </div>
             <div class="keep-with-next" style="padding-top: 0px;padding-bottom: 12px;text-align: center">
@@ -244,19 +225,19 @@
                     <table class="bordered"><tbody>
                         {% for officer in auth_officers %}
                         <tr>
-                            <td class="bordered" style="width:40%">Full name</td>
+                            <td class="bordered" style="width:35%">Full name</td>
                             <td class="bordered">{{ officer.first_name }} {{ officer.last_name }}</td>
                         </tr>
                         <tr>
-                            <td class="bordered" style="width:40%">Title</td>
+                            <td class="bordered" style="width:35%">Title</td>
                             <td class="bordered">{{ officer.title }}</td>
                         </tr>
                         <tr>
-                            <td class="bordered" style="width:40%">Email</td>
+                            <td class="bordered" style="width:35%">Email</td>
                             <td class="bordered">{{ officer.email }}</td>
                         </tr>
                         <tr>
-                            <td class="bordered" style="width:40%">Sample signature</td>
+                            <td class="bordered" style="width:35%">Sample signature</td>
                             <td class="bordered"></td>
                         </tr>
                         {% endfor %}
@@ -523,7 +504,7 @@
                     for any amounts that UNICEF determines are not in compliance with this Agreement.
                 </li>
                 <li>
-                    <span class="small-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a)&nbsp;&nbsp;&nbsp;&nbsp;
+                    <span class="small-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a)&nbsp;&nbsp;&nbsp;&nbsp;
                         The administration by the IP of the Cash Transfer
                         shall be carried out under its own financial regulations, rules and procedures, which UNICEF
                         has reviewed and assessed and found to be appropriate.
@@ -554,31 +535,31 @@
                     </tr>
                     {% for bank_detail in bank_details %}
                     <tr>
-                        <td class="bordered" style="width: 35%;">Bank Name</td>
+                        <td class="bordered" style="width: 45%;">Bank Name</td>
                         <td class="bordered">{{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Bank Address</td>
+                        <td class="bordered" style="width: 45%;">Bank Address</td>
                         <td class="bordered">{{ bank_detail.bank_address }}</td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Account Title</td>
+                        <td class="bordered" style="width: 45%;">Account Title</td>
                         <td class="bordered">{{ bank_detail.account_title }}</td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Account No.</td>
+                        <td class="bordered" style="width: 45%;">Account No.</td>
                         <td class="bordered">{{ bank_detail.account_number }}</td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Account Currency</td>
+                        <td class="bordered" style="width: 45%;">Account Currency</td>
                         <td class="bordered"></td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Routing Details <br/> SWIFT/IBAN</td>
+                        <td class="bordered" style="width: 45%;">Routing Details <br/> SWIFT/IBAN</td>
                         <td class="bordered">{{ bank_detail.routing_details }}</td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Bank Contact Person</td>
+                        <td class="bordered" style="width: 45%;">Bank Contact Person</td>
                         <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
                     {% endfor %}
@@ -660,8 +641,8 @@
                 </li>
                 <div class="keep-with-next"><p><b>(A) Financial reporting</b></p></div>
                 <div class=""><p><u>Financial reporting using FACE form:</u></p></div>
-                <li><span class="small-indent">
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                <li><span>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
                     Unless otherwise agreed between the Parties in writing, the IP will submit FACE forms at
                     the end of every Quarter, using the FACE form. Should a FACE form not be submitted within six(6)
                     months from the last Quarter, UNICEF will, unless agreed otherwise, suspend any further cash
@@ -786,15 +767,20 @@
                 <b>OF ACTIVITIES UNDER PROGRAMME DOCUMENT</b>
             </div>
             <ol class="indented">
-                <li>(a) &nbsp;&nbsp;&nbsp;Upon completion of the IP’s activities under a Programme Document, the IP shall refund to UNICEF
+                <li>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;&nbsp;
+                    Upon completion of the IP’s activities under a Programme Document, the IP shall refund to UNICEF
                     the unspent balances of all Cash Transfers under that Programme Document (which shall be reported on
                     the final FACE form submitted by the IP) and all other amounts of money it is not entitled to.
-                <div>(b) &nbsp;&nbsp;&nbsp;Upon completion of the IP’s activities under a Programme Document, the IP shall return to UNICEF
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b)&nbsp;&nbsp;&nbsp;&nbsp;
+                    Upon completion of the IP’s activities under a Programme Document, the IP shall return to UNICEF
                     all unused supplies and equipment provided by UNICEF as inputs for programme implementation but not used.
-                </div>
-                <div>(c) &nbsp;&nbsp;&nbsp;Such refunds and returns shall be effected no later than ninety (90) calendar days after the end
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(c) &nbsp;&nbsp;&nbsp;&nbsp;
+                    Such refunds and returns shall be effected no later than ninety (90) calendar days after the end
                     date of the Programme Document or the effective date activities have ceased, whichever occurred earlier.
-                </div>
+                </li>
                 <li>Upon winding up of the IP’s activities under a Programme Document, the Parties shall consult as to the
                 disposition of all non-expendable property provided by UNICEF or acquired from the Cash Transfer to or,
                 insofar as the Direct Payment modality was used, on behalf of the IP, with regard to that Programme Document.
