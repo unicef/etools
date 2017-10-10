@@ -36,19 +36,6 @@
     {% block extra_style %}
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <style type="text/css">
-            #page-header {
-            {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
-            }
-
-            {#        #page-footer{#}
-            {#            -pdf-frame-content: page-footer;#}
-            {#            bottom: 0cm;#}
-            {#            margin-left: 1cm;#}
-            {#            margin-right: 1cm;#}
-            {#            color: #0099ff;#}
-            {#            line-height: 1.0cm;#}
-            {#            background-color: #0099ff;#}
-            {#        }#}
             .details div {
             {#            background-color: #f1f1f1;#} border-radius: 25px;
                 border: 2px solid #f1f1f1;
@@ -58,20 +45,6 @@
             }
 
             /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
-            /*dejavu*/
-            @font-face {
-                font-family: "DejaVuSans";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSans.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSansMono";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSansMono.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSerif";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSerif.ttf");
-            }
-
             /*times new roman*/
             @font-face {
                 font-family: "Times_New_Roman";
@@ -154,6 +127,34 @@
             .list-style-type-roman {
                 list-style-type: lower-roman;
             }
+            table {
+                line-height: 140%;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            table.bordered {
+                border: 0.1pt solid #999999;
+            }
+            tr, td, th { border: none; }
+            th {
+                font-size: 12pt;
+                padding: 5px 0 0 0;
+                line-height: 1;
+                font-weight: bold;
+            }
+            th.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td {
+                font-size: 12pt;
+                vertical-align: middle;
+                padding: 5px 0 0 0;
+            }
+            td.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td:first-child { padding-right: 0px; }
+            td:last-child { padding-bottom: 0; }
         </style>
     {% endblock %}
 {% endblock %}
@@ -172,14 +173,13 @@
                 <b>ДОГОВОР О СОТРУДНИЧЕСТВЕ</b><br/>
                 <b>В РАМКАХ РЕАЛИЗАЦИИ ПРОГРАММЫ</b>
             </div>
-            <div><b>между</b></div>
+            <div><b>МЕЖДУ</b></div>
             <div><b>{{ agreement.partner|upper }}</b></div>
-            <div><b>и</b></div>
-            <div><b>Детским фондом Организации Объединенных Наций</b></div>
-            <div><b>по</b></div>
-            <div><b>реализации финансируемой ЮНИСЕФ Программы, связанной со</b></div>
-            <div><b>страновой программой ЮНИСЕФ</b></div>
-            <div><b>для {{ country|upper }}</b></div>
+            <div><b>И</b></div>
+            <div><b>ДЕТСКИМ ФОНДОМ ОРГАНИЗАЦИИ ОБЪЕДИНЕННЫХ НАЦИЙ</b></div>
+            <div><b>ПО</b></div>
+            <div><b>РЕАЛИЗАЦИИ ФИНАНСИРУЕМОЙ ЮНИСЕФ ПРОГРАММЫ, СВЯЗАННОЙ СО СТРАНОВОЙ ПРОГРАММОЙ ЮНИСЕФ</b></div>
+            <div><b>ДЛЯ {{ country|upper }}</b></div>
             <div style="padding-top: 12px;">
                 {{ agreement.partner }} и Детский фонд Организации Объединенных Наций (далее совместно именуемые «Стороны»,
                 а по отдельности — «Сторона»), настоящим договариваются о следующем:
@@ -203,9 +203,9 @@
                 </li>
                 <li><u> «Партнер по реализации программы»</u> или <u>«ПРП»</u>
                     означает {{ agreement.partner }}, {{ agreement.partner.address }}, {{ agreement.partner.city }} {{ agreement.partner.country }} </li>
-                <li><u>«Страновая программа»</u> означает [страновая программа ЮНИСЕФ для {{ country }}],
+                <li><u>«Страновая программа»</u> означает страновая программа ЮНИСЕФ для {{ country }},
                     утвержденную Исполнительным советом Детского фонда Организации Объединенных Наций на срок
-                    [{{ cp.from_date|date:"Y" }}  {{ cp.to_date|date:"Y" }}], включая любое последующее продление текущей
+                    {{ cp.from_date|date:"Y" }}  {{ cp.to_date|date:"Y" }}, включая любое последующее продление текущей
                     программы по утверждению Исполнительного директора или Исполнительного совета.
                 </li>
                 <li><u>«Программный документ»</u> означает подписанный Сторонами официальный документ (стандартного формата),
@@ -237,54 +237,32 @@
                 </li>
                 <li>
                     <u>«Уполномоченное должностное лицо»</u> означает одно из следующих должностных лиц ПРП:
-
-                    <!--
-                    <table id="officers_table" repeat="1">
-                    <tr>
-                        <th><br>Имя и фамилия</th>
-                        <th><br>Должность</th>
-                        <th><br>Электронная почта</th>
-                        <th><br>Образец подписи</th>
-                    </tr>
+                </li>
+                <table class="bordered"><tbody>
                     {% for officer in auth_officers %}
                     <tr>
-                        <td><br>{{ officer.first_name }}</td>
-                        <td><br>{{ officer.title }}</td>
-                        <td><br>{{ officer.email }}</td>
-                        <td><br></td>
+                        <td class="bordered" style="width:35%">Имя и фамилия</td>
+                        <td class="bordered">{{ officer.first_name }} {{ officer.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Должность</td>
+                        <td class="bordered">{{ officer.title }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Электронная почта</td>
+                        <td class="bordered">{{ officer.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Образец подписи</td>
+                        <td class="bordered"></td>
                     </tr>
                     {% endfor %}
-                    </table>
-                    -->
-
-                    <table id="officers_table">
-                        {% for officer in auth_officers %}
-                        <tr>
-                            <td style="width: 33%;"><br>Имя и фамилия</td>
-                            <td><br> {{ officer.first_name }} {{ officer.last_name }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Должность</td>
-                            <td><br>{{ officer.title }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Электронная почта</td>
-                            <td><br>{{ officer.email }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Образец подписи</td>
-                            <td><br></td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-
-                    <div style="padding-top: 15px">Во избежание сомнений следует подчеркнуть, что Стороны соглашаются с тем,
-                        что удаление из списка или добавление в список Уполномоченных должностных лиц, указанных выше,
-                        подлежит письменному оформлению в виде поправки к настоящему Договору в соответствии с разделом 20.0
-                        Общих условий договора о сотрудничестве в рамках реализации программы, прилагаемых к настоящему документу.
-                    </div>
-                </li>
-
+                </tbody></table>
+                <div style="padding-top: 15px">Во избежание сомнений следует подчеркнуть, что Стороны соглашаются с тем,
+                    что удаление из списка или добавление в список Уполномоченных должностных лиц, указанных выше,
+                    подлежит письменному оформлению в виде поправки к настоящему Договору в соответствии с разделом 20.0
+                    Общих условий договора о сотрудничестве в рамках реализации программы, прилагаемых к настоящему документу.
+                </div>
                 <li><u>«Нерасходуемое оборудование»</u> означает любую единицу оборудования стоимостью 2 500 долл.
                     США (две с половиной тысячи долларов США) или более, включая стоимость первоначальной доставки и
                     погрузки-разгрузки, срок службы которой составляет не менее 3 (трех) лет.
@@ -347,7 +325,7 @@
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px">
                 <b>Статья V</b>
             </div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+            <div class="" style="padding-top: 0px; text-align: center">
                 <b>Обязанности ПРП</b>
             </div>
             <ol>
@@ -396,7 +374,7 @@
         </div>
         <div id="article-VI" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Статья VI</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Обязанности ЮНИСЕФ</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Обязанности ЮНИСЕФ</b></div>
             <ol class="indented">
                 <li>ЮНИСЕФ участвует в реализации каждого Программного документа, на который распространяется действие
                     настоящего Договора, путем выполнения обязанностей, определенных для него в настоящем Договоре,
@@ -437,7 +415,7 @@
         </div>
         <div id="article-VII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Статья VII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Программные документы</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Программные документы</b></div>
             <ol class="indented">
                 <li>Стороны могут подписать один или несколько Программных документов. Программные документы подлежат
                     подписанию должным образом уполномоченными представителями Сторон.
@@ -450,14 +428,12 @@
                 <b>Статья VIII</b>
             </div>
             <div class="keep-with-next" style="padding-top: 0px; text-align: center">
-                <b>Ресурсы, выделяемые ЮНИСЕФ</b>
-            </div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+                <b>Ресурсы, выделяемые ЮНИСЕФ</b><br>
                 <b>для реализации Программных документов</b>
             </div>
 
             <div class="keep-with-next" ><b>(A) Перевод денежных средств ЮНИСЕФ в адрес (от имени) ПРП</b></div>
-            <div class="keep-with-next" ><p><u>Общие положения:</u></p></div>
+            <div class="" ><p><u>Общие положения:</u></p></div>
             <ol class="indented">
                 <li>ЮНИСЕФ оказывает ПРП помощь в виде предоставления денежных средств для осуществления деятельности,
                     указанной в Программных документах (далее — <u>«Перевод денежных средств»</u>), при условии наличия денежных
@@ -557,18 +533,22 @@
                     поставщиков ПРП, за суммы, которые, по определению ЮНИСЕФ, не соответствуют требованиям настоящего Договора.
                 </li>
                 <li>
-                    <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;Администрирование Перевода денежных средств осуществляется ПРП в
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                        Администрирование Перевода денежных средств осуществляется ПРП в
                         соответствии с его собственными финансовыми правилами и положениями, которые ЮНИСЕФ рассмотрел,
                         проанализировал и счел приемлемыми.
                     </div>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;
+                        Если в соответствии с требованиями ГПДС ЮНИСЕФ осуществляет Перевод
+                        денежных средств до рассмотрения и оценки финансовых положений и правил ПРП, то, если ЮНИСЕФ в
+                        последующем определит, что финансовые положения и правила ПРП не являются надлежащими, ЮНИСЕФ направит
+                        ПРП письменное уведомление и может потребовать возврата неизрасходованного остатка  уже перечисленных
+                        ПРП сумм и может принять решение о реализации Программного документа или каких-либо его частей
+                        (включая любые виды закупочной деятельности) напрямую.
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Если в соответствии с требованиями ГПДС ЮНИСЕФ осуществляет Перевод
-                    денежных средств до рассмотрения и оценки финансовых положений и правил ПРП, то, если ЮНИСЕФ в
-                    последующем определит, что финансовые положения и правила ПРП не являются надлежащими, ЮНИСЕФ направит
-                    ПРП письменное уведомление и может потребовать возврата неизрасходованного остатка  уже перечисленных
-                    ПРП сумм и может принять решение о реализации Программного документа или каких-либо его частей
-                    (включая любые виды закупочной деятельности) напрямую.
-                </div>
                 <li>При приобретении товаров или услуг с использованием денег, предоставленных путем Перевода денежных
                     средств, ПРП уделяет должное внимание соблюдению следующих принципов:
                 </li>
@@ -578,41 +558,40 @@
                 <li class="keep-with-next">
                     ЮНИСЕФ осуществляет Перевод денежных средств (за исключением Прямых платежей) на следующий банковский счет ПРП:
                 </li>
-
-                <table style="border: 1px solid black;">
+                <table class="bordered">
                     <tr>
-                        <td colspan="2" style="text-align: center;vertical-align: middle"><br>банковский счет</td>
+                        <td colspan="2" class="bordered" style="text-align: center;">банковский счет</td>
                     </tr>
                     {% for bank_detail in bank_details %}
                     <tr>
-                        <td style="width: 33%;"><br>Наименование банка</td>
-                        <td><br> {{ bank_detail.bank_name }}</td>
+                        <td class="bordered" style="width: 45%;">Наименование банка</td>
+                        <td class="bordered">{{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Адрес банка</td>
-                        <td><br>{{ bank_detail.bank_address }}</td>
+                        <td class="bordered" style="width: 45%;">Адрес банка</td>
+                        <td class="bordered">{{ bank_detail.bank_address }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Наименование счета:</td>
-                        <td><br>{{ bank_detail.account_title }}</td>
+                        <td class="bordered" style="width: 45%;">Наименование счета</td>
+                        <td class="bordered">{{ bank_detail.account_title }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Номер счета</td>
-                        <td><br>{{ bank_detail.account_number }}</td>
+                        <td class="bordered" style="width: 45%;">Номер счета</td>
+                        <td class="bordered">{{ bank_detail.account_number }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Валюта счета</td>
-                        <td></td>
+                        <td class="bordered" style="width: 45%;">Валюта счета</td>
+                        <td class="bordered"></td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;">
-                            <br/>Данные маршрутизации, <br/>включая код SWIFT и <br/>МНБС
+                        <td class="bordered" style="width: 45%;">
+                            Данные маршрутизации, <br/>включая код SWIFT и <br/>МНБС
                         </td>
-                        <td><br>{{ bank_detail.routing_details }}</td>
+                        <td class="bordered">{{ bank_detail.routing_details }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Контактное лицо в банке</td>
-                        <td><br>{{ bank_detail.bank_contact_person }}</td>
+                        <td class="bordered" style="width: 45%;">Контактное лицо в банке</td>
+                        <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
                     {% endfor %}
                 </table>
@@ -652,7 +631,7 @@
 
         <div id="article-IX" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Статья IX</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Ведение документации</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Ведение документации</b></div>
             <ol class="indented">
                 <li>ПРП соглашается вести точную, полную и своевременно обновляемую  бухгалтерскую документацию. </li>
                 <div class="keep-with-next"><p><u>Перевод денежных средств:</u></p></div>
@@ -701,18 +680,23 @@
                 </li>
                 <div class="keep-with-next"><p><b>(A) Финансовая отчетность</b></p></div>
                 <div class="keep-with-next"><p><u>Представление финансовой отчетности c использованием бланка УФиСР:</u></p></div>
-                <li><div class="small-indent">
-                    (a) &nbsp;&nbsp;&nbsp;В отсутствие между Сторонами письменной договоренности об ином ПРП представляет
-                    отчеты на бланке УФиСР в конце каждого Квартала. Если бланк УФиСР не представляется в
-                    течение 6 (шести) месяцев после окончания последнего Квартала и если не оговорен иной
-                    порядок, ЮНИСЕФ приостанавливает все последующие переводы денежных средств в адрес или от имени ПРП.
-                </div>
+                <li>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                        В отсутствие между Сторонами письменной договоренности об ином ПРП представляет
+                        отчеты на бланке УФиСР в конце каждого Квартала. Если бланк УФиСР не представляется в
+                        течение 6 (шести) месяцев после окончания последнего Квартала и если не оговорен иной
+                        порядок, ЮНИСЕФ приостанавливает все последующие переводы денежных средств в адрес или от имени ПРП.
+                    </div>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;
+                        Окончательный отчет на бланке УФиСР представляется не
+                        позднее 30 (тридцати) календарных дней после истечения срока Программного документа.
+                    </div>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(c) &nbsp;&nbsp;&nbsp;В бланк УФиСР:
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Окончательный отчет на бланке УФиСР представляется не
-                    позднее 30 (тридцати) календарных дней после истечения срока Программного документа.
-                </div>
-
-                <div class="small-indent keep-with-next">(c) &nbsp;&nbsp;&nbsp;В бланк УФиСР:</div>
                 <div class="small-indent">
                     <div style="padding-left: 25px">(i) &nbsp;&nbsp;&nbsp;включаются только те расходы, которые легко идентифицировать и
                         проверить. (Выражение <u>«легко идентифицировать»</u> означает, что расходы учитываются в системе
