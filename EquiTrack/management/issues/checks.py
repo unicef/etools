@@ -6,8 +6,9 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
 from django.utils.module_loading import import_string
 from EquiTrack.util_scripts import run
+from environment.models import IssueCheckConfig
 from .exceptions import IssueFoundException, IssueCheckNotFoundException
-from management.models import FlaggedIssue, ISSUE_STATUS_RESOLVED, IssueCheckConfig
+from management.models import FlaggedIssue, ISSUE_STATUS_RESOLVED
 
 
 ModelCheckData = namedtuple('ModelCheckData', 'object metadata')

@@ -175,13 +175,13 @@ SHARED_APPS = (
     'mptt',
     'easy_pdf',
     'ordered_model',
-
     'vision',
     'publics',
     # you must list the app where your tenant model resides in
     'users',
     'notification',
     'django_filters',
+    'environment',
     'utils.common',
     'utils.mail',
     'utils.writable_serializers',

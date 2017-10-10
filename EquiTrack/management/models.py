@@ -26,17 +26,6 @@ ISSUE_STATUS_CHOICES = (
 
 
 @python_2_unicode_compatible
-class IssueCheckConfig(models.Model):
-    """
-    Used to enable/disable issue checks at runtime.
-    """
-    check_id = models.CharField(max_length=100, unique=True, db_index=True)
-    is_active = models.BooleanField(default=False)
-
-    def __str__(self):
-        return '{}: {}'.format(self.check_id, self.is_active)
-
-@python_2_unicode_compatible
 class FlaggedIssue(models.Model):
     # generic foreign key to any object in the DB
     # https://docs.djangoproject.com/en/1.11/ref/contrib/contenttypes/#generic-relations
