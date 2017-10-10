@@ -159,7 +159,6 @@ SHARED_APPS = (
     'djrill',
     'djcelery',
     'djcelery_email',
-    'datetimewidget',
     'leaflet',
     'paintstore',
     'corsheaders',
