@@ -745,3 +745,14 @@ class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     sector = factory.SubFactory(SectorFactory)
+
+
+class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = report_models.AppliedIndicator
+
+    indicator = factory.SubFactory(IndicatorBlueprintFactory)
+    lower_result = factory.SubFactory(LowerResultFactory)
+    context_code = fuzzy.FuzzyText(length=5)
+    target = fuzzy.FuzzyText(length=15)

@@ -8,6 +8,8 @@ from unittest import TestCase
 
 from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
 from EquiTrack.factories import (
+    AppliedIndicatorFactory,
+    IndicatorBlueprintFactory,
     InterventionResultLinkFactory,
     LowerResultFactory,
     UserFactory,
@@ -352,6 +354,7 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
         names_and_paths = (
+            ('applied-indicator', 'applied-indicators/', {}),
             ('lower-results', 'lower_results/', {}),
         )
         self.assertReversal(names_and_paths, '', '/api/v2/reports/')
@@ -419,4 +422,124 @@ class TestLowerResultExportList(APITenantTestCase):
             u"{}".format(self.result_link.intervention.number),
             u"{}".format(self.lower_result.name),
             unicode(self.lower_result.code),
+        ))
+
+
+class TestAppliedIndicatorExportList(APITenantTestCase):
+    def setUp(self):
+        super(TestAppliedIndicatorExportList, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.result_link = InterventionResultLinkFactory()
+        self.lower_result = LowerResultFactory(
+            result_link=self.result_link
+        )
+        self.indicator = IndicatorBlueprintFactory()
+        self.applied = AppliedIndicatorFactory(
+            indicator=self.indicator,
+            lower_result=self.lower_result
+        )
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/applied-indicators/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/applied-indicators/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        disaggregatable = "Yes" if self.indicator.disaggregatable else "No"
+        self.assertEqual(dataset._get_headers(), [
+            "Reference Number",
+            "Lower Result",
+            "Code in Current Context",
+            "Target",
+            "Baseline",
+            "Assumptions",
+            "Means of Verification",
+            "Total",
+            "Name",
+            "Unit",
+            "Description",
+            "Code",
+            "Subdomain",
+            "Disaggregatable",
+            "Logic",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.result_link.intervention.pk),
+            u"{}".format(self.lower_result.pk),
+            unicode(self.applied.context_code),
+            unicode(self.applied.target),
+            u"",
+            u"",
+            u"",
+            u"{}".format(self.applied.total),
+            unicode(self.indicator.name),
+            unicode(self.indicator.unit),
+            u"",
+            u"",
+            u"",
+            disaggregatable,
+            u"",
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/applied-indicators/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        disaggregatable = "Yes" if self.indicator.disaggregatable else "No"
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Id",
+            "Reference Number",
+            "Lower Result",
+            "Code in Current Context",
+            "Target",
+            "Baseline",
+            "Assumptions",
+            "Means of Verification",
+            "Total",
+            "Name",
+            "Unit",
+            "Description",
+            "Code",
+            "Subdomain",
+            "Disaggregatable",
+            "Logic",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.applied.pk),
+            u"{}".format(self.result_link.intervention.number),
+            u"{}".format(self.lower_result.name),
+            unicode(self.applied.context_code),
+            unicode(self.applied.target),
+            u"",
+            u"",
+            u"",
+            u"{}".format(self.applied.total),
+            unicode(self.indicator.name),
+            unicode(self.indicator.unit),
+            u"",
+            u"",
+            u"",
+            disaggregatable,
+            u"",
         ))

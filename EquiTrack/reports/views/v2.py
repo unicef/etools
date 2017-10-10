@@ -10,12 +10,24 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_csv import renderers as r
 
-from reports.models import Result, CountryProgramme, Indicator, LowerResult, Disaggregation
+from reports.models import (
+    AppliedIndicator,
+    CountryProgramme,
+    Disaggregation,
+    Indicator,
+    LowerResult,
+    Result,
+)
 from reports.renderers import (
+    AppliedIndicatorCsvFlatRenderer,
+    AppliedIndicatorCsvRenderer,
     LowerResultCsvFlatRenderer,
     LowerResultCsvRenderer,
 )
 from reports.serializers.v2 import (
+    AppliedIndicatorExportFlatSerializer,
+    AppliedIndicatorExportSerializer,
+    AppliedIndicatorSerializer,
     DisaggregationSerializer,
     LowerResultExportFlatSerializer,
     LowerResultExportSerializer,
@@ -188,3 +200,47 @@ class DisaggregationListCreateView(ListCreateAPIView):
 class DisaggregationRetrieveUpdateView(RetrieveUpdateAPIView):
     serializer_class = DisaggregationSerializer
     queryset = Disaggregation.objects.all()
+
+
+class AppliedIndicatorListAPIView(ListAPIView):
+    """
+    Returns a list of AppliedIndicators.
+    """
+    serializer_class = AppliedIndicatorSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        AppliedIndicatorCsvRenderer,
+        AppliedIndicatorCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return AppliedIndicatorExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return AppliedIndicatorExportFlatSerializer
+        return super(AppliedIndicatorListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = AppliedIndicator.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(lower_result__result_link__intervention__number__icontains=query_params.get("search")) |
+                    Q(lower_result__name__icontains=query_params.get("search")) |
+                    Q(context_code__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        return q

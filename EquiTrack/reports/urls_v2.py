@@ -1,6 +1,7 @@
 from django.conf.urls import url
 
 from reports.views.v2 import (
+    AppliedIndicatorListAPIView,
     DisaggregationListCreateView,
     DisaggregationRetrieveUpdateView,
     LowerResultsListAPIView,
@@ -14,6 +15,9 @@ from reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveV
 
 urlpatterns = (
     url(r'^reports/results/$', view=OutputListAPIView.as_view(), name='report-result-list'),
+    url(r'^reports/applied-indicators/$',
+        view=AppliedIndicatorListAPIView.as_view(http_method_names=['get']),
+        name='applied-indicator'),
     url(r'^reports/lower_results/$',
         view=LowerResultsListAPIView.as_view(http_method_names=['get']),
         name='lower-results'),
