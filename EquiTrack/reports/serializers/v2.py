@@ -1,3 +1,5 @@
+import json
+
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -42,6 +44,74 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = AppliedIndicator
         fields = '__all__'
+
+
+class AppliedIndicatorExportSerializer(serializers.ModelSerializer):
+    intervention = serializers.CharField(source="lower_result.result_link.intervention.pk")
+    lower_result = serializers.CharField(source="lower_result.pk")
+    name = serializers.CharField(source="indicator.name")
+    unit = serializers.CharField(source="indicator.unit")
+    description = serializers.CharField(source="indicator.description")
+    code = serializers.CharField(source="indicator.code")
+    subdomain = serializers.CharField(source="indicator.subdomain")
+    disaggregatable = serializers.SerializerMethodField()
+    disaggregation_logic = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedIndicator
+        fields = (
+            "intervention",
+            "lower_result",
+            "context_code",
+            "target",
+            "baseline",
+            "assumptions",
+            "means_of_verification",
+            "total",
+            "disaggregation_logic",
+            "name",
+            "unit",
+            "description",
+            "code",
+            "subdomain",
+            "disaggregatable",
+        )
+
+    def get_disaggregatable(self, obj):
+        return "Yes" if obj.indicator.disaggregatable else "No"
+
+    def get_disaggregation_logic(self, obj):
+        res = obj.disaggregation_logic
+        if isinstance(obj.disaggregation_logic, str):
+            res = json.loads(obj.disaggregation_logic)
+        return res
+
+
+class AppliedIndicatorExportFlatSerializer(AppliedIndicatorExportSerializer):
+    intervention = serializers.CharField(source="lower_result.result_link.intervention.number")
+    lower_result = serializers.CharField(source="lower_result.name")
+
+    class Meta:
+        model = AppliedIndicator
+        fields = (
+            "id",
+            "intervention",
+            "lower_result",
+            "context_code",
+            "target",
+            "baseline",
+            "assumptions",
+            "means_of_verification",
+            "total",
+            "disaggregation_logic",
+            "name",
+            "unit",
+            "description",
+            "code",
+            "subdomain",
+            "disaggregatable",
+        )
+
 
 
 class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
