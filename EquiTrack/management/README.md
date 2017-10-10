@@ -12,6 +12,11 @@ Issue checks represent *types* of issues that can be raised. Examples of issue c
 "an Agreement did not have a signed PCA attached to it" or "an Intervention failed validation".
 **Issue checks live in code.**
 
+However, each Issue check also has an associated `IssueCheckConfig` object.
+The `IssueCheckConfig` is generated automatically, and is used to turn on/off issue checks at the database level
+(instead of having to deploy code to turn on/off checks).
+`IssueCheckConfig` objects are editable in the admin.
+
 Flagged issues represent *instances* of an issue.
 For example, "*This particular Agreement* did not have a signed PCA attached to it" or
 "*this particular Intervention* failed validation".
