@@ -190,6 +190,18 @@ class LowerResultSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class LowerResultExportSerializer(serializers.ModelSerializer):
+    result_link = serializers.CharField(source="result_link.intervention.pk")
+
+    class Meta:
+        model = LowerResult
+        fields = "__all__"
+
+
+class LowerResultExportFlatSerializer(LowerResultExportSerializer):
+    result_link = serializers.CharField(source="result_link.intervention.number")
+
+
 class LowerResultCUSerializer(serializers.ModelSerializer):
     code = serializers.CharField(read_only=True)
 
