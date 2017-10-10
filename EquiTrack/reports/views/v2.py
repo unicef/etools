@@ -7,12 +7,27 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_csv import renderers as r
 
 from reports.models import Result, CountryProgramme, Indicator, LowerResult
-from reports.serializers.v2 import OutputListSerializer,  MinimalOutputListSerializer
+from reports.renderers import (
+    LowerResultCsvFlatRenderer,
+    LowerResultCsvRenderer,
+)
+from reports.serializers.v2 import (
+    LowerResultExportFlatSerializer,
+    LowerResultExportSerializer,
+    LowerResultSerializer,
+    MinimalOutputListSerializer,
+    OutputListSerializer,
+)
 from reports.serializers.v1 import IndicatorSerializer
+from partners.filters import PartnerScopeFilter
 from partners.models import Intervention
-from partners.permissions import PartneshipManagerRepPermission
+from partners.permissions import (
+    PartneshipManagerPermission,
+    PartneshipManagerRepPermission,
+)
 
 
 class OutputListAPIView(ListAPIView):
@@ -100,6 +115,49 @@ class ResultIndicatorListAPIView(ListAPIView):
             serializer.data,
             status=status.HTTP_200_OK
         )
+
+
+class LowerResultsListAPIView(ListAPIView):
+    """
+    Returns a list of LowerResults.
+    """
+    serializer_class = LowerResultSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        LowerResultCsvRenderer,
+        LowerResultCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return LowerResultExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return LowerResultExportFlatSerializer
+        return super(LowerResultsListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = LowerResult.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(result_link__intervention__number__icontains=query_params.get("search")) |
+                    Q(name__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        return q
 
 
 class LowerResultsDeleteView(DestroyAPIView):

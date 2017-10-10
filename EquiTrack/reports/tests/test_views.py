@@ -1,16 +1,20 @@
 import datetime
 
 from rest_framework import status
+from tablib.core import Dataset
+from unittest import TestCase
 
 from reports.models import ResultType, CountryProgramme
 from EquiTrack.factories import (
+    InterventionResultLinkFactory,
+    LowerResultFactory,
     UserFactory,
     ResultFactory,
     SectionFactory,
     LocationFactory,
     CountryProgrammeFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 
 
 class TestReportViews(APITenantTestCase):
@@ -195,3 +199,54 @@ class TestReportViews(APITenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])
+
+
+class UrlsTestCase(URLAssertionMixin, TestCase):
+    '''Simple test case to verify URL reversal'''
+    def test_urls(self):
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        names_and_paths = (
+            ('lower-results', 'lower_results/', {}),
+        )
+        self.assertReversal(names_and_paths, '', '/api/v2/reports/')
+
+
+class TestLowerResultExportList(APITenantTestCase):
+    def setUp(self):
+        super(TestLowerResultExportList, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.result_link = InterventionResultLinkFactory()
+        self.lower_result = LowerResultFactory(
+            result_link=self.result_link
+        )
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/lower_results/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/lower_results/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Reference Number",
+            "Name",
+            "Code",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.result_link.intervention.pk),
+            u"{}".format(self.lower_result.name),
+            unicode(self.lower_result.code),
+        ))
