@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
-from django.db.models import Q, F
+from django.db.models import F
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
@@ -532,20 +532,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         hact["planned_cash_transfer"] = float(total)
         partner.hact_values = hact
         partner.save()
-
-    @property
-    def trips(self):
-        year = datetime.date.today().year
-        from trips.models import LinkedPartner, Trip
-        trip_ids = LinkedPartner.objects.filter(
-            partner=self).values_list('trip__id', flat=True)
-
-        return Trip.objects.filter(
-            Q(id__in=trip_ids),
-            Q(from_date__year=year),
-            Q(status=Trip.COMPLETED),
-            ~Q(section__name='Drivers'),
-        )
 
     @classmethod
     def planned_visits(cls, partner, pv_intervention=None):
@@ -2324,30 +2310,6 @@ class PCA(AdminURLMixin, models.Model):
         year = datetime.date.today().year
         total = self.budget_log.filter(year=year).order_by('-created').first()
         return total.unicef_cash if total else 0
-
-    @property
-    def programmatic_visits(self):
-        year = datetime.date.today().year
-        from trips.models import LinkedPartner, Trip
-        trip_ids = LinkedPartner.objects.filter(
-            intervention=self
-        ).values_list('trip__id', flat=True)
-
-        trips = Trip.objects.filter(
-            Q(id__in=trip_ids),
-            Q(from_date__year=year),
-            Q(status=Trip.COMPLETED),
-            Q(travel_type=Trip.PROGRAMME_MONITORING),
-            ~Q(section__name='Drivers'),
-        )
-        return trips.count()
-
-    @property
-    def spot_checks(self):
-        return self.trips.filter(
-            trip__status='completed',
-            trip__travel_type='spot_check'
-        ).count()
 
     def save(self, **kwargs):
 

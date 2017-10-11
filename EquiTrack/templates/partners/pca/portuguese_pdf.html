@@ -36,19 +36,6 @@
     {% block extra_style %}
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <style type="text/css">
-            #page-header {
-            {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
-            }
-
-            {#        #page-footer{#}
-            {#            -pdf-frame-content: page-footer;#}
-            {#            bottom: 0cm;#}
-            {#            margin-left: 1cm;#}
-            {#            margin-right: 1cm;#}
-            {#            color: #0099ff;#}
-            {#            line-height: 1.0cm;#}
-            {#            background-color: #0099ff;#}
-            {#        }#}
             .details div {
             {#            background-color: #f1f1f1;#} border-radius: 25px;
                 border: 2px solid #f1f1f1;
@@ -57,20 +44,6 @@
                 height: 150px;
             }
             /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
-            /*dejavu*/
-            @font-face {
-                font-family: "DejaVuSans";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSans.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSansMono";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSansMono.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSerif";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSerif.ttf");
-            }
-
             /*times new roman*/
             @font-face {
                 font-family: "Times_New_Roman";
@@ -91,27 +64,6 @@
             ul {
                 list-style-type: none;
             }
-            #officers_table {
-                width: 512pt;
-                margin-top: 24px;
-                margin-bottom: 12px;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-            #officers_table tr {width: 512pt;}
-            #officers_table th {
-                text-align: center;
-                vertical-align: middle;
-                font-weight: normal;
-                border: 1px solid black;
-            }
-            #officers_table td {
-                text-align: center;
-                vertical-align: middle;
-                border: 1px solid black;
-                font-size:10pt;
-            }
-
             /*fonts*/
             #header_content {
                 font-family: "Times_New_Roman";
@@ -152,6 +104,34 @@
             .list-style-type-roman {
                 list-style-type: lower-roman;
             }
+            table {
+                line-height: 140%;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            table.bordered {
+                border: 0.1pt solid #999999;
+            }
+            tr, td, th { border: none; }
+            th {
+                font-size: 12pt;
+                padding: 5px 0 0 0;
+                line-height: 1;
+                font-weight: bold;
+            }
+            th.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td {
+                font-size: 12pt;
+                vertical-align: middle;
+                padding: 5px 0 0 0;
+            }
+            td.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td:first-child { padding-right: 0px; }
+            td:last-child { padding-bottom: 0; }
         </style>
     {% endblock %}
 {% endblock %}
@@ -166,12 +146,12 @@
     <div id="content">
         <div id="title" style="text-align: center; padding-top: 0px">
             <div style="font-size: 16pt;padding-top: 18px;"><b>ACORDO DO PROGRAMA DE COOPERAÇÃO</b></div>
-            <div><b>Entre</b></div>
+            <div><b>ENTRE</b></div>
             <div><b>{{ agreement.partner|upper }}</b></div>
             <div><b>E O</b></div>
-            <div><b>O Fundo das Nações Unidas para a Infância</b></div>
+            <div><b>O FUNDO DAS NAÇÕES UNIDAS PARA A INFÂNCIA</b></div>
             <div><b>PARA</b></div>
-            <div><b>A Implementação do UNICEF - PROGRAMA FINANCIADO PELO UNICEF RELACCIONADO COM O PROGRAMA DO PAÍS
+            <div><b>A IMPLEMENTAÇÃO DO UNICEF - PROGRAMA FINANCIADO PELO UNICEF RELACCIONADO COM O PROGRAMA DO PAÍS
                 {{ country|upper }}</b></div>
             <div style="padding-top: 12px;">
                 {{ agreement.partner }} e o Fundo das Nações Unidas para a Infância  (referidos em conjunto como as
@@ -198,9 +178,9 @@
                     {{ agreement.partner }}, {{ agreement.partner.address }},
                     {{ agreement.partner.city }} {{ agreement.partner.country }}
                 </li>
-                <li>“<u>Programa do País</u>”, significa [programa do país do UNICEF para {{ country }}],
+                <li>“<u>Programa do País</u>”, significa programa do país do UNICEF para {{ country }},
                     aprovado pela Comissão Executiva do Fundo das Nações Unidas para a Infância para o período de
-                    [{{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}], incluindo qualquer prorrogação do
+                    {{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}, incluindo qualquer prorrogação do
                     actual programa aprovado pelo Diretor Executivo ou do Conselho Executivo.
                 </li>
                 <li>“<u>Documento do Programa</u>” significa um documento formal (de formato padrão)
@@ -233,67 +213,39 @@
                 </li>
                 <li>
                     “<u>Oficial autorizado</u>” significa um dos seguintes oficiais do PI:
-
-                    <!--
-                    <table id="officers_table" repeat="1">
-                    <tr>
-                        <th><br>Nome Completo</th>
-                        <th><br>Título</th>
-                        <th><br>Email</th>
-                        <th><br>Amostra da assinatura</th>
-                    </tr>
+                </li>
+                <table class="bordered"><tbody>
                     {% for officer in auth_officers %}
                     <tr>
-                        <td><br>{{ officer.first_name }}</td>
-                        <td><br>{{ officer.title }}</td>
-                        <td><br>{{ officer.email }}</td>
-                        <td><br></td>
+                        <td class="bordered" style="width:35%">Nome Completo</td>
+                        <td class="bordered">{{ officer.first_name }} {{ officer.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Título</td>
+                        <td class="bordered">{{ officer.title }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Email</td>
+                        <td class="bordered">{{ officer.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Amostra da assinatura</td>
+                        <td class="bordered"></td>
                     </tr>
                     {% endfor %}
-                    </table>
-                    -->
-
-                    <table id="officers_table">
-                        {% for officer in auth_officers %}
-                        <tr>
-                            <td style="width: 33%;"><br>Nome Completo</td>
-                            <td><br> {{ officer.first_name }} {{ officer.last_name }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Título</td>
-                            <td><br>{{ officer.title }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Email</td>
-                            <td><br>{{ officer.email }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Amostra da assinatura</td>
-                            <td><br></td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-
-                    <div style="padding-top: 15px">
-                        Entende-se que, para evitar dúvidas sobre qualquer das remoções provenientes das emendas da
-                        lista de oficiais autorizados acima identificados, deve-se requerer por escrito a emenda do
-                        presente Acordo em conformidade com a secção 20.0 dos Termos e Condições Gerais para Acordos
-                        do Programa de Cooperação em anexo.
-                    </div>
-                </li>
+                </tbody></table>
+                <div style="padding-top: 15px">
+                    Entende-se que, para evitar dúvidas sobre qualquer das remoções provenientes das emendas da
+                    lista de oficiais autorizados acima identificados, deve-se requerer por escrito a emenda do
+                    presente Acordo em conformidade com a secção 20.0 dos Termos e Condições Gerais para Acordos
+                    do Programa de Cooperação em anexo.
+                </div>
 
                 <li>“<u>Equipamentos não-prescindíveis</u>” significam quaisquer itens que custam dois mil e quinhentos 
                     dólares americanos (2.500 USD) ou mais, incluindo os custos iniciais de entrega e manuseamento e que,
                     tem uma vida útil de pelo menos 3 (três) anos.
                 </li>
                 <li class="keep-with-next">“<u>Governo</u>” significa o Governo de {{ country }}.</li>
-                <!--
-                <div style="padding:8px; padding-top:16px; margin-top: 0px;margin-bottom: 16px;border: 1px solid black;background-color: #eaeaea">
-                    <u>Nota para utilizador do UNICEF:</u> Adicionar detalhes de governos adicionales nos casos em que um
-                    parceiro opera em mais de um país de um programa multi-país.  Para Plano estratégico PCA apague
-                    o parágrafo 12.
-                </div>
-                -->
                 <li>“<u>País</u>” significa {{ country }}.</li>
             </ol>
         </div>
@@ -385,7 +337,7 @@
                     que, o seu pessoal se conduza pelos padrões mais altos de integridade e cuidado na administração dos
                     bens públicos incluindo valores monetários.
                 </div>
-                <li>2. Para além das obrigações previstas no supra citado n. º 1.</li>
+                <li>Para além das obrigações previstas no supra citado n. º 1.</li>
                 <div class="small-indent"> (a)&nbsp;&nbsp;&nbsp; O PI irá maximizar a utilização de quaisquer isenções
                     fiscais e aduaneiros, impostos ou taxas de importação à disposição no País ou, em qualquer outro
                     local no que diz respeito à aquisição, importação, registo, ou a utilização de suprimentos e
@@ -578,19 +530,24 @@
                     presente Acordo.
                 </li>
                 <li>
-                    <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;A administração da Transferência de Dinheiro feita pelo PI deve
+                    <div style="display: inline">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                        A administração da Transferência de Dinheiro feita pelo PI deve
                         ser realizada sob a sua própria regulamentação financeira, regras e procedimentos, que o
                         UNICEF procedeu à revisão e avaliou como sendo apropriado.
                     </div>
+                    <br>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;
+                        Nos casos em que, em conformidade com o HACT, o UNICEF preveja a
+                        Transferência de Dinheiro antes do processo de revisão e avaliação dos regulamentos, regras
+                        financeiras e procedimentos do PI e, subsequentemente o UNICEF determina que, os regulamentos
+                        financeiros, as regras e os procedimentos do PIs não são adequados, o UNICEF deve notificar por
+                        escrito e, em tal caso, pode solicitar ao PI a devolução dos montantes das Transferências de
+                        Dinheiro e, pode ainda, decidir implementar directamente o Documento do Programa ou partes do
+                        mesmo (incluindo actividades de <i>procurement</i>).
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Nos casos em que, em conformidade com o HACT, o UNICEF preveja a
-                    Transferência de Dinheiro antes do processo de revisão e avaliação dos regulamentos, regras
-                    financeiras e procedimentos do PI e, subsequentemente o UNICEF determina que, os regulamentos
-                    financeiros, as regras e os procedimentos do PIs não são adequados, o UNICEF deve notificar por
-                    escrito e, em tal caso, pode solicitar ao PI a devolução dos montantes das Transferências de
-                    Dinheiro e, pode ainda, decidir implementar directamente o Documento do Programa ou partes do
-                    mesmo (incluindo actividades de <i>procurement</i>).
-                </div>
                 <li>Nos casos em que, o PI adquire bens ou serviços a partir da Transferência de Dinheiro, este
                     deve fazê-lo dando a devida atenção aos seguintes princípios:
                 </li>
@@ -601,41 +558,40 @@
                     A Transferência de Dinheiro para além dos Pagamentos Directos devem ser feitas pelo UNICEF
                     para a seguinte conta bancária do PI:
                 </li>
-
-                <table style="border: 1px solid black;">
+                <table class="bordered">
                     <tr>
-                        <td colspan="2" style="text-align: center;vertical-align: middle"><br>Conta</td>
+                        <td colspan="2" class="bordered" style="text-align: center;">Conta</td>
                     </tr>
                     {% for bank_detail in bank_details %}
                     <tr>
-                        <td style="width: 33%;"><br>Nome do banco:</td>
-                        <td><br> {{ bank_detail.bank_name }}</td>
+                        <td class="bordered" style="width: 45%;">Nome do banco:</td>
+                        <td class="bordered">{{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Endereço do banco:</td>
-                        <td><br>{{ bank_detail.bank_address }}</td>
+                        <td class="bordered" style="width: 45%;">Endereço do banco:</td>
+                        <td class="bordered">{{ bank_detail.bank_address }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Conta título:</td>
-                        <td><br>{{ bank_detail.account_title }}</td>
+                        <td class="bordered" style="width: 45%;">Conta título:</td>
+                        <td class="bordered">{{ bank_detail.account_title }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Nº da Conta:</td>
-                        <td><br>{{ bank_detail.account_number }}</td>
+                        <td class="bordered" style="width: 45%;">Nº da Conta:</td>
+                        <td class="bordered">{{ bank_detail.account_number }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Moeda da Conta:</td>
-                        <td></td>
+                        <td class="bordered" style="width: 45%;">Moeda da Conta:</td>
+                        <td class="bordered"></td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br />
+                        <td class="bordered" style="width: 45%;">
                             Outros detalhes <br />bancários incluindo o <br />SWIFT/IBAN:
                         </td>
-                        <td><br>{{ bank_detail.routing_details }}</td>
+                        <td class="bordered">{{ bank_detail.routing_details }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Pessoa de Contacto no Banco:</td>
-                        <td><br>{{ bank_detail.bank_contact_person }}</td>
+                        <td class="bordered" style="width: 45%;">Pessoa de Contacto no Banco:</td>
+                        <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
                     {% endfor %}
                 </table>
@@ -712,24 +668,26 @@
 
         <div id="article-X" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO X</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>REQUISITOS PARA OS RELATÓRIOS</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>REQUISITOS PARA OS RELATÓRIOS</b></div>
             <ol>
                 <li>O PI irá entregar ao UNICEF os relatórios tal como estabelecido abaixo.  Os relatórios descritivos
                     devem ser providenciados se possível, em inglês, francês ou espanhol.
                 </li>
                 <div class="keep-with-next"><p><b>(A) Relatórios Financeiros</b></p></div>
-                <div class="keep-with-next"><p><u>Relatórios financeiros usando o formulário do FACE:</u></p></div>
-                <li><div class="small-indent">
-                    (a) &nbsp;&nbsp;&nbsp;Salvo acordo em contrário E por escrito entre as Partes, o PI vai apresentar no final de
-                    cada trimestre, os formulários do FACE. Se o formulário do FACE não for apresentado no prazo de
-                    seis (6) meses, a contar a partir do último trimestre, o UNICEF irá, salvo convenção em contrário,
-                    suspender quaisquer outras transferências de dinheiro para o PI, ou em nome do PI.
-                </div>
+                <div class=""><p><u>Relatórios financeiros usando o formulário do FACE:</u></p></div>
+                <li>
+                    <div style="display: inline">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                        seis (6) meses, a contar a partir do último trimestre, o UNICEF irá, salvo convenção em contrário,
+                        suspender quaisquer outras transferências de dinheiro para o PI, ou em nome do PI.
+                    </div>
+                    <br/>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;
+                        O último formulário do FACE irá ser apresentado o mais tardar até
+                        30 (trinta) dias após o término do programa.
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;O último formulário do FACE irá ser apresentado o mais tardar até
-                    30 (trinta) dias após o término do programa.
-                </div>
-
                 <div class="small-indent keep-with-next">(c) &nbsp;&nbsp;&nbsp;O Formulário do FACE:</div>
                 <div class="small-indent">
                     <div style="padding-left: 25px">(i) &nbsp;&nbsp;&nbsp; Irá incluir apenas os gastos que são identificáveis e
@@ -846,18 +804,27 @@
 
         <div id="article-XI" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO XI</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>ACÇÕES APÓS A CONCLUSÃO DAS ACTIVIDADES NO ÂMBITO DO</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>DOCUMENTO DO PROGRAMA</b></div>
+            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+                <b>ACÇÕES APÓS A CONCLUSÃO DAS ACTIVIDADES NO ÂMBITO DO</b>
+                <br>
+                <b>DOCUMENTO DO PROGRAMA</b>
+            </div>
             <ol class="indented">
-                <li>(a) &nbsp;&nbsp;&nbsp;Após a conclusão das actividades do PI no âmbito de Documento do Programa, o PI
+                <li>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                    Após a conclusão das actividades do PI no âmbito de Documento do Programa, o PI
                     deve reembolsar ao UNICEF os valores não utilizados de todas as Transferências de Dinheiro
                     feitas no âmbito do Documento do Programa (que deve ser reportado no último formulário do FACE
                     a ser apresentado pelo PI) e todos os outros montantes a que não tem direito.
-                <div>(b) &nbsp;&nbsp;&nbsp;Após a conclusão das actividades no âmbito do Documento do Programa, o PI deve
+                <div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;
+                    Após a conclusão das actividades no âmbito do Documento do Programa, o PI deve
                     retornar ao UNICEF todos os suprimentos e equipamentos não utilizados e que foram providenciados
                     pelo UNICEF como insumos para a implementação do Programa.
                 </div>
-                <div>(c) &nbsp;&nbsp;&nbsp;(c) Tais reembolsos e devoluções devem ser efectuados o mais tardar até
+                <div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(c) &nbsp;&nbsp;&nbsp;
+                    Tais reembolsos e devoluções devem ser efectuados o mais tardar até
                     90 (noventa)  dias após a data de término do Documento do Programa ou na data efectiva da
                     cessação da actividades ou consoante o que ocorreu mais cedo.
                 </div>
@@ -874,7 +841,7 @@
 
         <div id="article-XII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO XII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>PRIVILÉGIOS E IMUNIDADES; RESOLUCÃO DE CONFLITOS</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>PRIVILÉGIOS E IMUNIDADES; RESOLUCÃO DE CONFLITOS</b></div>
             <ol class="indented">
                 <li>Em conformidade com o disposto no artigo 17 dos Termos e Condições Gerais para a Implementação
                     dos Acordos de Parceria, nada em ou, relacionado a este Acordo será considerado como uma renúncia,
@@ -911,7 +878,7 @@
         </div>
         <div id="article-XIII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO  XIII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>DISPOSIÇÕES FINAIS</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>DISPOSIÇÕES FINAIS</b></div>
             <ol class="indented">
                 <li>O presente Acordo entra em vigor na data da assinatura por ambas as Partes. Deve terminar no
                     último dia do Programa do País a menos que seja encerrado antes, de acordo com o disposto no
@@ -953,7 +920,7 @@
         <div class="page-break"></div>
         <div id="general-terms" style="font: 10pt; padding-bottom: 10px">
             <div class="keep-with-next" style="padding-bottom: 0px; text-align: center"><b>TERMOS E CONDIÇÕES GERAIS</b></div>
-            <div class="keep-with-next" style="text-align: center; padding-top: 0px"><b>ACORDOS DO PROGRAMA DE COOPERAÇÃO</b></div>
+            <div class="" style="text-align: center; padding-top: 0px"><b>ACORDOS DO PROGRAMA DE COOPERAÇÃO</b></div>
             <ol>
                 <li><b>SITUAÇÃO JURÍDICA:</b> O PI deve ser considerado como tendo o estatuto jurídico de um contratante
                     independente, vis-à-vis com o UNICEF. Os funcionários, pessoal e subcontratados do PI, não devem
