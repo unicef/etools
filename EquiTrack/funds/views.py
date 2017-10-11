@@ -13,10 +13,13 @@ from rest_framework.response import Response
 from rest_framework_csv import renderers as r
 
 from funds.models import (
+    FundsCommitmentHeader,
     FundsReservationHeader,
     FundsReservationItem,
 )
 from funds.renderers import (
+    FundsCommitmentHeaderCsvFlatRenderer,
+    FundsCommitmentHeaderCsvRenderer,
     FundsReservationHeaderCsvRenderer,
     FundsReservationHeaderCsvFlatRenderer,
     FundsReservationItemCsvFlatRenderer,
@@ -25,6 +28,7 @@ from funds.renderers import (
 from funds.serializers import (
     FRHeaderSerializer,
     FRsSerializer,
+    FundsCommitmentHeaderSerializer,
     FundsReservationHeaderExportFlatSerializer,
     FundsReservationHeaderExportSerializer,
     FundsReservationItemExportFlatSerializer,
@@ -147,6 +151,37 @@ class FundsReservationItemListAPIView(ListAPIView):
                     Q(fund_reservation__intervention__number__icontains=query_params.get("search")) |
                     Q(fund_reservation__fr_number__icontains=query_params.get("search")) |
                     Q(fund_reservation__fr_ref_number__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        return q
+
+
+class FundsCommitmentHeaderListAPIView(ListAPIView):
+    """
+    Returns a list of FundsCommitmentHeaders.
+    """
+    serializer_class = FundsCommitmentHeaderSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        FundsCommitmentHeaderCsvRenderer,
+        FundsCommitmentHeaderCsvFlatRenderer,
+    )
+
+    def get_queryset(self, format=None):
+        q = FundsCommitmentHeader.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(vendor_code__icontains=query_params.get("search")) |
+                    Q(fc_number__icontains=query_params.get("search"))
                 )
             if queries:
                 expression = functools.reduce(operator.and_, queries)
