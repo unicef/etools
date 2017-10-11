@@ -29,7 +29,6 @@ from partners.models import (
     Agreement,
     RAMIndicator,
     PartnerStaffMember,
-    PartnershipBudget,
     FundingCommitment,
     IndicatorDueDates,
     InterventionPlannedVisits,
@@ -52,7 +51,6 @@ from partners.forms import (
     PartnersAdminForm,
     AmendmentForm,
     AgreementForm,
-    PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
     SectorLocationForm
 )
@@ -108,25 +106,6 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
             return self.max_num
 
         return 0
-
-
-class PartnershipBudgetInlineAdmin(admin.TabularInline):
-    model = PartnershipBudget
-    form = PartnershipBudgetAdminForm
-    formset = ParentInlineAdminFormSet
-    verbose_name = 'Budget'
-    verbose_name_plural = 'Budget'
-    extra = 0
-    fields = (
-        'partner_contribution',
-        'unicef_cash',
-        'in_kind_amount',
-        'total',
-        'amendment',
-    )
-    readonly_fields = (
-        'total',
-    )
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):
@@ -343,7 +322,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
 
     inlines = (
         PCASectorInlineAdmin,
-        PartnershipBudgetInlineAdmin,
         IndicatorsInlineAdmin,
         LinksInlineAdmin,
         # ResultsInlineAdmin,

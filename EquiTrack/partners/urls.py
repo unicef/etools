@@ -8,7 +8,6 @@ from .views.v1 import (
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
     InterventionsViewSet,
-    PartnershipBudgetViewSet,
     PCASectorViewSet,
     AmendmentLogViewSet,
     IndicatorReportViewSet,
@@ -42,9 +41,6 @@ simple_interventions_api.register(r'interventions', InterventionsViewSet, base_n
 
 pcasectors_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
 pcasectors_api.register(r'sectors', PCASectorViewSet, base_name='intervention-sectors')
-
-pcabudgets_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
-pcabudgets_api.register(r'budgets', PartnershipBudgetViewSet, base_name='intervention-budgets')
 
 pcaamendments_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
 pcaamendments_api.register(r'amendments', AmendmentLogViewSet, base_name='intervention-amendments')

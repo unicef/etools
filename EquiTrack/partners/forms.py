@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 
-import pandas
 import logging
-from datetime import date
 
 from django.utils.translation import ugettext as _
 from django import forms
@@ -11,6 +9,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
+import pandas
 from dal import autocomplete
 
 from EquiTrack.forms import (
@@ -27,7 +26,6 @@ from .models import (
     AgreementAmendmentLog,
     Agreement,
     PartnerStaffMember,
-    PartnershipBudget,
     InterventionSectorLocationLink,
 )
 
@@ -586,26 +584,3 @@ class PartnershipForm(UserGroupForm):
             self.import_results_from_work_plan(work_plan)
 
         return cleaned_data
-
-
-class PartnershipBudgetAdminForm(AmendmentForm):
-
-    class Meta:
-        model = PartnershipBudget
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        super(PartnershipBudgetAdminForm, self).__init__(*args, **kwargs)
-
-        # by default add the previous 1 years and the next 2 years
-        current_year = date.today().year
-        years = range(current_year - 1, current_year + 2)
-        if (hasattr(self, 'parent_partnership')) and \
-                self.parent_partnership.start_date and \
-                self.parent_partnership.end_date:
-            years = range(self.parent_partnership.start_date.year,
-                          self.parent_partnership.end_date.year + 1)
-
-        self.fields['year'] = forms.ChoiceField(
-            choices=[(year, year) for year in years] if years else []
-        )

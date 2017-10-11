@@ -27,7 +27,6 @@ from funds.models import Grant
 from reports.models import (
     Indicator,
     Sector,
-    Goal,
     Result,
     CountryProgramme,
     AppliedIndicator
@@ -2541,56 +2540,6 @@ class IndicatorDueDates(models.Model):
         verbose_name = 'Report Due Date'
         verbose_name_plural = 'Report Due Dates'
         ordering = ['-due_date']
-
-
-class PartnershipBudget(TimeStampedModel):
-    """
-    Represents a budget for the intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`partners.AmendmentLog`
-    """
-
-    partnership = models.ForeignKey(PCA, related_name='budget_log', null=True, blank=True)
-    partner_contribution = models.IntegerField(default=0)
-    unicef_cash = models.IntegerField(default=0)
-    in_kind_amount = models.IntegerField(
-        default=0,
-        verbose_name='UNICEF Supplies'
-    )
-    year = models.CharField(
-        max_length=5,
-        blank=True, null=True
-    )
-    # TODO add Currency field
-    total = models.IntegerField(default=0)
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='budgets',
-        blank=True, null=True,
-    )
-
-    tracker = FieldTracker()
-
-    def total_unicef_contribution(self):
-        return self.unicef_cash + self.in_kind_amount
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        """
-        Calculate total budget on save
-        """
-        self.total = \
-            self.total_unicef_contribution() \
-            + self.partner_contribution
-
-        super(PartnershipBudget, self).save(**kwargs)
-
-    def __unicode__(self):
-        return '{}: {}'.format(
-            self.partnership,
-            self.total
-        )
 
 
 class AgreementAmendmentLog(TimeStampedModel):

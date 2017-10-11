@@ -23,7 +23,6 @@ from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
 from partners.models import (
     FileType,
-    PartnershipBudget,
     PCA,
     PartnerOrganization,
     Agreement,
@@ -54,7 +53,6 @@ from partners.serializers.v1 import (
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
     AgreementSerializer,
-    PartnershipBudgetSerializer,
 )
 from EquiTrack.utils import get_data_from_insight
 
@@ -479,62 +477,6 @@ class PCASectorViewSet(
             serializer = self.serializer_class(queryset)
             data = serializer.data
         except PCASector.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
-
-
-class PartnershipBudgetViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.CreateModelMixin,
-        mixins.ListModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of partnership Budgets for an Intervention (PCA)
-    """
-    model = PartnershipBudget
-    queryset = PartnershipBudget.objects.all()
-    serializer_class = PartnershipBudgetSerializer
-    permission_classes = (IsAdminUser,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add partnership Budget to the PCA
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-        serializer.instance.created = datetime.datetime.strptime(request.data['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        serializer.instance.modified = datetime.datetime.strptime(request.data['modified'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        serializer.instance.save()
-        data = serializer.data
-
-        headers = self.get_success_headers(data)
-        return Response(
-            data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
-    def get_queryset(self):
-
-        queryset = super(PartnershipBudgetViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_pk')
-        return queryset.filter(partnership_id=intervention_id)
-
-    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
-        """
-        Returns a PCA Budget Object
-        """
-        try:
-            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except PartnershipBudget.DoesNotExist:
             data = {}
         return Response(
             data,

@@ -10,7 +10,6 @@ from partners.models import (
     PCASector,
     PCASectorGoal,
     AmendmentLog,
-    PartnershipBudget,
     PartnerStaffMember,
     PartnerOrganization,
     Agreement,
@@ -68,13 +67,6 @@ class FileTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FileType
-        fields = '__all__'
-
-
-class PartnershipBudgetSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = PartnershipBudget
         fields = '__all__'
 
 

@@ -16,7 +16,6 @@ class PartnersAppConfig(AppConfig):
         registry.register(self.get_model('Intervention'))
         registry.register(self.get_model('AmendmentLog'))
         registry.register(self.get_model('AgreementAmendmentLog'))
-        registry.register(self.get_model('PartnershipBudget'))
         registry.register(self.get_model('PCASector'))
         registry.register(self.get_model('PCASectorGoal'))
         registry.register(self.get_model('FileType'))
