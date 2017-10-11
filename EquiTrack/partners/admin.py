@@ -25,7 +25,6 @@ from partners.models import (
     Agreement,
     PartnerStaffMember,
     FundingCommitment,
-    IndicatorDueDates,
     InterventionPlannedVisits,
     Intervention,
     AgreementAmendment,
@@ -182,11 +181,6 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     )
 
 
-class IndicatorDueDatesAdmin(admin.TabularInline):
-    model = IndicatorDueDates
-    extra = 1
-
-
 class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
     form = PartnershipForm
     resource_class = InterventionExport
@@ -271,7 +265,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     inlines = (
         LinksInlineAdmin,
         # ResultsInlineAdmin,
-        IndicatorDueDatesAdmin,
     )
 
     def work_plan_template(self, obj):

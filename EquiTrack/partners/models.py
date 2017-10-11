@@ -2423,28 +2423,6 @@ def get_file_path(instance, filename):
     )
 
 
-class IndicatorDueDates(models.Model):
-    """
-    Represents an indicator due date for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    """
-
-    intervention = models.ForeignKey(
-        'PCA',
-        blank=True, null=True,
-        related_name='indicator_due_dates'
-    )
-    due_date = models.DateField(blank=True, null=True)
-
-    tracker = FieldTracker()
-
-    class Meta:
-        verbose_name = 'Report Due Date'
-        verbose_name_plural = 'Report Due Dates'
-        ordering = ['-due_date']
-
-
 class AgreementAmendmentLog(TimeStampedModel):
     """
     Represents an amendment log for the partner agreement.
