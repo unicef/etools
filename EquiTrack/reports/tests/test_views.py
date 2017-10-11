@@ -416,12 +416,16 @@ class TestLowerResultExportList(APITenantTestCase):
             "Reference Number",
             "Name",
             "Code",
+            "Created",
+            "Modified",
         ])
         self.assertEqual(dataset[0], (
             u"{}".format(self.lower_result.pk),
             u"{}".format(self.result_link.intervention.number),
             u"{}".format(self.lower_result.name),
             unicode(self.lower_result.code),
+            u"{}".format(self.lower_result.created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
+            u"{}".format(self.lower_result.modified.strftime('%Y-%m-%dT%H:%M:%S.%fZ')),
         ))
 
 
