@@ -127,7 +127,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
             'Signed By UNICEF Date',
             'Partner Authorized Officer',
             'Amendments',
-            'Country Programme Name',
+            'Country Programme',
             'Created',
             'Modified',
         ])
