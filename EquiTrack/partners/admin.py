@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from django.db import connection, models
+from django.db import models
 from django.contrib import admin
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.utils.translation import ugettext_lazy as _
@@ -12,9 +12,7 @@ from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
-from EquiTrack.forms import ParentInlineAdminFormSet
 from reports.models import Result
-from users.models import Section
 
 from partners.exports import (
     PartnerExport,
@@ -23,7 +21,6 @@ from partners.exports import (
 from partners.models import (
     PCA,
     FileType,
-    PCASector,
     PartnerOrganization,
     Assessment,
     Agreement,
@@ -42,40 +39,16 @@ from partners.models import (
 
 )
 from partners.filters import (
-    PCASectorFilter,
     PCAGatewayTypeFilter,
 )
 from partners.mixins import ReadOnlyMixin, HiddenPartnerMixin
 from partners.forms import (
     PartnershipForm,
     PartnersAdminForm,
-    AmendmentForm,
     AgreementForm,
     PartnerStaffMemberForm,
     SectorLocationForm
 )
-
-
-class PCASectorInlineAdmin(admin.TabularInline):
-    model = PCASector
-    form = AmendmentForm
-    formset = ParentInlineAdminFormSet
-    verbose_name = 'Programme/Sector/Section'
-    verbose_name_plural = 'Programmes/Sectors/Sections'
-    extra = 0
-    fields = (
-        'sector',
-        'amendment',
-    )
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-
-        if db_field.rel.to is Section:
-            kwargs['queryset'] = connection.tenant.sections.all()
-
-        return super(PCASectorInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
@@ -263,7 +236,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
     list_filter = (
         'partnership_type',
-        PCASectorFilter,
         'status',
         'current',
         'partner',
@@ -321,7 +293,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
 
     inlines = (
-        PCASectorInlineAdmin,
         IndicatorsInlineAdmin,
         LinksInlineAdmin,
         # ResultsInlineAdmin,

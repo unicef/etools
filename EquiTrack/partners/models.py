@@ -2490,36 +2490,6 @@ def get_file_path(instance, filename):
     )
 
 
-class PCASector(TimeStampedModel):
-    """
-    Represents a sector for the partner intervention, which links a sector to a partnership
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`users.Sector`
-    Relates to :model:`partners.AmendmentLog`
-    """
-
-    pca = models.ForeignKey(PCA)
-    sector = models.ForeignKey(Sector)
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='sectors',
-        blank=True, null=True,
-    )
-
-    tracker = FieldTracker()
-
-    class Meta:
-        verbose_name = 'PCA Sector'
-
-    def __unicode__(self):
-        return '{}: {}: {}'.format(
-            self.pca.partner.name,
-            self.pca.number,
-            self.sector.name,
-        )
-
-
 class IndicatorDueDates(models.Model):
     """
     Represents an indicator due date for the partner intervention

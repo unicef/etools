@@ -5,17 +5,7 @@ from rest_framework.filters import BaseFilterBackend
 
 from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
     InterventionExportFilterSerializer
-from reports.admin import SectorListFilter
 from reports.models import Indicator
-
-
-class PCASectorFilter(SectorListFilter):
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            return queryset.filter(pcasector__id__contains=self.value())
-        return queryset
 
 
 class PCAIndicatorFilter(admin.SimpleListFilter):
@@ -33,28 +23,6 @@ class PCAIndicatorFilter(admin.SimpleListFilter):
     #     if self.value():
     #         pca_ids = []
     #         for ip in IndicatorProgress.objects.filter(indicator=self.value()):
-    #             pca_ids.append(ip.pca.id)
-    #         return queryset.filter(id__in=pca_ids)
-    #     return queryset
-
-
-class PCAOutputFilter(admin.SimpleListFilter):
-
-    title = 'Output'
-    parameter_name = 'output'
-
-    # TODO invalid code: Rrp5Output and PCASectorOutput is not defined
-    # def lookups(self, request, model_admin):
-    #
-    #     return [
-    #         (output.id, output.name) for output in Rrp5Output.objects.all()
-    #     ]
-    #
-    # def queryset(self, request, queryset):
-    #
-    #     if self.value():
-    #         pca_ids = []
-    #         for ip in PCASectorOutput.objects.filter(output=self.value()):
     #             pca_ids.append(ip.pca.id)
     #         return queryset.filter(id__in=pca_ids)
     #     return queryset

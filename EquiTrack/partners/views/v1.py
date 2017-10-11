@@ -27,7 +27,6 @@ from partners.models import (
     PartnerOrganization,
     Agreement,
     AmendmentLog,
-    PCASector,
     PartnerStaffMember,
     # ResultChain,
     IndicatorReport,
@@ -48,7 +47,6 @@ from partners.serializers.v1 import (
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer,
     IndicatorReportSerializer,
-    PCASectorSerializer,
     AmendmentLogSerializer,
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
@@ -424,59 +422,6 @@ class IndicatorReportViewSet(
             serializer = self.serializer_class(queryset)
             data = serializer.data
         except IndicatorReport.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
-
-
-class PCASectorViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.CreateModelMixin,
-        mixins.ListModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of Sectors for an Interventions (PCA)
-    """
-    model = PCASector
-    queryset = PCASector.objects.all()
-    serializer_class = PCASectorSerializer
-    permission_classes = (IsAdminUser,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add a Sector to the PCA
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-        serializer.instance.created = datetime.datetime.strptime(request.data['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        serializer.instance.modified = datetime.datetime.strptime(request.data['modified'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        serializer.instance.save()
-        data = serializer.data
-
-        headers = self.get_success_headers(data)
-        return Response(data, status=status.HTTP_201_CREATED,
-                        headers=headers)
-
-    def get_queryset(self):
-
-        queryset = super(PCASectorViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_pk')
-        return queryset.filter(pca=intervention_id)
-
-    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
-        """
-        Returns a PCA Sector object
-        """
-        try:
-            queryset = self.queryset.get(pca_id=intervention_pk, id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except PCASector.DoesNotExist:
             data = {}
         return Response(
             data,

@@ -7,8 +7,6 @@ from reports.models import LowerResult
 from partners.models import (
     FileType,
     PCA,
-    PCASector,
-    PCASectorGoal,
     AmendmentLog,
     PartnerStaffMember,
     PartnerOrganization,
@@ -18,47 +16,6 @@ from partners.models import (
     CSO_TYPES,
     PartnerType,
 )
-
-
-class PCASectorGoalSerializer(serializers.ModelSerializer):
-
-    pca_sector = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = PCASectorGoal
-        fields = (
-            'pca_sector',
-            'goal'
-        )
-
-
-class PCASectorSerializer(serializers.ModelSerializer):
-
-    sector_name = serializers.CharField(source='sector.name')
-    sector_id = serializers.CharField(source='sector.id')
-    pcasectorgoal_set = PCASectorGoalSerializer(many=True)
-
-    def create(self, validated_data):
-
-        try:
-            pcasectorgoals = validated_data.pop('pcasectorgoal_set')
-        except KeyError:
-            pcasectorgoals = []
-
-        try:
-            instance = PCASector.objects.create(**validated_data)
-
-            for sectorgoal in pcasectorgoals:
-                PCASectorGoal.objects.create(pca_sector=instance, **sectorgoal)
-
-        except Exception as ex:
-            raise serializers.ValidationError({'instance': ex.message})
-
-        return instance
-
-    class Meta:
-        model = PCASector
-        fields = '__all__'
 
 
 class FileTypeSerializer(serializers.ModelSerializer):
@@ -105,7 +62,6 @@ class InterventionSerializer(serializers.ModelSerializer):
     pca_number = serializers.CharField(source='reference_number')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-    pcasector_set = PCASectorSerializer(many=True, read_only=True)
     lowerresult_set = serializers.SerializerMethodField()
     total_budget = serializers.CharField(read_only=True)
 
