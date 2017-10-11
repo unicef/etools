@@ -42,7 +42,14 @@ from reports.views.v1 import (
     UnitViewSet
 )
 from t2f.urls import urlpatterns as t2f_patterns
-from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
+from users.views import (
+    CountriesViewSet,
+    GroupViewSet,
+    ModuleRedirectView,
+    OfficeViewSet,
+    SectionViewSet,
+    UserViewSet,
+    )
 from workplan.views import (
     CommentViewSet,
     WorkplanViewSet,

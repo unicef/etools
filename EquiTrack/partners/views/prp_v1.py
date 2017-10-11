@@ -1,7 +1,9 @@
 import functools
-
 import operator
-from django.db.models import Q, connection
+
+from django.db.models import Q
+from django.db import connection
+
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     ListAPIView)
@@ -23,7 +25,6 @@ class PRPInterventionListAPIView(ListAPIView):
     serializer_class = PRPInterventionListSerializer
     permission_classes = (ListCreateAPIMixedPermission, )
     filter_backends = (PartnerScopeFilter,)
-
 
     def get_queryset(self, format=None):
         q = Intervention.objects.prefetch_related(
