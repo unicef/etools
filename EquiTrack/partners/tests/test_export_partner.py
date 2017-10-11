@@ -148,7 +148,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
             'Actual Cash Transfer for Current Year (USD)',
             'Marked for Deletion',
             'Blocked',
-            'Vision Synced',
+            'VISION Synced',
             'Hidden',
             'Assessment Type',
             'Date Assessed',
