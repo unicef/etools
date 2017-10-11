@@ -65,7 +65,7 @@ class TestFundsReservationHeaderExportList(APITenantTestCase):
         self.assertEqual(dataset._get_headers(), [
             "Reference Number",
             "Vendor Code",
-            "Number",
+            "FR Number",
             "Document Date",
             "Type",
             "Currency",
@@ -108,7 +108,7 @@ class TestFundsReservationHeaderExportList(APITenantTestCase):
             "Id",
             "Reference Number",
             "Vendor Code",
-            "Number",
+            "FR Number",
             "Document Date",
             "Type",
             "Currency",
