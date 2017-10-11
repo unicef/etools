@@ -18,6 +18,7 @@ from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, A
     InterventionSectorLocationLink, Agreement, PartnerOrganization, PartnerStaffMember, \
     Assessment
 from t2f.models import TravelActivity
+from utils.common.utils import every_country
 
 
 def printtf(*args):
@@ -847,19 +848,6 @@ def create_test_user(email, password):
     userp.country_override = country
     userp.save()
     logging.info("user {} created".format(u.email))
-
-
-class every_country:
-    original_country = None
-
-    def __enter__(self):
-        self.original_country = connection.tenant
-        for c in Country.objects.exclude(name='Global').all():
-            connection.set_tenant(c)
-            yield c
-
-    def __exit__(self, type, value, traceback):
-        connection.set_tenant(self.original_country)
 
 
 def run(function):
