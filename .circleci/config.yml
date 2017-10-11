@@ -88,6 +88,10 @@ jobs:
           command: |
             pg_isready
       - run:
+          name: show docker network
+          command: |
+            docker network ls
+      - run:
           name: Building the image
           command: |
             TAG=${CIRCLE_BRANCH}
