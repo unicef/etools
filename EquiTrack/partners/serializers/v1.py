@@ -6,12 +6,9 @@ from locations.models import Location
 from reports.models import LowerResult
 from partners.models import (
     FileType,
-    GwPCALocation,
     PCA,
     PCASector,
     PCASectorGoal,
-    PCAFile,
-    PCAGrant,
     AmendmentLog,
     PartnershipBudget,
     PartnerStaffMember,
@@ -65,34 +62,12 @@ class PCASectorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PCAFileSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-    attachment = serializers.FileField(read_only=True)
-
-    class Meta:
-        model = PCAFile
-        fields = (
-            "id",
-            "attachment",
-            "type",
-            "pca",
-        )
-
-
 class FileTypeSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
 
     class Meta:
         model = FileType
-        fields = '__all__'
-
-
-class PCAGrantSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = PCAGrant
         fields = '__all__'
 
 
@@ -118,14 +93,6 @@ class LocationSerializer(serializers.Serializer):
     location_type = serializers.CharField(source='gateway.name')
     gateway_id = serializers.CharField(source='gateway.id')
     p_code = serializers.CharField()
-    parterships = serializers.SerializerMethodField('get_pcas')
-
-    def get_pcas(self, location):
-        pcas = set([
-            loc.pca for loc in
-            location.gwpcalocation_set.all()
-        ])
-        return InterventionSerializer(pcas, many=True).data
 
     class Meta:
         model = Location
@@ -213,26 +180,6 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         # TODO: update value on resultchain (atomic)
         serializers.ValidationError({'result_chain': "Deprecated"})
-
-
-class GWLocationSerializer(serializers.ModelSerializer):
-
-    pca_title = serializers.CharField(source='pca.title', read_only=True)
-    pca_number = serializers.CharField(source='pca.number', read_only=True)
-    pca_id = serializers.CharField(source='pca.id', read_only=True)
-    partner_name = serializers.CharField(source='pca.partner.name', read_only=True)
-    partner_id = serializers.CharField(source='pca.partner.id', read_only=True)
-    sector_name = serializers.CharField(source='pca.sectors', read_only=True)
-    sector_id = serializers.CharField(source='pca.sector_id', read_only=True)
-    latitude = serializers.CharField(source='location.point.y', read_only=True)
-    longitude = serializers.CharField(source='location.point.x', read_only=True)
-    location_name = serializers.CharField(source='location.name', read_only=True)
-    location_type = serializers.CharField(source='location.gateway.name', read_only=True)
-    gateway_id = serializers.CharField(source='location.gateway.id', read_only=True)
-
-    class Meta:
-        model = GwPCALocation
-        fields = '__all__'
 
 
 class PartnerStaffMemberEmbedSerializer(serializers.ModelSerializer):

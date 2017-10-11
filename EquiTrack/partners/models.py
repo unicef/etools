@@ -21,7 +21,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
-from EquiTrack.utils import get_changeform_link, get_current_site, import_permissions
+from EquiTrack.utils import get_current_site, import_permissions
 from EquiTrack.mixins import AdminURLMixin
 from funds.models import Grant
 from reports.models import (
@@ -2491,97 +2491,6 @@ def get_file_path(instance, filename):
     )
 
 
-class PCAFile(models.Model):
-    """
-    Represents a file for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`partners.FileType`
-    """
-
-    pca = models.ForeignKey(PCA, related_name='attachments')
-    type = models.ForeignKey(FileType)
-    attachment = models.FileField(
-        max_length=255,
-        upload_to=get_file_path
-    )
-
-    tracker = FieldTracker()
-
-    def __unicode__(self):
-        return self.attachment.name
-
-    def download_url(self):
-        if self.file:
-            return '<a class="btn btn-primary default" ' \
-                   'href="{}" >Download</a>'.format(self.file.file.url)
-        return ''
-    download_url.allow_tags = True
-    download_url.short_description = 'Download Files'
-
-
-class PCAGrant(TimeStampedModel):
-    """
-    Represents a grant for the partner intervention, which links a grant to a partnership with a specified amount
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`funds.Grant`
-    Relates to :model:`partners.AmendmentLog`
-    """
-    partnership = models.ForeignKey(PCA, related_name='grants')
-    grant = models.ForeignKey(Grant)
-    funds = models.IntegerField(null=True, blank=True)
-    # TODO: Add multi-currency support
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='grants',
-        blank=True, null=True,
-    )
-
-    tracker = FieldTracker()
-
-    class Meta:
-        ordering = ['-funds']
-
-    def __unicode__(self):
-        return '{}: {}'.format(
-            self.grant,
-            self.funds
-        )
-
-
-class GwPCALocation(models.Model):
-    """
-    Represents a location for the partner intervention, which links a location to a partnership
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`users.Sector`
-    Relates to :model:`locations.Location`
-    """
-
-    pca = models.ForeignKey(PCA, related_name='locations')
-    sector = models.ForeignKey(Sector, null=True, blank=True)
-    location = models.ForeignKey(
-        Location,
-        null=True,
-        blank=True
-    )
-    tpm_visit = models.BooleanField(default=False)
-
-    tracker = FieldTracker()
-
-    class Meta:
-        verbose_name = 'Partnership Location'
-
-    def __unicode__(self):
-        return unicode(self.location) if self.location else ''
-
-    def view_location(self):
-        return get_changeform_link(self)
-    view_location.allow_tags = True
-    view_location.short_description = 'View Location'
-
-
 class PCASector(TimeStampedModel):
     """
     Represents a sector for the partner intervention, which links a sector to a partnership
@@ -2610,24 +2519,6 @@ class PCASector(TimeStampedModel):
             self.pca.number,
             self.sector.name,
         )
-
-
-class PCASectorGoal(models.Model):
-    """
-    Represents a goal for the partner intervention sector, which links a sector to a partnership
-
-    Relates to :model:`partners.PCASector`
-    Relates to :model:`reports.Goal`
-    """
-
-    pca_sector = models.ForeignKey(PCASector)
-    goal = models.ForeignKey(Goal)
-
-    tracker = FieldTracker()
-
-    class Meta:
-        verbose_name = 'CCC'
-        verbose_name_plural = 'CCCs'
 
 
 class IndicatorDueDates(models.Model):

@@ -3,13 +3,6 @@ from django.db.models.query_utils import Q
 
 from rest_framework.filters import BaseFilterBackend
 
-from funds.models import Donor, Grant
-from locations.models import GatewayType
-from partners.models import (
-    PCAGrant,
-    GwPCALocation,
-    # IndicatorProgress,
-)
 from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
     InterventionExportFilterSerializer
 from reports.admin import SectorListFilter
@@ -22,66 +15,6 @@ class PCASectorFilter(SectorListFilter):
 
         if self.value():
             return queryset.filter(pcasector__id__contains=self.value())
-        return queryset
-
-
-class PCADonorFilter(admin.SimpleListFilter):
-
-    title = 'Donor'
-    parameter_name = 'donor'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (donor.id, donor.name) for donor in Donor.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            donor = Donor.objects.get(pk=self.value())
-            pca_ids = PCAGrant.objects.filter(grant__donor=donor).values_list('partnership__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
-class PCAGrantFilter(admin.SimpleListFilter):
-
-    title = 'Grant Number'
-    parameter_name = 'grant'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (grant.id, grant.name) for grant in Grant.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            grant = Grant.objects.get(pk=self.value())
-            pca_ids = PCAGrant.objects.filter(grant=grant).values_list('partnership__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
-class PCAGatewayTypeFilter(admin.SimpleListFilter):
-
-    title = 'Gateway'
-    parameter_name = 'gateway'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (gateway.id, gateway.name) for gateway in GatewayType.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            gateway = GatewayType.objects.get(pk=self.value())
-            pca_ids = GwPCALocation.objects.filter(location__gateway=gateway).values_list('pca__id')
-            return queryset.filter(id__in=pca_ids)
         return queryset
 
 

@@ -22,11 +22,8 @@ from partners.exports import (
 )
 from partners.models import (
     PCA,
-    PCAFile,
     FileType,
-    PCAGrant,
     PCASector,
-    GwPCALocation,
     PartnerOrganization,
     Assessment,
     Agreement,
@@ -47,8 +44,6 @@ from partners.models import (
 )
 from partners.filters import (
     PCASectorFilter,
-    PCADonorFilter,
-    PCAGrantFilter,
     PCAGatewayTypeFilter,
 )
 from partners.mixins import ReadOnlyMixin, HiddenPartnerMixin
@@ -59,22 +54,8 @@ from partners.forms import (
     AgreementForm,
     PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
-    LocationForm,
     SectorLocationForm
 )
-
-
-class PCALocationInlineAdmin(admin.TabularInline):
-    form = LocationForm
-    model = GwPCALocation
-    verbose_name = 'Location'
-    verbose_name_plural = 'Locations'
-    fields = (
-        'sector',
-        'location',
-        'tpm_visit',
-    )
-    extra = 5
 
 
 class PCASectorInlineAdmin(admin.TabularInline):
@@ -97,21 +78,6 @@ class PCASectorInlineAdmin(admin.TabularInline):
         return super(PCASectorInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
-
-
-class PCAFileInline(admin.TabularInline):
-    model = PCAFile
-    verbose_name = 'File'
-    verbose_name_plural = 'Files'
-    extra = 0
-    fields = (
-        'type',
-        'attachment',
-        'download_url',
-    )
-    readonly_fields = (
-        'download_url',
-    )
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
@@ -161,20 +127,6 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
     readonly_fields = (
         'total',
     )
-
-
-class PCAGrantInlineAdmin(admin.TabularInline):
-
-    model = PCAGrant
-    verbose_name = 'Grant'
-    verbose_name_plural = 'Grants'
-    extra = 0
-    fields = (
-        'grant',
-        'funds',
-        'amendment',
-    )
-    ordering = ['amendment']
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):
@@ -336,9 +288,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         'status',
         'current',
         'partner',
-        PCADonorFilter,
         PCAGatewayTypeFilter,
-        PCAGrantFilter,
     )
     search_fields = (
         'number',
@@ -394,10 +344,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     inlines = (
         PCASectorInlineAdmin,
         PartnershipBudgetInlineAdmin,
-        PCAGrantInlineAdmin,
         IndicatorsInlineAdmin,
-        PCALocationInlineAdmin,
-        PCAFileInline,
         LinksInlineAdmin,
         # ResultsInlineAdmin,
         IndicatorDueDatesAdmin,

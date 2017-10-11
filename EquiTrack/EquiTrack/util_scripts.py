@@ -14,7 +14,7 @@ from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, \
-    InterventionResultLink, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
+    InterventionResultLink, InterventionBudget, Sector, \
     InterventionSectorLocationLink, Agreement, PartnerOrganization, PartnerStaffMember, \
     Assessment
 from t2f.models import TravelActivity
@@ -663,21 +663,6 @@ def copy_pca_budgets_to_intervention():
                                                              year=pb.year)
 
 
-def copy_pca_attachments_to_intervention():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry)
-        for pca_file in PCAFile.objects.all():
-            try:
-                intervention = Intervention.objects.get(number=pca_file.pca.number)
-            except Intervention.DoesNotExist:
-                print(pca_file.pca.number)
-                continue
-            InterventionAttachment.objects.get_or_create(intervention=intervention,
-                                                         type=pca_file.type,
-                                                         attachment=pca_file.attachment)
-
-
 def copy_pca_sector_locations_to_intervention():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
@@ -760,13 +745,6 @@ def after_partner_migration():
     copy_pca_fields_to_intervention()
     agreement_amendments_copy()
     copy_pca_results_to_intervention()
-    copy_pca_attachments_to_intervention()
-    #
-    # # copy_pca_amendments_to_intervention() # this needs to be manual since we can't map type of amendment
-    # copy_pca_budgets_to_intervention()
-    # copy_pca_sector_locations_to_intervention()
-    # copy_pca_supply_plan_to_intervention()
-    # copy_pca_distribution_plan_to_intervention()
 
     # TODO:
     # all_countries_do(pca_intervention_fr_numbers)

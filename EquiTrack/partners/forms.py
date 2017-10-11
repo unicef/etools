@@ -6,7 +6,6 @@ from datetime import date
 
 from django.utils.translation import ugettext as _
 from django import forms
-from django.contrib import messages
 from django.db.models import Q
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -19,13 +18,11 @@ from EquiTrack.forms import (
     UserGroupForm,
 )
 
-from locations.models import Location
 from reports.models import Sector
 from .models import (
     PCA,
     PartnerOrganization,
     Assessment,
-    GwPCALocation,
     AmendmentLog,
     AgreementAmendmentLog,
     Agreement,
@@ -35,25 +32,6 @@ from .models import (
 )
 
 logger = logging.getLogger('partners.forms')
-
-
-class LocationForm(forms.ModelForm):
-
-    class Meta:
-        model = GwPCALocation
-        fields = ('location',)
-        widgets = {
-            'location': autocomplete.ModelSelect2(
-                url='locations-autocomplete-light',
-                attrs={
-                    # Set some placeholder
-                    'data-placeholder': 'Enter Location Name ...',
-                    # Only trigger autocompletion after 3 characters have been typed
-                    'data-minimum-input-length': 3,
-
-                },
-            )
-        }
 
 
 class SectorLocationForm(forms.ModelForm):
@@ -362,34 +340,6 @@ class PartnershipForm(UserGroupForm):
             'title': forms.Textarea(),
         }
 
-    def add_locations(self, p_codes, sector):
-        """
-        Adds locations to the partnership based
-        on the passed in list and the relevant sector
-        """
-        p_codes_list = p_codes.split()
-        created, notfound = 0, 0
-        for p_code in p_codes_list:
-            try:
-                location = Location.objects.get(
-                    p_code=p_code
-                )
-                loc, new = GwPCALocation.objects.get_or_create(
-                    sector=sector,
-                    location=location,
-                    pca=self.obj
-                )
-                if new:
-                    created += 1
-            except Location.DoesNotExist:
-                notfound += 1
-
-        messages.info(
-            self.request,
-            u'Assigned {} locations, {} were not found'.format(
-                created, notfound
-            ))
-
     def import_results_from_work_plan(self, work_plan):
         """
         Matches results from the work plan to country result structure.
@@ -619,9 +569,6 @@ class PartnershipForm(UserGroupForm):
 
         if review_date and review_date < submission_date and review_date < initiation_date:
             raise ValidationError({'review_date': self.ERROR_MESSAGES['review_date']})
-
-        if p_codes and location_sector:
-            self.add_locations(p_codes, location_sector)
 
         if work_plan:
             # make sure the status of the intervention is in process

@@ -1,4 +1,5 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import datetime
 
 from collections import namedtuple
@@ -20,18 +21,14 @@ from easy_pdf.views import PDFTemplateView
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
-from locations.models import Location
 from partners.models import (
     FileType,
     PartnershipBudget,
-    PCAFile,
     PCA,
     PartnerOrganization,
     Agreement,
-    PCAGrant,
     AmendmentLog,
     PCASector,
-    GwPCALocation,
     PartnerStaffMember,
     # ResultChain,
     IndicatorReport,
@@ -49,19 +46,15 @@ from partners.filters import (
 from partners.permissions import PartnerPermission  # ResultChainPermission
 from partners.serializers.v1 import (
     FileTypeSerializer,
-    LocationSerializer,
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer,
     IndicatorReportSerializer,
     PCASectorSerializer,
-    PCAGrantSerializer,
     AmendmentLogSerializer,
-    GWLocationSerializer,
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
     AgreementSerializer,
     PartnershipBudgetSerializer,
-    PCAFileSerializer,
 )
 from EquiTrack.utils import get_data_from_insight
 
@@ -144,83 +137,6 @@ class PCAPDFView(PDFTemplateView):
             font_path=font_path,
             **kwargs
         )
-
-
-class InterventionLocationView(ListAPIView):
-    """
-    Gets a list of Intervention locations based on passed query params
-    """
-    model = GwPCALocation
-    serializer_class = LocationSerializer
-
-    def handle_exception(self, exc):
-        """
-        Handle 424 exception
-        """
-        if isinstance(exc, AttributeError):
-            r = Response(status='424')
-            return r
-
-        raise exc
-
-    def get_queryset(self):
-        """
-        Return locations with GPS points only
-        """
-        status = self.request.query_params.get('status', PCA.ACTIVE)
-        result_structure = self.request.query_params.get('result_structure', None)
-        sector = self.request.query_params.get('sector', None)
-        gateway = self.request.query_params.get('gateway', None)
-        donor = self.request.query_params.get('donor', None)
-        partner = self.request.query_params.get('partner', None)
-
-        queryset = self.model.objects.filter(
-            pca__status=status,
-        )
-
-        if gateway is not None:
-            queryset = queryset.filter(
-                location__gateway__id=int(gateway)
-            )
-        if result_structure is not None:
-            queryset = queryset.filter(
-                pca__result_structure__id=int(result_structure)
-            )
-        if partner is not None:
-            queryset = queryset.filter(
-                pca__partner__id=int(partner)
-            )
-        if sector is not None:
-            # get the filtered pcas so far
-            pcas = queryset.values_list('pca__id', flat=True)
-            # get those that contain this sector
-            pcas = PCASector.objects.filter(
-                pca__in=pcas,
-                sector__id=int(sector)
-            ).values_list('pca__id', flat=True)
-            # now filter the current query by the selected ids
-            queryset = queryset.filter(
-                pca__id__in=pcas
-            )
-
-        if donor is not None:
-            # get the filtered pcas so far
-            pcas = queryset.values_list('pca__id', flat=True)
-            # get those that contain this donor
-            pcas = PCAGrant.objects.filter(
-                partnership__id__in=pcas,
-                grant__donor__id=int(donor)
-            ).values_list('partnership', flat=True)
-            # now filter the current query by the selected ids
-            queryset = queryset.filter(
-                pca__id__in=pcas
-            )
-
-        pca_locs = queryset.values_list('location', flat=True)
-        locs = Location.objects.filter(
-            id__in=pca_locs
-        )
-        return locs
 
 
 class PortalDashView(View):
@@ -619,176 +535,6 @@ class PartnershipBudgetViewSet(
             serializer = self.serializer_class(queryset)
             data = serializer.data
         except PartnershipBudget.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
-
-
-class PCAFileViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.CreateModelMixin,
-        mixins.ListModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of files URL for an Intervention (PCA)
-    """
-    model = PCAFile
-    queryset = PCAFile.objects.all()
-    serializer_class = PCAFileSerializer
-    # parser_classes = (MultiPartParser, FormParser,)
-    permission_classes = (PartnerPermission,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add a file to the PCA
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        try:
-            attachment = request.data["attachment"]
-        except KeyError:
-            attachment = None
-
-        serializer.instance = serializer.save()
-
-        if attachment:
-            serializer.instance.attachment = attachment
-            serializer.instance.save()
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
-    def get_queryset(self):
-
-        queryset = super(PCAFileViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_pk')
-        return queryset.filter(pca=intervention_id)
-
-    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
-        """
-        Returns a PCA File Object
-        """
-        try:
-            queryset = self.queryset.get(pca_id=intervention_pk, id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except PCAFile.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
-
-
-class PCAGrantViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.CreateModelMixin,
-        mixins.ListModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of Grants for a Intervention (PCA)
-    """
-    model = PCAGrant
-    queryset = PCAGrant.objects.all()
-    serializer_class = PCAGrantSerializer
-    permission_classes = (IsAdminUser,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add a Grant to the PCA
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-        serializer.instance.created = datetime.datetime.strptime(request.data['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        serializer.instance.modified = datetime.datetime.strptime(request.data['modified'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        serializer.instance.save()
-        data = serializer.data
-
-        headers = self.get_success_headers(data)
-        return Response(
-            data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
-    def get_queryset(self):
-
-        queryset = super(PCAGrantViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_pk')
-        return queryset.filter(partnership_id=intervention_id)
-
-    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
-        """
-        Returns a PCA Grant Object
-        """
-        try:
-            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except PCAGrant.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
-
-
-class GwPCALocationViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.CreateModelMixin,
-        mixins.ListModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of GW Locations for an Intervention (PCA)
-    """
-    model = GwPCALocation
-    queryset = GwPCALocation.objects.all()
-    serializer_class = GWLocationSerializer
-    permission_classes = (IsAdminUser,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add an GW location to the PCA
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-        data = serializer.data
-
-        headers = self.get_success_headers(data)
-        return Response(
-            data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
-    def get_queryset(self):
-
-        queryset = super(GwPCALocationViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_pk')
-        return queryset.filter(pca_id=intervention_id)
-
-    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
-        """
-        Returns a PCA Grant Object
-        """
-        try:
-            queryset = self.queryset.get(pca_id=intervention_pk, id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except GwPCALocation.DoesNotExist:
             data = {}
         return Response(
             data,
