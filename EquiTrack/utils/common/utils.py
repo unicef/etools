@@ -35,6 +35,12 @@ def pop_keys(d, keys):
     return res, rem
 
 
+def run_on_all_tenants(function):
+    with every_country() as c:
+        for country in c:
+            function()
+
+
 class every_country:
     """
     Loop through every available available tenant/country, then revert back to whatever was set before.

@@ -5,10 +5,10 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
 from django.utils.module_loading import import_string
-from EquiTrack.util_scripts import run
 from environment.models import IssueCheckConfig
 from .exceptions import IssueFoundException, IssueCheckNotFoundException
 from management.models import FlaggedIssue, ISSUE_STATUS_RESOLVED
+from utils.common.utils import run_on_all_tenants
 
 
 ModelCheckData = namedtuple('ModelCheckData', 'object metadata')
@@ -41,7 +41,7 @@ class BaseIssueCheck(object):
                     issue.message = unicode(e)
                     issue.save()
         # todo: is it always valid to run all checks against all tenants?
-        run(_inner)
+        run_on_all_tenants(_inner)
 
     def get_queryset(self):
         """
@@ -143,7 +143,7 @@ def recheck_all_open_issues():
                 logging.error(unicode(e))
 
     # todo: is it always valid to run all checks against all tenants?
-    run(_check)
+    run_on_all_tenants(_check)
 
 
 def bootstrap_checks(default_is_active=False):
