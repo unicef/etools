@@ -113,7 +113,6 @@ class AppliedIndicatorExportFlatSerializer(AppliedIndicatorExportSerializer):
         )
 
 
-
 class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
 
     class Meta:
