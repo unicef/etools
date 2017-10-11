@@ -102,6 +102,7 @@ class TestInterventionsAPIListPermissions(APITenantTestCase):
     '''Exercise permissions on the PRPIntervention list view'''
     def setUp(self):
         self.url = reverse('prp_api_v1:prp-intervention-list')
+        self.query_param_data = {'workspace': self.tenant.business_area_code}
 
     def test_unauthenticated_user_forbidden(self):
         '''Ensure an unauthenticated user gets the 403 smackdown'''
@@ -120,10 +121,10 @@ class TestInterventionsAPIListPermissions(APITenantTestCase):
         '''Ensure a non-staff user in the correct group has access'''
         user = UserFactory()
         user.groups.add(Group.objects.get(name=READ_ONLY_API_GROUP_NAME))
-        response = self.forced_auth_req('get', self.url, user=user)
+        response = self.forced_auth_req('get', self.url, user=user, data=self.query_param_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_staff_has_access(self):
         '''Ensure a staff user has access'''
-        response = self.forced_auth_req('get', self.url, user=UserFactory(is_staff=True))
+        response = self.forced_auth_req('get', self.url, user=UserFactory(is_staff=True), data=self.query_param_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)

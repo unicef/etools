@@ -96,6 +96,9 @@ class FastTenantTestCase(TenantTestCase):
             cls.tenant = TenantModel(domain_url=tenant_domain, schema_name='test')
             cls.tenant.save(verbosity=0)
 
+        cls.tenant.business_area_code = 'ZZZ'
+        cls.tenant.save(verbosity=0)
+
         try:
             cls.tenant.counters
         except ObjectDoesNotExist:
