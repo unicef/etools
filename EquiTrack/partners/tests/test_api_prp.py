@@ -33,6 +33,7 @@ class TestInterventionsAPI(APITenantTestCase):
             method,
             reverse('prp_api_v1:prp-intervention-list'),
             user=user or self.unicef_staff,
+            data={'workspace': self.tenant.business_area_code},
         )
         return response.status_code, json.loads(response.rendered_content)
 
@@ -40,7 +41,6 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_prp_v1(
             user=self.unicef_staff, method='get'
         )
-
         self.assertEqual(status_code, status.HTTP_200_OK)
 
         # uncomment if you need to see the response json / regenerate the test file
