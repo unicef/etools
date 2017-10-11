@@ -2496,46 +2496,4 @@ class AgreementAmendmentLog(TimeStampedModel):
         return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
 
 
-class AuthorizedOfficer(models.Model):
-    # TODO: write a script to move this to authorized officers on the model
-    # TODO: change on admin to use the model
-    """
-    Represents an authorized UNICEF officer on the partner agreement.
-
-    Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`partners.AgreementAmendmentLog`
-    """
-
-    agreement = models.ForeignKey(
-        Agreement,
-    )
-    officer = models.ForeignKey(
-        PartnerStaffMember
-    )
-    amendment = models.ForeignKey(
-        'AgreementAmendmentLog',
-        blank=True, null=True,
-    )
-
-    tracker = FieldTracker()
-
-    def __unicode__(self):
-        return unicode(self.officer)
-
-    @classmethod
-    def create_officer(cls, sender, instance, created, **kwargs):
-        """
-        Signal handler to create authorized_officers automatically
-        """
-        if instance.partner_manager and \
-                instance.partner_manager.id not in \
-                instance.authorized_officers:
-
-            cls.objects.create(agreement=instance,
-                               officer=instance.partner_manager)
-
-
-# post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
-
 post_save.connect(PCA.send_changes, sender=PCA)

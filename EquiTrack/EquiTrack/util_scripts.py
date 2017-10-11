@@ -12,7 +12,7 @@ from django.contrib.auth.models import User, Group
 
 from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
-from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, \
+from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, \
     InterventionResultLink, InterventionBudget, Sector, \
     InterventionSectorLocationLink, Agreement, PartnerOrganization, PartnerStaffMember, \
@@ -665,23 +665,6 @@ def local_country_keep():
     Country.objects.exclude(name__in=keeping).all().delete()
 
 
-def migrate_authorized_officers(country_name):
-    """
-    Migrates AuthorizedOfficer from schema  , cntryinstances back to the Agreement as a M2M field
-    to PartnerStaffMember
-    """
-    if not country_name:
-        logging.info("country name required")
-    set_country(country_name)
-    logging.info("Migrating authorized officers for {}".format(country_name))
-    authorized_officers = AuthorizedOfficer.objects.all()
-    for item in authorized_officers:
-        agreement = item.agreement
-        officer = item.officer
-        agreement.authorized_officers.add(officer)
-        agreement.save()
-
-
 def change_partner_shared_women(country_name):
     if not country_name:
         logging.info("country name required")
@@ -722,7 +705,6 @@ def after_partner_migration():
 
 
 def release_3_migrations():
-    all_countries_do(migrate_authorized_officers, 'migrate authorized officers')
     all_countries_do(change_partner_shared_women, 'change Women to UN Women migrations')
     all_countries_do(change_partner_cso_type, 'change old partner cso types')
 
