@@ -1,31 +1,9 @@
-from django.contrib import admin
 from django.db.models.query_utils import Q
 
 from rest_framework.filters import BaseFilterBackend
 
 from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
     InterventionExportFilterSerializer
-from reports.models import Indicator
-
-
-class PCAIndicatorFilter(admin.SimpleListFilter):
-
-    title = 'Indicator'
-    parameter_name = 'indicator'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (indicator.id, indicator.name) for indicator in Indicator.objects.all()
-        ]
-    # TODO invaid code: IndicatorProgress is not defined (import commented out)
-    # def queryset(self, request, queryset):
-    #     if self.value():
-    #         pca_ids = []
-    #         for ip in IndicatorProgress.objects.filter(indicator=self.value()):
-    #             pca_ids.append(ip.pca.id)
-    #         return queryset.filter(id__in=pca_ids)
-    #     return queryset
 
 
 class PartnerScopeFilter(BaseFilterBackend):

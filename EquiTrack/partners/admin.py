@@ -38,9 +38,6 @@ from partners.models import (
     InterventionAttachment,
 
 )
-from partners.filters import (
-    PCAGatewayTypeFilter,
-)
 from partners.mixins import ReadOnlyMixin, HiddenPartnerMixin
 from partners.forms import (
     PartnershipForm,
@@ -239,7 +236,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         'status',
         'current',
         'partner',
-        PCAGatewayTypeFilter,
     )
     search_fields = (
         'number',
