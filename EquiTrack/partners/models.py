@@ -1,9 +1,9 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import datetime
 import json
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
 from django.db.models import F
@@ -21,7 +21,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
-from EquiTrack.utils import get_current_site, import_permissions
+from EquiTrack.utils import import_permissions
 from EquiTrack.mixins import AdminURLMixin
 from funds.models import Grant
 from reports.models import (
@@ -34,12 +34,30 @@ from reports.models import (
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
 from users.models import Section, Office
-from notification.models import Notification
 from partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreements_illegal_transition,
     agreement_transition_to_signed_valid)
 from partners.validation import interventions as intervention_validation
+
+
+class AgreementStatus(object):
+    '''Constants for agreement status. (Formerly part of now-defunct PCA model.)'''
+    IN_PROCESS = 'in_process'
+    ACTIVE = 'active'
+    IMPLEMENTED = 'implemented'
+    CANCELLED = 'cancelled'
+    SUSPENDED = 'suspended'
+    TERMINATED = 'terminated'
+
+    CHOICES = (
+        (IN_PROCESS, "In Process"),
+        (ACTIVE, "Active"),
+        (IMPLEMENTED, "Implemented"),
+        (CANCELLED, "Cancelled"),
+        (SUSPENDED, "Suspended"),
+        (TERMINATED, "Terminated"),
+    )
 
 
 # TODO: streamline this ...
@@ -1952,436 +1970,12 @@ class DirectCashTransfer(models.Model):
     tracker = FieldTracker()
 
 
-# TODO: remove these models
-class PCA(AdminURLMixin, models.Model):
-    """
-    Represents a partner intervention.
-
-    Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`partners.Agreement`
-    Relates to :model:`reports.ResultStructure`
-    Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`auth.User`
-    Relates to :model:`partners.PartnerStaffMember`
-    """
-
-    IN_PROCESS = 'in_process'
-    ACTIVE = 'active'
-    IMPLEMENTED = 'implemented'
-    CANCELLED = 'cancelled'
-    SUSPENDED = 'suspended'
-    TERMINATED = 'terminated'
-    PCA_STATUS = (
-        (IN_PROCESS, u"In Process"),
-        (ACTIVE, u"Active"),
-        (IMPLEMENTED, u"Implemented"),
-        (CANCELLED, u"Cancelled"),
-        (SUSPENDED, u"Suspended"),
-        (TERMINATED, u"Terminated"),
-    )
-    PD = 'PD'
-    SHPD = 'SHPD'
-    AWP = 'AWP'
-    SSFA = 'SSFA'
-    IC = 'IC'
-    PARTNERSHIP_TYPES = (
-        (PD, 'Programme Document'),
-        (SHPD, 'Simplified Humanitarian Programme Document'),
-        (AWP, 'Cash Transfers to Government'),
-        (SSFA, 'SSFA TOR'),
-        (IC, 'IC TOR'),
-    )
-    # TODO: remove partner foreign key, already on the agreement model
-    partner = models.ForeignKey(
-        PartnerOrganization,
-        related_name='documents',
-    )
-    # TODO: remove chained foreign key
-    agreement = ChainedForeignKey(
-        Agreement,
-        related_name='pca_interventions',
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=True,
-        blank=True, null=True,
-    )
-    partnership_type = models.CharField(
-        choices=PARTNERSHIP_TYPES,
-        default=PD,
-        blank=True, null=True,
-        max_length=255,
-        verbose_name='Document type'
-    )
-    number = models.CharField(
-        max_length=45,
-        blank=True, null=True,
-        verbose_name='Reference Number'
-    )
-    title = models.CharField(max_length=256)
-    project_type = models.CharField(
-        max_length=20,
-        blank=True, null=True,
-        choices=Choices(
-            'Bulk Procurement',
-            'Construction Project',
-        )
-    )
-    status = models.CharField(
-        max_length=32,
-        blank=True,
-        choices=PCA_STATUS,
-        default='in_process',
-        help_text='In Process = In discussion with partner, '
-        'Active = Currently ongoing, '
-        'Implemented = completed, '
-        'Cancelled = cancelled or not approved'
-    )
-    # dates
-    start_date = models.DateField(
-        null=True, blank=True,
-        help_text='The date the Intervention will start'
-    )
-    end_date = models.DateField(
-        null=True, blank=True,
-        help_text='The date the Intervention will end'
-    )
-    initiation_date = models.DateField(
-        verbose_name='Submission Date',
-        help_text='The date the partner submitted complete partnership documents to Unicef',
-    )
-    submission_date = models.DateField(
-        verbose_name='Submission Date to PRC',
-        help_text='The date the documents were submitted to the PRC',
-        null=True, blank=True,
-    )
-    review_date = models.DateField(
-        verbose_name='Review date by PRC',
-        help_text='The date the PRC reviewed the partnership',
-        null=True, blank=True,
-    )
-    signed_by_unicef_date = models.DateField(null=True, blank=True)
-    signed_by_partner_date = models.DateField(null=True, blank=True)
-
-    # managers and focal points
-    unicef_manager = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='approved_partnerships',
-        verbose_name='Signed by',
-        blank=True, null=True
-    )
-    unicef_managers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        verbose_name='Unicef focal points',
-        blank=True,
-    )
-    partner_manager = ChainedForeignKey(
-        PartnerStaffMember,
-        verbose_name='Signed by partner',
-        related_name='signed_partnerships',
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=False,
-        blank=True, null=True,
-    )
-
-    # TODO: remove chainedForeignKEy
-    partner_focal_point = ChainedForeignKey(
-        PartnerStaffMember,
-        related_name='my_partnerships',
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=False,
-        blank=True, null=True,
-    )
-    fr_number = models.CharField(max_length=50, blank=True, null=True)
-    planned_visits = models.IntegerField(default=0)
-
-    # meta fields
-    sectors = models.CharField(max_length=255, null=True, blank=True)
-    current = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    tracker = FieldTracker()
-
-    class Meta:
-        verbose_name = 'Old Intervention'
-        verbose_name_plural = 'Old Interventions'
-        ordering = ['-created_at']
-
-    def __unicode__(self):
-        return '{}: {}'.format(
-            self.partner.name,
-            self.number if self.number else self.reference_number
-        )
-
-    @property
-    def sector_children(self):
-        sectors = self.pcasector_set.all().values_list('sector__id', flat=True)
-        return Sector.objects.filter(id__in=sectors)
-
-    @property
-    def sector_id(self):
-        if self.sector_children:
-            return self.sector_children[0].id
-        return 0
-
-    @property
-    def sector_names(self):
-        return ', '.join(self.sector_children.values_list('name', flat=True))
-
-    @property
-    def days_from_submission_to_signed(self):
-        if not self.submission_date:
-            return 'Not Submitted'
-        if not self.signed_by_unicef_date or self.signed_by_partner_date:
-            return 'Not fully signed'
-        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
-        return relativedelta(signed_date - self.submission_date).days
-
-    @property
-    def days_from_review_to_signed(self):
-        if not self.review_date:
-            return 'Not Reviewed'
-        if not self.signed_by_unicef_date or self.signed_by_partner_date:
-            return 'Not fully signed'
-        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
-        return relativedelta(signed_date - self.review_date).days
-
-    @property
-    def duration(self):
-        if self.start_date and self.end_date:
-            return '{} Months'.format(
-                relativedelta(self.end_date - self.start_date).months
-            )
-        else:
-            return ''
-
-    @property
-    def amendment_num(self):
-        return self.amendments_log.all().count()
-
-    @cached_property
-    def total_partner_contribution(self):
-
-        if self.budget_log.exists():
-            return sum([b['partner_contribution'] for b in
-                        self.budget_log.values('created', 'year', 'partner_contribution').
-                        order_by('year', '-created').distinct('year').all()
-                        ])
-        return 0
-
-    @cached_property
-    def total_unicef_cash(self):
-
-        if self.budget_log.exists():
-            return sum([b['unicef_cash'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash').
-                        order_by('year', '-created').distinct('year').all()
-                        ])
-        return 0
-
-    @cached_property
-    def total_budget(self):
-
-        if self.budget_log.exists():
-            return sum([b['unicef_cash'] + b['in_kind_amount'] + b['partner_contribution'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash',
-                                               'in_kind_amount', 'partner_contribution').
-                        order_by('year', '-created').distinct('year').all()])
-        return 0
-
-    @cached_property
-    def total_partner_contribution_local(self):
-
-        if self.budget_log.exists():
-            return sum([b['partner_contribution_local'] for b in
-                        self.budget_log.values('created', 'year', 'partner_contribution_local').
-                        order_by('year', '-created').distinct('year').all()
-                        ])
-        return 0
-
-    @cached_property
-    def total_unicef_cash_local(self):
-
-        if self.budget_log.exists():
-            return sum([b['unicef_cash_local'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local').
-                        order_by('year', '-created').distinct('year').all()
-                        ])
-        return 0
-
-    @cached_property
-    def total_budget_local(self):
-
-        if self.budget_log.exists():
-            return sum([b['unicef_cash_local'] + b['in_kind_amount_local'] + b['partner_contribution_local'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash_local',
-                                               'in_kind_amount_local', 'partner_contribution_local').
-                        order_by('year', '-created').distinct('year').all()])
-        return 0
-
-    @property
-    def year(self):
-        if self.id:
-            if self.signed_by_unicef_date is not None:
-                return self.signed_by_unicef_date.year
-            else:
-                return self.created_at.year
-        else:
-            return datetime.date.today().year
-
-    @property
-    def reference_number(self):
-
-        if self.partnership_type in [Agreement.SSFA, Agreement.MOU]:
-            number = self.agreement.reference_number
-        elif self.number:
-            number = self.number
-        else:
-            objects = list(PCA.objects.filter(
-                partner=self.partner,
-                created_at__year=self.year,
-                partnership_type=self.partnership_type
-            ).order_by('created_at').values_list('id', flat=True))
-            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-            number = '{agreement}/{type}{year}{seq}'.format(
-                agreement=self.agreement.reference_number.split("-")[0] if self.id and self.agreement else '',
-                type=self.partnership_type,
-                year=self.year,
-                seq=sequence
-            )
-        return '{}{}'.format(
-            number,
-            '-{0:02d}'.format(self.amendments_log.last().amendment_number)
-            if self.amendments_log.last() else ''
-        )
-
-    @property
-    def planned_cash_transfers(self):
-        """
-        Planned cash transfers for the current year
-        """
-        if not self.budget_log.exists():
-            return 0
-        year = datetime.date.today().year
-        total = self.budget_log.filter(year=year).order_by('-created').first()
-        return total.unicef_cash if total else 0
-
-    def save(self, **kwargs):
-
-        # commit the referece number to the database once the intervention is
-        # signed
-        if self.status != PCA.IN_PROCESS and self.signed_by_unicef_date and not self.number:
-            self.number = self.reference_number
-
-        if not self.pk:
-            if self.partnership_type != self.PD:
-                self.signed_by_partner_date = self.agreement.signed_by_partner_date
-                self.partner_manager = self.agreement.partner_manager
-                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
-                self.unicef_manager = self.agreement.signed_by
-                self.start_date = self.agreement.start
-                self.end_date = self.agreement.end
-
-            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-                PartnerOrganization.planned_visits(self.partner, self)
-        else:
-            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-                prev_pca = PCA.objects.filter(id=self.id)[0]
-                if self.planned_visits != prev_pca.planned_visits:
-                    PartnerOrganization.planned_visits(self.partner, self)
-
-        # set start date to latest of signed by partner or unicef date
-        if self.partnership_type == self.PD:
-            if self.agreement.signed_by_unicef_date\
-                    and self.agreement.signed_by_partner_date and self.start_date is None:
-                if self.agreement.signed_by_unicef_date > self.agreement.signed_by_partner_date:
-                    self.start_date = self.agreement.signed_by_unicef_date
-                else:
-                    self.start_date = self.agreement.signed_by_partner_date
-
-            if self.agreement.signed_by_unicef_date\
-                    and not self.agreement.signed_by_partner_date and self.start_date is None:
-                self.start_date = self.agreement.signed_by_unicef_date
-
-            if not self.agreement.signed_by_unicef_date\
-                    and self.agreement.signed_by_partner_date and self.start_date is None:
-                self.start_date = self.agreement.signed_by_partner_date
-
-        super(PCA, self).save(**kwargs)
-
-    @classmethod
-    def get_active_partnerships(cls):
-        return cls.objects.filter(current=True, status=cls.ACTIVE)
-
-    @classmethod
-    def send_changes(cls, sender, instance, created, **kwargs):
-        # send emails to managers on changes
-        manager, created = Group.objects.get_or_create(
-            name='Partnership Manager'
-        )
-        managers = set(manager.user_set.filter(profile__country=connection.tenant, is_staff=True) |
-                       instance.unicef_managers.all())
-        recipients = [user.email for user in managers]
-
-        email_context = {
-            'number': unicode(instance),
-            'state': 'Created',
-            'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
-        }
-
-        if created:  # new partnership
-            notification = Notification.objects.create(
-                sender=instance,
-                recipients=recipients, template_name="partners/partnership/created/updated",
-                template_data=email_context
-            )
-
-        else:  # change to existing
-            email_context['state'] = 'Updated'
-
-            notification = Notification.objects.create(
-                sender=instance,
-                recipients=recipients, template_name="partners/partnership/created/updated",
-                template_data=email_context
-            )
-
-        notification.send_notification()
-
-        # attach any FCs immediately
-        # if instance:
-        #     for fr_number in instance.fr_numbers:
-        #         commitments = FundingCommitment.objects.filter(fr_number=fr_number)
-        #         for commit in commitments:
-        #             commit.intervention = instance
-        #             commit.save()
-
-
-def get_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_org',
-         str(instance.pca.agreement.partner.id),
-         'agreements',
-         str(instance.pca.agreement.id),
-         'interventions',
-         str(instance.pca.id),
-         filename]
-    )
-
-
 class AgreementAmendmentLog(TimeStampedModel):
     """
     Represents an amendment log for the partner agreement.
 
     Relates to :model:`partners.Agreement`
     """
-
     agreement = models.ForeignKey(Agreement, related_name='amendments_log')
     type = models.CharField(
         max_length=50,
@@ -2402,7 +1996,7 @@ class AgreementAmendmentLog(TimeStampedModel):
     status = models.CharField(
         max_length=32,
         blank=True,
-        choices=PCA.PCA_STATUS,
+        choices=AgreementStatus.CHOICES,
     )
 
     tracker = FieldTracker()
@@ -2424,6 +2018,3 @@ class AgreementAmendmentLog(TimeStampedModel):
         ).order_by('created').values_list('id', flat=True))
 
         return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
-
-
-post_save.connect(PCA.send_changes, sender=PCA)

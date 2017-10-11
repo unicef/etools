@@ -10,7 +10,6 @@ from model_utils import Choices
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import (
-    ListAPIView,
     RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
 )
@@ -28,7 +27,6 @@ from funds.models import Donor
 
 from partners.models import (
     PartnerOrganization,
-    PCA,
     Agreement,
     PartnerStaffMember,
     PartnerType,
@@ -43,46 +41,8 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberPropertiesSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
 )
-from partners.permissions import PartneshipManagerPermission, PartnerPermission
-from partners.serializers.v1 import InterventionSerializer
+from partners.permissions import PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
-
-
-class PartnerInterventionListAPIView(ListAPIView):
-    queryset = Intervention.objects.detail_qs().all()
-    serializer_class = InterventionSerializer
-    permission_classes = (PartnerPermission,)
-
-    def list(self, request, pk=None, format=None):
-        """
-        Return All Interventions for Partner
-        """
-        interventions = Intervention.objects.detail_qs().filter(partner_id=pk)
-        serializer = InterventionSerializer(interventions, many=True)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
-
-
-class AgreementInterventionsListAPIView(ListAPIView):
-    serializer_class = InterventionSerializer
-    filter_backends = (PartnerScopeFilter,)
-    permission_classes = (PartneshipManagerPermission,)
-
-    def list(self, request, partner_pk=None, pk=None, format=None):
-        """
-        Return All Interventions for Partner and Agreement
-        """
-        if partner_pk:
-            interventions = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk)
-        else:
-            interventions = PCA.objects.filter(agreement_id=pk)
-        serializer = InterventionSerializer(interventions, many=True)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
 
 
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -195,8 +155,6 @@ class PmpStaticDropdownsListApiView(APIView):
 
 
 class PMPDropdownsListApiView(APIView):
-    # serializer_class = InterventionSerializer
-    # filter_backends = (PartnerScopeFilter,)
     permission_classes = (IsAdminUser,)
 
     def get(self, request):

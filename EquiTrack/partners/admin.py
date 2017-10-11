@@ -2,23 +2,18 @@ from __future__ import absolute_import
 
 from django.db import models
 from django.contrib import admin
-from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
 
 from reversion.admin import VersionAdmin
-from import_export.admin import ExportMixin, base_formats
+from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
 
-from partners.exports import (
-    PartnerExport,
-    InterventionExport,
-)
+from partners.exports import PartnerExport
 from partners.models import (
-    PCA,
     FileType,
     PartnerOrganization,
     Assessment,
@@ -37,7 +32,6 @@ from partners.models import (
 )
 from partners.mixins import HiddenPartnerMixin
 from partners.forms import (
-    PartnershipForm,
     PartnersAdminForm,
     AgreementForm,
     PartnerStaffMemberForm,
@@ -179,130 +173,6 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     list_filter = (
         'sector',
     )
-
-
-class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
-    form = PartnershipForm
-    resource_class = InterventionExport
-    # Add custom exports
-    formats = (
-        base_formats.CSV,
-        # DonorsFormat,
-        # KMLFormat,
-    )
-    date_hierarchy = 'start_date'
-    list_display = (
-        'number',
-        'partnership_type',
-        'status',
-        'created_date',
-        'signed_by_unicef_date',
-        'start_date',
-        'end_date',
-        'partner',
-        'sector_names',
-        'title',
-        'total_unicef_cash',
-        'total_budget',
-    )
-    list_filter = (
-        'partnership_type',
-        'status',
-        'current',
-        'partner',
-    )
-    search_fields = (
-        'number',
-        'title',
-    )
-    readonly_fields = (
-        'number',
-        'total_budget',
-        'days_from_submission_to_signed',
-        'days_from_review_to_signed',
-        'duration',
-        'work_plan_template',
-    )
-    filter_horizontal = (
-        'unicef_managers',
-    )
-    fieldsets = (
-        (_('Intervention Details'), {
-            'fields':
-                ('partner',
-                 'agreement',
-                 'partnership_type',
-                 'number',
-                 ('title', 'project_type',),
-                 'status',
-                 'initiation_date',)
-        }),
-        (_('Dates and Signatures'), {
-            'fields':
-                (('submission_date',),
-                 'review_date',
-                 ('partner_manager', 'signed_by_partner_date',),
-                 ('unicef_manager', 'signed_by_unicef_date',),
-                 ('partner_focal_point', 'planned_visits',),
-                 'unicef_managers',
-                 ('days_from_submission_to_signed', 'days_from_review_to_signed',),
-                 ('start_date', 'end_date', 'duration',),
-                 'fr_number',),
-        }),
-        (_('Add sites by P Code'), {
-            'fields': ('location_sector', 'p_codes',),
-        }),
-        (_('Import work plan'), {
-            'fields': ('work_plan', 'work_plan_template'),
-        }),
-    )
-    remove_fields_if_read_only = (
-        'location_sector',
-        'p_codes',
-        'work_plan',
-    )
-
-    inlines = (
-        LinksInlineAdmin,
-        # ResultsInlineAdmin,
-    )
-
-    def work_plan_template(self, obj):
-        return u'<a class="btn btn-primary default" ' \
-               u'href="{}" >Download Template</a>'.format(
-                   static(
-                       'partner/templates/workplan_template.xlsx')
-               )
-    work_plan_template.allow_tags = True
-    work_plan_template.short_description = 'Template'
-
-    def created_date(self, obj):
-        return obj.created_at.strftime('%d-%m-%Y')
-    created_date.admin_order_field = '-created_at'
-
-    def get_form(self, request, obj=None, **kwargs):
-        """
-        Set up the form with extra data and initial values
-        """
-        form = super(PartnershipAdmin, self).get_form(request, obj, **kwargs)
-
-        # add the current request and object to the form
-        form.request = request
-        form.obj = obj
-
-        if obj and obj.sector_children:
-            form.base_fields['location_sector'].queryset = obj.sector_children
-
-        return form
-
-    def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
-
-        super(PartnershipAdmin, self).save_model(request, obj, form, change)
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser
 
 
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
@@ -687,6 +557,5 @@ admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
 
 
-admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(FileType, FileTypeAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)

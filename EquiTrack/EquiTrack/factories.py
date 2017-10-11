@@ -173,17 +173,6 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
-class PartnershipFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = partner_models.PCA
-
-    partner = factory.SubFactory(PartnerFactory)
-    agreement = factory.SubFactory(AgreementFactory)
-    partnership_type = u'PD'
-    title = u'To save the galaxy from the Empire'
-    initiation_date = datetime.today()
-
-
 class InterventionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.Intervention

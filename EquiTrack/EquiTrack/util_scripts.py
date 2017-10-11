@@ -12,11 +12,8 @@ from django.contrib.auth.models import User, Group
 
 from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
-from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, \
-    AgreementAmendmentLog, AgreementAmendment, Intervention, \
-    InterventionResultLink, InterventionBudget, Sector, \
-    InterventionSectorLocationLink, Agreement, PartnerOrganization, PartnerStaffMember, \
-    Assessment
+from partners.models import FundingCommitment, InterventionPlannedVisits, Assessment, \
+    AgreementAmendmentLog, AgreementAmendment, Intervention, Agreement, PartnerOrganization, PartnerStaffMember
 from t2f.models import TravelActivity
 
 
@@ -342,23 +339,6 @@ def after_code_merge():  # and after migrations
     print("don't forget to sync")
 
 
-def populate_reference_numbers():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        pcas = PCA.objects.filter(number__isnull=True, signed_by_unicef_date__isnull=False).exclude(
-            status=PCA.DRAFT)
-        print(cntry.name)
-        print(pcas)
-        for pca in pcas:
-            pca.number = pca.reference_number
-            pca.save()
-
-        agreements = Agreement.objects.filter(signed_by_unicef_date__isnull=False, agreement_number__isnull=True)
-        for agr in agreements:
-            agr.agreement_number = agr.reference_number
-            agr.save()
-
-
 # run this before migration partners_0005
 def agreement_unique_reference_number():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
@@ -378,31 +358,6 @@ def agreement_unique_reference_number():
                 cdup.agreement_number = '{}|{}'.format(cdup.agreement_number, cdup.id)
                 print(cdup)
                 cdup.save()
-
-
-def pca_unique_reference_number():
-    from django.db.models import signals
-    signals.post_save.disconnect(receiver=PCA.send_changes, sender=PCA)
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry.name)
-        pcas = PCA.objects.all()
-        for pca in pcas:
-            if not pca.number:
-                print(pca)
-                pca.number = 'blk:{}'.format(pca.id)
-                pca.save()
-        dupes = PCA.objects.values('number').annotate(
-            Count('number')).order_by().filter(number__count__gt=1).all()
-        for dup in dupes:
-            cdupes = PCA.objects.filter(number=dup['number'])
-            for cdup in cdupes:
-                if len(cdup.number) > 40:
-                    cdup.number = cdup.number[len(cdup.number)-40:]
-                cdup.number = '{}|{}'.format(cdup.number, cdup.id)
-                print(cdup)
-                cdup.save()
-    signals.post_save.connect(receiver=PCA.send_changes, sender=PCA)
 
 
 # run this after migration partners_0007
@@ -431,99 +386,10 @@ def agreement_amendments_copy():
                 print('{}-{}'.format(agr_amd.number, agr_amd.agreement))
 
 
-def copy_pca_fields_to_intervention():
-    MAPPING = {
-        'created_at': 'created',
-        'updated_at': 'modified',
-        'partnership_type': 'document_type',
-        'number': 'number',
-        'title': 'title',
-        'status': 'status',
-        'start_date': 'start',
-        'end_date': 'end',
-        'initiation_date': 'submission_date',
-        'submission_date': 'submission_date_prc',
-        'review_date': 'review_date_prc',
-        'signed_by_unicef_date': 'signed_by_unicef_date',
-        'signed_by_partner_date': 'signed_by_partner_date',
-        'agreement': 'agreement',
-        'result_structure': 'hrp',
-        'partner_manager': 'partner_authorized_officer_signatory',
-        'unicef_manager': 'unicef_signatory',
-    }
-    pca_attrs = ['created_at', 'updated_at', 'partnership_type', 'number', 'title', 'status', 'start_date', 'end_date',
-                 'initiation_date', 'submission_date', 'review_date', 'signed_by_unicef_date', 'signed_by_partner_date',
-                 'agreement', 'result_structure', 'partner_manager', 'unicef_manager']
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry)
-        pcas = PCA.objects.all()
-        interventions_to_save = []
-        for pca in pcas:
-            if pca.number == '-':
-                print('-')
-            if pca.partnership_type in [PCA.AWP, PCA.IC]:
-                continue
-            intervention = Intervention()
-            for attr in pca_attrs:
-                if attr == 'status' and pca.status == u'in_process':
-                    setattr(intervention, 'status', u'draft')
-                elif attr == 'agreement' and not getattr(pca, attr):
-                    break
-                else:
-                    setattr(intervention, MAPPING[attr], getattr(pca, attr))
-            if not intervention.document_type:
-                continue
-            try:
-                if intervention.status in \
-                        [intervention.ACTIVE, intervention.SUSPENDED,
-                         intervention.TERMINATED, intervention.IMPLEMENTED] \
-                        and \
-                        not intervention.signed_by_unicef_date:
-                    if intervention.start:
-                        intervention.signed_by_unicef_date = intervention.start
-                    elif intervention.signed_by_partner_date:
-                        intervention.signed_by_unicef_date = intervention.signed_by_partner_date
-                    else:
-                        intervention.signed_by_unicef_date = intervention.created
-                print('before', intervention, intervention.status, intervention.document_type)
-                if not intervention.agreement:
-                    continue
-                interventions_to_save.append(intervention)
-            except Exception as e:
-                print(pca.number)
-                print(intervention.number)
-                raise e
-            print('after', intervention, intervention.status, intervention.document_type)
-        Intervention.objects.bulk_create(interventions_to_save)
-
-
 def clean_interventions():
     for country in Country.objects.exclude(name='Global'):
         set_country(country)
         Intervention.objects.all().delete()
-
-
-def export_old_pca_fields():
-    pca_fields = {}
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        pcas = PCA.objects.all()
-        numbers = []
-        for pca in pcas:
-            if pca.fr_number or pca.planned_visits > 0:
-                pca_numbers = {}
-                pca_numbers['pca'] = pca.number
-                pca_numbers['fr_number'] = pca.fr_number or 0
-                pca_numbers['planned_visits'] = pca.planned_visits
-                numbers.append(pca_numbers)
-        print(numbers)
-        if numbers.count > 0:
-            pca_fields[cntry.name] = numbers
-    print(pca_fields)
-
-    with open('pca_numbers.json', 'w') as fp:
-        json.dump(pca_fields, fp)
 
 
 def import_planned_visits():
@@ -556,78 +422,6 @@ def import_fr_numbers():
                         continue
                     intervention.fr_numbers = [row['fr_number']]
                     intervention.save()
-
-
-def copy_pca_results_to_intervention():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry)
-        for pca in PCA.objects.all():
-            result_ids = pca.indicators.order_by().values_list('result__id', flat=True).distinct()
-            for result_id in result_ids:
-                result = Result.objects.get(id=result_id)
-                ram_inds = pca.indicators.filter(result=result)
-                indicators = []
-                for ram_ind in ram_inds:
-                    if ram_ind.indicator:
-                        indicators.append(ram_ind.indicator)
-                try:
-                    intervention = Intervention.objects.get(number=pca.number)
-                except Intervention.DoesNotExist:
-                    log_to_file('copy_pca_results_to_intervention: Indervention.DoesNotExist', pca.id, pca.number)
-                    continue
-                irl, created = InterventionResultLink.objects.get_or_create(intervention=intervention, cp_output=result)
-                irl.ram_indicators.add(*indicators)
-
-
-def copy_pca_budgets_to_intervention():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry)
-        for pca in PCA.objects.all():
-            pb_years = pca.budget_log.values_list('year', flat=True).distinct()
-            if not pb_years:
-                continue
-            try:
-                intervention = Intervention.objects.get(number=pca.number)
-            except Intervention.DoesNotExist:
-                log_to_file('copy_pca_budgets_to_intervention: Indervention.DoesNotExist', pca.id, pca.number)
-                continue
-            print(pb_years)
-            for pb_year in pb_years:
-                if pb_year:
-                    pb = pca.budget_log.filter(year=pb_year).order_by('-created').first()
-                    InterventionBudget.objects.get_or_create(intervention=intervention,
-                                                             partner_contribution=pb.partner_contribution,
-                                                             unicef_cash=pb.unicef_cash,
-                                                             in_kind_amount=pb.in_kind_amount,
-                                                             year=pb.year)
-
-
-def copy_pca_sector_locations_to_intervention():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry)
-        for pca in PCA.objects.all():
-            sector_ids = pca.locations.order_by().values_list('sector__id', flat=True).distinct()
-            for sector_id in sector_ids:
-                if not sector_id:
-                    continue
-                sector = Sector.objects.get(id=sector_id)
-                gwpc_locations = pca.locations.filter(sector=sector).all()
-                locations = []
-                for gwpc_loc in gwpc_locations:
-                    if gwpc_loc.location:
-                        locations.append(gwpc_loc.location)
-                try:
-                    intervention = Intervention.objects.get(number=pca.number)
-                except Intervention.DoesNotExist:
-                    log_to_file('copy_pca_sector_locations_to_intervention: Indervention.DoesNotExist',
-                                pca.id, pca.number)
-                    continue
-                isl, created = InterventionSectorLocationLink.objects.get_or_create(intervention=intervention,
-                                                                                    sector=sector)
-                isl.locations.add(*locations)
 
 
 def local_country_keep():
@@ -663,16 +457,6 @@ def change_partner_cso_type(country_name):
         if partner.cso_type in ['Community based organization', 'Community Based Organisation']:
             partner.cso_type = 'Community Based Organization'
         partner.save()
-
-
-def after_partner_migration():
-    copy_pca_fields_to_intervention()
-    agreement_amendments_copy()
-    copy_pca_results_to_intervention()
-
-    # TODO:
-    # all_countries_do(pca_intervention_fr_numbers)
-    # planned_visits
 
 
 def release_3_migrations():

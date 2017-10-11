@@ -7,7 +7,6 @@ from rest_framework_nested import routers
 from .views.v1 import (
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
-    InterventionsViewSet,
     IndicatorReportViewSet,
     PCAPDFView,
     PartnerOrganizationsViewSet,
@@ -27,13 +26,6 @@ simple_agreements_api.register(r'agreements', AgreementViewSet, base_name='agree
 agreement_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
 agreement_api.register(r'agreements', AgreementViewSet, base_name='agreements')
 
-# interventions_api = routers.SimpleRouter()
-interventions_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
-interventions_api.register(r'interventions', InterventionsViewSet, base_name='interventions')
-
-simple_interventions_api = routers.SimpleRouter()
-simple_interventions_api.register(r'interventions', InterventionsViewSet, base_name='interventions')
-
 # simple_results_api = routers.NestedSimpleRouter(simple_interventions_api, r'interventions', lookup='intervention')
 # simple_results_api.register(r'results', InterventionResultsViewSet, base_name='simpleintervention-results')
 
@@ -51,7 +43,6 @@ urlpatterns = (
     # remove partner portal for now:
     # url(r'^$', PortalDashView.as_view()),
 
-    url(r'^my_interventions/', InterventionsViewSet.as_view({'get': 'retrieve'}), name='interventions'),
     # url(r'^interventions/(?P<intervention_pk>\d+)/reports/', IndicatorReportViewSet.as_view(), name='interventions'),
     #
     # url(r'^interventions/(?P<intervention_pk>\d+)/reports/', IndicatorReportViewSet.as_view(),

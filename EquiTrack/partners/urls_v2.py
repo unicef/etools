@@ -40,9 +40,6 @@ urlpatterns = (
     url(r'^agreements/amendments/(?P<pk>\d+)/$',
         view=AgreementAmendmentDeleteView.as_view(http_method_names=['delete']),
         name='agreement-amendment-del'),
-    # url(r'^agreements/(?P<pk>\d+)/interventions/$',
-    #     view=AgreementInterventionsListAPIView.as_view(),
-    #     name='agreement-interventions-list'),
 
     url(r'^partners/$',
         view=PartnerOrganizationListAPIView.as_view(http_method_names=['get', 'post']),
@@ -61,15 +58,9 @@ urlpatterns = (
         name='partner-assessment-del'),
     url(r'^partners/add/$', view=PartnerOrganizationAddView.as_view(http_method_names=['post']), name='partner-add'),
 
-    # url(r'^partners/(?P<pk>\d+)/interventions/$',
-    #     view=PartnerInterventionListAPIView.as_view(),
-    #     name='partner-interventions-list'),
     # url(r'^partners/(?P<partner_pk>\d+)/agreements/$',
     #     view=AgreementListAPIView.as_view(),
     #     name='parter-agreement-list'),
-    # url(r'^partners/(?P<partner_pk>\d+)/agreements/(?P<pk>\d+)/interventions/$',
-    #     view=AgreementInterventionsListAPIView.as_view(),
-    #     name='partner-agreement-interventions-list'),
 
     url(r'^partners/(?P<partner_pk>\d+)/staff-members/$',
         view=PartnerStaffMemberListAPIVIew.as_view(http_method_names=['get']),

@@ -10,7 +10,6 @@ class PartnersAppConfig(AppConfig):
         registry.register(self.get_model('PartnerOrganization'))
         registry.register(self.get_model('PartnerStaffMember'))
         registry.register(self.get_model('Assessment'))
-        registry.register(self.get_model('PCA'))
         registry.register(self.get_model('Intervention'))
         registry.register(self.get_model('AgreementAmendmentLog'))
         registry.register(self.get_model('FileType'))

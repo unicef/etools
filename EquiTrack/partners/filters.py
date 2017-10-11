@@ -2,8 +2,7 @@ from django.db.models.query_utils import Q
 
 from rest_framework.filters import BaseFilterBackend
 
-from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
-    InterventionExportFilterSerializer
+from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer
 
 
 class PartnerScopeFilter(BaseFilterBackend):
@@ -81,65 +80,5 @@ class AgreementExportFilter(BaseFilterBackend):
         ends_before = parameters.get('ends_before')
         if ends_before:
             q &= Q(end_date__lte=ends_before)
-
-        return queryset.filter(q)
-
-
-class InterventionExportFilter(BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        parameter_serializer = InterventionExportFilterSerializer(data=request.GET)
-        parameter_serializer.is_valid(raise_exception=True)
-
-        parameters = parameter_serializer.data
-
-        q = Q()
-        search_str = parameters.get('search')
-        if search_str:
-            search_q = Q(
-                Q(partner__name__istartswith=search_str) |
-                Q(short_name__istartswith=search_str) |
-                Q(title__istartswith=search_str)
-            )
-            q &= search_q
-
-        document_type = parameters.get('document_type')
-        if document_type:
-            q &= Q(partnership_type=document_type)
-
-        status = parameters.get('status')
-        if status:
-            q &= Q(status=status)
-
-        country_programme = parameters.get('country_programme')
-        if country_programme:
-            q &= Q(result_structure__country_programme__name__istartswith=country_programme)
-
-        result_structure = parameters.get('result_structure')
-        if result_structure:
-            q &= Q(result_structure__name__istartswith=result_structure)
-
-        sector = parameters.get('sector')
-        if sector:
-            q &= Q(sectors__sector__name__istartswith=sector)
-
-        unicef_focal_point = parameters.get('unicef_focal_point')
-        if unicef_focal_point:
-            q &= Q(unicef_manager__name__istartswith=unicef_focal_point)
-
-        donor = parameters.get('donor')
-        if donor:
-            q &= Q(grants__grant__donor__name__istartswith=donor)
-
-        grant = parameters.get('grant')
-        if grant:
-            q &= Q(grants__grant__name__istartswith=grant)
-
-        starts_after = parameters.get('starts_after')
-        if starts_after:
-            q &= Q(start_date__gte=starts_after)
-
-        ends_before = parameters.get('ends_before')
-        if ends_before:
-            q &= Q(ends_before__lte=ends_before)
 
         return queryset.filter(q)

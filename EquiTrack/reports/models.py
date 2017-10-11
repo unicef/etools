@@ -448,9 +448,9 @@ class Indicator(models.Model):
         )
 
     def programmed_amounts(self):
-        from partners.models import PCA
+        from partners.models import AgreementStatus
         return self.resultchain_set.filter(
-            partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
+            partnership__status__in=[AgreementStatus.ACTIVE, AgreementStatus.IMPLEMENTED]
         )
 
     def programmed(self, result_structure=None):

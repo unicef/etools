@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
-import datetime
 
 from collections import namedtuple
 from django.conf import settings
@@ -11,8 +10,8 @@ from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 
 from rest_framework import status, viewsets, mixins
-from rest_framework.decorators import detail_route, list_route
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.decorators import list_route
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 
 from actstream import action
@@ -22,7 +21,6 @@ from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
 from partners.models import (
     FileType,
-    PCA,
     PartnerOrganization,
     Agreement,
     PartnerStaffMember,
@@ -31,19 +29,16 @@ from partners.models import (
 )
 from partners.exports import (
     PartnerExport, AgreementExport,
-    InterventionExport,
 )
 from partners.filters import (
     PartnerOrganizationExportFilter,
     AgreementExportFilter,
-    InterventionExportFilter,
     PartnerScopeFilter
 )
 from partners.permissions import PartnerPermission  # ResultChainPermission
 from partners.serializers.v1 import (
     FileTypeSerializer,
     PartnerStaffMemberPropertiesSerializer,
-    InterventionSerializer,
     IndicatorReportSerializer,
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
@@ -242,19 +237,6 @@ class AgreementViewSet(
 
         return Response(serializer.data)
 
-    @detail_route(methods=['get'], url_path='interventions')
-    def interventions(self, request, partner_pk=None, pk=None):
-        """
-        Return All Interventions for Partner and Agreement
-        """
-        data = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk).values()
-        headers = self.get_success_headers(data)
-        return Response(
-            data,
-            status=status.HTTP_200_OK,
-            headers=headers
-        )
-
     def retrieve(self, request, partner_pk=None, pk=None):
         """
         Returns an Agreement object for this Agreement PK and partner
@@ -278,101 +260,6 @@ class AgreementViewSet(
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="ModelExportAgreements.csv"'
-        response.write(dataset.csv)
-        return response
-
-
-class InterventionsViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.ListModelMixin,
-        mixins.CreateModelMixin,
-        mixins.UpdateModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of all Interventions,
-    """
-    queryset = PCA.objects.all()
-    serializer_class = InterventionSerializer
-    permission_classes = (PartnerPermission,)
-    filter_backends = (PartnerScopeFilter, InterventionExportFilter,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add an Intervention
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        try:
-            managers = request.data['unicef_managers']
-        except KeyError:
-            managers = []
-
-        serializer.instance = serializer.save()
-        try:
-            serializer.instance.created_at = datetime.datetime.strptime(
-                request.data['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        except Exception:
-            serializer.instance.created_at = datetime.datetime.strptime(
-                request.data['created_at'], '%Y-%m-%dT%H:%M:%SZ')
-        serializer.instance.updated_at = datetime.datetime.strptime(request.data['updated_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        serializer.instance.save()
-        data = serializer.data
-
-        for man in managers:
-            serializer.instance.unicef_managers.add(man)
-
-        headers = self.get_success_headers(data)
-        return Response(data, status=status.HTTP_201_CREATED,
-                        headers=headers)
-
-    def get_queryset(self):
-
-        queryset = super(InterventionsViewSet, self).get_queryset()
-        if not self.request.user.is_staff:
-            # This must be a partner
-            try:
-                # TODO: Promote this to a permissions class
-                current_member = PartnerStaffMember.objects.get(
-                    id=self.request.user.profile.partner_staff_member
-                )
-            except PartnerStaffMember.DoesNotExist:
-                # This is an authenticated user with no access to interventions
-                return queryset.none()
-            else:
-                # Return all interventions this partner has
-                return queryset.filter(partner=current_member.partner)
-        return queryset
-
-    def retrieve(self, request, partner_pk=None, pk=None):
-        """
-        Returns an Intervention object for this Intervention PK and partner
-        """
-        # if not pk or partner_pk:
-        #     psm = self.request.user.profile.partner_staff_member
-        #     if psm:
-        #         try:
-        #             PartnerStaffMember.get(psm)
-        try:
-            queryset = self.queryset.get(partner_id=partner_pk, id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except PCA.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
-
-    @list_route(methods=['get'])
-    def export(self, request, partner_pk=None):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        dataset = InterventionExport().export(queryset)
-
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="ModelExportInterventions.csv"'
         response.write(dataset.csv)
         return response
 
@@ -517,11 +404,3 @@ class FileTypeViewSet(
     """
     queryset = FileType.objects.all()
     serializer_class = FileTypeSerializer
-
-
-class InterventionsView(ListAPIView):
-    '''
-    returns a list of all interventions
-    '''
-    queryset = PCA.objects.all()
-    serializer_class = InterventionSerializer

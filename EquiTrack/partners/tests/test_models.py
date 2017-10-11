@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.factories import PartnershipFactory, AgreementFactory, InterventionFactory, InterventionBudgetFactory
+from EquiTrack.factories import AgreementFactory, InterventionFactory, InterventionBudgetFactory
 
 from funds.models import Donor, Grant
 
@@ -16,8 +16,8 @@ from reports.models import (
     ResultType,
 )
 from partners.models import (
-    PCA,
     Agreement,
+    AgreementStatus,
     FundingCommitment,
     AgreementAmendmentLog,
     PartnerOrganization,
@@ -60,7 +60,7 @@ class TestAgreementNumberGeneration(TenantTestCase):
         AgreementAmendmentLog.objects.create(
             agreement=agreement1,
             amended_at=self.date,
-            status=PCA.ACTIVE
+            status=AgreementStatus.ACTIVE
         )
         # reference number should be unchanged.
         self.assertEqual(agreement1.reference_number, expected_reference_number)
@@ -143,34 +143,6 @@ class TestAgreementNumberGeneration(TenantTestCase):
         self.assertEqual(agreement.base_number, expected_reference_number)
         self.assertEqual(agreement.agreement_number, expected_reference_number + '-42')
         self.assertEqual(agreement.reference_number, expected_reference_number)
-
-    @skip("Fix this")
-    def test_pd_numbering(self):
-
-        pd_ref = 'LEBA/PCA{year}01/{{}}{year}{{}}'.format(year=self.date.year)
-
-        # create one programme document
-        intervention1 = PartnershipFactory()
-        self.assertEqual(intervention1.reference_number, pd_ref.format('PD', '01'))
-
-        # create another under the same partner and agreement
-        intervention2 = PartnershipFactory(
-            partner=intervention1.partner,
-            agreement=intervention1.agreement
-        )
-        self.assertEqual(intervention2.reference_number, pd_ref.format('PD', '02'))
-
-        intervention3 = PartnershipFactory(
-            partner=intervention1.partner,
-            agreement=intervention1.agreement,
-        )
-        self.assertEqual(intervention3.reference_number, pd_ref.format('PD', '03'))
-
-        # agreement numbering remains the same even if previous agreement is deleted
-        intervention3.signed_by_unicef_date = self.date
-        intervention3.save()
-        intervention1.delete()
-        self.assertEqual(intervention3.reference_number, pd_ref.format('PD', '03'))
 
 
 class TestHACTCalculations(TenantTestCase):
@@ -565,7 +537,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
     @skip("Fix when HACT available")
     def test_planned_visits_non_gov(self):
         self.partner_organization.partner_type = "UN Agency"
-        self.partner_organization.status = PCA.ACTIVE
+        self.partner_organization.status = AgreementStatus.ACTIVE
         self.partner_organization.save()
         agreement = Agreement.objects.create(
             agreement_type=Agreement.PCA,
@@ -573,7 +545,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
         Intervention.objects.create(
             title="Int 1",
-            status=PCA.ACTIVE,
+            status=AgreementStatus.ACTIVE,
             agreement=agreement,
             submission_date=datetime.date(datetime.date.today().year, 1, 1),
             end=datetime.date(datetime.date.today().year + 1, 1, 1),
@@ -581,7 +553,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
         Intervention.objects.create(
             title="Int 1",
-            status=PCA.ACTIVE,
+            status=AgreementStatus.ACTIVE,
             agreement=agreement,
             submission_date=datetime.date(datetime.date.today().year, 1, 1),
             end=datetime.date(datetime.date.today().year + 1, 1, 1),
