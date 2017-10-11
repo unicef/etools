@@ -58,6 +58,8 @@ jobs:
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
       - image: circleci/postgres:9.5-alpine-postgis
         network_mode: host
+        ports:
+          - 5432:5432
         environment:
           POSTGRES_USER: postgres 
           PGUSER: postgres
