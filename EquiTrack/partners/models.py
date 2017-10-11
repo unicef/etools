@@ -2392,45 +2392,6 @@ class PCA(AdminURLMixin, models.Model):
         #             commit.save()
 
 
-class RAMIndicator(models.Model):
-    """
-    Represents a RAM Indicator for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`reports.Result`
-    Relates to :model:`reports.Indicator`
-    """
-    # TODO: Remove This indicator and connect direcly to higher indicators M2M
-    # related
-    intervention = models.ForeignKey(PCA, related_name='indicators')
-    result = models.ForeignKey(Result)
-    indicator = ChainedForeignKey(
-        Indicator,
-        chained_field="result",
-        chained_model_field="result",
-        show_all=False,
-        auto_choose=True,
-        blank=True,
-        null=True
-    )
-
-    tracker = FieldTracker()
-
-    @property
-    def baseline(self):
-        return self.indicator.baseline
-
-    @property
-    def target(self):
-        return self.indicator.target
-
-    def __unicode__(self):
-        return '{} -> {}'.format(
-            self.result.sector.name if self.result.sector else '',
-            unicode(self.result),
-        )
-
-
 class AmendmentLog(TimeStampedModel):
     """
     Represents an amendment log for the partner intervention.

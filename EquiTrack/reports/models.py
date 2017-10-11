@@ -410,7 +410,7 @@ class Indicator(models.Model):
     Relates to :model:`reports.Sector`
     Relates to :model:`reports.Result`
     """
-    # TODO: rename this to RAMIndicator and rename/remove RAMIndicator
+    # TODO: rename this to RAMIndicator
 
     sector = models.ForeignKey(
         Sector,

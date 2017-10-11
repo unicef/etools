@@ -17,7 +17,6 @@ class PartnersAppConfig(AppConfig):
         registry.register(self.get_model('AmendmentLog'))
         registry.register(self.get_model('AgreementAmendmentLog'))
         registry.register(self.get_model('FileType'))
-        registry.register(self.get_model('RAMIndicator'))
         registry.register(self.get_model('IndicatorDueDates'))
         registry.register(self.get_model('IndicatorReport'))
         registry.register(self.get_model('FundingCommitment'))

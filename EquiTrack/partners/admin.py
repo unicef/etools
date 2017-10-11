@@ -12,7 +12,6 @@ from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
-from reports.models import Result
 
 from partners.exports import (
     PartnerExport,
@@ -24,7 +23,6 @@ from partners.models import (
     PartnerOrganization,
     Assessment,
     Agreement,
-    RAMIndicator,
     PartnerStaffMember,
     FundingCommitment,
     IndicatorDueDates,
@@ -38,7 +36,7 @@ from partners.models import (
     InterventionAttachment,
 
 )
-from partners.mixins import ReadOnlyMixin, HiddenPartnerMixin
+from partners.mixins import HiddenPartnerMixin
 from partners.forms import (
     PartnershipForm,
     PartnersAdminForm,
@@ -80,24 +78,6 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
 
 class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
-
-
-class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
-    model = RAMIndicator
-    verbose_name = 'RAM Result'
-    verbose_name_plural = 'RAM Results'
-    extra = 1
-    fields = ('result',)
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-
-        if db_field.name == u'result':
-            kwargs['queryset'] = Result.objects.filter(
-                result_type__name=u'Output', ram=True, hidden=False)
-
-        return super(IndicatorsInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
 
 
 class InterventionBudgetAdmin(admin.ModelAdmin):
@@ -289,7 +269,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
 
     inlines = (
-        IndicatorsInlineAdmin,
         LinksInlineAdmin,
         # ResultsInlineAdmin,
         IndicatorDueDatesAdmin,
