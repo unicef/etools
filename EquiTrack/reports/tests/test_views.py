@@ -320,7 +320,7 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
         disaggregatable = "Yes" if self.indicator.disaggregatable else "No"
         self.assertEqual(dataset._get_headers(), [
             "Reference Number",
-            "Lower Result",
+            "Lower Level Result",
             "Code in Current Context",
             "Target",
             "Baseline",
@@ -368,7 +368,7 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
         self.assertEqual(dataset._get_headers(), [
             "Id",
             "Reference Number",
-            "Lower Result",
+            "Lower Level Result",
             "Code in Current Context",
             "Target",
             "Baseline",
@@ -381,7 +381,7 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
             "Code",
             "Subdomain",
             "Disaggregatable",
-            "Logic",
+            "Disaggregation Logic",
         ])
         self.assertEqual(dataset[0], (
             u"{}".format(self.applied.pk),
