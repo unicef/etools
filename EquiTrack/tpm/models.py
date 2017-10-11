@@ -416,19 +416,14 @@ class TPMActionPoint(TimeStampedModel, models.Model):
         return 'Action Point #{} on {}'.format(self.id, self.tpm_activity)
 
     def notify_person_responsible(self, template_name):
+        activities_data = self.tpm_visit.tpm_activities.values('partnership__title', 'implementing_partner__name')
         context = {
             'url': site_url(),
             'environment': get_environment(),
             'visit': self.tpm_visit,
             'action_point': self,
-            'implementing_partners': set(map(
-                lambda a: a.implementing_partner.name,
-                self.tpm_visit.tpm_activities.all()
-            )),
-            'partnerships': set(map(
-                lambda a: a.partnership.title,
-                self.tpm_visit.tpm_activities.all()
-            )),
+            'implementing_partners': set(map(lambda a: a['implementing_partner__name'], activities_data)),
+            'partnerships': set(map(lambda a: a['partnership__title'], activities_data)),
         }
 
         mail.send(
