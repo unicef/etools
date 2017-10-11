@@ -53,8 +53,7 @@ urlpatterns = (
     url(r'^agreements/(?P<agr>\d+)/generate_doc/$', PCAPDFView.as_view(), name='pca_pdf'),
     url(r'^agreements/amendments/$',
         view=AgreementAmendmentListAPIView.as_view(),
-        name='agreement-amendment-list'
-    ),
+        name='agreement-amendment-list'),
     url(r'^agreements/amendments/(?P<pk>\d+)/$',
         view=AgreementAmendmentDeleteView.as_view(http_method_names=['delete']),
         name='agreement-amendment-del'),
