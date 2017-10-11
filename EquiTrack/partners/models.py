@@ -1616,9 +1616,6 @@ class InterventionResultLink(models.Model):
 class InterventionBudget(TimeStampedModel):
     """
     Represents a budget for the intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`partners.AmendmentLog`
     """
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True)
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0)
