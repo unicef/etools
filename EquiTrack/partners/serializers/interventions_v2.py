@@ -417,6 +417,7 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
     code = serializers.CharField(source="cp_output.code")
     from_date = serializers.CharField(source="cp_output.from_date")
     to_date = serializers.CharField(source="cp_output.to_date")
+    parent = serializers.CharField(source="cp_output.parent.pk")
     wbs = serializers.CharField(source="cp_output.wbs")
     vision_id = serializers.CharField(source="cp_output.vision_id")
     gic_code = serializers.CharField(source="cp_output.gic_code")
@@ -437,6 +438,7 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
             "code",
             "from_date",
             "to_date",
+            "parent",
             "humanitarian_tag",
             "wbs",
             "vision_id",
@@ -452,6 +454,8 @@ class InterventionResultExportSerializer(InterventionResultSerializer):
 
 
 class InterventionResultExportFlatSerializer(InterventionResultExportSerializer):
+    parent = serializers.CharField(source="cp_output.parent.name")
+
     class Meta:
         model = InterventionResultLink
         fields = (
@@ -464,6 +468,7 @@ class InterventionResultExportFlatSerializer(InterventionResultExportSerializer)
             "code",
             "from_date",
             "to_date",
+            "parent",
             "humanitarian_tag",
             "wbs",
             "vision_id",
