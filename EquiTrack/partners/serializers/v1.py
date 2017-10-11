@@ -7,7 +7,6 @@ from reports.models import LowerResult
 from partners.models import (
     FileType,
     PCA,
-    AmendmentLog,
     PartnerStaffMember,
     PartnerOrganization,
     Agreement,
@@ -24,13 +23,6 @@ class FileTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FileType
-        fields = '__all__'
-
-
-class AmendmentLogSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = AmendmentLog
         fields = '__all__'
 
 

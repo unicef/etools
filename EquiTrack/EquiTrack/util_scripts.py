@@ -13,7 +13,7 @@ from django.contrib.auth.models import User, Group
 from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, \
-    AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, \
+    AgreementAmendmentLog, AgreementAmendment, Intervention, \
     InterventionResultLink, InterventionBudget, Sector, \
     InterventionSectorLocationLink, Agreement, PartnerOrganization, PartnerStaffMember, \
     Assessment
@@ -502,35 +502,6 @@ def clean_interventions():
     for country in Country.objects.exclude(name='Global'):
         set_country(country)
         Intervention.objects.all().delete()
-
-
-def copy_pca_amendments_to_intervention():
-
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry)
-        amendments = AmendmentLog.objects.all()
-        for amendment in amendments:
-            amd_type = ''
-            if amendment.type == 'No Cost':
-                amd_type = InterventionAmendment.CTBLT20
-            if amendment.type == 'Cost':
-                amd_type = InterventionAmendment.CTBGT20
-            if amendment.type == 'Activity':
-                amd_type = InterventionAmendment.CABGT20
-            if amendment.type == 'Other':
-                amd_type = InterventionAmendment.CPR
-            try:
-                intervention = Intervention.objects.get(number=amendment.partnership.number)
-            except Intervention.DoesNotExist:
-                continue
-
-            intr_amd, created = InterventionAmendment.objects.get_or_create(signed_date=amendment.amended_at,
-                                                                            intervention=intervention,
-                                                                            type=amd_type,
-                                                                            amendment_number=amendment.amendment_number)
-            if created:
-                print('{}-{}'.format(intr_amd.amendment_number, intr_amd.intervention))
 
 
 def export_old_pca_fields():

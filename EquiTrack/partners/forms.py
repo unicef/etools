@@ -22,8 +22,6 @@ from .models import (
     PCA,
     PartnerOrganization,
     Assessment,
-    AmendmentLog,
-    AgreementAmendmentLog,
     Agreement,
     PartnerStaffMember,
     InterventionSectorLocationLink,
@@ -102,33 +100,6 @@ class AssessmentAdminForm(AutoSizeTextForm):
                 )
 
         return cleaned_data
-
-
-class AmendmentForm(forms.ModelForm):
-
-    class Meta:
-        model = AmendmentLog
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        """
-        Only display the amendments related to this partnership
-        """
-        if 'parent_object' in kwargs:
-            self.parent_partnership = kwargs.pop('parent_object')
-
-        super(AmendmentForm, self).__init__(*args, **kwargs)
-
-        self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
-            if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
-        self.fields['amendment'].empty_label = u'Original'
-
-
-class AgreementAmendmentForm(AmendmentForm):
-
-    class Meta:
-        model = AgreementAmendmentLog
-        fields = '__all__'
 
 
 class PartnerStaffMemberForm(forms.ModelForm):

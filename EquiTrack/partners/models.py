@@ -2361,51 +2361,6 @@ class PCA(AdminURLMixin, models.Model):
         #             commit.save()
 
 
-class AmendmentLog(TimeStampedModel):
-    """
-    Represents an amendment log for the partner intervention.
-
-    Relates to :model:`partners.PCA`
-    """
-
-    partnership = models.ForeignKey(PCA, related_name='amendments_log')
-    type = models.CharField(
-        max_length=50,
-        choices=Choices(
-            'No Cost',
-            'Cost',
-            'Activity',
-            'Other',
-        ))
-    amended_at = models.DateField(null=True, verbose_name='Signed At')
-    amendment_number = models.IntegerField(default=0)
-    status = models.CharField(
-        max_length=32,
-        blank=True,
-        choices=PCA.PCA_STATUS,
-    )
-
-    tracker = FieldTracker()
-
-    def __unicode__(self):
-        return '{}: {} - {}'.format(
-            self.amendment_number,
-            self.type,
-            self.amended_at
-        )
-
-    @property
-    def amendment_number(self):
-        """
-        Increment amendment number automatically
-        """
-        objects = list(AmendmentLog.objects.filter(
-            partnership=self.partnership
-        ).order_by('created').values_list('id', flat=True))
-
-        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
-
-
 def get_file_path(instance, filename):
     return '/'.join(
         [connection.schema_name,

@@ -18,7 +18,6 @@ from reports.models import (
 from partners.models import (
     PCA,
     Agreement,
-    AmendmentLog,
     FundingCommitment,
     AgreementAmendmentLog,
     PartnerOrganization,
@@ -160,14 +159,6 @@ class TestAgreementNumberGeneration(TenantTestCase):
             agreement=intervention1.agreement
         )
         self.assertEqual(intervention2.reference_number, pd_ref.format('PD', '02'))
-
-        # create amendment
-        AmendmentLog.objects.create(
-            partnership=intervention2,
-            amended_at=self.date,
-            status=PCA.ACTIVE
-        )
-        self.assertEqual(intervention2.reference_number, pd_ref.format('PD', '02-01'))
 
         intervention3 = PartnershipFactory(
             partner=intervention1.partner,

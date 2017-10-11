@@ -13,7 +13,6 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from actstream import action
@@ -26,7 +25,6 @@ from partners.models import (
     PCA,
     PartnerOrganization,
     Agreement,
-    AmendmentLog,
     PartnerStaffMember,
     # ResultChain,
     IndicatorReport,
@@ -47,7 +45,6 @@ from partners.serializers.v1 import (
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer,
     IndicatorReportSerializer,
-    AmendmentLogSerializer,
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
     AgreementSerializer,
@@ -422,62 +419,6 @@ class IndicatorReportViewSet(
             serializer = self.serializer_class(queryset)
             data = serializer.data
         except IndicatorReport.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
-
-
-class AmendmentLogViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.CreateModelMixin,
-        mixins.ListModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of Amendment logs for an Intervention (PCA)
-    """
-    model = AmendmentLog
-    queryset = AmendmentLog.objects.all()
-    serializer_class = AmendmentLogSerializer
-    permission_classes = (IsAdminUser,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add an Amendment log to the PCA
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-        serializer.instance.created = datetime.datetime.strptime(request.data['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        serializer.instance.modified = datetime.datetime.strptime(request.data['modified'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        serializer.instance.save()
-        data = serializer.data
-
-        headers = self.get_success_headers(data)
-        return Response(
-            data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
-    def get_queryset(self):
-
-        queryset = super(AmendmentLogViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_pk')
-        return queryset.filter(partnership_id=intervention_id)
-
-    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
-        """
-        Returns a PCA Grant Object
-        """
-        try:
-            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except AmendmentLog.DoesNotExist:
             data = {}
         return Response(
             data,
