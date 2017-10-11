@@ -12,7 +12,7 @@ from django.contrib.auth.models import User, Group
 
 from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
-from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
+from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, \
     InterventionResultLink, InterventionBudget, Sector, \
     InterventionSectorLocationLink, Agreement, PartnerOrganization, PartnerStaffMember, \
@@ -403,36 +403,6 @@ def pca_unique_reference_number():
                 print(cdup)
                 cdup.save()
     signals.post_save.connect(receiver=PCA.send_changes, sender=PCA)
-
-
-# run this after migration partners_0006
-def bank_details_to_partner():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry.name)
-        bds = BankDetails.objects.all()
-        if bds.count() > 0:
-            for bd in bds:
-                if not bd.partner_organization:
-                    bd.partner_organization = bd.agreement.partner
-                    print(bd.partner_organization.name)
-                    bd.save()
-
-        # agreement model bank details
-        # agreements = Agreement.objects.filter(bank_name__isnull=False).exclude(bank_name='')
-        # if agreements.count() > 0:
-        #     print("================ AGREEMENTS MODEL ================================")
-        #     for agr in agreements:
-        #         bd, created = BankDetails.objects.get_or_create(agreement=agr,
-        #                                                         partner_organization=agr.partner,
-        #                                                         bank_name=agr.bank_name,
-        #                                                         bank_address= agr.bank_address,
-        #                                                         account_title=agr.account_title,
-        #                                                         account_number=agr.account_number,
-        #                                                         routing_details=agr.routing_details,
-        #                                                         bank_contact_person=agr.bank_contact_person)
-        #         if created:
-        #             print(bd.partner_organization)
 
 
 # run this after migration partners_0007

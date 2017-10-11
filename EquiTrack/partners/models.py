@@ -777,34 +777,6 @@ class Assessment(models.Model):
         super(Assessment, self).save(**kwargs)
 
 
-class BankDetails(models.Model):
-    """
-    Represents bank information on the partner agreement and/or agreement amendment log.
-
-    Relates to :model:`partners.Agreement`
-    Relates to :model:`partners.AgreementAmendmentLog`
-    """
-
-    # TODO: remove the ability to add blank for the partner_organization field
-    partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details', null=True, blank=True)
-    bank_name = models.CharField(max_length=255, null=True, blank=True)
-    bank_address = models.CharField(
-        max_length=256,
-        blank=True
-    )
-    account_title = models.CharField(max_length=255, null=True, blank=True)
-    account_number = models.CharField(max_length=50, null=True, blank=True)
-    routing_details = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        help_text='Routing Details, including SWIFT/IBAN (if applicable)'
-    )
-    bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
-
-    tracker = FieldTracker()
-
-
 class AgreementManager(models.Manager):
 
     def get_queryset(self):
