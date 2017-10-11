@@ -21,7 +21,7 @@ class FundsReservationHeaderCsvRenderer(r.CSVRenderer):
     labels = {
         "intervention": "Reference Number",
         "vendor_code": "Vendor Code",
-        "fr_number": "Number",
+        "fr_number": "FR Number",
         "document_date": "Document Date",
         "fr_type": "Type",
         "currency": "Currency",
@@ -59,7 +59,7 @@ class FundsReservationHeaderCsvFlatRenderer(r.CSVRenderer):
         "id": "Id",
         "intervention": "Reference Number",
         "vendor_code": "Vendor Code",
-        "fr_number": "Number",
+        "fr_number": "FR Number",
         "document_date": "Document Date",
         "fr_type": "Type",
         "currency": "Currency",
