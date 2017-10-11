@@ -4,14 +4,15 @@ from django.views.generic.detail import SingleObjectMixin
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import ugettext_lazy as _
 from easy_pdf.views import PDFTemplateView
-from rest_framework import mixins, views
-from rest_framework import viewsets
+from rest_framework import generics, mixins, views, viewsets
 from rest_framework.decorators import list_route
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
+from partners.models import PartnerOrganization
+from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from utils.common.views import MultiSerializerViewSetMixin, ExportViewSetDataMixin, FSMTransitionActionMixin, \
     NestedViewSetMixin, SafeTenantViewSetMixin
 from vision.adapters.purchase_order import POSynchronizer
@@ -101,6 +102,25 @@ class PurchaseOrderViewSet(
         return Response(serializer.data)
 
 
+class EngagementPartnerView(generics.ListAPIView):
+    queryset = PartnerOrganization.objects.filter(hidden=False)
+    serializer_class = MinimalPartnerOrganizationListSerializer
+    permission_classes = (IsAuthenticated, )
+
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+
+    engagements = None
+
+    def get_queryset(self):
+        queryset = super(EngagementPartnerView, self).get_queryset()
+
+        if self.engagements is not None:
+            queryset = queryset.filter(engagement__in=self.engagements).distinct()
+
+        return queryset
+
+
 class EngagementViewSet(
     mixins.CreateModelMixin,
     BaseAuditViewSet,
@@ -155,6 +175,11 @@ class EngagementViewSet(
             queryset = queryset.filter(staff_members__user=self.request.user)
 
         return queryset
+
+    @list_route(methods=['get'], url_path='partners')
+    def partners(self, request, *args, **kwargs):
+        engagements = self.get_queryset()
+        return EngagementPartnerView.as_view(engagements=engagements)(request, *args, **kwargs)
 
 
 class EngagementManagementMixin(

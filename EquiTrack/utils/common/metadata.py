@@ -54,7 +54,7 @@ class FSMTransitionActionMetadataMixin(object):
         if not instance:
             return actions
 
-        actions["allowed_FSM_transitions"] = []
+        allowed_FSM_transitions = []
         for action in self._collect_actions(instance):
             meta = action._django_fsm
             im_self = getattr(action, 'im_self', getattr(action, '__self__'))
@@ -68,10 +68,15 @@ class FSMTransitionActionMetadataMixin(object):
                 if callable(name):
                     name = name(instance)
 
-                actions["allowed_FSM_transitions"].append({
+                allowed_FSM_transitions.append({
                     'code': action.__name__,
                     'display_name': name
                 })
+
+        # Move cancel to the end.
+        actions["allowed_FSM_transitions"] = sorted(
+            allowed_FSM_transitions, key=lambda a: a['code'] == 'cancel'
+        )
 
         return actions
 

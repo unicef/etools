@@ -252,7 +252,7 @@ class SpotCheckSerializer(EngagementSerializer):
         })
         extra_kwargs.update({
             field: {'required': True} for field in [
-                'total_amount_tested', 'total_amount_of_ineligible_expenditure',
+                'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'internal_controls',
             ]
         })
 

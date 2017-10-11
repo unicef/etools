@@ -35,6 +35,10 @@ class DisplayStatusFilter(BaseFilterBackend):
             return partner_contacted.filter(
                 date_of_draft_report_to_ip__isnull=False, date_of_comments_by_ip__isnull=True
             )
+        elif status == Engagement.DISPLAY_STATUSES.comments_received_by_partner:
+            return partner_contacted.filter(
+                date_of_comments_by_ip__isnull=False, date_of_draft_report_to_unicef__isnull=True
+            )
         elif status == Engagement.DISPLAY_STATUSES.draft_issued_to_unicef:
             return partner_contacted.filter(
                 date_of_draft_report_to_unicef__isnull=False, date_of_comments_by_unicef__isnull=True

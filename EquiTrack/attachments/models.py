@@ -28,7 +28,6 @@ class FileType(OrderedModel, models.Model):
 
 
 def generate_file_path(attachment, filename):
-    print(attachment.content_type.app_label, attachment.content_type.model)
     return 'files/{}/{}/{}/{}'.format(
         attachment.content_type.app_label,
         slugify(attachment.content_type.model),
