@@ -532,6 +532,15 @@ class AgreementAmendmentFactory(factory.django.DjangoModelFactory):
     types = [partner_models.AgreementAmendment.CLAUSE]
 
 
+class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionResultLink
+
+    intervention = factory.SubFactory(InterventionFactory)
+    cp_output = factory.SubFactory(ResultFactory)
+
+
 class TravelExpenseTypeFactory(factory.django.DjangoModelFactory):
 
     class Meta:
