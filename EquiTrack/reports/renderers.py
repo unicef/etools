@@ -58,7 +58,7 @@ class AppliedIndicatorCsvRenderer(r.CSVRenderer):
 
     labels = {
         "intervention": "Reference Number",
-        "lower_result": "Lower Result",
+        "lower_result": "Lower Level Result",
         "context_code": "Code in Current Context",
         "target": "Target",
         "baseline": "Baseline",
@@ -100,7 +100,7 @@ class AppliedIndicatorCsvFlatRenderer(r.CSVRenderer):
     labels = {
         "id": "Id",
         "intervention": "Reference Number",
-        "lower_result": "Lower Result",
+        "lower_result": "Lower Level Result",
         "context_code": "Code in Current Context",
         "target": "Target",
         "baseline": "Baseline",
@@ -113,5 +113,5 @@ class AppliedIndicatorCsvFlatRenderer(r.CSVRenderer):
         "code": "Code",
         "subdomain": "Subdomain",
         "disaggregatable": "Disaggregatable",
-        "disaggregation_logic": "Logic",
+        "disaggregation_logic": "Disaggregation Logic",
     }
