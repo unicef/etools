@@ -7,6 +7,7 @@ from funds.models import (
     FundsCommitmentItem,
     FundsReservationHeader,
     FundsReservationItem,
+    Grant,
 )
 
 
@@ -85,3 +86,13 @@ class FundsCommitmentItemSerializer(serializers.ModelSerializer):
 
 class FundsCommitmentItemExportFlatSerializer(FundsCommitmentItemSerializer):
     fund_commitment = serializers.CharField(source="fund_commitment.fc_number")
+
+
+class GrantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Grant
+        fields = "__all__"
+
+
+class GrantExportFlatSerializer(GrantSerializer):
+    donor = serializers.CharField(source="donor.name")

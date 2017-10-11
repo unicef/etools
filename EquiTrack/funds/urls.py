@@ -7,7 +7,8 @@ from views import (
     FundsCommitmentHeaderListAPIView,
     FundsCommitmentItemListAPIView,
     FundsReservationHeaderListAPIView,
-    FundsReservationItemListAPIView
+    FundsReservationItemListAPIView,
+    GrantListAPIView,
 )
 
 urlpatterns = (
@@ -24,4 +25,7 @@ urlpatterns = (
     url(r'^reservation-item/$',
         view=FundsReservationItemListAPIView.as_view(),
         name='funds-reservation-item'),
+    url(r'^grant/$',
+        view=GrantListAPIView.as_view(),
+        name='funds-grant'),
 )

@@ -13,6 +13,7 @@ from EquiTrack.factories import (
     FundsCommitmentItemFactory,
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
+    GrantFactory,
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
@@ -25,8 +26,10 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
         names_and_paths = (
             ('frs', 'frs/', {}),
             ('funds-commitment-header', 'commitment-header/', {}),
+            ('funds-commitment-item', 'commitment-item/', {}),
             ('funds-reservation-header', 'reservation-header/', {}),
             ('funds-reservation-item', 'reservation-item/', {}),
+            ('funds-grant', 'grant/', {}),
         )
         self.assertReversal(names_and_paths, 'funds:', '/api/v2/funds/')
 
@@ -414,4 +417,70 @@ class TestFundsCommitmentItemExportList(APITenantTestCase):
             "{0:.2f}".format(self.item.commitment_amount),
             "{0:.2f}".format(self.item.commitment_amount_dc),
             "{0:.2f}".format(self.item.amount_changed),
+        ))
+
+
+class TestGrantExportList(APITenantTestCase):
+    def setUp(self):
+        super(TestGrantExportList, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.grant = GrantFactory()
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/funds/grant/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/funds/grant/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Donor",
+            "Name",
+            "Description",
+            "Expiry",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.grant.donor.pk),
+            unicode(self.grant.name),
+            u"",
+            u"",
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/funds/grant/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Id",
+            "Donor",
+            "Name",
+            "Description",
+            "Expiry",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.grant.pk),
+            unicode(self.grant.donor.name),
+            unicode(self.grant.name),
+            u"",
+            u"",
         ))

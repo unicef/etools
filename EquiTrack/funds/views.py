@@ -17,6 +17,7 @@ from funds.models import (
     FundsCommitmentItem,
     FundsReservationHeader,
     FundsReservationItem,
+    Grant,
 )
 from funds.renderers import (
     FundsCommitmentHeaderCsvFlatRenderer,
@@ -27,6 +28,8 @@ from funds.renderers import (
     FundsReservationHeaderCsvFlatRenderer,
     FundsReservationItemCsvFlatRenderer,
     FundsReservationItemCsvRenderer,
+    GrantCsvFlatRenderer,
+    GrantCsvRenderer,
 )
 from funds.serializers import (
     FRHeaderSerializer,
@@ -39,6 +42,8 @@ from funds.serializers import (
     FundsReservationItemExportFlatSerializer,
     FundsReservationItemExportSerializer,
     FundsReservationItemSerializer,
+    GrantExportFlatSerializer,
+    GrantSerializer,
 )
 from partners.filters import PartnerScopeFilter
 from partners.permissions import PartneshipManagerPermission
@@ -220,6 +225,48 @@ class FundsCommitmentItemListAPIView(ListAPIView):
 
     def get_queryset(self, format=None):
         q = FundsCommitmentItem.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(fund_commitment__vendor_code__icontains=query_params.get("search")) |
+                    Q(fund_commitment__fc_number__icontains=query_params.get("search")) |
+                    Q(fr_ref_number__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        return q
+
+
+class GrantListAPIView(ListAPIView):
+    """
+    Returns a list of Grants.
+    """
+    serializer_class = GrantSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        GrantCsvRenderer,
+        GrantCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv_flat':
+                return GrantExportFlatSerializer
+        return super(GrantListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = Grant.objects.all()
         query_params = self.request.query_params
 
         if query_params:

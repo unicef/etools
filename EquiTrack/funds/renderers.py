@@ -259,3 +259,39 @@ class FundsCommitmentItemCsvFlatRenderer(r.CSVRenderer):
         "commitment_amount_dc": "Amount DC",
         "amount_changed": "Amount Changed",
     }
+
+
+class GrantCsvRenderer(r.CSVRenderer):
+    header = [
+        "donor",
+        "name",
+        "description",
+        "expiry",
+    ]
+
+    labels = {
+        "donor": "Donor",
+        "name": "Name",
+        "description": "Description",
+        "expiry": "Expiry",
+    }
+
+
+class GrantCsvFlatRenderer(r.CSVRenderer):
+    format = 'csv_flat'
+
+    header = [
+        "id",
+        "donor",
+        "name",
+        "description",
+        "expiry",
+    ]
+
+    labels = {
+        "id": "Id",
+        "donor": "Donor",
+        "name": "Name",
+        "description": "Description",
+        "expiry": "Expiry",
+    }
