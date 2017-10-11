@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 from itertools import chain
 
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.db import connection
+from users.models import Country
 
 
 def get_all_field_names(TheModel):
@@ -31,3 +33,32 @@ def pop_keys(d, keys):
         else:
             rem[key] = value
     return res, rem
+
+
+def run_on_all_tenants(function):
+    with every_country() as c:
+        for country in c:
+            function()
+
+
+class every_country:
+    """
+    Loop through every available available tenant/country, then revert back to whatever was set before.
+
+    Example usage:
+
+    with every_country() as c:
+        for country in c:
+            print(country.name)
+            function()
+    """
+    original_country = None
+
+    def __enter__(self):
+        self.original_country = connection.tenant
+        for c in Country.objects.exclude(name='Global').all():
+            connection.set_tenant(c)
+            yield c
+
+    def __exit__(self, type, value, traceback):
+        connection.set_tenant(self.original_country)
