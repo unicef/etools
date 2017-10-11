@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from funds.models import (
     FundsCommitmentHeader,
+    FundsCommitmentItem,
     FundsReservationHeader,
     FundsReservationItem,
 )
@@ -74,3 +75,13 @@ class FundsCommitmentHeaderSerializer(serializers.ModelSerializer):
     class Meta:
         model = FundsCommitmentHeader
         fields = "__all__"
+
+
+class FundsCommitmentItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FundsCommitmentItem
+        fields = "__all__"
+
+
+class FundsCommitmentItemExportFlatSerializer(FundsCommitmentItemSerializer):
+    fund_commitment = serializers.CharField(source="fund_commitment.fc_number")

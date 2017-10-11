@@ -187,3 +187,75 @@ class FundsCommitmentHeaderCsvFlatRenderer(r.CSVRenderer):
         "exchange_rate": "Exchange Rate",
         "responsible_person": "Responsible",
     }
+
+
+class FundsCommitmentItemCsvRenderer(r.CSVRenderer):
+    header = [
+        "fund_commitment",
+        "fc_ref_number",
+        "line_item",
+        "line_item_text",
+        "wbs",
+        "grant_number",
+        "fund",
+        "gl_account",
+        "due_date",
+        "fr_number",
+        "commitment_amount",
+        "commitment_amount_dc",
+        "amount_changed",
+    ]
+
+    labels = {
+        "fund_commitment": "Fund Commitment",
+        "fc_ref_number": "Number",
+        "line_item": "Line Item",
+        "line_item_text": "Description",
+        "wbs": "WBS",
+        "grant_number": "Grant Number",
+        "fund": "Fund",
+        "gl_account": "Account",
+        "due_date": "Due Date",
+        "fr_number": "Reservation Number",
+        "commitment_amount": "Amount",
+        "commitment_amount_dc": "Amount DC",
+        "amount_changed": "Amount Changed",
+    }
+
+
+class FundsCommitmentItemCsvFlatRenderer(r.CSVRenderer):
+    format = 'csv_flat'
+
+    header = [
+        "id",
+        "fund_commitment",
+        "fc_ref_number",
+        "line_item",
+        "line_item_text",
+        "wbs",
+        "grant_number",
+        "fund",
+        "gl_account",
+        "due_date",
+        "fr_number",
+        "commitment_amount",
+        "commitment_amount_dc",
+        "amount_changed",
+    ]
+
+    labels = {
+        "id": "Id",
+        "fund_commitment": "Fund Commitment",
+        "fc_ref_number": "Number",
+        "line_item": "Line Item",
+        "line_item_text": "Description",
+        "wbs": "WBS",
+        "grant_number": "Grant Number",
+        "fund": "Fund",
+        "gl_account": "Account",
+        "due_date": "Due Date",
+        "fr_number": "Reservation Number",
+        "commitment_amount": "Amount",
+        "commitment_amount_dc": "Amount DC",
+        "amount_changed": "Amount Changed",
+    }

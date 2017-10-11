@@ -10,6 +10,7 @@ from unittest import TestCase
 
 from EquiTrack.factories import (
     FundsCommitmentHeaderFactory,
+    FundsCommitmentItemFactory,
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
     UserFactory,
@@ -311,4 +312,106 @@ class TestFundsCommitmentHeaderExportList(APITenantTestCase):
             u"",
             u"",
             u"",
+        ))
+
+
+class TestFundsCommitmentItemExportList(APITenantTestCase):
+    def setUp(self):
+        super(TestFundsCommitmentItemExportList, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.item = FundsCommitmentItemFactory()
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/funds/commitment-item/',
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/funds/commitment-item/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Fund Commitment",
+            "Number",
+            "Line Item",
+            "Description",
+            "WBS",
+            "Grant Number",
+            "Fund",
+            "Account",
+            "Due Date",
+            "Reservation Number",
+            "Amount",
+            "Amount DC",
+            "Amount Changed",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.item.fund_commitment.pk),
+            unicode(self.item.fc_ref_number),
+            unicode(self.item.line_item),
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            "{0:.2f}".format(self.item.commitment_amount),
+            "{0:.2f}".format(self.item.commitment_amount_dc),
+            "{0:.2f}".format(self.item.amount_changed),
+        ))
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/funds/commitment-item/',
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            "Id",
+            "Fund Commitment",
+            "Number",
+            "Line Item",
+            "Description",
+            "WBS",
+            "Grant Number",
+            "Fund",
+            "Account",
+            "Due Date",
+            "Reservation Number",
+            "Amount",
+            "Amount DC",
+            "Amount Changed",
+        ])
+        self.assertEqual(dataset[0], (
+            u"{}".format(self.item.pk),
+            unicode(self.item.fund_commitment.fc_number),
+            unicode(self.item.fc_ref_number),
+            unicode(self.item.line_item),
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            u"",
+            "{0:.2f}".format(self.item.commitment_amount),
+            "{0:.2f}".format(self.item.commitment_amount_dc),
+            "{0:.2f}".format(self.item.amount_changed),
         ))

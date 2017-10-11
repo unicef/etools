@@ -14,12 +14,15 @@ from rest_framework_csv import renderers as r
 
 from funds.models import (
     FundsCommitmentHeader,
+    FundsCommitmentItem,
     FundsReservationHeader,
     FundsReservationItem,
 )
 from funds.renderers import (
     FundsCommitmentHeaderCsvFlatRenderer,
     FundsCommitmentHeaderCsvRenderer,
+    FundsCommitmentItemCsvFlatRenderer,
+    FundsCommitmentItemCsvRenderer,
     FundsReservationHeaderCsvRenderer,
     FundsReservationHeaderCsvFlatRenderer,
     FundsReservationItemCsvFlatRenderer,
@@ -29,6 +32,8 @@ from funds.serializers import (
     FRHeaderSerializer,
     FRsSerializer,
     FundsCommitmentHeaderSerializer,
+    FundsCommitmentItemExportFlatSerializer,
+    FundsCommitmentItemSerializer,
     FundsReservationHeaderExportFlatSerializer,
     FundsReservationHeaderExportSerializer,
     FundsReservationItemExportFlatSerializer,
@@ -182,6 +187,48 @@ class FundsCommitmentHeaderListAPIView(ListAPIView):
                 queries.append(
                     Q(vendor_code__icontains=query_params.get("search")) |
                     Q(fc_number__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        return q
+
+
+class FundsCommitmentItemListAPIView(ListAPIView):
+    """
+    Returns a list of FundsCommitmentItems.
+    """
+    serializer_class = FundsCommitmentItemSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        FundsCommitmentItemCsvRenderer,
+        FundsCommitmentItemCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv_flat':
+                return FundsCommitmentItemExportFlatSerializer
+        return super(FundsCommitmentItemListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = FundsCommitmentItem.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(fund_commitment__vendor_code__icontains=query_params.get("search")) |
+                    Q(fund_commitment__fc_number__icontains=query_params.get("search")) |
+                    Q(fr_ref_number__icontains=query_params.get("search"))
                 )
             if queries:
                 expression = functools.reduce(operator.and_, queries)
