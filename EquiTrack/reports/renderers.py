@@ -23,6 +23,8 @@ class LowerResultCsvFlatRenderer(r.CSVRenderer):
         "result_link",
         "name",
         "code",
+        "created",
+        "modified",
     ]
 
     labels = {
@@ -30,6 +32,8 @@ class LowerResultCsvFlatRenderer(r.CSVRenderer):
         "result_link": "Reference Number",
         "name": "Name",
         "code": "Code",
+        "created": "Created",
+        "modified": "Modified",
     }
 
 
