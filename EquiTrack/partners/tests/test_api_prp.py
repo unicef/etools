@@ -33,6 +33,7 @@ class TestInterventionsAPI(APITenantTestCase):
             method,
             reverse('prp_api_v1:prp-intervention-list'),
             user=user or self.unicef_staff,
+            data={'workspace': self.tenant.business_area_code},
         )
         return response.status_code, json.loads(response.rendered_content)
 
@@ -40,7 +41,6 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_prp_v1(
             user=self.unicef_staff, method='get'
         )
-
         self.assertEqual(status_code, status.HTTP_200_OK)
 
         # uncomment if you need to see the response json / regenerate the test file
@@ -62,6 +62,7 @@ class TestInterventionsAPI(APITenantTestCase):
                 del expected_intervention['expected_results'][j]['indicators'][0]['id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
                 del actual_intervention['expected_results'][j]['id']
+                del actual_intervention['expected_results'][j]['result_link']
                 del actual_intervention['expected_results'][j]['cp_output']['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
@@ -69,7 +70,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(response, expected_interventions)
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 17
+        EXPECTED_QUERIES = 18
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'
@@ -101,6 +102,7 @@ class TestInterventionsAPIListPermissions(APITenantTestCase):
     '''Exercise permissions on the PRPIntervention list view'''
     def setUp(self):
         self.url = reverse('prp_api_v1:prp-intervention-list')
+        self.query_param_data = {'workspace': self.tenant.business_area_code}
 
     def test_unauthenticated_user_forbidden(self):
         '''Ensure an unauthenticated user gets the 403 smackdown'''
@@ -119,10 +121,10 @@ class TestInterventionsAPIListPermissions(APITenantTestCase):
         '''Ensure a non-staff user in the correct group has access'''
         user = UserFactory()
         user.groups.add(Group.objects.get(name=READ_ONLY_API_GROUP_NAME))
-        response = self.forced_auth_req('get', self.url, user=user)
+        response = self.forced_auth_req('get', self.url, user=user, data=self.query_param_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_staff_has_access(self):
         '''Ensure a staff user has access'''
-        response = self.forced_auth_req('get', self.url, user=UserFactory(is_staff=True))
+        response = self.forced_auth_req('get', self.url, user=UserFactory(is_staff=True), data=self.query_param_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)

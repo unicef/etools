@@ -18,6 +18,7 @@ from partners.models import (
     # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
     InterventionResultLink,
+    InterventionReportingPeriod,
 )
 from reports.models import LowerResult
 from locations.serializers import LocationSerializer, LocationLightSerializer
@@ -258,6 +259,60 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
         ll_results = self.context.pop('ll_results', [])
         self.update_ll_results(instance, ll_results)
         return super(InterventionResultCUSerializer, self).update(instance, validated_data)
+
+
+class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReportingPeriod
+        fields = ('intervention', 'start_date', 'end_date', 'due_date')
+
+    def validate_intervention(self, value):
+        """
+        Changing the intervention is not allowed. Users should delete this
+        reporting period and create a new one associated with the desired
+        intervention.
+        """
+        if self.instance and value != self.instance.intervention:
+            raise ValidationError(
+                'Cannot change the intervention that this reporting period is associated with.')
+        return value
+
+    def check_date_order(self, start_date, end_date, due_date):
+        """
+        Validate that start_date <= end_date <= due_date.
+        """
+        if start_date > end_date:
+            raise ValidationError('end_date must be on or after start_date')
+        if end_date > due_date:
+            raise ValidationError('due_date must be on or after end_date')
+
+    def check_for_overlapping_periods(self, intervention_pk, start_date, end_date):
+        """
+        Validate that new instance doesn't overlap existing periods for this intervention.
+        """
+        periods = InterventionReportingPeriod.objects.filter(intervention=intervention_pk)
+        if self.instance:
+            # exclude ourself
+            periods = periods.exclude(pk=self.instance.pk)
+        # How to identify overlapping periods: https://stackoverflow.com/a/325939/347942
+        if periods.filter(start_date__lt=end_date).filter(end_date__gt=start_date).exists():
+            raise ValidationError('This period overlaps an existing reporting period.')
+
+    def validate(self, data):
+        """
+        Validate that start_date <= end_date <= due_date.
+        Validate that new instance doesn't overlap existing periods.
+        """
+        # If we're creating, we'll have all these values in ``data``. If we're
+        # patching, we might not, so get missing values from the existing DB instance
+        start_date = data.get('start_date') or self.instance.start_date
+        end_date = data.get('end_date') or self.instance.end_date
+        due_date = data.get('due_date') or self.instance.due_date
+        intervention_pk = data.get('intervention') or self.instance.intervention.pk
+
+        self.check_date_order(start_date, end_date, due_date)
+        self.check_for_overlapping_periods(intervention_pk, start_date, end_date)
+        return data
 
 
 class FundingCommitmentNestedSerializer(serializers.ModelSerializer):

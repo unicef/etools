@@ -25,7 +25,8 @@ from partners.models import (
     InterventionPlannedVisits,
     InterventionAttachment,
     InterventionAmendment,
-    InterventionResultLink
+    InterventionResultLink,
+    InterventionReportingPeriod,
 )
 from partners.serializers.interventions_v2 import (
     InterventionListSerializer,
@@ -39,7 +40,9 @@ from partners.serializers.interventions_v2 import (
     InterventionResultCUSerializer,
     InterventionListMapSerializer,
     MinimalInterventionListSerializer,
-    InterventionResultLinkSimpleCUSerializer)
+    InterventionResultLinkSimpleCUSerializer,
+    InterventionReportingPeriodSerializer,
+)
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter, InterventionFilter, \
     AppliedIndicatorsFilter
@@ -434,6 +437,22 @@ class InterventionResultLinkUpdateView(RetrieveUpdateDestroyAPIView):
             raise ValidationError(u'This CP Output cannot be removed from this Intervention because there are nested'
                                   u' Results, please remove all Document Results to continue')
         return super(InterventionResultLinkUpdateView, self).delete(request, *args, **kwargs)
+
+
+class InterventionReportingPeriodListCreateView(ListCreateAPIView):
+    serializer_class = InterventionReportingPeriodSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    filter_backends = (InterventionFilter,)
+    renderer_classes = (r.JSONRenderer,)
+    queryset = InterventionReportingPeriod.objects
+
+
+class InterventionReportingPeriodDetailView(RetrieveUpdateDestroyAPIView):
+    serializer_class = InterventionReportingPeriodSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    filter_backends = (InterventionFilter,)
+    renderer_classes = (r.JSONRenderer,)
+    queryset = InterventionReportingPeriod.objects
 
 
 class InterventionIndicatorsListView(ListCreateAPIView):

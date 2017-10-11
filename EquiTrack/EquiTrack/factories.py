@@ -11,7 +11,6 @@ import factory
 from factory import fuzzy
 
 from users import models as user_models
-from trips import models as trip_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
@@ -100,16 +99,6 @@ class UserFactory(factory.django.DjangoModelFactory):
     def groups(self, create, extracted, **kwargs):
         group, created = Group.objects.get_or_create(name='UNICEF User')
         self.groups.add(group)
-
-
-class TripFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = trip_models.Trip
-
-    owner = factory.SubFactory(UserFactory)
-    supervisor = factory.SubFactory(UserFactory)
-    from_date = datetime.today().date()
-    to_date = from_date + timedelta(days=1)
 
 
 class GatewayTypeFactory(factory.django.DjangoModelFactory):
@@ -215,6 +204,18 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     partner_contribution_local = 20.00
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
+
+
+class InterventionReportingPeriodFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionReportingPeriod
+
+    intervention = factory.SubFactory(InterventionFactory)
+    # make each period start_date 10 days after the last one
+    start_date = factory.Sequence(lambda n: date.today() + timedelta(days=10 * n))
+    # use LazyAttribute to make sure that start_date, end_date and due_date are in order
+    end_date = factory.LazyAttribute(lambda o: o.start_date + timedelta(days=3))
+    due_date = factory.LazyAttribute(lambda o: o.end_date + timedelta(days=3))
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
