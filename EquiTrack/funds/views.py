@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework_csv import renderers as r
 
 from funds.models import (
+    Donor,
     FundsCommitmentHeader,
     FundsCommitmentItem,
     FundsReservationHeader,
@@ -20,6 +21,8 @@ from funds.models import (
     Grant,
 )
 from funds.renderers import (
+    DonorCsvFlatRenderer,
+    DonorCsvRenderer,
     FundsCommitmentHeaderCsvFlatRenderer,
     FundsCommitmentHeaderCsvRenderer,
     FundsCommitmentItemCsvFlatRenderer,
@@ -32,6 +35,9 @@ from funds.renderers import (
     GrantCsvRenderer,
 )
 from funds.serializers import (
+    DonorExportFlatSerializer,
+    DonorExportSerializer,
+    DonorSerializer,
     FRHeaderSerializer,
     FRsSerializer,
     FundsCommitmentHeaderSerializer,
@@ -276,6 +282,48 @@ class GrantListAPIView(ListAPIView):
                     Q(fund_commitment__vendor_code__icontains=query_params.get("search")) |
                     Q(fund_commitment__fc_number__icontains=query_params.get("search")) |
                     Q(fr_ref_number__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        return q
+
+
+class DonorListAPIView(ListAPIView):
+    """
+    Returns a list of Donors.
+    """
+    serializer_class = DonorSerializer
+    permission_classes = (PartneshipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        DonorCsvRenderer,
+        DonorCsvFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return DonorExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return DonorExportFlatSerializer
+        return super(DonorListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = Donor.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(name__icontains=query_params.get("search"))
                 )
             if queries:
                 expression = functools.reduce(operator.and_, queries)

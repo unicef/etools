@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from rest_framework import serializers
 
 from funds.models import (
+    Donor,
     FundsCommitmentHeader,
     FundsCommitmentItem,
     FundsReservationHeader,
@@ -96,3 +97,21 @@ class GrantSerializer(serializers.ModelSerializer):
 
 class GrantExportFlatSerializer(GrantSerializer):
     donor = serializers.CharField(source="donor.name")
+
+
+class DonorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Donor
+        fields = "__all__"
+
+
+class DonorExportSerializer(DonorSerializer):
+    grant = serializers.SerializerMethodField()
+
+    def get_grant(self, obj):
+        return ", ".join([str(g.pk) for g in obj.grant_set.all()])
+
+
+class DonorExportFlatSerializer(DonorExportSerializer):
+    def get_grant(self, obj):
+        return ", ".join([g.name for g in obj.grant_set.all()])

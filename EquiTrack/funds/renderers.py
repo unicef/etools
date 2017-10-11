@@ -295,3 +295,31 @@ class GrantCsvFlatRenderer(r.CSVRenderer):
         "description": "Description",
         "expiry": "Expiry",
     }
+
+
+class DonorCsvRenderer(r.CSVRenderer):
+    header = [
+        "grant",
+        "name",
+    ]
+
+    labels = {
+        "grant": "Grant",
+        "name": "Name"
+    }
+
+
+class DonorCsvFlatRenderer(r.CSVRenderer):
+    format = 'csv_flat'
+
+    header = [
+        "id",
+        "grant",
+        "name",
+    ]
+
+    labels = {
+        "id": "Id",
+        "grant": "Grant",
+        "name": "Name"
+    }
