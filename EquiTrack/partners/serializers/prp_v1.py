@@ -150,6 +150,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
                                               max_digits=20, decimal_places=2)
     funds_received_currency = serializers.CharField(source='fr_currency', read_only=True)
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
+    update_date = serializers.DateTimeField(source='modified')
 
     def get_business_area_code(self, obj):
         return connection.tenant.business_area_code
@@ -170,4 +171,5 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'funds_received', 'funds_received_currency',
             # 'reporting_frequencies',  # todo: figure out where this comes from
             'expected_results',
+            'update_date'
         )
