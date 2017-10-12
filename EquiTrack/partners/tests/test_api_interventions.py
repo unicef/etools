@@ -472,6 +472,10 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
         self.url = reverse('partners_api:intervention-result-links-update',
                            kwargs={'pk': self.intervention_result_link.id})
 
+        # self.expected_keys are the keys expected in a JSON response.
+        self.expected_keys = sorted(('cp_output', 'ram_indicators', 'cp_output_name', 'ram_indicator_names',
+                                     'id', 'intervention'))
+
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)
 
@@ -480,7 +484,7 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
-        self.assertIn('id', response_json.keys())
+        self.assertEqual(self.expected_keys, sorted(response_json.keys()))
 
     def test_no_permission_user_forbidden(self):
         '''Ensure a non-staff user gets the 403 smackdown'''
