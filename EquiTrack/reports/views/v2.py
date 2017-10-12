@@ -50,7 +50,7 @@ class OutputListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         if self.request.method == "GET":
             if self.request.query_params.get("verbosity", "") == 'minimal':
@@ -146,7 +146,7 @@ class LowerResultsListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -217,7 +217,7 @@ class AppliedIndicatorListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():

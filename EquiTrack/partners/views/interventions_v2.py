@@ -107,7 +107,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         if self.request.method == "GET":
             query_params = self.request.query_params
@@ -262,7 +262,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         if self.request.method in ["PATCH", "PUT"]:
             return InterventionCreateUpdateSerializer
@@ -346,7 +346,7 @@ class InterventionResultListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -389,7 +389,7 @@ class InterventionIndicatorListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -456,7 +456,7 @@ class InterventionAmendmentListAPIView(ValidatorViewMixin, ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -516,7 +516,7 @@ class InterventionSectorLocationLinkListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
