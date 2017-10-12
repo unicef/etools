@@ -92,7 +92,7 @@ class FastTenantTestCase(TenantTestCase):
         TenantModel = get_tenant_model()
         try:
             cls.tenant = TenantModel.objects.get(domain_url=tenant_domain, schema_name='test')
-        except:
+        except TenantModel.DoesNotExist:
             cls.tenant = TenantModel(domain_url=tenant_domain, schema_name='test')
             cls.tenant.save(verbosity=0)
 
