@@ -34,7 +34,7 @@ from EquiTrack.factories import (
     SectionFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin, WorkspaceRequiredAPITestMixIn
 from reports.models import ResultType
 from users.models import Country
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
@@ -81,7 +81,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestAPIPartnerOrganizationListView(APITenantTestCase):
+class TestAPIPartnerOrganizationListView(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
     '''Exercise the list view for PartnerOrganization'''
     def setUp(self):
         self.user = UserFactory(is_staff=True)
@@ -242,7 +242,7 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
+class TestPartnerOrganizationListViewForCSV(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
     '''Exercise the CSV-generating portion of the list view for PartnerOrganization.
 
     This is a separate test case from TestPartnerOrganizationListView because it does some monkey patching in
@@ -739,7 +739,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.data["hidden"], False)
 
 
-class TestPartnershipViews(APITenantTestCase):
+class TestPartnershipViews(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
