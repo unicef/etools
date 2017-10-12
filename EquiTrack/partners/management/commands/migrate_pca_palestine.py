@@ -18,10 +18,10 @@ class Command(BaseCommand):
             cps = CountryProgramme.objects.filter(invalid=False, wbs__contains='/PC/')
 
             for cp in cps:
-                if not agreement.country_programme:
-                    agreement = Agreement.objects.filter(start__gte=cp.from_date, start__lte=cp.to_date, ).exclude(
-                        agreement_type__in=['MOU']).update(country_programme=cp)
-
+                Agreement.objects.filter(
+                    start__gte=cp.from_date,
+                    start__lte=cp.to_date,
+                    country_programme__isnull=True
+                ).exclude(agreement_type__in=['MOU']).update(country_programme=cp)
         except Country.DoesNotExist:
             print "The schema could not be set"
-            
