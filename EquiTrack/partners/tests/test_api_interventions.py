@@ -21,6 +21,7 @@ from users.models import Country
 from EquiTrack.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
+    LowerResultFactory,
     ResultFactory,
     SectionFactory,
     UserFactory,
@@ -605,6 +606,80 @@ class TestAPIInterventionResultLinkDeleteView(APITenantTestCase):
 
     def test_group_permission_non_staff(self):
         '''Ensure group membership is sufficient for update; even non-staff group members can update'''
+        user = UserFactory()
+        response = self._make_request(user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        _add_user_to_partnership_manager_group(user)
+
+        # Now the request should succeed.
+        response = self._make_request(user)
+        self.assertResponseFundamentals(response)
+
+
+class TestAPIInterventionLowerResultListView(APITenantTestCase):
+    '''Exercise the list view for InterventionLowerResultListCreateView'''
+    def setUp(self):
+        self.result_link = InterventionResultLinkFactory()
+
+        self.lower_result1 = LowerResultFactory(result_link=self.result_link)
+        self.lower_result2 = LowerResultFactory(result_link=self.result_link)
+
+        # Create another result link/lower result pair that will break this test if the views don't filter properly
+        LowerResultFactory(result_link=InterventionResultLinkFactory())
+
+        self.url = reverse('partners_api:intervention-lower-results-list',
+                           kwargs={'result_link_pk': self.result_link.id})
+
+        # self.expected_field_names is the list of field names expected in responses.
+        self.expected_field_names = sorted(('id', 'code', 'created', 'modified', 'name', 'result_link'))
+
+    def _make_request(self, user):
+        return self.forced_auth_req('get', self.url, user=user)
+
+    def assertResponseFundamentals(self, response, expected_keys=None):
+        '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
+        response dict are compared to self.normal_field_names. Otherwise, they're compared to whatever is passed in
+        expected_keys.
+        '''
+        if expected_keys is None:
+            expected_keys = self.expected_field_names
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertEqual(len(response_json), 2)
+        for obj in response_json:
+            self.assertIsInstance(obj, dict)
+        if expected_keys:
+            for d in response_json:
+                self.assertEqual(sorted(d.keys()), expected_keys)
+
+        actual_ids = sorted([d.get('id') for d in response_json])
+        expected_ids = sorted((self.lower_result1.id, self.lower_result2.id))
+
+        self.assertEqual(actual_ids, expected_ids)
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self._make_request(UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.get(self.url)
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_staff_access_ok(self):
+        '''Ensure a staff user has access'''
+        response = self._make_request(UserFactory(is_staff=True))
+        self.assertResponseFundamentals(response)
+
+    def test_group_permission(self):
+        '''A non-staff user has read access if in the correct group'''
         user = UserFactory()
         response = self._make_request(user)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
