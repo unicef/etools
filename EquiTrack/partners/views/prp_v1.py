@@ -5,7 +5,7 @@ from django.db.models import Q
 
 from rest_framework.generics import (
     ListAPIView)
-from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
+from rest_framework.pagination import LimitOffsetPagination
 
 from partners.filters import PartnerScopeFilter
 from partners.models import (
