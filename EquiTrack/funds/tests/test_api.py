@@ -3,10 +3,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from unittest import TestCase
 
+from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
-from unittest import TestCase
 
 from EquiTrack.factories import (
     DonorFactory,
@@ -45,7 +46,7 @@ class TestFundsReservationHeaderExportList(APITenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/reservation-header/',
+            reverse('funds:funds-reservation-header'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -54,7 +55,7 @@ class TestFundsReservationHeaderExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/reservation-header/',
+            reverse('funds:funds-reservation-header'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -96,7 +97,7 @@ class TestFundsReservationHeaderExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/reservation-header/',
+            reverse('funds:funds-reservation-header'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -150,7 +151,7 @@ class TestFundsReservationItemExportList(APITenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/reservation-item/',
+            reverse('funds:funds-reservation-item'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -159,7 +160,7 @@ class TestFundsReservationItemExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/reservation-item/',
+            reverse('funds:funds-reservation-item'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -197,7 +198,7 @@ class TestFundsReservationItemExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/reservation-item/',
+            reverse('funds:funds-reservation-item'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -247,7 +248,7 @@ class TestFundsCommitmentHeaderExportList(APITenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/commitment-header/',
+            reverse('funds:funds-commitment-header'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -256,7 +257,7 @@ class TestFundsCommitmentHeaderExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/commitment-header/',
+            reverse('funds:funds-commitment-header'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -288,7 +289,7 @@ class TestFundsCommitmentHeaderExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/commitment-header/',
+            reverse('funds:funds-commitment-header'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -329,7 +330,7 @@ class TestFundsCommitmentItemExportList(APITenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/commitment-item/',
+            reverse('funds:funds-commitment-item'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -338,7 +339,7 @@ class TestFundsCommitmentItemExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/commitment-item/',
+            reverse('funds:funds-commitment-item'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -380,7 +381,7 @@ class TestFundsCommitmentItemExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/commitment-item/',
+            reverse('funds:funds-commitment-item'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -431,7 +432,7 @@ class TestGrantExportList(APITenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/grant/',
+            reverse('funds:funds-grant'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -440,7 +441,7 @@ class TestGrantExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/grant/',
+            reverse('funds:funds-grant'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -464,7 +465,7 @@ class TestGrantExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/grant/',
+            reverse('funds:funds-grant'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -500,7 +501,7 @@ class TestDonorExportList(APITenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/donor/',
+            reverse('funds:funds-donor'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -509,7 +510,7 @@ class TestDonorExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/donor/',
+            reverse('funds:funds-donor'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -529,7 +530,7 @@ class TestDonorExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/funds/donor/',
+            reverse('funds:funds-donor'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )

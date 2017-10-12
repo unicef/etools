@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import datetime
 import tempfile
 
+from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
@@ -60,7 +61,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -104,7 +105,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -156,7 +157,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -177,7 +178,7 @@ class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/amendments/',
+            reverse('partners_api:agreement-amendment-list'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -187,7 +188,7 @@ class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/amendments/',
+            reverse('partners_api:agreement-amendment-list'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -215,7 +216,7 @@ class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/amendments/',
+            reverse('partners_api:agreement-amendment-list'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )

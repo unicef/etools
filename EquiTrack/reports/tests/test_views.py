@@ -1,8 +1,10 @@
 import datetime
 
+from unittest import TestCase
+
+from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
-from unittest import TestCase
 
 from reports.models import ResultType, CountryProgramme
 from EquiTrack.factories import (
@@ -84,7 +86,7 @@ class TestReportViews(APITenantTestCase):
     def test_apiv2_results_list(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/results/',
+            reverse('report-result-list'),
             user=self.unicef_staff
         )
 
@@ -95,7 +97,7 @@ class TestReportViews(APITenantTestCase):
         params = {"verbosity": "minimal"}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/results/',
+            reverse('report-result-list'),
             user=self.unicef_staff,
             data=params,
         )
@@ -106,7 +108,7 @@ class TestReportViews(APITenantTestCase):
     def test_apiv2_results_retrieve(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/results/{}/'.format(self.result1.id),
+            reverse('report-result-detail', args=[self.result1.id]),
             user=self.unicef_staff
         )
 
@@ -116,7 +118,7 @@ class TestReportViews(APITenantTestCase):
     def test_apiv2_results_list_current_cp(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/results/',
+            reverse('report-result-list'),
             user=self.unicef_staff
         )
 
@@ -129,7 +131,7 @@ class TestReportViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/results/',
+            reverse('report-result-list'),
             user=self.unicef_staff,
             data=param,
         )
@@ -142,7 +144,7 @@ class TestReportViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/results/',
+            reverse('report-result-list'),
             user=self.unicef_staff,
             data=param,
         )
@@ -155,7 +157,7 @@ class TestReportViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/results/',
+            reverse('report-result-list'),
             user=self.unicef_staff,
             data=param,
         )
@@ -168,7 +170,7 @@ class TestReportViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/results/',
+            reverse('report-result-list'),
             user=self.unicef_staff,
             data=param,
         )
@@ -181,7 +183,7 @@ class TestReportViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/results/',
+            reverse('report-result-list'),
             user=self.unicef_staff,
             data=param,
         )
@@ -195,7 +197,7 @@ class TestReportViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/results/',
+            reverse('report-result-list'),
             user=self.unicef_staff,
             data=param,
         )
@@ -226,7 +228,7 @@ class TestLowerResultExportList(APITenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/lower_results/',
+            reverse('lower-results'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -235,7 +237,7 @@ class TestLowerResultExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/lower_results/',
+            reverse('lower-results'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -257,7 +259,7 @@ class TestLowerResultExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/lower_results/',
+            reverse('lower-results'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -300,7 +302,7 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/applied-indicators/',
+            reverse('applied-indicator'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -309,7 +311,7 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/applied-indicators/',
+            reverse('applied-indicator'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -356,7 +358,7 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/applied-indicators/',
+            reverse('applied-indicator'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
