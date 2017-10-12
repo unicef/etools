@@ -644,7 +644,7 @@ class EngagementActionPoint(models.Model):
         context = {
             'engagement_url': self.engagement.get_object_url(),
             'environment': get_environment(),
-            'engagement': self.engagement,
+            'engagement': Engagement.objects.get_subclass(action_points__id=self.id),
             'action_point': self,
         }
 
