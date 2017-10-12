@@ -545,3 +545,7 @@ ISSUE_CHECKS = [
     'management.issues.project_checks.PDAmendmentsMissingFilesCheck',
     'management.issues.project_checks.PCAAmendmentsMissingFilesCheck',
 ]
+
+EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
+    'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@un.org'
+)

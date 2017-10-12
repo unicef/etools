@@ -32,7 +32,7 @@ from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from .transitions.conditions import AuditSubmitReportRequiredFieldsCheck, ValidateAuditRiskCategories, \
     EngagementHasReportAttachmentsCheck, SPSubmitReportRequiredFieldsCheck, ValidateMARiskCategories, \
-    EngagementSubmitReportRequiredFieldsCheck
+    EngagementSubmitReportRequiredFieldsCheck, ValidateMARiskExtra
 from .transitions.serializers import EngagementCancelSerializer
 
 
@@ -66,6 +66,11 @@ class AuditorStaffMember(BaseStaffMember):
         )
 
 
+class PurchaseOrderManager(models.Manager):
+    def get_by_natural_key(self, order_number):
+        return self.get(order_number=order_number)
+
+
 @python_2_unicode_compatible
 class PurchaseOrder(TimeStampedModel, models.Model):
     order_number = models.CharField(
@@ -75,12 +80,18 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         unique=True,
         max_length=30
     )
+    item_number = models.IntegerField(_('PO Item Number'), null=True, blank=True)
     auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('auditor'), related_name='purchase_orders')
     contract_start_date = models.DateField(_('PO Date'), null=True, blank=True)
     contract_end_date = models.DateField(_('Contract Expiry Date'), null=True, blank=True)
 
+    objects = PurchaseOrderManager()
+
     def __str__(self):
         return self.order_number
+
+    def natural_key(self):
+        return (self.order_number, )
 
 
 def _has_action_permission(action):
@@ -99,17 +110,17 @@ class Engagement(TimeStampedModel, models.Model):
     )
 
     STATUSES = Choices(
-        ('partner_contacted', _('Partner Contacted')),
+        ('partner_contacted', _('IP Contacted')),
         ('report_submitted', _('Report Submitted')),
         ('final', _('Final Report')),
         ('cancelled', _('Cancelled')),
     )
 
     DISPLAY_STATUSES = Choices(
-        ('partner_contacted', _('Partner Contacted')),
+        ('partner_contacted', _('IP Contacted')),
         ('field_visit', _('Field Visit')),
-        ('draft_issued_to_partner', _('Draft Report Issued to Partner')),
-        ('comments_received_by_partner', _('Comments Received from Partner')),
+        ('draft_issued_to_partner', _('Draft Report Issued to IP')),
+        ('comments_received_by_partner', _('Comments Received from IP')),
         ('draft_issued_to_unicef', _('Draft Report Issued to UNICEF')),
         ('comments_received_by_unicef', _('Comments Received from UNICEF')),
         ('report_submitted', _('Report Submitted')),
@@ -134,7 +145,7 @@ class Engagement(TimeStampedModel, models.Model):
     agreement = models.ForeignKey(PurchaseOrder, verbose_name=_('purchase order'))
 
     partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('partner'))
-    partner_contacted_at = models.DateField(_('date partner was contacted'), blank=True, null=True)
+    partner_contacted_at = models.DateField(_('Date IP was contacted'), blank=True, null=True)
     engagement_type = models.CharField(_('Engagement type'), max_length=10, choices=TYPES)
     start_date = models.DateField(_('period start date'), blank=True, null=True)
     end_date = models.DateField(_('period end date'), blank=True, null=True)
@@ -146,15 +157,15 @@ class Engagement(TimeStampedModel, models.Model):
     report_attachments = CodedGenericRelation(Attachment, verbose_name=_('report attachments'), code='audit_report',
                                               blank=True)
 
-    date_of_field_visit = models.DateField(_('date of field visit'), null=True, blank=True)
-    date_of_draft_report_to_ip = models.DateField(_('date draft report issued to IP'), null=True, blank=True)
-    date_of_comments_by_ip = models.DateField(_('date comments received by IP'), null=True, blank=True)
-    date_of_draft_report_to_unicef = models.DateField(_('date draft report issued to UNICEF'), null=True, blank=True)
-    date_of_comments_by_unicef = models.DateField(_('date comments received by UNICEF'), null=True, blank=True)
+    date_of_field_visit = models.DateField(_('Date of field visit'), null=True, blank=True)
+    date_of_draft_report_to_ip = models.DateField(_('Date draft report issued to IP'), null=True, blank=True)
+    date_of_comments_by_ip = models.DateField(_('Date comments received from IP'), null=True, blank=True)
+    date_of_draft_report_to_unicef = models.DateField(_('Date draft report issued to UNICEF'), null=True, blank=True)
+    date_of_comments_by_unicef = models.DateField(_('Date comments received from UNICEF'), null=True, blank=True)
 
-    date_of_report_submit = models.DateField(_('date report submitted'), null=True, blank=True)
-    date_of_final_report = models.DateField(_('date report finalized'), null=True, blank=True)
-    date_of_cancel = models.DateField(_('date report cancelled'), null=True, blank=True)
+    date_of_report_submit = models.DateField(_('Date report submitted'), null=True, blank=True)
+    date_of_final_report = models.DateField(_('Date report finalized'), null=True, blank=True)
+    date_of_cancel = models.DateField(_('Date report cancelled'), null=True, blank=True)
 
     amount_refunded = models.DecimalField(_('amount refunded'), null=True, blank=True, decimal_places=2, max_digits=20)
     additional_supporting_documentation_provided = models.DecimalField(
@@ -196,17 +207,15 @@ class Engagement(TimeStampedModel, models.Model):
         if self.status != self.STATUSES.partner_contacted:
             return self.status
 
-        today = timezone.now().date()
-
-        if self.date_of_comments_by_unicef and today > self.date_of_comments_by_unicef:
+        if self.date_of_comments_by_unicef:
             return self.DISPLAY_STATUSES.comments_received_by_unicef
-        elif self.date_of_draft_report_to_unicef and today > self.date_of_draft_report_to_unicef:
+        elif self.date_of_draft_report_to_unicef:
             return self.DISPLAY_STATUSES.draft_issued_to_unicef
-        elif self.date_of_comments_by_ip and today > self.date_of_comments_by_ip:
+        elif self.date_of_comments_by_ip:
             return self.DISPLAY_STATUSES.comments_received_by_partner
-        elif self.date_of_draft_report_to_ip and today > self.date_of_draft_report_to_ip:
+        elif self.date_of_draft_report_to_ip:
             return self.DISPLAY_STATUSES.draft_issued_to_partner
-        elif self.date_of_field_visit and today > self.date_of_field_visit:
+        elif self.date_of_field_visit:
             return self.DISPLAY_STATUSES.field_visit
 
         return self.status
@@ -498,6 +507,7 @@ class MicroAssessment(Engagement):
         conditions=[
             EngagementSubmitReportRequiredFieldsCheck.as_condition(),
             ValidateMARiskCategories.as_condition(),
+            ValidateMARiskExtra.as_condition(),
             EngagementHasReportAttachmentsCheck.as_condition(),
         ],
         permission=_has_action_permission(action='submit')
@@ -604,7 +614,7 @@ class FinancialFinding(models.Model):
 @python_2_unicode_compatible
 class EngagementActionPoint(models.Model):
     DESCRIPTION_CHOICES = Choices(
-        _('Invoice and recieve reimbursement of ineligible expenditure'),
+        _('Invoice and receive reimbursement of ineligible expenditure'),
         _('Change cash transfer modality (DCT, reimbursement or direct payment)'),
         _('IP to incur and report on additional expenditure'),
         _('Review and amend ICE or budget'),
@@ -630,16 +640,11 @@ class EngagementActionPoint(models.Model):
     def __str__(self):
         return '{} on {}'.format(self.get_description_display(), self.engagement)
 
-    def save(self, *args, **kwargs):
-        super(EngagementActionPoint, self).save(*args, **kwargs)
-
-        self._notify_person_responsible('audit/engagement/action_point_assigned')
-
-    def _notify_person_responsible(self, template_name):
+    def notify_person_responsible(self, template_name):
         context = {
             'engagement_url': self.engagement.get_object_url(),
             'environment': get_environment(),
-            'engagement': self.engagement,
+            'engagement': Engagement.objects.get_subclass(action_points__id=self.id),
             'action_point': self,
         }
 
