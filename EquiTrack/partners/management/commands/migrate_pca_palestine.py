@@ -24,3 +24,4 @@ class Command(BaseCommand):
 
         except Country.DoesNotExist:
             print "The schema could not be set"
+            
