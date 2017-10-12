@@ -7,13 +7,13 @@ from tablib.core import Dataset
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, \
     GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory, \
     InterventionBudgetFactory, PartnerStaffFactory
-from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMixIn
+from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory
 from partners.models import GovernmentInterventionResult
 from reports.models import ResultType
 
 
-class TestModelExport(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
+class TestModelExport(APITenantTestCase):
     def setUp(self):
         super(TestModelExport, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

@@ -76,7 +76,8 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         q = PartnerOrganization.objects.all()
         query_params = self.request.query_params
         workspace = query_params.get('workspace', None)
-        set_tenant_or_fail(workspace)
+        if workspace:
+            set_tenant_or_fail(workspace)
 
         if query_params:
             queries = []
