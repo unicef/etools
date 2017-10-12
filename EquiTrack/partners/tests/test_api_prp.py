@@ -14,14 +14,14 @@ from EquiTrack.factories import (
     ResultFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMixIn
 from partners.models import InterventionResultLink
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.tests.test_utils import setup_intervention_test_data
 from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
 
 
-class TestInterventionsAPI(APITenantTestCase):
+class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -33,7 +33,6 @@ class TestInterventionsAPI(APITenantTestCase):
             method,
             reverse('prp_api_v1:prp-intervention-list'),
             user=user or self.unicef_staff,
-            data={'workspace': self.tenant.business_area_code},
         )
         return response.status_code, json.loads(response.rendered_content)
 
