@@ -43,6 +43,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
             user=self.unicef_staff, method='get'
         )
         self.assertEqual(status_code, status.HTTP_200_OK)
+        response = response['results']
 
         # uncomment if you need to see the response json / regenerate the test file
         # print json.dumps(response, indent=2)
@@ -85,10 +86,10 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
                 user=self.unicef_staff, method='get', data=params
             )
             self.assertEqual(status_code, status.HTTP_200_OK)
-            self.assertEqual(expected_results, len(response))
+            self.assertEqual(expected_results, len(response['results']))
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 18
+        EXPECTED_QUERIES = 19
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'

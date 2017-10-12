@@ -5,6 +5,7 @@ from django.db.models import Q
 
 from rest_framework.generics import (
     ListAPIView)
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 
 from partners.filters import PartnerScopeFilter
 from partners.models import (
@@ -15,6 +16,10 @@ from partners.permissions import ListCreateAPIMixedPermission
 from partners.views.helpers import set_tenant_or_fail
 
 
+class PRPInterventionPagination(LimitOffsetPagination):
+    default_limit = 100
+
+
 class PRPInterventionListAPIView(ListAPIView):
     """
     Create new Interventions.
@@ -23,6 +28,10 @@ class PRPInterventionListAPIView(ListAPIView):
     serializer_class = PRPInterventionListSerializer
     permission_classes = (ListCreateAPIMixedPermission, )
     filter_backends = (PartnerScopeFilter,)
+    pagination_class = PRPInterventionPagination
+
+    def paginate_queryset(self, queryset):
+        return super(PRPInterventionListAPIView, self).paginate_queryset(queryset)
 
     def get_queryset(self, format=None):
         q = Intervention.objects.prefetch_related(
