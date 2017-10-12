@@ -274,15 +274,18 @@ class MicroAssessmentSerializer(RiskCategoriesUpdateMixin, EngagementSerializer)
     test_subject_areas = RiskRootSerializer(
         code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
     )
+    overall_risk_assessment = RiskRootSerializer(
+        code='ma_global_assessment', required=False, label=_('Overall Risk Assessment')
+    )
     findings = DetailedFindingInfoSerializer(
         many=True, required=False, label=_('Detailed Internal Control Findings and Recommendations')
     )
 
     class Meta(EngagementSerializer.Meta):
         model = MicroAssessment
-        risk_categories_fields = ('questionnaire', 'test_subject_areas',)
+        risk_categories_fields = ('questionnaire', 'test_subject_areas', 'overall_risk_assessment')
         fields = EngagementSerializer.Meta.fields + [
-            'findings', 'questionnaire', 'test_subject_areas'
+            'findings', 'questionnaire', 'test_subject_areas', 'overall_risk_assessment',
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
