@@ -334,6 +334,26 @@ class TestPartnerOrganizationModel(TenantTestCase):
         models.PartnerOrganization.micro_assessment_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "No")
 
+    def test_micro_assessment_needed_completed_date(self):
+        year = datetime.date.today().year
+        self.partner_organization.type_of_assessment = "High Risk Assumed"
+        self.partner_organization.save()
+        models.Assessment.objects.create(
+            partner=self.partner_organization,
+            type="Micro Assessment",
+            completed_date=datetime.date(year, 1, 1)
+        )
+        assessment_last = models.Assessment.objects.create(
+            partner=self.partner_organization,
+            type="Micro Assessment",
+            completed_date=datetime.date(year, 2, 1)
+        )
+        models.PartnerOrganization.micro_assessment_needed(
+            self.partner_organization,
+            assessment_last
+        )
+        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
+
     def test_audit_needed_under_500k(self):
         self.partner_organization.total_ct_cp = 500000.00
         self.partner_organization.save()
@@ -845,3 +865,39 @@ class TestGetFilePaths(TenantTestCase):
                 amendment.number,
             ))
         )
+
+
+class TestWorkspaceFileType(TenantTestCase):
+    def test_unicode(self):
+        w = models.WorkspaceFileType(name="Test")
+        self.assertEqual(unicode(w), u"Test")
+
+
+class TestPartnerOrganization(TenantTestCase):
+    def test_unicode(self):
+        p = models.PartnerOrganization(name="Test Partner Org")
+        self.assertEqual(unicode(p), "Test Partner Org")
+
+    def test_save_exception(self):
+        p = models.PartnerOrganization(name="Test", hact_values="wrong")
+        with self.assertRaises(ValueError):
+            p.save()
+
+    def test_save(self):
+        p = models.PartnerOrganization(
+            name="Test",
+            hact_values={'all': 'good'}
+        )
+        p.save()
+        self.assertIsNotNone(p.pk)
+
+    def test_save_hact_is_string(self):
+        p = models.PartnerOrganization(
+            name="Test",
+            hact_values='{"all": "good"}'
+        )
+        self.assertTrue(isinstance(p.hact_values, str))
+        p.save()
+        self.assertIsNotNone(p.pk)
+        self.assertTrue(isinstance(p.hact_values, str))
+        self.assertEqual(p.hact_values, '{"all": "good"}')
