@@ -739,7 +739,6 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.data["hidden"], False)
 
 
-
 class TestPartnershipViews(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
     fixtures = ['initial_data.json']
 
