@@ -102,7 +102,7 @@ class FundsReservationHeaderListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -146,7 +146,7 @@ class FundsReservationItemListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -221,7 +221,7 @@ class FundsCommitmentItemListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -263,7 +263,7 @@ class GrantListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -305,7 +305,7 @@ class DonorListAPIView(ListAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
