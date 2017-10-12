@@ -357,6 +357,9 @@ class TestAPIInterventionResultLinkListView(APITenantTestCase):
         self.expected_field_names = sorted(
             ('cp_output', 'ram_indicators', 'cp_output_name', 'ram_indicator_names', 'id', 'intervention', ))
 
+    def _make_request(self, user):
+        return self.forced_auth_req('get', self.url, user=user)
+
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
         response dict are compared to self.normal_field_names. Otherwise, they're compared to whatever is passed in
@@ -382,7 +385,7 @@ class TestAPIInterventionResultLinkListView(APITenantTestCase):
 
     def test_no_permission_user_forbidden(self):
         '''Ensure a non-staff user gets the 403 smackdown'''
-        response = self.forced_auth_req('get', self.url, user=UserFactory())
+        response = self._make_request(UserFactory())
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
@@ -395,14 +398,19 @@ class TestAPIInterventionResultLinkListView(APITenantTestCase):
 
     def test_staff_access_ok(self):
         '''Ensure a staff user has access'''
-        response = self.forced_auth_req('get', self.url, user=UserFactory(is_staff=True))
+        response = self._make_request(UserFactory(is_staff=True))
         self.assertResponseFundamentals(response)
 
     def test_group_permission(self):
         '''A non-staff user has read access if in the correct group'''
         user = UserFactory()
+        response = self._make_request(user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
         _add_user_to_partnership_manager_group(user)
-        response = self.forced_auth_req('get', self.url, user=user)
+
+        # Now the request should succeed.
+        response = self._make_request(user)
         self.assertResponseFundamentals(response)
 
 
@@ -420,6 +428,9 @@ class TestAPIInterventionResultLinkCreateView(APITenantTestCase):
                      'cp_output': cp_output.id
                      }
 
+    def _make_request(self, user):
+        return self.forced_auth_req('post', self.url, user=user, data=self.data)
+
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
@@ -429,7 +440,7 @@ class TestAPIInterventionResultLinkCreateView(APITenantTestCase):
 
     def test_no_permission_user_forbidden(self):
         '''Ensure a non-staff user gets the 403 smackdown'''
-        response = self.forced_auth_req('post', self.url, data=self.data, user=UserFactory())
+        response = self._make_request(UserFactory())
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
@@ -443,13 +454,13 @@ class TestAPIInterventionResultLinkCreateView(APITenantTestCase):
     def test_group_permission_non_staff(self):
         '''Ensure group membership is sufficient for create; even non-staff group members can create'''
         user = UserFactory()
-        response = self.forced_auth_req('post', self.url, data=self.data, user=user)
+        response = self._make_request(user)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
-        # Now the create should succeed.
-        response = self.forced_auth_req('post', self.url, data=self.data, user=user)
+        # Now the request should succeed.
+        response = self._make_request(user)
         self.assertResponseFundamentals(response)
 
 
@@ -461,6 +472,9 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
         self.url = reverse('partners_api:intervention-result-links-update',
                            kwargs={'pk': self.intervention_result_link.id})
 
+    def _make_request(self, user):
+        return self.forced_auth_req('get', self.url, user=user)
+
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -470,7 +484,7 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
 
     def test_no_permission_user_forbidden(self):
         '''Ensure a non-staff user gets the 403 smackdown'''
-        response = self.forced_auth_req('get', self.url, user=UserFactory())
+        response = self._make_request(UserFactory())
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
@@ -483,19 +497,19 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
 
     def test_staff_access_ok(self):
         '''Ensure a staff user can access'''
-        response = self.forced_auth_req('get', self.url, user=UserFactory(is_staff=True))
+        response = self._make_request(UserFactory(is_staff=True))
         self.assertResponseFundamentals(response)
 
     def test_group_permission_non_staff(self):
         '''Ensure group membership is sufficient for retrieval; even non-staff group members can retrieve'''
         user = UserFactory()
-        response = self.forced_auth_req('get', self.url, user=user)
+        response = self._make_request(user)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
         # Now the request should succeed.
-        response = self.forced_auth_req('get', self.url, user=user)
+        response = self._make_request(user)
         self.assertResponseFundamentals(response)
 
 
