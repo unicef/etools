@@ -776,6 +776,19 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertIn("Partner", response.data[0]["name"])
 
+    def test_api_partners_list_specify_workspace(self):
+        # specifying current tenant works
+        response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff,
+                                        data={'workspace': self.tenant.business_area_code})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+        # specifying invalid tenant fails
+        response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff,
+                                        data={'workspace': ':('})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
     @skip("different endpoint")
     def test_api_agreements_list(self):
 
