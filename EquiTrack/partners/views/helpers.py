@@ -16,6 +16,3 @@ def set_tenant_or_fail(workspace):
             raise ValidationError('Workspace code provided is not a valid business_area_code: %s' % workspace)
         else:
             connection.set_tenant(ws)
-
-
-
