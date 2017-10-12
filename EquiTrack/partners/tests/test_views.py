@@ -34,7 +34,7 @@ from EquiTrack.factories import (
     SectionFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin, WorkspaceRequiredAPITestMixIn
 from reports.models import ResultType
 from users.models import Country
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
@@ -81,7 +81,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestAPIPartnerOrganizationListView(APITenantTestCase):
+class TestAPIPartnerOrganizationListView(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
     '''Exercise the list view for PartnerOrganization'''
     def setUp(self):
         self.user = UserFactory(is_staff=True)
