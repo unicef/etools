@@ -1,10 +1,11 @@
 import datetime
 
+from unittest import TestCase
+
 from django.core.urlresolvers import reverse
 from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
 from tablib.core import Dataset
-from unittest import TestCase
 
 from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
 from EquiTrack.factories import (
@@ -81,7 +82,6 @@ class TestReportViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     # V2 URLs
-
     def test_apiv2_results_list(self):
         response = self.forced_auth_req('get', self.v2_results_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -372,7 +372,7 @@ class TestLowerResultExportList(APITenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/lower_results/',
+            reverse('lower-results'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -381,7 +381,7 @@ class TestLowerResultExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/lower_results/',
+            reverse('lower-results'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -403,7 +403,7 @@ class TestLowerResultExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/lower_results/',
+            reverse('lower-results'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -446,7 +446,7 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/applied-indicators/',
+            reverse('applied-indicator'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -455,7 +455,7 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/applied-indicators/',
+            reverse('applied-indicator'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -502,7 +502,7 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/reports/applied-indicators/',
+            reverse('applied-indicator'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )

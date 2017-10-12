@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import datetime
 import tempfile
 
+from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
@@ -94,7 +95,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/',
+            reverse('partners_api:intervention-list'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -103,7 +104,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/',
+            reverse('partners_api:intervention-list'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -194,7 +195,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/',
+            reverse('partners_api:intervention-list'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -289,7 +290,7 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/amendments/',
+            reverse('partners_api:intervention-amendments'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -298,7 +299,7 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/amendments/',
+            reverse('partners_api:intervention-amendments'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -326,7 +327,7 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/amendments/',
+            reverse('partners_api:intervention-amendments'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -370,7 +371,7 @@ class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/results/',
+            reverse('partners_api:intervention-results'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -379,7 +380,7 @@ class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/results/',
+            reverse('partners_api:intervention-results'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -438,7 +439,7 @@ class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/results/',
+            reverse('partners_api:intervention-results'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -512,7 +513,7 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/indicators/',
+            reverse('partners_api:intervention-indicators'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -521,7 +522,7 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/indicators/',
+            reverse('partners_api:intervention-indicators'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -572,7 +573,7 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/indicators/',
+            reverse('partners_api:intervention-indicators'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -637,7 +638,7 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/sector-locations/',
+            reverse('partners_api:intervention-sector-locations'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -646,7 +647,7 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/sector-locations/',
+            reverse('partners_api:intervention-sector-locations'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -680,7 +681,7 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/sector-locations/',
+            reverse('partners_api:intervention-sector-locations'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )

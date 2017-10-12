@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import datetime
 import tempfile
 
+from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
@@ -44,7 +45,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/',
+            reverse('partners_api:partner-list'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -54,7 +55,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/',
+            reverse('partners_api:partner-list'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -115,7 +116,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/',
+            reverse('partners_api:partner-list'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -203,7 +204,7 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/{}/staff-members/'.format(self.partner.pk),
+            reverse('partners_api:partner-staff-members-list', args=[self.partner.pk]),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -213,7 +214,7 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/{}/staff-members/'.format(self.partner.pk),
+            reverse('partners_api:partner-staff-members-list', args=[self.partner.pk]),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -248,7 +249,7 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/{}/staff-members/'.format(self.partner.pk),
+            reverse('partners_api:partner-staff-members-list', args=[self.partner.pk]),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
@@ -295,7 +296,7 @@ class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/assessments/',
+            reverse('partners_api:partner-assessment'),
             user=self.unicef_staff,
             data={"format": "unknown"},
         )
@@ -305,7 +306,7 @@ class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/assessments/',
+            reverse('partners_api:partner-assessment'),
             user=self.unicef_staff,
             data={"format": "csv"},
         )
@@ -350,7 +351,7 @@ class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/assessments/',
+            reverse('partners_api:partner-assessment'),
             user=self.unicef_staff,
             data={"format": "csv_flat"},
         )
