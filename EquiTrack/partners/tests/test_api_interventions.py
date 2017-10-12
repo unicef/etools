@@ -14,7 +14,8 @@ from rest_framework.test import APIRequestFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
-    Intervention
+    Intervention,
+    InterventionResultLink,
 )
 from users.models import Country
 from EquiTrack.factories import (
@@ -420,7 +421,7 @@ class TestAPIInterventionResultLinkCreateView(APITenantTestCase):
                      }
 
     def assertResponseFundamentals(self, response):
-        '''Assert common fundamentals about the response. Return the id of the new object.'''
+        '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
@@ -461,7 +462,7 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
                            kwargs={'pk': self.intervention_result_link.id})
 
     def assertResponseFundamentals(self, response):
-        '''Assert common fundamentals about the response. Return the id of the new object.'''
+        '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
@@ -476,7 +477,7 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
         '''Ensure an unauthenticated user gets the 403 smackdown'''
         factory = APIRequestFactory()
         view_info = resolve(self.url)
-        request = factory.post(self.url, format='json')
+        request = factory.get(self.url, format='json')
         response = view_info.func(request)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -486,13 +487,112 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
     def test_group_permission_non_staff(self):
-        '''Ensure group membership is sufficient for create; even non-staff group members can create'''
+        '''Ensure group membership is sufficient for retrieval; even non-staff group members can retrieve'''
         user = UserFactory()
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
-        # Now the get should succeed.
+        # Now the request should succeed.
         response = self.forced_auth_req('get', self.url, user=user)
+        self.assertResponseFundamentals(response)
+
+
+class TestAPIInterventionResultLinkUpdateView(APITenantTestCase):
+    '''Exercise the update view for InterventionResultLinkUpdateView'''
+    def setUp(self):
+        self.intervention_result_link = InterventionResultLinkFactory()
+
+        self.url = reverse('partners_api:intervention-result-links-update',
+                           kwargs={'pk': self.intervention_result_link.id})
+
+        self.new_cp_output = ResultFactory()
+
+        self.data = {'cp_output': self.new_cp_output.id}
+
+    def _make_request(self, user):
+        return self.forced_auth_req('patch', self.url, user=user, data=self.data)
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response.'''
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        intervention_result_link = InterventionResultLink.objects.get(pk=self.intervention_result_link.id)
+        self.assertEqual(intervention_result_link.cp_output.id, self.new_cp_output.id)
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self._make_request(UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.patch(self.url, data=self.data, format='json')
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_staff_access_refused(self):
+        '''Ensure a staff doesn't have write access'''
+        response = self._make_request(UserFactory(is_staff=True))
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_group_permission_non_staff(self):
+        '''Ensure group membership is sufficient for update; even non-staff group members can update'''
+        user = UserFactory()
+        response = self._make_request(user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        _add_user_to_partnership_manager_group(user)
+
+        # Now the request should succeed.
+        response = self._make_request(user)
+        self.assertResponseFundamentals(response)
+
+
+class TestAPIInterventionResultLinkDeleteView(APITenantTestCase):
+    '''Exercise the delete view for InterventionResultLinkUpdateView'''
+    def setUp(self):
+        self.intervention_result_link = InterventionResultLinkFactory()
+
+        self.url = reverse('partners_api:intervention-result-links-update',
+                           kwargs={'pk': self.intervention_result_link.id})
+
+    def _make_request(self, user):
+        return self.forced_auth_req('delete', self.url, user=user)
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response.'''
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(InterventionResultLink.objects.filter(pk=self.intervention_result_link.id).exists())
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self._make_request(UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.patch(self.url, format='json')
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_staff_access_refused(self):
+        '''Ensure a staff doesn't have write access'''
+        response = self._make_request(UserFactory(is_staff=True))
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_group_permission_non_staff(self):
+        '''Ensure group membership is sufficient for update; even non-staff group members can update'''
+        user = UserFactory()
+        response = self._make_request(user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        _add_user_to_partnership_manager_group(user)
+
+        # Now the request should succeed.
+        response = self._make_request(user)
         self.assertResponseFundamentals(response)
