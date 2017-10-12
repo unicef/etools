@@ -28,7 +28,7 @@ class PartnerModelExportTestCase(APITenantTestCase):
             shared_with=["DPKO", "ECA"],
             address="Address 123",
             phone_number="Phone no 1234567",
-            email="email@address.com",
+            email="email@example.com",
             rating="High",
             core_values_assessment_date=datetime.date.today(),
             total_ct_cp=10000,
