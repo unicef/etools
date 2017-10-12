@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import json
 from unittest import skip
+from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
@@ -148,6 +149,14 @@ class TestUserViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/users/', data={'verbosity': 'minimal'}, user=self.unicef_superuser)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
+
+    def test_workspace_api(self):
+        response = self.forced_auth_req('get', reverse('list-workspaces'), user=self.unicef_superuser)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json), 1)
+        result = response_json[0]
+        self.assertEqual(result['id'], self.tenant.id)
+        self.assertEqual(result['business_area_code'], self.tenant.business_area_code)
 
     @skip('How to create new schemas?')
     def test_business_area_code(self):
