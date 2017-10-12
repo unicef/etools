@@ -1,5 +1,6 @@
 import json
 import os
+import datetime
 
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse, resolve
@@ -28,11 +29,12 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
         super(TestInterventionsAPI, self).setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)
 
-    def run_prp_v1(self, user=None, method='get'):
+    def run_prp_v1(self, user=None, method='get', data=None):
         response = self.forced_auth_req(
             method,
             reverse('prp_api_v1:prp-intervention-list'),
             user=user or self.unicef_staff,
+            data=data,
         )
         return response.status_code, json.loads(response.rendered_content)
 
@@ -67,6 +69,23 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
                 del actual_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
 
         self.assertEqual(response, expected_interventions)
+
+    def test_prp_api_modified_queries(self):
+        yesterday = (datetime.datetime.today() - datetime.timedelta(days=1)).isoformat()
+        tomorrow = (datetime.datetime.today() + datetime.timedelta(days=1)).isoformat()
+        checks = [
+            ({'updated_before': yesterday}, 0),
+            ({'updated_before': tomorrow}, 3),
+            ({'updated_after': yesterday}, 3),
+            ({'updated_after': tomorrow}, 0),
+            ({'updated_before': tomorrow, 'updated_after': yesterday}, 3),
+        ]
+        for params, expected_results in checks:
+            status_code, response = self.run_prp_v1(
+                user=self.unicef_staff, method='get', data=params
+            )
+            self.assertEqual(status_code, status.HTTP_200_OK)
+            self.assertEqual(expected_results, len(response))
 
     def test_prp_api_performance(self):
         EXPECTED_QUERIES = 18

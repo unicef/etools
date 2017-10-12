@@ -51,6 +51,10 @@ class PRPInterventionListAPIView(ListAPIView):
                 queries.append(Q(status=query_params.get("status")))
             if "partner" in query_params.keys():
                 queries.append(Q(agreement__partner=query_params.get("partner")))
+            if "updated_before" in query_params.keys():
+                queries.append(Q(modified__lte=query_params.get("updated_before")))
+            if "updated_after" in query_params.keys():
+                queries.append(Q(modified__gte=query_params.get("updated_after")))
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression).distinct()
