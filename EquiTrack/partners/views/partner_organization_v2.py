@@ -46,15 +46,15 @@ from t2f.models import TravelActivity
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
 from partners.exports_flat import (
-    AssessmentCsvFlatRenderer,
-    PartnerOrganizationCsvFlatRenderer,
-    PartnerStaffMemberCsvFlatRenderer,
+    AssessmentCSVFlatRenderer,
+    PartnerOrganizationCSVFlatRenderer,
+    PartnerStaffMemberCSVFlatRenderer,
 )
 from partners.exports_v2 import (
-    AssessmentCsvRenderer,
-    PartnerOrganizationCsvRenderer,
-    PartnerOrganizationHactCsvRenderer,
-    PartnerStaffMemberCsvRenderer,
+    AssessmentCSVRenderer,
+    PartnerOrganizationCSVRenderer,
+    PartnerOrganizationHactCSVRenderer,
+    PartnerStaffMemberCSVRenderer,
 )
 
 
@@ -69,8 +69,8 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        PartnerOrganizationCsvRenderer,
-        PartnerOrganizationCsvFlatRenderer
+        PartnerOrganizationCSVRenderer,
+        PartnerOrganizationCSVFlatRenderer
     )
 
     def get_serializer_class(self, format=None):
@@ -219,7 +219,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.filter(total_ct_cp__gt=0).all()
     serializer_class = PartnerOrganizationHactSerializer
-    renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCSVRenderer)
 
     def list(self, request, format=None):
         """
@@ -244,8 +244,8 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        PartnerStaffMemberCsvRenderer,
-        PartnerStaffMemberCsvFlatRenderer,
+        PartnerStaffMemberCSVRenderer,
+        PartnerStaffMemberCSVFlatRenderer,
     )
 
     def get_serializer_class(self, format=None):
@@ -284,8 +284,8 @@ class PartnerOrganizationAssessmentListView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        AssessmentCsvRenderer,
-        AssessmentCsvFlatRenderer,
+        AssessmentCSVRenderer,
+        AssessmentCSVFlatRenderer,
     )
 
     def get_serializer_class(self, format=None):

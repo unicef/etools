@@ -54,18 +54,18 @@ from partners.serializers.interventions_v2 import (
     PlannedVisitsCUSerializer,
 )
 from partners.exports_flat import (
-    InterventionAmendmentCsvFlatRenderer,
-    InterventionCsvFlatRenderer,
-    InterventionIndicatorCsvFlatRenderer,
-    InterventionResultCsvFlatRenderer,
-    InterventionSectorLocationLinkCsvFlatRenderer,
+    InterventionAmendmentCSVFlatRenderer,
+    InterventionCSVFlatRenderer,
+    InterventionIndicatorCSVFlatRenderer,
+    InterventionResultCSVFlatRenderer,
+    InterventionSectorLocationLinkCSVFlatRenderer,
 )
 from partners.exports_v2 import (
-    InterventionAmendmentCsvRenderer,
-    InterventionCsvRenderer,
-    InterventionIndicatorCsvRenderer,
-    InterventionResultCsvRenderer,
-    InterventionSectorLocationLinkCsvRenderer,
+    InterventionAmendmentCSVRenderer,
+    InterventionCSVRenderer,
+    InterventionIndicatorCSVRenderer,
+    InterventionResultCSVRenderer,
+    InterventionSectorLocationLinkCSVRenderer,
 )
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
@@ -82,8 +82,8 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionCsvRenderer,
-        InterventionCsvFlatRenderer,
+        InterventionCSVRenderer,
+        InterventionCSVFlatRenderer,
     )
 
     SERIALIZER_MAP = {
@@ -331,8 +331,8 @@ class InterventionResultListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionResultCsvRenderer,
-        InterventionResultCsvFlatRenderer,
+        InterventionResultCSVRenderer,
+        InterventionResultCSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -374,8 +374,8 @@ class InterventionIndicatorListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionIndicatorCsvRenderer,
-        InterventionIndicatorCsvFlatRenderer,
+        InterventionIndicatorCSVRenderer,
+        InterventionIndicatorCSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -441,8 +441,8 @@ class InterventionAmendmentListAPIView(ValidatorViewMixin, ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionAmendmentCsvRenderer,
-        InterventionAmendmentCsvFlatRenderer,
+        InterventionAmendmentCSVRenderer,
+        InterventionAmendmentCSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -501,8 +501,8 @@ class InterventionSectorLocationLinkListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionSectorLocationLinkCsvRenderer,
-        InterventionSectorLocationLinkCsvFlatRenderer,
+        InterventionSectorLocationLinkCSVRenderer,
+        InterventionSectorLocationLinkCSVFlatRenderer,
     )
 
     def get_serializer_class(self):

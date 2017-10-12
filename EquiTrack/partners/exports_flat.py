@@ -1,11 +1,11 @@
 from rest_framework_csv import renderers as r
 
 
-class BaseCsvFlatRenderer(r.CSVRenderer):
+class BaseCSVFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
 
-class AssessmentCsvFlatRenderer(BaseCsvFlatRenderer):
+class AssessmentCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
         "id",
         "partner",
@@ -41,7 +41,7 @@ class AssessmentCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
-class AgreementCsvFlatRenderer(BaseCsvFlatRenderer):
+class AgreementCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
         "id",
         "agreement_number",
@@ -83,7 +83,7 @@ class AgreementCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
-class AgreementAmendmentCsvFlatRenderer(BaseCsvFlatRenderer):
+class AgreementAmendmentCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
         "id",
         "number",
@@ -107,7 +107,7 @@ class AgreementAmendmentCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
-class InterventionCsvFlatRenderer(BaseCsvFlatRenderer):
+class InterventionCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
             "id",
             "status",
@@ -185,7 +185,7 @@ class InterventionCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
-class InterventionAmendmentCsvFlatRenderer(BaseCsvFlatRenderer):
+class InterventionAmendmentCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
         "id",
         "intervention",
@@ -211,7 +211,7 @@ class InterventionAmendmentCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
-class InterventionResultCsvFlatRenderer(BaseCsvFlatRenderer):
+class InterventionResultCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
         "id",
         "intervention",
@@ -261,7 +261,7 @@ class InterventionResultCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
-class InterventionIndicatorCsvFlatRenderer(BaseCsvFlatRenderer):
+class InterventionIndicatorCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
         "id",
         "intervention",
@@ -303,7 +303,7 @@ class InterventionIndicatorCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
-class InterventionSectorLocationLinkCsvFlatRenderer(BaseCsvFlatRenderer):
+class InterventionSectorLocationLinkCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
         "id",
         "intervention",
@@ -331,7 +331,7 @@ class InterventionSectorLocationLinkCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
-class PartnerOrganizationCsvFlatRenderer(BaseCsvFlatRenderer):
+class PartnerOrganizationCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
         'id',
         'vendor_number',
@@ -399,7 +399,7 @@ class PartnerOrganizationCsvFlatRenderer(BaseCsvFlatRenderer):
     }
 
 
-class PartnerStaffMemberCsvFlatRenderer(BaseCsvFlatRenderer):
+class PartnerStaffMemberCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
         "id",
         "partner_name",

@@ -1,7 +1,7 @@
 from rest_framework_csv import renderers as r
 
 
-class AssessmentCsvRenderer(r.CSVRenderer):
+class AssessmentCSVRenderer(r.CSVRenderer):
     header = [
         "partner",
         "type",
@@ -35,7 +35,7 @@ class AssessmentCsvRenderer(r.CSVRenderer):
     }
 
 
-class PartnerOrganizationCsvRenderer(r.CSVRenderer):
+class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     header = ['vendor_number', 'organization_full_name',
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
               'phone_number', 'email_address', 'risk_rating', 'date_last_assessment_against_core_values',
@@ -66,7 +66,7 @@ class PartnerOrganizationCsvRenderer(r.CSVRenderer):
     }
 
 
-class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
+class PartnerOrganizationHactCSVRenderer(r.CSVRenderer):
     header = ["name", "partner_type", "shared_partner", "shared_with", "total_ct_cp",
               "hact_values.planned_cash_transfer", "total_ct_cy", "hact_values.micro_assessment_needed", "rating",
               "hact_values.planned_visits", "hact_min_requirements.programme_visits", "hact_values.programmatic_visits",
@@ -94,7 +94,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
     }
 
 
-class PartnerStaffMemberCsvRenderer(r.CSVRenderer):
+class PartnerStaffMemberCSVRenderer(r.CSVRenderer):
     header = [
         "partner",
         "title",
@@ -116,7 +116,7 @@ class PartnerStaffMemberCsvRenderer(r.CSVRenderer):
     }
 
 
-class AgreementCsvRenderer(r.CSVRenderer):
+class AgreementCSVRenderer(r.CSVRenderer):
     header = [
         "agreement_number",
         "status",
@@ -150,7 +150,7 @@ class AgreementCsvRenderer(r.CSVRenderer):
     }
 
 
-class AgreementAmendmentCsvRenderer(r.CSVRenderer):
+class AgreementAmendmentCSVRenderer(r.CSVRenderer):
     header = [
         "number",
         "agreement_number",
@@ -168,7 +168,7 @@ class AgreementAmendmentCsvRenderer(r.CSVRenderer):
     }
 
 
-class InterventionCsvRenderer(r.CSVRenderer):
+class InterventionCSVRenderer(r.CSVRenderer):
     header = [
         "status", "partner_name", "partner_type", "agreement_number", "country_programme", "document_type", "number",
         "title", "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
@@ -221,7 +221,7 @@ class InterventionCsvRenderer(r.CSVRenderer):
     }
 
 
-class InterventionAmendmentCsvRenderer(r.CSVRenderer):
+class InterventionAmendmentCSVRenderer(r.CSVRenderer):
     header = [
         "intervention",
         "amendment_number",
@@ -241,7 +241,7 @@ class InterventionAmendmentCsvRenderer(r.CSVRenderer):
     }
 
 
-class InterventionResultCsvRenderer(r.CSVRenderer):
+class InterventionResultCSVRenderer(r.CSVRenderer):
     header = [
         "intervention",
         "country_programme",
@@ -289,7 +289,7 @@ class InterventionResultCsvRenderer(r.CSVRenderer):
     }
 
 
-class InterventionIndicatorCsvRenderer(r.CSVRenderer):
+class InterventionIndicatorCSVRenderer(r.CSVRenderer):
     header = [
         "intervention",
         "sector",
@@ -329,7 +329,7 @@ class InterventionIndicatorCsvRenderer(r.CSVRenderer):
     }
 
 
-class InterventionSectorLocationLinkCsvRenderer(r.CSVRenderer):
+class InterventionSectorLocationLinkCSVRenderer(r.CSVRenderer):
     header = [
         "intervention",
         "sector",
@@ -355,7 +355,7 @@ class InterventionSectorLocationLinkCsvRenderer(r.CSVRenderer):
     }
 
 
-class PartnershipDashCsvRenderer(r.CSVRenderer):
+class PartnershipDashCSVRenderer(r.CSVRenderer):
     header = [
         'partner_name', 'number', 'status', 'start', 'end',
         'sectors', 'offices_names',
