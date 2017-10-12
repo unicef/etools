@@ -1315,7 +1315,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def submitted_to_prc(self):
-        return True if self.submission_date_prc else False
+        return True if any([self.submission_date_prc, self.review_date_prc, self.prc_review_document]) else False
 
     @property
     def days_from_review_to_signed(self):
