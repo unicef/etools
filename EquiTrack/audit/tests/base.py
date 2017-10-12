@@ -42,10 +42,10 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
     engagement_factory = None
     endpoint = ''
 
-    def _fill_category(self, code):
+    def _fill_category(self, code, **kwargs):
         blueprints = RiskBluePrint.objects.filter(category__code=code)
         for blueprint in blueprints:
-            RiskFactory(blueprint=blueprint, engagement=self.engagement)
+            RiskFactory(blueprint=blueprint, engagement=self.engagement, **kwargs)
 
     def _fill_date_fields(self):
         self.engagement.date_of_field_visit = timezone.now()
