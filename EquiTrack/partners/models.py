@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
-from django.db.models import Q, F
+from django.db.models import F
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
@@ -532,20 +532,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         hact["planned_cash_transfer"] = float(total)
         partner.hact_values = hact
         partner.save()
-
-    @property
-    def trips(self):
-        year = datetime.date.today().year
-        from trips.models import LinkedPartner, Trip
-        trip_ids = LinkedPartner.objects.filter(
-            partner=self).values_list('trip__id', flat=True)
-
-        return Trip.objects.filter(
-            Q(id__in=trip_ids),
-            Q(from_date__year=year),
-            Q(status=Trip.COMPLETED),
-            ~Q(section__name='Drivers'),
-        )
 
     @classmethod
     def planned_visits(cls, partner, pv_intervention=None):
@@ -1329,7 +1315,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def submitted_to_prc(self):
-        return True if self.submission_date_prc else False
+        return True if any([self.submission_date_prc, self.review_date_prc, self.prc_review_document]) else False
 
     @property
     def days_from_review_to_signed(self):
@@ -1406,11 +1392,11 @@ class Intervention(TimeStampedModel):
             r['total_actual_amt'] += fr.actual_amt
             if r['earliest_start_date'] is None:
                 r['earliest_start_date'] = fr.start_date
-            elif r['earliest_start_date'] < fr.start_date:
+            elif r['earliest_start_date'] > fr.start_date:
                 r['earliest_start_date'] = fr.start_date
             if r['latest_end_date'] is None:
                 r['latest_end_date'] = fr.end_date
-            elif r['latest_end_date'] > fr.end_date:
+            elif r['latest_end_date'] < fr.end_date:
                 r['latest_end_date'] = fr.end_date
         return r
 
@@ -1508,7 +1494,7 @@ class Intervention(TimeStampedModel):
                 self.agreement.start = self.start
                 self.agreement.end = self.end
 
-            if self.status == self.SIGNED and self.agreement.status != Agreement.SIGNED:
+            if self.status in [self.SIGNED, self.ACTIVE] and self.agreement.status != Agreement.SIGNED:
                 save_agreement = True
                 self.agreement.status = Agreement.SIGNED
 
@@ -2316,30 +2302,6 @@ class PCA(AdminURLMixin, models.Model):
         year = datetime.date.today().year
         total = self.budget_log.filter(year=year).order_by('-created').first()
         return total.unicef_cash if total else 0
-
-    @property
-    def programmatic_visits(self):
-        year = datetime.date.today().year
-        from trips.models import LinkedPartner, Trip
-        trip_ids = LinkedPartner.objects.filter(
-            intervention=self
-        ).values_list('trip__id', flat=True)
-
-        trips = Trip.objects.filter(
-            Q(id__in=trip_ids),
-            Q(from_date__year=year),
-            Q(status=Trip.COMPLETED),
-            Q(travel_type=Trip.PROGRAMME_MONITORING),
-            ~Q(section__name='Drivers'),
-        )
-        return trips.count()
-
-    @property
-    def spot_checks(self):
-        return self.trips.filter(
-            trip__status='completed',
-            trip__travel_type='spot_check'
-        ).count()
 
     def save(self, **kwargs):
 

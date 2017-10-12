@@ -36,19 +36,6 @@
     {% block extra_style %}
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <style type="text/css">
-            #page-header {
-            {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
-            }
-
-            {#        #page-footer{#}
-            {#            -pdf-frame-content: page-footer;#}
-            {#            bottom: 0cm;#}
-            {#            margin-left: 1cm;#}
-            {#            margin-right: 1cm;#}
-            {#            color: #0099ff;#}
-            {#            line-height: 1.0cm;#}
-            {#            background-color: #0099ff;#}
-            {#        }#}
             .details div {
             {#            background-color: #f1f1f1;#} border-radius: 25px;
                 border: 2px solid #f1f1f1;
@@ -57,20 +44,6 @@
                 height: 150px;
             }
             /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
-            /*dejavu*/
-            @font-face {
-                font-family: "DejaVuSans";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSans.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSansMono";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSansMono.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSerif";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSerif.ttf");
-            }
-
             /*times new roman*/
             @font-face {
                 font-family: "Times_New_Roman";
@@ -124,6 +97,10 @@
             .small-indent {
                 text-indent: 0.8cm;
             }
+            .padded-indent {
+                padding-left: 2.8cm;
+                margin-left: 2.8cm;
+            }
             .indented {}
             .list-style-type-letter {
                 list-style-type: lower-alpha;
@@ -159,6 +136,10 @@
                 border: 0.1pt solid #999999;
             }
             td:last-child { padding-bottom: 0; }
+            td:first-child {
+                padding-right: 0px;
+                padding-left: 0px;
+            }
             .capitalize{text-transform: capitalize;}
             .uppercase{text-transform: uppercase;}
         </style>
@@ -189,7 +170,7 @@
         </div>
 
         <div article-I>
-            <div class="keep-with-next" style="padding-top: 12px;text-align: center">
+            <div class="keep-with-next" style="padding-top: 24px;text-align: center">
                 <b>ARTICLE I</b>
             </div>
             <div class="keep-with-next" style="padding-top: 0px;padding-bottom: 12px;text-align: center">
@@ -240,35 +221,33 @@
                 <li>
                     “<u>Authorized Officer</u>” means one of the following officers of the IP:
                 </li>
-                <li style="display: block;">
-                    <table class="bordered"><tbody>
-                        {% for officer in auth_officers %}
-                        <tr>
-                            <td class="bordered" style="width:40%">Full name</td>
-                            <td class="bordered">{{ officer.first_name }} {{ officer.last_name }}</td>
-                        </tr>
-                        <tr>
-                            <td class="bordered" style="width:40%">Title</td>
-                            <td class="bordered">{{ officer.title }}</td>
-                        </tr>
-                        <tr>
-                            <td class="bordered" style="width:40%">Email</td>
-                            <td class="bordered">{{ officer.email }}</td>
-                        </tr>
-                        <tr>
-                            <td class="bordered" style="width:40%">Sample signature</td>
-                            <td class="bordered"></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody></table>
+                <table class="bordered"><tbody>
+                    {% for officer in auth_officers %}
+                    <tr>
+                        <td class="bordered" style="width:35%">Full name</td>
+                        <td class="bordered">{{ officer.first_name }} {{ officer.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Title</td>
+                        <td class="bordered">{{ officer.title }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Email</td>
+                        <td class="bordered">{{ officer.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Sample signature</td>
+                        <td class="bordered"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody></table>
 
-                    <div style="padding-top: 15px">
-                        It is understood, for the avoidance of doubt, that any removals from or
-                        amendments to the (list of) Authorized Officer(s) identified above shall require a written amendment
-                        to this Agreement in accordance with section 20.0 of the General Terms and Conditions for
-                        Programme Cooperation Agreements appended hereto.
-                    </div>
-                </li>
+                <div style="padding-top: 15px">
+                    It is understood, for the avoidance of doubt, that any removals from or
+                    amendments to the (list of) Authorized Officer(s) identified above shall require a written amendment
+                    to this Agreement in accordance with section 20.0 of the General Terms and Conditions for
+                    Programme Cooperation Agreements appended hereto.
+                </div>
 
                 <li>“<u>non-expendable equipment</u>” means any item that cost two thousand five hundred US dollars
                     (US$2,500) or more, including costs of initial delivery and handling, and which has a service
@@ -296,7 +275,7 @@
 
         <div id="article-III" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE III</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>PURPOSE AND SCOPE</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>PURPOSE AND SCOPE</b></div>
             <ol class="indented">
                 <li>
                     This Agreement shall govern the implementation by the IP of the relevant parts of the Programme
@@ -331,7 +310,7 @@
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px">
                 <b>ARTICLE V</b>
             </div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+            <div class="" style="padding-top: 0px; text-align: center">
                 <b>RESPONSIBILITIES OF THE IP</b>
             </div>
             <ol>
@@ -425,10 +404,9 @@
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px">
                 <b>ARTICLE VIII</b>
             </div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+            <div class="" style="padding-top: 0px; text-align: center">
                 <b>INPUTS BY UNICEF TOWARDS</b>
-            </div>
-            <div style="padding-top: 0px; text-align: center">
+                <br/>
                 <b>IMPLEMENTATION OF PROGRAMME DOCUMENTS</b>
             </div>
 
@@ -457,7 +435,7 @@
                     provides UNICEF with a signed copy of this Agreement and the Programme Document. The request will be
                     signed by an Authorized Officer.
                 </li>
-                <div class="keep-with-next"><p><u>Cash Transfer procedures:</u></p></div>
+                <div class=""><p><u>Cash Transfer procedures:</u></p></div>
                 <li>Cash Transfer Installments will be transferred to or, where the Direct Payment modality is used, on
                     behalf of the IP solely to contribute to the implementation of the Programme Documents. The IP
                     agrees that the funds so transferred will be used exclusively for the implementation of the
@@ -467,7 +445,7 @@
                     behalf of the IP in response to a written request from the IP, in accordance with the following
                     procedures:
                 </li>
-                <div class="keep-with-next"><p><u>Procedures for requests for Cash Transfer Installments under all three Cash Transfer
+                <div class=""><p><u>Procedures for requests for Cash Transfer Installments under all three Cash Transfer
                     Modalities:</u></p></div>
                 <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;Unless otherwise indicated by UNICEF in writing, every three calendar months during the term of
                     this Agreement (“<u>Quarter</u>”) the IP will provide UNICEF with a written request for the Cash Transfer
@@ -487,7 +465,7 @@
                     and will transfer that amount to or, where the modality of Direct Payment is used,
                     on behalf of the IP within a reasonable time.
                 </div>
-                <div class="keep-with-next"><p><u>Additional procedures applicable only to Direct Payment modality:</u></p></div>
+                <div class=""><p><u>Additional procedures applicable only to Direct Payment modality:</u></p></div>
                 <div class="small-indent">(d) &nbsp;&nbsp;&nbsp;The request for a Direct Payment is submitted using the FACE form and  shall in all cases include the
                     vendor’s complete details and banking information in a format specified by UNICEF at the time of
                     Programme Document finalization.
@@ -495,7 +473,7 @@
                 <div class="small-indent">(e) &nbsp;&nbsp;&nbsp;For both Direct Payment and Reimbursement modalities, the requested expenditures should have been
                     previously authorized through the FACE form by UNICEF.
                 </div>
-                <div class="keep-with-next"><p><u>Special terms and conditions for Cash Transfer Installments:</u></p></div>
+                <div class=""><p><u>Special terms and conditions for Cash Transfer Installments:</u></p></div>
                 <li>Any request for a Cash Transfer Installment by the IP will fulfill the following criteria to the
                     satisfaction of UNICEF, failing which UNICEF may decide not to honor the request in whole or in part:
                 </li>
@@ -523,7 +501,7 @@
                     for any amounts that UNICEF determines are not in compliance with this Agreement.
                 </li>
                 <li>
-                    <span class="small-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a)&nbsp;&nbsp;&nbsp;&nbsp;
+                    <span class="small-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a)&nbsp;&nbsp;&nbsp;&nbsp;
                         The administration by the IP of the Cash Transfer
                         shall be carried out under its own financial regulations, rules and procedures, which UNICEF
                         has reviewed and assessed and found to be appropriate.
@@ -554,37 +532,37 @@
                     </tr>
                     {% for bank_detail in bank_details %}
                     <tr>
-                        <td class="bordered" style="width: 35%;">Bank Name</td>
+                        <td class="bordered" style="width: 45%;">Bank Name</td>
                         <td class="bordered">{{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Bank Address</td>
+                        <td class="bordered" style="width: 45%;">Bank Address</td>
                         <td class="bordered">{{ bank_detail.bank_address }}</td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Account Title</td>
+                        <td class="bordered" style="width: 45%;">Account Title</td>
                         <td class="bordered">{{ bank_detail.account_title }}</td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Account No.</td>
+                        <td class="bordered" style="width: 45%;">Account No.</td>
                         <td class="bordered">{{ bank_detail.account_number }}</td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Account Currency</td>
+                        <td class="bordered" style="width: 45%;">Account Currency</td>
                         <td class="bordered"></td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Routing Details <br/> SWIFT/IBAN</td>
+                        <td class="bordered" style="width: 45%;">Routing Details <br/> SWIFT/IBAN</td>
                         <td class="bordered">{{ bank_detail.routing_details }}</td>
                     </tr>
                     <tr>
-                        <td class="bordered" style="width: 35%;">Bank Contact Person</td>
+                        <td class="bordered" style="width: 45%;">Bank Contact Person</td>
                         <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
                     {% endfor %}
                 </table>
 
-                <div class="keep-with-next" style="padding-top: 24px;">
+                <div class="" style="padding-top: 24px;">
                     <p><b>(B) Transfer of supplies/equipment by UNICEF to IP</b></p>
                 </div>
                 <li>Supplies and equipment transferred to the IP by UNICEF will be used exclusively for the
@@ -620,7 +598,7 @@
             <div class="" style="padding-top: 0px; text-align: center"><b>RECORD KEEPING</b></div>
             <ol class="indented">
                 <li>The IP agrees to maintain books and records that are accurate, complete and up-to-date. </li>
-                <div class="keep-with-next"><p><u>Cash Transfer:</u></p></div>
+                <div class=""><p><u>Cash Transfer:</u></p></div>
                 <li>The IP’s books and records will clearly identify all Cash Transfer Installments received by the IP
                     as well as disbursements made by the IP under this Agreement, including the amount of any unspent funds.
                     Without limiting the foregoing, the IP is required to maintain:
@@ -642,7 +620,7 @@
                     The IP understands that a written statement by the IP that money has been spent is insufficient
                     and cannot replace the original documentation to support expenditures.
                 </div>
-                <div class="keep-with-next"><p><u>Supplies/equipment:</u></p></div>
+                <div class=""><p><u>Supplies/equipment:</u></p></div>
                 <li>The IP will maintain records of supplies and equipment purchased from the Cash Transfer or transferred
                     to the IP in accordance with Article VIII (B) of this Agreement. Detailed inventories shall be taken
                     by the IP and kept for a period of five (5) years after the completion of the last Programme Document
@@ -660,18 +638,24 @@
                 </li>
                 <div class="keep-with-next"><p><b>(A) Financial reporting</b></p></div>
                 <div class=""><p><u>Financial reporting using FACE form:</u></p></div>
-                <li><span class="small-indent">
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
-                    Unless otherwise agreed between the Parties in writing, the IP will submit FACE forms at
-                    the end of every Quarter, using the FACE form. Should a FACE form not be submitted within six(6)
-                    months from the last Quarter, UNICEF will, unless agreed otherwise, suspend any further cash
-                    transfers to the IP, or on behalf of the IP.</span>
+                <li><div style="display: inline">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                        Unless otherwise agreed between the Parties in writing, the IP will submit FACE forms at
+                        the end of every Quarter, using the FACE form. Should a FACE form not be submitted within six(6)
+                        months from the last Quarter, UNICEF will, unless agreed otherwise, suspend any further cash
+                        transfers to the IP, or on behalf of the IP.
+                    </div>
+                    <br/>
+                    <div style="display: inline">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;
+                        The final FACE form will be submitted no later than thirty (30)
+                        calendar days after the end of the Programme Document.
+                    </div>
+                    <br/>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(c) &nbsp;&nbsp;&nbsp;The FACE form:
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;The final FACE form will be submitted no later than thirty (30)
-                    calendar days after the end of the Programme Document.
-                </div>
-
-                <div class="small-indent keep-with-next">(c) &nbsp;&nbsp;&nbsp;The FACE form:</div>
                 <div class="small-indent">
                     <div style="padding-left: 25px">(i) &nbsp;&nbsp;&nbsp;will only include expenditures that are identifiable and verifiable.
                         (The term “<u>identifiable</u>” includes that the expenditures are recorded in the IP’s accounting system
@@ -697,7 +681,7 @@
                     <div>(d) &nbsp;&nbsp;&nbsp;UNICEF will have access, upon request, to all documents and records that support or may be deemed
                         to support the information contained in the FACE form.
                     </div>
-                    <div class="keep-with-next"><p><u>Ineligible Expenditures:</u></p></div>
+                    <div class=""><p><u>Ineligible Expenditures:</u></p></div>
                     <div>(e) &nbsp;&nbsp;&nbsp;The following are Ineligible Expenditures (as determined by UNICEF in its sole discretion) and,
                         therefore, will not be included in the FACE form:
                     </div>
@@ -760,18 +744,18 @@
                     Cash Transfer was made.  The IP is not required to convert transactions into United States Dollars
                     or any other currency.
                 </li>
-                <div class="keep-with-next"><p><u>Use of eFACE:</u></p></div>
+                <div class=""><p><u>Use of eFACE:</u></p></div>
                 <li>In addition to using the FACE form, the IP may enter the information contained in the FACE form into
                     the FACE e-tool, once available, if requested by UNICEF.
                 </li>
-                <div class="keep-with-next"><p><b>(B) Progress reporting</b></p></div>
+                <div class=""><p><b>(B) Progress reporting</b></p></div>
                 <li>The IP will submit to UNICEF narrative progress reports against the planned activities contained
                     in the Programme Document, using the PDPR. Unless otherwise agreed between the Parties in writing,
                     these reports will be submitted at the end of every Quarter. The final report will be submitted
                     no later than thirty (30) calendar days after the end the Programme and will be provided together
                     with the FACE form.
                 </li>
-                <div class="keep-with-next"><p><b>(C) Additional reporting</b></p></div>
+                <div class=""><p><b>(C) Additional reporting</b></p></div>
                 <li>Additional reporting requirements will be specified in the Programme Document. The IP will provide
                     ad hoc reporting as may be requested by UNICEF from time to time. UNICEF will make every reasonable effort
                     to minimize ad hoc reporting requests.
@@ -781,20 +765,25 @@
 
         <div id="article-XI" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE XI</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+            <div class="" style="padding-top: 0px; text-align: center">
                 <b>ACTIONS UPON COMPLETION</b><br>
                 <b>OF ACTIVITIES UNDER PROGRAMME DOCUMENT</b>
             </div>
             <ol class="indented">
-                <li>(a) &nbsp;&nbsp;&nbsp;Upon completion of the IP’s activities under a Programme Document, the IP shall refund to UNICEF
+                <li>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;&nbsp;
+                    Upon completion of the IP’s activities under a Programme Document, the IP shall refund to UNICEF
                     the unspent balances of all Cash Transfers under that Programme Document (which shall be reported on
                     the final FACE form submitted by the IP) and all other amounts of money it is not entitled to.
-                <div>(b) &nbsp;&nbsp;&nbsp;Upon completion of the IP’s activities under a Programme Document, the IP shall return to UNICEF
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b)&nbsp;&nbsp;&nbsp;&nbsp;
+                    Upon completion of the IP’s activities under a Programme Document, the IP shall return to UNICEF
                     all unused supplies and equipment provided by UNICEF as inputs for programme implementation but not used.
-                </div>
-                <div>(c) &nbsp;&nbsp;&nbsp;Such refunds and returns shall be effected no later than ninety (90) calendar days after the end
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(c) &nbsp;&nbsp;&nbsp;&nbsp;
+                    Such refunds and returns shall be effected no later than ninety (90) calendar days after the end
                     date of the Programme Document or the effective date activities have ceased, whichever occurred earlier.
-                </div>
+                </li>
                 <li>Upon winding up of the IP’s activities under a Programme Document, the Parties shall consult as to the
                 disposition of all non-expendable property provided by UNICEF or acquired from the Cash Transfer to or,
                 insofar as the Direct Payment modality was used, on behalf of the IP, with regard to that Programme Document.
@@ -907,7 +896,7 @@
                     of its obligations under this Agreement. The terms of any sub-contract, sub-subcontract and so forth
                     shall be subject to, conform to and give full effect to the provisions of this Agreement.
                 </li>
-                <li class="keep-with-next"><b>OFFICIALS NOT TO BENEFIT; RESTRICTION ON HIRING UNICEF PERSONNEL:</b></li>
+                <li class=""><b>OFFICIALS NOT TO BENEFIT; RESTRICTION ON HIRING UNICEF PERSONNEL:</b></li>
                 <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
                     <li>IP warrants that no official of UNICEF has received or will be offered by IP any direct or
                         indirect benefit arising from this Agreement or the award thereof. IP agrees that breach of this
@@ -939,7 +928,7 @@
                     or to become due for any work done, services rendered or materials, supplies or equipment furnished
                     under this Agreement, or by reason of any other claim or demand against IP.
                 </li>
-                <li class="keep-with-next"><b>COPYRIGHT, PATENTS AND OTHER PROPRIETARY RIGHTS; CONFIDENTIALITY:</b></li>
+                <li class=""><b>COPYRIGHT, PATENTS AND OTHER PROPRIETARY RIGHTS; CONFIDENTIALITY:</b></li>
                 <div style="padding-top: 2px">8.1 &nbsp;&nbsp;&nbsp;Except as is otherwise expressly provided in writing in the Agreement, UNICEF shall be entitled
                     to all intellectual property and other proprietary rights including, but not limited to, patents,
                     copyrights, and trademarks, with regard to products, processes, inventions, ideas, know-how, or
@@ -984,7 +973,7 @@
                     for the Programme Document. Where such visibility would jeopardize the safety and security of the
                     IP’s staff, the IP shall propose appropriate alternative arrangements.
                 </li>
-                <li class="keep-with-next"><b>FORCE MAJEURE; OTHER CHANGES IN CONDITIONS:</b></li>
+                <li class=""><b>FORCE MAJEURE; OTHER CHANGES IN CONDITIONS:</b></li>
                 <div style="padding-top: 2px">10.1 &nbsp;&nbsp;&nbsp;In the event of and as soon as possible
                     after the occurrence of any cause constituting <i>force majeure</i>,
                     IP shall give notice and full particulars in writing to UNICEF, of such occurrence or change if IP is
@@ -1016,7 +1005,7 @@
                     of civil unrest occurring in such areas shall not, in and of itself, constitute <i>force majeure</i>.
                 </div>
                 <li class="keep-with-next"><b>TERMINATION:</b></li>
-                <div class="keep-with-next" style="padding-top: 2px">11.1 &nbsp;&nbsp;&nbsp;Either Party may terminate this Agreement
+                <div class="" style="padding-top: 2px">11.1 &nbsp;&nbsp;&nbsp;Either Party may terminate this Agreement
                     by giving thirty (30) calendar days’ written notice to the other Party in each of the following situations:
                 </div>
                 <div style="padding-left: 25px;">
@@ -1030,7 +1019,7 @@
                     </ol>
                 </div>
 
-                <div class="keep-with-next">11.2 &nbsp;&nbsp;&nbsp;UNICEF may also suspend or terminate this Agreement
+                <div class="">11.2 &nbsp;&nbsp;&nbsp;UNICEF may also suspend or terminate this Agreement
                     forthwith in each of the following situations:</div>
                 <div style="padding-left: 25px;">
                     <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
@@ -1082,7 +1071,7 @@
                     or such other URL as may be decided from time to time by UNICEF.
                 </li>
                 <li><b>ASSURANCE ACTIVITIES:</b></li>
-                <div class="keep-with-next">14.1 &nbsp;&nbsp;&nbsp;Audit:</div>
+                <div class="">14.1 &nbsp;&nbsp;&nbsp;Audit:</div>
                 <div style="padding-left: 25px;">
                     <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
                         <li>At the request of and at such times as determined solely by UNICEF, IP will have its
@@ -1106,7 +1095,7 @@
                         </li>
                     </ol>
                 </div>
-                <div class="keep-with-next">14.2 &nbsp;&nbsp;&nbsp;Spot checks and programmatic visits:</div>
+                <div class="">14.2 &nbsp;&nbsp;&nbsp;Spot checks and programmatic visits:</div>
                 <div>IP agrees that, from time to time, UNICEF may conduct on site reviews (“<u>spot checks</u>” and
                     programmatic visits), subject to such standards, scope, frequency and timing as decided by UNICEF.
                     IP shall provide its full and timely cooperation with any such spot checks or programmatic visits,

@@ -189,7 +189,7 @@ def update_all_partners(country_name=None):
 
 @app.task
 def update_purchase_orders(country_name=None):
-    print ('Starting update values for purcase order')
+    logger.info('Starting update values for purchase order')
     countries = Country.objects.filter(vision_sync_enabled=True)
     if country_name is not None:
         countries = countries.filter(name=country_name)

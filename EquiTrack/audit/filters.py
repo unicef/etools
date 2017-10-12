@@ -33,6 +33,10 @@ class DisplayStatusFilter(BaseFilterBackend):
             return partner_contacted.filter(
                 date_of_draft_report_to_ip__isnull=False, date_of_comments_by_ip__isnull=True
             )
+        elif status == Engagement.DISPLAY_STATUSES.comments_received_by_partner:
+            return partner_contacted.filter(
+                date_of_comments_by_ip__isnull=False, date_of_draft_report_to_unicef__isnull=True
+            )
         elif status == Engagement.DISPLAY_STATUSES.draft_issued_to_unicef:
             return partner_contacted.filter(
                 date_of_draft_report_to_unicef__isnull=False, date_of_comments_by_unicef__isnull=True
@@ -53,5 +57,5 @@ class UniqueIDOrderingFilter(BaseFilterBackend):
 
         ordering_params = ['partner__name', 'engagement_type', 'created_year', 'id']
 
-        return queryset.extra(select={'created_year': 'EXTRACT(year FROM created)'})\
+        return queryset.extra(select={'created_year': 'EXTRACT(year FROM audit_engagement.created)'})\
             .order_by(*map(lambda param: ('' if ordering == 'unique_id' else '-') + param, ordering_params))

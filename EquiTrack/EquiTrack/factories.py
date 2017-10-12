@@ -11,7 +11,6 @@ import factory
 from factory import fuzzy
 
 from users import models as user_models
-from trips import models as trip_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
@@ -100,16 +99,6 @@ class UserFactory(factory.django.DjangoModelFactory):
     def groups(self, create, extracted, **kwargs):
         group, created = Group.objects.get_or_create(name='UNICEF User')
         self.groups.add(group)
-
-
-class TripFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = trip_models.Trip
-
-    owner = factory.SubFactory(UserFactory)
-    supervisor = factory.SubFactory(UserFactory)
-    from_date = datetime.today().date()
-    to_date = from_date + timedelta(days=1)
 
 
 class GatewayTypeFactory(factory.django.DjangoModelFactory):
