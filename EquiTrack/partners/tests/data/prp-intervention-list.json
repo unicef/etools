@@ -53,7 +53,8 @@
     "funds_received_currency": null,
     "cso_budget_currency": null,
     "id": 642,
-    "cso_budget": null
+    "cso_budget": null,
+    "update_date": "2017-10-12T08:10:43.708677Z"
   },
   {
     "expected_results": [],
@@ -77,7 +78,8 @@
     "funds_received_currency": null,
     "cso_budget_currency": null,
     "id": 641,
-    "cso_budget": null
+    "cso_budget": null,
+    "update_date": "2017-10-12T08:10:43.708677Z"
   },
   {
     "expected_results": [],
@@ -101,6 +103,7 @@
     "funds_received_currency": null,
     "cso_budget_currency": null,
     "id": 640,
-    "cso_budget": "200.00"
+    "cso_budget": "200.00",
+    "update_date": "2017-10-12T08:10:43.708677Z"
   }
 ]

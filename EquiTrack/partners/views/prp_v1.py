@@ -2,11 +2,10 @@ import functools
 import operator
 
 from django.db.models import Q
-from django.db import connection
 
-from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     ListAPIView)
+from rest_framework.pagination import LimitOffsetPagination
 
 from partners.filters import PartnerScopeFilter
 from partners.models import (
@@ -14,7 +13,11 @@ from partners.models import (
 )
 from partners.serializers.prp_v1 import PRPInterventionListSerializer
 from partners.permissions import ListCreateAPIMixedPermission
-from users.models import Country as Workspace
+from partners.views.helpers import set_tenant_or_fail
+
+
+class PRPInterventionPagination(LimitOffsetPagination):
+    default_limit = 100
 
 
 class PRPInterventionListAPIView(ListAPIView):
@@ -25,6 +28,10 @@ class PRPInterventionListAPIView(ListAPIView):
     serializer_class = PRPInterventionListSerializer
     permission_classes = (ListCreateAPIMixedPermission, )
     filter_backends = (PartnerScopeFilter,)
+    pagination_class = PRPInterventionPagination
+
+    def paginate_queryset(self, queryset):
+        return super(PRPInterventionListAPIView, self).paginate_queryset(queryset)
 
     def get_queryset(self, format=None):
         q = Intervention.objects.prefetch_related(
@@ -41,15 +48,7 @@ class PRPInterventionListAPIView(ListAPIView):
 
         query_params = self.request.query_params
         workspace = query_params.get('workspace', None)
-        if workspace is None:
-            raise ValidationError('Workspace is required as a queryparam')
-        else:
-            try:
-                ws = Workspace.objects.get(business_area_code=workspace)
-            except Workspace.DoesNotExist:
-                raise ValidationError('Workspace code provided is not a valid business_area_code: %s' % workspace)
-            else:
-                connection.set_tenant(ws)
+        set_tenant_or_fail(workspace)
 
         if query_params:
             queries = []
@@ -61,12 +60,12 @@ class PRPInterventionListAPIView(ListAPIView):
                 queries.append(Q(status=query_params.get("status")))
             if "partner" in query_params.keys():
                 queries.append(Q(agreement__partner=query_params.get("partner")))
+            if "updated_before" in query_params.keys():
+                queries.append(Q(modified__lte=query_params.get("updated_before")))
+            if "updated_after" in query_params.keys():
+                queries.append(Q(modified__gte=query_params.get("updated_after")))
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression).distinct()
 
         return q
-
-    def list(self, request):
-        # todo: customize this (or remove if no customizations needed)
-        return super(PRPInterventionListAPIView, self).list(request)

@@ -38,6 +38,7 @@ from partners.serializers.partner_organization_v2 import (
     AssessmentDetailSerializer,
     MinimalPartnerOrganizationListSerializer,
 )
+from partners.views.helpers import set_tenant_or_fail
 from t2f.models import TravelActivity
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 from partners.filters import PartnerScopeFilter
@@ -74,6 +75,9 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     def get_queryset(self, format=None):
         q = PartnerOrganization.objects.all()
         query_params = self.request.query_params
+        workspace = query_params.get('workspace', None)
+        if workspace:
+            set_tenant_or_fail(workspace)
 
         if query_params:
             queries = []

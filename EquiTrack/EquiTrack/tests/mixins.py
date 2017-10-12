@@ -92,7 +92,7 @@ class FastTenantTestCase(TenantTestCase):
         TenantModel = get_tenant_model()
         try:
             cls.tenant = TenantModel.objects.get(domain_url=tenant_domain, schema_name='test')
-        except:
+        except TenantModel.DoesNotExist:
             cls.tenant = TenantModel(domain_url=tenant_domain, schema_name='test')
             cls.tenant.save(verbosity=0)
 
@@ -178,3 +178,16 @@ class APITenantTestCase(FastTenantTestCase):
             response.render()
 
         return response
+
+
+class WorkspaceRequiredAPITestMixIn(object):
+    """
+    For APITenantTestCases that have a required workspace param, just automatically
+    set the current tenant.
+    """
+    def forced_auth_req(self, method, url, user=None, data=None, request_format='json', **kwargs):
+        data = data or {}
+        data['workspace'] = self.tenant.business_area_code
+        return super(WorkspaceRequiredAPITestMixIn, self).forced_auth_req(
+            method, url, user=user, data=data, request_format=request_format, **kwargs
+        )

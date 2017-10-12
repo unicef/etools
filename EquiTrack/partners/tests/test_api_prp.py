@@ -1,5 +1,6 @@
 import json
 import os
+import datetime
 
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse, resolve
@@ -14,26 +15,26 @@ from EquiTrack.factories import (
     ResultFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMixIn
 from partners.models import InterventionResultLink
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.tests.test_utils import setup_intervention_test_data
 from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
 
 
-class TestInterventionsAPI(APITenantTestCase):
+class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
         super(TestInterventionsAPI, self).setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)
 
-    def run_prp_v1(self, user=None, method='get'):
+    def run_prp_v1(self, user=None, method='get', data=None):
         response = self.forced_auth_req(
             method,
             reverse('prp_api_v1:prp-intervention-list'),
             user=user or self.unicef_staff,
-            data={'workspace': self.tenant.business_area_code},
+            data=data,
         )
         return response.status_code, json.loads(response.rendered_content)
 
@@ -42,6 +43,7 @@ class TestInterventionsAPI(APITenantTestCase):
             user=self.unicef_staff, method='get'
         )
         self.assertEqual(status_code, status.HTTP_200_OK)
+        response = response['results']
 
         # uncomment if you need to see the response json / regenerate the test file
         # print json.dumps(response, indent=2)
@@ -53,7 +55,7 @@ class TestInterventionsAPI(APITenantTestCase):
         for i in range(len(response)):
             expected_intervention = expected_interventions[i]
             actual_intervention = response[i]
-            for dynamic_key in ['id', 'number', 'start_date', 'end_date']:
+            for dynamic_key in ['id', 'number', 'start_date', 'end_date', 'update_date']:
                 del expected_intervention[dynamic_key]
                 del actual_intervention[dynamic_key]
             for j in range(len(expected_intervention['expected_results'])):
@@ -69,8 +71,25 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(response, expected_interventions)
 
+    def test_prp_api_modified_queries(self):
+        yesterday = (datetime.datetime.today() - datetime.timedelta(days=1)).isoformat()
+        tomorrow = (datetime.datetime.today() + datetime.timedelta(days=1)).isoformat()
+        checks = [
+            ({'updated_before': yesterday}, 0),
+            ({'updated_before': tomorrow}, 3),
+            ({'updated_after': yesterday}, 3),
+            ({'updated_after': tomorrow}, 0),
+            ({'updated_before': tomorrow, 'updated_after': yesterday}, 3),
+        ]
+        for params, expected_results in checks:
+            status_code, response = self.run_prp_v1(
+                user=self.unicef_staff, method='get', data=params
+            )
+            self.assertEqual(status_code, status.HTTP_200_OK)
+            self.assertEqual(expected_results, len(response['results']))
+
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 18
+        EXPECTED_QUERIES = 19
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'
