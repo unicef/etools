@@ -242,7 +242,7 @@ class TestAPIPartnerOrganizationListView(WorkspaceRequiredAPITestMixIn, APITenan
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
+class TestPartnerOrganizationListViewForCSV(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
     '''Exercise the CSV-generating portion of the list view for PartnerOrganization.
 
     This is a separate test case from TestPartnerOrganizationListView because it does some monkey patching in
@@ -739,7 +739,8 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.data["hidden"], False)
 
 
-class TestPartnershipViews(APITenantTestCase):
+
+class TestPartnershipViews(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
