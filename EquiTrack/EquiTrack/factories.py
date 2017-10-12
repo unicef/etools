@@ -269,27 +269,6 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
     audit = 3
 
 
-class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = partner_models.InterventionAttachment
-
-    intervention = factory.SubFactory(InterventionFactory)
-    type = factory.Iterator(partner_models.FileType.objects.all())
-    attachment = factory.django.FileField(filename='test_file.pdf')
-
-
-class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = partner_models.InterventionAmendment
-
-    intervention = factory.SubFactory(InterventionFactory)
-    types = [partner_models.InterventionAmendment.BUDGET]
-    other_description = "Other description"
-    signed_date = date.today()
-    amendment_number = 123
-    signed_amendment = factory.django.FileField(filename='test_file.pdf')
-
-
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.ResultType
