@@ -175,20 +175,28 @@ class PartnershipManagerPermission(permissions.BasePermission):
       - user must be in 'Partnership Manager' group
 
     - For retrieve views --
-      - user must be (staff or in 'Partnership Manager' group) AND
+      - user must be (staff or in 'Partnership Manager' group) OR
                      (staff or listed as a partner staff member on the object)
 
     - For update/delete views --
-      - user must be (in 'Partnership Manager' group) AND
+      - user must be (in 'Partnership Manager' group) OR
                      (listed as a partner staff member on the object)
     '''
     message = 'Accessing this item is not allowed.'
 
-    def _has_access_permissions(self, user, object):
-        if user.is_staff or \
-                user.profile.partner_staff_member in \
-                object.partner.staff_members.values_list('id', flat=True):
-            return True
+    def _has_access_permissions(self, user, obj):
+        '''True if --
+              - user is staff OR
+              - user is 'Partnership Manager' group member OR
+              - user is listed as a partner staff member on the object, assuming the object has a partner attribute
+        '''
+        has_access = user.is_staff or _is_user_in_groups(user, ['Partnership Manager'])
+
+        has_access = has_access or \
+            (hasattr(obj, 'partner') and
+             user.profile.partner_staff_member in obj.partner.staff_members.values_list('id', flat=True))
+
+        return has_access
 
     def has_permission(self, request, view):
         """
