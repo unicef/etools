@@ -21,18 +21,18 @@ from funds.models import (
     Grant,
 )
 from funds.renderers import (
-    DonorCsvFlatRenderer,
-    DonorCsvRenderer,
-    FundsCommitmentHeaderCsvFlatRenderer,
-    FundsCommitmentHeaderCsvRenderer,
-    FundsCommitmentItemCsvFlatRenderer,
-    FundsCommitmentItemCsvRenderer,
-    FundsReservationHeaderCsvRenderer,
-    FundsReservationHeaderCsvFlatRenderer,
-    FundsReservationItemCsvFlatRenderer,
-    FundsReservationItemCsvRenderer,
-    GrantCsvFlatRenderer,
-    GrantCsvRenderer,
+    DonorCSVFlatRenderer,
+    DonorCSVRenderer,
+    FundsCommitmentHeaderCSVFlatRenderer,
+    FundsCommitmentHeaderCSVRenderer,
+    FundsCommitmentItemCSVFlatRenderer,
+    FundsCommitmentItemCSVRenderer,
+    FundsReservationHeaderCSVRenderer,
+    FundsReservationHeaderCSVFlatRenderer,
+    FundsReservationItemCSVFlatRenderer,
+    FundsReservationItemCSVRenderer,
+    GrantCSVFlatRenderer,
+    GrantCSVRenderer,
 )
 from funds.serializers import (
     DonorExportFlatSerializer,
@@ -96,8 +96,8 @@ class FundsReservationHeaderListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        FundsReservationHeaderCsvRenderer,
-        FundsReservationHeaderCsvFlatRenderer,
+        FundsReservationHeaderCSVRenderer,
+        FundsReservationHeaderCSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -140,8 +140,8 @@ class FundsReservationItemListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        FundsReservationItemCsvRenderer,
-        FundsReservationItemCsvFlatRenderer,
+        FundsReservationItemCSVRenderer,
+        FundsReservationItemCSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -184,8 +184,8 @@ class FundsCommitmentHeaderListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        FundsCommitmentHeaderCsvRenderer,
-        FundsCommitmentHeaderCsvFlatRenderer,
+        FundsCommitmentHeaderCSVRenderer,
+        FundsCommitmentHeaderCSVFlatRenderer,
     )
 
     def get_queryset(self, format=None):
@@ -215,8 +215,8 @@ class FundsCommitmentItemListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        FundsCommitmentItemCsvRenderer,
-        FundsCommitmentItemCsvFlatRenderer,
+        FundsCommitmentItemCSVRenderer,
+        FundsCommitmentItemCSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -257,8 +257,8 @@ class GrantListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        GrantCsvRenderer,
-        GrantCsvFlatRenderer,
+        GrantCSVRenderer,
+        GrantCSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -299,8 +299,8 @@ class DonorListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        DonorCsvRenderer,
-        DonorCsvFlatRenderer,
+        DonorCSVRenderer,
+        DonorCSVFlatRenderer,
     )
 
     def get_serializer_class(self):

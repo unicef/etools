@@ -1,7 +1,7 @@
 from rest_framework_csv import renderers as r
 
 
-class LowerResultCsvRenderer(r.CSVRenderer):
+class LowerResultCSVRenderer(r.CSVRenderer):
     header = [
         "result_link",
         "name",
@@ -15,7 +15,7 @@ class LowerResultCsvRenderer(r.CSVRenderer):
     }
 
 
-class LowerResultCsvFlatRenderer(r.CSVRenderer):
+class LowerResultCSVFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
     header = [
@@ -37,7 +37,7 @@ class LowerResultCsvFlatRenderer(r.CSVRenderer):
     }
 
 
-class AppliedIndicatorCsvRenderer(r.CSVRenderer):
+class AppliedIndicatorCSVRenderer(r.CSVRenderer):
     header = [
         "intervention",
         "lower_result",
@@ -75,7 +75,7 @@ class AppliedIndicatorCsvRenderer(r.CSVRenderer):
     }
 
 
-class AppliedIndicatorCsvFlatRenderer(r.CSVRenderer):
+class AppliedIndicatorCSVFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
     header = [

@@ -19,10 +19,10 @@ from reports.models import (
     Result,
 )
 from reports.renderers import (
-    AppliedIndicatorCsvFlatRenderer,
-    AppliedIndicatorCsvRenderer,
-    LowerResultCsvFlatRenderer,
-    LowerResultCsvRenderer,
+    AppliedIndicatorCSVFlatRenderer,
+    AppliedIndicatorCSVRenderer,
+    LowerResultCSVFlatRenderer,
+    LowerResultCSVRenderer,
 )
 from reports.serializers.v2 import (
     AppliedIndicatorExportFlatSerializer,
@@ -140,8 +140,8 @@ class LowerResultsListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        LowerResultCsvRenderer,
-        LowerResultCsvFlatRenderer,
+        LowerResultCSVRenderer,
+        LowerResultCSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -211,8 +211,8 @@ class AppliedIndicatorListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        AppliedIndicatorCsvRenderer,
-        AppliedIndicatorCsvFlatRenderer,
+        AppliedIndicatorCSVRenderer,
+        AppliedIndicatorCSVFlatRenderer,
     )
 
     def get_serializer_class(self):

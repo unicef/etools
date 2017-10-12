@@ -1,7 +1,7 @@
 from rest_framework_csv import renderers as r
 
 
-class FundsReservationHeaderCsvRenderer(r.CSVRenderer):
+class FundsReservationHeaderCSVRenderer(r.CSVRenderer):
     header = [
         "intervention",
         "vendor_code",
@@ -35,7 +35,7 @@ class FundsReservationHeaderCsvRenderer(r.CSVRenderer):
     }
 
 
-class FundsReservationHeaderCsvFlatRenderer(r.CSVRenderer):
+class FundsReservationHeaderCSVFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
     header = [
@@ -73,7 +73,7 @@ class FundsReservationHeaderCsvFlatRenderer(r.CSVRenderer):
     }
 
 
-class FundsReservationItemCsvRenderer(r.CSVRenderer):
+class FundsReservationItemCSVRenderer(r.CSVRenderer):
     header = [
         "intervention",
         "fund_reservation",
@@ -103,7 +103,7 @@ class FundsReservationItemCsvRenderer(r.CSVRenderer):
     }
 
 
-class FundsReservationItemCsvFlatRenderer(r.CSVRenderer):
+class FundsReservationItemCSVFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
     header = [
@@ -137,7 +137,7 @@ class FundsReservationItemCsvFlatRenderer(r.CSVRenderer):
     }
 
 
-class FundsCommitmentHeaderCsvRenderer(r.CSVRenderer):
+class FundsCommitmentHeaderCSVRenderer(r.CSVRenderer):
     header = [
         "vendor_code",
         "fc_number",
@@ -161,7 +161,7 @@ class FundsCommitmentHeaderCsvRenderer(r.CSVRenderer):
     }
 
 
-class FundsCommitmentHeaderCsvFlatRenderer(r.CSVRenderer):
+class FundsCommitmentHeaderCSVFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
     header = [
@@ -189,7 +189,7 @@ class FundsCommitmentHeaderCsvFlatRenderer(r.CSVRenderer):
     }
 
 
-class FundsCommitmentItemCsvRenderer(r.CSVRenderer):
+class FundsCommitmentItemCSVRenderer(r.CSVRenderer):
     header = [
         "fund_commitment",
         "fc_ref_number",
@@ -223,7 +223,7 @@ class FundsCommitmentItemCsvRenderer(r.CSVRenderer):
     }
 
 
-class FundsCommitmentItemCsvFlatRenderer(r.CSVRenderer):
+class FundsCommitmentItemCSVFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
     header = [
@@ -261,7 +261,7 @@ class FundsCommitmentItemCsvFlatRenderer(r.CSVRenderer):
     }
 
 
-class GrantCsvRenderer(r.CSVRenderer):
+class GrantCSVRenderer(r.CSVRenderer):
     header = [
         "donor",
         "name",
@@ -277,7 +277,7 @@ class GrantCsvRenderer(r.CSVRenderer):
     }
 
 
-class GrantCsvFlatRenderer(r.CSVRenderer):
+class GrantCSVFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
     header = [
@@ -297,7 +297,7 @@ class GrantCsvFlatRenderer(r.CSVRenderer):
     }
 
 
-class DonorCsvRenderer(r.CSVRenderer):
+class DonorCSVRenderer(r.CSVRenderer):
     header = [
         "grant",
         "name",
@@ -309,7 +309,7 @@ class DonorCsvRenderer(r.CSVRenderer):
     }
 
 
-class DonorCsvFlatRenderer(r.CSVRenderer):
+class DonorCSVFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
     header = [
