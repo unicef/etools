@@ -450,3 +450,49 @@ class TestAPIInterventionResultLinkCreateView(APITenantTestCase):
         # Now the create should succeed.
         response = self.forced_auth_req('post', self.url, data=self.data, user=user)
         self.assertResponseFundamentals(response)
+
+
+class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
+    '''Exercise the retrieve view for InterventionResultLinkUpdateView'''
+    def setUp(self):
+        self.intervention_result_link = InterventionResultLinkFactory()
+
+        self.url = reverse('partners_api:intervention-result-links-update',
+                           kwargs={'pk': self.intervention_result_link.id})
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response. Return the id of the new object.'''
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, dict)
+        self.assertIn('id', response_json.keys())
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self.forced_auth_req('get', self.url, user=UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.post(self.url, format='json')
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_staff_access_ok(self):
+        '''Ensure a staff user can access'''
+        response = self.forced_auth_req('get', self.url, user=UserFactory(is_staff=True))
+        self.assertResponseFundamentals(response)
+
+    def test_group_permission_non_staff(self):
+        '''Ensure group membership is sufficient for create; even non-staff group members can create'''
+        user = UserFactory()
+        response = self.forced_auth_req('get', self.url, user=user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        _add_user_to_partnership_manager_group(user)
+
+        # Now the get should succeed.
+        response = self.forced_auth_req('get', self.url, user=user)
+        self.assertResponseFundamentals(response)
