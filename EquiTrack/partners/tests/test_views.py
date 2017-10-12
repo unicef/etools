@@ -788,7 +788,6 @@ class TestPartnershipViews(APITenantTestCase):
                                         data={'workspace': ':('})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-
     @skip("different endpoint")
     def test_api_agreements_list(self):
 
