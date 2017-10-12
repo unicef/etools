@@ -178,7 +178,13 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
         model = partner_models.Assessment
 
     partner = factory.SubFactory(PartnerFactory)
-    type = fuzzy.FuzzyChoice(partner_models.Assessment.ASSESMENT_TYPES)
+    type = fuzzy.FuzzyChoice([
+        u'Micro Assessment',
+        u'Simplified Checklist',
+        u'Scheduled Audit report',
+        u'Special Audit report',
+        u'Other',
+    ])
     names_of_other_agencies = fuzzy.FuzzyText(length=50)
     expected_budget = fuzzy.FuzzyInteger(1000)
     notes = fuzzy.FuzzyText(length=50)
@@ -199,7 +205,15 @@ class FileTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.FileType
 
-    name = fuzzy.FuzzyChoice(partner_models.FileType.NAME_CHOICES)
+    name = fuzzy.FuzzyChoice([
+        u'FACE',
+        u'Progress Report',
+        u'Partnership Review',
+        u'Final Partnership Review',
+        u'Correspondence',
+        u'Supply/Distribution Plan',
+        u'Other',
+    ])
 
 
 class InterventionFactory(factory.django.DjangoModelFactory):
@@ -216,9 +230,12 @@ class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
         model = partner_models.InterventionAmendment
 
     intervention = factory.SubFactory(InterventionFactory)
-    types = fuzzy.FuzzyChoice(
-        partner_models.InterventionAmendment.AMENDMENT_TYPES
-    )
+    types = fuzzy.FuzzyChoice([
+        [u'Change IP name'],
+        [u'Change authorized officer'],
+        [u'Change banking info'],
+        [u'Change in clause'],
+    ])
     other_description = fuzzy.FuzzyText(length=50)
     amendment_number = fuzzy.FuzzyInteger(1000)
     signed_date = date.today()
@@ -231,7 +248,7 @@ class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     attachment = factory.django.FileField(filename='test_file.pdf')
-    type = factory.SubFactory(FileTypeFactory)
+    type = factory.Iterator(partner_models.FileType.objects.all())
 
 
 class InterventionBudgetFactory(factory.django.DjangoModelFactory):
