@@ -232,9 +232,12 @@ class CountrySerializer(SimpleUserSerializer):
     class Meta:
         model = Country
         fields = (
-                'name',
-                'latitude',
-                'longitude',
-                'initial_zoom',
-                'local_currency_id'
+            'id',
+            'name',
+            'latitude',
+            'longitude',
+            'initial_zoom',
+            'local_currency_id',
+            'business_area_code',
+            'country_short_code',
         )
