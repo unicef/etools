@@ -56,7 +56,3 @@ class PRPInterventionListAPIView(ListAPIView):
                 q = q.filter(expression).distinct()
 
         return q
-
-    def list(self, request):
-        # todo: customize this (or remove if no customizations needed)
-        return super(PRPInterventionListAPIView, self).list(request)
