@@ -7,7 +7,17 @@ from django.utils import timezone
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.factories import PartnershipFactory, AgreementFactory, InterventionFactory, InterventionBudgetFactory
+from EquiTrack.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    AssessmentFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    InterventionBudgetFactory,
+    PartnerFactory,
+    PartnershipFactory,
+)
 
 from funds.models import Donor, Grant
 
@@ -16,6 +26,13 @@ from reports.models import (
     ResultType,
 )
 from partners.models import (
+    get_agreement_amd_file_path,
+    get_agreement_path,
+    get_assesment_path,
+    get_intervention_amendment_file_path,
+    get_intervention_attachments_file_path,
+    get_intervention_file_path,
+    get_prc_intervention_file_path,
     PCA,
     Agreement,
     AmendmentLog,
@@ -749,3 +766,99 @@ class TestInterventionModel(TenantTestCase):
             in_kind_amount_local=10,
         )
         self.assertEqual(int(self.intervention.planned_cash_transfers), 15000)
+
+
+class TestGetFilePaths(TenantTestCase):
+    def test_get_agreement_path(self):
+        partner = PartnerFactory()
+        agreement = Agreement(
+            agreement_number="123",
+            partner=partner,
+        )
+        p = get_agreement_path(agreement, "test.pdf")
+        self.assertTrue(p.endswith("/agreements/123/test.pdf"))
+
+    def test_get_assessment_path(self):
+        partner = PartnerFactory()
+        assessment = AssessmentFactory(
+            partner=partner,
+        )
+        p = get_assesment_path(assessment, "test.pdf")
+        self.assertTrue(
+            p.endswith("/assesments/{}/test.pdf".format(assessment.pk))
+        )
+
+    def test_get_intervention_path(self):
+        agreement = AgreementFactory()
+        intervention = InterventionFactory(
+            agreement=agreement
+        )
+        p = get_intervention_file_path(intervention, "test.pdf")
+        self.assertTrue(
+            p.endswith("/agreements/{}/interventions/{}/test.pdf".format(
+                agreement.pk,
+                intervention.pk
+            ))
+        )
+
+    def test_get_prc_intervention_path(self):
+        agreement = AgreementFactory()
+        intervention = InterventionFactory(
+            agreement=agreement
+        )
+        p = get_prc_intervention_file_path(intervention, "test.pdf")
+        self.assertTrue(
+            p.endswith(
+                "/agreements/{}/interventions/{}/prc/test.pdf".format(
+                    agreement.pk,
+                    intervention.pk
+                )
+            )
+        )
+
+    def test_get_intervention_amendment_file_path(self):
+        agreement = AgreementFactory()
+        intervention = InterventionFactory(
+            agreement=agreement
+        )
+        amendment = InterventionAmendmentFactory(
+            intervention=intervention
+        )
+        p = get_intervention_amendment_file_path(amendment, "test.pdf")
+        self.assertTrue(
+            p.endswith("/agreements/{}/interventions/{}/amendments/{}/test.pdf".format(
+                agreement.pk,
+                intervention.pk,
+                amendment.pk
+            ))
+        )
+
+    def test_get_intervention_attachments_file_path(self):
+        agreement = AgreementFactory()
+        intervention = InterventionFactory(
+            agreement=agreement
+        )
+        attachment = InterventionAttachmentFactory(
+            intervention=intervention
+        )
+        p = get_intervention_attachments_file_path(attachment, "test.pdf")
+        self.assertTrue(
+            p.endswith("/agreements/{}/interventions/{}/attachments/{}/test.pdf".format(
+                agreement.pk,
+                intervention.pk,
+                attachment.pk
+            ))
+        )
+
+    def test_get_agreement_amd_file_path(self):
+        agreement = AgreementFactory()
+        amendment = AgreementAmendmentFactory(
+            agreement=agreement,
+        )
+        p = get_agreement_amd_file_path(amendment, "test.pdf")
+        self.assertTrue(
+            p.endswith("/agreements/{}/amendments/{}/test.pdf".format(
+                agreement.base_number,
+                amendment.number,
+            ))
+        )

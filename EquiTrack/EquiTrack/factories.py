@@ -173,6 +173,17 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
+class AssessmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.Assessment
+
+    partner = factory.SubFactory(PartnerFactory)
+    type = fuzzy.FuzzyChoice(partner_models.Assessment.ASSESMENT_TYPES)
+    names_of_other_agencies = fuzzy.FuzzyText(length=50)
+    expected_budget = fuzzy.FuzzyInteger(1000)
+    notes = fuzzy.FuzzyText(length=50)
+
+
 class PartnershipFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PCA
@@ -184,6 +195,13 @@ class PartnershipFactory(factory.django.DjangoModelFactory):
     initiation_date = datetime.today()
 
 
+class FileTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.FileType
+
+    name = fuzzy.FuzzyChoice(partner_models.FileType.NAME_CHOICES)
+
+
 class InterventionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.Intervention
@@ -191,6 +209,29 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     agreement = factory.SubFactory(AgreementFactory)
     title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
     submission_date = datetime.today()
+
+
+class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAmendment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    types = fuzzy.FuzzyChoice(
+        partner_models.InterventionAmendment.AMENDMENT_TYPES
+    )
+    other_description = fuzzy.FuzzyText(length=50)
+    amendment_number = fuzzy.FuzzyInteger(1000)
+    signed_date = date.today()
+    signed_amendment = factory.django.FileField(filename='test_file.pdf')
+
+
+class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAttachment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    attachment = factory.django.FileField(filename='test_file.pdf')
+    type = factory.SubFactory(FileTypeFactory)
 
 
 class InterventionBudgetFactory(factory.django.DjangoModelFactory):
