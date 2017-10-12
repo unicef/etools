@@ -2018,3 +2018,19 @@ class AgreementAmendmentLog(TimeStampedModel):
         ).order_by('created').values_list('id', flat=True))
 
         return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
+
+
+# get_file_path() isn't used as of October 2017, but it's referenced by partners/migrations/0001_initial.py.
+# Once migrations are squashed, this can be removed.
+def get_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_org',
+         str(instance.pca.agreement.partner.id),
+         'agreements',
+         str(instance.pca.agreement.id),
+         'interventions',
+         str(instance.pca.id),
+         filename]
+    )

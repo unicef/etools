@@ -24,7 +24,6 @@ from partners.models import (
     PartnerOrganization,
     Agreement,
     PartnerStaffMember,
-    # ResultChain,
     IndicatorReport,
 )
 from partners.exports import (
@@ -35,7 +34,7 @@ from partners.filters import (
     AgreementExportFilter,
     PartnerScopeFilter
 )
-from partners.permissions import PartnerPermission  # ResultChainPermission
+from partners.permissions import PartnerPermission
 from partners.serializers.v1 import (
     FileTypeSerializer,
     PartnerStaffMemberPropertiesSerializer,
