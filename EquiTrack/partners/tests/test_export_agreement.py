@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import datetime
 import tempfile
 
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
@@ -41,17 +42,22 @@ class BaseAgreementModelExportTestCase(APITenantTestCase):
             last_assessment_date=datetime.date.today(),
         )
         partnerstaff = PartnerStaffFactory(partner=partner)
-        attachment = tempfile.NamedTemporaryFile(suffix=".pdf").name
-        self.agreement = AgreementFactory(
-            partner=partner,
-            country_programme=CountryProgrammeFactory(wbs="random WBS"),
-            attached_agreement=attachment,
-            start=datetime.date.today(),
-            end=datetime.date.today(),
-            signed_by_unicef_date=datetime.date.today(),
-            signed_by=self.unicef_staff,
-            signed_by_partner_date=datetime.date.today()
-        )
+        with tempfile.NamedTemporaryFile(
+                mode="w+b",
+                delete=False,
+                suffix=".pdf",
+                dir=settings.MEDIA_ROOT
+        ) as attachment:
+            self.agreement = AgreementFactory(
+                partner=partner,
+                country_programme=CountryProgrammeFactory(wbs="random WBS"),
+                attached_agreement=attachment.name,
+                start=datetime.date.today(),
+                end=datetime.date.today(),
+                signed_by_unicef_date=datetime.date.today(),
+                signed_by=self.unicef_staff,
+                signed_by_partner_date=datetime.date.today()
+            )
         self.agreement.authorized_officers.add(partnerstaff)
         self.agreement.save()
 
@@ -168,12 +174,17 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
 class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
     def setUp(self):
         super(TestAgreementAmendmentModelExport, self).setUp()
-        attachment = tempfile.NamedTemporaryFile(suffix=".pdf").name
-        self.amendment = AgreementAmendmentFactory(
-            agreement=self.agreement,
-            signed_amendment=attachment,
-            signed_date=datetime.date.today(),
-        )
+        with tempfile.NamedTemporaryFile(
+                mode="w+b",
+                delete=False,
+                suffix=".pdf",
+                dir=settings.MEDIA_ROOT
+        ) as attachment:
+            self.amendment = AgreementAmendmentFactory(
+                agreement=self.agreement,
+                signed_amendment=attachment.name,
+                signed_date=datetime.date.today(),
+            )
 
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
