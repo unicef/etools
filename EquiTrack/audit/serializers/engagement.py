@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -62,6 +64,14 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
             'id', 'description', 'due_date', 'person_responsible', 'comments',
         ]
 
+    def validate(self, attrs):
+        if not self.instance and attrs.get('description') == _('Escalate to Investigation') \
+                and 'person_responsible' not in attrs:
+            email = settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
+            attrs['person_responsible'] = User.objects.filter(email=email).first()
+
+        return attrs
+
     def create(self, validated_data):
         validated_data['author'] = self.get_user()
         return super(EngagementActionPointSerializer, self).create(validated_data)
@@ -124,10 +134,11 @@ class EngagementSerializer(EngagementDatesValidation,
                            WritableNestedParentSerializerMixin,
                            EngagementLightSerializer):
     staff_members = SeparatedReadWriteField(
-        read_field=AuditorStaffMemberSerializer(many=True, required=False, label=_('Audit Team Members')),
+        read_field=AuditorStaffMemberSerializer(many=True, required=False, label=_('Audit Staff Team Members')),
     )
     active_pd = SeparatedReadWriteField(
-        read_field=InterventionListSerializer(many=True, required=False, label='Active PD'),
+        read_field=InterventionListSerializer(many=True, required=False, label=_('Programme Document(s)')),
+        required=False
     )
     authorized_officers = SeparatedReadWriteField(
         read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True)
@@ -179,6 +190,13 @@ class EngagementSerializer(EngagementDatesValidation,
         if not partner:
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
 
+        if self.instance and partner != self.instance.partner and 'active_pd' not in validated_data:
+            if partner.partner_type != PartnerType.GOVERNMENT:
+                raise serializers.ValidationError({
+                    'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ]
+                })
+            validated_data['active_pd'] = []
+
         active_pd = validated_data.get('active_pd', [])
         if not active_pd:
             active_pd = self.instance.active_pd.all() if self.instance else validated_data.get('active_pd', [])
@@ -196,7 +214,7 @@ class EngagementSerializer(EngagementDatesValidation,
 
         if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0 and status == 'new':
             raise serializers.ValidationError({
-                    'active_pd': [_('This field is required.'), ],
+                    'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
                 })
         return validated_data
 
@@ -234,7 +252,7 @@ class SpotCheckSerializer(EngagementSerializer):
         })
         extra_kwargs.update({
             field: {'required': True} for field in [
-                'total_amount_tested', 'total_amount_of_ineligible_expenditure',
+                'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'internal_controls',
             ]
         })
 
@@ -256,15 +274,18 @@ class MicroAssessmentSerializer(RiskCategoriesUpdateMixin, EngagementSerializer)
     test_subject_areas = RiskRootSerializer(
         code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
     )
+    overall_risk_assessment = RiskRootSerializer(
+        code='ma_global_assessment', required=False, label=_('Overall Risk Assessment')
+    )
     findings = DetailedFindingInfoSerializer(
         many=True, required=False, label=_('Detailed Internal Control Findings and Recommendations')
     )
 
     class Meta(EngagementSerializer.Meta):
         model = MicroAssessment
-        risk_categories_fields = ('questionnaire', 'test_subject_areas',)
+        risk_categories_fields = ('questionnaire', 'test_subject_areas', 'overall_risk_assessment')
         fields = EngagementSerializer.Meta.fields + [
-            'findings', 'questionnaire', 'test_subject_areas'
+            'findings', 'questionnaire', 'test_subject_areas', 'overall_risk_assessment',
         ]
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({

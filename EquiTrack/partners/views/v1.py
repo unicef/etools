@@ -85,7 +85,7 @@ class PCAPDFView(PDFTemplateView):
             return {"error": response}
         try:
             banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
-        except KeyError:
+        except (KeyError, TypeError):
             return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
 
         bank_key_values = [

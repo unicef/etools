@@ -3,8 +3,9 @@ import random
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
+from partners.models import PartnerType
 from .factories import RiskCategoryFactory, RiskBluePrintFactory, \
-    MicroAssessmentFactory, AuditFactory, AuditPartnerFactory
+    MicroAssessmentFactory, AuditFactory, AuditPartnerFactory, PartnerWithAgreementsFactory
 from .base import EngagementTransitionsTestCaseMixin, AuditTestCaseMixin
 
 
@@ -249,6 +250,101 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTe
 
     def test_unknown_user_list(self):
         self._test_list(self.usual_user, [])
+
+
+class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
+    engagement_factory = MicroAssessmentFactory
+
+    def setUp(self):
+        super(TestEngagementsCreateViewSet, self).setUp()
+        self.create_data = {
+            'end_date': self.engagement.end_date,
+            'start_date': self.engagement.start_date,
+            'partner_contacted_at': self.engagement.partner_contacted_at,
+            'total_value': self.engagement.total_value,
+            'agreement': self.engagement.agreement_id,
+            'partner': self.engagement.partner_id,
+            'engagement_type': self.engagement.engagement_type,
+            'authorized_officers': self.engagement.authorized_officers.values_list('id', flat=True),
+            'staff_members': self.engagement.staff_members.values_list('id', flat=True),
+            'active_pd': self.engagement.active_pd.values_list('id', flat=True),
+        }
+
+    def _do_create(self, user, data):
+        data = data or {}
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/engagements/',
+            user=user, data=data
+        )
+        return response
+
+    def test_partner_without_active_pd(self):
+        del self.create_data['active_pd']
+
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('active_pd', response.data)
+
+    def test_partner_with_active_pd(self):
+        self.engagement.partner.partner_type = PartnerType.BILATERAL_MULTILATERAL
+        self.engagement.partner.save()
+
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_government_partner_without_active_pd(self):
+        self.engagement.partner.partner_type = PartnerType.GOVERNMENT
+        self.engagement.partner.save()
+        del self.create_data['active_pd']
+
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+
+class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
+    engagement_factory = MicroAssessmentFactory
+
+    def _do_update(self, user, data):
+        data = data or {}
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/micro-assessments/{}/'.format(self.engagement.id),
+            user=user, data=data
+        )
+        return response
+
+    def test_partner_changed_without_pd(self):
+        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.BILATERAL_MULTILATERAL)
+
+        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('active_pd', response.data)
+
+    def test_partner_changed_with_pd(self):
+        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.BILATERAL_MULTILATERAL)
+        response = self._do_update(
+            self.unicef_focal_point,
+            {
+                'partner': partner.id,
+                'active_pd': partner.agreements.first().interventions.values_list('id', flat=True)
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            sorted(map(lambda pd: pd['id'], response.data['active_pd'])),
+            sorted(map(lambda i: i.id, partner.agreements.first().interventions.all()))
+        )
+
+    def test_government_partner_changed(self):
+        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.GOVERNMENT)
+        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['active_pd'], [])
 
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, APITenantTestCase):

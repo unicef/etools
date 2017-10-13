@@ -469,13 +469,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
-            last_audit = partner.latest_assessment(u'Scheduled Audit report')
-            if assesment:
-                if last_audit:
-                    if assesment.completed_date > last_audit.completed_date:
-                        last_audit = assesment
-                else:
-                    last_audit = assesment
         hact['audits_mr'] = audits
         partner.hact_values = hact
         partner.save()
@@ -1304,7 +1297,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def submitted_to_prc(self):
-        return True if self.submission_date_prc else False
+        return True if any([self.submission_date_prc, self.review_date_prc, self.prc_review_document]) else False
 
     @property
     def days_from_review_to_signed(self):
@@ -1381,11 +1374,11 @@ class Intervention(TimeStampedModel):
             r['total_actual_amt'] += fr.actual_amt
             if r['earliest_start_date'] is None:
                 r['earliest_start_date'] = fr.start_date
-            elif r['earliest_start_date'] < fr.start_date:
+            elif r['earliest_start_date'] > fr.start_date:
                 r['earliest_start_date'] = fr.start_date
             if r['latest_end_date'] is None:
                 r['latest_end_date'] = fr.end_date
-            elif r['latest_end_date'] > fr.end_date:
+            elif r['latest_end_date'] < fr.end_date:
                 r['latest_end_date'] = fr.end_date
         return r
 
@@ -1483,7 +1476,7 @@ class Intervention(TimeStampedModel):
                 self.agreement.start = self.start
                 self.agreement.end = self.end
 
-            if self.status == self.SIGNED and self.agreement.status != Agreement.SIGNED:
+            if self.status in [self.SIGNED, self.ACTIVE] and self.agreement.status != Agreement.SIGNED:
                 save_agreement = True
                 self.agreement.status = Agreement.SIGNED
 

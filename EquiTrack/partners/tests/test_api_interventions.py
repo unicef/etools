@@ -268,8 +268,8 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch',
                                                  user=self.partnership_manager_user)
 
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response['frs'], ['One or more selected FRs is expired, {}'.format(self.fr_1.fr_number)])
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertItemsEqual(response['frs'], frs_data)
 
     def test_fail_add_used_fr_on_pd(self):
         self.fr_1.intervention = self.intervention

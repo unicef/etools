@@ -149,10 +149,8 @@ class InterventionCvsRenderer(r.CSVRenderer):
 
 class PartnershipDashCsvRenderer(r.CSVRenderer):
     header = [
-        'partner_name', 'number', 'status', 'start', 'end',
-        'sectors', 'offices_names',
-        'total_budget', 'cso_contribution', 'unicef_cash', 'unicef_supplies',
-        'disbursement', 'disbursement_percent', 'days_last_pv'
+        'partner_name', 'number', 'status', 'start', 'end', 'sectors', 'offices_names', 'total_budget',
+        'cso_contribution', 'unicef_cash', 'unicef_supplies', 'disbursement', 'disbursement_percent', 'days_last_pv'
     ]
 
     labels = {

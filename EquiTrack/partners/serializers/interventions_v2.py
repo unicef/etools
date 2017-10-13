@@ -272,10 +272,13 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
                     raise ValidationError({'error': 'One or more of the FRs selected is related to a different PD/SSFA,'
                                                     ' {}'.format(fr.fr_number)})
             else:
+                pass
+                # unicef/etools-issues:779
+                # TODO: add this validation back after all legacy data has been handled.
                 # make sure it's not expired
-                if fr.expired:
-                    raise ValidationError({'error': 'One or more selected FRs is expired,'
-                                                    ' {}'.format(fr.fr_number)})
+                # if fr.expired:
+                #     raise ValidationError({'error': 'One or more selected FRs is expired,'
+                #                                     ' {}'.format(fr.fr_number)})
         return frs
 
     @transaction.atomic
