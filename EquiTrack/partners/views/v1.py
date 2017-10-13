@@ -19,7 +19,6 @@ from partners.models import (
     PartnerOrganization,
     Agreement,
     PartnerStaffMember,
-    IndicatorReport,
 )
 from partners.exports import (
     PartnerExport,
@@ -29,7 +28,6 @@ from partners.permissions import PartnerPermission
 from partners.serializers.v1 import (
     FileTypeSerializer,
     PartnerStaffMemberPropertiesSerializer,
-    IndicatorReportSerializer,
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
 )
@@ -164,55 +162,6 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         obj = get_object_or_404(queryset, **filter)
         self.check_object_permissions(self.request, obj)
         return obj
-
-
-class IndicatorReportViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.CreateModelMixin,
-        mixins.ListModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of all Indicator Reports for an Intervention and Result
-    """
-    model = IndicatorReport
-    queryset = IndicatorReport.objects.all()
-    serializer_class = IndicatorReportSerializer
-    # permission_classes = (IndicatorReportPermission,)
-
-    def get_serializer(self, *args, **kwargs):
-        if "data" in kwargs:
-            data = kwargs["data"]
-
-            if isinstance(data, list):
-                kwargs["many"] = True
-
-        return super(IndicatorReportViewSet, self).get_serializer(*args, **kwargs)
-
-    def perform_create(self, serializer):
-        # add the user to the arguments
-        try:
-            partner_staff_member = PartnerStaffMember.objects.get(
-                pk=self.request.user.profile.partner_staff_member
-            )
-        except PartnerStaffMember.DoesNotExist:
-            raise Exception('User without partnerstaffmember set is trying to submit a report')
-
-        serializer.save(partner_staff_member=partner_staff_member)
-
-    def retrieve(self, request, partner_pk=None, intervention_pk=None, result_pk=None, pk=None):
-        """
-        Returns an Indicator report object
-        """
-        try:
-            queryset = self.queryset.get(id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except IndicatorReport.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
 
 
 class PartnerOrganizationsViewSet(

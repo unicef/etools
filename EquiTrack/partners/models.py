@@ -29,7 +29,6 @@ from reports.models import (
     Sector,
     Result,
     CountryProgramme,
-    AppliedIndicator
 )
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
@@ -1866,51 +1865,6 @@ class GovernmentInterventionResultActivity(models.Model):
     intervention_result = models.ForeignKey(GovernmentInterventionResult, related_name='result_activities')
     code = models.CharField(max_length=36)
     description = models.CharField(max_length=1024)
-
-
-class IndicatorReport(TimeStampedModel, TimeFramedModel):
-    """
-    Represents an indicator report for the result chain on the location
-
-    Relates to :model:`partners.AppliedIndicator`
-    Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`locations.Location`
-    """
-
-    STATUS_CHOICES = Choices(
-        ('ontrack', _('On Track')),
-        ('constrained', _('Constrained')),
-        ('noprogress', _('No Progress')),
-        ('targetmet', _('Target Met'))
-    )
-
-    # FOR WHOM / Beneficiary
-    #  -  AppliedIndicator
-    indicator = models.ForeignKey(AppliedIndicator, related_name='reports')
-
-    # WHO
-    #  -  Implementing Partner
-    partner_staff_member = models.ForeignKey('partners.PartnerStaffMember', related_name='indicator_reports')
-
-    # WHAT
-    #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
-    total = models.PositiveIntegerField()
-    # is this a disaggregated report?
-    disaggregated = models.BooleanField(default=False)
-    # the structure should always be computed from applied_indicator
-    disaggregation = JSONField(default=dict)
-
-    # WHERE
-    #  -  Location
-    location = models.ForeignKey('locations.Location', blank=True, null=True)
-
-    # Metadata
-    #  - Remarks, Report Status
-    # TODO: set max_length property
-    remarks = models.TextField(blank=True, null=True)
-    report_status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES.ontrack, max_length=15)
-
-    tracker = FieldTracker()
 
 
 # TODO: Move to funds

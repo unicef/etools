@@ -12,6 +12,5 @@ class PartnersAppConfig(AppConfig):
         registry.register(self.get_model('Assessment'))
         registry.register(self.get_model('Intervention'))
         registry.register(self.get_model('FileType'))
-        registry.register(self.get_model('IndicatorReport'))
         registry.register(self.get_model('FundingCommitment'))
         registry.register(self.get_model('DirectCashTransfer'))

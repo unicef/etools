@@ -9,7 +9,6 @@ from partners.models import (
     PartnerStaffMember,
     PartnerOrganization,
     Agreement,
-    IndicatorReport,
     RISK_RATINGS,
     CSO_TYPES,
     PartnerType,
@@ -44,61 +43,6 @@ class LowerOutputStructuredSerializer(serializers.ModelSerializer):
     class Meta:
         model = LowerResult
         fields = ('id', 'name')
-
-
-class IndicatorReportSerializer(serializers.ModelSerializer):
-
-    disaggregated = serializers.BooleanField(read_only=True)
-    partner_staff_member = serializers.SerializerMethodField(read_only=True)
-    indicator = serializers.SerializerMethodField(read_only=True)
-    location_object = LocationSerializer(source='location', read_only=True)
-    disaggregation = serializers.JSONField()
-
-    class Meta:
-        model = IndicatorReport
-        fields = '__all__'
-
-    def get_indicator(self, obj):
-        return obj.indicator.id
-
-    def get_partner_staff_member(self, obj):
-        return obj.partner_staff_member.id
-
-    def validate(self, data):
-        # TODO: handle validation
-        # result_chain.partner.partner.id
-        user = self.context['request'].user
-        rc = data.get('result_chain')
-        # make sure only a partner staff member can create a new submission on a partner result chain
-        # we could allow superusers by checking for superusers first
-        if not (user or rc) or \
-                (user.profile.partner_staff_member not in
-                    rc.partnership.partner.staff_members.values_list('id', flat=True)):
-            raise Exception('no result chain ... deprecated')
-
-        return data
-
-    def create(self, validated_data):
-        # result_chain = validated_data.get('result_chain')
-        # for multi report this needs to be
-        # refreshed from the db in order to reflect the latest value
-        # result_chain.refresh_from_db()
-        # validated_data['indicator'] = result_chain.indicator
-        #
-        # try:
-        #     with transaction.atomic():
-        #         indicator_report = IndicatorReport.objects.create(**validated_data)
-        #         result_chain.current_progress += validated_data.get('total')
-        #         result_chain.save()
-        # except:
-        #     raise serializers.ValidationError({'result_chain': "Creation halted for now"})
-        #
-        # return indicator_report
-        serializers.ValidationError({'result_chain': "Deprecated"})
-
-    def update(self, instance, validated_data):
-        # TODO: update value on resultchain (atomic)
-        serializers.ValidationError({'result_chain': "Deprecated"})
 
 
 class PartnerStaffMemberEmbedSerializer(serializers.ModelSerializer):
