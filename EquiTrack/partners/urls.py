@@ -2,17 +2,11 @@ from __future__ import absolute_import
 
 from django.conf.urls import url
 
-from rest_framework_nested import routers
-
 from .views.v1 import (
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
     PCAPDFView,
-    PartnerStaffMembersViewSet,
 )
-
-staffm_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
-staffm_api.register(r'staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
 
 # simple_results_api = routers.NestedSimpleRouter(simple_interventions_api, r'interventions', lookup='intervention')
 # simple_results_api.register(r'results', InterventionResultsViewSet, base_name='simpleintervention-results')

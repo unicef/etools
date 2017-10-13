@@ -8,9 +8,8 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 
-from rest_framework import status, viewsets, mixins
+from rest_framework import viewsets, mixins
 from rest_framework.generics import RetrieveAPIView
-from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
 from partners.models import (
@@ -18,11 +17,9 @@ from partners.models import (
     Agreement,
     PartnerStaffMember,
 )
-from partners.permissions import PartnerPermission
 from partners.serializers.v1 import (
     FileTypeSerializer,
     PartnerStaffMemberPropertiesSerializer,
-    PartnerStaffMemberSerializer,
 )
 from EquiTrack.utils import get_data_from_insight
 
@@ -155,44 +152,6 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         obj = get_object_or_404(queryset, **filter)
         self.check_object_permissions(self.request, obj)
         return obj
-
-
-class PartnerStaffMembersViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.ListModelMixin,
-        mixins.CreateModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of all Partner staff members
-    """
-    queryset = PartnerStaffMember.objects.all()
-    serializer_class = PartnerStaffMemberSerializer
-    permission_classes = (PartnerPermission,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add Staff member to Partner Organization
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
-    def retrieve(self, request, partner_pk=None, pk=None):
-        queryset = self.queryset.get(partner_id=partner_pk, id=pk)
-        serializer = self.serializer_class(queryset)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
 
 
 class FileTypeViewSet(

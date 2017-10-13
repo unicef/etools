@@ -65,13 +65,6 @@ class AgreementSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PartnerStaffMemberSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = PartnerStaffMember
-        fields = '__all__'
-
-
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
 
     partner = PartnerOrganizationSerializer()
@@ -80,8 +73,6 @@ class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         fields = '__all__'
-        # fields = (
-        # )
 
 
 class RapidProRequest(serializers.Serializer):
