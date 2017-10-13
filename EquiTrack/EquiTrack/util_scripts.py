@@ -13,7 +13,7 @@ from django.contrib.auth.models import User, Group
 from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
 from partners.models import FundingCommitment, InterventionPlannedVisits, Assessment, \
-    AgreementAmendment, Intervention, Agreement, PartnerOrganization, PartnerStaffMember
+    Intervention, Agreement, PartnerOrganization, PartnerStaffMember
 from t2f.models import TravelActivity
 from utils.common.utils import every_country
 

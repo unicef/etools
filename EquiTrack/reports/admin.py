@@ -6,7 +6,6 @@ from mptt.admin import MPTTModelAdmin
 from EquiTrack.forms import AutoSizeTextForm
 from reports.models import (
     Sector,
-    Goal,
     Unit,
     Indicator,
     Result,
@@ -53,10 +52,6 @@ class SectorAdmin(admin.ModelAdmin):
     form = AutoSizeTextForm
     list_display = ('name', 'color', 'dashboard',)
     list_editable = ('color', 'dashboard',)
-
-
-class GoalAdmin(admin.ModelAdmin):
-    form = AutoSizeTextForm
 
 
 class IndicatorAdmin(admin.ModelAdmin):
@@ -194,7 +189,6 @@ class AppliedIndicatorAdmin(admin.ModelAdmin):
 admin.site.register(Result, ResultAdmin)
 admin.site.register(CountryProgramme)
 admin.site.register(Sector, SectorAdmin)
-admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
 # admin.site.register(ResultChain)

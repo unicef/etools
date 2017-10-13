@@ -227,14 +227,6 @@ class LowerResultFactory(factory.django.DjangoModelFactory):
     code = factory.Sequence(lambda n: 'Lower Result Code {}'.format(n))
 
 
-class GoalFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Goal
-
-    name = factory.Sequence(lambda n: 'Goal {}'.format(n))
-    sector = factory.SubFactory(SectorFactory)
-
-
 class UnitFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Unit

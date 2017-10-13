@@ -305,26 +305,6 @@ class LowerResult(TimeStampedModel):
 
 
 @python_2_unicode_compatible
-class Goal(models.Model):
-    """
-    Represents a goal for the humanitarian response plan
-
-    Relates to :model:`reports.ResultStructure`
-    Relates to :model:`reports.Sector`
-    """
-    sector = models.ForeignKey(Sector, related_name='goals')
-    name = models.CharField(max_length=512, unique=True)
-    description = models.CharField(max_length=512, blank=True)
-
-    class Meta:
-        verbose_name = 'CCC'
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-
-@python_2_unicode_compatible
 class Unit(models.Model):
     """
     Represents an unit of measurement
