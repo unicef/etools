@@ -349,44 +349,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         PartnerOrganization.audit_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
-    def test_audit_needed_last_audit_is_in_current(self):
-        Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Scheduled Audit report",
-            completed_date=datetime.date(datetime.date.today().year, 1, 1)
-        )
-        self.partner_organization.total_ct_cp = 500001.00
-        self.partner_organization.save()
-        PartnerOrganization.audit_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
-
-    def test_audit_needed_last_audit_is_not_in_current(self):
-        Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Scheduled Audit report",
-            completed_date=datetime.date(datetime.date.today().year - 2, 1, 1)
-        )
-        self.partner_organization.total_ct_cp = 500001.00
-        self.partner_organization.save()
-        PartnerOrganization.audit_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
-
-    def test_audit_needed_extra_assessment_after_last(self):
-        Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Scheduled Audit report",
-            completed_date=datetime.date(datetime.date.today().year, 1, 1)
-        )
-        assessment2 = Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Scheduled Audit report",
-            completed_date=datetime.date(datetime.date.today().year, 2, 1)
-        )
-        self.partner_organization.total_ct_cp = 500001.00
-        self.partner_organization.save()
-        PartnerOrganization.audit_needed(self.partner_organization, assessment2)
-        self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
-
     def test_audit_needed_extra_assessment_only(self):
         assessment = Assessment.objects.create(
             partner=self.partner_organization,
