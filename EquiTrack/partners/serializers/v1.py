@@ -1,5 +1,3 @@
-
-import json
 from rest_framework import serializers
 
 from locations.models import Location
@@ -73,21 +71,3 @@ class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         fields = '__all__'
-
-
-class RapidProRequest(serializers.Serializer):
-
-    relayer = serializers.CharField()
-    phone = serializers.CharField(required=True)
-    text = serializers.CharField(required=True)
-    flow = serializers.CharField()
-    step = serializers.CharField()
-    time = serializers.DateTimeField()
-    values = serializers.CharField()
-
-    def restore_fields(self, data, files):
-
-        restored_data = super(RapidProRequest, self).restore_fields(data, files)
-        if restored_data['values']:
-            restored_data['values'] = json.loads(restored_data['values'])
-        return restored_data
