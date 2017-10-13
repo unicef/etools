@@ -1,9 +1,8 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
-
 from collections import namedtuple
+
 from django.conf import settings
-from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
@@ -13,11 +12,7 @@ from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import list_route
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
-
-from actstream import action
 from easy_pdf.views import PDFTemplateView
-
-from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
 from partners.models import (
     FileType,
@@ -27,13 +22,9 @@ from partners.models import (
     IndicatorReport,
 )
 from partners.exports import (
-    PartnerExport, AgreementExport,
+    PartnerExport,
 )
-from partners.filters import (
-    PartnerOrganizationExportFilter,
-    AgreementExportFilter,
-    PartnerScopeFilter
-)
+from partners.filters import PartnerOrganizationExportFilter
 from partners.permissions import PartnerPermission
 from partners.serializers.v1 import (
     FileTypeSerializer,
@@ -41,7 +32,6 @@ from partners.serializers.v1 import (
     IndicatorReportSerializer,
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
-    AgreementSerializer,
 )
 from EquiTrack.utils import get_data_from_insight
 
@@ -174,93 +164,6 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         obj = get_object_or_404(queryset, **filter)
         self.check_object_permissions(self.request, obj)
         return obj
-
-
-class AgreementViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.ListModelMixin,
-        mixins.CreateModelMixin,
-        mixins.UpdateModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of Agreements
-    """
-    queryset = Agreement.objects.all()
-    serializer_class = AgreementSerializer
-    permission_classes = (PartnerPermission,)
-    filter_backends = (PartnerScopeFilter, AgreementExportFilter,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add a new Agreement
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        # TODO: Use a different action verb for each status choice in Agreement
-        # Draft, Active, Expired, Suspended, Terminated
-        create_snapshot_activity_stream(request.user, serializer.instance, created=True)
-
-        serializer.instance = serializer.save()
-
-        with transaction.atomic():
-            action.send(request.user, verb="created", target=serializer.instance)
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
-    def update(self, request, *args, **kwargs):
-        """
-        Update (with partially) an existing Agreement
-        :return: JSON
-        """
-        # Copied from update method in UpdateModelMixin and modified to add activity stream
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-
-        create_snapshot_activity_stream(request.user, serializer.instance)
-
-        serializer.instance = serializer.save()
-
-        if getattr(instance, '_prefetched_objects_cache', None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
-            instance._prefetched_objects_cache = {}
-
-        return Response(serializer.data)
-
-    def retrieve(self, request, partner_pk=None, pk=None):
-        """
-        Returns an Agreement object for this Agreement PK and partner
-        """
-        try:
-            queryset = self.queryset.get(partner=partner_pk, id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except Agreement.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
-
-    @list_route(methods=['get'])
-    def export(self, request, partner_pk=None):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        dataset = AgreementExport().export(queryset)
-
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="ModelExportAgreements.csv"'
-        response.write(dataset.csv)
-        return response
 
 
 class IndicatorReportViewSet(

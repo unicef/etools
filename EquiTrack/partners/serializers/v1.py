@@ -169,10 +169,3 @@ class PartnershipExportFilterSerializer(serializers.Serializer):
     risk_rating = serializers.ChoiceField(RISK_RATINGS, required=False)
     flagged = serializers.ChoiceField((MARKED_FOR_DELETION,), required=False)
     show_hidden = serializers.BooleanField(default=False, required=False)
-
-
-class AgreementExportFilterSerializer(serializers.Serializer):
-    search = serializers.CharField(default='', required=False)
-    agreement_type = serializers.ChoiceField(Agreement.AGREEMENT_TYPES, required=False)
-    starts_after = serializers.DateField(required=False)
-    ends_before = serializers.DateField(required=False)

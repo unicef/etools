@@ -2,7 +2,7 @@ from django.db.models.query_utils import Q
 
 from rest_framework.filters import BaseFilterBackend
 
-from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer
+from partners.serializers.v1 import PartnershipExportFilterSerializer
 
 
 class PartnerScopeFilter(BaseFilterBackend):
@@ -48,37 +48,5 @@ class PartnerOrganizationExportFilter(BaseFilterBackend):
         show_hidden = parameters.get('show_hidden')
         if not show_hidden:
             q &= Q(hidden=False)
-
-        return queryset.filter(q)
-
-
-class AgreementExportFilter(BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        parameter_serializer = AgreementExportFilterSerializer(data=request.GET)
-        parameter_serializer.is_valid(raise_exception=True)
-
-        parameters = parameter_serializer.data
-
-        q = Q()
-        search_str = parameters.get('search')
-        if search_str:
-            search_q = Q(
-                Q(partner__name__istartswith=search_str) |
-                Q(short_name__istartswith=search_str) |
-                Q(partner__vendor_number__istartswith=search_str)
-            )
-            q &= search_q
-
-        agreement_type = parameters.get('agreement_type')
-        if agreement_type:
-            q &= Q(agreement_type=agreement_type)
-
-        starts_after = parameters.get('starts_after')
-        if starts_after:
-            q &= Q(start_date__gte=starts_after)
-
-        ends_before = parameters.get('ends_before')
-        if ends_before:
-            q &= Q(end_date__lte=ends_before)
 
         return queryset.filter(q)

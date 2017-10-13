@@ -11,7 +11,6 @@ from .views.v1 import (
     PCAPDFView,
     PartnerOrganizationsViewSet,
     PartnerStaffMembersViewSet,
-    AgreementViewSet,
 )
 
 partners_api = routers.SimpleRouter()
@@ -19,12 +18,6 @@ partners_api.register(r'partners', PartnerOrganizationsViewSet, base_name='partn
 
 staffm_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
 staffm_api.register(r'staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
-
-simple_agreements_api = routers.SimpleRouter()
-simple_agreements_api.register(r'agreements', AgreementViewSet, base_name='agreements')
-
-agreement_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
-agreement_api.register(r'agreements', AgreementViewSet, base_name='agreements')
 
 # simple_results_api = routers.NestedSimpleRouter(simple_interventions_api, r'interventions', lookup='intervention')
 # simple_results_api.register(r'results', InterventionResultsViewSet, base_name='simpleintervention-results')
