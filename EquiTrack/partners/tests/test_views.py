@@ -748,6 +748,7 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertIn("PCA", response.data[0]["agreement_type"])
 
+
 class TestAgreementCreateAPIView(APITenantTestCase):
     '''Exercise the create portion of the API.'''
     def setUp(self):
