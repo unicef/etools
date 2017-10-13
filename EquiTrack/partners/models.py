@@ -865,7 +865,7 @@ class Agreement(TimeStampedModel):
 
     signed_by_unicef_date = models.DateField(null=True, blank=True)
 
-    # Unicef staff members that sign the agreemetns
+    # Unicef staff members that sign the agreements
     # this user needs to be in the partnership management group
     signed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -1961,56 +1961,6 @@ class DirectCashTransfer(models.Model):
     amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
 
     tracker = FieldTracker()
-
-
-class AgreementAmendmentLog(TimeStampedModel):
-    """
-    Represents an amendment log for the partner agreement.
-
-    Relates to :model:`partners.Agreement`
-    """
-    agreement = models.ForeignKey(Agreement, related_name='amendments_log')
-    type = models.CharField(
-        max_length=50,
-        choices=Choices(
-            'Authorised Officers',
-            'Banking Info',
-            'Agreement Changes',
-            'Additional Clauses',
-        ))
-    amended_at = models.DateField(null=True, verbose_name='Signed At')
-
-    signed_document = models.FileField(
-        max_length=1024,
-        upload_to=get_agreement_amd_file_path,
-        blank=True,
-        null=True,
-    )
-    status = models.CharField(
-        max_length=32,
-        blank=True,
-        choices=AgreementStatus.CHOICES,
-    )
-
-    tracker = FieldTracker()
-
-    def __unicode__(self):
-        return '{}: {} - {}'.format(
-            self.amendment_number,
-            self.type,
-            self.amended_at
-        )
-
-    @property
-    def amendment_number(self):
-        """
-        Increment amendment number automatically
-        """
-        objects = list(AgreementAmendmentLog.objects.filter(
-            agreement=self.agreement
-        ).order_by('created').values_list('id', flat=True))
-
-        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
 
 
 # get_file_path() isn't used as of October 2017, but it's referenced by partners/migrations/0001_initial.py.

@@ -13,7 +13,7 @@ from django.contrib.auth.models import User, Group
 from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator
 from partners.models import FundingCommitment, InterventionPlannedVisits, Assessment, \
-    AgreementAmendmentLog, AgreementAmendment, Intervention, Agreement, PartnerOrganization, PartnerStaffMember
+    AgreementAmendment, Intervention, Agreement, PartnerOrganization, PartnerStaffMember
 from t2f.models import TravelActivity
 from utils.common.utils import every_country
 
@@ -359,32 +359,6 @@ def agreement_unique_reference_number():
                 cdup.agreement_number = '{}|{}'.format(cdup.agreement_number, cdup.id)
                 print(cdup)
                 cdup.save()
-
-
-# run this after migration partners_0007
-def agreement_amendments_copy():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry.name)
-        agr_amds = AgreementAmendmentLog.objects.all()
-        amd_type = ''
-        for amd in agr_amds:
-            if amd.type == 'Authorised Officers':
-                amd_type = 'Change authorized officer'
-            elif amd.type == 'Banking Info':
-                amd_type = 'Change banking info'
-            elif amd.type == 'Agreement Changes':
-                amd_type = 'Amend existing clause'
-            elif amd.type == 'Additional Clauses':
-                amd_type = 'Additional clause'
-
-            agr_amd, created = AgreementAmendment.objects.get_or_create(number=amd.amendment_number,
-                                                                        agreement=amd.agreement,
-                                                                        type=amd_type,
-                                                                        signed_amendment=amd.signed_document,
-                                                                        signed_date=amd.amended_at)
-            if created:
-                print('{}-{}'.format(agr_amd.number, agr_amd.agreement))
 
 
 def clean_interventions():

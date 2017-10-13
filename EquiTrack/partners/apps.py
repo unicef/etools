@@ -11,7 +11,6 @@ class PartnersAppConfig(AppConfig):
         registry.register(self.get_model('PartnerStaffMember'))
         registry.register(self.get_model('Assessment'))
         registry.register(self.get_model('Intervention'))
-        registry.register(self.get_model('AgreementAmendmentLog'))
         registry.register(self.get_model('FileType'))
         registry.register(self.get_model('IndicatorReport'))
         registry.register(self.get_model('FundingCommitment'))
