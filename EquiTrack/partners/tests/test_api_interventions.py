@@ -619,20 +619,23 @@ class TestAPIInterventionResultLinkDeleteView(APITenantTestCase):
 
 class TestAPIInterventionLowerResultListView(APITenantTestCase):
     '''Exercise the list view for InterventionLowerResultListCreateView'''
-    def setUp(self):
-        self.result_link = InterventionResultLinkFactory()
+    @classmethod
+    def setUpClass(cls):
+        super(TestAPIInterventionLowerResultListView, cls).setUpClass()
 
-        self.lower_result1 = LowerResultFactory(result_link=self.result_link)
-        self.lower_result2 = LowerResultFactory(result_link=self.result_link)
+        cls.result_link = InterventionResultLinkFactory()
+
+        cls.lower_result1 = LowerResultFactory(result_link=cls.result_link)
+        cls.lower_result2 = LowerResultFactory(result_link=cls.result_link)
 
         # Create another result link/lower result pair that will break this test if the views don't filter properly
         LowerResultFactory(result_link=InterventionResultLinkFactory())
 
-        self.url = reverse('partners_api:intervention-lower-results-list',
-                           kwargs={'result_link_pk': self.result_link.id})
+        cls.url = reverse('partners_api:intervention-lower-results-list',
+                          kwargs={'result_link_pk': cls.result_link.id})
 
-        # self.expected_field_names is the list of field names expected in responses.
-        self.expected_field_names = sorted(('id', 'code', 'created', 'modified', 'name', 'result_link'))
+        # cls.expected_field_names is the list of field names expected in responses.
+        cls.expected_field_names = sorted(('id', 'code', 'created', 'modified', 'name', 'result_link'))
 
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)
@@ -693,16 +696,19 @@ class TestAPIInterventionLowerResultListView(APITenantTestCase):
 
 class TestAPIInterventionLowerResultCreateView(APITenantTestCase):
     '''Exercise the create view for InterventionLowerResultListCreateView'''
-    def setUp(self):
-        self.result_link = InterventionResultLinkFactory()
+    @classmethod
+    def setUpClass(cls):
+        super(TestAPIInterventionLowerResultCreateView, cls).setUpClass()
+
+        cls.result_link = InterventionResultLinkFactory()
 
         # Create another result link/lower result pair that will break this test if the views don't behave properly
         LowerResultFactory(result_link=InterventionResultLinkFactory())
 
-        self.url = reverse('partners_api:intervention-lower-results-list',
-                           kwargs={'result_link_pk': self.result_link.id})
+        cls.url = reverse('partners_api:intervention-lower-results-list',
+                          kwargs={'result_link_pk': cls.result_link.id})
 
-        self.data = {'name': 'my lower result'}
+        cls.data = {'name': 'my lower result'}
 
     def _make_request(self, user):
         return self.forced_auth_req('post', self.url, user=user, data=self.data)
