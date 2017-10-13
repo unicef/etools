@@ -1,9 +1,7 @@
 from __future__ import unicode_literals
 
 import datetime
-import tempfile
 
-from django.conf import settings
 from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
@@ -288,16 +286,10 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
 class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
     def setUp(self):
         super(TestPartnerOrganizationAssessmentModelExport, self).setUp()
-        with tempfile.NamedTemporaryFile(
-                mode="w+b",
-                delete=False,
-                suffix=".pdf",
-                dir=settings.MEDIA_ROOT
-        ) as report:
-            self.assessment = AssessmentFactory(
-                partner=self.partner,
-                report=report.name
-            )
+        self.assessment = AssessmentFactory(
+            partner=self.partner,
+            report="fake_report.pdf"
+        )
 
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(

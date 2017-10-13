@@ -1,9 +1,7 @@
 from __future__ import unicode_literals
 
 import datetime
-import tempfile
 
-from django.conf import settings
 from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
@@ -51,22 +49,16 @@ class BaseInterventionModelExportTestCase(APITenantTestCase):
             last_assessment_date=datetime.date.today(),
         )
         partnerstaff = PartnerStaffFactory(partner=partner)
-        with tempfile.NamedTemporaryFile(
-                mode="w+b",
-                delete=False,
-                suffix=".pdf",
-                dir=settings.MEDIA_ROOT
-        ) as attachment:
-            agreement = AgreementFactory(
-                partner=partner,
-                country_programme=CountryProgrammeFactory(wbs="random WBS"),
-                attached_agreement=attachment.name,
-                start=datetime.date.today(),
-                end=datetime.date.today(),
-                signed_by_unicef_date=datetime.date.today(),
-                signed_by=self.unicef_staff,
-                signed_by_partner_date=datetime.date.today()
-            )
+        agreement = AgreementFactory(
+            partner=partner,
+            country_programme=CountryProgrammeFactory(wbs="random WBS"),
+            attached_agreement="fake_attachment.pdf",
+            start=datetime.date.today(),
+            end=datetime.date.today(),
+            signed_by_unicef_date=datetime.date.today(),
+            signed_by=self.unicef_staff,
+            signed_by_partner_date=datetime.date.today()
+        )
         agreement.authorized_officers.add(partnerstaff)
         agreement.save()
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
