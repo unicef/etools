@@ -650,6 +650,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             3
         )
 
+
 class TestAgreementModel(TenantTestCase):
     fixtures = ['initial_data.json']
 
