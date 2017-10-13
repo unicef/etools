@@ -11,10 +11,12 @@ from EquiTrack.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
     AssessmentFactory,
+    CountryProgrammeFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
-    InterventionFactory,
     InterventionBudgetFactory,
+    InterventionFactory,
+    InterventionPlannedVisitsFactory,
     PartnerFactory,
     PartnershipFactory,
 )
@@ -243,34 +245,37 @@ class TestPartnerOrganizationModel(TenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
-        self.partner_organization = models.PartnerOrganization.objects.create(
+        self.partner_organization = PartnerFactory(
             name="Partner Org 1",
         )
-        self.cp = CountryProgramme.objects.create(
+        year = datetime.date.today().year
+        self.cp = CountryProgrammeFactory(
             name="CP 1",
             wbs="0001/A0/01",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
+            from_date=datetime.date(year - 1, 1, 1),
+            to_date=datetime.date(year + 1, 1, 1),
         )
-        year = datetime.date.today().year
-        self.pca_signed1 = models.Agreement.objects.create(
+        self.pca_signed1 = AgreementFactory(
             agreement_type=models.Agreement.PCA,
             partner=self.partner_organization,
             signed_by_unicef_date=datetime.date(year - 1, 1, 1),
             signed_by_partner_date=datetime.date(year - 1, 1, 1),
             country_programme=self.cp,
         )
-        models.Agreement.objects.create(
+        AgreementFactory(
             agreement_type=models.Agreement.PCA,
             partner=self.partner_organization,
             signed_by_unicef_date=datetime.date(year - 2, 1, 1),
             signed_by_partner_date=datetime.date(year - 2, 1, 1),
             country_programme=self.cp,
         )
-        models.Agreement.objects.create(
+        AgreementFactory(
             agreement_type=models.Agreement.PCA,
             partner=self.partner_organization,
             country_programme=self.cp,
+            signed_by_unicef_date=None,
+            signed_by_partner_date=None,
+            status=models.Agreement.DRAFT
         )
 
     def test_get_last_pca(self):
@@ -519,63 +524,109 @@ class TestPartnerOrganizationModel(TenantTestCase):
             else self.partner_organization.hact_values
         self.assertEqual(hact['planned_cash_transfer'], 100001)
 
-    @skip('Deprecated functionality -planned visits towards government')
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = "Government"
         self.partner_organization.save()
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
+        intervention = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
         )
-        gi = models.GovernmentIntervention.objects.create(
-            partner=self.partner_organization,
+        year = datetime.date.today().year
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
+            year=year,
+            programmatic=3
         )
-        rt = ResultType.objects.get(id=1)
-        r = models.Result.objects.create(
-            result_type=rt,
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
+            year=year - 1,
+            programmatic=2
         )
-        models.GovernmentInterventionResult.objects.create(
-            intervention=gi,
-            result=r,
-            year=datetime.date.today().year,
-            planned_visits=3,
-        )
-        models.GovernmentInterventionResult.objects.create(
-            intervention=gi,
-            result=r,
-            year=datetime.date.today().year,
-            planned_visits=2,
-        )
-        self.assertEqual(self.partner_organization.hact_values['planned_visits'], 5)
+        self.assertEqual(self.partner_organization.hact_values['planned_visits'], 0)
 
-    @skip("Fix when HACT available")
     def test_planned_visits_non_gov(self):
         self.partner_organization.partner_type = "UN Agency"
         self.partner_organization.status = models.PCA.ACTIVE
         self.partner_organization.save()
-        agreement = models.Agreement.objects.create(
-            agreement_type=models.Agreement.PCA,
-            partner=self.partner_organization,
+        intervention = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
         )
-        models.Intervention.objects.create(
-            title="Int 1",
-            status=models.PCA.ACTIVE,
-            agreement=agreement,
-            submission_date=datetime.date(datetime.date.today().year, 1, 1),
-            end=datetime.date(datetime.date.today().year + 1, 1, 1),
-            planned_visits=3,
+        year = datetime.date.today().year
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
+            year=year,
+            programmatic=3
         )
-        models.Intervention.objects.create(
-            title="Int 1",
-            status=models.PCA.ACTIVE,
-            agreement=agreement,
-            submission_date=datetime.date(datetime.date.today().year, 1, 1),
-            end=datetime.date(datetime.date.today().year + 1, 1, 1),
-            planned_visits=2,
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
+            year=year - 1,
+            programmatic=2
         )
-        self.assertEqual(self.partner_organization.hact_values['planned_visits'], 5)
+        self.assertEqual(self.partner_organization.hact_values['planned_visits'], 3)
+
+    def test_planned_visits_non_gov_no_pv_intervention(self):
+        self.partner_organization.partner_type = "UN Agency"
+        self.partner_organization.status = models.PCA.ACTIVE
+        self.partner_organization.save()
+        intervention1 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
+        )
+        intervention2 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
+        )
+        year = datetime.date.today().year
+        InterventionPlannedVisitsFactory(
+            intervention=intervention1,
+            year=year,
+            programmatic=3
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention2,
+            year=year - 1,
+            programmatic=2
+        )
+        models.PartnerOrganization.planned_visits(
+            self.partner_organization
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values['planned_visits'],
+            3
+        )
+
+    def test_planned_visits_non_gov_with_pv_intervention(self):
+        self.partner_organization.partner_type = "UN Agency"
+        self.partner_organization.status = models.PCA.ACTIVE
+        self.partner_organization.save()
+        intervention1 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
+        )
+        intervention2 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.ACTIVE
+        )
+        year = datetime.date.today().year
+        pv = InterventionPlannedVisitsFactory(
+            intervention=intervention1,
+            year=year,
+            programmatic=3
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention2,
+            year=year - 1,
+            programmatic=2
+        )
+        models.PartnerOrganization.planned_visits(
+            self.partner_organization,
+            pv
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values['planned_visits'],
+            3
+        )
 
 
 class TestAgreementModel(TenantTestCase):
