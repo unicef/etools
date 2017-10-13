@@ -9,9 +9,6 @@ from partners.models import (
     PartnerStaffMember,
     PartnerOrganization,
     Agreement,
-    RISK_RATINGS,
-    CSO_TYPES,
-    PartnerType,
 )
 
 
@@ -103,13 +100,3 @@ class RapidProRequest(serializers.Serializer):
         if restored_data['values']:
             restored_data['values'] = json.loads(restored_data['values'])
         return restored_data
-
-
-class PartnershipExportFilterSerializer(serializers.Serializer):
-    MARKED_FOR_DELETION = 'marked_for_deletion'
-    search = serializers.CharField(default='', required=False)
-    partner_type = serializers.ChoiceField(PartnerType.CHOICES, required=False)
-    cso_type = serializers.ChoiceField(CSO_TYPES, required=False)
-    risk_rating = serializers.ChoiceField(RISK_RATINGS, required=False)
-    flagged = serializers.ChoiceField((MARKED_FOR_DELETION,), required=False)
-    show_hidden = serializers.BooleanField(default=False, required=False)

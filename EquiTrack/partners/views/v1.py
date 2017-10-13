@@ -9,26 +9,19 @@ from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 
 from rest_framework import status, viewsets, mixins
-from rest_framework.decorators import list_route
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
 from partners.models import (
     FileType,
-    PartnerOrganization,
     Agreement,
     PartnerStaffMember,
 )
-from partners.exports import (
-    PartnerExport,
-)
-from partners.filters import PartnerOrganizationExportFilter
 from partners.permissions import PartnerPermission
 from partners.serializers.v1 import (
     FileTypeSerializer,
     PartnerStaffMemberPropertiesSerializer,
-    PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
 )
 from EquiTrack.utils import get_data_from_insight
@@ -162,49 +155,6 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         obj = get_object_or_404(queryset, **filter)
         self.check_object_permissions(self.request, obj)
         return obj
-
-
-class PartnerOrganizationsViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.ListModelMixin,
-        mixins.CreateModelMixin,
-        mixins.UpdateModelMixin,
-        viewsets.GenericViewSet):
-    """
-    Returns a list of all Partner Organizations
-    """
-    queryset = PartnerOrganization.objects.all()
-    serializer_class = PartnerOrganizationSerializer
-    permission_classes = (PartnerPermission,)
-    filter_backends = (PartnerOrganizationExportFilter,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add a Partner Organization
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
-    @list_route(methods=['get'])
-    def export(self, request):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        dataset = PartnerExport().export(queryset)
-
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="ModelExportPartners.csv"'
-        response.write(dataset.csv)
-        return response
 
 
 class PartnerStaffMembersViewSet(

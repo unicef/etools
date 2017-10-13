@@ -8,12 +8,8 @@ from .views.v1 import (
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
     PCAPDFView,
-    PartnerOrganizationsViewSet,
     PartnerStaffMembersViewSet,
 )
-
-partners_api = routers.SimpleRouter()
-partners_api.register(r'partners', PartnerOrganizationsViewSet, base_name='partnerorganizations')
 
 staffm_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
 staffm_api.register(r'staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
