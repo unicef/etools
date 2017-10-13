@@ -264,7 +264,7 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
 class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionReportingPeriod
-        fields = ('intervention', 'start_date', 'end_date', 'due_date')
+        fields = ('id', 'intervention', 'start_date', 'end_date', 'due_date')
 
     def validate_intervention(self, value):
         """
