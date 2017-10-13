@@ -7,7 +7,12 @@ from django.utils import timezone
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.factories import AgreementFactory, InterventionFactory, InterventionBudgetFactory
+from EquiTrack.factories import (
+    AgreementFactory,
+    AgreementAmendmentFactory,
+    InterventionFactory,
+    InterventionBudgetFactory
+    )
 
 from funds.models import Donor, Grant
 
@@ -19,7 +24,6 @@ from partners.models import (
     Agreement,
     AgreementStatus,
     FundingCommitment,
-    AgreementAmendmentLog,
     PartnerOrganization,
     Assessment,
     Result,
@@ -57,11 +61,7 @@ class TestAgreementNumberGeneration(TenantTestCase):
         self.assertEqual(agreement1.reference_number, expected_reference_number)
 
         # create amendment
-        AgreementAmendmentLog.objects.create(
-            agreement=agreement1,
-            amended_at=self.date,
-            status=AgreementStatus.ACTIVE
-        )
+        AgreementAmendmentFactory(agreement=agreement1)
         # reference number should be unchanged.
         self.assertEqual(agreement1.reference_number, expected_reference_number)
 
