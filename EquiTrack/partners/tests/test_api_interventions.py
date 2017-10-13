@@ -364,7 +364,7 @@ class TestAPIInterventionResultLinkListView(APITenantTestCase):
 
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
-        response dict are compared to self.normal_field_names. Otherwise, they're compared to whatever is passed in
+        response dict are compared to self.expected_field_names. Otherwise, they're compared to whatever is passed in
         expected_keys.
         '''
         if expected_keys is None:
@@ -643,7 +643,7 @@ class TestAPIInterventionLowerResultListView(APITenantTestCase):
 
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
-        response dict are compared to self.normal_field_names. Otherwise, they're compared to whatever is passed in
+        response dict are compared to self.expected_field_names. Otherwise, they're compared to whatever is passed in
         expected_keys.
         '''
         if expected_keys is None:
@@ -797,7 +797,7 @@ class TestAPIInterventionIndicatorsListView(APITenantTestCase):
 
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
-        response dict are compared to self.normal_field_names. Otherwise, they're compared to whatever is passed in
+        response dict are compared to self.expected_field_names. Otherwise, they're compared to whatever is passed in
         expected_keys.
         '''
         if expected_keys is None:
