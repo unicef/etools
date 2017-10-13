@@ -2058,7 +2058,7 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         data = json.loads(response.content)
         self.assertEqual(len(data), self.num_periods)
         # check that our keys match our expectation
-        self.assertEqual(set(data[0]), {'start_date', 'end_date', 'due_date', 'intervention'})
+        self.assertEqual(set(data[0]), {'id', 'start_date', 'end_date', 'due_date', 'intervention'})
         self.assertEqual(data[0]['intervention'], self.intervention.pk)
 
     def test_list_empty(self):
@@ -2189,7 +2189,7 @@ class TestInterventionReportingPeriodViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEqual(set(data.keys()),
-                         {'intervention', 'start_date', 'end_date', 'due_date'})
+                         {'id', 'intervention', 'start_date', 'end_date', 'due_date'})
 
     def test_get_404(self):
         nonexistent_pk = 0
