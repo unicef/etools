@@ -574,8 +574,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         else:
             pv = InterventionPlannedVisits.objects.filter(
                 intervention__agreement__partner=partner, year=year,
-                intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).aggregate(
-                models.Sum('programmatic'))['programmatic__sum'] or 0
+                intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]
+            ).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         hact["planned_visits"] = pv

@@ -17,8 +17,8 @@ from EquiTrack.factories import (
     GrantFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
-    InterventionFactory,
     InterventionBudgetFactory,
+    InterventionFactory,
     InterventionPlannedVisitsFactory,
     PartnerFactory,
     ResultFactory,
@@ -214,16 +214,16 @@ class TestPartnerOrganizationModel(TenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
-        self.partner_organization = models.PartnerOrganization.objects.create(
+        self.partner_organization = PartnerFactory(
             name="Partner Org 1",
         )
+        year = datetime.date.today().year
         self.cp = CountryProgrammeFactory(
             name="CP 1",
             wbs="0001/A0/01",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
+            from_date=datetime.date(year - 1, 1, 1),
+            to_date=datetime.date(year + 1, 1, 1),
         )
-        year = datetime.date.today().year
         self.pca_signed1 = AgreementFactory(
             agreement_type=models.Agreement.PCA,
             partner=self.partner_organization,
