@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 from datetime import datetime, timedelta
 import json
@@ -18,6 +18,7 @@ from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, A
     Agreement, PartnerOrganization, PartnerStaffMember, \
     Assessment
 from t2f.models import TravelActivity
+from utils.common.utils import every_country
 
 
 def printtf(*args):
@@ -820,16 +821,6 @@ def create_test_user(email, password):
     userp.country_override = country
     userp.save()
     logging.info("user {} created".format(u.email))
-
-
-class every_country:
-    def __enter__(self):
-        for c in Country.objects.exclude(name='Global').all():
-            connection.set_tenant(c)
-            yield c
-
-    def __exit__(self, type, value, traceback):
-        connection.set_tenant(Country.objects.get(name='Global'))
 
 
 def run(function):

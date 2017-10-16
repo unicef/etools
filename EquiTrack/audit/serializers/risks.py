@@ -23,6 +23,11 @@ class RiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
             }
         }
 
+    def validate_extra(self, value):
+        if isinstance(value, six.string_types):
+            raise serializers.ValidationError('Invalid data type.')
+        return value
+
     def get_attribute(self, instance):
         if instance.risks.exists():
             # It's work only if risks already filtered by engagement. See get_attribute method in RiskRootSerializer.

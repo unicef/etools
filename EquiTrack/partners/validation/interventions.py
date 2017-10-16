@@ -24,7 +24,32 @@ def transition_ok(i):
 
 
 def transition_to_closed(i):
-    # validation id 6
+    # unicef/etools-issues:820
+    # TODO: this is required to go around the caching of intervention.total_frs where self.frs.all() is called
+    # TODO: find a sol for invalidating the cache on related .all() -has to do with prefetch_related in the validator
+    r = {
+        'total_frs_amt': 0,
+        'total_outstanding_amt': 0,
+        'total_intervention_amt': 0,
+        'total_actual_amt': 0,
+        'earliest_start_date': None,
+        'latest_end_date': None
+    }
+    for fr in i.frs.filter():
+        r['total_frs_amt'] += fr.total_amt
+        r['total_outstanding_amt'] += fr.outstanding_amt
+        r['total_intervention_amt'] += fr.intervention_amt
+        r['total_actual_amt'] += fr.actual_amt
+        if r['earliest_start_date'] is None:
+            r['earliest_start_date'] = fr.start_date
+        elif r['earliest_start_date'] < fr.start_date:
+            r['earliest_start_date'] = fr.start_date
+        if r['latest_end_date'] is None:
+            r['latest_end_date'] = fr.end_date
+        elif r['latest_end_date'] > fr.end_date:
+            r['latest_end_date'] = fr.end_date
+    # hack
+    i.total_frs = r
 
     # Make sure that is past the end date
     today = date.today()

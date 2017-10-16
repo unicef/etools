@@ -174,14 +174,13 @@ SHARED_APPS = (
     'mptt',
     'easy_pdf',
     'ordered_model',
-
     'vision',
-    'management',
     'publics',
     # you must list the app where your tenant model resides in
     'users',
     'notification',
     'django_filters',
+    'environment',
     'utils.common',
     'utils.mail',
     'utils.writable_serializers',
@@ -204,6 +203,7 @@ TENANT_APPS = (
     'tpm',
     'audit',
     'firms',
+    'management',
 )
 INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
 
@@ -539,8 +539,21 @@ VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
 
 
 # ALLOW BASIC AUTH FOR DEMO SITE
-ALLOW_BASIC_AUTH = os.getenv('ALLOW_BASIC_AUTH', True)
+ALLOW_BASIC_AUTH = os.getenv('ALLOW_BASIC_AUTH', False)
 if ALLOW_BASIC_AUTH:
     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
         'EquiTrack.mixins.DRFBasicAuthMixin',
     )
+
+ISSUE_CHECKS = [
+    'management.issues.project_checks.ActivePCANoSignedDocCheck',
+    'management.issues.project_checks.PdOutputsWrongCheck',
+    'management.issues.project_checks.InterventionsAssociatedSSFACheck',
+    'management.issues.project_checks.InterventionsAreValidCheck',
+    'management.issues.project_checks.PDAmendmentsMissingFilesCheck',
+    'management.issues.project_checks.PCAAmendmentsMissingFilesCheck',
+]
+
+EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
+    'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@un.org'
+)

@@ -45,6 +45,34 @@ class ValidateRiskCategories(BaseTransitionCheck):
         return errors
 
 
+class ValidateRiskExtra(BaseTransitionCheck):
+    VALIDATE_CATEGORIES = {}
+    REQUIRED_EXTRA_FIELDS = []
+
+    def get_errors(self, instance, *args, **kwargs):
+        errors = super(ValidateRiskExtra, self).get_errors(*args, **kwargs)
+
+        for code, category in self.VALIDATE_CATEGORIES.items():
+            answers = instance.risks.filter(blueprint__category__code=code)
+            for answer in answers:
+                extra_errors = {}
+
+                extra = answer.extra or {}
+                for extra_field in self.REQUIRED_EXTRA_FIELDS:
+                    if extra.get(extra_field) is None:
+                        extra_errors[extra_field] = _('This field is required.')
+
+                if extra_errors:
+                    if category not in errors:
+                        errors[category] = {}
+                    if answer.blueprint_id not in errors[category]:
+                        errors[category][answer.blueprint_id] = {}
+
+                    errors[category][answer.blueprint_id]['extra'] = extra_errors
+
+        return errors
+
+
 class BaseRequiredFieldsCheck(BaseTransitionCheck):
     fields = []
 
@@ -94,8 +122,17 @@ class AuditSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsC
 class ValidateMARiskCategories(ValidateRiskCategories):
     VALIDATE_CATEGORIES_BEFORE_SUBMIT = {
         'ma_questionnaire': 'questionnaire',
-        'ma_subject_areas': 'test_subject_areas'
+        'ma_subject_areas': 'test_subject_areas',
+        'ma_global_assessment': 'overall_risk_assessment',
     }
+
+
+class ValidateMARiskExtra(ValidateRiskExtra):
+    VALIDATE_CATEGORIES = {
+        'ma_subject_areas': 'test_subject_areas',
+        'ma_global_assessment': 'overall_risk_assessment',
+    }
+    REQUIRED_EXTRA_FIELDS = ['comments']
 
 
 class ValidateAuditRiskCategories(ValidateRiskCategories):
