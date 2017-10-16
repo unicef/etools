@@ -266,16 +266,6 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
         return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
 
 
-class PartnerAuthorizedOfficersListAPIVIew(ListAPIView):
-    """
-    Returns a list of all signed officers for Partner
-    """
-    queryset = PartnerStaffMember.objects.filter(signed_interventions__isnull=False).distinct()
-    serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (IsAdminUser,)
-    filter_backends = (PartnerScopeFilter, )
-
-
 class PartnerOrganizationAssessmentListView(ListAPIView):
     """
     Returns a list of all Partner staff members

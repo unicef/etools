@@ -232,7 +232,7 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     in_kind_amount_local = 10.00
 
 
-class InterventionPlannedVisitFactory(factory.django.DjangoModelFactory):
+class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.InterventionPlannedVisits
 

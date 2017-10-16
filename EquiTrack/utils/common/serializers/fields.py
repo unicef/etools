@@ -1,4 +1,4 @@
-from rest_framework.fields import Field
+from rest_framework.fields import empty, Field, SkipField
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
 
@@ -28,6 +28,31 @@ class SeparatedReadWriteField(Field):
     def get_validators(self):
         return self.write_field.get_validators()
 
+    def validate_empty_values(self, data):
+        """
+        Validate empty values, and either:
+
+        * Raise `ValidationError`, indicating invalid data.
+        * Raise `SkipField`, indicating that the field should be ignored.
+        * Return (True, data), indicating an empty value that should be
+          returned without any further validation being applied.
+        * Return (False, data), indicating a non-empty value, that should
+          have validation applied as normal.
+        """
+        if data is empty:
+            if getattr(self.root, 'partial', False):
+                raise SkipField()
+            if self.write_field.required:
+                self.fail('required')
+            return (True, self.get_default())
+
+        if data is None:
+            if not self.write_field.allow_null:
+                self.fail('null')
+            return (True, None)
+
+        return (False, data)
+
     def _build_field(self):
         model = getattr(self.parent.Meta, 'model')
         depth = getattr(self.parent.Meta, 'depth', 0)
@@ -39,6 +64,10 @@ class SeparatedReadWriteField(Field):
         extra_kwargs, hidden_fields = self.parent.get_uniqueness_extra_kwargs(
             [self.field_name], [self], extra_kwargs
         )
+        extra_field_kwargs = {
+            key: value for key, value in self._kwargs.items()
+            if key not in ['read_field']
+        }
 
         # Determine the serializer field class and keyword arguments.
         field_class, field_kwargs = self.parent.build_field(
@@ -46,7 +75,9 @@ class SeparatedReadWriteField(Field):
         )
 
         # Include any kwargs defined in `Meta.extra_kwargs`
-        extra_field_kwargs = extra_kwargs.get(self.field_name, {})
+        extra_field_kwargs.update(
+            extra_kwargs.get(self.field_name, {})
+        )
         field_kwargs = self.parent.include_extra_kwargs(
             field_kwargs, extra_field_kwargs
         )

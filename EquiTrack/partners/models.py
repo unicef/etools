@@ -452,13 +452,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
-            last_audit = partner.latest_assessment(u'Scheduled Audit report')
-            if assesment:
-                if last_audit:
-                    if assesment.completed_date > last_audit.completed_date:
-                        last_audit = assesment
-                else:
-                    last_audit = assesment
         hact['audits_mr'] = audits
         partner.hact_values = hact
         partner.save()
@@ -535,23 +528,20 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @classmethod
     def planned_visits(cls, partner, pv_intervention=None):
+        """For current year sum all programmatic values of planned visits
+        records for partner
+
+        If partner type is Government, then default to 0 planned visits
+        """
         year = datetime.date.today().year
         # planned visits
-        pv = 0
         if partner.partner_type == 'Government':
-            pass
+            pv = 0
         else:
-            if pv_intervention:
-                pv = InterventionPlannedVisits.objects.filter(
-                    intervention__agreement__partner=partner, year=year,
-                    intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).exclude(
-                    id=pv_intervention.id).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
-                pv += pv_intervention.programmatic
-            else:
-                pv = InterventionPlannedVisits.objects.filter(
-                    intervention__agreement__partner=partner, year=year,
-                    intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).aggregate(
-                    models.Sum('programmatic'))['programmatic__sum'] or 0
+            pv = InterventionPlannedVisits.objects.filter(
+                intervention__agreement__partner=partner, year=year,
+                intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).aggregate(
+                models.Sum('programmatic'))['programmatic__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         hact["planned_visits"] = pv
@@ -1323,7 +1313,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def submitted_to_prc(self):
-        return True if self.submission_date_prc else False
+        return True if any([self.submission_date_prc, self.review_date_prc, self.prc_review_document]) else False
 
     @property
     def days_from_review_to_signed(self):
@@ -1400,11 +1390,11 @@ class Intervention(TimeStampedModel):
             r['total_actual_amt'] += fr.actual_amt
             if r['earliest_start_date'] is None:
                 r['earliest_start_date'] = fr.start_date
-            elif r['earliest_start_date'] < fr.start_date:
+            elif r['earliest_start_date'] > fr.start_date:
                 r['earliest_start_date'] = fr.start_date
             if r['latest_end_date'] is None:
                 r['latest_end_date'] = fr.end_date
-            elif r['latest_end_date'] > fr.end_date:
+            elif r['latest_end_date'] < fr.end_date:
                 r['latest_end_date'] = fr.end_date
         return r
 
@@ -1502,7 +1492,7 @@ class Intervention(TimeStampedModel):
                 self.agreement.start = self.start
                 self.agreement.end = self.end
 
-            if self.status == self.SIGNED and self.agreement.status != Agreement.SIGNED:
+            if self.status in [self.SIGNED, self.ACTIVE] and self.agreement.status != Agreement.SIGNED:
                 save_agreement = True
                 self.agreement.status = Agreement.SIGNED
 
@@ -1629,8 +1619,8 @@ class InterventionPlannedVisits(models.Model):
 
     @transaction.atomic
     def save(self, **kwargs):
-        PartnerOrganization.planned_visits(self.intervention.agreement.partner, self)
         super(InterventionPlannedVisits, self).save(**kwargs)
+        PartnerOrganization.planned_visits(self.intervention.agreement.partner, self)
 
     class Meta:
         unique_together = ('intervention', 'year')

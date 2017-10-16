@@ -69,6 +69,6 @@ class PurchaseOrderSerializer(
     class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = PurchaseOrder
         fields = [
-            'id', 'order_number', 'auditor_firm',
+            'id', 'order_number', 'item_number', 'auditor_firm',
             'contract_start_date', 'contract_end_date'
         ]

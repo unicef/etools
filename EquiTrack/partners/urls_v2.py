@@ -4,7 +4,6 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from partners.views.dashboards import InterventionPartnershipDashView
 from partners.views.v1 import PCAPDFView
 from partners.views.partner_organization_v2 import (
-    PartnerAuthorizedOfficersListAPIVIew,
     PartnerOrganizationAddView,
     PartnerOrganizationAssessmentDeleteView,
     PartnerOrganizationAssessmentListView,
@@ -91,9 +90,6 @@ urlpatterns = (
     url(r'^partners/(?P<partner_pk>\d+)/staff-members/$',
         view=PartnerStaffMemberListAPIVIew.as_view(http_method_names=['get']),
         name='partner-staff-members-list'),
-    url(r'^partners/(?P<partner_pk>\d+)/authorized-officers/$',
-        view=PartnerAuthorizedOfficersListAPIVIew.as_view(http_method_names=['get']),
-        name='partner-authorized-officers-list'),
     # url(r'^staff-members/$', view=PartnerStaffMemberListAPIVIew.as_view(), name='staff-member-list'),
     # url(r'^staff-members/(?P<pk>\d+)/$', view=PartnerStaffMemberDetailAPIView.as_view(), name='staff-member-detail'),
     # url(r'^staff-members/(?P<pk>\d+)/properties/$',
