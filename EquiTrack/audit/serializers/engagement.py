@@ -191,7 +191,7 @@ class EngagementSerializer(EngagementDatesValidation,
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
 
         if self.instance and partner != self.instance.partner and 'active_pd' not in validated_data:
-            if partner.partner_type != PartnerType.GOVERNMENT:
+            if partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL]:
                 raise serializers.ValidationError({
                     'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ]
                 })
