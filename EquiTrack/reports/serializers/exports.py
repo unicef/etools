@@ -113,7 +113,3 @@ class IndicatorExportFlatSerializer(IndicatorExportSerializer):
     sector = serializers.CharField(source="sector.name")
     result = serializers.CharField(source="result.name")
     unit = serializers.CharField(source="unit.type")
-
-    class Meta:
-        model = Indicator
-        fields = "__all__"
