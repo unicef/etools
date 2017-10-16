@@ -120,7 +120,7 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             HOSTIP=`/sbin/ip route|awk '/default/ { print $3 }'`
-            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e SECRET_KEY --add-host=docker:${HOSTIP} unicef/etools:$TAG bash runtests.sh
+            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e SECRET_KEY unicef/etools:$TAG bash runtests.sh
 #      - run:
 #          name: Pushing to Docker Hub
 #          command: |
