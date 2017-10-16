@@ -22,12 +22,14 @@ from reports.renderers import (
     LowerResultCSVFlatRenderer,
     LowerResultCSVRenderer,
 )
-from reports.serializers.v2 import (
+from reports.serializers.exports import (
     AppliedIndicatorExportFlatSerializer,
     AppliedIndicatorExportSerializer,
-    AppliedIndicatorSerializer,
     LowerResultExportFlatSerializer,
     LowerResultExportSerializer,
+)
+from reports.serializers.v2 import (
+    AppliedIndicatorSerializer,
     LowerResultSerializer,
     MinimalOutputListSerializer,
     OutputListSerializer,
