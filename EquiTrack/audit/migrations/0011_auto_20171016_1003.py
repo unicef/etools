@@ -25,7 +25,7 @@ def do_nothing(appps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('audit', '0009_purchaseorder_item_number'),
+        ('audit', '0010_auto_20171002_1347'),
     ]
 
     operations = [
