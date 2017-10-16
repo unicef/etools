@@ -191,7 +191,7 @@ class EngagementSerializer(EngagementDatesValidation,
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
 
         if self.instance and partner != self.instance.partner and 'active_pd' not in validated_data:
-            if partner.partner_type != PartnerType.GOVERNMENT:
+            if partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL]:
                 raise serializers.ValidationError({
                     'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ]
                 })
@@ -337,6 +337,10 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
             'audited_expenditure': {'label': _('Audited Expenditure $')},
             'financial_findings': {'label': _('Financial Findings $')},
             'percent_of_audited_expenditure': {'label': _('% Of Audited Expenditure')},
+
+            'recommendation': {'required': True},
+            'audit_observation': {'required': True},
+            'ip_response': {'required': True},
         })
 
     def get_number_of_financial_findings(self, obj):
