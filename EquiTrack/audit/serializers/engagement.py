@@ -337,6 +337,10 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
             'audited_expenditure': {'label': _('Audited Expenditure $')},
             'financial_findings': {'label': _('Financial Findings $')},
             'percent_of_audited_expenditure': {'label': _('% Of Audited Expenditure')},
+
+            'recommendation': {'required': True},
+            'audit_observation': {'required': True},
+            'ip_response': {'required': True},
         })
 
     def get_number_of_financial_findings(self, obj):
