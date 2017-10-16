@@ -21,13 +21,15 @@ from partners.models import (
     Agreement,
     AgreementAmendment,
 )
-from partners.serializers.agreements_v2 import (
-    AgreementAmendmentListSerializer,
+from partners.serializers.exports.agreements import (
     AgreementAmendmentExportSerializer,
     AgreementAmendmentExportFlatSerializer,
-    AgreementListSerializer,
     AgreementExportSerializer,
     AgreementExportFlatSerializer,
+)
+from partners.serializers.agreements_v2 import (
+    AgreementAmendmentListSerializer,
+    AgreementListSerializer,
     AgreementCreateUpdateSerializer,
     AgreementDetailSerializer,
     AgreementAmendmentCreateUpdateSerializer
