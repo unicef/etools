@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import json
 import collections
 
 from django.db import models
@@ -61,14 +60,10 @@ class ValidateRiskExtra(BaseTransitionCheck):
             for answer in answers:
                 extra_errors = {}
 
-                try:
-                    extra = json.loads(answer.extra) if answer.extra else {}
-                except ValueError:
-                    extra_errors = _('Invalid value provided.')
-                else:
-                    for extra_field in self.REQUIRED_EXTRA_FIELDS:
-                        if extra.get(extra_field) is None:
-                            extra_errors[extra_field] = _('This field is required.')
+                extra = answer.extra or {}
+                for extra_field in self.REQUIRED_EXTRA_FIELDS:
+                    if extra.get(extra_field) is None:
+                        extra_errors[extra_field] = _('This field is required.')
 
                 if extra_errors:
                     if category not in errors:
