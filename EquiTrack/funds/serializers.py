@@ -48,29 +48,10 @@ class FRsSerializer(serializers.Serializer):
         return sum([i.actual_amt for i in obj.all()])
 
 
-class FundsReservationHeaderExportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FundsReservationHeader
-        fields = '__all__'
-
-
-class FundsReservationHeaderExportFlatSerializer(FundsReservationHeaderExportSerializer):
-    intervention = serializers.CharField(source="intervention.number")
-
-
 class FundsReservationItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = FundsReservationItem
         fields = "__all__"
-
-
-class FundsReservationItemExportSerializer(FundsReservationItemSerializer):
-    intervention = serializers.CharField(source="fund_reservation.intervention.pk")
-
-
-class FundsReservationItemExportFlatSerializer(FundsReservationItemExportSerializer):
-    intervention = serializers.CharField(source="fund_reservation.intervention.number")
-    fund_reservation = serializers.CharField(source="fund_reservation.fr_number")
 
 
 class FundsCommitmentHeaderSerializer(serializers.ModelSerializer):
@@ -85,33 +66,13 @@ class FundsCommitmentItemSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class FundsCommitmentItemExportFlatSerializer(FundsCommitmentItemSerializer):
-    fund_commitment = serializers.CharField(source="fund_commitment.fc_number")
-
-
 class GrantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grant
         fields = "__all__"
 
 
-class GrantExportFlatSerializer(GrantSerializer):
-    donor = serializers.CharField(source="donor.name")
-
-
 class DonorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donor
         fields = "__all__"
-
-
-class DonorExportSerializer(DonorSerializer):
-    grant = serializers.SerializerMethodField()
-
-    def get_grant(self, obj):
-        return ", ".join([str(g.pk) for g in obj.grant_set.all()])
-
-
-class DonorExportFlatSerializer(DonorExportSerializer):
-    def get_grant(self, obj):
-        return ", ".join([g.name for g in obj.grant_set.all()])
