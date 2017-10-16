@@ -20,6 +20,7 @@ from partners.serializers.interventions_v2 import (
 from reports.models import Indicator
 from reports.serializers.exports import (
     IndicatorExportFlatSerializer,
+    IndicatorExportSerializer,
 )
 
 
@@ -172,7 +173,7 @@ class InterventionResultExportFlatSerializer(InterventionResultExportSerializer)
         )
 
 
-class InterventionIndicatorExportSerializer(serializers.ModelSerializer):
+class InterventionIndicatorExportSerializer(IndicatorExportSerializer):
     intervention = serializers.SerializerMethodField()
 
     class Meta:
