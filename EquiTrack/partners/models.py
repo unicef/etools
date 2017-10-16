@@ -452,13 +452,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
-            last_audit = partner.latest_assessment(u'Scheduled Audit report')
-            if assesment:
-                if last_audit:
-                    if assesment.completed_date > last_audit.completed_date:
-                        last_audit = assesment
-                else:
-                    last_audit = assesment
         hact['audits_mr'] = audits
         partner.hact_values = hact
         partner.save()
