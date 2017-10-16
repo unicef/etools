@@ -1,0 +1,8 @@
+[
+    {
+        "model": "auth.group",
+        "fields": {
+            "name": "UNICEF Audit Focal Point"
+        }
+    }
+]
