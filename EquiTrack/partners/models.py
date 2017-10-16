@@ -528,23 +528,20 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @classmethod
     def planned_visits(cls, partner, pv_intervention=None):
+        """For current year sum all programmatic values of planned visits
+        records for partner
+
+        If partner type is Government, then default to 0 planned visits
+        """
         year = datetime.date.today().year
         # planned visits
-        pv = 0
         if partner.partner_type == 'Government':
-            pass
+            pv = 0
         else:
-            if pv_intervention:
-                pv = InterventionPlannedVisits.objects.filter(
-                    intervention__agreement__partner=partner, year=year,
-                    intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).exclude(
-                    id=pv_intervention.id).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
-                pv += pv_intervention.programmatic
-            else:
-                pv = InterventionPlannedVisits.objects.filter(
-                    intervention__agreement__partner=partner, year=year,
-                    intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).aggregate(
-                    models.Sum('programmatic'))['programmatic__sum'] or 0
+            pv = InterventionPlannedVisits.objects.filter(
+                intervention__agreement__partner=partner, year=year,
+                intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).aggregate(
+                models.Sum('programmatic'))['programmatic__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         hact["planned_visits"] = pv
@@ -1614,8 +1611,8 @@ class InterventionPlannedVisits(models.Model):
 
     @transaction.atomic
     def save(self, **kwargs):
-        PartnerOrganization.planned_visits(self.intervention.agreement.partner, self)
         super(InterventionPlannedVisits, self).save(**kwargs)
+        PartnerOrganization.planned_visits(self.intervention.agreement.partner, self)
 
     class Meta:
         unique_together = ('intervention', 'year')
