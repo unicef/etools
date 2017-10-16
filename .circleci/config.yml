@@ -102,6 +102,10 @@ jobs:
           command: |
             docker run --name docker-postgres -e PGUSER=postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=circle_test -d circleci/postgres:9.5-alpine-postgis
       - run:
+          name: Postgres Extensions
+          command: |
+            docker exec docker-postgres  psql -U postgres -d template1 -c 'create extension if not exists hstore;'
+      - run:
           name: Building the image
           command: |
             TAG=${CIRCLE_BRANCH}
