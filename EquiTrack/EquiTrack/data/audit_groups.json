@@ -4,5 +4,17 @@
         "fields": {
             "name": "UNICEF Audit Focal Point"
         }
+    },
+    {
+        "model": "auth.group",
+        "fields": {
+            "name": "Auditor"
+        }
+    },
+    {
+        "model": "auth.group",
+        "fields": {
+            "name": "UNICEF User"
+        }
     }
 ]
