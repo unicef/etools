@@ -104,7 +104,7 @@ jobs:
       - run:
           name: Postgres Extensions
           command: |
-            docker exec docker-postgres  psql -U postgres -d template1 -c 'create extension if not exists hstore;'
+            sleep 10 && docker exec docker-postgres psql -U postgres -d template1 -c 'create extension if not exists hstore;'
       - run:
           name: Building the image
           command: |
