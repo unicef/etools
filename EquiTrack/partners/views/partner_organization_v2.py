@@ -26,19 +26,21 @@ from partners.models import (
     PartnerOrganization,
     Assessment,
 )
-from partners.serializers.partner_organization_v2 import (
-    AssessmentDetailSerializer,
+from partners.serializers.exports.partner_organization import (
     AssessmentExportFlatSerializer,
     AssessmentExportSerializer,
     PartnerOrganizationExportFlatSerializer,
     PartnerOrganizationExportSerializer,
+    PartnerStaffMemberExportFlatSerializer,
+    PartnerStaffMemberExportSerializer,
+)
+from partners.serializers.partner_organization_v2 import (
+    AssessmentDetailSerializer,
     PartnerOrganizationListSerializer,
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationCreateUpdateSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
-    PartnerStaffMemberExportFlatSerializer,
-    PartnerStaffMemberExportSerializer,
     PartnerOrganizationHactSerializer,
     MinimalPartnerOrganizationListSerializer,
 )
