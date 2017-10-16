@@ -98,6 +98,10 @@ jobs:
           command: |
             docker network ls
       - run:
+          name: Start DB Image
+          command: |
+            docker run --name docker-postgres -e PGUSER=postgres POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=circle_test -d circleci/postgres:9.5-alpine-postgis
+      - run:
           name: Building the image
           command: |
             TAG=${CIRCLE_BRANCH}
