@@ -54,7 +54,7 @@ from partners.models import (
     PartnerType,
 )
 from partners.permissions import READ_ONLY_API_GROUP_NAME
-from partners.serializers.partner_organization_v2 import PartnerOrganizationExportSerializer
+from partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 import partners.views.partner_organization_v2
 
 
