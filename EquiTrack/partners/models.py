@@ -1990,7 +1990,7 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
     Represents an indicator report for the result chain on the location
 
-    Relates to :model:`partners.AppliedIndicator`
+    Relates to :model:`reports.AppliedIndicator`
     Relates to :model:`partners.PartnerStaffMember`
     Relates to :model:`locations.Location`
     """

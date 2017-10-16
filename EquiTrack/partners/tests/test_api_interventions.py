@@ -19,8 +19,10 @@ from partners.models import (
 )
 from users.models import Country
 from EquiTrack.factories import (
+    AppliedIndicatorFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
+    LocationFactory,
     LowerResultFactory,
     ResultFactory,
     SectionFactory,
@@ -363,7 +365,7 @@ class TestAPIInterventionResultLinkListView(APITenantTestCase):
 
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
-        response dict are compared to self.normal_field_names. Otherwise, they're compared to whatever is passed in
+        response dict are compared to self.expected_field_names. Otherwise, they're compared to whatever is passed in
         expected_keys.
         '''
         if expected_keys is None:
@@ -642,7 +644,7 @@ class TestAPIInterventionLowerResultListView(APITenantTestCase):
 
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
-        response dict are compared to self.normal_field_names. Otherwise, they're compared to whatever is passed in
+        response dict are compared to self.expected_field_names. Otherwise, they're compared to whatever is passed in
         expected_keys.
         '''
         if expected_keys is None:
@@ -763,3 +765,176 @@ class TestAPIInterventionLowerResultCreateView(APITenantTestCase):
         response_json = self.assertResponseFundamentals(response)
 
         self.assertNotEqual(response_json.get('code'), 'ZZZ')
+
+
+class TestAPIInterventionIndicatorsListView(APITenantTestCase):
+    '''Exercise the list view for InterventionIndicatorsListView (these are AppliedIndicator instances)'''
+    @classmethod
+    def setUpClass(cls):
+        super(TestAPIInterventionIndicatorsListView, cls).setUpClass()
+
+        cls.result_link = InterventionResultLinkFactory()
+
+        cls.lower_result = LowerResultFactory(result_link=cls.result_link)
+
+        cls.indicator1 = AppliedIndicatorFactory(lower_result=cls.lower_result)
+        cls.indicator2 = AppliedIndicatorFactory(lower_result=cls.lower_result)
+
+        # Create another result link/lower result/indicator combo that will break this test if the views don't
+        # filter properly
+        AppliedIndicatorFactory(lower_result=LowerResultFactory(result_link=InterventionResultLinkFactory()))
+
+        cls.url = reverse('partners_api:intervention-indicators-list',
+                          kwargs={'lower_result_pk': cls.lower_result.id})
+
+        # cls.expected_field_names is the list of field names expected in responses.
+        cls.expected_field_names = sorted(('id', 'assumptions', 'baseline', 'cluster_indicator_id',
+                                           'cluster_indicator_title', 'context_code', 'disaggregation',
+                                           'indicator', 'locations', 'lower_result', 'means_of_verification',
+                                           'section', 'target', 'total', 'created', 'modified', ))
+
+    def _make_request(self, user):
+        return self.forced_auth_req('get', self.url, user=user)
+
+    def assertResponseFundamentals(self, response, expected_keys=None):
+        '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
+        response dict are compared to self.expected_field_names. Otherwise, they're compared to whatever is passed in
+        expected_keys.
+        '''
+        if expected_keys is None:
+            expected_keys = self.expected_field_names
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertEqual(len(response_json), 2)
+        for obj in response_json:
+            self.assertIsInstance(obj, dict)
+        if expected_keys:
+            for d in response_json:
+                self.assertEqual(sorted(d.keys()), expected_keys)
+
+        actual_ids = sorted([d.get('id') for d in response_json])
+        expected_ids = sorted((self.indicator1.id, self.indicator2.id))
+
+        self.assertEqual(actual_ids, expected_ids)
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self._make_request(UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.get(self.url)
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_staff_access_ok(self):
+        '''Ensure a staff user has access'''
+        response = self._make_request(UserFactory(is_staff=True))
+        self.assertResponseFundamentals(response)
+
+    def test_group_permission(self):
+        '''A non-staff user has read access if in the correct group'''
+        user = UserFactory()
+        response = self._make_request(user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        _add_user_to_partnership_manager_group(user)
+
+        # Now the request should succeed.
+        response = self._make_request(user)
+        self.assertResponseFundamentals(response)
+
+
+class TestAPInterventionIndicatorsCreateView(APITenantTestCase):
+    '''Exercise the create view for InterventionIndicatorsListView (these are AppliedIndicator instances)'''
+    @classmethod
+    def setUpClass(cls):
+        super(TestAPInterventionIndicatorsCreateView, cls).setUpClass()
+
+        cls.result_link = InterventionResultLinkFactory()
+        cls.lower_result = LowerResultFactory(result_link=cls.result_link)
+
+        # Create another result link/lower result pair that will break this test if the views don't behave properly
+        LowerResultFactory(result_link=InterventionResultLinkFactory())
+
+        cls.url = reverse('partners_api:intervention-indicators-list',
+                          kwargs={'lower_result_pk': cls.lower_result.id})
+
+        location = LocationFactory()
+
+        cls.data = {'assumptions': 'lorem ipsum',
+                    'locations': [location.id],
+                    # indicator (blueprint) is required because the AppliedIndicator model has a unique_together
+                    # constraint of (indicator, lower_result).
+                    'indicator': {'title': 'my indicator blueprint'},
+                    }
+
+    def _make_request(self, user, data=None):
+        if data is None:
+            data = self.data
+        return self.forced_auth_req('post', self.url, user=user, data=data)
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response.'''
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, dict)
+        self.assertIn('id', response_json.keys())
+        # The id of the newly-created indicator should be associated with my lower result, and it should be
+        # the only one associated with that result.
+        self.assertEqual([response_json['id']],
+                         [indicator.id for indicator in self.lower_result.applied_indicators.all()])
+        self.assertEqual(response_json.get('assumptions'), 'lorem ipsum')
+
+        return response_json
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self._make_request(UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.post(self.url, data=self.data, format='json')
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_group_permission_non_staff(self):
+        '''Ensure group membership is sufficient for create; even non-staff group members can create'''
+        user = UserFactory()
+        response = self._make_request(user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        _add_user_to_partnership_manager_group(user)
+
+        # Now the request should succeed.
+        response = self._make_request(user)
+        self.assertResponseFundamentals(response)
+
+    def test_multiple_association(self):
+        '''Ensure a different indicator blueprint can be associated with the same lower_result, but
+        the same indicator can't be added twice.
+        '''
+        user = UserFactory()
+        _add_user_to_partnership_manager_group(user)
+        data = self.data.copy()
+        data['indicator'] = {'title': 'another indicator blueprint'}
+        response = self._make_request(user, data)
+        # OK to add a different indicator
+        self.assertResponseFundamentals(response)
+
+        response = self._make_request(user, data)
+        # Adding the same indicator again should fail.
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json.keys(), ['non_field_errors'])
+        self.assertIsInstance(response_json['non_field_errors'], list)
+        self.assertEqual(response_json['non_field_errors'],
+                         ['This indicator is already being monitored for this Result'])

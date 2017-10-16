@@ -136,7 +136,6 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                 )
 
         elif not attrs.get('cluster_indicator_id'):
-            print "no cluster id"
             indicator_blueprint = IndicatorBlueprintCUSerializer(data=blueprint_data)
             indicator_blueprint.is_valid(raise_exception=True)
             indicator_blueprint.save()
