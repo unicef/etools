@@ -18,7 +18,7 @@ from partners.serializers.interventions_v2 import (
     InterventionResultSerializer,
 )
 from reports.models import Indicator
-from reports.serializers.v2 import (
+from reports.serializers.exports import (
     IndicatorExportFlatSerializer,
 )
 
