@@ -139,6 +139,32 @@ class Engagement(TimeStampedModel, models.Model):
         DISPLAY_STATUSES.cancelled: 'date_of_cancel'
     }
 
+    SHARED_IP_WITH_CHOICES = Choices(
+        _('DPKO'),
+        _('ECA'),
+        _('ECLAC'),
+        _('ESCWA'),
+        _('FAO'),
+        _('ILO'),
+        _('IOM'),
+        _('OHCHR'),
+        _('UN Women'),
+        _('UNAIDS'),
+        _('UNDP'),
+        _('UNESCO'),
+        _('UNFPA'),
+        _('UN - Habitat'),
+        _('UNHCR'),
+        _('UNODC'),
+        _('UNOPS'),
+        _('UNRWA'),
+        _('UNSC'),
+        _('UNU'),
+        _('WB'),
+        _('WFP'),
+        _('WHO'),
+    )
+
     status = FSMField(_('status'), max_length=30, choices=STATUSES, default=STATUSES.partner_contacted, protected=True)
 
     # auditor - partner organization from agreement
@@ -177,6 +203,9 @@ class Engagement(TimeStampedModel, models.Model):
     explanation_for_additional_information = models.TextField(
         _('Provide explanation for additional information received from the IP or add attachments'), blank=True
     )
+
+    joint_audit = models.BooleanField(_('Joint Audit'), default=False, blank=True)
+    shared_ip_with = models.CharField(_('Shared IP with'), max_length=12, choices=SHARED_IP_WITH_CHOICES, blank=True)
 
     staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('staff members'))
 

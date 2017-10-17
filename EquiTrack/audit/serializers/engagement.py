@@ -159,6 +159,8 @@ class EngagementSerializer(EngagementDatesValidation,
             'total_value', 'staff_members', 'active_pd',
             'authorized_officers', 'action_points',
 
+            'joint_audit', 'shared_ip_with',
+
             'start_date', 'end_date',
             'partner_contacted_at', 'date_of_field_visit',
             'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
