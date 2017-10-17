@@ -129,6 +129,7 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
         model = Engagement
         fields = [
             'id', 'unique_id', 'agreement', 'related_agreement', 'partner', 'engagement_type', 'status', 'status_date',
+
         ]
 
 
@@ -349,7 +350,9 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
         return obj.financial_finding_set.count()
 
 
-class SpecificProcedureSerializer(AuditPermissionsBasedSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
+class SpecificProcedureSerializer(AuditPermissionsBasedSerializerMixin,
+                                  WritableNestedSerializerMixin,
+                                  serializers.ModelSerializer):
     class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = SpecificProcedure
         fields = [
