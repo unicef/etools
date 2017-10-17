@@ -15,7 +15,7 @@ from EquiTrack.factories import (
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionBudgetFactory,
-    InterventionPlannedVisitFactory,
+    InterventionPlannedVisitsFactory,
     InterventionResultLinkFactory,
     InterventionSectorLocationLinkFactory,
     LocationFactory,
@@ -81,7 +81,7 @@ class BaseInterventionModelExportTestCase(APITenantTestCase):
             intervention=self.intervention,
             currency=CurrencyFactory()
         )
-        self.planned_visit = InterventionPlannedVisitFactory(
+        self.planned_visit = InterventionPlannedVisitsFactory(
             intervention=self.intervention,
         )
         self.attachment = InterventionAttachmentFactory(
