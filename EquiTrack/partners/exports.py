@@ -3,7 +3,6 @@ from import_export import resources
 from partners.models import (
     PartnerOrganization,
     PartnerType,
-    Agreement
 )
 
 
@@ -41,45 +40,3 @@ class PartnerExport(resources.ModelResource):
 
     def dehydrate_active_staff_members(self, partner_organization):
         return ', '.join([sm.get_full_name() for sm in partner_organization.staff_members.all()])
-
-
-class AgreementExport(resources.ModelResource):
-    reference_number = resources.Field()
-    signed_by_partner = resources.Field()
-    signed_by_unicef = resources.Field()
-    authorized_officers = resources.Field()
-    start_date = resources.Field()
-    end_date = resources.Field()
-
-    class Meta:
-        model = Agreement
-        # TODO add missing fields:
-        #   Attached Signed Agreement Link
-        #   Amendments (comma separated list of amended fields)
-        fields = ('reference_number', 'partner__vendor_number', 'partner__name', 'partner__short_name',
-                  'start_date', 'end_date', 'signed_by_partner', 'signed_by_partner_date',
-                  'signed_by_unicef', 'signed_by_unicef_date', 'authorized_officers')
-        export_order = fields
-
-    def dehydrate_reference_number(self, agreement):
-        return agreement.reference_number
-
-    def dehydrate_signed_by_partner(self, agreement):
-        if agreement.partner_manager:
-            return agreement.partner_manager.get_full_name()
-        return None
-
-    def dehydrate_signed_by_unicef(self, agreement):
-        if agreement.signed_by:
-            return agreement.signed_by.get_full_name()
-        return ''
-
-    def dehydrate_authorized_officers(self, agreement):
-        names = [ao.get_full_name() for ao in agreement.authorized_officers.all()]
-        return ', '.join(names)
-
-    def dehydrate_start_date(self, agreement):
-        return agreement.start
-
-    def dehydrate_end_date(self, agreement):
-        return agreement.end
