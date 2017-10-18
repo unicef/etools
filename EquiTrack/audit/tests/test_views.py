@@ -288,7 +288,7 @@ class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenant
         self.assertIn('active_pd', response.data)
 
     def test_partner_with_active_pd(self):
-        self.engagement.partner.partner_type = PartnerType.BILATERAL_MULTILATERAL
+        self.engagement.partner.partner_type = PartnerType.CIVIL_SOCIETY_ORGANIZATION
         self.engagement.partner.save()
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
@@ -317,8 +317,22 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenant
         )
         return response
 
-    def test_partner_changed_without_pd(self):
+    def test_partner_government_changed_without_pd(self):
+        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.GOVERNMENT)
+
+        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_partner_bilaterial_changed_without_pd(self):
         partner = PartnerWithAgreementsFactory(partner_type=PartnerType.BILATERAL_MULTILATERAL)
+
+        response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_partner_changed_without_pd(self):
+        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
 
         response = self._do_update(self.unicef_focal_point, {'partner': partner.id})
 
@@ -326,7 +340,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenant
         self.assertIn('active_pd', response.data)
 
     def test_partner_changed_with_pd(self):
-        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.BILATERAL_MULTILATERAL)
+        partner = PartnerWithAgreementsFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         response = self._do_update(
             self.unicef_focal_point,
             {
