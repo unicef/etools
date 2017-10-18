@@ -53,7 +53,6 @@ gunicorn==19.6.0
 tenant-schemas-celery==0.1.5
 sqlparse==0.2.2  # for django debug toolbar to not break admin
 azure-storage==0.20.2
-pandas==0.19.1
 requests==2.11.1
 xlrd==1.0.0
 xhtml2pdf==0.1b3
