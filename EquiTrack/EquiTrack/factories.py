@@ -106,7 +106,7 @@ class GatewayTypeFactory(factory.django.DjangoModelFactory):
         model = location_models.GatewayType
 
     name = factory.Sequence(lambda n: 'GatewayType {}'.format(n))
-    admin_level = fuzzy.FuzzyInteger(1, 5)
+    admin_level = fuzzy.FuzzyInteger(0, 5)
 
 
 class LocationFactory(factory.django.DjangoModelFactory):
