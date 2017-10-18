@@ -5,7 +5,6 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
 
-from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
 
@@ -175,7 +174,7 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     )
 
 
-class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
+class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, admin.ModelAdmin):
 
     date_hierarchy = 'start'
     list_display = (
