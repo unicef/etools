@@ -25,6 +25,7 @@ from reports.models import (
     ResultType,
 )
 from funds.models import Donor
+from locations.models import GatewayType
 
 from partners.models import (
     PartnerOrganization,
@@ -169,6 +170,7 @@ class PmpStaticDropdownsListApiView(APIView):
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
+        location_types = GatewayType.objects.values('id', 'name', 'admin_level').order_by('id')
 
         currencies = map(lambda x: {"label": x[0], "value": x[1]},
                          Currency.objects.values_list('code', 'id').order_by('code').distinct())
@@ -188,7 +190,8 @@ class PmpStaticDropdownsListApiView(APIView):
                 'intervention_status': intervention_status,
                 'intervention_amendment_types': intervention_amendment_types,
                 'currencies': currencies,
-                'local_currency': local_currency
+                'local_currency': local_currency,
+                'location_types': location_types
             },
             status=status.HTTP_200_OK
         )
