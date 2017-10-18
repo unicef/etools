@@ -9,7 +9,6 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
-import pandas
 from dal import autocomplete
 
 from EquiTrack.forms import (
@@ -18,11 +17,10 @@ from EquiTrack.forms import (
 )
 
 from .models import (
-    PartnerOrganization,
-    Assessment,
     Agreement,
-    PartnerStaffMember,
     InterventionSectorLocationLink,
+    PartnerOrganization,
+    PartnerStaffMember,
 )
 
 logger = logging.getLogger('partners.forms')
@@ -67,36 +65,6 @@ class PartnersAdminForm(AutoSizeTextForm):
             raise ValidationError(
                 _(u'"CSO Type" does not apply to non-CSO organizations, please remove type')
             )
-        return cleaned_data
-
-
-class AssessmentAdminForm(AutoSizeTextForm):
-
-    class Meta:
-        model = Assessment
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        """
-        Filter linked results by sector and result structure
-        """
-        if 'parent_object' in kwargs:
-            self.parent_partnership = kwargs.pop('parent_object')
-
-        super(AssessmentAdminForm, self).__init__(*args, **kwargs)
-
-    def clean(self):
-        cleaned_data = super(AssessmentAdminForm, self).clean()
-
-        current = cleaned_data[u'current']
-
-        if hasattr(self, 'parent_partnership'):
-            exisiting = self.parent_partnership.assessments.filter(current=True).exclude(pk=self.instance.id)
-            if exisiting and current:
-                raise ValidationError(
-                    _(u'You can only have assessment or audit as the basis of the risk rating')
-                )
-
         return cleaned_data
 
 
@@ -253,27 +221,3 @@ class AgreementForm(UserGroupForm):
         #     )
 
         return cleaned_data
-
-
-def check_and_return_value(column, row, row_num, number=False):
-
-    value = 0
-    if column in row:
-        if not pandas.isnull(row[column]) and row[column]:
-            # In case numbers are written in locale eg: u"6,000"
-            if number and type(row[column]) in [str, unicode]:
-                try:
-                    value = int(row[column].replace(',', ''))
-                except ValueError:
-                    raise ValidationError(u"The value {} received for row {} column {} is not numeric."
-                                          .format(row[column], row_num, column))
-            elif 0.01 <= row[column] <= 0.99:
-                value = int(row[column] * 100)
-            else:
-                value = row[column]
-        row.pop(column)
-    return value
-
-
-def parse_disaggregate_val(csvs):
-    return [x.strip() for x in csvs.split(',')]
