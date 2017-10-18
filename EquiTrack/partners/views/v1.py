@@ -4,23 +4,17 @@ from collections import namedtuple
 
 from django.conf import settings
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 
 from rest_framework import viewsets, mixins
-from rest_framework.generics import RetrieveAPIView
 from easy_pdf.views import PDFTemplateView
 
 from partners.models import (
-    FileType,
     Agreement,
-    PartnerStaffMember,
+    FileType,
 )
-from partners.serializers.v1 import (
-    FileTypeSerializer,
-    PartnerStaffMemberPropertiesSerializer,
-)
+from partners.serializers.v1 import FileTypeSerializer
 from EquiTrack.utils import get_data_from_insight
 
 
@@ -120,38 +114,6 @@ class PortalLoginFailedView(TemplateView):
         context = super(PortalLoginFailedView, self).get_context_data(**kwargs)
         context['email'] = urlsafe_base64_decode(context['email'])
         return context
-
-
-class PartnerStaffMemberPropertiesView(RetrieveAPIView):
-    """
-    Gets the details of Staff Member belonging to a partner
-    """
-    serializer_class = PartnerStaffMemberPropertiesSerializer
-    queryset = PartnerStaffMember.objects.all()
-
-    def get_object(self):
-        queryset = self.get_queryset()
-        # TODO: see permissions if user is staff allow access to all partners (maybe)
-
-        # Get the current partnerstaffmember
-        try:
-            current_member = PartnerStaffMember.objects.get(id=self.request.user.profile.partner_staff_member)
-        except PartnerStaffMember.DoesNotExist:
-            raise Exception('there is no PartnerStaffMember record associated with this user')
-
-        # Perform the lookup filtering.
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        # If current member is actually looking for themselves return right away.
-        if self.kwargs[lookup_url_kwarg] == str(current_member.id):
-            return current_member
-
-        filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-        # allow lookup only for PSMs inside the same partnership
-        filter['partner'] = current_member.partner
-
-        obj = get_object_or_404(queryset, **filter)
-        self.check_object_permissions(self.request, obj)
-        return obj
 
 
 class FileTypeViewSet(

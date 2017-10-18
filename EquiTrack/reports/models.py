@@ -369,11 +369,11 @@ class AppliedIndicator(models.Model):
     assumptions = models.TextField(null=True, blank=True)
     means_of_verification = models.CharField(max_length=255, null=True, blank=True)
 
-    # current total, transactional and dynamically calculated based on IndicatorReports
+    # current total, transactional and dynamically calculated
     total = models.IntegerField(null=True, blank=True, default=0,
                                 verbose_name="Current Total")
 
-    # variable disaggregation's that may be present in the work plan
+    # variable disaggregations that may be present in the work plan
     # this can only be present if the indicatorBlueprint has dissagregatable = true
     disaggregation_logic = JSONField(null=True)
 

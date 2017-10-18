@@ -2,12 +2,7 @@ from rest_framework import serializers
 
 from locations.models import Location
 from reports.models import LowerResult
-from partners.models import (
-    FileType,
-    PartnerStaffMember,
-    PartnerOrganization,
-    Agreement,
-)
+from partners.models import FileType
 
 
 class FileTypeSerializer(serializers.ModelSerializer):
@@ -38,36 +33,3 @@ class LowerOutputStructuredSerializer(serializers.ModelSerializer):
     class Meta:
         model = LowerResult
         fields = ('id', 'name')
-
-
-class PartnerStaffMemberEmbedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = PartnerStaffMember
-        fields = ("id", "first_name", "last_name",)
-
-
-class PartnerOrganizationSerializer(serializers.ModelSerializer):
-
-    staff_members = PartnerStaffMemberEmbedSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = PartnerOrganization
-        fields = '__all__'
-
-
-class AgreementSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Agreement
-        fields = '__all__'
-
-
-class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
-
-    partner = PartnerOrganizationSerializer()
-    agreement_set = AgreementSerializer(many=True)
-
-    class Meta:
-        model = PartnerStaffMember
-        fields = '__all__'
