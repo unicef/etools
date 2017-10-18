@@ -34,8 +34,8 @@ class GatewayTypeSerializer(serializers.ModelSerializer):
 class LocationSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
-    location_type_id = serializers.IntegerField(source='gateway.id')
     location_type = serializers.CharField(source='gateway.name')
+    location_type_admin_level = serializers.IntegerField(source='gateway.admin_level')
     geo_point = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
 
@@ -51,8 +51,8 @@ class LocationSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'p_code',
-            'location_type_id',
             'location_type',
+            'location_type_admin_level',
             'parent',
             'geo_point'
         )
