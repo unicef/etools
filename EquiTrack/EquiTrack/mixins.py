@@ -227,3 +227,44 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
         return
+
+
+class ExportModelMixin(object):
+    def set_header(self, fields, model):
+        header = model._meta.ordering
+        extra_header = [x for x in fields if x not in header]
+        header = extra_header + header
+        return header
+
+    def set_labels(self, header, fields, model):
+        labels = {}
+        model_labels = {}
+        serializer_labels = {}
+        for f in model._meta.fields:
+            model_labels[f.name] = f.verbose_name
+        for f in fields:
+            if fields[f].label is not None:
+                serializer_labels[f] = fields[f].label
+        for h in header:
+            if model_labels.get(h, False):
+                labels[h] = model_labels.get(h)
+            elif serializer_labels.get(h, False):
+                labels[h] = serializer_labels.get(h)
+            else:
+                labels[h] = h.replace("_", " ").title()
+        return labels
+
+    def get_renderer_context(self):
+        context = super(ExportModelMixin, self).get_renderer_context()
+        if hasattr(self, "get_serializer_class"):
+            serializer_class = self.get_serializer_class()
+            serializer = serializer_class()
+            serializer_fields = serializer.get_fields()
+            model = getattr(serializer.Meta, "model")
+            context["header"] = self.set_header(serializer_fields, model)
+            context["labels"] = self.set_labels(
+                context["header"],
+                serializer_fields,
+                model
+            )
+        return context
