@@ -1,19 +1,17 @@
 from __future__ import unicode_literals
-import datetime
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Sum
 from rest_framework import serializers
 
+from funds.serializers import FRsSerializer
+from partners.permissions import InterventionPermissions
 from reports.serializers.v1 import SectorLightSerializer
 from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 from locations.models import Location
 
 from partners.models import (
     InterventionBudget,
-    SupplyPlan,
-    DistributionPlan,
     InterventionPlannedVisits,
     Intervention,
     InterventionAmendment,
@@ -23,25 +21,7 @@ from partners.models import (
 )
 from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
-from funds.models import FundsCommitmentItem
-
-
-class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = InterventionBudget
-        fields = (
-            "id",
-            "partner_contribution",
-            "unicef_cash",
-            "in_kind_amount",
-            "partner_contribution_local",
-            "unicef_cash_local",
-            "in_kind_amount_local",
-            "year",
-            "total",
-            "currency"
-        )
+from funds.models import FundsCommitmentItem, FundsReservationHeader
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):
@@ -64,60 +44,9 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "partner_contribution_local",
             "unicef_cash_local",
             "in_kind_amount_local",
-            "year",
             "total",
             'currency'
         )
-        # read_only_fields = [u'total']
-
-    def validate(self, data):
-        errors = {}
-        try:
-            data = super(InterventionBudgetCUSerializer, self).validate(data)
-        except ValidationError as e:
-            errors.update(e)
-
-        year = data.get("year", "")
-        # To avoid any confusion.. budget year will always be required
-        if not year:
-            errors.update(year="Budget year is required")
-
-        if errors:
-            raise serializers.ValidationError(errors)
-
-        return data
-
-
-class SupplyPlanCreateUpdateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = SupplyPlan
-        fields = "__all__"
-
-
-class SupplyPlanNestedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = SupplyPlan
-        fields = (
-            'id',
-            "item",
-            "quantity",
-        )
-
-
-class DistributionPlanCreateUpdateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = DistributionPlan
-        fields = "__all__"
-
-
-class DistributionPlanNestedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = DistributionPlan
-        fields = "__all__"
 
 
 class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
@@ -154,11 +83,32 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
 class InterventionListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='agreement.partner.name')
+    unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
+    cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
+                                                decimal_places=2)
+    total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
+    total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    unicef_budget = serializers.IntegerField(source='total_unicef_cash')
-    cso_contribution = serializers.IntegerField(source='total_partner_contribution')
     sectors = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
+    offices_names = serializers.SerializerMethodField()
+    frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
+    frs_latest_end_date = serializers.DateField(source='total_frs.latest_end_date', read_only=True)
+    frs_total_frs_amt = serializers.DecimalField(source='total_frs.total_frs_amt', read_only=True,
+                                                 max_digits=20,
+                                                 decimal_places=2)
+    frs_total_intervention_amt = serializers.DecimalField(source='total_frs.total_intervention_amt', read_only=True,
+                                                          max_digits=20,
+                                                          decimal_places=2)
+    frs_total_outstanding_amt = serializers.DecimalField(source='total_frs.total_outstanding_amt', read_only=True,
+                                                         max_digits=20,
+                                                         decimal_places=2)
+    actual_amount = serializers.DecimalField(source='total_frs.total_actual_amt', read_only=True,
+                                                    max_digits=20,
+                                                    decimal_places=2)
+
+    def get_offices_names(self, obj):
+        return [o.name for o in obj.offices.all()]
 
     def get_cp_outputs(self, obj):
         return [rl.cp_output.id for rl in obj.result_links.all()]
@@ -169,10 +119,10 @@ class InterventionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            'id', 'number', 'hrp', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
-            'unicef_budget', 'cso_contribution',
-            'sectors', 'cp_outputs', 'unicef_focal_points',
-            'offices'
+            'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end', 'frs_total_frs_amt',
+            'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
+            'sectors', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt', 'frs_total_outstanding_amt',
+            'offices', 'actual_amount', 'offices_names', 'total_unicef_budget', 'total_budget', 'metadata',
         )
 
 
@@ -211,7 +161,7 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionAttachment
         fields = (
-            'id', 'intervention', 'type', 'attachment', "attachment_file"
+            'id', 'intervention', 'created', 'type', 'attachment', "attachment_file"
         )
 
 
@@ -292,21 +242,45 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
-    planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
+    planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    supplies = SupplyPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
-    distributions = DistributionPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     sector_locations = InterventionSectorLocationCUSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
+    frs = serializers.PrimaryKeyRelatedField(many=True,
+                                             queryset=FundsReservationHeader.objects.prefetch_related('intervention')
+                                             .all(),
+                                             required=False)
 
     class Meta:
         model = Intervention
         fields = "__all__"
+
+    def to_internal_value(self, data):
+        if 'frs' in data:
+            if data['frs'] is None:
+                data['frs'] = []
+        return super(InterventionCreateUpdateSerializer, self).to_internal_value(data)
+
+    def validate_frs(self, frs):
+        for fr in frs:
+            if fr.intervention:
+                if (self.instance is None) or (not self.instance.id) or (fr.intervention.id != self.instance.id):
+                    raise ValidationError({'error': 'One or more of the FRs selected is related to a different PD/SSFA,'
+                                                    ' {}'.format(fr.fr_number)})
+            else:
+                pass
+                # unicef/etools-issues:779
+                # TODO: add this validation back after all legacy data has been handled.
+                # make sure it's not expired
+                # if fr.expired:
+                #     raise ValidationError({'error': 'One or more selected FRs is expired,'
+                #                                     ' {}'.format(fr.fr_number)})
+        return frs
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -315,45 +289,36 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
-    planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
+    planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
+    partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    supplies = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
-    distributions = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
-    fr_numbers_details = serializers.SerializerMethodField(read_only=True, required=False)
     submitted_to_prc = serializers.ReadOnlyField()
+    frs_details = FRsSerializer(source='frs', read_only=True)
+    permissions = serializers.SerializerMethodField(read_only=True)
 
-    def get_fr_numbers_details(self, obj):
-        data = {}
-        if obj.fr_numbers:
-            data = {k: [] for k in obj.fr_numbers}
-            try:
-                fc_items = FundsCommitmentItem.objects.filter(
-                    fr_number__in=obj.fr_numbers).select_related('fund_commitment')
-            except FundsCommitmentItem.DoesNotExist:
-                pass
-            else:
-                for fc in fc_items:
-                    serializer = FundingCommitmentNestedSerializer(fc)
-                    data[fc.fr_number].append(serializer.data)
-        return data
+    def get_permissions(self, obj):
+        user = self.context['request'].user
+        ps = Intervention.permission_structure()
+        permissions = InterventionPermissions(user=user, instance=self.instance, permission_structure=ps)
+        return permissions.get_permissions()
 
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner", "agreement", "document_type", "hrp", "number", "prc_review_document_file",
+            "id", 'frs', "partner", "agreement", "document_type", "number", "prc_review_document_file", "frs_details",
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
-            "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
-            "created", "modified", "planned_budget", "result_links",
-            "amendments", "planned_visits", "attachments", "supplies", "distributions", "fr_numbers_details",
+            "offices", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
+            "created", "modified", "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd',
+            "amendments", "planned_visits", "attachments", 'permissions', 'partner_id',
         )
 
 
@@ -369,7 +334,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     sectors = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
     fr_numbers = serializers.SerializerMethodField()
-    local_currency = serializers.SerializerMethodField()
     planned_budget_local = serializers.DecimalField(
         source='total_unicef_cash_local',
         read_only=True,
@@ -392,7 +356,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         decimal_places=2)
     # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
     unicef_signatory = serializers.SerializerMethodField()
-    hrp_name = serializers.CharField(source='hrp.name')
     partner_focal_points = serializers.SerializerMethodField()
     unicef_focal_points = serializers.SerializerMethodField()
     partner_authorized_officer_signatory = serializers.SerializerMethodField()
@@ -404,16 +367,18 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
     days_from_submission_to_signed = serializers.SerializerMethodField()
     days_from_review_to_signed = serializers.SerializerMethodField()
+    migration_error_msg = serializers.SerializerMethodField()
 
     class Meta:
         model = Intervention
         fields = (
-            "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
-            "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
-            "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
+            "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
+            "title", "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
+            "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
             "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
             "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
+            "migration_error_msg",
             "signed_by_partner_date", "url", "days_from_submission_to_signed", "days_from_review_to_signed"
         )
 
@@ -431,7 +396,10 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join([l.name for l in ll.all()])
 
     def get_partner_authorized_officer_signatory(self, obj):
-        return obj.partner_authorized_officer_signatory.get_full_name() if obj.partner_authorized_officer_signatory else ''
+        if obj.partner_authorized_officer_signatory:
+            return obj.partner_authorized_officer_signatory.get_full_name()
+        else:
+            return ''
 
     def get_partner_focal_points(self, obj):
         return ', '.join([pf.get_full_name() for pf in obj.partner_focal_points.all()])
@@ -447,7 +415,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         for rs in obj.result_links.all():
             if rs.ram_indicators:
                 for ram in rs.ram_indicators.all():
-                    ram_indicators.append("{}, ".format(ram.name))
+                    ram_indicators.append("[{}] {}, ".format(rs.cp_output.name, ram.name))
+        return ' '.join([ram for ram in ram_indicators])
 
     def get_planned_visits(self, obj):
         return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
@@ -467,28 +436,56 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_days_from_review_to_signed(self, obj):
         return obj.days_from_review_to_signed
 
-    def get_local_currency(self, obj):
-        planned_budget = obj.planned_budget.first()
-        return planned_budget.currency if planned_budget else ""
-
     def get_fr_numbers(self, obj):
-        return ', '.join([x for x in obj.fr_numbers]) if obj.fr_numbers else ""
+        return ', '.join([x.fr_number for x in obj.frs.all()]) if obj.frs.all().count() > 0 else ""
+
+    def get_migration_error_msg(self, obj):
+        return ', '.join([a for a in obj.metadata['error_msg']]) if 'error_msg' in obj.metadata.keys() else ''
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='agreement.partner.name')
-    planned_budget = serializers.SerializerMethodField()
+    unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
+    cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
+                                                decimal_places=2)
+    total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
+    total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    def get_planned_budget(self, obj):
-        year = datetime.datetime.now().year
-        return obj.planned_budget.filter(year=year).aggregate(
-            total=Sum('unicef_cash'))['total'] or 0
+    sectors = serializers.SerializerMethodField()
+    cp_outputs = serializers.SerializerMethodField()
+    offices_names = serializers.SerializerMethodField()
+    frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
+    frs_latest_end_date = serializers.DateField(source='total_frs.latest_end_date', read_only=True)
+    frs_total_frs_amt = serializers.DecimalField(source='total_frs.total_frs_amt', read_only=True,
+                                                 max_digits=20,
+                                                 decimal_places=2)
+    frs_total_intervention_amt = serializers.DecimalField(source='total_frs.total_intervention_amt', read_only=True,
+                                                          max_digits=20,
+                                                          decimal_places=2)
+    frs_total_outstanding_amt = serializers.DecimalField(source='total_frs.total_outstanding_amt', read_only=True,
+                                                         max_digits=20,
+                                                         decimal_places=2)
+    actual_amount = serializers.DecimalField(source='total_frs.total_actual_amt', read_only=True,
+                                                    max_digits=20,
+                                                    decimal_places=2)
+
+    def get_offices_names(self, obj):
+        return [o.name for o in obj.offices.all()]
+
+    def get_cp_outputs(self, obj):
+        return [rl.cp_output.id for rl in obj.result_links.all()]
+
+    def get_sectors(self, obj):
+        return [l.sector.name for l in obj.sector_locations.all()]
 
     class Meta:
         model = Intervention
         fields = (
-            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'planned_budget'
+            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'unicef_cash', 'cso_contribution',
+            'total_unicef_budget',
+            'total_budget', 'sectors', 'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
+            'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount'
         )
 
 
@@ -510,6 +507,7 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner_id", "partner_name", "agreement", "document_type", "hrp", "number", "title", "status", "start", "end",
+            "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
+            "start", "end",
             "offices", "sector_locations",
         )

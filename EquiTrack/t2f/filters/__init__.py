@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from django.db.models.query_utils import Q
 from django.db.models import F
 from rest_framework.filters import BaseFilterBackend
-
 from t2f.serializers.filters import SearchFilterSerializer
 
 
@@ -17,6 +16,14 @@ class TravelActivityPartnerFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         return queryset \
                 .filter(partner__pk=view.kwargs['partner_organization_pk']) \
+                .prefetch_related('travels') \
+                .filter(travels__traveler=F("primary_traveler"))
+
+
+class TravelActivityInterventionFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        return queryset \
+                .filter(partnership__pk=view.kwargs['partnership_pk']) \
                 .prefetch_related('travels') \
                 .filter(travels__traveler=F("primary_traveler"))
 
@@ -68,7 +75,12 @@ class BaseFilterBoxFilter(BaseFilterBackend):
     serializer_class = None
 
     def filter_queryset(self, request, queryset, view):
+
         data = self._get_filter_kwargs(request, queryset, view)
+        statuses = request.query_params.get('mf_status', None)
+        if statuses is not None:
+            statuses = statuses.split(',')
+            queryset = queryset.filter(status__in=statuses)
         # To have proper keys in data dict, the serializer renames the incoming values according to the needs
         return queryset.filter(**data)
 

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 import datetime
 
 from collections import namedtuple
@@ -21,7 +21,6 @@ from easy_pdf.views import PDFTemplateView
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
 from locations.models import Location
-from reports.models import CountryProgramme
 from partners.models import (
     FileType,
     PartnershipBudget,
@@ -36,17 +35,15 @@ from partners.models import (
     PartnerStaffMember,
     # ResultChain,
     IndicatorReport,
-    GovernmentIntervention
 )
 from partners.exports import (
     PartnerExport, AgreementExport,
-    InterventionExport, GovernmentExport
+    InterventionExport,
 )
 from partners.filters import (
     PartnerOrganizationExportFilter,
     AgreementExportFilter,
     InterventionExportFilter,
-    GovernmentInterventionExportFilter,
     PartnerScopeFilter
 )
 from partners.permissions import PartnerPermission  # ResultChainPermission
@@ -65,17 +62,34 @@ from partners.serializers.v1 import (
     AgreementSerializer,
     PartnershipBudgetSerializer,
     PCAFileSerializer,
-    GovernmentInterventionSerializer,
 )
 from EquiTrack.utils import get_data_from_insight
 
 
-class PcaPDFView(PDFTemplateView):
-    template_name = "partners/pca_pdf.html"
+class PCAPDFView(PDFTemplateView):
+    template_name = "partners/pca/english_pdf.html"
+    # TODO add proper templates for different languages
+    language_templates_mapping = {
+        "arabic": "partners/pca/arabic_pdf.html",
+        "english": "partners/pca/english_pdf.html",
+        "french": "partners/pca/french_pdf.html",
+        "portuguese": "partners/pca/portuguese_pdf.html",
+        "russian": "partners/pca/russian_pdf.html",
+        "spanish": "partners/pca/spanish_pdf.html",
+        "ifrc_english": "partners/pca/ifrc_english_pdf.html",
+        "ifrc_french": "partners/pca/ifrc_french_pdf.html"
+    }
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
+        lang = self.request.GET.get('lang', None)
         error = None
+
+        try:
+            self.template_name = self.language_templates_mapping[lang]
+        except KeyError:
+            return {"error": "Cannot find document with given query parameter lang={}".format(lang)}
+
         try:
             agreement = Agreement.objects.get(id=agr_id)
         except Agreement.DoesNotExist:
@@ -91,7 +105,7 @@ class PcaPDFView(PDFTemplateView):
             return {"error": response}
         try:
             banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
-        except KeyError:
+        except (KeyError, TypeError):
             return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
 
         bank_key_values = [
@@ -112,18 +126,22 @@ class PcaPDFView(PDFTemplateView):
             officers_list.append(
                 {'first_name': officer.first_name,
                  'last_name': officer.last_name,
+                 'email': officer.email,
                  'title': officer.title}
             )
 
-        return super(PcaPDFView, self).get_context_data(
+        font_path = settings.SITE_ROOT + '/assets/fonts/'
+
+        return super(PCAPDFView, self).get_context_data(
             error=error,
             pagesize="Letter",
             title="Partnership",
             agreement=agreement,
             bank_details=bank_objects,
-            cp=CountryProgramme.current(),
+            cp=agreement.country_programme,
             auth_officers=officers_list,
             country=self.request.tenant.long_name,
+            font_path=font_path,
             **kwargs
         )
 
@@ -351,26 +369,6 @@ class AgreementViewSet(
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="ModelExportAgreements.csv"'
-        response.write(dataset.csv)
-        return response
-
-
-class GovernmentInterventionsViewSet(viewsets.GenericViewSet,
-                                     mixins.RetrieveModelMixin,
-                                     mixins.ListModelMixin,):
-    queryset = GovernmentIntervention.objects.all()
-    serializer_class = GovernmentInterventionSerializer
-    permission_classes = (PartnerPermission,)
-    filter_backends = (PartnerScopeFilter, GovernmentInterventionExportFilter,)
-
-    @list_route(methods=['get'])
-    def export(self, request, partner_pk=None):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        dataset = GovernmentExport().export(queryset)
-
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="ModelExportGovernmentInterventions.csv"'
         response.write(dataset.csv)
         return response
 

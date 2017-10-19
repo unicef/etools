@@ -4,14 +4,12 @@ django-braces==1.10.0
 django-model-utils==2.6
 dj-database-url==0.4.1
 dj-static==0.0.6
-django-easy-pdf==0.1.0
+django-easy-pdf==0.1.1
 django-logentry-admin==1.0.2
 djrill==2.1.0
 django-autocomplete-light==3.2.1
 django-smart-selects==1.3.1
-django-hstore==1.4.2
 django-redis-cache==1.7.1
-django-datetime-widget==0.9.3
 django-leaflet==0.19.0
 django-geojson==2.9.1
 django-post_office==2.0.8
@@ -23,8 +21,6 @@ django-analytical==2.2.2
 django-celery==3.1.17
 django-fsm==2.4.0
 django-celery-email==1.1.5
-django-suit==0.2.21
-django-suit-ckeditor==0.0.2
 django-import-export==0.5.1
 django-reversion==1.10.1
 django-generic-links==0.4.0
@@ -44,6 +40,7 @@ djangorestframework-xml==1.0.1
 django-mptt==0.8.6
 drf-nested-routers==0.11.1
 django-rest-swagger==2.1.0
+djangorestframework-recursive==0.1.1
 
 # Other Python packages
 logutils==0.3.3
@@ -51,7 +48,7 @@ psycopg2==2.6.2
 celery==3.1.23
 hiredis==0.2.0
 GDAL==1.10.0           # DO NOT USE GDAL <= 2.1.0
-cartodb==0.8.1
+carto==1.0.1
 gunicorn==19.6.0
 tenant-schemas-celery==0.1.5
 sqlparse==0.2.2  # for django debug toolbar to not break admin
@@ -66,6 +63,9 @@ flower==0.9.1
 easy-thumbnails==2.3
 django-debug-toolbar==1.6 # add debug-toolbar to be able to test in dev while we have the current docker build
 pyyaml==3.12
+django-ordered-model==1.3.0
+django-filter==1.0.2
+raven==6.2.1  # used for sentry config and dependencies
 
 # Testing packages
 coverage==4.2

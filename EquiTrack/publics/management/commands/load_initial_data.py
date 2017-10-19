@@ -7,7 +7,8 @@ from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.db.transaction import atomic
 
-from publics.models import Currency, AirlineCompany, DSARegion, TravelExpenseType, BusinessRegion, BusinessArea, Country
+from publics.models import Currency, AirlineCompany, TravelExpenseType, BusinessRegion, BusinessArea, Country
+
 
 # DEVELOPMENT CODE -
 class Command(BaseCommand):
@@ -17,7 +18,7 @@ class Command(BaseCommand):
 
         self._load_airlines()
         self._load_business_areas()
-        dsa_country_mapping = self._load_countries()
+        self._load_countries()
         self._add_expense_types()
         self._add_user_groups()
 

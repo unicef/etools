@@ -8,7 +8,6 @@ from django.db import connection
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-
 from django.core.urlresolvers import reverse
 from django.template.response import SimpleTemplateResponse
 from django.utils.http import urlsafe_base64_encode
@@ -29,7 +28,7 @@ from allauth.account.utils import perform_login
 from EquiTrack.utils import set_country
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
-logger = logging.getLogger('etools.mixins')
+logger = logging.getLogger(__name__)
 
 
 class AdminURLMixin(object):
@@ -102,6 +101,7 @@ class EToolsTenantMiddleware(TenantMiddleware):
                 u'login',
                 u'saml',
                 u'accounts',
+                u'monitoring',
             ]):
                 return None  # let them pass
             else:
@@ -117,9 +117,9 @@ class EToolsTenantMiddleware(TenantMiddleware):
         try:
             set_country(request.user, request)
 
-        except Exception as exp:
+        except Exception:
             logger.info('No country found for user {}'.format(request.user))
-            return SimpleTemplateResponse('no_country_found.html', {'user': request.user});
+            return SimpleTemplateResponse('no_country_found.html', {'user': request.user})
 
         # Content type can no longer be cached as public and tenant schemas
         # have different models. If someone wants to change this, the cache
@@ -160,7 +160,7 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
 
         try:
             user, jwt_value = super(EToolsTenantJWTAuthentication, self).authenticate(request)
-        except TypeError as exp:
+        except TypeError:
             raise PermissionDenied(detail='No valid authentication provided')
 
         if not user.profile.country:
@@ -210,12 +210,3 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     def login(self, request, user):
         # if we need to add any other login validation, here would be the place.
         return super(CustomAccountAdapter, self).login(request, user)
-
-
-class CSRFExemptMiddleware(object):
-    def process_request(self, request):
-        """
-        Rest framework session based authentication cannot handle csrf_exempt decorator.
-        This will prevent csrf related issues with post requests
-        """
-        request.csrf_processing_done = True

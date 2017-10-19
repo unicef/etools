@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from rest_framework_nested import routers
 
@@ -9,7 +9,6 @@ from .views.v1 import (
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
     InterventionsViewSet,
-    GovernmentInterventionsViewSet,
     PartnershipBudgetViewSet,
     PCASectorViewSet,
     PCAFileViewSet,
@@ -17,7 +16,7 @@ from .views.v1 import (
     AmendmentLogViewSet,
     GwPCALocationViewSet,
     IndicatorReportViewSet,
-    PcaPDFView,
+    PCAPDFView,
     PartnerOrganizationsViewSet,
     PartnerStaffMembersViewSet,
     AgreementViewSet,
@@ -73,22 +72,23 @@ bulk_reports_api = routers.SimpleRouter()
 bulk_reports_api.register(r'bulk_reports', IndicatorReportViewSet, base_name='bulk-reports')
 
 
-urlpatterns = patterns(
-    '',
+urlpatterns = (
     # remove partner portal for now:
     # url(r'^$', PortalDashView.as_view()),
 
     url(r'^my_interventions/', InterventionsViewSet.as_view({'get': 'retrieve'}), name='interventions'),
     # url(r'^interventions/(?P<intervention_pk>\d+)/reports/', IndicatorReportViewSet.as_view(), name='interventions'),
     #
-    # url(r'^interventions/(?P<intervention_pk>\d+)/reports/', IndicatorReportViewSet.as_view(), name='intervention-reports'),
+    # url(r'^interventions/(?P<intervention_pk>\d+)/reports/', IndicatorReportViewSet.as_view(),
+    #     name='intervention-reports'),
     #
-    # url(r'^interventions/(?P<intervention_pk>\d+)/indicator/(?P<indicator_pk>\d+)/reports/', IndicatorReportViewSet.as_view(), name='intervention-indicator-reports'),
+    # url(r'^interventions/(?P<intervention_pk>\d+)/indicator/(?P<indicator_pk>\d+)/reports/',
+    #     IndicatorReportViewSet.as_view(), name='intervention-indicator-reports'),
     # url(r'^indicators/bulk_reports/', IndicatorReportViewSet.as_view(), name='indicator-bulk-reports'),
 
     url(r'^accounts/loginfailed/(?P<email>.+)/$', PortalLoginFailedView.as_view(), name='sociallogin_notamember'),
     url(r'^locations/$', InterventionLocationView.as_view(), name='locations'),
-    url(r'^agreement/(?P<agr>\d+)/pdf', PcaPDFView.as_view(), name='pca_pdf'),
+    url(r'^agreement/(?P<agr>\d+)/pdf', PCAPDFView.as_view(), name='pca_pdf'),
 
     url(r'^staffmember/(?P<pk>\d+)/$', PartnerStaffMemberPropertiesView.as_view()),
 )

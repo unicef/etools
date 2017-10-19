@@ -1,11 +1,10 @@
-
-
+from __future__ import unicode_literals
+from django.db import connection
 from rest_framework import serializers
 
 from workplan.serializers import ResultWorkplanPropertySerializer
 from workplan.models import ResultWorkplanProperty
 from reports.models import (
-    ResultStructure,
     ResultType,
     Unit,
     Sector,
@@ -46,6 +45,10 @@ class SectorLightSerializer(serializers.ModelSerializer):
 
 
 class IndicatorSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        return '{}{}'.format('[Inactive] ' if not obj.active else '', obj.name)
 
     class Meta:
         model = Indicator
@@ -108,15 +111,6 @@ class ResultLightSerializer(serializers.ModelSerializer):
         fields = ('id', 'result_name')
 
 
-class ResultStructureSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = ResultStructure
-        fields = '__all__'
-
-
 class ResultTypeSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
@@ -136,7 +130,14 @@ class UnitSerializer(serializers.ModelSerializer):
 
 
 class CountryProgrammeSerializer(serializers.ModelSerializer):
+    expired = serializers.ReadOnlyField()
+    active = serializers.ReadOnlyField()
+    special = serializers.SerializerMethodField()
+    future = serializers.ReadOnlyField()
 
     class Meta:
         model = CountryProgramme
         fields = '__all__'
+
+    def get_special(self, cp):
+        return False if connection.schema_name in ['palestine'] else cp.special

@@ -18,11 +18,9 @@ from partners.models import (
     PartnerOrganization,
     Agreement,
     IndicatorReport,
-    DistributionPlan,
     RISK_RATINGS,
     CSO_TYPES,
     PartnerType,
-    GovernmentIntervention,
 )
 
 
@@ -134,17 +132,6 @@ class LocationSerializer(serializers.Serializer):
         fields = '__all__'
 
 
-class DistributionPlanSerializer(serializers.ModelSerializer):
-    item = serializers.CharField(source='item.name')
-    site = serializers.CharField(source='site.name')
-    quantity = serializers.IntegerField()
-    delivered = serializers.IntegerField()
-
-    class Meta:
-        model = DistributionPlan
-        fields = ('item', 'site', 'quantity', 'delivered')
-
-
 class LowerOutputStructuredSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -161,7 +148,6 @@ class InterventionSerializer(serializers.ModelSerializer):
     partner_id = serializers.CharField(source='partner.id')
     pcasector_set = PCASectorSerializer(many=True, read_only=True)
     lowerresult_set = serializers.SerializerMethodField()
-    distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
     total_budget = serializers.CharField(read_only=True)
 
     def get_lowerresult_set(self, obj):
@@ -227,12 +213,6 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         # TODO: update value on resultchain (atomic)
         serializers.ValidationError({'result_chain': "Deprecated"})
-
-
-class GovernmentInterventionSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = GovernmentIntervention
 
 
 class GWLocationSerializer(serializers.ModelSerializer):
@@ -337,7 +317,6 @@ class InterventionExportFilterSerializer(serializers.Serializer):
     search = serializers.CharField(default='', required=False)
     document_type = serializers.ChoiceField(PCA.PARTNERSHIP_TYPES, required=False)
     country_programme = serializers.CharField(required=False)
-    result_structure = serializers.CharField(required=False)
     sector = serializers.CharField(required=False)
     status = serializers.ChoiceField(PCA.PCA_STATUS, required=False)
     unicef_focal_point = serializers.CharField(required=False)
@@ -345,10 +324,3 @@ class InterventionExportFilterSerializer(serializers.Serializer):
     grant = serializers.CharField(required=False)
     starts_after = serializers.DateField(required=False)
     ends_before = serializers.DateField(required=False)
-
-
-class GovernmentInterventionExportFilterSerializer(serializers.Serializer):
-    search = serializers.CharField(default='', required=False)
-    result_structure = serializers.CharField(required=False)
-    country_programme = serializers.CharField(required=False)
-    year = serializers.IntegerField(required=False)

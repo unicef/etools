@@ -44,8 +44,8 @@ class InvoiceEndpoints(APITenantTestCase):
 
         self.assertEqual(len(response_json['data']), 1)
         travel_data = response_json['data'][0]
-        expected_keys = ['id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
-                         'message', 'vision_fi_id', 'items']
+        expected_keys = ['id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency',
+                         'amount', 'status', 'message', 'vision_fi_id', 'items']
         self.assertKeysIn(expected_keys, travel_data)
 
     def test_invoice_details(self):
@@ -54,8 +54,8 @@ class InvoiceEndpoints(APITenantTestCase):
                                         user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
-        expected_keys = ['id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
-                         'message', 'vision_fi_id', 'items']
+        expected_keys = ['id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency',
+                         'amount', 'status', 'message', 'vision_fi_id', 'items']
         self.assertKeysIn(expected_keys, response_json)
 
     def test_filtering(self):
@@ -148,6 +148,6 @@ class InvoiceEndpoints(APITenantTestCase):
         invoice_data = response_json['data'][0]
 
         really_precise_number = '123.4567000000000000000000000'
-        self.assertEqual(len(really_precise_number), getcontext().prec + 1) # +1 because of the decimal separator
+        self.assertEqual(len(really_precise_number), getcontext().prec + 1)  # +1 because of the decimal separator
         self.assertEqual(invoice_data['amount'], really_precise_number)
         self.assertEqual(invoice_data['items'][0]['amount'], really_precise_number)

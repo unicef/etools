@@ -6,12 +6,11 @@ from tablib.core import Dataset
 
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, \
     GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory, \
-    ResultStructureFactory, InterventionBudgetFactory, PartnerStaffFactory
+    InterventionBudgetFactory, PartnerStaffFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory
-from partners.models import GovernmentInterventionResult, SupplyPlan, DistributionPlan
+from partners.models import GovernmentInterventionResult
 from reports.models import ResultType
-from supplies.models import SupplyItem
 
 
 class TestModelExport(APITenantTestCase):
@@ -55,7 +54,6 @@ class TestModelExport(APITenantTestCase):
         self.intervention = InterventionFactory(
             agreement=self.agreement,
             document_type='SHPD',
-            hrp=ResultStructureFactory(),
             status='draft',
             start=datetime.date.today(),
             end=datetime.date.today(),
@@ -66,19 +64,7 @@ class TestModelExport(APITenantTestCase):
             signed_by_partner_date=datetime.date.today(),
             unicef_signatory=self.unicef_staff,
             population_focus="Population focus",
-            fr_numbers=["1234", "124456"],
             partner_authorized_officer_signatory=self.partnerstaff,
-        )
-        self.supply_item = SupplyItem.objects.create(name="foo", description="bar")
-        self.supplyplan = SupplyPlan.objects.create(
-            intervention=self.intervention,
-            quantity=1,
-            item=self.supply_item
-        )
-        self.distributionplan = DistributionPlan.objects.create(
-            intervention=self.intervention,
-            item=self.supply_item,
-            quantity=1
         )
         self.ib = InterventionBudgetFactory(intervention=self.intervention, currency=CurrencyFactory())
         self.government_intervention = GovernmentInterventionFactory(
@@ -123,11 +109,9 @@ class TestModelExport(APITenantTestCase):
             'UNICEF Focal Points',
             'CSO Authorized Officials',
             'Population Focus',
-            'Humanitarian Response Plan',
             'CP Outputs',
             'RAM Indicators',
             'FR Number(s)',
-            'Local Currency of Planned Budget',
             'Total UNICEF Budget (Local)',
             'Total UNICEF Budget (USD)',
             'Total CSO Budget (USD)',
@@ -144,7 +128,8 @@ class TestModelExport(APITenantTestCase):
             'Signed by UNICEF Date',
             'Days from Submission to Signed',
             'Days from Review to Signed',
-            'URL'
+            'URL',
+            'Migration messages',
         ])
 
         self.assertEqual(dataset[0], (
@@ -164,11 +149,9 @@ class TestModelExport(APITenantTestCase):
             u'',
             u'',
             self.intervention.population_focus,
-            unicode(self.intervention.hrp.name),
             u'',
             u'',
-            u', '.join(self.intervention.fr_numbers),
-            '{}'.format(self.intervention.planned_budget.first().currency),
+            u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
             u'{:.2f}'.format(self.intervention.total_unicef_cash_local),
             u'{:.2f}'.format(self.intervention.total_unicef_budget),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
@@ -185,7 +168,8 @@ class TestModelExport(APITenantTestCase):
             '{}'.format(self.intervention.signed_by_partner_date),
             '{}'.format(self.intervention.days_from_submission_to_signed),
             '{}'.format(self.intervention.days_from_review_to_signed),
-            u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id)
+            u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
+            u'',
         )
         )
 
@@ -216,7 +200,9 @@ class TestModelExport(APITenantTestCase):
             'URL'
         ])
 
-        self.assertEqual(dataset[0], (
+        # we're interested in the first agreement, so it will be last in the exported list
+        exported_agreement = dataset[-1]
+        self.assertEqual(exported_agreement, (
             self.agreement.agreement_number,
             unicode(self.agreement.status),
             unicode(self.agreement.partner.name),
@@ -269,7 +255,8 @@ class TestModelExport(APITenantTestCase):
         deleted_flag = "Yes" if self.partner.deleted_flag else "No"
         blocked = "Yes" if self.partner.blocked else "No"
 
-        self.assertEqual(dataset[0], (
+        test_option = filter(lambda e: e[0] == self.partner.vendor_number, dataset)[0]
+        self.assertEqual(test_option, (
             self.partner.vendor_number,
             unicode(self.partner.name),
             self.partner.short_name,

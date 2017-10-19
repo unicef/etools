@@ -1,13 +1,13 @@
-from datetime import datetime
-from django.db import models
-from django.contrib.postgres.fields import JSONField
+from datetime import date
 
+from django.contrib.postgres.fields import JSONField
+from django.db import models, transaction
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 
+from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
-
-from model_utils.models import TimeStampedModel
 
 
 class Quarter(models.Model):
@@ -32,66 +32,84 @@ class Quarter(models.Model):
     def __repr__(self):
         return '{}-{}'.format(self.name, self.year)
 
-    def save(self, *args, **kwargs):
-        super(Quarter, self).save(*args, **kwargs)
+
+class CountryProgrammeManager(models.Manager):
+    def get_queryset(self):
+        return super(CountryProgrammeManager, self).get_queryset().filter(invalid=False)
+
+    @property
+    def all_active_and_future(self):
+        today = date.today()
+        return self.get_queryset().filter(to_date__gt=today)
+
+    @property
+    def all_future(self):
+        today = date.today()
+        return self.get_queryset().filter(from_date__gt=today)
+
+    @property
+    def all_active(self):
+        today = date.today()
+        return self.get_queryset().filter(from_date__lte=today, to_date__gt=today)
 
 
+@python_2_unicode_compatible
 class CountryProgramme(models.Model):
     """
     Represents a country programme cycle
     """
     name = models.CharField(max_length=150)
     wbs = models.CharField(max_length=30, unique=True)
+    invalid = models.BooleanField(default=False)
     from_date = models.DateField()
     to_date = models.DateField()
 
-    def __unicode__(self):
+    objects = CountryProgrammeManager()
+
+    def __str__(self):
         return ' '.join([self.name, self.wbs])
 
+    @cached_property
+    def active(self):
+        today = date.today()
+        return self.from_date <= today < self.to_date
+
+    @cached_property
+    def future(self):
+        today = date.today()
+        return self.from_date >= today
+
+    @cached_property
+    def expired(self):
+        today = date.today()
+        return self.to_date < today
+
+    @cached_property
+    def special(self):
+        return self.wbs[5] != 'A'
+
     @classmethod
-    def current(cls):
-        today = datetime.now()
+    def main_active(cls):
+        today = date.today()
         cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
         return cps.first()
 
-    @classmethod
-    def encapsulates(cls, date_from, date_to):
-        '''
-        :param date_from:
-        :param date_to:
-        :return: CountryProgramme instance - Country programme that contains the dates specified
-        raises cls.DoesNotExist if the dates span outside existing country programmes
-        raises cls.MultipleObjectsReturned if the dates span multiple country programmes
-        '''
+    def save(self, *args, **kwargs):
+        if 'A0/99' in self.wbs:
+            self.invalid = True
 
-        return cls.objects.get(wbs__contains='/A0/', from_date__lte=date_from, to_date__gte=date_to)
-
-
-class ResultStructure(models.Model):
-    """
-    Represents a humanitarian response plan in the country programme
-
-    Relates to :model:`reports.CountryProgramme`
-    """
-
-    name = models.CharField(max_length=150)
-    country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
-    from_date = models.DateField()
-    to_date = models.DateField()
-    # TODO: add validation these dates should never extend beyond the country programme structure
-
-    class Meta:
-        ordering = ['name']
-        unique_together = (("name", "from_date", "to_date"),)
-
-    def __unicode__(self):
-        return self.name
-
-    @classmethod
-    def current(cls):
-        return ResultStructure.objects.order_by('to_date').last()
+        if self.pk:
+            old_version = CountryProgramme.objects.get(id=self.pk)
+            if old_version.to_date != self.to_date:
+                from partners.models import Agreement
+                with transaction.atomic():
+                    Agreement.objects.filter(agreement_type='PCA', country_programme=self).update(end=self.to_date)
+                    super(CountryProgramme, self).save(*args, **kwargs)
+                    return
+        super(CountryProgramme, self).save(*args, **kwargs)
 
 
+@python_2_unicode_compatible
 class ResultType(models.Model):
     """
     Represents a result type
@@ -108,10 +126,11 @@ class ResultType(models.Model):
     )
     name = models.CharField(max_length=150, unique=True, choices=NAME_CHOICES)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class Sector(models.Model):
     """
     Represents a sector
@@ -140,7 +159,7 @@ class Sector(models.Model):
     class Meta:
         ordering = ['name']
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{} {}'.format(
             self.alternate_id if self.alternate_id else '',
             self.name
@@ -150,9 +169,16 @@ class Sector(models.Model):
 class ResultManager(models.Manager):
     def get_queryset(self):
         return super(ResultManager, self).get_queryset().select_related(
-            'country_programme', 'result_structure', 'result_type')
+            'country_programme', 'result_type')
 
 
+class OutputManager(models.Manager):
+    def get_queryset(self):
+        return super(OutputManager, self).get_queryset().filter(result_type__name=ResultType.OUTPUT).select_related(
+            'country_programme', 'result_type')
+
+
+@python_2_unicode_compatible
 class Result(MPTTModel):
     """
     Represents a result, wbs is unique
@@ -161,8 +187,6 @@ class Result(MPTTModel):
     Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.ResultType`
     """
-
-    result_structure = models.ForeignKey(ResultStructure, null=True, blank=True, on_delete=models.DO_NOTHING)
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     sector = models.ForeignKey(Sector, null=True, blank=True)
@@ -192,6 +216,7 @@ class Result(MPTTModel):
     ram = models.BooleanField(default=False)
 
     objects = ResultManager()
+    outputs = OutputManager()
 
     class Meta:
         ordering = ['name']
@@ -205,7 +230,26 @@ class Result(MPTTModel):
             self.name
         )
 
-    def __unicode__(self):
+    @cached_property
+    def output_name(self):
+        assert self.result_type.name == ResultType.OUTPUT
+
+        return u'{}{}{}'.format(
+            '[Expired] ' if self.expired else '',
+            'Special- ' if self.special else '',
+            self.name
+        )
+
+    @cached_property
+    def expired(self):
+        today = date.today()
+        return self.to_date < today
+
+    @cached_property
+    def special(self):
+        return self.country_programme.special
+
+    def __str__(self):
         return u'{} {}: {}'.format(
             self.code if self.code else u'',
             self.result_type.name,
@@ -228,6 +272,7 @@ class Result(MPTTModel):
                 node.save()
 
 
+@python_2_unicode_compatible
 class LowerResult(TimeStampedModel):
 
     # Lower result is always an output
@@ -240,7 +285,7 @@ class LowerResult(TimeStampedModel):
     # automatically assigned unless assigned manually in the UI (Lower level WBS - like code)
     code = models.CharField(max_length=50)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{}: {}'.format(
             self.code,
             self.name
@@ -259,6 +304,7 @@ class LowerResult(TimeStampedModel):
         return super(LowerResult, self).save(**kwargs)
 
 
+@python_2_unicode_compatible
 class Goal(models.Model):
     """
     Represents a goal for the humanitarian response plan
@@ -266,9 +312,6 @@ class Goal(models.Model):
     Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.Sector`
     """
-
-    result_structure = models.ForeignKey(
-        ResultStructure, blank=True, null=True, on_delete=models.DO_NOTHING)
     sector = models.ForeignKey(Sector, related_name='goals')
     name = models.CharField(max_length=512, unique=True)
     description = models.CharField(max_length=512, blank=True)
@@ -277,10 +320,11 @@ class Goal(models.Model):
         verbose_name = 'CCC'
         ordering = ['name']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class Unit(models.Model):
     """
     Represents an unit of measurement
@@ -290,10 +334,11 @@ class Unit(models.Model):
     class Meta:
         ordering = ['type']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.type
 
 
+@python_2_unicode_compatible
 class IndicatorBlueprint(models.Model):
     NUMBER = u'number'
     PERCENTAGE = u'percentage'
@@ -324,7 +369,7 @@ class IndicatorBlueprint(models.Model):
             self.code = None
         super(IndicatorBlueprint, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -356,6 +401,7 @@ class AppliedIndicator(models.Model):
         unique_together = (("indicator", "lower_result"),)
 
 
+@python_2_unicode_compatible
 class Indicator(models.Model):
     """
     Represents an indicator
@@ -369,10 +415,6 @@ class Indicator(models.Model):
     sector = models.ForeignKey(
         Sector,
         blank=True, null=True
-    )
-    result_structure = models.ForeignKey(
-        ResultStructure,
-        blank=True, null=True, on_delete=models.DO_NOTHING
     )
 
     result = models.ForeignKey(Result, null=True, blank=True)
@@ -390,15 +432,16 @@ class Indicator(models.Model):
     target = models.CharField(max_length=255, null=True, blank=True)
     baseline = models.CharField(max_length=255, null=True, blank=True)
     ram_indicator = models.BooleanField(default=False)
-
+    active = models.BooleanField(default=True)
     view_on_dashboard = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['-active', 'name']  # active indicators will show up first in the list
         unique_together = (("name", "result", "sector"),)
 
-    def __unicode__(self):
-        return u'{} {} {}'.format(
+    def __str__(self):
+        return u'{}{} {} {}'.format(
+            u'' if self.active else u'[Inactive] ',
             self.name,
             u'Baseline: {}'.format(self.baseline) if self.baseline else u'',
             u'Target: {}'.format(self.target) if self.target else u''

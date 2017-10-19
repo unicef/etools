@@ -1,7 +1,6 @@
-__author__ = 'jcranwellward'
+from __future__ import unicode_literals
 
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-
 from EquiTrack.factories import UserFactory
 
 
@@ -15,3 +14,8 @@ class TestUserModel(TenantTestCase):
             'Chief Tea Maker',
             user.profile.job_title
         )
+
+    def test_conversion_to_string(self):
+        '''Exercise converting instances to string.'''
+        user = UserFactory(first_name='Pel\xe9', last_name='Arantes do Nascimento')
+        self.assertEqual(unicode(user), 'Pel\xe9 Arantes do Nascimento')

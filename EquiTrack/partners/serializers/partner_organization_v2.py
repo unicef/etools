@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import json
 
 from django.utils import timezone
@@ -36,7 +37,8 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
         try:
             existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
             if existing_user.profile.partner_staff_member:
-                raise ValidationError("This user already exists under a different partnership: {}".format(email))
+                raise ValidationError("The email {} for the partner contact is used by another partner contact. "
+                                      "Email has to be unique to proceed.".format(email))
         except User.DoesNotExist:
             pass
 
@@ -98,8 +100,8 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
         if existing_user and not self.instance and existing_user.profile.partner_staff_member:
             raise ValidationError(
-                {'active': 'The Partner Staff member you are '
-                           'trying to add is associated with a different partnership: {}'.format(email)})
+                {'active': 'The email for the partner contact is used by another partner contact. Email has to be '
+                           'unique to proceed {}'.format(email)})
 
         # make sure email addresses are not editable after creation.. user must be removed and re-added
         if self.instance:
@@ -114,7 +116,8 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                     existing_user and existing_user.profile.partner_staff_member and \
                     existing_user.profile.partner_staff_member != self.instance.pk:
                 raise ValidationError(
-                    {'active': 'The Partner Staff member you are trying to activate is associated with a different partnership'}
+                    {'active':
+                     'The Partner Staff member you are trying to activate is associated with a different partnership'}
                 )
 
         return data
@@ -156,7 +159,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
                   'date_last_assessment_against_core_values', 'assessments', 'url',)
 
     def get_staff_members(self, obj):
-        return ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
+        return ', '.join(['{} ({})'.format(sm.get_full_name(), sm.email)
                           for sm in obj.staff_members.filter(active=True).all()])
 
     def get_assessments(self, obj):
@@ -237,6 +240,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
+    hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -258,6 +262,7 @@ class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values

@@ -3,14 +3,14 @@ import datetime
 import logging
 from decimal import Decimal
 
-from vision.vision_data_synchronizer import VisionDataSynchronizer
-from vision.utils import wcf_json_date_as_datetime, comp_decimals
 from django.utils import timezone
 
 from funds.models import (
     Grant, FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 )
 from partners.models import FundingCommitment, DirectCashTransfer
+from vision.vision_data_synchronizer import VisionDataSynchronizer
+from vision.utils import wcf_json_date_as_datetime, comp_decimals
 
 
 class FundingSynchronizer(VisionDataSynchronizer):
@@ -209,6 +209,11 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "OVERALL_AMOUNT_DC",
         "FR_LINE_ITEM_TEXT",
         "DUE_DATE",
+        "FR_OVERALL_AMOUNT",
+        "CURRENT_FR_AMOUNT",
+        "ACTUAL_CASH_TRANSFER",
+        "OUTSTANDING_DCT"
+
     )
     MAPPING = {
         "vendor_code": "VENDOR_CODE",
@@ -227,10 +232,14 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "overall_amount_dc": "OVERALL_AMOUNT_DC",
         "line_item_text": "FC_LINE_ITEM_TEXT",
         "due_date": "DUE_DATE",
+        "intervention_amt": "CURRENT_FR_AMOUNT",
+        "total_amt": "FR_OVERALL_AMOUNT",
+        "actual_amt": "ACTUAL_CASH_TRANSFER",
+        "outstanding_amt": "OUTSTANDING_DCT",
     }
-    HEADER_FIELDS = ['VENDOR_CODE', 'FR_NUMBER', 'FR_DOC_DATE',
-                     'FR_TYPE', 'CURRENCY', 'FR_DOCUMENT_TEXT',
-                     'FR_START_DATE', 'FR_END_DATE']
+    HEADER_FIELDS = ['VENDOR_CODE', 'FR_NUMBER', 'FR_DOC_DATE', 'FR_TYPE', 'CURRENCY',
+                     'FR_DOCUMENT_TEXT', 'FR_START_DATE', 'FR_END_DATE', "FR_OVERALL_AMOUNT",
+                     "CURRENT_FR_AMOUNT",  "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT"]
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
@@ -294,7 +303,8 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
             self.item_records[self.get_fr_item_number(r)] = self.map_line_item_record(r)
 
     def equal_fields(self, field, obj_field, record_field):
-        if field in ['overall_amount', 'overall_amount_dc']:
+        if field in ['overall_amount', 'overall_amount_dc',
+                     'intervention_amt', 'total_amt', 'actual_amt', 'outstanding_amt']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':
             return str(obj_field) == record_field
@@ -438,7 +448,8 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                      'EXCHANGE_RATE', 'RESP_PERSON']
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'WBS_ELEMENT', 'GRANT_NBR', 'FC_NUMBER', 'FR_NUMBER',
-                        'FUND', 'DUE_DATE', 'COMMITMENT_AMOUNT_USD', 'COMMITMENT_AMOUNT_DC', 'AMOUNT_CHANGED', 'FC_LINE_ITEM_TEXT']
+                        'FUND', 'DUE_DATE', 'COMMITMENT_AMOUNT_USD', 'COMMITMENT_AMOUNT_DC', 'AMOUNT_CHANGED',
+                        'FC_LINE_ITEM_TEXT']
 
     def __init__(self, *args, **kwargs):
         self.header_records = {}

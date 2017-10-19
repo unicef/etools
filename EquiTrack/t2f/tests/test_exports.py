@@ -15,7 +15,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory, WBSFactory, GrantFactory, FundFactory, DSARegionFactory, \
     AirlineCompanyFactory, DSARateFactory
 from t2f.models import Invoice, ModeOfTravel, TravelType, TravelActivity
-from t2f.tests.factories import InvoiceFactory, InvoiceItemFactory, IteneraryItemFactory, ExpenseFactory, \
+from t2f.tests.factories import InvoiceFactory, InvoiceItemFactory, ItineraryItemFactory, ExpenseFactory, \
     TravelActivityFactory
 
 from .factories import TravelFactory
@@ -229,10 +229,10 @@ class TravelExports(APITenantTestCase):
         ExpenseFactory(travel=travel, amount=Decimal('500'))
 
         travel_2 = TravelFactory(traveler=self.traveler,
-                               supervisor=self.unicef_staff,
-                               start_date=datetime(2016, 11, 20, tzinfo=UTC),
-                               end_date=datetime(2016, 12, 5, tzinfo=UTC),
-                               mode_of_travel=None)
+                                 supervisor=self.unicef_staff,
+                                 start_date=datetime(2016, 11, 20, tzinfo=UTC),
+                                 end_date=datetime(2016, 12, 5, tzinfo=UTC),
+                                 mode_of_travel=None)
         travel_2.expenses.all().delete()
         ExpenseFactory(travel=travel_2, amount=Decimal('200'))
         ExpenseFactory(travel=travel_2, amount=Decimal('100'), currency=None)
@@ -310,7 +310,7 @@ class TravelExports(APITenantTestCase):
         travel_1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
         travel_1.itinerary.all().delete()
 
-        itinerary_item_1 = IteneraryItemFactory(travel=travel_1,
+        itinerary_item_1 = ItineraryItemFactory(travel=travel_1,
                                                 origin='Origin1',
                                                 destination='Origin2',
                                                 departure_date=datetime(2016, 12, 3, 11, tzinfo=UTC),
@@ -319,7 +319,7 @@ class TravelExports(APITenantTestCase):
                                                 dsa_region=dsa_brd)
         itinerary_item_1.airlines.all().delete()
 
-        itinerary_item_2 = IteneraryItemFactory(travel=travel_1,
+        itinerary_item_2 = ItineraryItemFactory(travel=travel_1,
                                                 origin='Origin2',
                                                 destination='Origin3',
                                                 departure_date=datetime(2016, 12, 5, 11, tzinfo=UTC),
@@ -329,7 +329,7 @@ class TravelExports(APITenantTestCase):
         itinerary_item_2.airlines.all().delete()
         itinerary_item_2.airlines.add(airline_jetstar)
 
-        itinerary_item_3 = IteneraryItemFactory(travel=travel_1,
+        itinerary_item_3 = ItineraryItemFactory(travel=travel_1,
                                                 origin='Origin3',
                                                 destination='Origin1',
                                                 departure_date=datetime(2016, 12, 6, 11, tzinfo=UTC),
@@ -344,7 +344,7 @@ class TravelExports(APITenantTestCase):
         travel_2 = TravelFactory(traveler=another_traveler, supervisor=self.unicef_staff)
         travel_2.itinerary.all().delete()
 
-        itinerary_item_4 = IteneraryItemFactory(travel=travel_2,
+        itinerary_item_4 = ItineraryItemFactory(travel=travel_2,
                                                 origin='Origin2',
                                                 destination='Origin1',
                                                 departure_date=datetime(2016, 12, 5, 11, tzinfo=UTC),
@@ -354,7 +354,7 @@ class TravelExports(APITenantTestCase):
         itinerary_item_4.airlines.all().delete()
         itinerary_item_4.airlines.add(airline_jetstar)
 
-        itinerary_item_5 = IteneraryItemFactory(travel=travel_2,
+        itinerary_item_5 = ItineraryItemFactory(travel=travel_2,
                                                 origin='Origin3',
                                                 destination='Origin1',
                                                 departure_date=datetime(2016, 12, 6, 11, tzinfo=UTC),

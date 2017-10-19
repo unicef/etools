@@ -13,17 +13,12 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
 from dal import autocomplete
-from suit.widgets import AutosizedTextarea, SuitDateWidget
 
 from EquiTrack.forms import (
     AutoSizeTextForm,
-    ParentInlineAdminFormSet,
     UserGroupForm,
 )
 
-from reports.models import (
-    ResultStructure,
-)
 from locations.models import Location
 from reports.models import Sector
 from .models import (
@@ -35,11 +30,7 @@ from .models import (
     AgreementAmendmentLog,
     Agreement,
     PartnerStaffMember,
-    SupplyItem,
-    DistributionPlan,
     PartnershipBudget,
-    GovernmentIntervention,
-    Intervention,
     InterventionSectorLocationLink,
 )
 
@@ -137,25 +128,6 @@ class AssessmentAdminForm(AutoSizeTextForm):
         return cleaned_data
 
 
-class GovernmentInterventionAdminForm(forms.ModelForm):
-
-    class Meta:
-        model = GovernmentIntervention
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        super(GovernmentInterventionAdminForm, self).__init__(*args, **kwargs)
-
-        # by default add the previous 1 years and the next 2 years
-        current_year = date.today().year
-        years = range(current_year - 1, current_year + 2)
-
-        self.fields['year'] = forms.ChoiceField(
-            choices=[(year, year) for year in years]
-        )
-        self.fields['year'].empty_label = u'Select year'
-
-
 class AmendmentForm(forms.ModelForm):
 
     class Meta:
@@ -235,76 +207,6 @@ class PartnerStaffMemberForm(forms.ModelForm):
         return cleaned_data
 
 
-class DistributionPlanForm(forms.ModelForm):
-
-    class Meta:
-        model = DistributionPlan
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        """
-        Only show supply items already in the supply plan
-        """
-        if 'parent_object' in kwargs:
-            self.parent_partnership = kwargs.pop('parent_object')
-
-        super(DistributionPlanForm, self).__init__(*args, **kwargs)
-
-        queryset = SupplyItem.objects.none()
-        if hasattr(self, 'parent_partnership'):
-            if isinstance(self.parent_partnership, Intervention):
-                items = self.parent_partnership.supplies.all().values_list('item__id', flat=True)
-            else:
-                items = self.parent_partnership.supply_plans.all().values_list('item__id', flat=True)
-            queryset = SupplyItem.objects.filter(id__in=items)
-
-        self.fields['item'].queryset = queryset
-
-
-class DistributionPlanFormSet(ParentInlineAdminFormSet):
-
-    def clean(self):
-        """
-        Ensure distribution plans are inline with overall supply plan
-        """
-        cleaned_data = super(DistributionPlanFormSet, self).clean()
-
-        if isinstance(self.instance, Intervention):
-            if self.instance:
-                for plan in self.instance.supplies.all():
-                    total_quantity = 0
-                    for form in self.forms:
-                        if form.cleaned_data.get('DELETE', False):
-                            continue
-                        data = form.cleaned_data
-                        if plan.item == data.get('item', 0):
-                            total_quantity += data.get('quantity', 0)
-
-                    if total_quantity > plan.quantity:
-                        raise ValidationError(
-                            _(u'The total quantity ({}) of {} exceeds the planned amount of {}'.format(
-                                total_quantity, plan.item, plan.quantity))
-                        )
-        else:
-            if self.instance:
-                for plan in self.instance.supply_plans.all():
-                    total_quantity = 0
-                    for form in self.forms:
-                        if form.cleaned_data.get('DELETE', False):
-                            continue
-                        data = form.cleaned_data
-                        if plan.item == data.get('item', 0):
-                            total_quantity += data.get('quantity', 0)
-
-                    if total_quantity > plan.quantity:
-                        raise ValidationError(
-                            _(u'The total quantity ({}) of {} exceeds the planned amount of {}'.format(
-                                total_quantity, plan.item, plan.quantity))
-                        )
-
-        return cleaned_data
-
-
 class AgreementForm(UserGroupForm):
 
     ERROR_MESSAGES = {
@@ -327,10 +229,6 @@ class AgreementForm(UserGroupForm):
     class Meta:
         model = Agreement
         fields = '__all__'
-        widgets = {
-            'start': SuitDateWidget,
-            'end': SuitDateWidget,
-        }
 
     def clean(self):
         cleaned_data = super(AgreementForm, self).clean()
@@ -355,19 +253,6 @@ class AgreementForm(UserGroupForm):
                 if start < partner.get_last_pca.end:
                     err = u'This partner can only have one active {} agreement'.format(agreement_type)
                     raise ValidationError({'agreement_type': err})
-
-            # PCAs last as long as the most recent CPD
-            result_structure = ResultStructure.current()
-            if result_structure and end and end > result_structure.to_date:
-                raise ValidationError(
-                    {'end': u'This agreement cannot last longer than the current {} which ends on {}'.format(
-                        result_structure.name, result_structure.to_date
-                    )}
-                )
-
-            # set end date to result structure end date
-            if end is None:
-                self.cleaned_data[u'end'] = ResultStructure.current().to_date
 
             #  set start date to one of the signed dates
             if start is None:
@@ -474,7 +359,7 @@ class PartnershipForm(UserGroupForm):
         model = PCA
         fields = '__all__'
         widgets = {
-            'title': AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+            'title': forms.Textarea(),
         }
 
     def add_locations(self, p_codes, sector):

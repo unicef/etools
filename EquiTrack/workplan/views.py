@@ -2,35 +2,9 @@ from rest_framework import mixins, viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 
-from .models import Workplan, Comment, ResultWorkplanProperty, WorkplanProject, Label, Milestone
-from .serializers import CommentSerializer, WorkplanSerializer,\
+from workplan.models import Workplan, Comment, ResultWorkplanProperty, WorkplanProject, Label, Milestone
+from workplan.serializers import CommentSerializer, WorkplanSerializer,\
     WorkplanProjectSerializer, LabelSerializer, MilestoneSerializer
-from .tasks import notify_comment_tagged_users
-
-
-class TaggedNotificationMixin(object):
-    # TODO: rethink this
-    def perform_update(self, serializer):
-        # Caches the original set of tagged users on the instance to be able to
-        # determine new ones after update.
-        comment = self.get_object()
-        tagged_users_old = {x.id for x in comment.tagged_users.all()}
-        instance = serializer.save()
-        tagged_users_new = {x.id for x in instance.tagged_users.all()}
-        # Compare newly added to the old set
-        users_to_notify = list(tagged_users_new - tagged_users_old)
-
-        # Trigger notification
-        if users_to_notify:
-            notify_comment_tagged_users.delay(users_to_notify, instance.id)
-
-    def perform_create(self, serializer):
-        instance = serializer.save()
-        tagged_users_new = {x.id for x in instance.tagged_users.all()}
-
-        # Trigger notification
-        if tagged_users_new:
-            notify_comment_tagged_users.delay(tagged_users_new, instance.id)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -55,10 +29,10 @@ class WorkplanViewSet(viewsets.ModelViewSet):
 
 
 class LabelViewSet(mixins.RetrieveModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.CreateModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+                   mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   mixins.DestroyModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Label.objects.all()
     serializer_class = LabelSerializer
     permission_classes = (IsAdminUser,)

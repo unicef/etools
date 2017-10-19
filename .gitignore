@@ -1,4 +1,3 @@
-/behave-test/reports
 # Python bytecode:
 *.py[co]
 
@@ -22,7 +21,7 @@ build
 *idea*
 
 EquiTrack/static/*
-
+EquiTrack/migration_errors.txt
 static/*
 media
 
@@ -106,3 +105,9 @@ db_dumps/*.bz2
 
 # Sphinx documentation
 docs/_build/
+
+# macOS system meta file
+.DS_Store
+
+# custom settings files
+EquiTrack/EquiTrack/settings/custom.py

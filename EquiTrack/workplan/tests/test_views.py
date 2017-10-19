@@ -1,12 +1,9 @@
-from django.core import mail
 from rest_framework import status
 
 from EquiTrack.factories import UserFactory, CommentFactory, WorkplanFactory, \
-    ResultWorkplanPropertyFactory, WorkplanProjectFactory, LabelFactory, ResultFactory, \
-    ResultStructureFactory
+    ResultWorkplanPropertyFactory, WorkplanProjectFactory, LabelFactory, ResultFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType
-from workplan.tasks import notify_comment_tagged_users
 
 
 class TestWorkplanViews(APITenantTestCase):
@@ -23,7 +20,7 @@ class TestWorkplanViews(APITenantTestCase):
         self.workplan_project = WorkplanProjectFactory(workplan=self.workplan)
         self.labels = [LabelFactory() for x in xrange(3)]
         self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
-        self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
+        self.result = ResultFactory(result_type=self.result_type)
 
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(
                                             workplan=self.workplan,
@@ -160,28 +157,5 @@ class TestWorkplanViews(APITenantTestCase):
         }
         response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data,
                                         user=self.unicef_staff)
-        notify_comment_tagged_users([self.user.id, self.user2.id], self.comment2["id"])
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(mail.outbox[1].subject, "You are tagged on a comment")
-
-    # def test_view_comments_update_remove(self):
-    #     data = {
-    #         "author": self.user.id,
-    #         "tagged_users": [self.user.id, self.user2.id],
-    #         "text": "foobar",
-    #         "workplan": self.workplan.id
-    #     }
-    #     response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data,
-    #                                     user=self.unicef_staff)
-    #     data = {
-    #         "author": self.user.id,
-    #         "tagged_users": [self.user2.id],
-    #         "text": "foobar",
-    #         "workplan": self.workplan.id
-    #     }
-    #     response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data,
-    #                                     user=self.unicef_staff)
-    #
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(mail.outbox), 2)

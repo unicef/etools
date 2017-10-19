@@ -1,23 +1,24 @@
-import logging
-
 from decimal import Decimal
+import logging
+import sys
+
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction, connection
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from djangosaml2.signals import pre_user_save
-
-from django.db import transaction, connection
-
 from tenant_schemas.models import TenantMixin
 
-User.__unicode__ = lambda user: user.get_full_name()
+if sys.version_info.major == 3:
+    User.__str__ = lambda user: user.get_full_name()
+else:
+    # Python 2.7
+    User.__unicode__ = lambda user: user.get_full_name()
 User._meta.ordering = ['first_name']
-
-logger = logging.getLogger('users.models')
+logger = logging.getLogger(__name__)
 
 
 class Country(TenantMixin):
@@ -105,6 +106,7 @@ class WorkspaceCounter(models.Model):
 
     def __unicode__(self):
         return self.workspace.name
+
 
 post_save.connect(WorkspaceCounter.create_counter_model, sender=Country)
 
@@ -213,7 +215,8 @@ class UserProfile(models.Model):
     section_code = models.CharField(max_length=32, null=True, blank=True)
 
     # TODO: figure this out when we need to autmatically map to groups
-    # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES), blank=True, null=True)
+    # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
+    #                           blank=True, null=True)
 
     def username(self):
         return self.user.username

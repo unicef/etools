@@ -1,14 +1,15 @@
-__author__ = 'jcranwellward'
-
 import logging
+
 from django import forms
 from django.core.exceptions import ValidationError
 
-from cartodb import CartoDBAPIKey, CartoDBException
+from carto.auth import APIKeyAuthClient
+from carto.exceptions import CartoException
+from carto.sql import SQLClient
 
 from .models import CartoDBTable
 
-logger = logging.getLogger('locations.models')
+logger = logging.getLogger(__name__)
 
 
 class CartoDBTableForm(forms.ModelForm):
@@ -26,14 +27,13 @@ class CartoDBTableForm(forms.ModelForm):
         pcode_col = self.cleaned_data['pcode_col']
         parent_code_col = self.cleaned_data['parent_code_col']
 
-        client = CartoDBAPIKey(api_key, domain)
+        auth_client = APIKeyAuthClient(api_key=api_key, base_url="https://{}.carto.com/".format(str(domain)))
+        sql_client = SQLClient(auth_client)
         try:
-            sites = client.sql(
-                'select * from {} limit 1'.format(table_name)
-            )
-        except CartoDBException as e:
-            logging.exception("CartoDB exception occured", exc_info=True)
-            raise ValidationError("Couldn't connect to CartoDB table: "+table_name)
+            sites = sql_client.send('select * from {} limit 1'.format(table_name))
+        except CartoException:
+            logger.exception("CartoDB exception occured")
+            raise ValidationError("Couldn't connect to CartoDB table: {}".format(table_name))
         else:
             row = sites['rows'][0]
             if name_col not in row:
