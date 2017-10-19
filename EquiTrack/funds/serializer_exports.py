@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from funds.models import (
@@ -20,11 +21,17 @@ class FundsReservationHeaderExportSerializer(serializers.ModelSerializer):
 
 
 class FundsReservationHeaderExportFlatSerializer(FundsReservationHeaderExportSerializer):
-    intervention = serializers.CharField(source="intervention.number")
+    intervention = serializers.CharField(
+        label=_("Reference Number"),
+        source="intervention.number",
+    )
 
 
 class FundsReservationItemExportSerializer(serializers.ModelSerializer):
-    intervention = serializers.CharField(source="fund_reservation.intervention.pk")
+    intervention = serializers.CharField(
+        label=_("Reference Number"),
+        source="fund_reservation.intervention.pk",
+    )
 
     class Meta:
         model = FundsReservationItem
@@ -32,7 +39,10 @@ class FundsReservationItemExportSerializer(serializers.ModelSerializer):
 
 
 class FundsReservationItemExportFlatSerializer(FundsReservationItemExportSerializer):
-    intervention = serializers.CharField(source="fund_reservation.intervention.number")
+    intervention = serializers.CharField(
+        label=_("Reference Number"),
+        source="fund_reservation.intervention.number",
+    )
     fund_reservation = serializers.CharField(source="fund_reservation.fr_number")
 
 
@@ -45,7 +55,7 @@ class GrantExportFlatSerializer(GrantSerializer):
 
 
 class DonorExportSerializer(serializers.ModelSerializer):
-    grant = serializers.SerializerMethodField(label="Grant")
+    grant = serializers.SerializerMethodField(label=_("Grant"))
 
     class Meta:
         model = Donor
