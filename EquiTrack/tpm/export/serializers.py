@@ -76,3 +76,21 @@ class TPMPartnerExportSerializer(serializers.Serializer):
     city = serializers.CharField()
     phone_number = serializers.CharField()
     email = serializers.CharField()
+
+
+class TPMPartnerContactsSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    email = serializers.CharField(source='user.email')
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
+    is_active = serializers.IntegerField(source='user.is_active')
+    job_title = serializers.CharField(source='user.profile.job_title')
+    phone_number = serializers.CharField(source='user.profile.phone_number')
+    org_id = serializers.CharField(source='tpm_partner.vendor_number')
+    org_name = serializers.CharField(source='tpm_partner.name')
+    org_email = serializers.CharField(source='tpm_partner.email')
+    org_phone = serializers.CharField(source='tpm_partner.phone_number')
+    org_country = serializers.CharField(source='tpm_partner.country')
+    org_city = serializers.CharField(source='tpm_partner.city')
+    org_address = serializers.CharField(source='tpm_partner.street_address')
+    org_postal_code = serializers.CharField(source='tpm_partner.postal_code')
