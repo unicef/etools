@@ -7,20 +7,16 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework_csv import renderers as r
+from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
 
+from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.renderers import CSVFlatRenderer
 from reports.models import (
     AppliedIndicator,
     CountryProgramme,
     Indicator,
     LowerResult,
     Result,
-)
-from reports.renderers import (
-    AppliedIndicatorCSVFlatRenderer,
-    AppliedIndicatorCSVRenderer,
-    LowerResultCSVFlatRenderer,
-    LowerResultCSVRenderer,
 )
 from reports.serializers.exports import (
     AppliedIndicatorExportFlatSerializer,
@@ -130,7 +126,7 @@ class ResultIndicatorListAPIView(ListAPIView):
         )
 
 
-class LowerResultsListAPIView(ListAPIView):
+class LowerResultsListAPIView(ExportModelMixin, ListAPIView):
     """
     Returns a list of LowerResults.
     """
@@ -138,9 +134,9 @@ class LowerResultsListAPIView(ListAPIView):
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
-        LowerResultCSVRenderer,
-        LowerResultCSVFlatRenderer,
+        JSONRenderer,
+        CSVRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -191,7 +187,7 @@ class LowerResultsDeleteView(DestroyAPIView):
             raise ValidationError("You do not have permissions to delete a lower result")
 
 
-class AppliedIndicatorListAPIView(ListAPIView):
+class AppliedIndicatorListAPIView(ExportModelMixin, ListAPIView):
     """
     Returns a list of AppliedIndicators.
     """
@@ -199,9 +195,9 @@ class AppliedIndicatorListAPIView(ListAPIView):
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
-        AppliedIndicatorCSVRenderer,
-        AppliedIndicatorCSVFlatRenderer,
+        JSONRenderer,
+        CSVRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self):

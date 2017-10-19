@@ -4,6 +4,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
+from django.utils.translation import ugettext as _
 
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
@@ -278,12 +279,17 @@ class LowerResult(TimeStampedModel):
     # Lower result is always an output
 
     # link to intermediary model to intervention and cp ouptut
-    result_link = models.ForeignKey('partners.InterventionResultLink', related_name='ll_results', null=True)
+    result_link = models.ForeignKey(
+        'partners.InterventionResultLink',
+        verbose_name=_("Reference Number"),
+        related_name='ll_results',
+        null=True,
+    )
 
-    name = models.CharField(max_length=500)
+    name = models.CharField(verbose_name=_("Name"), max_length=500)
 
     # automatically assigned unless assigned manually in the UI (Lower level WBS - like code)
-    code = models.CharField(max_length=50)
+    code = models.CharField(verbose_name=_("Code"), max_length=50)
 
     def __str__(self):
         return u'{}: {}'.format(
@@ -348,12 +354,36 @@ class IndicatorBlueprint(models.Model):
         (PERCENTAGE, PERCENTAGE),
         (YESNO, YESNO)
     )
-    name = models.CharField(max_length=1024)
-    unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default=NUMBER)
-    description = models.CharField(max_length=3072, null=True, blank=True)
-    code = models.CharField(max_length=50, null=True, blank=True, unique=True)
-    subdomain = models.CharField(max_length=255, null=True, blank=True)
-    disaggregatable = models.BooleanField(default=False)
+    name = models.CharField(verbose_name=_("Name"), max_length=1024)
+    unit = models.CharField(
+        verbose_name=_("Unit"),
+        max_length=10,
+        choices=UNIT_CHOICES,
+        default=NUMBER,
+    )
+    description = models.CharField(
+        verbose_name=_("Description"),
+        max_length=3072,
+        null=True,
+        blank=True,
+    )
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        null=True,
+        blank=True,
+        unique=True,
+    )
+    subdomain = models.CharField(
+        verbose_name=_("Subdomain"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    disaggregatable = models.BooleanField(
+        verbose_name=_("Disaggregatable"),
+        default=False,
+    )
 
     # TODO: add:
     # siblings (similar inidcators to this indicator)
@@ -378,24 +408,58 @@ class AppliedIndicator(models.Model):
     indicator = models.ForeignKey(IndicatorBlueprint)
 
     # the result this indicator is contributing to.
-    lower_result = models.ForeignKey(LowerResult, related_name='applied_indicators')
+    lower_result = models.ForeignKey(
+        LowerResult,
+        verbose_name=_("Lower Level Result"),
+        related_name='applied_indicators',
+    )
 
     # unique code for this indicator within the current context
     # eg: (1.1) result code 1 - indicator code 1
-    context_code = models.CharField(max_length=50, null=True, blank=True,
-                                    verbose_name="Code in current context")
-    target = models.CharField(max_length=255, null=True, blank=True)
-    baseline = models.CharField(max_length=255, null=True, blank=True)
-    assumptions = models.TextField(null=True, blank=True)
-    means_of_verification = models.CharField(max_length=255, null=True, blank=True)
+    context_code = models.CharField(
+        verbose_name=_("Code in current context"),
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    target = models.CharField(
+        verbose_name=_("Target"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    baseline = models.CharField(
+        verbose_name=_("Baseline"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    assumptions = models.TextField(
+        verbose_name=_("Assumptions"),
+        null=True,
+        blank=True,
+    )
+    means_of_verification = models.CharField(
+        verbose_name=_("Means of Verification"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
 
     # current total, transactional and dynamically calculated based on IndicatorReports
-    total = models.IntegerField(null=True, blank=True, default=0,
-                                verbose_name="Current Total")
+    total = models.IntegerField(
+        verbose_name=_("Current Total"),
+        null=True,
+        blank=True,
+        default=0,
+    )
 
     # variable disaggregation's that may be present in the work plan
     # this can only be present if the indicatorBlueprint has dissagregatable = true
-    disaggregation_logic = JSONField(null=True)
+    disaggregation_logic = JSONField(
+        verbose_name=_("Disaggregation Logic"),
+        null=True,
+    )
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
