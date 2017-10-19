@@ -63,7 +63,7 @@ class ExportViewSetDataMixin(object):
 
 class FSMTransitionActionMixin(object):
     @detail_route(methods=['post'], url_path='(?P<action>\D+)')
-    def action(self, request, *args, **kwargs):
+    def transition(self, request, *args, **kwargs):
         """
         Change status of the Engagement
         """
