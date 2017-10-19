@@ -186,6 +186,12 @@ class EngagementViewSet(
     @detail_route(methods=['get'], url_path='pdf')
     def export_pdf(self, request, *args, **kwargs):
         obj = self.get_object()
+
+        if not AuditPermission.objects.filter(instance=obj, user=request.user).exists():
+            self.permission_denied(
+                request, message=_('You have no access to this engagement.')
+            )
+
         if isinstance(obj, MicroAssessment):
             serializer_class = MicroAssessmentPDFSerializer
             template = 'audit/microassessment_pdf.html'

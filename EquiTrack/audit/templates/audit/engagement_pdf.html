@@ -207,7 +207,7 @@
                 <td>First Name</td>
                 <td>Last Name</td>
                 <td>Phone Number</td>
-                <td>E-mail Address</td>
+                <td colspan="2">E-mail Address</td>
               </tr>
               {% if engagement.staff_members %}
                 {% for staff_member in engagement.staff_members %}
@@ -217,7 +217,7 @@
                   <td>{{ staff_member.first_name|default:"-" }}</td>
                   <td>{{ staff_member.last_name|default:"-" }}</td>
                   <td>{{ staff_member.phone_number|default:"-" }}</td>
-                  <td>{{ staff_member.email|default:"-" }}</td>
+                  <td colspan="2">{{ staff_member.email|default:"-" }}</td>
                 </tr>
                 {% endfor %}
               {% else %}
