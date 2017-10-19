@@ -212,7 +212,8 @@ class TPMVisitViewSet(
     )
     filter_fields = (
         'tpm_partner', 'tpm_activities__section', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
-        'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status'
+        'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status',
+        'unicef_focal_points', 'tpm_partner_focal_points',
     )
 
     def get_queryset(self):
