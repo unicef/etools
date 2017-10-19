@@ -3,7 +3,6 @@ import functools
 
 from django.utils.translation import ugettext as _
 from django.db.models import Q
-from EquiTrack.mixins import ExportModelMixin
 from rest_framework import (
     permissions,
     status
@@ -11,9 +10,9 @@ from rest_framework import (
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework_csv import renderers as r
-from rest_framework_csv.renderers import CSVRenderer
+from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
 
+from EquiTrack.mixins import ExportModelMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from funds.models import (
     Donor,
@@ -86,7 +85,7 @@ class FundsReservationHeaderListAPIView(ExportModelMixin, ListAPIView):
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         CSVRenderer,
         CSVFlatRenderer,
     )
@@ -130,7 +129,7 @@ class FundsReservationItemListAPIView(ExportModelMixin, ListAPIView):
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         CSVRenderer,
         CSVFlatRenderer,
     )
@@ -174,7 +173,7 @@ class FundsCommitmentHeaderListAPIView(ExportModelMixin, ListAPIView):
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         CSVRenderer,
         CSVFlatRenderer,
     )
@@ -205,7 +204,7 @@ class FundsCommitmentItemListAPIView(ExportModelMixin, ListAPIView):
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         CSVRenderer,
         CSVFlatRenderer,
     )
@@ -247,7 +246,7 @@ class GrantListAPIView(ExportModelMixin, ListAPIView):
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         CSVRenderer,
         CSVFlatRenderer,
     )
@@ -289,7 +288,7 @@ class DonorListAPIView(ExportModelMixin, ListAPIView):
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
-        r.JSONRenderer,
+        JSONRenderer,
         CSVRenderer,
         CSVFlatRenderer,
     )
