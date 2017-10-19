@@ -212,7 +212,13 @@
               {% if engagement.staff_members %}
                 {% for staff_member in engagement.staff_members %}
                 <tr>
-                  <td class="text-center">{{ staff_member.has_access }}</td>
+                  <td class="text-center">
+                    {% if staff_member.has_access %}
+                      Y
+                    {% else %}
+                      N
+                    {% endif %}
+                  </td>
                   <td>{{ staff_member.job_title|default:"-" }}</td>
                   <td>{{ staff_member.first_name|default:"-" }}</td>
                   <td>{{ staff_member.last_name|default:"-" }}</td>
@@ -223,7 +229,7 @@
               {% else %}
                 <tr>
                   <td>-</td><td>-</td><td>-</td>
-                  <td>-</td><td>-</td><td>-</td>
+                  <td>-</td><td>-</td><td colspan="2">-</td>
                 </tr>
               {% endif %}
             </table>
