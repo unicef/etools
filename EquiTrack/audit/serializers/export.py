@@ -22,6 +22,7 @@ class AuditorPDFSerializer(serializers.ModelSerializer):
         model = AuditorFirm
         fields = ('name', 'vendor_number')
 
+
 class AgreementPDFSerializer(serializers.ModelSerializer):
     auditor_firm = AuditorPDFSerializer()
     contract_start_date = serializers.DateField(format='%d %b %Y')
@@ -115,10 +116,10 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
     class Meta:
         model = Engagement
         fields = [
-            'id','agreement','partner', 'engagement_type_display', 'engagement_type','status_display', 'status', 'unique_id',
-            'authorized_officers', 'active_pd', 'staff_members',
-            'date_of_field_visit','date_of_draft_report_to_ip','date_of_comments_by_ip',
-            'date_of_draft_report_to_unicef','date_of_comments_by_unicef',
+            'id', 'agreement', 'partner', 'engagement_type_display', 'engagement_type', 'status_display', 'status',
+            'unique_id', 'authorized_officers', 'active_pd', 'staff_members',
+            'date_of_field_visit', 'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
+            'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'action_points', 'engagement_attachments', 'report_attachments',
         ]
 
