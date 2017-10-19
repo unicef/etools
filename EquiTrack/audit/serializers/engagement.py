@@ -159,6 +159,8 @@ class EngagementSerializer(EngagementDatesValidation,
             'total_value', 'staff_members', 'active_pd',
             'authorized_officers', 'action_points',
 
+            'joint_audit', 'shared_ip_with',
+
             'start_date', 'end_date',
             'partner_contacted_at', 'date_of_field_visit',
             'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
@@ -246,6 +248,8 @@ class SpotCheckSerializer(EngagementSerializer):
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information',
         ]
+        fields.remove('joint_audit')
+        fields.remove('shared_ip_with')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True, 'label': _('Engagement Type')}

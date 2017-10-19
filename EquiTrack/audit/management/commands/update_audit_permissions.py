@@ -45,6 +45,8 @@ class Command(BaseCommand):
         'engagement.end_date',
         'engagement.total_value',
         'engagement.active_pd',
+        'engagement.joint_audit',
+        'engagement.shared_ip_with',
     ]
 
     partner_block = [
