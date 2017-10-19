@@ -28,47 +28,8 @@ from .transitions.conditions import ValidateTPMVisitActivities, \
                                     TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
 
 
-@python_2_unicode_compatible
 class TPMPartner(BaseFirm):
-    STATUSES = Choices(
-        ('draft', _('Draft')),
-        ('active', _('Active')),
-        ('cancelled', _('Cancelled')),
-    )
-
-    STATUSES_DATES = {
-        STATUSES.draft: 'date_created',
-        STATUSES.active: 'date_of_active',
-        STATUSES.cancelled: 'date_of_cancel',
-    }
-
-    status = FSMField(_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
     attachments = GenericRelation(Attachment, verbose_name=_('attachments'), blank=True)
-
-    date_of_active = models.DateField(blank=True, null=True)
-    date_of_cancel = models.DateField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def date_created(self):
-        return self.created.date()
-
-    @property
-    def status_date(self):
-        return getattr(self, self.STATUSES_DATES[self.status])
-
-    # TODO: Remove hardcode for PME permissions?
-    @transition(status, source=[STATUSES.draft, STATUSES.cancelled], target=STATUSES.active,
-                permission=lambda instance, user: PME.as_group() in user.groups.all())
-    def activate(self):
-        self.date_of_active = timezone.now()
-
-    @transition(status, source=[STATUSES.draft, STATUSES.active], target=STATUSES.cancelled,
-                permission=lambda instance, user: PME.as_group() in user.groups.all())
-    def cancel(self):
-        self.date_of_cancel = timezone.now()
 
 
 @python_2_unicode_compatible

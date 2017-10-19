@@ -18,20 +18,18 @@ class TPMPartnerStaffMemberSerializer(BaseStaffMemberSerializer):
 
 
 class TPMPartnerLightSerializer(serializers.ModelSerializer):
-    status_date = serializers.ReadOnlyField()
-
     class Meta:
         model = TPMPartner
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number', 'status', 'status_date',
+            'email', 'phone_number',
             'hidden', 'blocked', 'vision_synced', 'deleted_flag',
         ]
         extra_kwargs = {
             field: {'read_only': True}
             for field in [
-                'vendor_number', 'name', 'status',
+                'vendor_number', 'name',
                 'street_address', 'city', 'postal_code', 'country',
                 'blocked', 'vision_synced', 'deleted_flag',
             ]

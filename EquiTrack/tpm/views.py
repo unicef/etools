@@ -42,12 +42,10 @@ class TPMPartnerViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    FSMTransitionActionMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-    metadata_class = TPMPermissionBasedMetadata
     queryset = TPMPartner.objects.all()
     serializer_class = TPMPartnerSerializer
     serializer_action_classes = {
@@ -58,7 +56,7 @@ class TPMPartnerViewSet(
     search_fields = ('vendor_number', 'name', 'phone_number', 'email')
     ordering_fields = ('vendor_number', 'name', 'phone_number', 'email')
     filter_fields = (
-        'status', 'blocked', 'hidden', 'deleted_flag',
+        'blocked', 'hidden', 'deleted_flag',
     )
 
     def get_queryset(self):
