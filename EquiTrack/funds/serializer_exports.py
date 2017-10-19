@@ -45,7 +45,7 @@ class GrantExportFlatSerializer(GrantSerializer):
 
 
 class DonorExportSerializer(serializers.ModelSerializer):
-    grant = serializers.SerializerMethodField()
+    grant = serializers.SerializerMethodField(label="Grant")
 
     class Meta:
         model = Donor

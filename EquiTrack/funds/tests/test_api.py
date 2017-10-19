@@ -450,12 +450,14 @@ class TestGrantExportList(APITenantTestCase):
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
+            "ID",
             "Donor",
             "Name",
             "Description",
             "Expiry",
         ])
         self.assertEqual(dataset[0], (
+            u"{}".format(self.grant.pk),
             u"{}".format(self.grant.donor.pk),
             unicode(self.grant.name),
             u"",
@@ -474,7 +476,7 @@ class TestGrantExportList(APITenantTestCase):
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
-            "Id",
+            "ID",
             "Donor",
             "Name",
             "Description",
@@ -519,10 +521,12 @@ class TestDonorExportList(APITenantTestCase):
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
+            "ID",
             "Grant",
             "Name",
         ])
         self.assertEqual(dataset[0], (
+            u"{}".format(self.donor.pk),
             unicode(self.grant.pk),
             unicode(self.donor.name),
         ))
@@ -539,7 +543,7 @@ class TestDonorExportList(APITenantTestCase):
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
-            "Id",
+            "ID",
             "Grant",
             "Name",
         ])

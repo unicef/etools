@@ -3,6 +3,7 @@ import functools
 
 from django.utils.translation import ugettext as _
 from django.db.models import Q
+from EquiTrack.mixins import ExportModelMixin
 from rest_framework import (
     permissions,
     status
@@ -11,7 +12,9 @@ from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_csv import renderers as r
+from rest_framework_csv.renderers import CSVRenderer
 
+from EquiTrack.renderers import CSVFlatRenderer
 from funds.models import (
     Donor,
     FundsCommitmentHeader,
@@ -21,8 +24,6 @@ from funds.models import (
     Grant,
 )
 from funds.renderers import (
-    DonorCSVFlatRenderer,
-    DonorCSVRenderer,
     FundsCommitmentHeaderCSVFlatRenderer,
     FundsCommitmentHeaderCSVRenderer,
     FundsCommitmentItemCSVFlatRenderer,
@@ -31,8 +32,6 @@ from funds.renderers import (
     FundsReservationHeaderCSVFlatRenderer,
     FundsReservationItemCSVFlatRenderer,
     FundsReservationItemCSVRenderer,
-    GrantCSVFlatRenderer,
-    GrantCSVRenderer,
 )
 from funds.serializer_exports import (
     DonorExportFlatSerializer,
@@ -250,7 +249,7 @@ class FundsCommitmentItemListAPIView(ListAPIView):
         return q
 
 
-class GrantListAPIView(ListAPIView):
+class GrantListAPIView(ExportModelMixin, ListAPIView):
     """
     Returns a list of Grants.
     """
@@ -259,8 +258,8 @@ class GrantListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        GrantCSVRenderer,
-        GrantCSVFlatRenderer,
+        CSVRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -292,7 +291,7 @@ class GrantListAPIView(ListAPIView):
         return q
 
 
-class DonorListAPIView(ListAPIView):
+class DonorListAPIView(ExportModelMixin, ListAPIView):
     """
     Returns a list of Donors.
     """
@@ -301,8 +300,8 @@ class DonorListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        DonorCSVRenderer,
-        DonorCSVFlatRenderer,
+        CSVRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self):

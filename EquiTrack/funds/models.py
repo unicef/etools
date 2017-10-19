@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext as _
 
 
 @python_2_unicode_compatible
@@ -9,7 +10,7 @@ class Donor(models.Model):
     Represents Donor for a Grant.
     """
 
-    name = models.CharField(max_length=45, unique=True)
+    name = models.CharField(verbose_name=_("Name"), max_length=45, unique=True)
 
     class Meta:
         ordering = ['name']
@@ -31,15 +32,29 @@ class Grant(models.Model):
     Relates to :model:`funds.Donor`
     """
 
-    donor = models.ForeignKey(Donor)
-    name = models.CharField(max_length=128, unique=True)
-    description = models.CharField(max_length=255, null=True, blank=True)
-    expiry = models.DateField(null=True, blank=True)
+    donor = models.ForeignKey(Donor, verbose_name=_("Donor"))
+    name = models.CharField(
+        verbose_name=_("Name"),
+        max_length=128,
+        unique=True
+    )
+    description = models.CharField(
+        verbose_name=_("Description"),
+        max_length=255,
+        null=True,
+        blank=True
+    )
+    expiry = models.DateField(verbose_name=_("Expiry"), null=True, blank=True)
 
     objects = GrantManager()
 
     class Meta:
-        ordering = ['donor']
+        ordering = [
+            'donor',
+            'name',
+            'description',
+            'expiry',
+        ]
 
     def __str__(self):
         return u"{}: {}".format(
