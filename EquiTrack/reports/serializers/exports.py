@@ -24,23 +24,7 @@ class AppliedIndicatorExportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AppliedIndicator
-        fields = (
-            "intervention",
-            "lower_result",
-            "context_code",
-            "target",
-            "baseline",
-            "assumptions",
-            "means_of_verification",
-            "total",
-            "disaggregation_logic",
-            "name",
-            "unit",
-            "description",
-            "code",
-            "subdomain",
-            "disaggregatable",
-        )
+        fields = "__all__"
 
     def get_disaggregatable(self, obj):
         return "Yes" if obj.indicator.disaggregatable else "No"
@@ -58,24 +42,7 @@ class AppliedIndicatorExportFlatSerializer(AppliedIndicatorExportSerializer):
 
     class Meta:
         model = AppliedIndicator
-        fields = (
-            "id",
-            "intervention",
-            "lower_result",
-            "context_code",
-            "target",
-            "baseline",
-            "assumptions",
-            "means_of_verification",
-            "total",
-            "disaggregation_logic",
-            "name",
-            "unit",
-            "description",
-            "code",
-            "subdomain",
-            "disaggregatable",
-        )
+        fields = "__all__"
 
 
 class LowerResultExportSerializer(serializers.ModelSerializer):
