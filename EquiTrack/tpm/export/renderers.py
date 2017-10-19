@@ -4,34 +4,42 @@ from rest_framework_csv.renderers import CSVRenderer
 
 
 class TPMActivityCSVRenderer(CSVRenderer):
-    header = ['ref', 'visit', 'activity', 'section', 'cp_output', 'partnership',
-              'locations', 'date', 'unicef_focal_points']
+    header = ['ref', 'visit', 'activity', 'section', 'cp_output', 'implementing_partner', 'partnership',
+              'locations', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'link']
     labels = {
         'ref': _('Visit Ref. #'),
         'visit': _('Visit'),
         'activity': _('Activity'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
+        'implementing_partner': _('Partner'),
         'partnership': _('Partnership'),
         'locations': _('Locations'),
         'date': _('Date'),
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
+        'offices': _('Offices'),
+        'tpm_focal_points': _('Name of TPM Focal Point'),
+        'link': _('Hyperlink'),
     }
 
 
 class TPMLocationCSVRenderer(CSVRenderer):
-    header = ['ref', 'visit', 'activity', 'section', 'cp_output', 'partnership',
-              'location', 'date', 'unicef_focal_points']
+    header = ['ref', 'visit', 'activity', 'section', 'cp_output', 'implementing_partner', 'partnership',
+              'location', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'link']
     labels = {
         'ref': _('Visit Ref. #'),
         'visit': _('Visit'),
         'activity': _('Activity'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
+        'implementing_partner': _('Partner'),
         'partnership': _('Partnership'),
         'location': _('Location'),
         'date': _('Date'),
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
+        'offices': _('Offices'),
+        'tpm_focal_points': _('Name of TPM Focal Point'),
+        'link': _('Hyperlink'),
     }
 
 
