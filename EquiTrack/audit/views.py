@@ -1,11 +1,9 @@
 from django.db.models import Prefetch
 from django.http import Http404
-from django.views.generic.detail import SingleObjectMixin
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import ugettext_lazy as _
 from easy_pdf.rendering import render_to_pdf_response
-from easy_pdf.views import PDFTemplateView
-from rest_framework import generics, mixins, views, viewsets
+from rest_framework import generics, mixins, viewsets
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import IsAuthenticated
@@ -206,9 +204,10 @@ class EngagementViewSet(
 
         return render_to_pdf_response(
             request, template,
-            context={'engagement': serializer_class(obj).data,},
+            context={'engagement': serializer_class(obj).data},
             filename='engagement_{}.pdf'.format(obj.unique_id),
         )
+
 
 class EngagementManagementMixin(
     FSMTransitionActionMixin,
