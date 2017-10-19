@@ -107,6 +107,7 @@ class Engagement(TimeStampedModel, models.Model):
         ('audit', _('Audit')),
         ('ma', _('Micro Accessment')),
         ('sc', _('Spot Check')),
+        ('sa', _('Special Audit')),
     )
 
     STATUSES = Choices(
@@ -638,6 +639,25 @@ class FinancialFinding(models.Model):
     description = models.TextField(_('description'))
     recommendation = models.TextField(_('recommendation'), blank=True)
     ip_comments = models.TextField(_('IP comments'), blank=True)
+
+
+class SpecialAudit(Engagement):
+    pass
+
+
+class SpecificProcedure(models.Model):
+    audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='specific_procedures')
+
+    number = models.PositiveIntegerField()
+    description = models.TextField()
+    finding = models.TextField()
+
+
+class SpecialAuditRecommendation(models.Model):
+    audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='other_recommendations')
+
+    number = models.PositiveIntegerField()
+    description = models.TextField()
 
 
 @python_2_unicode_compatible

@@ -5,7 +5,7 @@ from django.conf.urls import include, url
 from rest_framework_nested import routers
 
 from audit.views import (
-    AuditorFirmViewSet, AuditViewSet,
+    AuditorFirmViewSet, AuditViewSet, SpecialAuditViewSet,
     EngagementViewSet, MicroAssessmentViewSet, SpotCheckViewSet,
     PurchaseOrderViewSet, AuditorStaffMembersViewSet)
 from utils.common.routers import NestedComplexRouter
@@ -31,6 +31,9 @@ spot_checks_api.register(r'spot-checks', SpotCheckViewSet, base_name='spot-check
 audits_api = routers.SimpleRouter()
 audits_api.register('audits', AuditViewSet, base_name='audits')
 
+special_audits_api = routers.SimpleRouter()
+special_audits_api.register(r'special-audits', SpecialAuditViewSet, base_name='special-audits')
+
 
 urlpatterns = [
     url(r'^', include(auditor_firms_api.urls)),
@@ -40,4 +43,5 @@ urlpatterns = [
     url(r'^', include(micro_assessments_api.urls)),
     url(r'^', include(spot_checks_api.urls)),
     url(r'^', include(audits_api.urls)),
+    url(r'^', include(special_audits_api.urls)),
 ]

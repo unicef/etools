@@ -34,6 +34,7 @@ class Command(BaseCommand):
         'riskcategory.*',
         'profile.*',
         'user.*',
+        'specificprocedure.*',
     ]
 
     engagement_overview_block = [
@@ -133,6 +134,11 @@ class Command(BaseCommand):
             'engagement.related_agreement',
             'purchaseorder.contract_end_date',
         ])
+        self.add_permissions(self.new_engagement, self.focal_point, 'edit', [
+            'specialaudit.specific_procedures',
+            'specificprocedure.number',
+            'specificprocedure.description',
+        ])
 
         # created: auditor can edit, everybody else can view, focal point can cancel
         self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
@@ -153,6 +159,13 @@ class Command(BaseCommand):
             'engagementstaffmember.*',
             'profile.*',
             'user.*',
+            'specificprocedure.*',
+        ])
+
+        self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
+            'specialaudit.specific_procedures',
+            'specificprocedure.finding',
+            'specialaudit.specialauditrecommendation',
         ])
 
         self.add_permissions(self.partner_contacted, self.all_unicef_users, 'view', self.everything)

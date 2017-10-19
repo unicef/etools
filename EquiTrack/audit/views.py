@@ -16,13 +16,13 @@ from utils.common.views import MultiSerializerViewSetMixin, ExportViewSetDataMix
     NestedViewSetMixin, SafeTenantViewSetMixin
 from vision.adapters.purchase_order import POSynchronizer
 from .models import Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, PurchaseOrder, \
-    AuditorStaffMember, Auditor, AuditPermission
+    AuditorStaffMember, Auditor, AuditPermission, SpecialAudit, UNICEFUser
 from utils.common.pagination import DynamicPageNumberPagination
 from .permissions import HasCreatePermission, CanCreateStaffMembers
 from .serializers.auditor import AuditorFirmSerializer, AuditorFirmLightSerializer, PurchaseOrderSerializer, \
     AuditorStaffMemberSerializer, AuditorFirmExportSerializer
 from .serializers.engagement import EngagementSerializer, MicroAssessmentSerializer, AuditSerializer, \
-    SpotCheckSerializer, EngagementLightSerializer, EngagementExportSerializer
+    SpotCheckSerializer, SpecialAuditSerializer, EngagementLightSerializer, EngagementExportSerializer
 from .serializers.export import MicroAssessmentPDFSerializer, AuditPDFSerializer, SpotCheckPDFSerializer
 from .metadata import AuditBaseMetadata, EngagementMetadata
 from .exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
@@ -160,6 +160,8 @@ class EngagementViewSet(
                 serializer_class = MicroAssessmentSerializer
             elif engagement_type == Engagement.TYPES.sc:
                 serializer_class = SpotCheckSerializer
+            elif engagement_type == Engagement.TYPES.sa:
+                serializer_class = SpecialAuditSerializer
 
         return serializer_class or super(EngagementViewSet, self).get_serializer_class()
 
@@ -173,6 +175,9 @@ class EngagementViewSet(
         user_type = AuditPermission._get_user_type(self.request.user)
         if not user_type or user_type == Auditor:
             queryset = queryset.filter(staff_members__user=self.request.user)
+
+        if user_type == UNICEFUser:
+            queryset = queryset.exclude(engagement_type=Engagement.TYPES.sa)
 
         return queryset
 
@@ -231,6 +236,11 @@ class AuditViewSet(EngagementManagementMixin, EngagementViewSet):
 class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = SpotCheck.objects.all()
     serializer_class = SpotCheckSerializer
+
+
+class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
+    queryset = SpecialAudit.objects.all()
+    serializer_class = SpecialAuditSerializer
 
 
 class AuditorStaffMembersViewSet(
