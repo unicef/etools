@@ -1,11 +1,10 @@
 from django.db.models import Prefetch
 from django.http import Http404
-from django.views.generic.detail import SingleObjectMixin
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import ugettext_lazy as _
-from easy_pdf.views import PDFTemplateView
-from rest_framework import generics, mixins, views, viewsets
-from rest_framework.decorators import list_route
+from easy_pdf.rendering import render_to_pdf_response
+from rest_framework import generics, mixins, viewsets
+from rest_framework.decorators import list_route, detail_route
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -17,13 +16,14 @@ from utils.common.views import MultiSerializerViewSetMixin, ExportViewSetDataMix
     NestedViewSetMixin, SafeTenantViewSetMixin
 from vision.adapters.purchase_order import POSynchronizer
 from .models import Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, PurchaseOrder, \
-    AuditorStaffMember, Auditor, AuditPermission
+    AuditorStaffMember, Auditor, AuditPermission, SpecialAudit, UNICEFUser
 from utils.common.pagination import DynamicPageNumberPagination
 from .permissions import HasCreatePermission, CanCreateStaffMembers
 from .serializers.auditor import AuditorFirmSerializer, AuditorFirmLightSerializer, PurchaseOrderSerializer, \
     AuditorStaffMemberSerializer, AuditorFirmExportSerializer
 from .serializers.engagement import EngagementSerializer, MicroAssessmentSerializer, AuditSerializer, \
-    SpotCheckSerializer, EngagementLightSerializer, EngagementExportSerializer
+    SpotCheckSerializer, SpecialAuditSerializer, EngagementLightSerializer, EngagementExportSerializer
+from .serializers.export import MicroAssessmentPDFSerializer, AuditPDFSerializer, SpotCheckPDFSerializer
 from .metadata import AuditBaseMetadata, EngagementMetadata
 from .exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
 from .filters import DisplayStatusFilter, UniqueIDOrderingFilter
@@ -160,6 +160,8 @@ class EngagementViewSet(
                 serializer_class = MicroAssessmentSerializer
             elif engagement_type == Engagement.TYPES.sc:
                 serializer_class = SpotCheckSerializer
+            elif engagement_type == Engagement.TYPES.sa:
+                serializer_class = SpecialAuditSerializer
 
         return serializer_class or super(EngagementViewSet, self).get_serializer_class()
 
@@ -174,12 +176,42 @@ class EngagementViewSet(
         if not user_type or user_type == Auditor:
             queryset = queryset.filter(staff_members__user=self.request.user)
 
+        if user_type == UNICEFUser:
+            queryset = queryset.exclude(engagement_type=Engagement.TYPES.sa)
+
         return queryset
 
     @list_route(methods=['get'], url_path='partners')
     def partners(self, request, *args, **kwargs):
         engagements = self.get_queryset()
         return EngagementPartnerView.as_view(engagements=engagements)(request, *args, **kwargs)
+
+    @detail_route(methods=['get'], url_path='pdf')
+    def export_pdf(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        if not AuditPermission.objects.filter(instance=obj, user=request.user).exists():
+            self.permission_denied(
+                request, message=_('You have no access to this engagement.')
+            )
+
+        if isinstance(obj, MicroAssessment):
+            serializer_class = MicroAssessmentPDFSerializer
+            template = 'audit/microassessment_pdf.html'
+        elif isinstance(obj, Audit):
+            serializer_class = AuditPDFSerializer
+            template = 'audit/audit_pdf.html'
+        elif isinstance(obj, SpotCheck):
+            serializer_class = SpotCheckPDFSerializer
+            template = 'audit/spotcheck_pdf.html'
+        else:
+            raise NotImplementedError
+
+        return render_to_pdf_response(
+            request, template,
+            context={'engagement': serializer_class(obj).data},
+            filename='engagement_{}.pdf'.format(obj.unique_id),
+        )
 
 
 class EngagementManagementMixin(
@@ -206,6 +238,11 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     serializer_class = SpotCheckSerializer
 
 
+class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
+    queryset = SpecialAudit.objects.all()
+    serializer_class = SpecialAuditSerializer
+
+
 class AuditorStaffMembersViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
@@ -227,41 +264,3 @@ class AuditorStaffMembersViewSet(
         instance = serializer.save(auditor_firm=self.get_parent_object(), **kwargs)
         instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.save()
-
-
-class EngagementPDFView(
-    SafeTenantViewSetMixin,
-    SingleObjectMixin,
-    PDFTemplateView,
-    views.APIView
-):
-    template_name = "audit/engagement_pdf.html"
-    model = Engagement
-    permission_classes = (IsAuthenticated, )
-
-    def get_pdf_filename(self):
-        return 'engagement_{}.pdf'.format(self.object.unique_id)
-
-    def check_permissions(self, request):
-        super(EngagementPDFView, self).check_permissions(request)
-        if self.pk_url_kwarg in self.kwargs and \
-           not AuditPermission.objects.filter(instance=self.get_object(), user=request.user).exists():
-            self.permission_denied(
-                request, message=_('You have no access to this engagement.')
-            )
-
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        return super(EngagementPDFView, self).get(request, *args, **kwargs)
-
-
-class AuditPDFView(EngagementPDFView):
-    model = Audit
-
-
-class SpotCheckPDFView(EngagementPDFView):
-    model = SpotCheck
-
-
-class MicroAssessmentPDFView(EngagementPDFView):
-    model = MicroAssessment

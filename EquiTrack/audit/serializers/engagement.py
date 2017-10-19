@@ -5,7 +5,8 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from audit.models import Engagement, Finding, SpotCheck, MicroAssessment, Audit, \
-    FinancialFinding, DetailedFindingInfo, EngagementActionPoint
+    FinancialFinding, DetailedFindingInfo, EngagementActionPoint, SpecialAudit, SpecificProcedure, \
+    SpecialAuditRecommendation
 from utils.common.serializers.fields import SeparatedReadWriteField
 from partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer, \
     PartnerStaffMemberNestedSerializer
@@ -19,7 +20,8 @@ from utils.common.serializers.mixins import UserContextSerializerMixin
 from utils.writable_serializers.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
 from .auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
-from .mixins import RiskCategoriesUpdateMixin, EngagementDatesValidation, AuditPermissionsBasedRootSerializerMixin
+from .mixins import RiskCategoriesUpdateMixin, EngagementDatesValidation, AuditPermissionsBasedRootSerializerMixin, \
+    AuditPermissionsBasedSerializerMixin
 from .risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
 
 
@@ -127,6 +129,7 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
         model = Engagement
         fields = [
             'id', 'unique_id', 'agreement', 'related_agreement', 'partner', 'engagement_type', 'status', 'status_date',
+
         ]
 
 
@@ -158,6 +161,8 @@ class EngagementSerializer(EngagementDatesValidation,
             'engagement_attachments', 'report_attachments',
             'total_value', 'staff_members', 'active_pd',
             'authorized_officers', 'action_points',
+
+            'joint_audit', 'shared_ip_with',
 
             'start_date', 'end_date',
             'partner_contacted_at', 'date_of_field_visit',
@@ -191,7 +196,7 @@ class EngagementSerializer(EngagementDatesValidation,
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
 
         if self.instance and partner != self.instance.partner and 'active_pd' not in validated_data:
-            if partner.partner_type != PartnerType.GOVERNMENT:
+            if partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL]:
                 raise serializers.ValidationError({
                     'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ]
                 })
@@ -246,6 +251,8 @@ class SpotCheckSerializer(EngagementSerializer):
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information',
         ]
+        fields.remove('joint_audit')
+        fields.remove('shared_ip_with')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True, 'label': _('Engagement Type')}
@@ -337,7 +344,40 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
             'audited_expenditure': {'label': _('Audited Expenditure $')},
             'financial_findings': {'label': _('Financial Findings $')},
             'percent_of_audited_expenditure': {'label': _('% Of Audited Expenditure')},
+
+            'recommendation': {'required': True},
+            'audit_observation': {'required': True},
+            'ip_response': {'required': True},
         })
 
     def get_number_of_financial_findings(self, obj):
         return obj.financial_finding_set.count()
+
+
+class SpecificProcedureSerializer(AuditPermissionsBasedSerializerMixin,
+                                  WritableNestedSerializerMixin,
+                                  serializers.ModelSerializer):
+    class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+        model = SpecificProcedure
+        fields = [
+            'id', 'number', 'description', 'finding',
+        ]
+
+
+class SpecialAuditRecommendationSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = SpecialAuditRecommendation
+        fields = [
+            'id', 'number', 'description',
+        ]
+
+
+class SpecialAuditSerializer(EngagementSerializer):
+    specific_procedures = SpecificProcedureSerializer(many=True)
+    other_recommendations = SpecialAuditRecommendationSerializer(many=True)
+
+    class Meta(EngagementSerializer.Meta):
+        model = SpecialAudit
+        fields = EngagementSerializer.Meta.fields + [
+            'specific_procedures', 'other_recommendations',
+        ]

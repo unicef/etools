@@ -12,10 +12,12 @@ from utils.writable_serializers.serializers import WritableListSerializer, Writa
 
 
 class RiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    value_display = serializers.ReadOnlyField(source='get_value_display')
+
     class Meta(WritableNestedSerializerMixin.Meta):
         model = Risk
         fields = [
-            'value', 'extra',
+            'value', 'value_display', 'extra',
         ]
         extra_kwargs = {
             'value': {
