@@ -10,143 +10,97 @@
   {% block layout_style %}
     <style type="text/css">
       @page {
-        size: letter;
-        margin-left: 2.0cm;
-        margin-right: 2.0cm;
-        margin-top: 1.8cm;
-        margin-bottom: 1.8cm;
+        size: a4 landscape;
+        margin: 1.8cm 2.0cm;
 
-        @frame header {
-          -pdf-frame-content: page-header;
-          margin-top: 0cm;
-          margin-right: 0mm;
-          margin-bottom: 0.3cm;
-          margin-left: 0cm;
-          background-color: #0099ff;
-          height: 2cm;
+        @frame content_frame {
+{#            left: 50pt; width: 512pt; top: 90pt; height: 632pt;#}
         }
 
         @frame footer_frame {
           /* Static frame */
           -pdf-frame-content:footer_content;
-          left: 50pt; width: 512pt; top: 772pt; height: 20pt;
-        }
-      }
-
-      @page landscape {
-        size: letter landscape;
-        margin-left: 2.0cm;
-        margin-right: 2.0cm;
-        margin-top: 1.8cm;
-        margin-bottom: 1.8cm;
-
-        @frame header {
-          -pdf-frame-content: page-header;
-          margin-top: 0cm;
-          margin-right: 0mm;
-          margin-bottom: 0.3cm;
-          margin-left: 0cm;
-          background-color: #0099ff;
-          height: 2cm;
-        }
-
-        @frame footer_frame {
-          /* Static frame */
-          -pdf-frame-content:footer_content;
-          left: 50pt; width: 680pt; top: 590pt; height: 20pt;
+          right: 60pt; width: 100pt; top: 570pt; height: 20pt;
         }
       }
     </style>
   {% endblock %}
   {% block extra_style %}
     <style type="text/css">
-      ul {
-        list-style-type: none;
-      }
-
-      #content {
-        font-family: "Helvetica";
-        font-size: 12pt;
-        background-color: #ffffff;
-      }
-
-      #title {
-        font-size: 14pt;
-      }
-
-      #title.main-title {
-        font-size: 20pt;
-      }
-
-      .text-blue {
-        color: #0070c0;
-      }
-
-      .page-break {
-        page-break-after: always;
-      }
-
-      .text-left {
-        text-align: left;
-      }
-
-      .text-center {
-        text-align: center;
-      }
-
-      .text-right {
-        text-align: right;
-      }
-
-      .text-justify {
-        text-align: justify;
-      }
-
-      .text-bordered {
-        border: 1pt solid #0070c0;
-      }
-
-      .head_table {
-        border: 1pt solid #0070c0;
-        background-color: rgb(210, 217, 229);
-      }
-
-      .head_table td {
-        padding: 3pt;
-        line-height: 1;
-      }
-
-      .common_table {
-        border: 1pt solid #75b2dd;
-        text-align: center;
-      }
-
-      .common_table td {
-        padding: 3pt;
-        line-height: 1;
-        min-width: 20pt;
-      }
-
-      .common_table td.head {
-        background-color: #0070c0;
-        color: white;
-        padding: 5pt 3pt;
-        font-weight: bold;
-      }
-
-      pdftoc {
-        color: #0070c0;
-      }
-
-      pdftoc.pdftoclevel0 {
-        font-weight: bold;
-        margin-top: 0.5em;
-      }
-
-      pdftoc.pdftoclevel1 {
-        margin-left: 1em;
-      }
-
+    #content {
+      font-family: 'Roboto', 'Noto', sans-serif;
+      font-size: 10pt;
+    }
+    .main_title {
+      font-size: 25pt;
+      font-weight: lighter;
+    }
+    .view-container {
+    }
+    .content-section {
+      margin-bottom: 20pt;
+    }
+    .content-section__header {
+      font-size: 15pt;
+      line-height: 15pt;
+      font-weight: bold;
+      padding: 7pt 5pt 5pt;
+      background: #0099ff;
+      color: #ffffff;
+      margin: 0;
+    }
+    .content-section__header--orange {
+      background-color: #FF9044;
+    }
+    .content-section__header__title {
+      text-align: center;
+    }
+    .content-section__wrapper {
+      padding: 8pt 12pt 20pt;
+      border-bottom: 1px solid silver;
+      border-left: 1px solid silver;
+      border-right: 1px solid silver;
+    }
+    .content-section__wrapper tr {
+      border: none;
+    }
+    .content-section__table tr {
+      border-bottom: 1px solid silver;
+      padding: 4pt 10pt;
+    }
+    .content-section__table tr.content-section__table__header {
+      color: rgb(122, 122, 122);
+    }
+    .input-container {
+      padding: 7pt 10pt;
+      margin: 0;
+    }
+    .input-container__label, .input-container__value {
+      font-size: 12pt;
+      line-height: 12pt;
+      padding: 0;
+    }
+    .input-container__label {
+      font-size: 10pt;
+      color: rgb(122, 122, 122);
+      padding-bottom: 5pt;
+    }
+    .input-container__value {
+      color: rgb(60, 60, 60);
+    }
+    .risk-subheader {
+      font-weight: bold;
+      font-size: 12pt;
+    }
+    .internal-control-message {
+      padding: 0;
+    }
+    .text-center {
+      text-align: center!important;
+    }
+    .text-left {
+      text-align: left!important;
+    }
     </style>
   {% endblock %}
 {% endblock %}
@@ -156,95 +110,258 @@
     PDF could not be generated properly: <br> {{ error }}
   {% else %}
     <div id="content">
-      <div id="title" class="text-blue">
-        <div class="text-right"><b><u>REF #: {{ object.unique_id }}</u></b></div>
-        <div class="text-center">
-          <p class="main-title" style="margin-top: 50pt;">
-            <b>UNITED NATIONS CHILDREN’S FUND<br/>(UNICEF)</b>
-          </p>
-          <p class="main-title">AUDIT REPORT AND MANAGEMENT LETTER</p>
-          <p>
-            Financial {{ object.get_type_display|lower }} of the implementing partner:<br/>
-            {{ object.partner.name }}<br/>
-            {{ object.visit_date }}
-          </p>
+      <div class="view-container">
+        <div class="main_title">{{ engagement.unique_id }}</div>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">Engagement Overview</div>
+          </div>
+          <table class="content-section__wrapper">
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">Purchase order number</div>
+                <div class="input-container__value">{{ engagement.agreement.order_number }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">Vendor Name</div>
+                <div class="input-container__value">{{ engagement.partner.name }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">PO Item Number</div>
+                <div class="input-container__value">{{ engagement.agreement.item_number|default_if_none:"-" }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">PO Date</div>
+                <div class="input-container__value">{{ engagement.agreement.contract_start_date|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">Contract Expiry Date</div>
+                <div class="input-container__value">{{ engagement.agreement.contract_end_date|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">Date IP was contacted</div>
+                <div class="input-container__value">{{ engagement.partner_contacted_at|default:"-" }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">Engagement Type</div>
+                <div class="input-container__value">{{ engagement.engagement_type_display }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">Status</div>
+                <div class="input-container__value">{{ engagement.status_display }}</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">Partner Details</div>
+          </div>
+          <table class="content-section__wrapper">
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">Partner</div>
+                <div class="input-container__value">{{ engagement.partner.name }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">Partner Address</div>
+                <div class="input-container__value">{{ engagement.partner.address|default:"-" }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">Phone number</div>
+                <div class="input-container__value">{{ engagement.partner.phone_number|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">Email</div>
+                <div class="input-container__value">{{ engagement.partner.email|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">Authorized Officers</div>
+                <div class="input-container__value">{{ engagement.authorized_officers|default:"-" }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">Programme Document(s) or SSFA(s)</div>
+                <div class="input-container__value">{{ engagement.active_pd|default:"-" }}</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <pdf:nextpage></pdf:nextpage>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">Audit Staff Team Members ({{ engagement.staff_members|length }})</div>
+          </div>
+          <div class="content-section__wrapper">
+            <table class="content-section__table">
+              <tr class="content-section__table__header">
+                <td class="text-center">Has access</td>
+                <td>Position</td>
+                <td>First Name</td>
+                <td>Last Name</td>
+                <td>Phone Number</td>
+                <td>E-mail Address</td>
+              </tr>
+              {% if engagement.staff_members %}
+                {% for staff_member in engagement.staff_members %}
+                <tr>
+                  <td class="text-center">{{ staff_member.has_access }}</td>
+                  <td>{{ staff_member.job_title|default:"-" }}</td>
+                  <td>{{ staff_member.first_name|default:"-" }}</td>
+                  <td>{{ staff_member.last_name|default:"-" }}</td>
+                  <td>{{ staff_member.phone_number|default:"-" }}</td>
+                  <td>{{ staff_member.email|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td>-</td><td>-</td><td>-</td>
+                  <td>-</td><td>-</td><td>-</td>
+                </tr>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+        {% if engagement.status == 'report_submitted' or engagement.status == 'final' %}
+          <pdf:nextpage></pdf:nextpage>
+          <div class="content-section">
+            <div class="content-section__header">
+              <div class="content-section__header__title">Engagement Status</div>
+            </div>
+            <table class="content-section__wrapper">
+              <tr>
+                <td class="input-container">
+                  <div class="input-container__label">Date of field visit</div>
+                  <div class="input-container__value">{{ engagement.date_of_field_visit|default:"-" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">Date draft report issued to IP</div>
+                  <div class="input-container__value">{{ engagement.date_of_draft_report_to_ip|default:"-" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">Date comments received from IP</div>
+                  <div class="input-container__value">{{ engagement.date_of_comments_by_ip|default:"-" }}</div>
+                </td>
+              </tr>
+              <tr>
+                <td class="input-container">
+                  <div class="input-container__label">Date draft report issued to UNICEF</div>
+                  <div class="input-container__value">{{ engagement.date_of_draft_report_to_unicef|default:"-" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">Date comments received from UNICEF</div>
+                  <div class="input-container__value">{{ engagement.date_of_comments_by_unicef|default:"-" }}</div>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          {% block extra_content %}{% endblock %}
+
+          <pdf:nextpage></pdf:nextpage>
+          <div class="content-section">
+            <div class="content-section__header">
+              <div class="content-section__header__title">UNICEF Follow-Up Actions</div>
+            </div>
+            <div class="content-section__wrapper">
+              <table class="content-section__table">
+                <tr class="content-section__table__header">
+                  <td colspan="2">Description</td>
+                  <td>Due date</td>
+                  <td>Person responsible</td>
+                  <td colspan="2">Comments</td>
+                </tr>
+                {% if engagement.action_points %}
+                  {% for action_point in engagement.action_points %}
+                    <tr>
+                      <td colspan="2"><span>{{ action_point.description }}</span></td>
+                      <td>{{ action_point.due_date }}</td>
+                      <td>{{ action_point.person_responsible }}</td>
+                      <td colspan="2">{{ action_point.comments }}</td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td colspan="2">-</td>
+                  </tr>
+                {% endif %}
+              </table>
+            </div>
+          </div>
+        {% endif %}
+        <pdf:nextpage></pdf:nextpage>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">Related Documents</div>
+          </div>
+          <div class="content-section__wrapper">
+            <table class="content-section__table">
+              <tr class="content-section__table__header">
+                <td>Date Uploaded</td>
+                <td>Document Type</td>
+                <td colspan="5">File Attachment</td>
+              </tr>
+              {% if engagement.engagement_attachments %}
+                {% for attachment in engagement.engagement_attachments %}
+                  <tr>
+                    <td>{{ attachment.created }}</td>
+                    <td>{{ attachment.file_type }}</td>
+                    <td colspan="5"><a href="{{ attachment.url }}" target="_blank">{{ attachment.url }}</a></td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                  <tr>
+                    <td>-</td>
+                    <td>-</td>
+                    <td colspan="5">-</td>
+                  </tr>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">Report Attachments</div>
+          </div>
+          <div class="content-section__wrapper">
+            <table class="content-section__table">
+              <tr class="content-section__table__header">
+                <td>Date Uploaded</td>
+                <td>Document Type</td>
+                <td colspan="5">File Attachment</td>
+              </tr>
+              {% if engagement.report_attachments %}
+                {% for attachment in engagement.report_attachments %}
+                  <tr>
+                    <td>{{ attachment.created }}</td>
+                    <td>{{ attachment.file_type }}</td>
+                    <td colspan="5"><a href="{{ attachment.url }}" target="_blank">{{ attachment.url }}</a></td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                  <tr>
+                    <td>-</td>
+                    <td>-</td>
+                    <td colspan="5">-</td>
+                  </tr>
+              {% endif %}
+            </table>
+          </div>
         </div>
       </div>
-      <div>
-        <table class="head_table" style="margin-top: 200pt; margin-bottom: 40pt;">
-          <tr>
-            <td>Country:</td>
-            <td>{{ object.agreement.auditor_firm.country|default:"Unknown" }}</td>
-          </tr>
-          <tr>
-            <td>Auditor:</td>
-            <td>{{ object.agreement.auditor_firm.name }}</td>
-          </tr>
-          <tr>
-            <td>Period subject to audit</td>
-            <td>{{ object.start_date }} to {{ object.end_date }}</td>
-          </tr>
-        </table>
-        <p class="text-justify text-bordered" style="margin: 0; padding: 5pt 3pt;">
-          This report is established by request of UNICEF. The views expressed in this report are those of the
-          external auditor and in no way reflect the official opinion of UNICEF. This report has been prepared solely
-          for use of UNICEF for the purpose of the control of the use of funds by the implementing partner concerned
-          by the audit. It may be disclosed to those official authorities having regulatory right of access to it.
-          This report should not be used by any other party or for other than its intended purpose.
-        </p>
-      </div>
-      <div class="page-break"></div>
-
-      <div>
-        <h1>Contents</h1>
-        <pdf:toc />
-      </div>
-
-      <pdf:nexttemplate name="landscape"/>
-      <div class="page-break"></div>
-
-      <div id="executive-summary">
-        <h1 class="main-title text-blue">1. EXECUTIVE SUMMARY</h1>
-        <p>The present audit has been conducted as per the terms of reference for a financial audit under the
-          Harmonised Approach to Cash Transfer (HACT) Framework and concerns the expenditure reported by the
-          implementing partner for the period {{ object.start_date }} to {{ object.end_date }}.</p>
-        <p>The audit opinion in respect of the expenditure reported by the implementing partner is qualified. A
-          summary of the audit findings that have been raised is presented in the table below:</p>
-
-        <span class="text-blue"><b>Table 1.1 - Summary of audit fundings</b></span>
-        <table class="common_table">
-          <tr>
-            <td class="head text-left" style="width: 180pt">Implementing partner</td>
-            <td class="head text-right" style="width: 100pt">Audited expenditure US$</td>
-            <td class="head text-right" style="width: 90pt">Financial findings US$</td>
-            <td class="head text-right" style="width: 90pt">% of audited expedinture</td>
-            <td class="head" style="width: 70pt">Audit opinion</td>
-            <td class="head" style="width: 60pt">No. of FFs</td>
-            <td class="head" style="width: 60pt">No. of MCFs</td>
-            <td class="head" style="width: 60pt">No. of CFs</td>
-            <td class="head" style="width: 60pt">No. of OFs</td>
-          </tr>
-          <tr>
-            <td class="text-left">{{ object.partner.name|default_if_none:"-" }}</td>
-            <td class="text-right">{{ object.audited_expenditure|default_if_none:"-" }}</td>
-            <td class="text-right">{{ object.financial_findings|default_if_none:"-" }}</td>
-            <td class="text-right">{{ object.percent_of_audited_expenditure|default_if_none:"-" }}</td>
-            <td class="text-right">{{ object.audit_opinion|default_if_none:"-" }}</td>
-            <td>{{ object.financial_finding_set.count|default_if_none:"-" }}</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-        </table>
-        <span style="font-size: medium">FF = Financial finding; MCF = Management control finding; CF = Compliance finding; OF = Other finding</span>
-      </div>
-
-      <pdf:nexttemplate/>
-      <div class="page-break"></div>
     </div>
     <div id="footer_content" style="text-align: right">
-    <pdf:pagenumber> of
-    <pdf:pagecount>
+      <pdf:pagenumber> of <pdf:pagecount>
     <div>
   {% endif %}
 {% endblock %}
