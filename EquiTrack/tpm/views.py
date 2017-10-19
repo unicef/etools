@@ -46,6 +46,7 @@ class TPMPartnerViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
+    metadata_class = TPMPermissionBasedMetadata
     queryset = TPMPartner.objects.all()
     serializer_class = TPMPartnerSerializer
     serializer_action_classes = {
