@@ -184,7 +184,7 @@ class Result(MPTTModel):
     Represents a result, wbs is unique
 
     Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.Sector`
     Relates to :model:`reports.ResultType`
     """
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
@@ -386,8 +386,7 @@ class Indicator(models.Model):
     """
     Represents an indicator
 
-    Relates to :model:`reports.ResultStructure`
-    Relates to :model:`reports.Sector`
+    Relates to :model:`reports.Unit`
     Relates to :model:`reports.Result`
     """
     # TODO: rename this to RAMIndicator

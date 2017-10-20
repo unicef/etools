@@ -1118,10 +1118,10 @@ class Intervention(TimeStampedModel):
 
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`partners.Agreement`
-    Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.CountryProgramme`
     Relates to :model:`auth.User`
     Relates to :model:`partners.PartnerStaffMember`
+    Relates to :model:`users.Office`
     """
 
     DRAFT = 'draft'
@@ -1742,7 +1742,7 @@ class GovernmentIntervention(models.Model):
     Represents a government intervention.
 
     Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.CountryProgramme`
     """
     objects = GovernmentInterventionManager()
 
