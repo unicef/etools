@@ -265,7 +265,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=256,
         blank=True
     )
-    shared_with = ArrayField(models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES), blank=True, null=True)
+    shared_with = ArrayField(
+        models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES),
+        verbose_name=_("Shared Partner"),
+        blank=True,
+        null=True
+    )
 
     # TODO remove this after migration to shared_with + add calculation to
     # hact_field
@@ -309,6 +314,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     # TODO: remove this when migration to the new fields is done. check for references
     # BEGIN REMOVE
     address = models.TextField(
+        verbose_name=_("Address"),
         blank=True,
         null=True
     )
