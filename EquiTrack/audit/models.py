@@ -648,7 +648,6 @@ class SpecialAudit(Engagement):
 class SpecificProcedure(models.Model):
     audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='specific_procedures')
 
-    number = models.PositiveIntegerField()
     description = models.TextField()
     finding = models.TextField()
 
@@ -656,7 +655,6 @@ class SpecificProcedure(models.Model):
 class SpecialAuditRecommendation(models.Model):
     audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='other_recommendations')
 
-    number = models.PositiveIntegerField()
     description = models.TextField()
 
 

@@ -112,3 +112,12 @@ class FinancialFindingAdmin(admin.ModelAdmin):
         'title', 'audit', 'description', 'amount', 'local_amount',
     ]
     search_fields = ['title', ]
+
+
+@admin.register(models.SpecificProcedure)
+class SpecificProcedureAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(models.SpecialAuditRecommendation)
+class SpecialAuditRecommendationAdmin(admin.ModelAdmin):
+    pass

@@ -139,7 +139,7 @@ class SpecificProcedureSerializer(AuditPermissionsBasedSerializerMixin,
     class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = SpecificProcedure
         fields = [
-            'id', 'number', 'description', 'finding',
+            'id', 'description', 'finding',
         ]
 
 
@@ -373,7 +373,7 @@ class SpecialAuditRecommendationSerializer(WritableNestedSerializerMixin, serial
     class Meta(WritableNestedSerializerMixin.Meta):
         model = SpecialAuditRecommendation
         fields = [
-            'id', 'number', 'description',
+            'id', 'description',
         ]
 
 

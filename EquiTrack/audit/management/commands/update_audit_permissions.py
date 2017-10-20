@@ -136,7 +136,7 @@ class Command(BaseCommand):
             'purchaseorder.contract_end_date',
         ])
         self.add_permissions(self.new_engagement, self.focal_point, 'edit', [
-            'specialaudit.specific_procedures',
+            'engagement.specific_procedures',
             'specificprocedure.*',
         ])
 
