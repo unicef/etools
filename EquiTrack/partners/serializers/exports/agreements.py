@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from partners.serializers.fields import TypeArrayField
@@ -48,12 +49,24 @@ class AgreementAmendmentExportFlatSerializer(AgreementAmendmentExportSerializer)
 
 
 class AgreementExportSerializer(serializers.ModelSerializer):
-    staff_members = serializers.SerializerMethodField()
-    partner_name = serializers.CharField(source='partner.name', read_only=True)
-    partner_manager_name = serializers.CharField(source='partner_manager.get_full_name')
-    signed_by_name = serializers.CharField(source='signed_by.get_full_name')
-    amendments = serializers.SerializerMethodField()
-    url = serializers.SerializerMethodField()
+    staff_members = serializers.SerializerMethodField(
+        label=_("Partner Authorized Officer"),
+    )
+    partner_name = serializers.CharField(
+        label="Partner Name",
+        source='partner.name',
+        read_only=True,
+    )
+    partner_manager_name = serializers.CharField(
+        label=_("Signed By Partner"),
+        source='partner_manager.get_full_name',
+    )
+    signed_by_name = serializers.CharField(
+        label=_("Signed By UNICEF"),
+        source='signed_by.get_full_name',
+    )
+    amendments = serializers.SerializerMethodField(label=_("Amendments"))
+    url = serializers.SerializerMethodField(label=_("URL"))
 
     class Meta:
         model = Agreement
@@ -93,32 +106,16 @@ class AgreementExportSerializer(serializers.ModelSerializer):
 
 class AgreementExportFlatSerializer(AgreementExportSerializer):
     attached_agreement_file = serializers.FileField(
+        label=_("Attached Agreement"),
         source="attached_agreement",
         read_only=True
     )
     country_programme_name = serializers.CharField(
+        label=_("Country Programme"),
         source='country_programme.name',
         read_only=True
     )
 
     class Meta:
         model = Agreement
-        fields = (
-            "id",
-            "agreement_number",
-            "attached_agreement_file",
-            "status",
-            "partner_name",
-            "agreement_type",
-            "start",
-            "end",
-            "partner_manager_name",
-            "signed_by_partner_date",
-            "signed_by_name",
-            "signed_by_unicef_date",
-            "staff_members",
-            "amendments",
-            "country_programme_name",
-            "created",
-            "modified",
-        )
+        fields = "__all__"

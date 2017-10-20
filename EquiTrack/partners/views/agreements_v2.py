@@ -17,6 +17,9 @@ from rest_framework.generics import (
     DestroyAPIView,
 )
 
+from EquiTrack.renderers import CSVFlatRenderer
+from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -39,18 +42,16 @@ from partners.filters import PartnerScopeFilter
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 
 from partners.exports_flat import (
-    AgreementCSVFlatRenderer,
     AgreementAmendmentCSVFlatRenderer,
 )
 from partners.exports_v2 import (
     AgreementCSVRenderer,
     AgreementAmendmentCSVRenderer,
 )
-from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.agreements import AgreementValid
 
 
-class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
+class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
     """
     Create new Agreements.
     Returns a list of Agreements.
@@ -61,7 +62,7 @@ class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
     renderer_classes = (
         r.JSONRenderer,
         AgreementCSVRenderer,
-        AgreementCSVFlatRenderer,
+        CSVFlatRenderer,
     )
 
     SERIALIZER_MAP = {
