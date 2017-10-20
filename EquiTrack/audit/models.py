@@ -32,7 +32,7 @@ from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from .transitions.conditions import AuditSubmitReportRequiredFieldsCheck, ValidateAuditRiskCategories, \
     EngagementHasReportAttachmentsCheck, SPSubmitReportRequiredFieldsCheck, ValidateMARiskCategories, \
-    EngagementSubmitReportRequiredFieldsCheck, ValidateMARiskExtra
+    EngagementSubmitReportRequiredFieldsCheck, ValidateMARiskExtra, SpecialAuditSubmitRelatedModelsCheck
 from .transitions.serializers import EngagementCancelSerializer
 
 
@@ -642,7 +642,23 @@ class FinancialFinding(models.Model):
 
 
 class SpecialAudit(Engagement):
-    pass
+    @transition(
+        'status',
+        source=Engagement.STATUSES.partner_contacted, target=Engagement.STATUSES.report_submitted,
+        conditions=[
+            SpecialAuditSubmitRelatedModelsCheck.as_condition(),
+            EngagementHasReportAttachmentsCheck.as_condition(),
+        ],
+        permission=_has_action_permission(action='submit')
+    )
+    def submit(self, *args, **kwargs):
+        return super(SpecialAudit, self).submit(*args, **kwargs)
+
+    def __str__(self):
+        return 'Special Audit ({}: {}, {})'.format(self.engagement_type, self.agreement.order_number, self.partner.name)
+
+    def get_object_url(self):
+        return build_frontend_url('ap', 'special-audits', self.id, 'overview')
 
 
 class SpecificProcedure(models.Model):
