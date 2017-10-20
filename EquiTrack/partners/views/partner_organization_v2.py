@@ -49,12 +49,7 @@ from partners.views.helpers import set_tenant_or_fail
 from t2f.models import TravelActivity
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 from partners.filters import PartnerScopeFilter
-from partners.exports_flat import (
-    AssessmentCSVFlatRenderer,
-    PartnerStaffMemberCSVFlatRenderer,
-)
 from partners.exports_v2 import (
-    AssessmentCSVRenderer,
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationHactCSVRenderer,
     PartnerStaffMemberCSVRenderer,
@@ -240,7 +235,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         return response
 
 
-class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
+class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListCreateAPIView):
     """
     Returns a list of all Partner staff members
     """
@@ -251,7 +246,7 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     renderer_classes = (
         r.JSONRenderer,
         PartnerStaffMemberCSVRenderer,
-        PartnerStaffMemberCSVFlatRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self, format=None):
@@ -270,7 +265,7 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
         return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
 
 
-class PartnerOrganizationAssessmentListView(ListAPIView):
+class PartnerOrganizationAssessmentListView(ExportModelMixin, ListAPIView):
     """
     Returns a list of all Partner staff members
     """
@@ -280,8 +275,8 @@ class PartnerOrganizationAssessmentListView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        AssessmentCSVRenderer,
-        AssessmentCSVFlatRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self, format=None):
@@ -294,7 +289,7 @@ class PartnerOrganizationAssessmentListView(ListAPIView):
                 return AssessmentExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return AssessmentExportFlatSerializer
-        return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
+        return super(PartnerOrganizationAssessmentListView, self).get_serializer_class()
 
 
 class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
