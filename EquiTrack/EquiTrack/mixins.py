@@ -238,7 +238,7 @@ class ExportModelMixin(object):
         for f in serializer_fields:
             if model_labels.get(f, False):
                 labels[f] = model_labels.get(f)
-            elif serializer_fields.get(f, False):
+            elif serializer_fields.get(f) and serializer_fields[f].label:
                 labels[f] = serializer_fields[f].label
             else:
                 labels[f] = f.replace("_", " ").title()
