@@ -1311,7 +1311,7 @@ class Intervention(TimeStampedModel):
     objects = InterventionManager()
 
     document_type = models.CharField(
-        verbose_name=_('Document type'),
+        verbose_name=_('Document Type'),
         choices=INTERVENTION_TYPES,
         max_length=255,
     )
@@ -1335,7 +1335,7 @@ class Intervention(TimeStampedModel):
         null=True,
         unique=True,
     )
-    title = models.CharField(verbose_name=_("Title"), max_length=256)
+    title = models.CharField(verbose_name=_("Document Title"), max_length=256)
     status = FSMField(
         verbose_name=_("Status"),
         max_length=32,
@@ -1369,7 +1369,7 @@ class Intervention(TimeStampedModel):
         blank=True,
     )
     review_date_prc = models.DateField(
-        verbose_name=_('Review date by PRC'),
+        verbose_name=_('Review Date by PRC'),
         help_text='The date the PRC reviewed the partnership',
         null=True,
         blank=True,

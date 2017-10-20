@@ -18,8 +18,9 @@ from rest_framework.generics import (
     DestroyAPIView,
 )
 
+from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
-
 from partners.models import (
     Intervention,
     InterventionPlannedVisits,
@@ -55,26 +56,13 @@ from partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
     PlannedVisitsCUSerializer,
 )
-from partners.exports_flat import (
-    InterventionAmendmentCSVFlatRenderer,
-    InterventionCSVFlatRenderer,
-    InterventionIndicatorCSVFlatRenderer,
-    InterventionResultCSVFlatRenderer,
-    InterventionSectorLocationLinkCSVFlatRenderer,
-)
-from partners.exports_v2 import (
-    InterventionAmendmentCSVRenderer,
-    InterventionCSVRenderer,
-    InterventionIndicatorCSVRenderer,
-    InterventionResultCSVRenderer,
-    InterventionSectorLocationLinkCSVRenderer,
-)
+from partners.exports_v2 import InterventionCSVRenderer
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 
 
-class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
+class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -85,7 +73,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     renderer_classes = (
         r.JSONRenderer,
         InterventionCSVRenderer,
-        InterventionCSVFlatRenderer,
+        CSVFlatRenderer,
     )
 
     SERIALIZER_MAP = {
@@ -324,7 +312,7 @@ class InterventionAttachmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class InterventionResultListAPIView(ListAPIView):
+class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
     """
     Returns a list of InterventionResultLinks.
     """
@@ -333,8 +321,8 @@ class InterventionResultListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionResultCSVRenderer,
-        InterventionResultCSVFlatRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -367,7 +355,7 @@ class InterventionResultListAPIView(ListAPIView):
         return q
 
 
-class InterventionIndicatorListAPIView(ListAPIView):
+class InterventionIndicatorListAPIView(ExportModelMixin, ListAPIView):
     """
     Returns a list of InterventionResultLink Indicators.
     """
@@ -376,8 +364,8 @@ class InterventionIndicatorListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionIndicatorCSVRenderer,
-        InterventionIndicatorCSVFlatRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -434,7 +422,7 @@ class InterventionResultLinkDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class InterventionAmendmentListAPIView(ValidatorViewMixin, ListAPIView):
+class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListAPIView):
     """
     Returns a list of InterventionAmendments.
     """
@@ -443,8 +431,8 @@ class InterventionAmendmentListAPIView(ValidatorViewMixin, ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionAmendmentCSVRenderer,
-        InterventionAmendmentCSVFlatRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self):
@@ -494,7 +482,7 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             raise ValidationError("You do not have permissions to delete an amendment")
 
 
-class InterventionSectorLocationLinkListAPIView(ListAPIView):
+class InterventionSectorLocationLinkListAPIView(ExportModelMixin, ListAPIView):
     """
     Returns a list of InterventionSectorLocationLinks.
     """
@@ -503,8 +491,8 @@ class InterventionSectorLocationLinkListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        InterventionSectorLocationLinkCSVRenderer,
-        InterventionSectorLocationLinkCSVFlatRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self):
