@@ -150,24 +150,6 @@ class AgreementCSVRenderer(r.CSVRenderer):
     }
 
 
-class AgreementAmendmentCSVRenderer(r.CSVRenderer):
-    header = [
-        "number",
-        "agreement_number",
-        "signed_amendment",
-        "types",
-        "signed_date",
-    ]
-
-    labels = {
-        "number": "Number",
-        "agreement_number": "Reference Number",
-        "signed_amendment": "Signed Amendment",
-        "types": "Types",
-        "signed_date": "Signed Date",
-    }
-
-
 class InterventionCSVRenderer(r.CSVRenderer):
     header = [
         "status", "partner_name", "partner_type", "agreement_number", "country_programme", "document_type", "number",

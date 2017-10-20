@@ -41,13 +41,7 @@ from partners.serializers.agreements_v2 import (
 from partners.filters import PartnerScopeFilter
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 
-from partners.exports_flat import (
-    AgreementAmendmentCSVFlatRenderer,
-)
-from partners.exports_v2 import (
-    AgreementCSVRenderer,
-    AgreementAmendmentCSVRenderer,
-)
+from partners.exports_v2 import AgreementCSVRenderer
 from partners.validation.agreements import AgreementValid
 
 
@@ -193,15 +187,15 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
         return Response(AgreementDetailSerializer(instance, context=self.get_serializer_context()).data)
 
 
-class AgreementAmendmentListAPIView(ListAPIView):
+class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
     """Returns a list of Agreement Amendments"""
     serializer_class = AgreementAmendmentListSerializer
     filter_backends = (PartnerScopeFilter,)
     permission_classes = (PartneshipManagerPermission, )
     renderer_classes = (
         r.JSONRenderer,
-        AgreementAmendmentCSVRenderer,
-        AgreementAmendmentCSVFlatRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
     )
 
     def get_serializer_class(self, format=None):

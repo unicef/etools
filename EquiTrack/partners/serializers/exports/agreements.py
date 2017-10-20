@@ -19,13 +19,7 @@ class AgreementAmendmentExportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AgreementAmendment
-        fields = (
-            "number",
-            "agreement_number",
-            "signed_amendment",
-            "types",
-            "signed_date",
-        )
+        fields = "__all__"
 
 
 class AgreementAmendmentExportFlatSerializer(AgreementAmendmentExportSerializer):
@@ -33,19 +27,6 @@ class AgreementAmendmentExportFlatSerializer(AgreementAmendmentExportSerializer)
         source="signed_amendment",
         read_only=True
     )
-
-    class Meta:
-        model = AgreementAmendment
-        fields = (
-            "id",
-            "number",
-            "agreement_number",
-            "signed_amendment_file",
-            "types",
-            "signed_date",
-            "created",
-            "modified",
-        )
 
 
 class AgreementExportSerializer(serializers.ModelSerializer):
