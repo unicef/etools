@@ -18,6 +18,8 @@ from rest_framework.generics import (
     CreateAPIView,
     ListAPIView)
 
+from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.utils import get_data_from_insight
 from EquiTrack.validation_mixins import ValidatorViewMixin
 
@@ -49,7 +51,6 @@ from partners.permissions import PartnershipManagerRepPermission, PartnershipMan
 from partners.filters import PartnerScopeFilter
 from partners.exports_flat import (
     AssessmentCSVFlatRenderer,
-    PartnerOrganizationCSVFlatRenderer,
     PartnerStaffMemberCSVFlatRenderer,
 )
 from partners.exports_v2 import (
@@ -60,7 +61,7 @@ from partners.exports_v2 import (
 )
 
 
-class PartnerOrganizationListAPIView(ListCreateAPIView):
+class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
     """
     Create new Partners.
     Returns a list of Partners.
@@ -72,7 +73,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     renderer_classes = (
         r.JSONRenderer,
         PartnerOrganizationCSVRenderer,
-        PartnerOrganizationCSVFlatRenderer
+        CSVFlatRenderer
     )
 
     def get_serializer_class(self, format=None):
