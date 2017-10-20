@@ -29,6 +29,7 @@ class GatewayType(models.Model):
     """
 
     name = models.CharField(max_length=64, unique=True)
+    admin_level = models.PositiveSmallIntegerField(null=True, unique=True)
 
     class Meta:
         ordering = ['name']
