@@ -157,7 +157,7 @@ class EngagementSerializer(EngagementDatesValidation,
         read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     )
 
-    specific_procedures = SpecificProcedureSerializer(many=True)
+    specific_procedures = SpecificProcedureSerializer(many=True, label=_('Specific Procedure To Be Performed'))
 
     engagement_attachments = EngagementBase64AttachmentSerializer(
         many=True, required=False, label=_('Related Documents')

@@ -35,7 +35,6 @@ class Command(BaseCommand):
         'profile.*',
         'user.*',
         'specificprocedure.*',
-        'specialauditrecommendation.*',
     ]
 
     engagement_overview_block = [
@@ -137,7 +136,7 @@ class Command(BaseCommand):
         ])
         self.add_permissions(self.new_engagement, self.focal_point, 'edit', [
             'engagement.specific_procedures',
-            'specificprocedure.*',
+            'specificprocedure.description',
         ])
 
         # created: auditor can edit, everybody else can view, focal point can cancel
@@ -164,9 +163,8 @@ class Command(BaseCommand):
 
         self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
             'specialaudit.specific_procedures',
-            'specificprocedure.*',
+            'specificprocedure.finding',
             'specialaudit.other_recommendations',
-            'specialauditrecommendation.*',
         ])
 
         self.add_permissions(self.partner_contacted, self.all_unicef_users, 'view', self.everything)

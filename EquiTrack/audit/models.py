@@ -649,7 +649,7 @@ class SpecificProcedure(models.Model):
     audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='specific_procedures')
 
     description = models.TextField()
-    finding = models.TextField()
+    finding = models.TextField(blank=True)
 
 
 class SpecialAuditRecommendation(models.Model):
