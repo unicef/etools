@@ -26,19 +26,6 @@ class PartnerStaffMemberExportSerializer(serializers.ModelSerializer):
 class PartnerStaffMemberExportFlatSerializer(PartnerStaffMemberExportSerializer):
     partner_name = serializers.CharField(source="partner.name")
 
-    class Meta:
-        model = PartnerStaffMember
-        fields = (
-            "id",
-            "partner_name",
-            "title",
-            "first_name",
-            "last_name",
-            "email",
-            "phone",
-            "active"
-        )
-
 
 class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
     staff_members = serializers.SerializerMethodField(label=_("Staff Members"))

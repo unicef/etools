@@ -5,42 +5,6 @@ class BaseCSVFlatRenderer(r.CSVRenderer):
     format = 'csv_flat'
 
 
-class AssessmentCSVFlatRenderer(BaseCSVFlatRenderer):
-    header = [
-        "id",
-        "partner",
-        "type",
-        "names_of_other_agencies",
-        "expected_budget",
-        "notes",
-        "requested_date",
-        "requesting_officer",
-        "approving_officer",
-        "planned_date",
-        "completed_date",
-        "rating",
-        "report_file",
-        "current",
-    ]
-
-    labels = {
-        "id": "Id",
-        "partner": "Partner Name",
-        "type": "Type",
-        "names_of_other_agencies": "Other Agencies",
-        "expected_budget": "Expected Budget",
-        "notes": "Notes",
-        "requested_date": "Date Requested",
-        "requesting_officer": "Requesting Officer",
-        "approving_officer": "Approving Officer",
-        "planned_date": "Date Planned",
-        "completed_date": "Date Completed",
-        "rating": "Rating",
-        "report_file": "Report File",
-        "current": "Current",
-    }
-
-
 class InterventionCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
             "id",
@@ -262,28 +226,4 @@ class InterventionSectorLocationLinkCSVFlatRenderer(BaseCSVFlatRenderer):
         "point": "Point",
         "latitude": "Latitude",
         "longitude": "Longitude",
-    }
-
-
-class PartnerStaffMemberCSVFlatRenderer(BaseCSVFlatRenderer):
-    header = [
-        "id",
-        "partner_name",
-        "title",
-        "first_name",
-        "last_name",
-        "email",
-        "phone",
-        "active",
-    ]
-
-    labels = {
-        "id": "Id",
-        "partner_name": "Partner Name",
-        "title": "Title",
-        "first_name": "First Name",
-        "last_name": "Last Name",
-        "email": "Email Address",
-        "phone": "Phone Number",
-        "active": "Active",
     }
