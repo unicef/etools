@@ -237,27 +237,31 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('WHO', 'WHO')
     )
     partner_type = models.CharField(
+        verbose_name=_("Partner Type"),
         max_length=50,
         choices=PartnerType.CHOICES
     )
 
     # this is only applicable if type is CSO
     cso_type = models.CharField(
+        verbose_name=_('CSO Type'),
         max_length=50,
         choices=CSO_TYPES,
-        verbose_name='CSO Type',
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     name = models.CharField(
+        verbose_name=_('Full Name'),
         max_length=255,
-        verbose_name='Full Name',
         help_text='Please make sure this matches the name you enter in VISION'
     )
     short_name = models.CharField(
+        verbose_name=_("Short Name"),
         max_length=50,
         blank=True
     )
     description = models.CharField(
+        verbose_name=_("Description"),
         max_length=256,
         blank=True
     )
@@ -266,6 +270,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     # TODO remove this after migration to shared_with + add calculation to
     # hact_field
     shared_partner = models.CharField(
+        verbose_name=_("Shared Partner (old)"),
         help_text='Partner shared with UNDP or UNFPA?',
         choices=Choices(
            'No',
@@ -277,20 +282,28 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=50
     )
     street_address = models.CharField(
+        verbose_name=_("Street Address"),
         max_length=500,
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     city = models.CharField(
+        verbose_name=_("City"),
         max_length=32,
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     postal_code = models.CharField(
+        verbose_name=_("Postal Code"),
         max_length=32,
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     country = models.CharField(
+        verbose_name=_("Country"),
         max_length=32,
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
 
     # TODO: remove this when migration to the new fields is done. check for references
@@ -302,61 +315,87 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     # END REMOVE
 
     email = models.CharField(
+        verbose_name=_("Email Address"),
         max_length=255,
         blank=True, null=True
     )
     phone_number = models.CharField(
+        verbose_name=_("Phone Number"),
         max_length=32,
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     vendor_number = models.CharField(
+        verbose_name=_("Vendor Number"),
         blank=True,
         null=True,
         unique=True,
         max_length=30
     )
     alternate_id = models.IntegerField(
+        verbose_name=_("Alternate ID"),
         blank=True,
         null=True
     )
     alternate_name = models.CharField(
+        verbose_name=_("Alternate Name"),
         max_length=255,
         blank=True,
         null=True
     )
     rating = models.CharField(
+        verbose_name=_('Risk Rating'),
         max_length=50,
         null=True,
-        verbose_name='Risk Rating'
     )
     type_of_assessment = models.CharField(
+        verbose_name=_("Assessment Type"),
         max_length=50,
         null=True,
     )
     last_assessment_date = models.DateField(
-        blank=True, null=True
+        verbose_name=_("Last Assessment Date"),
+        blank=True,
+        null=True,
     )
     core_values_assessment_date = models.DateField(
-        blank=True, null=True,
-        verbose_name='Date positively assessed against core values'
+        verbose_name=_('Date positively assessed against core values'),
+        blank=True,
+        null=True,
     )
     core_values_assessment = models.FileField(
-        blank=True, null=True,
+        verbose_name=_("Core Values Assessment"),
+        blank=True,
+        null=True,
         upload_to='partners/core_values/',
         max_length=1024,
         help_text='Only required for CSO partners'
     )
-    vision_synced = models.BooleanField(default=False)
-    blocked = models.BooleanField(default=False)
-    hidden = models.BooleanField(default=False)
-    deleted_flag = models.BooleanField(default=False, verbose_name='Marked for deletion')
+    vision_synced = models.BooleanField(
+        verbose_name=_("VISION Synced"),
+        default=False,
+    )
+    blocked = models.BooleanField(verbose_name=_("Blocked"), default=False)
+    hidden = models.BooleanField(verbose_name=_("Hidden"), default=False)
+    deleted_flag = models.BooleanField(
+        verbose_name=_('Marked for deletion'),
+        default=False,
+    )
 
     total_ct_cp = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
+        verbose_name=_("Total Cash Transferred for Country Programme"),
+        decimal_places=2,
+        max_digits=12,
+        blank=True,
+        null=True,
         help_text='Total Cash Transferred for Country Programme'
     )
     total_ct_cy = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
+        verbose_name=_("Total Cash Transferred per Current Year"),
+        decimal_places=2,
+        max_digits=12,
+        blank=True,
+        null=True,
         help_text='Total Cash Transferred per Current Year'
     )
 
@@ -369,7 +408,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     #     "planned_cash_transfer": 0,
     #     "micro_assessment_needed": "Missing",
     #     "audits_mr": 0}
-    hact_values = JSONField(blank=True, null=True, default=hact_default)
+    hact_values = JSONField(
+        verbose_name=_("HACT"),
+        blank=True,
+        null=True,
+        default=hact_default,
+    )
 
     tracker = FieldTracker()
 
@@ -613,13 +657,32 @@ class PartnerStaffMember(models.Model):
     """
 
     partner = models.ForeignKey(
-        PartnerOrganization, related_name='staff_members')
-    title = models.CharField(max_length=64, null=True, blank=True)
-    first_name = models.CharField(max_length=64)
-    last_name = models.CharField(max_length=64)
-    email = models.CharField(max_length=128, unique=True, blank=False)
-    phone = models.CharField(max_length=64, blank=True, null=True)
+        PartnerOrganization,
+        verbose_name=_("Partner"),
+        related_name='staff_members'
+    )
+    title = models.CharField(
+        verbose_name=_("Title"),
+        max_length=64,
+        null=True,
+        blank=True,
+    )
+    first_name = models.CharField(verbose_name=_("First Name"), max_length=64)
+    last_name = models.CharField(verbose_name=_("Last Name"), max_length=64)
+    email = models.CharField(
+        verbose_name=_("Email Address"),
+        max_length=128,
+        unique=True,
+        blank=False,
+    )
+    phone = models.CharField(
+        verbose_name=_("Phone Number"),
+        max_length=64,
+        blank=True,
+        null=True,
+    )
     active = models.BooleanField(
+        verbose_name=_("Active"),
         default=True
     )
 
@@ -677,60 +740,75 @@ class Assessment(models.Model):
 
     partner = models.ForeignKey(
         PartnerOrganization,
+        verbose_name=_("Partner"),
         related_name='assessments'
     )
     type = models.CharField(
+        verbose_name=_("Type"),
         max_length=50,
         choices=ASSESMENT_TYPES,
     )
     names_of_other_agencies = models.CharField(
+        verbose_name=_("Other Agencies"),
         max_length=255,
         blank=True, null=True,
         help_text='List the names of the other agencies they have worked with'
     )
     expected_budget = models.IntegerField(
-        verbose_name='Planned amount',
+        verbose_name=_('Planned amount'),
         blank=True, null=True,
     )
     notes = models.CharField(
         max_length=255,
         blank=True, null=True,
-        verbose_name='Special requests',
+        verbose_name=_('Special requests'),
         help_text='Note any special requests to be considered during the assessment'
     )
     requested_date = models.DateField(
-        auto_now_add=True
+        verbose_name=_("Requested Date"),
+        auto_now_add=True,
     )
     requesting_officer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Requesting Officer"),
         related_name='requested_assessments',
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     approving_officer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        blank=True, null=True
+        verbose_name=_("Approving Officer"),
+        blank=True,
+        null=True,
     )
     planned_date = models.DateField(
-        blank=True, null=True
+        verbose_name=_("Planned Date"),
+        blank=True,
+        null=True,
     )
     completed_date = models.DateField(
-        blank=True, null=True
+        verbose_name=_("Completed Date"),
+        blank=True,
+        null=True,
     )
     rating = models.CharField(
+        verbose_name=_("Rating"),
         max_length=50,
         choices=RISK_RATINGS,
         default=HIGH,
     )
     # Assesment Report
     report = models.FileField(
-        blank=True, null=True,
+        verbose_name=_("Report"),
+        blank=True,
+        null=True,
         max_length=1024,
         upload_to=get_assesment_path
     )
     # Basis for Risk Rating
     current = models.BooleanField(
+        verbose_name=_('Basis for risk rating'),
         default=False,
-        verbose_name='Basis for risk rating'
     )
 
     tracker = FieldTracker()
@@ -847,47 +925,73 @@ class Agreement(TimeStampedModel):
     }
 
     partner = models.ForeignKey(PartnerOrganization, related_name="agreements")
-    country_programme = models.ForeignKey('reports.CountryProgramme', related_name='agreements', blank=True, null=True)
+    country_programme = models.ForeignKey(
+        'reports.CountryProgramme',
+        verbose_name=_("Country Programme"),
+        related_name='agreements',
+        blank=True,
+        null=True,
+    )
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
+        verbose_name=_("Partner Authorized Officer"),
         blank=True,
         related_name="agreement_authorizations")
     agreement_type = models.CharField(
+        verbose_name=_("Agreement Type"),
         max_length=10,
         choices=AGREEMENT_TYPES
     )
     agreement_number = models.CharField(
+        verbose_name=_('Reference Number'),
         max_length=45,
         blank=True,
-        verbose_name='Reference Number',
         # TODO: write a script to insure this before merging.
         unique=True,
     )
     attached_agreement = models.FileField(
+        verbose_name=_("Attached Agreement"),
         upload_to=get_agreement_path,
         blank=True,
         max_length=1024
     )
-    start = models.DateField(null=True, blank=True)
-    end = models.DateField(null=True, blank=True)
+    start = models.DateField(
+        verbose_name=_("Start Date"),
+        null=True,
+        blank=True,
+    )
+    end = models.DateField(
+        verbose_name=_("End Date"),
+        null=True,
+        blank=True,
+    )
 
-    signed_by_unicef_date = models.DateField(null=True, blank=True)
+    signed_by_unicef_date = models.DateField(
+        verbose_name=_("Signed By UNICEF Date"),
+        null=True,
+        blank=True,
+    )
 
     # Unicef staff members that sign the agreemetns
     # this user needs to be in the partnership management group
     signed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Signed By UNICEF"),
         related_name='agreements_signed+',
         null=True, blank=True
     )
 
-    signed_by_partner_date = models.DateField(null=True, blank=True)
+    signed_by_partner_date = models.DateField(
+        verbose_name=_("Signed By Partner Date"),
+        null=True,
+        blank=True,
+    )
 
     # Signatory on behalf of the PartnerOrganization
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
         related_name='agreements_signed',
-        verbose_name='Signed by partner',
+        verbose_name=_('Signed by partner'),
         chained_field="partner",
         chained_model_field="partner",
         show_all=False,
@@ -897,6 +1001,7 @@ class Agreement(TimeStampedModel):
 
     # TODO: Write a script that sets a status to each existing record
     status = FSMField(
+        verbose_name=_("Status"),
         max_length=32,
         blank=True,
         choices=STATUS_CHOICES,
@@ -1064,9 +1169,14 @@ class AgreementAmendment(TimeStampedModel):
         (CLAUSE, 'Change in clause'),
     )
 
-    number = models.CharField(max_length=5)
-    agreement = models.ForeignKey(Agreement, related_name='amendments')
+    number = models.CharField(verbose_name=_("Number"), max_length=5)
+    agreement = models.ForeignKey(
+        Agreement,
+        verbose_name=_("Agreement"),
+        related_name='amendments',
+    )
     signed_amendment = models.FileField(
+        verbose_name=_("Signed Amendment"),
         max_length=1024,
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
@@ -1074,7 +1184,11 @@ class AgreementAmendment(TimeStampedModel):
     types = ArrayField(models.CharField(
         max_length=50,
         choices=AMENDMENT_TYPES))
-    signed_date = models.DateField(null=True, blank=True)
+    signed_date = models.DateField(
+        verbose_name=_("Signed Date"),
+        null=True,
+        blank=True,
+    )
 
     tracker = FieldTracker()
     view_objects = AgreementAmendmentManager()
@@ -1191,30 +1305,33 @@ class Intervention(TimeStampedModel):
     objects = InterventionManager()
 
     document_type = models.CharField(
+        verbose_name=_('Document type'),
         choices=INTERVENTION_TYPES,
         max_length=255,
-        verbose_name='Document type'
     )
     agreement = models.ForeignKey(
         Agreement,
+        verbose_name=_("Agreement"),
         related_name='interventions'
     )
     # Even though CP is defined at the Agreement Level, for a particular intervention this can be different.
     country_programme = models.ForeignKey(
         CountryProgramme,
+        verbose_name=_("Country Programme"),
         related_name='interventions',
         blank=True, null=True, on_delete=models.DO_NOTHING,
         help_text='Which Country Programme does this Intervention belong to?'
     )
     number = models.CharField(
+        verbose_name=_('Reference Number'),
         max_length=64,
         blank=True,
         null=True,
-        verbose_name='Reference Number',
         unique=True,
     )
-    title = models.CharField(max_length=256)
+    title = models.CharField(verbose_name=_("Title"), max_length=256)
     status = FSMField(
+        verbose_name=_("Status"),
         max_length=32,
         blank=True,
         choices=INTERVENTION_STATUS,
@@ -1222,72 +1339,116 @@ class Intervention(TimeStampedModel):
     )
     # dates
     start = models.DateField(
-        null=True, blank=True,
+        verbose_name=_("Start Date"),
+        null=True,
+        blank=True,
         help_text='The date the Intervention will start'
     )
     end = models.DateField(
-        null=True, blank=True,
+        verbose_name=_("End Date"),
+        null=True,
+        blank=True,
         help_text='The date the Intervention will end'
     )
     submission_date = models.DateField(
-        null=True, blank=True,
+        verbose_name=_("Document Submission Date by CSO"),
+        null=True,
+        blank=True,
         help_text='The date the partner submitted complete PD/SSFA documents to Unicef',
     )
     submission_date_prc = models.DateField(
-        verbose_name='Submission Date to PRC',
+        verbose_name=_('Submission Date to PRC'),
         help_text='The date the documents were submitted to the PRC',
-        null=True, blank=True,
+        null=True,
+        blank=True,
     )
     review_date_prc = models.DateField(
-        verbose_name='Review date by PRC',
+        verbose_name=_('Review date by PRC'),
         help_text='The date the PRC reviewed the partnership',
-        null=True, blank=True,
+        null=True,
+        blank=True,
     )
     prc_review_document = models.FileField(
+        verbose_name=_("Review Document by PRC"),
         max_length=1024,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         upload_to=get_prc_intervention_file_path
     )
     signed_pd_document = models.FileField(
+        verbose_name=_("Signed PD Document"),
         max_length=1024,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         upload_to=get_prc_intervention_file_path
     )
-    signed_by_unicef_date = models.DateField(null=True, blank=True)
-    signed_by_partner_date = models.DateField(null=True, blank=True)
+    signed_by_unicef_date = models.DateField(
+        verbose_name=_("Signed by UNICEF Date"),
+        null=True,
+        blank=True,
+    )
+    signed_by_partner_date = models.DateField(
+        verbose_name=_("Signed by Partner Date"),
+        null=True,
+        blank=True,
+    )
 
     # partnership managers
     unicef_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Signed by UNICEF"),
         related_name='signed_interventions+',
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     # part of the Agreement authorized officers
     partner_authorized_officer_signatory = models.ForeignKey(
         PartnerStaffMember,
+        verbose_name=_("Signed by Partner"),
         related_name='signed_interventions',
-        blank=True, null=True,
+        blank=True,
+        null=True,
     )
     # anyone in unicef country office
     unicef_focal_points = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("UNICEF Focal Points"),
         blank=True,
         related_name='unicef_interventions_focal_points+'
     )
     # any PartnerStaffMember on the ParterOrganization
     partner_focal_points = models.ManyToManyField(
         PartnerStaffMember,
+        verbose_name=_("CSO Authorized Officials"),
         related_name='interventions_focal_points+',
         blank=True
     )
 
-    contingency_pd = models.BooleanField(default=False)
+    contingency_pd = models.BooleanField(
+        verbose_name=_("Contingency PD"),
+        default=False,
+    )
 
-    offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
-    population_focus = models.CharField(max_length=130, null=True, blank=True)
+    offices = models.ManyToManyField(
+        Office,
+        verbose_name=_("UNICEF Office"),
+        blank=True,
+        related_name='office_interventions+',
+    )
+    population_focus = models.CharField(
+        verbose_name=_("Population Focus"),
+        max_length=130,
+        null=True,
+        blank=True,
+    )
     # Flag if this has been migrated to a status that is not correct
     # previous status
-    metadata = JSONField(blank=True, null=True, default=dict)
+    metadata = JSONField(
+        verbose_name=_("Metadata"),
+        blank=True,
+        null=True,
+        default=dict,
+    )
 
     class Meta:
         ordering = ['-created']
@@ -1551,17 +1712,33 @@ class InterventionAmendment(TimeStampedModel):
         (OTHER, 'Other')
     )
 
-    intervention = models.ForeignKey(Intervention, related_name='amendments')
+    intervention = models.ForeignKey(
+        Intervention,
+        verbose_name=_("Reference Number"),
+        related_name='amendments'
+    )
 
     types = ArrayField(models.CharField(
         max_length=50,
         choices=AMENDMENT_TYPES))
 
-    other_description = models.CharField(max_length=512, null=True, blank=True)
+    other_description = models.CharField(
+        verbose_name=_("Description"),
+        max_length=512,
+        null=True,
+        blank=True,
+    )
 
-    signed_date = models.DateField(null=True)
-    amendment_number = models.IntegerField(default=0)
+    signed_date = models.DateField(
+        verbose_name=_("Signed Date"),
+        null=True,
+    )
+    amendment_number = models.IntegerField(
+        verbose_name=_("Number"),
+        default=0,
+    )
     signed_amendment = models.FileField(
+        verbose_name=_("Amendment"),
         max_length=1024,
         upload_to=get_intervention_amendment_file_path
     )

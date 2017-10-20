@@ -188,33 +188,101 @@ class Result(MPTTModel):
     Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.ResultType`
     """
-    country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
-    result_type = models.ForeignKey(ResultType)
-    sector = models.ForeignKey(Sector, null=True, blank=True)
-    name = models.TextField()
-    code = models.CharField(max_length=50, null=True, blank=True)
-    from_date = models.DateField(null=True, blank=True)
-    to_date = models.DateField(null=True, blank=True)
+    country_programme = models.ForeignKey(
+        CountryProgramme,
+        verbose_name=_("Country Programme"),
+        null=True,
+        blank=True,
+    )
+    result_type = models.ForeignKey(ResultType, verbose_name=_("Result Type"))
+    sector = models.ForeignKey(
+        Sector,
+        verbose_name=_("Section"),
+        null=True,
+        blank=True,
+    )
+    name = models.TextField(verbose_name=_("Name"))
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    from_date = models.DateField(
+        verbose_name=_("From Date"),
+        null=True,
+        blank=True,
+    )
+    to_date = models.DateField(
+        verbose_name=_("To Date"),
+        null=True,
+        blank=True,
+    )
     parent = TreeForeignKey(
         'self',
-        null=True, blank=True,
+        verbose_name=_("Parent"),
+        null=True,
+        blank=True,
         related_name='children',
         db_index=True
     )
 
     # activity level attributes
-    humanitarian_tag = models.BooleanField(default=False)
-    wbs = models.CharField(max_length=50, null=True, blank=True)
-    vision_id = models.CharField(max_length=10, null=True, blank=True)
-    gic_code = models.CharField(max_length=8, null=True, blank=True)
-    gic_name = models.CharField(max_length=255, null=True, blank=True)
-    sic_code = models.CharField(max_length=8, null=True, blank=True)
-    sic_name = models.CharField(max_length=255, null=True, blank=True)
-    activity_focus_code = models.CharField(max_length=8, null=True, blank=True)
-    activity_focus_name = models.CharField(max_length=255, null=True, blank=True)
+    humanitarian_tag = models.BooleanField(
+        verbose_name=_("Humanitarian Tag"),
+        default=False,
+    )
+    wbs = models.CharField(
+        verbose_name=_("WBS"),
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    vision_id = models.CharField(
+        verbose_name=_("VISION ID"),
+        max_length=10,
+        null=True,
+        blank=True,
+    )
+    gic_code = models.CharField(
+        verbose_name=_("GIC Code"),
+        max_length=8,
+        null=True,
+        blank=True,
+    )
+    gic_name = models.CharField(
+        verbose_name=_("GIC Name"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    sic_code = models.CharField(
+        verbose_name=_("SIC Code"),
+        max_length=8,
+        null=True,
+        blank=True,
+    )
+    sic_name = models.CharField(
+        verbose_name=_("SIC Name"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    activity_focus_code = models.CharField(
+        verbose_name=_("Activity Focus Code"),
+        max_length=8,
+        null=True,
+        blank=True,
+    )
+    activity_focus_name = models.CharField(
+        verbose_name=_("Activity Focus Code"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
 
-    hidden = models.BooleanField(default=False)
-    ram = models.BooleanField(default=False)
+    hidden = models.BooleanField(verbose_name=_("Hidden"), default=False)
+    ram = models.BooleanField(verbose_name=_("RAM"), default=False)
 
     objects = ResultManager()
     outputs = OutputManager()
@@ -478,26 +546,79 @@ class Indicator(models.Model):
 
     sector = models.ForeignKey(
         Sector,
+        verbose_name=_("Section"),
         blank=True, null=True
     )
 
-    result = models.ForeignKey(Result, null=True, blank=True)
-    name = models.CharField(max_length=1024)
-    code = models.CharField(max_length=50, null=True, blank=True)
-    unit = models.ForeignKey(Unit, null=True, blank=True)
+    result = models.ForeignKey(
+        Result,
+        verbose_name=_("Result"),
+        null=True,
+        blank=True,
+    )
+    name = models.CharField(verbose_name=_("Name"), max_length=1024)
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name=_("Unit"),
+        null=True,
+        blank=True,
+    )
 
-    total = models.IntegerField(verbose_name='UNICEF Target', null=True, blank=True)
-    sector_total = models.IntegerField(verbose_name='Sector Target', null=True, blank=True)
-    current = models.IntegerField(null=True, blank=True, default=0)
-    sector_current = models.IntegerField(null=True, blank=True)
-    assumptions = models.TextField(null=True, blank=True)
+    total = models.IntegerField(
+        verbose_name=_('UNICEF Target'),
+        null=True,
+        blank=True,
+    )
+    sector_total = models.IntegerField(
+        verbose_name=_('Sector Target'),
+        null=True,
+        blank=True,
+    )
+    current = models.IntegerField(
+        verbose_name=_("Current"),
+        null=True,
+        blank=True,
+        default=0,
+    )
+    sector_current = models.IntegerField(
+        verbose_name=_("Sector Current"),
+        null=True,
+        blank=True,
+    )
+    assumptions = models.TextField(
+        verbose_name=_("Assumptions"),
+        null=True,
+        blank=True,
+    )
 
     # RAM Info
-    target = models.CharField(max_length=255, null=True, blank=True)
-    baseline = models.CharField(max_length=255, null=True, blank=True)
-    ram_indicator = models.BooleanField(default=False)
-    active = models.BooleanField(default=True)
-    view_on_dashboard = models.BooleanField(default=False)
+    target = models.CharField(
+        verbose_name=_("Target"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    baseline = models.CharField(
+        verbose_name=_("Baseline"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    ram_indicator = models.BooleanField(
+        verbose_name=_("RAM Indicator"),
+        default=False,
+    )
+    active = models.BooleanField(verbose_name=_("Active"), default=True)
+    view_on_dashboard = models.BooleanField(
+        verbose_name=_("View on Dashboard"),
+        default=False,
+    )
 
     class Meta:
         ordering = ['-active', 'name']  # active indicators will show up first in the list
