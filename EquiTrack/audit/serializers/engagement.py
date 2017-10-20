@@ -385,3 +385,9 @@ class SpecialAuditSerializer(EngagementSerializer):
         fields = EngagementSerializer.Meta.fields + [
             'other_recommendations',
         ]
+        extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
+        extra_kwargs.update({
+            'start_date': {'required': False},
+            'end_date': {'required': False},
+            'total_value': {'required': False},
+        })
