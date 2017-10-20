@@ -51,7 +51,6 @@ class PartnerPDFSerializer(serializers.ModelSerializer):
 
 
 class StaffMemberPDFSerializer(serializers.ModelSerializer):
-    has_access = serializers.BooleanField()
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
     job_title = serializers.CharField(source='user.profile.job_title')
@@ -61,7 +60,7 @@ class StaffMemberPDFSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditorStaffMember
         fields = (
-            'has_access', 'first_name', 'last_name', 'job_title', 'phone_number', 'email'
+            'first_name', 'last_name', 'job_title', 'phone_number', 'email'
         )
 
 
@@ -100,7 +99,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
     unique_id = serializers.ReadOnlyField()
     authorized_officers = serializers.SerializerMethodField()
     active_pd = serializers.SerializerMethodField()
-    staff_members = serializers.SerializerMethodField()
+    staff_members = StaffMemberPDFSerializer(many=True)
 
     date_of_field_visit = serializers.DateField(format='%d %b %Y')
     date_of_draft_report_to_ip = serializers.DateField(format='%d %b %Y')
@@ -119,7 +118,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
             'id', 'agreement', 'partner', 'engagement_type_display', 'engagement_type', 'status_display', 'status',
             'unique_id', 'authorized_officers', 'active_pd', 'staff_members',
             'date_of_field_visit', 'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
-            'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
+            'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef', 'partner_contacted_at',
             'action_points', 'engagement_attachments', 'report_attachments',
         ]
 
@@ -131,13 +130,6 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
 
     def get_active_pd(self, obj):
         return ', '.join(map(str, obj.active_pd.all()))
-
-    def get_staff_members(self, obj):
-        return StaffMemberPDFSerializer(
-            obj.agreement.auditor_firm.staff_members.annotate(
-                has_access=Count(Q(engagement__id=obj.id))
-            ), many=True
-        ).data
 
 
 class MicroAssessmentPDFSerializer(EngagementPDFSerializer):

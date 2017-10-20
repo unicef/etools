@@ -202,7 +202,6 @@
           <div class="content-section__wrapper">
             <table class="content-section__table">
               <tr class="content-section__table__header">
-                <td class="text-center">Has access</td>
                 <td>Position</td>
                 <td>First Name</td>
                 <td>Last Name</td>
@@ -212,13 +211,6 @@
               {% if engagement.staff_members %}
                 {% for staff_member in engagement.staff_members %}
                 <tr>
-                  <td class="text-center">
-                    {% if staff_member.has_access %}
-                      Y
-                    {% else %}
-                      N
-                    {% endif %}
-                  </td>
                   <td>{{ staff_member.job_title|default:"-" }}</td>
                   <td>{{ staff_member.first_name|default:"-" }}</td>
                   <td>{{ staff_member.last_name|default:"-" }}</td>
