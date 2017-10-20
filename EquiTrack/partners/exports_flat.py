@@ -41,48 +41,6 @@ class AssessmentCSVFlatRenderer(BaseCSVFlatRenderer):
     }
 
 
-class AgreementCSVFlatRenderer(BaseCSVFlatRenderer):
-    header = [
-        "id",
-        "agreement_number",
-        "attached_agreement_file",
-        "status",
-        "partner_name",
-        "agreement_type",
-        "start",
-        "end",
-        "partner_manager_name",
-        "signed_by_partner_date",
-        "signed_by_name",
-        "signed_by_unicef_date",
-        "staff_members",
-        "amendments",
-        "country_programme_name",
-        "created",
-        "modified",
-    ]
-
-    labels = {
-        "id": "Id",
-        "agreement_number": 'Reference Number',
-        "attached_agreement_file": "Attached Agreement",
-        "status": 'Status',
-        "partner_name": 'Partner Name',
-        "agreement_type": 'Agreement Type',
-        "start": 'Start Date',
-        "end": 'End Date',
-        "partner_manager_name": 'Signed By Partner',
-        "signed_by_partner_date": 'Signed By Partner Date',
-        "signed_by_name": 'Signed By UNICEF',
-        "signed_by_unicef_date": 'Signed By UNICEF Date',
-        "staff_members": 'Partner Authorized Officer',
-        "amendments": 'Amendments',
-        "country_programme_name": "Country Programme",
-        "created": "Created",
-        "modified": "Modified",
-    }
-
-
 class AgreementAmendmentCSVFlatRenderer(BaseCSVFlatRenderer):
     header = [
         "id",
