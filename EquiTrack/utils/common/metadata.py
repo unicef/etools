@@ -63,6 +63,8 @@ class FSMTransitionActionMetadataMixin(object):
                 model_transitions.append(action)
 
         actions["allowed_FSM_transitions"] = map(lambda t: t.__name__, model_transitions)
+        # Move cancel to the end.
+        actions["allowed_FSM_transitions"].sort(key=lambda action: action == 'cancel')
         return actions
 
 

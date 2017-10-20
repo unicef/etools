@@ -174,14 +174,13 @@ SHARED_APPS = (
     'mptt',
     'easy_pdf',
     'ordered_model',
-
     'vision',
-    'management',
     'publics',
     # you must list the app where your tenant model resides in
     'users',
     'notification',
     'django_filters',
+    'environment',
     'utils.common',
     'utils.mail',
     'utils.writable_serializers',
@@ -204,6 +203,7 @@ TENANT_APPS = (
     'tpm',
     'audit',
     'firms',
+    'management',
 )
 INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
 
@@ -536,3 +536,16 @@ TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
 VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
+
+ISSUE_CHECKS = [
+    'management.issues.project_checks.ActivePCANoSignedDocCheck',
+    'management.issues.project_checks.PdOutputsWrongCheck',
+    'management.issues.project_checks.InterventionsAssociatedSSFACheck',
+    'management.issues.project_checks.InterventionsAreValidCheck',
+    'management.issues.project_checks.PDAmendmentsMissingFilesCheck',
+    'management.issues.project_checks.PCAAmendmentsMissingFilesCheck',
+]
+
+EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
+    'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@un.org'
+)

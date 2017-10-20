@@ -1,0 +1,25 @@
+[
+  {
+    "model": "audit.auditorfirm",
+    "fields": {
+      "vendor_number": "000",
+      "name": "UNICEF Staff Org.",
+      "street_address": "3 United Nations Plaza",
+      "city": "New York",
+      "postal_code": "10017",
+      "country": "U.S.A.",
+      "email": "audit@unicef.org",
+      "phone_number": ""
+   }
+  },
+  {
+    "model": "audit.purchaseorder",
+    "fields": {
+      "order_number": "0000000000",
+      "item_number": 0,
+      "auditor_firm": ["000"],
+      "contract_start_date": "1946-12-11",
+      "contract_end_date": "3000-01-01"
+    }
+  }
+]

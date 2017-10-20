@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 
-from audit.models import AuditorStaffMember, Auditor, Engagement
+from audit.models import AuditorStaffMember, Auditor, Engagement, EngagementActionPoint
 
 
 @receiver(post_save, sender=AuditorStaffMember)
@@ -23,3 +23,9 @@ def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwa
 @receiver(post_delete, sender=AuditorStaffMember)
 def delete_user_receiver(instance, **kwargs):
     instance.user.delete()
+
+
+@receiver(post_save, sender=EngagementActionPoint)
+def action_point_updated_receiver(instance, created, **kwargs):
+    if created:
+        instance.notify_person_responsible('audit/engagement/action_point_assigned')

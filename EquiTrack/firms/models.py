@@ -14,6 +14,11 @@ from post_office import mail
 from EquiTrack.utils import get_environment, get_current_site
 
 
+class BaseFirmManager(models.Manager):
+    def get_by_natural_key(self, vendor_number):
+        return self.get(vendor_number=vendor_number)
+
+
 @python_2_unicode_compatible
 class BaseFirm(TimeStampedModel, models.Model):
     vendor_number = models.CharField(
@@ -63,6 +68,8 @@ class BaseFirm(TimeStampedModel, models.Model):
     blocked = models.BooleanField(_('blocked'), default=False)
     hidden = models.BooleanField(_('hidden'), default=False)
 
+    objects = BaseFirmManager()
+
     class Meta:
         abstract = True
         verbose_name = _('organization')
@@ -70,6 +77,9 @@ class BaseFirm(TimeStampedModel, models.Model):
 
     def __str__(self):
         return self.name
+
+    def natural_key(self):
+        return (self.vendor_number, )
 
 
 @python_2_unicode_compatible
