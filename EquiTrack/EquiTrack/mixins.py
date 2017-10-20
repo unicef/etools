@@ -230,17 +230,16 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
 
 class ExportModelMixin(object):
-    def set_labels(self, fields, model):
+    def set_labels(self, serializer_fields, model):
         labels = {}
         model_labels = {}
-        serializer_labels = {}
         for f in model._meta.fields:
             model_labels[f.name] = f.verbose_name
-        for f in fields:
+        for f in serializer_fields:
             if model_labels.get(f, False):
                 labels[f] = model_labels.get(f)
-            elif serializer_labels.get(f, False):
-                labels[f] = fields[f].label
+            elif serializer_fields.get(f, False):
+                labels[f] = serializer_fields[f].label
             else:
                 labels[f] = f.replace("_", " ").title()
         return labels
