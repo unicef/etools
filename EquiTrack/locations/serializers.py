@@ -81,16 +81,10 @@ class LocationExportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Location
-        fields = (
-            'id',
-            'name',
-            'p_code',
-            'location_type',
-            'parent',
-            'geo_point',
-            'latitude',
-            'longitude',
-        )
+        fields = "__all__"
+
+    def get_geo_point(self, obj):
+        return "{}".format(obj.geo_point)
 
 
 class LocationExportFlatSerializer(serializers.ModelSerializer):
@@ -99,17 +93,7 @@ class LocationExportFlatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Location
-        fields = (
-            'id',
-            'name',
-            'p_code',
-            'location_type',
-            'parent',
-            'geom',
-            'point',
-            'latitude',
-            'longitude',
-        )
+        fields = "__all__"
 
     def get_geom(self, obj):
         return obj.geom.point_on_surface if obj.geom else ""

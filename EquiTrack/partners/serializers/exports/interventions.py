@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from locations.models import Location
@@ -25,7 +26,7 @@ from reports.serializers.exports import (
 
 
 class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
-    types = TypeArrayField()
+    types = TypeArrayField(label=_("Types"))
 
     class Meta:
         model = InterventionAmendment
@@ -33,26 +34,21 @@ class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
 
 
 class InterventionAmendmentExportFlatSerializer(InterventionAmendmentExportSerializer):
-    intervention = serializers.CharField(source="intervention.number")
+    intervention = serializers.CharField(
+        label=_("Reference Number"),
+        source="intervention.number",
+    )
 
 
 class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
-    intervention = serializers.SerializerMethodField()
+    intervention = serializers.SerializerMethodField(
+        label=_("Reference Number")
+    )
     sector = serializers.SerializerMethodField()
 
     class Meta:
         model = Location
-        fields = (
-            'intervention',
-            'sector',
-            'name',
-            'location_type',
-            'p_code',
-            'geom',
-            'point',
-            'latitude',
-            'longitude',
-        )
+        fields = "__all__"
 
     def get_intervention(self, obj):
         return ",".join(
@@ -67,23 +63,14 @@ class InterventionSectorLocationLinkExportSerializer(LocationExportSerializer):
 
 
 class InterventionSectorLocationLinkExportFlatSerializer(LocationExportFlatSerializer):
-    intervention = serializers.SerializerMethodField()
-    sector = serializers.SerializerMethodField()
+    intervention = serializers.SerializerMethodField(
+        label=_("Reference Number"),
+    )
+    sector = serializers.SerializerMethodField(label=_("Sector"))
 
     class Meta:
         model = Location
-        fields = (
-            'id',
-            'intervention',
-            'sector',
-            'name',
-            'location_type',
-            'p_code',
-            'geom',
-            'point',
-            'latitude',
-            'longitude',
-        )
+        fields = "__all__"
 
     def get_intervention(self, obj):
         return ",".join(
@@ -99,103 +86,95 @@ class InterventionSectorLocationLinkExportFlatSerializer(LocationExportFlatSeria
 
 
 class InterventionResultExportSerializer(InterventionResultSerializer):
-    intervention = serializers.CharField(source="intervention.number")
-    country_programme = serializers.CharField(source="cp_output.country_programme.name")
-    result_type = serializers.CharField(source="cp_output.result_type.name")
-    sector = serializers.CharField(source="cp_output.sector.name")
-    name = serializers.CharField(source="cp_output.name")
-    code = serializers.CharField(source="cp_output.code")
-    from_date = serializers.CharField(source="cp_output.from_date")
-    to_date = serializers.CharField(source="cp_output.to_date")
-    parent = serializers.CharField(source="cp_output.parent.pk")
-    wbs = serializers.CharField(source="cp_output.wbs")
-    vision_id = serializers.CharField(source="cp_output.vision_id")
-    gic_code = serializers.CharField(source="cp_output.gic_code")
-    gic_name = serializers.CharField(source="cp_output.gic_name")
-    sic_code = serializers.CharField(source="cp_output.sic_code")
-    sic_name = serializers.CharField(source="cp_output.sic_name")
-    activity_focus_code = serializers.CharField(source="cp_output.activity_focus_code")
-    activity_focus_name = serializers.CharField(source="cp_output.activity_focus_name")
+    intervention = serializers.CharField(
+        label=_("Reference Number"),
+        source="intervention.number",
+    )
+    country_programme = serializers.CharField(
+        label=_("Country Programme"),
+        source="cp_output.country_programme.name",
+    )
+    result_type = serializers.CharField(
+        label=_("Result Type"),
+        source="cp_output.result_type.name",
+    )
+    sector = serializers.CharField(
+        label=_("Sector"),
+        source="cp_output.sector.name",
+    )
+    name = serializers.CharField(
+        label=_("Name"),
+        source="cp_output.name",
+    )
+    code = serializers.CharField(
+        label=_("Code"),
+        source="cp_output.code",
+    )
+    from_date = serializers.CharField(
+        label=_("From Date"),
+        source="cp_output.from_date",
+    )
+    to_date = serializers.CharField(
+        label=_("To Date"),
+        source="cp_output.to_date",
+    )
+    parent = serializers.CharField(
+        label=_("Parent"),
+        source="cp_output.parent.pk",
+    )
+    wbs = serializers.CharField(
+        label=_("WBS"),
+        source="cp_output.wbs",
+    )
+    vision_id = serializers.CharField(
+        label=_("VISION ID"),
+        source="cp_output.vision_id",
+    )
+    gic_code = serializers.CharField(
+        label=_("GIC Code"),
+        source="cp_output.gic_code",
+    )
+    gic_name = serializers.CharField(
+        label=_("GIC Name"),
+        source="cp_output.gic_name",
+    )
+    sic_code = serializers.CharField(
+        label=_("SIC Code"),
+        source="cp_output.sic_code",
+    )
+    sic_name = serializers.CharField(
+        label=_("SIC Name"),
+        source="cp_output.sic_name",
+    )
+    activity_focus_code = serializers.CharField(
+        label=_("Activity Focus Code"),
+        source="cp_output.activity_focus_code",
+    )
+    activity_focus_name = serializers.CharField(
+        label=_("Activity Focus Name"),
+        source="cp_output.activity_focus_name",
+    )
 
     class Meta:
         model = InterventionResultLink
-        fields = (
-            "intervention",
-            "country_programme",
-            "result_type",
-            "sector",
-            "name",
-            "code",
-            "from_date",
-            "to_date",
-            "parent",
-            "humanitarian_tag",
-            "wbs",
-            "vision_id",
-            "gic_code",
-            "gic_name",
-            "sic_code",
-            "sic_name",
-            "activity_focus_code",
-            "activity_focus_name",
-            "hidden",
-            "ram",
-        )
+        fields = "__all__"
 
 
 class InterventionResultExportFlatSerializer(InterventionResultExportSerializer):
-    parent = serializers.CharField(source="cp_output.parent.name")
+    parent = serializers.CharField(
+        label=_("Parent"),
+        source="cp_output.parent.name",
+    )
 
     class Meta:
         model = InterventionResultLink
-        fields = (
-            "id",
-            "intervention",
-            "country_programme",
-            "result_type",
-            "sector",
-            "name",
-            "code",
-            "from_date",
-            "to_date",
-            "parent",
-            "humanitarian_tag",
-            "wbs",
-            "vision_id",
-            "gic_code",
-            "gic_name",
-            "sic_code",
-            "sic_name",
-            "activity_focus_code",
-            "activity_focus_name",
-            "hidden",
-            "ram",
-        )
+        fields = "__all__"
 
 
 class InterventionIndicatorExportSerializer(IndicatorExportSerializer):
-    intervention = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Indicator
-        fields = (
-            "intervention",
-            "sector",
-            "result",
-            "name",
-            "code",
-            "unit",
-            "total",
-            "sector_total",
-            "current",
-            "sector_current",
-            "assumptions",
-            "target",
-            "baseline",
-            "ram_indicator",
-            "active",
-            "view_on_dashboard",
-        )
+    intervention = serializers.SerializerMethodField(
+        label=_("Reference Number"),
+    )
 
     def get_intervention(self, obj):
         return ",".join(
@@ -205,29 +184,13 @@ class InterventionIndicatorExportSerializer(IndicatorExportSerializer):
 
 
 class InterventionIndicatorExportFlatSerializer(IndicatorExportFlatSerializer):
-    intervention = serializers.SerializerMethodField()
+    intervention = serializers.SerializerMethodField(
+        label=_("Reference Number"),
+    )
 
     class Meta:
         model = Indicator
-        fields = (
-            "id",
-            "intervention",
-            "sector",
-            "result",
-            "name",
-            "code",
-            "unit",
-            "total",
-            "sector_total",
-            "current",
-            "sector_current",
-            "assumptions",
-            "target",
-            "baseline",
-            "ram_indicator",
-            "active",
-            "view_on_dashboard",
-        )
+        fields = "__all__"
 
     def get_intervention(self, obj):
         return ",".join(
@@ -239,48 +202,88 @@ class InterventionIndicatorExportFlatSerializer(IndicatorExportFlatSerializer):
 class InterventionExportSerializer(serializers.ModelSerializer):
     # TODO CP Outputs, RAM Indicators, Fund Commitment(s), Supply Plan, Distribution Plan, URL
 
-    partner_name = serializers.CharField(source='agreement.partner.name')
-    partner_type = serializers.CharField(source='agreement.partner.partner_type')
-    agreement_number = serializers.CharField(source='agreement.agreement_number')
-    country_programme = serializers.CharField(source='agreement.country_programme.name')
-    offices = serializers.SerializerMethodField()
-    sectors = serializers.SerializerMethodField()
-    locations = serializers.SerializerMethodField()
-    fr_numbers = serializers.SerializerMethodField()
+    partner_name = serializers.CharField(
+        label=_("Partner"),
+        source='agreement.partner.name',
+    )
+    partner_type = serializers.CharField(
+        label=_("Partner Type"),
+        source='agreement.partner.partner_type',
+    )
+    agreement_number = serializers.CharField(
+        label=_("Agreement"),
+        source='agreement.agreement_number',
+    )
+    country_programme = serializers.CharField(
+        label=_("Country Programme"),
+        source='agreement.country_programme.name',
+    )
+    offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
+    sectors = serializers.SerializerMethodField(label=_("Sectors"))
+    locations = serializers.SerializerMethodField(label=_("Locations"))
+    fr_numbers = serializers.SerializerMethodField(label=_("FR Number(s)"))
     planned_budget_local = serializers.DecimalField(
+        label=_("Total UNICEF Budget (Local)"),
         source='total_unicef_cash_local',
         read_only=True,
         max_digits=20,
-        decimal_places=2)
+        decimal_places=2,
+    )
     unicef_budget = serializers.DecimalField(
+        label=_("Total UNICEF Budget (USD)"),
         source='total_unicef_budget',
         read_only=True,
         max_digits=20,
-        decimal_places=2)
+        decimal_places=2,
+    )
     cso_contribution = serializers.DecimalField(
+        label=_("Total CSO Budget (USD)"),
         source='total_partner_contribution',
         read_only=True,
         max_digits=20,
-        decimal_places=2)
+        decimal_places=2,
+    )
     partner_contribution_local = serializers.DecimalField(
+        label=_("Total CSO Budget (Local)"),
         source='total_partner_contribution_local',
         read_only=True,
         max_digits=20,
-        decimal_places=2)
+        decimal_places=2,
+    )
     # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
-    unicef_signatory = serializers.SerializerMethodField()
-    partner_focal_points = serializers.SerializerMethodField()
-    unicef_focal_points = serializers.SerializerMethodField()
-    partner_authorized_officer_signatory = serializers.SerializerMethodField()
-    cp_outputs = serializers.SerializerMethodField()
-    ram_indicators = serializers.SerializerMethodField()
-    planned_visits = serializers.SerializerMethodField()
-    spot_checks = serializers.SerializerMethodField()
-    audit = serializers.SerializerMethodField()
-    url = serializers.SerializerMethodField()
-    days_from_submission_to_signed = serializers.SerializerMethodField()
-    days_from_review_to_signed = serializers.SerializerMethodField()
-    migration_error_msg = serializers.SerializerMethodField()
+    unicef_signatory = serializers.SerializerMethodField(
+        label=_("Signed by UNICEF"),
+    )
+    partner_focal_points = serializers.SerializerMethodField(
+        label=_("CSO Authorized Officials"),
+    )
+    unicef_focal_points = serializers.SerializerMethodField(
+        label=_("UNICEF Focal Points"),
+    )
+    partner_authorized_officer_signatory = serializers.SerializerMethodField(
+        label=_("Signed by Partner"),
+    )
+    cp_outputs = serializers.SerializerMethodField(label=_("CP Outputs"))
+    ram_indicators = serializers.SerializerMethodField(
+        label=_("RAM Indicators"),
+    )
+    planned_visits = serializers.SerializerMethodField(
+        label=_("Planned Programmatic Visits"),
+    )
+    spot_checks = serializers.SerializerMethodField(
+        label=_("Planned Spot Checks"),
+    )
+    audit = serializers.SerializerMethodField(label=_("Planned Audits"))
+    url = serializers.SerializerMethodField(label=_("URL"))
+    days_from_submission_to_signed = serializers.SerializerMethodField(
+        label=_("Days from Submission to Signed"),
+    )
+    days_from_review_to_signed = serializers.SerializerMethodField(
+        label=_("Days from Review to Signed"),
+    )
+    migration_error_msg = serializers.SerializerMethodField(
+        label=_("Migration messages"),
+    )
 
     class Meta:
         model = Intervention
@@ -386,57 +389,50 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
 
 class InterventionExportFlatSerializer(InterventionExportSerializer):
-    planned_visits = serializers.SerializerMethodField()
-    attachments = serializers.SerializerMethodField()
-    country_programme = serializers.CharField(source='country_programme.name')
-    partner_contribution = serializers.CharField(source='planned_budget.partner_contribution')
-    unicef_cash = serializers.CharField(source='planned_budget.unicef_cash')
-    in_kind_amount = serializers.CharField(source='planned_budget.in_kind_amount')
-    partner_contribution_local = serializers.CharField(source='planned_budget.partner_contribution_local')
-    unicef_cash_local = serializers.CharField(source='planned_budget.unicef_cash_local')
-    in_kind_amount_local = serializers.CharField(source='planned_budget.in_kind_amount_local')
-    currency = serializers.CharField(source='planned_budget.currency')
-    total = serializers.CharField(source='planned_budget.total')
+    planned_visits = serializers.SerializerMethodField(
+        label=_("Planned Programmatic Visits"),
+    )
+    attachments = serializers.SerializerMethodField(label=_("Attachments"))
+    country_programme = serializers.CharField(
+        label=_("Country Programme"),
+        source='country_programme.name',
+    )
+    partner_contribution = serializers.CharField(
+        label=_("CSO Contribution"),
+        source='planned_budget.partner_contribution',
+    )
+    unicef_cash = serializers.CharField(
+        label=_("UNICEF Cash"),
+        source='planned_budget.unicef_cash',
+    )
+    in_kind_amount = serializers.CharField(
+        label=_("In Kind Amount"),
+        source='planned_budget.in_kind_amount',
+    )
+    partner_contribution_local = serializers.CharField(
+        label=_("CSO Contribution (Local)"),
+        source='planned_budget.partner_contribution_local',
+    )
+    unicef_cash_local = serializers.CharField(
+        label=_("UNICEF Cash (Local)"),
+        source='planned_budget.unicef_cash_local',
+    )
+    in_kind_amount_local = serializers.CharField(
+        label=_("In Kind Amount (Local)"),
+        source='planned_budget.in_kind_amount_local',
+    )
+    currency = serializers.CharField(
+        label=_("Currency"),
+        source='planned_budget.currency',
+    )
+    total = serializers.CharField(
+        label=_("Total"),
+        source='planned_budget.total',
+    )
 
     class Meta:
         model = Intervention
-        fields = (
-            "id",
-            "document_type",
-            "number",
-            "country_programme",
-            "title",
-            "status",
-            "start",
-            "end",
-            "submission_date",
-            "submission_date_prc",
-            "review_date_prc",
-            "prc_review_document",
-            "signed_by_unicef_date",
-            "signed_by_partner_date",
-            "fr_numbers",
-            "population_focus",
-            "agreement_number",
-            "partner_authorized_officer_signatory",
-            "unicef_signatory",
-            "signed_pd_document",
-            "unicef_focal_points",
-            "partner_focal_points",
-            "offices",
-            "planned_visits",
-            "partner_contribution",
-            "unicef_cash",
-            "in_kind_amount",
-            "partner_contribution_local",
-            "unicef_cash_local",
-            "in_kind_amount_local",
-            "currency",
-            "total",
-            "attachments",
-            "created",
-            "modified",
-        )
+        fields = "__all__"
 
     def get_planned_visits(self, obj):
         planned_visits = []
