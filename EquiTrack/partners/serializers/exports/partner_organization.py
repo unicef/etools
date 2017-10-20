@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from partners.models import (
@@ -40,21 +41,45 @@ class PartnerStaffMemberExportFlatSerializer(PartnerStaffMemberExportSerializer)
 
 
 class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
-    staff_members = serializers.SerializerMethodField()
-    assessments = serializers.SerializerMethodField()
-    staff_members = serializers.SerializerMethodField()
-    organization_full_name = serializers.CharField(source='name')
-    email_address = serializers.CharField(source='email')
-    risk_rating = serializers.CharField(source='rating')
-    date_last_assessment_against_core_values = serializers.CharField(source='core_values_assessment_date')
-    actual_cash_transfer_for_cp = serializers.CharField(source='total_ct_cp')
-    actual_cash_transfer_for_current_year = serializers.CharField(source='total_ct_cy')
-    marked_for_deletion = serializers.SerializerMethodField()
-    blocked = serializers.SerializerMethodField()
-    date_assessed = serializers.CharField(source='last_assessment_date')
-    url = serializers.SerializerMethodField()
-    shared_with = serializers.SerializerMethodField()
-    partner_type = serializers.SerializerMethodField()
+    staff_members = serializers.SerializerMethodField(label=_("Staff Members"))
+    assessments = serializers.SerializerMethodField(
+        label=_("Assessment Type (Date Assessed)")
+    )
+    organization_full_name = serializers.CharField(
+        label=_("Organizations Full Name"),
+        source='name'
+    )
+    email_address = serializers.CharField(
+        label=_("Email Address"),
+        source='email'
+    )
+    risk_rating = serializers.CharField(
+        label=_("Risk Rating"),
+        source='rating'
+    )
+    date_last_assessment_against_core_values = serializers.CharField(
+        label=_("Date Last Assessed Against Core Values"),
+        source='core_values_assessment_date'
+    )
+    actual_cash_transfer_for_cp = serializers.CharField(
+        label=_("Actual Cash Transfer for CP (USD)"),
+        source='total_ct_cp'
+    )
+    actual_cash_transfer_for_current_year = serializers.CharField(
+        label=_("Actual Cash Transfer for Current Year (USD)"),
+        source='total_ct_cy'
+    )
+    marked_for_deletion = serializers.SerializerMethodField(
+        label=_("Marked for Deletion")
+    )
+    blocked = serializers.SerializerMethodField(label=_("Blocked"))
+    date_assessed = serializers.CharField(
+        label=_("Date Assessed"),
+        source='last_assessment_date'
+    )
+    url = serializers.SerializerMethodField(label=_("URL"))
+    shared_with = serializers.SerializerMethodField(label=_("Shared Partner"))
+    partner_type = serializers.SerializerMethodField(label=_("Partner Type"))
 
     class Meta:
 
@@ -93,44 +118,13 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
 
 
 class PartnerOrganizationExportFlatSerializer(PartnerOrganizationExportSerializer):
-    vision_synced = serializers.SerializerMethodField()
-    hidden = serializers.SerializerMethodField()
-    hact_values = HactValuesField()
+    vision_synced = serializers.SerializerMethodField(label=_("VISION Synced"))
+    hidden = serializers.SerializerMethodField(label=_("Hidden"))
+    hact_values = HactValuesField(label=_("HACT"))
 
     class Meta:
         model = PartnerOrganization
-        fields = (
-            'id',
-            'vendor_number',
-            'marked_for_deletion',
-            'blocked',
-            'vision_synced',
-            'hidden',
-            'organization_full_name',
-            'short_name',
-            'alternate_name',
-            'alternate_id',
-            'description',
-            'partner_type',
-            'shared_with',
-            'shared_partner',
-            'hact_values',
-            'address',
-            'street_address',
-            'city',
-            'postal_code',
-            'country',
-            'email_address',
-            'phone_number',
-            'risk_rating',
-            'type_of_assessment',
-            'date_assessed',
-            'actual_cash_transfer_for_cp',
-            'actual_cash_transfer_for_current_year',
-            'staff_members',
-            'date_last_assessment_against_core_values',
-            'assessments',
-        )
+        fields = "__all__"
 
     def get_vision_synced(self, obj):
         return "Yes" if obj.vision_synced else "No"
