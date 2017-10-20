@@ -118,6 +118,7 @@ class FinancialFindingAdmin(admin.ModelAdmin):
 class SpecificProcedureAdmin(admin.ModelAdmin):
     pass
 
+
 @admin.register(models.SpecialAuditRecommendation)
 class SpecialAuditRecommendationAdmin(admin.ModelAdmin):
     pass
