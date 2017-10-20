@@ -133,6 +133,16 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
         ]
 
 
+class SpecificProcedureSerializer(AuditPermissionsBasedSerializerMixin,
+                                  WritableNestedSerializerMixin,
+                                  serializers.ModelSerializer):
+    class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+        model = SpecificProcedure
+        fields = [
+            'id', 'number', 'description', 'finding',
+        ]
+
+
 class EngagementSerializer(EngagementDatesValidation,
                            WritableNestedParentSerializerMixin,
                            EngagementLightSerializer):
@@ -146,6 +156,8 @@ class EngagementSerializer(EngagementDatesValidation,
     authorized_officers = SeparatedReadWriteField(
         read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     )
+
+    specific_procedures = SpecificProcedureSerializer(many=True)
 
     engagement_attachments = EngagementBase64AttachmentSerializer(
         many=True, required=False, label=_('Related Documents')
@@ -169,7 +181,7 @@ class EngagementSerializer(EngagementDatesValidation,
             'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
-            'cancel_comment',
+            'cancel_comment', 'specific_procedures',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
@@ -253,6 +265,7 @@ class SpotCheckSerializer(EngagementSerializer):
         ]
         fields.remove('joint_audit')
         fields.remove('shared_ip_with')
+        fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True, 'label': _('Engagement Type')}
@@ -294,6 +307,7 @@ class MicroAssessmentSerializer(RiskCategoriesUpdateMixin, EngagementSerializer)
         fields = EngagementSerializer.Meta.fields + [
             'findings', 'questionnaire', 'test_subject_areas', 'overall_risk_assessment',
         ]
+        fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True, 'label': _('Engagement Type')},
@@ -338,6 +352,7 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information',
         ]
+        fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True, 'label': _('Engagement Type')},
@@ -354,16 +369,6 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
         return obj.financial_finding_set.count()
 
 
-class SpecificProcedureSerializer(AuditPermissionsBasedSerializerMixin,
-                                  WritableNestedSerializerMixin,
-                                  serializers.ModelSerializer):
-    class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
-        model = SpecificProcedure
-        fields = [
-            'id', 'number', 'description', 'finding',
-        ]
-
-
 class SpecialAuditRecommendationSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     class Meta(WritableNestedSerializerMixin.Meta):
         model = SpecialAuditRecommendation
@@ -373,11 +378,10 @@ class SpecialAuditRecommendationSerializer(WritableNestedSerializerMixin, serial
 
 
 class SpecialAuditSerializer(EngagementSerializer):
-    specific_procedures = SpecificProcedureSerializer(many=True)
     other_recommendations = SpecialAuditRecommendationSerializer(many=True)
 
     class Meta(EngagementSerializer.Meta):
         model = SpecialAudit
         fields = EngagementSerializer.Meta.fields + [
-            'specific_procedures', 'other_recommendations',
+            'other_recommendations',
         ]
