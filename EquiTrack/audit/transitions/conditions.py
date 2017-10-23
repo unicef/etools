@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.db import models
 from rest_framework.serializers import ValidationError
 
 from django.utils.decorators import classonlymethod
@@ -96,6 +97,16 @@ class EngagementHasReportAttachmentsCheck(BaseTransitionCheck):
 
         if instance.report_attachments.count() <= 0:
             errors['report_attachments'] = _('You should attach at least one file.')
+        return errors
+
+
+class SpecialAuditSubmitRelatedModelsCheck(BaseTransitionCheck):
+    def get_errors(self, instance, *args, **kwargs):
+        errors = super(SpecialAuditSubmitRelatedModelsCheck, self).get_errors(instance, *args, **kwargs)
+
+        if instance.specific_procedures.filter(models.Q(finding__isnull=True) | models.Q(finding='')).exists():
+            errors['specific_procedures'] = _('You should provide results of performing specific procedures.')
+
         return errors
 
 

@@ -3,7 +3,6 @@ try:
 except ImportError:
     from urlparse import urljoin
 
-from django.db.models import Count, Q
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers

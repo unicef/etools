@@ -8,7 +8,7 @@ from EquiTrack.factories import InterventionFactory, AgreementFactory, PartnerFa
 
 from audit.models import AuditorFirm, PurchaseOrder, Engagement, RiskCategory, \
     RiskBluePrint, Risk, AuditorStaffMember, MicroAssessment, \
-    Audit, SpotCheck, Auditor
+    Audit, SpotCheck, Auditor, SpecialAudit
 from firms.factories import BaseStaffMemberFactory, BaseFirmFactory
 
 
@@ -78,6 +78,11 @@ class MicroAssessmentFactory(EngagementFactory):
 class AuditFactory(EngagementFactory):
     class Meta:
         model = Audit
+
+
+class SpecialAuditFactory(EngagementFactory):
+    class Meta:
+        model = SpecialAudit
 
 
 class SpotCheckFactory(EngagementFactory):
