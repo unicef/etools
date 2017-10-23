@@ -1,7 +1,9 @@
 import datetime
 import json
-from unittest import skip
+
 from actstream.models import model_stream
+from mock import patch, Mock
+from unittest import skip
 
 from django.utils import timezone
 
@@ -19,6 +21,7 @@ from EquiTrack.factories import (
     InterventionPlannedVisitsFactory,
     PartnerFactory,
     PartnershipFactory,
+    PartnerStaffFactory,
 )
 
 from funds.models import Donor, Grant
@@ -914,3 +917,94 @@ class TestPartnerOrganization(TenantTestCase):
         self.assertIsNotNone(p.pk)
         self.assertTrue(isinstance(p.hact_values, str))
         self.assertEqual(p.hact_values, '{"all": "good"}')
+
+
+class TestPartnerStaffMember(TenantTestCase):
+    def test_unicode(self):
+        partner = models.PartnerOrganization(name="Partner")
+        staff = models.PartnerStaffMember(
+            first_name="First",
+            last_name="Last",
+            partner=partner
+        )
+        self.assertEqual(unicode(staff), "First Last (Partner)")
+
+    def test_save_update_deactivate(self):
+        partner = PartnerFactory()
+        staff = PartnerStaffFactory(
+            partner=partner,
+        )
+        self.assertTrue(staff.active)
+        mock_send = Mock()
+        with patch("partners.models.pre_delete.send", mock_send):
+            staff.active = False
+            staff.save()
+        self.assertEqual(mock_send.call_count, 1)
+
+    def test_save_update_reactivate(self):
+        partner = PartnerFactory()
+        staff = PartnerStaffFactory(
+            partner=partner,
+            active=False,
+        )
+        self.assertFalse(staff.active)
+        mock_send = Mock()
+        with patch("partners.models.post_save.send", mock_send):
+            staff.active = True
+            staff.save()
+        self.assertEqual(mock_send.call_count, 2)
+
+
+class TestAssessment(TenantTestCase):
+    def test_unicode_not_completed(self):
+        partner = models.PartnerOrganization(name="Partner")
+        a = models.Assessment(
+            partner=partner,
+            type="Type",
+            rating="Rating",
+        )
+        self.assertEqual(unicode(a), "Type: Partner Rating NOT COMPLETED")
+
+    def test_unicode_completed(self):
+        partner = models.PartnerOrganization(name="Partner")
+        a = models.Assessment(
+            partner=partner,
+            type="Type",
+            rating="Rating",
+            completed_date=datetime.date(2001, 1, 1)
+        )
+        self.assertEqual(unicode(a), "Type: Partner Rating 01-01-2001")
+
+    def test_save_update_micro_assessment(self):
+        partner = PartnerFactory(
+            rating=models.LOW,
+            type_of_assessment="Micro Assessment",
+        )
+        assessment = AssessmentFactory(
+            partner=partner,
+            type="Micro Assessment",
+            completed_date=datetime.date(2001, 1, 1)
+        )
+        self.assertEqual(partner.hact_values["micro_assessment_needed"], "Yes")
+        assessment.completed_date = datetime.date.today()
+        assessment.save()
+        partner_updated = models.PartnerOrganization.objects.get(pk=partner.pk)
+        self.assertEqual(
+            partner_updated.hact_values["micro_assessment_needed"],
+            "No"
+        )
+
+    def test_save_update_scheduled_audit_report(self):
+        partner = PartnerFactory(
+            rating=models.LOW,
+            type_of_assessment="Micro Assessment",
+        )
+        assessment = AssessmentFactory(
+            partner=partner,
+            type="Micro Assessment",
+            completed_date=datetime.date(2001, 1, 1)
+        )
+        self.assertEqual(partner.hact_values["audits_done"], 0)
+        assessment.type = "Scheduled Audit report"
+        assessment.save()
+        self.assertEqual(partner.hact_values["audits_done"], 1)
