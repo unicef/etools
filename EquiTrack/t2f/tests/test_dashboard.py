@@ -53,7 +53,7 @@ class TravelActivityList(APITenantTestCase):
         act.partner = partner
         act.save()
 
-        self.assertEquals(act.primary_traveler, act.travels.first().traveler)
+        self.assertEqual(act.primary_traveler, act.travels.first().traveler)
 
         with self.assertNumQueries(4):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activities',

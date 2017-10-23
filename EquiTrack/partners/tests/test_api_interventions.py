@@ -49,9 +49,9 @@ class TestInterventionsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
     EDITABLE_FIELDS = {
         'draft': ["status", "sector_locations", "attachments", "prc_review_document", 'travel_activities',
-                  "partner_authorized_officer_signatory", "partner_focal_points", "distributions", "id",
+                  "partner_authorized_officer_signatory", "partner_focal_points", "id",
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
-                  "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start", "supplies",
+                  "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start",
                   "metadata", "submission_date", "action_object_actions", "agreement", "unicef_signatory_id",
                   "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "actor_actions", "created", "planned_visits",
@@ -93,6 +93,7 @@ class TestInterventionsAPI(APITenantTestCase):
                                                        unicef_signatory=self.unicef_staff,
                                                        partner_authorized_officer_signatory=self.partner1.
                                                        staff_members.all().first())
+
         self.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
         self.result = ResultFactory(result_type=self.result_type)
 
@@ -126,6 +127,14 @@ class TestInterventionsAPI(APITenantTestCase):
         )
         return response.status_code, json.loads(response.rendered_content)
 
+    def run_request_list_dash_ep(self, data={}, user=None, method='get'):
+        response = self.forced_auth_req(
+            method,
+            reverse('partners_api:intervention-list-dash'),
+            user=user or self.unicef_staff,
+        )
+        return response.status_code, json.loads(response.rendered_content)
+
     def run_request(self, intervention_id, data=None, method='get', user=None):
         user = user or self.partnership_manager_user
         response = self.forced_auth_req(
@@ -154,6 +163,24 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         result = json.loads(response.rendered_content)
         self.assertEqual(result.get('result_links'), {'name': ['This field may not be null.']})
+
+    def test_dashboard_list_focal_point(self):
+        self.active_intervention.unicef_focal_points.add(self.unicef_staff)
+        status_code, response = self.run_request_list_dash_ep()
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 1)
+        self.draft_intervention = InterventionFactory(agreement=self.agreement,
+                                                      status='draft')
+        self.draft_intervention.unicef_focal_points.add(self.unicef_staff)
+        status_code, response = self.run_request_list_dash_ep()
+        self.assertEqual(len(response), 1)
+
+    def test_dashboard_list_partnership_manager(self):
+        self.draft_intervention = InterventionFactory(agreement=self.agreement,
+                                                      status='draft')
+        status_code, response = self.run_request_list_dash_ep(user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 4)
 
     def test_add_contingency_pd(self):
         data = {
@@ -210,14 +237,14 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
-        self.assertEquals(response['frs_details']['total_actual_amt'],
-                          float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
-        self.assertEquals(response['frs_details']['total_outstanding_amt'],
-                          float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
-        self.assertEquals(response['frs_details']['total_frs_amt'],
-                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
-        self.assertEquals(response['frs_details']['total_intervention_amt'],
-                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+        self.assertEqual(response['frs_details']['total_actual_amt'],
+                         float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
+        self.assertEqual(response['frs_details']['total_outstanding_amt'],
+                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+        self.assertEqual(response['frs_details']['total_frs_amt'],
+                         float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
+        self.assertEqual(response['frs_details']['total_intervention_amt'],
+                         float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
 
     def test_add_two_valid_frs_on_update_pd(self):
         frs_data = [self.fr_1.id, self.fr_2.id]
@@ -228,14 +255,14 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
-        self.assertEquals(response['frs_details']['total_actual_amt'],
-                          float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
-        self.assertEquals(response['frs_details']['total_outstanding_amt'],
-                          float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
-        self.assertEquals(response['frs_details']['total_frs_amt'],
-                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
-        self.assertEquals(response['frs_details']['total_intervention_amt'],
-                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+        self.assertEqual(response['frs_details']['total_actual_amt'],
+                         float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
+        self.assertEqual(response['frs_details']['total_outstanding_amt'],
+                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+        self.assertEqual(response['frs_details']['total_frs_amt'],
+                         float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
+        self.assertEqual(response['frs_details']['total_intervention_amt'],
+                         float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
 
     def test_remove_an_fr_from_pd(self):
         frs_data = [self.fr_1.id, self.fr_2.id]
@@ -268,8 +295,8 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch',
                                                  user=self.partnership_manager_user)
 
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response['frs'], ['One or more selected FRs is expired, {}'.format(self.fr_1.fr_number)])
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertItemsEqual(response['frs'], frs_data)
 
     def test_fail_add_used_fr_on_pd(self):
         self.fr_1.intervention = self.intervention
@@ -309,7 +336,7 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def test_permissions_for_intervention_status_draft(self):
         # intervention is in Draft status
-        self.assertEquals(self.intervention.status, Intervention.DRAFT)
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
 
         # user is UNICEF User
         status_code, response = self.run_request(self.intervention.id, user=self.partnership_manager_user)
@@ -327,7 +354,7 @@ class TestInterventionsAPI(APITenantTestCase):
     @skip('add test after permissions file is ready')
     def test_permissions_for_intervention_status_active(self):
         # intervention is in Draft status
-        self.assertEquals(self.active_intervention.status, Intervention.ACTIVE)
+        self.assertEqual(self.active_intervention.status, Intervention.ACTIVE)
 
         # user is UNICEF User
         status_code, response = self.run_request(self.active_intervention.id, user=self.partnership_manager_user)
@@ -347,7 +374,7 @@ class TestInterventionsAPI(APITenantTestCase):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response), 3)
+        self.assertEqual(len(response), 3)
 
         # add another intervention to make sure that the queries are constant
         data = {
@@ -365,4 +392,4 @@ class TestInterventionsAPI(APITenantTestCase):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response), 4)
+        self.assertEqual(len(response), 4)

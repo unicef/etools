@@ -223,16 +223,6 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
 
 
-class PartnerAuthorizedOfficersListAPIVIew(ListAPIView):
-    """
-    Returns a list of all signed officers for Partner
-    """
-    queryset = PartnerStaffMember.objects.filter(signed_interventions__isnull=False).distinct()
-    serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (IsAdminUser,)
-    filter_backends = (PartnerScopeFilter, )
-
-
 class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
     permission_classes = (PartneshipManagerRepPermission,)
 
@@ -346,7 +336,7 @@ class PartnerOrganizationDeleteView(DestroyAPIView):
             partner = PartnerOrganization.objects.get(id=int(kwargs['pk']))
         except PartnerOrganization.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        if partner.agreements.count() > 0:
+        if partner.agreements.exclude(status='draft').count() > 0:
             raise ValidationError("There was a PCA/SSFA signed with this partner or a transaction was performed "
                                   "against this partner. The Partner record cannot be deleted")
         elif TravelActivity.objects.filter(partner=partner).count() > 0:

@@ -40,13 +40,13 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
               "hact_values.audits_done", "hact_values.follow_up_flags"]
 
     labels = {
-        'name': 'Implementing Partnerr',
+        'name': 'Implementing Partner',
         'partner_type': 'Partner Type',
         'shared_partner': 'Shared',
         'shared_with': 'Shared IP',
         'total_ct_cp': 'TOTAL for current CP cycle',
         'hact_values.planned_cash_transfer': 'PLANNED for current year',
-        'total_ct_cy': 'ACTUAL for current year',
+        'total_ct_cy': 'Current Year (1 Oct - 30 Sep)',
         'hact_values.micro_assessment_needed': 'Micro Assessment',
         'rating': 'Risk Rating',
         'hact_values.planned_visits': 'Programmatic Visits Planned',
@@ -144,4 +144,28 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "days_from_review_to_signed": "Days from Review to Signed",
         "url": "URL",
         "migration_error_msg": "Migration messages"
+    }
+
+
+class PartnershipDashCsvRenderer(r.CSVRenderer):
+    header = [
+        'partner_name', 'number', 'status', 'start', 'end', 'sectors', 'offices_names', 'total_budget',
+        'cso_contribution', 'unicef_cash', 'unicef_supplies', 'disbursement', 'disbursement_percent', 'days_last_pv'
+    ]
+
+    labels = {
+        "partner_name": "IP Name",
+        "number": "PD/SSFA Ref #",
+        "sectors": "Section",
+        "offices_names": "Field Office",
+        "status": "Status",
+        "start": "Start Date",
+        "end": "End Date",
+        "unicef_cash": "Total UNICEF Cash ($)",
+        "unicef_supplies": "Total UNICEF Supplies ($)",
+        "cso_contribution": "CSO Contr. ($)",
+        "total_budget": "Total Budget ($)",
+        "disbursement": "Disbursement To Date ($)",
+        "disbursement_percent": "Disbursement To Date (%)",
+        "days_last_pv": "Days Since Last PV",
     }

@@ -8,6 +8,8 @@ from django.contrib import admin
 
 # 3rd party imports
 from rest_framework_swagger.views import get_swagger_view
+from rest_framework_swagger.renderers import OpenAPIRenderer
+from rest_framework.schemas import get_schema_view
 import rest_framework_jwt.views
 from rest_framework_nested import routers
 import djangosaml2.views
@@ -40,7 +42,6 @@ from reports.views.v1 import (
     UnitViewSet
 )
 from t2f.urls import urlpatterns as t2f_patterns
-from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
 from workplan.views import (
     CommentViewSet,
@@ -51,18 +52,16 @@ from workplan.views import (
 )
 
 
+# ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
 
+# coreapi+json (http://www.coreapi.org/)
+schema_view_json_coreapi = get_schema_view(title="eTools API")
+# openapi+json (https://openapis.org/ aka swagger 2.0)
+schema_view_json_openapi = get_schema_view(title="eTools API",
+                                           renderer_classes=[OpenAPIRenderer])
+
 api = routers.SimpleRouter()
-
-# ******************  API version 1 - not used ******************************
-
-trips_api = routers.SimpleRouter()
-trips_api.register(r'trips', TripsViewSet, base_name='trips')
-tripsfiles_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
-tripsfiles_api.register(r'files', TripFileViewSet, base_name='files')
-actionpoint_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
-actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='actionpoints')
 
 # ******************  API version 1  ******************************
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
@@ -98,17 +97,10 @@ urlpatterns = [
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
     url(r'^users/', include('users.urls')),
-    url(r'^supplies/', include('supplies.urls')),
     url(r'^api/management/', include(management_urls)),
     url(r'^api/', include(api.urls)),
     url(r'^api/', include(staffm_api.urls)),
     url(r'^api/', include(publics_patterns, namespace='public')),
-
-
-    # url(r'^trips/', include('trips.urls')),
-    url(r'^api/', include(trips_api.urls)),
-    url(r'^api/', include(tripsfiles_api.urls)),
-    url(r'^api/', include(actionpoint_api.urls)),
 
     # ***************  API version 2  ******************
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$',
@@ -127,6 +119,8 @@ urlpatterns = [
 
 
     url(r'^api/docs/', schema_view),
+    url(r'^api/schema/coreapi', schema_view_json_coreapi),
+    url(r'^api/schema/openapi', schema_view_json_openapi),
     url(r'^admin/', include(admin.site.urls)),
 
     # helper urls

@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 from datetime import datetime, timedelta
 import json
@@ -15,9 +15,10 @@ from reports.models import ResultType, Result, CountryProgramme, Indicator
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, \
     InterventionResultLink, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
-    InterventionSectorLocationLink, SupplyPlan, DistributionPlan, Agreement, PartnerOrganization, PartnerStaffMember, \
+    InterventionSectorLocationLink, Agreement, PartnerOrganization, PartnerStaffMember, \
     Assessment
 from t2f.models import TravelActivity
+from utils.common.utils import every_country
 
 
 def printtf(*args):
@@ -704,39 +705,6 @@ def copy_pca_sector_locations_to_intervention():
                 isl.locations.add(*locations)
 
 
-def copy_pca_supply_plan_to_intervention():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry)
-        for sp in SupplyPlan.objects.all():
-            try:
-                intervention = Intervention.objects.get(number=sp.partnership.number)
-            except Intervention.DoesNotExist:
-                log_to_file('copy_pca_supply_plan_to_intervention: Indervention.DoesNotExist',
-                            sp.partnership.id, sp.partnership.number)
-                continue
-            sp.intervention = intervention
-            sp.save()
-
-
-def copy_pca_distribution_plan_to_intervention():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry)
-        for dp in DistributionPlan.objects.all():
-            if SupplyPlan.objects.filter(intervention=dp.intervention, item=dp.item).count():
-                try:
-                    intervention = Intervention.objects.get(number=dp.partnership.number)
-                except Intervention.DoesNotExist:
-                    log_to_file('copy_pca_distribution_plan_to_intervention: Indervention.DoesNotExist',
-                                dp.partnership.id,
-                                dp.partnership.number)
-
-                    continue
-                dp.intervention = intervention
-                dp.save()
-
-
 def local_country_keep():
     set_country('Global')
     keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border']
@@ -880,16 +848,6 @@ def create_test_user(email, password):
     userp.country_override = country
     userp.save()
     logging.info("user {} created".format(u.email))
-
-
-class every_country:
-    def __enter__(self):
-        for c in Country.objects.exclude(name='Global').all():
-            connection.set_tenant(c)
-            yield c
-
-    def __exit__(self, type, value, traceback):
-        connection.set_tenant(Country.objects.get(name='Global'))
 
 
 def run(function):

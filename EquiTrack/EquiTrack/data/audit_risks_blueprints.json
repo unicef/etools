@@ -1423,9 +1423,9 @@
         "fields": {
             "order": 0,
             "header": "Overall Risk Assessment",
-            "parent": 2,
+            "parent": null,
             "category_type": "primary",
-            "code": "ma_subject_areas"
+            "code": "ma_global_assessment"
         }
     },
     {
@@ -1441,7 +1441,7 @@
         "model": "audit.riskcategory",
         "pk": 32,
         "fields": {
-            "order": 1,
+            "order": 0,
             "header": "Implementing partner",
             "parent": 2,
             "category_type": "default",
@@ -1461,7 +1461,7 @@
         "model": "audit.riskcategory",
         "pk": 33,
         "fields": {
-            "order": 2,
+            "order": 1,
             "header": "Programme Management",
             "parent": 2,
             "category_type": "default",
@@ -1481,7 +1481,7 @@
         "model": "audit.riskcategory",
         "pk": 34,
         "fields": {
-            "order": 3,
+            "order": 2,
             "header": "Organizational structure and staffing",
             "parent": 2,
             "category_type": "default",
@@ -1501,7 +1501,7 @@
         "model": "audit.riskcategory",
         "pk": 35,
         "fields": {
-            "order": 4,
+            "order": 3,
             "header": "Accounting policies and procedures",
             "parent": 2,
             "category_type": "default",
@@ -1521,7 +1521,7 @@
         "model": "audit.riskcategory",
         "pk": 36,
         "fields": {
-            "order": 5,
+            "order": 4,
             "header": "Fixed Assets and Inventory",
             "parent": 2,
             "category_type": "default",
@@ -1541,7 +1541,7 @@
         "model": "audit.riskcategory",
         "pk": 37,
         "fields": {
-            "order": 6,
+            "order": 5,
             "header": "Financial Reporting and Monitoring",
             "parent": 2,
             "category_type": "default",
@@ -1561,7 +1561,7 @@
         "model": "audit.riskcategory",
         "pk": 38,
         "fields": {
-            "order": 7,
+            "order": 6,
             "header": "Procurement",
             "parent": 2,
             "category_type": "default",
