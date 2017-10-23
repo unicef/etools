@@ -20,8 +20,15 @@ class TPMAttachmentsSerializer(WritableNestedSerializerMixin, Base64AttachmentSe
         pass
 
 
-class TPMReportAttachmentsSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
+class TPMReportSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
     file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code="tpm_report"))
+
+    class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
+        pass
+
+
+class TPMReportAttachmentsSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):
+    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='tpm_report_attachments'))
 
     class Meta(WritableNestedSerializerMixin.Meta, Base64AttachmentSerializer.Meta):
         pass

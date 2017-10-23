@@ -232,5 +232,32 @@
             "name": "Other",
             "code": "tpm_partner"
         }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 30,
+        "fields": {
+            "order": 1,
+            "name": "Picture Dataset",
+            "code": "tpm_report_attachments"
+        }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 31,
+        "fields": {
+            "order": 2,
+            "name": "Questionnaire",
+            "code": "tpm_report_attachments"
+        }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 32,
+        "fields": {
+            "order": 3,
+            "name": "Other",
+            "code": "tpm_report_attachments"
+        }
     }
 ]
