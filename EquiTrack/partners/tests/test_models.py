@@ -1,3 +1,4 @@
+import copy
 import datetime
 import json
 
@@ -1129,3 +1130,74 @@ class TestAssessment(TenantTestCase):
         assessment.type = "Scheduled Audit report"
         assessment.save()
         self.assertEqual(partner.hact_values["audits_done"], 1)
+
+
+class TestAgreement(TenantTestCase):
+    def test_unicode(self):
+        partner = models.PartnerOrganization(name="Partner")
+        agreement = models.Agreement(
+            partner=partner,
+            agreement_type=models.Agreement.DRAFT,
+        )
+        self.assertEqual(unicode(agreement), "draft for Partner ( - )")
+
+    def test_unicode_dates(self):
+        partner = models.PartnerOrganization(name="Partner")
+        agreement = models.Agreement(
+            partner=partner,
+            agreement_type=models.Agreement.DRAFT,
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date(2002, 1, 1),
+        )
+        self.assertEqual(
+            unicode(agreement),
+            "draft for Partner (01-01-2001 - 01-01-2002)"
+        )
+
+    def test_permission_structure(self):
+        permissions = models.Agreement.permission_structure()
+        self.assertTrue(isinstance(permissions, dict))
+        self.assertEqual(permissions["amendments"], {
+            'edit': {
+                'true': [{
+                        'status': 'signed',
+                        'group': 'Partnership Manager',
+                        'condition': 'is type PCA or MOU'
+                    }]
+            }
+        })
+
+    def test_year_signed_by_unicef_date(self):
+        agreement = AgreementFactory()
+        self.assertIsNotNone(agreement.signed_by_unicef_date)
+        self.assertEqual(agreement.year, agreement.signed_by_unicef_date.year)
+
+    def test_year_created(self):
+        agreement = AgreementFactory(
+            signed_by_unicef_date=None
+        )
+        self.assertIsNone(agreement.signed_by_unicef_date)
+        self.assertEqual(agreement.year, agreement.created.year)
+
+    def test_year_not_saved(self):
+        partner = models.PartnerOrganization(name="Partner")
+        agreement = models.Agreement(partner=partner)
+        self.assertEqual(agreement.year, datetime.date.today().year)
+
+    def test_update_related_interventions(self):
+        agreement = AgreementFactory(
+            status=models.Agreement.DRAFT,
+        )
+        intervention = InterventionFactory(
+            agreement=agreement,
+            document_type=models.Intervention.PD,
+            status=models.Intervention.SIGNED,
+        )
+        agreement_old = copy.deepcopy(agreement)
+        agreement.status = models.Agreement.TERMINATED
+        agreement.update_related_interventions(agreement_old)
+        self.assertNotEqual(intervention.status, agreement.status)
+        intervention_updated = models.Intervention.objects.get(
+            pk=intervention.pk
+        )
+        self.assertEqual(intervention_updated.status, agreement.status)
