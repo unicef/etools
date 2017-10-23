@@ -150,11 +150,34 @@
                 <div class="input-container__label">Engagement Type</div>
                 <div class="input-container__value">{{ engagement.engagement_type_display }}</div>
               </td>
-              <td class="input-container">
-                <div class="input-container__label">Status</div>
-                <div class="input-container__value">{{ engagement.status_display }}</div>
-              </td>
+              {% if engagement.engagement_type == 'audit' or engagement.engagement_type == 'sc' %}
+                <td class="input-container">
+                  <div class="input-container__label">Period start date</div>
+                  <div class="input-container__value">{{ engagement.start_date }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">Period end date</div>
+                  <div class="input-container__value">{{ engagement.end_date }}</div>
+                </td>
+              {% else %}
+                <td class="input-container">
+                  <div class="input-container__label">Status</div>
+                  <div class="input-container__value">{{ engagement.status_display }}</div>
+                </td>
+              {% endif %}
             </tr>
+            {% if engagement.engagement_type == 'audit' or engagement.engagement_type == 'sc' %}
+              <tr>
+                <td class="input-container">
+                  <div class="input-container__label">Total value of selected FACE form(s)</div>
+                  <div class="input-container__value">{{ engagement.total_value }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">Status</div>
+                  <div class="input-container__value">{{ engagement.status_display }}</div>
+                </td>
+              </tr>
+            {% endif %}
           </table>
         </div>
         <div class="content-section">

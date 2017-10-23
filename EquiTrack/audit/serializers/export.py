@@ -101,6 +101,9 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
     active_pd = serializers.SerializerMethodField()
     staff_members = StaffMemberPDFSerializer(many=True)
 
+    start_date = serializers.DateField(label='Start Date', format='%d %b %Y')
+    end_date = serializers.DateField(label='End Date', format='%d %b %Y')
+
     date_of_field_visit = serializers.DateField(format='%d %b %Y')
     date_of_draft_report_to_ip = serializers.DateField(format='%d %b %Y')
     date_of_comments_by_ip = serializers.DateField(format='%d %b %Y')
@@ -120,6 +123,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
             'date_of_field_visit', 'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef', 'partner_contacted_at',
             'action_points', 'engagement_attachments', 'report_attachments',
+            'total_value', 'start_date', 'end_date',
         ]
 
     def get_status_display(self, obj):
@@ -186,17 +190,12 @@ class SpotCheckPDFSerializer(EngagementPDFSerializer):
     high_priority_findings = serializers.SerializerMethodField()
     low_priority_findings = serializers.SerializerMethodField()
 
-    face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', source='start_date',
-                                                 format='%d %b %Y')
-    face_form_end_date = serializers.DateField(label='FACE Form(s) End Date', source='end_date', format='%d %b %Y')
-
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
 
     class Meta(EngagementPDFSerializer.Meta):
         model = SpotCheck
         fields = EngagementPDFSerializer.Meta.fields + [
-            'total_value', 'face_form_start_date', 'face_form_end_date', 'total_amount_tested',
-            'total_amount_of_ineligible_expenditure',
+            'total_amount_tested', 'total_amount_of_ineligible_expenditure',
             'internal_controls', 'high_priority_findings', 'low_priority_findings',
 
             'amount_refunded', 'additional_supporting_documentation_provided',
