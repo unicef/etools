@@ -188,7 +188,6 @@ class Command(BaseCommand):
         self.add_permissions(self.tpm_reported, self.pme, 'action', [
             'tpmvisit.reject_report',
             'tpmvisit.approve',
-            'tpmvisit.cancel',
         ])
         self.add_permissions(self.tpm_reported, [self.pme, self.focal_point], 'edit', self.follow_up_page)
         self.revoke_permissions(self.tpm_reported, self.third_party_monitor, 'view', [
@@ -203,9 +202,6 @@ class Command(BaseCommand):
             'tpmactivity.report_attachments',
         ])
         self.add_permissions(self.tpm_report_rejected, self.third_party_monitor, 'action', 'tpmvisit.send_report')
-        self.add_permissions(self.tpm_report_rejected, self.pme, 'action', [
-            'tpmvisit.cancel',
-        ])
         self.revoke_permissions(self.tpm_report_rejected, self.everybody, 'view', [
             'tpmvisit.action_points',
         ])
