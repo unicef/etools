@@ -109,20 +109,20 @@ jobs:
             TAG=${CIRCLE_BRANCH}
             HOSTIP=`/sbin/ip route|awk '/default/ { print $3 }'`
             docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e SECRET_KEY unicef/etools:$TAG bash runtests.sh
-#      - run:
-#          name: Pushing to Docker Hub
-#          command: |
-#            docker login -u $DOCKER_USER -p $DOCKER_PASS
-#            docker push unicef/etools:$TAG
+      - run:
+          name: Pushing to Docker Hub
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push unicef/etools:$TAG
 
 workflows:
   version: 2
   build_and_test:
     jobs:
-#      - test
+      - test
       - build_and_deploy:
-#          requires:
-#            - test
+          requires:
+            - test
           filters:
             branches:
               only:
