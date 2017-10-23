@@ -117,7 +117,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
             'id': {'label': _('Activity ID')},
             'date': {'required': True},
             'implementing_partner': {'required': True},
-            'partnership': {'required': True},
+            'partnership': {'required': True, 'label': _('PD/SSFA')},
         }
 
 
