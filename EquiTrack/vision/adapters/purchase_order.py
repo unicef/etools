@@ -1,8 +1,9 @@
 from collections import OrderedDict
 
+from audit.models import AuditorFirm, PurchaseOrder
+from funds.models import Donor, Grant
+
 from .manual import ManualVisionSynchronizer
-from audit.models import PurchaseOrder, AuditorFirm
-from funds.models import Grant, Donor
 
 
 class POSynchronizer(ManualVisionSynchronizer):
