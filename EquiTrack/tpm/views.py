@@ -24,8 +24,10 @@ from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMP
 from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from .permissions import IsPMEorReadonlyPermission
-from .export.renderers import TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer
-from .export.serializers import TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer
+from .export.renderers import TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer, \
+    TPMPartnerContactsCSVRenderer
+from .export.serializers import TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer, \
+    TPMPartnerContactsSerializer
 
 
 class BaseTPMViewSet(
@@ -123,6 +125,17 @@ class TPMStaffMembersViewSet(
         instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
         instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.save()
+
+    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))
+    def export(self, request, *args, **kwargs):
+        partner = self.get_parent_object()
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = TPMPartnerContactsSerializer(queryset, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_#{}_contacts_{}.csv'.format(
+                partner.vendor_number, timezone.now().date()
+            ),
+        })
 
 
 class ImplementingPartnerView(generics.ListAPIView):

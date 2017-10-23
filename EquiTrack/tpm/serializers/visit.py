@@ -11,7 +11,7 @@ from partners.models import InterventionResultLink, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActionPoint, \
     TPMPartnerStaffMember
-from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer
+from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
 from utils.common.serializers.fields import SeparatedReadWriteField
@@ -105,7 +105,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     )
 
     attachments = TPMAttachmentsSerializer(many=True, required=False)
-    report_attachments = TPMReportAttachmentsSerializer(many=True, required=False)
+    report_attachments = TPMReportSerializer(many=True, required=False)
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
@@ -189,7 +189,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
 class TPMVisitSerializer(TPMVisitLightSerializer):
     tpm_activities = TPMActivitySerializer(many=True, required=False)
 
-    report_attachments = TPMAttachmentsSerializer(many=True, required=False)
+    report_attachments = TPMReportAttachmentsSerializer(many=True, required=False)
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
