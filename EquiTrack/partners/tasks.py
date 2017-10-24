@@ -3,7 +3,7 @@ import datetime
 import itertools
 
 from django.conf import settings
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import F, Sum
 
 from celery.utils.log import get_task_logger
@@ -48,6 +48,7 @@ def agreement_status_automatic_transition():
         _make_agreement_status_automatic_transitions(country.name)
 
 
+@transaction.atomic
 def _make_agreement_status_automatic_transitions(country_name):
     '''Implementation core of agreement_status_automatic_transition() (q.v.)'''
     logger.info('Starting agreement auto status transition for country {}'.format(country_name))
@@ -97,6 +98,7 @@ def intervention_status_automatic_transition():
         _make_intervention_status_automatic_transitions(country.name)
 
 
+@transaction.atomic
 def _make_intervention_status_automatic_transitions(country_name):
     '''Implementation core of intervention_status_automatic_transition() (q.v.)'''
     logger.info('Starting intervention auto status transition for country {}'.format(country_name))
