@@ -1,10 +1,11 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
+from model_utils.models import TimeStampedModel
 
 
 @python_2_unicode_compatible
-class Donor(models.Model):
+class Donor(TimeStampedModel):
     """
     Represents Donor for a Grant.
     """
@@ -24,7 +25,7 @@ class GrantManager(models.Manager):
 
 
 @python_2_unicode_compatible
-class Grant(models.Model):
+class Grant(TimeStampedModel):
     """
     Represents the name of a Grant with expiration date, and Donor name.
 
@@ -49,7 +50,7 @@ class Grant(models.Model):
 
 
 @python_2_unicode_compatible
-class FundsReservationHeader(models.Model):
+class FundsReservationHeader(TimeStampedModel):
     intervention = models.ForeignKey('partners.Intervention', related_name='frs', blank=True, null=True)
     vendor_code = models.CharField(max_length=20)
     fr_number = models.CharField(max_length=20, unique=True)
@@ -85,7 +86,7 @@ class FundsReservationHeader(models.Model):
 
 
 @python_2_unicode_compatible
-class FundsReservationItem(models.Model):
+class FundsReservationItem(TimeStampedModel):
     fund_reservation = models.ForeignKey(FundsReservationHeader, related_name="fr_items")
     fr_ref_number = models.CharField(max_length=30, null=True, blank=True)
     line_item = models.CharField(max_length=5)
@@ -114,7 +115,7 @@ class FundsReservationItem(models.Model):
 
 
 @python_2_unicode_compatible
-class FundsCommitmentHeader(models.Model):
+class FundsCommitmentHeader(TimeStampedModel):
     vendor_code = models.CharField(max_length=20)
     fc_number = models.CharField(max_length=20, unique=True)
     document_date = models.DateField(null=True, blank=True)
@@ -131,7 +132,7 @@ class FundsCommitmentHeader(models.Model):
 
 
 @python_2_unicode_compatible
-class FundsCommitmentItem(models.Model):
+class FundsCommitmentItem(TimeStampedModel):
     fund_commitment = models.ForeignKey(FundsCommitmentHeader, related_name='fc_items')
     fc_ref_number = models.CharField(max_length=30, null=True, blank=True)
     line_item = models.CharField(max_length=5)
