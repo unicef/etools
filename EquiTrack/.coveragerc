@@ -1,6 +1,6 @@
 [run]
 branch = true
-omit = */tests/*, */migrations/*, */urls.py, */settings/*, */wsgi.py, manage.py, manage_debug.py EquiTrack/util_scripts.py
+omit = */tests/*, */migrations/*, */urls.py, */settings/*, */wsgi.py, manage.py, manage_debug.py, EquiTrack/util_scripts.py
 source = .
 
 [report]
