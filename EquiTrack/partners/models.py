@@ -1301,7 +1301,7 @@ class Intervention(TimeStampedModel):
     offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
     population_focus = models.CharField(max_length=130, null=True, blank=True)
 
-    sections = models.ManyToManyField(Section, blank=True, related_name='section_interventions+')
+    sections = models.ManyToManyField(Sector, blank=True, related_name='interventions')
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
