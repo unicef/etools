@@ -89,6 +89,14 @@ class TestInterventionsAPI(APITenantTestCase):
         )
         return response.status_code, json.loads(response.rendered_content)
 
+    def run_request_list_dash_ep(self, data={}, user=None, method='get'):
+        response = self.forced_auth_req(
+            method,
+            reverse('partners_api:intervention-list-dash'),
+            user=user or self.unicef_staff,
+        )
+        return response.status_code, json.loads(response.rendered_content)
+
     def run_request(self, intervention_id, data=None, method='get', user=None):
         user = user or self.partnership_manager_user
         response = self.forced_auth_req(
@@ -117,6 +125,24 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         result = json.loads(response.rendered_content)
         self.assertEqual(result.get('result_links'), {'name': ['This field may not be null.']})
+
+    def test_dashboard_list_focal_point(self):
+        self.active_intervention.unicef_focal_points.add(self.unicef_staff)
+        status_code, response = self.run_request_list_dash_ep()
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 1)
+        self.draft_intervention = InterventionFactory(agreement=self.agreement,
+                                                      status='draft')
+        self.draft_intervention.unicef_focal_points.add(self.unicef_staff)
+        status_code, response = self.run_request_list_dash_ep()
+        self.assertEqual(len(response), 1)
+
+    def test_dashboard_list_partnership_manager(self):
+        self.draft_intervention = InterventionFactory(agreement=self.agreement,
+                                                      status='draft')
+        status_code, response = self.run_request_list_dash_ep(user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 4)
 
     def test_add_contingency_pd(self):
         data = {
