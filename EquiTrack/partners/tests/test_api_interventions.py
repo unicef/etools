@@ -17,7 +17,7 @@ from partners.models import (
     Intervention,
     InterventionResultLink,
 )
-from users.models import Country
+
 from EquiTrack.factories import (
     AppliedIndicatorFactory,
     InterventionFactory,
@@ -25,7 +25,6 @@ from EquiTrack.factories import (
     LocationFactory,
     LowerResultFactory,
     ResultFactory,
-    # SectionFactory,
     SectorFactory,
     UserFactory,
 )
@@ -320,12 +319,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 3)
 
-        # section1 = SectionFactory()
-        # Country.objects.get(schema_name="test").sections.add(section1)
         section1 = SectorFactory()
-
-        # section2 = SectionFactory()
-        # Country.objects.get(schema_name="test").sections.add(section2)
         section2 = SectorFactory()
 
         # add another intervention to make sure that the queries are constant
