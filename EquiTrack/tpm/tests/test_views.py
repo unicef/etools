@@ -11,7 +11,23 @@ from .factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
 from ..models import TPMActionPoint
 
 
-class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
+class TestExportMixin(object):
+    def _test_export(self, user, url_postfix, status_code=status.HTTP_200_OK):
+        if not url_postfix.endswith('/'):
+            url_postfix += '/'
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/tpm/{}'.format(url_postfix),
+            user=user
+        )
+
+        self.assertEqual(response.status_code, status_code)
+        if status_code == status.HTTP_200_OK:
+            self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
+
+
+class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_tpm_permissions', verbosity=0)
@@ -83,8 +99,21 @@ class TestTPMVisitViewSet(TPMTestCaseMixin, APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertNotEquals(TPMActionPoint.objects.filter(tpm_visit=visit).count(), 0)
 
+    def test_visits_csv(self):
+        self._test_export(self.pme_user, 'visits/export')
 
-class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
+    def test_activities_csv(self):
+        self._test_export(self.pme_user, 'visits/activities/export')
+
+    def test_locations_csv(self):
+        self._test_export(self.pme_user, 'visits/locations/export')
+
+    def test_visit_letter(self):
+        visit = TPMVisitFactory(status='tpm_accepted')
+        self._test_export(self.pme_user, 'visits/{}/visit-letter'.format(visit.id))
+
+
+class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.tpm_partner = TPMPartnerFactory()
@@ -229,8 +258,11 @@ class TestTPMStaffMembersViewSet(TPMTestCaseMixin, APITenantTestCase):
         )
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_staff_members_csv(self):
+        self._test_export(self.pme_user, 'partners/{}/staff-members/export'.format(self.tpm_partner.id))
 
-class TestTPMPartnerViewSet(TPMTestCaseMixin, APITenantTestCase):
+
+class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.tpm_partner = TPMPartnerFactory()
@@ -315,3 +347,6 @@ class TestTPMPartnerViewSet(TPMTestCaseMixin, APITenantTestCase):
 
     def test_tpm_partner_detail_options(self):
         self._test_detail_options(self.tpm_user, can_update=False)
+
+    def test_partners_csv(self):
+        self._test_export(self.pme_user, 'partners/export')

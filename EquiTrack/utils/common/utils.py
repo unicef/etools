@@ -6,6 +6,11 @@ from itertools import chain
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import connection
+from django.db.models import QuerySet, Manager
+from django.utils import six
+
+from rest_framework.fields import get_attribute
+
 from users.models import Country
 
 
@@ -62,3 +67,21 @@ class every_country:
 
     def __exit__(self, type, value, traceback):
         connection.set_tenant(self.original_country)
+
+
+def get_attribute_smart(instance, attrs):
+    if isinstance(attrs, six.string_types):
+        attrs = attrs.split('.')
+
+    for attr in attrs:
+        if isinstance(instance, (list, set, QuerySet)):
+            instance = list([get_attribute_smart(obj, [attr]) for obj in instance])
+            if all([isinstance(obj, QuerySet) for obj in instance]):
+                instance = chain(*instance)
+        else:
+            instance = get_attribute(instance, [attr])
+
+        if isinstance(instance, Manager):
+            instance = instance.all()
+
+    return instance

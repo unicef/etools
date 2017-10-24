@@ -25,9 +25,9 @@ from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer
 from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from .permissions import IsPMEorReadonlyPermission
 from .export.renderers import TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer, \
-    TPMPartnerContactsCSVRenderer
+    TPMPartnerContactsCSVRenderer, TPMVisitCSVRenderer
 from .export.serializers import TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer, \
-    TPMPartnerContactsSerializer
+    TPMPartnerContactsSerializer, TPMVisitExportSerializer
 
 
 class BaseTPMViewSet(
@@ -262,6 +262,18 @@ class TPMVisitViewSet(
         visits = self.get_queryset()
         return VisitsCPOutputView.as_view(visits=visits)(request, *args, **kwargs)
 
+    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMVisitCSVRenderer,))
+    def visits_export(self, request, *args, **kwargs):
+        tpm_visits = TPMVisit.objects.all().prefetch_related(
+            'tpm_activities', 'tpm_activities__section', 'tpm_activities__implementing_partner',
+            'tpm_activities__partnership', 'tpm_activities__locations', 'unicef_focal_points',
+            'tpm_partner_focal_points'
+        ).order_by('id')
+        serializer = TPMVisitExportSerializer(tpm_visits, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now().date())
+        })
+
     @list_route(methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
     def activities_export(self, request, *args, **kwargs):
         tpm_activities = TPMActivity.objects.filter(
@@ -294,6 +306,10 @@ class TPMVisitViewSet(
 
     @detail_route(methods=['get'], url_path='visit-letter')
     def tpm_visit_letter(self, request, *args, **kwargs):
-        return render_to_pdf_response(request, "tpm/visit_letter_pdf.html", context={
-            "visit": self.get_object(),
-        })
+        visit = self.get_object()
+        return render_to_pdf_response(
+            request, "tpm/visit_letter_pdf.html", context={
+                "visit": visit
+            },
+            filename="visit_letter_{}.csv".format(visit.reference_number)
+        )

@@ -43,6 +43,32 @@ class TPMLocationCSVRenderer(CSVRenderer):
     }
 
 
+class TPMVisitCSVRenderer(CSVRenderer):
+    header = [
+        'ref', 'visit', 'status', 'activities',
+        'sections', 'partners', 'partnerships', 'locations',
+        'start_date', 'end_date', 'unicef_focal_points',
+        'tpm_partner_focal_points', 'report_link', 'attachments', 'link',
+    ]
+    labels = {
+        'ref': _('Visit Ref. #'),
+        'visit': _('Visit'),
+        'status': _('Status'),
+        'activities': _('Activities'),
+        'sections': _('Sections'),
+        'partners': _('Partners'),
+        'partnerships': _('Partnerships'),
+        'locations': _('Locations'),
+        'start_date': _('Start Date'),
+        'end_date': _('End Date'),
+        'unicef_focal_points': _('Name of UNICEF Focal Point'),
+        'tpm_partner_focal_points': _('Name of TPM focal Point'),
+        'report_link': _('Report Hyperlink'),
+        'attachments': _('Attachment Type - Hyperlink'),
+        'link': _('Visit Hyperlink'),
+    }
+
+
 class TPMPartnerCSVRenderer(CSVRenderer):
     header = [
         'vendor_number', 'name', 'street_address', 'postal_code', 'city',
