@@ -31,7 +31,7 @@ from EquiTrack.factories import (
     PartnerFactory,
     PartnerStaffFactory,
     ResultFactory,
-    SectionFactory,
+    SectorFactory,
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
@@ -1563,8 +1563,9 @@ class TestInterventionViews(APITenantTestCase):
         )
         self.intervention = response.data
 
-        self.section = SectionFactory()
-        Country.objects.get(schema_name="test").sections.add(self.section)
+        # self.section = SectionFactory()
+        # Country.objects.get(schema_name="test").sections.add(self.section)
+        self.section = SectorFactory()
 
         self.fund_commitment_header = FundsCommitmentHeader.objects.create(
             vendor_code="test1",
@@ -2268,8 +2269,9 @@ class TestPartnershipDashboardView(APITenantTestCase):
         )
         self.intervention = response.data
 
-        self.section = SectionFactory()
-        Country.objects.get(schema_name="test").sections.add(self.section)
+        # self.section = SectionFactory()
+        # Country.objects.get(schema_name="test").sections.add(self.section)
+        self.section = SectorFactory()
 
         # Basic data to adjust in tests
         self.intervention_data = {

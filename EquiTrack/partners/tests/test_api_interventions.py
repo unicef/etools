@@ -25,7 +25,8 @@ from EquiTrack.factories import (
     LocationFactory,
     LowerResultFactory,
     ResultFactory,
-    SectionFactory,
+    # SectionFactory,
+    SectorFactory,
     UserFactory,
 )
 from utils.common.utils import get_all_field_names
@@ -319,11 +320,13 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 3)
 
-        section1 = SectionFactory()
-        Country.objects.get(schema_name="test").sections.add(section1)
+        # section1 = SectionFactory()
+        # Country.objects.get(schema_name="test").sections.add(section1)
+        section1 = SectorFactory()
 
-        section2 = SectionFactory()
-        Country.objects.get(schema_name="test").sections.add(section2)
+        # section2 = SectionFactory()
+        # Country.objects.get(schema_name="test").sections.add(section2)
+        section2 = SectorFactory()
 
         # add another intervention to make sure that the queries are constant
         data = {
