@@ -654,6 +654,45 @@ class TestPartnerOrganizationModel(TenantTestCase):
             1
         )
 
+    def test_spot_checks_update_one(self):
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            0
+        )
+        PartnerOrganization.spot_checks(
+            self.partner_organization,
+            update_one=True,
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            1
+        )
+
+    def test_spot_checks_update_travel_activity(self):
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            0
+        )
+        traveller = UserFactory()
+        travel = TravelFactory(
+            traveler=traveller,
+            status=Travel.COMPLETED,
+            completed_at=datetime.datetime.now()
+        )
+        TravelActivityFactory(
+            travels=[travel],
+            primary_traveler=traveller,
+            travel_type=TravelType.SPOT_CHECK,
+            partner=self.partner_organization,
+        )
+        PartnerOrganization.spot_checks(
+            self.partner_organization,
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            1
+        )
+
 
 class TestAgreementModel(TenantTestCase):
     fixtures = ['initial_data.json']
