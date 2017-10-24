@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='intervention',
             name='sections',
-            field=models.ManyToManyField(blank=True, related_name='interventions', to='partners.Sector'),
+            field=models.ManyToManyField(blank=True, related_name='interventions', to='reports.Sector'),
         ),
     ]
