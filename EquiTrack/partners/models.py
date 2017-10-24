@@ -40,25 +40,6 @@ from partners.validation.agreements import (
 from partners.validation import interventions as intervention_validation
 
 
-class AgreementStatus(object):
-    '''Constants for agreement status. (Formerly part of now-defunct PCA model.)'''
-    IN_PROCESS = 'in_process'
-    ACTIVE = 'active'
-    IMPLEMENTED = 'implemented'
-    CANCELLED = 'cancelled'
-    SUSPENDED = 'suspended'
-    TERMINATED = 'terminated'
-
-    CHOICES = (
-        (IN_PROCESS, "In Process"),
-        (ACTIVE, "Active"),
-        (IMPLEMENTED, "Implemented"),
-        (CANCELLED, "Cancelled"),
-        (SUSPENDED, "Suspended"),
-        (TERMINATED, "Terminated"),
-    )
-
-
 # TODO: streamline this ...
 def get_agreement_path(instance, filename):
     return '/'.join(

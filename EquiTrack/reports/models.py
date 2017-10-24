@@ -426,32 +426,6 @@ class Indicator(models.Model):
             u'Target: {}'.format(self.target) if self.target else u''
         )
 
-    def programmed_amounts(self):
-        from partners.models import AgreementStatus
-        return self.resultchain_set.filter(
-            partnership__status__in=[AgreementStatus.ACTIVE, AgreementStatus.IMPLEMENTED]
-        )
-
-    def programmed(self, result_structure=None):
-        programmed = self.programmed_amounts()
-        if result_structure:
-            programmed = programmed.filter(
-                partnership__result_structure=result_structure,
-
-            )
-        total = programmed.aggregate(models.Sum('target'))
-        return total[total.keys()[0]] or 0
-
-    def progress(self, result_structure=None):
-        programmed = self.programmed_amounts()
-        if result_structure:
-            programmed = programmed.filter(
-                partnership__result_structure=result_structure,
-
-            )
-        total = programmed.aggregate(models.Sum('current_progress'))
-        return (total[total.keys()[0]] or 0) + self.current if self.current else 0
-
     def save(self, *args, **kwargs):
         # Prevent from saving empty strings as code because of the unique together constraint
         if not self.code:
