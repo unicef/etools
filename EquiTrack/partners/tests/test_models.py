@@ -758,6 +758,17 @@ class TestInterventionModel(TenantTestCase):
         )
         self.assertEqual(int(self.intervention.total_unicef_cash), 100000)
 
+    def test_total_partner_contribution(self):
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            partner_contribution_local=20,
+            in_kind_amount_local=10,
+        )
+        self.assertEqual(int(self.intervention.total_partner_contribution), 200)
+
     def test_total_budget(self):
         InterventionBudget.objects.create(
             intervention=self.intervention,
@@ -768,6 +779,61 @@ class TestInterventionModel(TenantTestCase):
             in_kind_amount_local=10,
         )
         self.assertEqual(int(self.intervention.total_budget), 100200)
+
+    def test_total_in_kind_amount(self):
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            in_kind_amount=3300,
+            in_kind_amount_local=10,
+        )
+        self.assertEqual(int(self.intervention.total_in_kind_amount), 3300)
+
+    def test_total_unicef_budget(self):
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            in_kind_amount=2000,
+            in_kind_amount_local=10,
+        )
+        self.assertEqual(int(self.intervention.total_unicef_budget), 102000)
+
+    def test_total_partner_contribution_local(self):
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution_local=7000,
+            in_kind_amount=2000,
+            in_kind_amount_local=10,
+        )
+        self.assertEqual(int(self.intervention.total_partner_contribution_local), 7000)
+
+    def test_total_unicef_cash_local(self):
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution_local=7000,
+            in_kind_amount=2000,
+            in_kind_amount_local=10,
+        )
+        self.assertEqual(int(self.intervention.total_unicef_cash_local), 10)
+
+    def test_total_budget_local(self):
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution_local=7000,
+            in_kind_amount=2000,
+            in_kind_amount_local=3000,
+        )
+        self.assertEqual(int(self.intervention.total_budget_local), 3000)
 
     def test_year(self):
         '''Exercise the year property'''
