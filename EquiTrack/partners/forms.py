@@ -2,26 +2,16 @@ from __future__ import absolute_import
 
 import logging
 
-from django.utils.translation import ugettext as _
-from django import forms
-from django.db.models import Q
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
-
 from dal import autocomplete
+from django import forms
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.db.models import Q
+from django.utils.translation import ugettext as _
 
-from EquiTrack.forms import (
-    AutoSizeTextForm,
-    UserGroupForm,
-)
-
-from .models import (
-    Agreement,
-    InterventionSectorLocationLink,
-    PartnerOrganization,
-    PartnerStaffMember,
-)
+from EquiTrack.forms import AutoSizeTextForm, UserGroupForm
+from partners.models import Agreement, InterventionSectorLocationLink, PartnerOrganization, PartnerStaffMember
 
 logger = logging.getLogger('partners.forms')
 

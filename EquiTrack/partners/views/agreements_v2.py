@@ -1,38 +1,23 @@
-import operator
 import functools
 import logging
-
-from rest_framework import status
+import operator
 
 from django.db import transaction
 from django.db.models import Q
+from rest_framework import status
+from rest_framework.generics import DestroyAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-
 from rest_framework_csv import renderers as r
-from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
-    DestroyAPIView,
-)
 
-from partners.models import (
-    Agreement,
-    AgreementAmendment,
-)
-from partners.serializers.agreements_v2 import (
-    AgreementListSerializer,
-    AgreementExportSerializer,
-    AgreementCreateUpdateSerializer,
-    AgreementDetailSerializer,
-    AgreementAmendmentCreateUpdateSerializer
-)
-
-from partners.filters import PartnerScopeFilter
-from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
-
-from partners.exports_v2 import AgreementCvsRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
+from partners.exports_v2 import AgreementCvsRenderer
+from partners.filters import PartnerScopeFilter
+from partners.models import Agreement, AgreementAmendment
+from partners.permissions import PartneshipManagerPermission, PartneshipManagerRepPermission
+from partners.serializers.agreements_v2 import (
+    AgreementAmendmentCreateUpdateSerializer, AgreementCreateUpdateSerializer, AgreementDetailSerializer,
+    AgreementExportSerializer, AgreementListSerializer,)
 from partners.validation.agreements import AgreementValid
 
 

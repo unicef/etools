@@ -1,9 +1,6 @@
 from import_export import resources
 
-from partners.models import (
-    PartnerOrganization,
-    PartnerType,
-)
+from partners.models import PartnerOrganization, PartnerType
 
 
 class PartnerExport(resources.ModelResource):

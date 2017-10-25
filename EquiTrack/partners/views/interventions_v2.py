@@ -1,50 +1,29 @@
-import operator
 import functools
 import logging
+import operator
 
 from django.db import transaction
 from django.db.models import Q
-
 from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import DestroyAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 from rest_framework_csv import renderers as r
 
-from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
-    DestroyAPIView,
-)
-
 from EquiTrack.validation_mixins import ValidatorViewMixin
-
-from partners.models import (
-    Intervention,
-    InterventionPlannedVisits,
-    InterventionAttachment,
-    InterventionAmendment,
-    InterventionSectorLocationLink,
-    InterventionResultLink
-)
-from partners.serializers.interventions_v2 import (
-    InterventionListSerializer,
-    InterventionDetailSerializer,
-    InterventionCreateUpdateSerializer,
-    InterventionExportSerializer,
-    InterventionBudgetCUSerializer,
-    PlannedVisitsCUSerializer,
-    InterventionAttachmentSerializer,
-    InterventionAmendmentCUSerializer,
-    InterventionSectorLocationCUSerializer,
-    InterventionResultCUSerializer,
-    InterventionListMapSerializer,
-    MinimalInterventionListSerializer,
-)
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
+from partners.models import (
+    Intervention, InterventionAmendment, InterventionAttachment, InterventionPlannedVisits, InterventionResultLink,
+    InterventionSectorLocationLink,)
+from partners.permissions import PartneshipManagerPermission, PartneshipManagerRepPermission
+from partners.serializers.interventions_v2 import (
+    InterventionAmendmentCUSerializer, InterventionAttachmentSerializer, InterventionBudgetCUSerializer,
+    InterventionCreateUpdateSerializer, InterventionDetailSerializer, InterventionExportSerializer,
+    InterventionListMapSerializer, InterventionListSerializer, InterventionResultCUSerializer,
+    InterventionSectorLocationCUSerializer, MinimalInterventionListSerializer, PlannedVisitsCUSerializer,)
 from partners.validation.interventions import InterventionValid
-from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):

@@ -1,6 +1,6 @@
 from django.apps import apps
-from rest_framework import permissions
 from django.utils.lru_cache import lru_cache
+from rest_framework import permissions
 
 from EquiTrack.utils import HashableDict
 from EquiTrack.validation_mixins import check_rigid_related

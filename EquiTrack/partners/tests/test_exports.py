@@ -1,15 +1,17 @@
 from __future__ import unicode_literals
+
 import datetime
 import tempfile
+
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, \
-    GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory, \
-    InterventionBudgetFactory, PartnerStaffFactory
+from EquiTrack.factories import (
+    AgreementFactory, CountryProgrammeFactory, GovernmentInterventionFactory, InterventionBudgetFactory,
+    InterventionFactory, PartnerFactory, PartnerStaffFactory, ResultFactory, UserFactory,)
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import CurrencyFactory
 from partners.models import GovernmentInterventionResult
+from publics.tests.factories import CurrencyFactory
 from reports.models import ResultType
 
 

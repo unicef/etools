@@ -1,18 +1,14 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
-from django.db.models import Case, When, F, Max, DateTimeField, DurationField, ExpressionWrapper
 
-from rest_framework_csv import renderers as r
+from django.db.models import Case, DateTimeField, DurationField, ExpressionWrapper, F, Max, When
+from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAdminUser
-from rest_framework.generics import (
-    ListCreateAPIView
-)
+from rest_framework_csv import renderers as r
 
-from partners.models import (
-    Intervention,
-)
 from partners.exports_v2 import PartnershipDashCsvRenderer
+from partners.models import Intervention
 from partners.serializers.dashboards import InterventionDashSerializer
 from t2f.models import Travel, TravelType
 

@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
-from datetime import date
+
 import logging
+from datetime import date
 
 from django.utils.translation import ugettext as _
 
-
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, check_rigid_related, \
-    BasicValidationError, check_rigid_fields, check_required_fields
+from EquiTrack.validation_mixins import (
+    BasicValidationError, check_required_fields, check_rigid_fields, check_rigid_related, CompleteValidation,
+    StateValidError, TransitionError,)
 from partners.permissions import InterventionPermissions
 
 logger = logging.getLogger('partners.interventions.validation')
@@ -102,8 +103,8 @@ def start_date_signed_valid(i):
 
 def start_date_related_agreement_valid(i):
     # i = intervention
-    if i.document_type in [i.PD, i.SHPD] and not i.contingency_pd and i.start and i.agreement.start and\
-                    i.signed_pd_document and i.start < i.agreement.start:
+    if i.document_type in [i.PD, i.SHPD] and not i.contingency_pd and i.start and \
+            i.agreement.start and i.signed_pd_document and i.start < i.agreement.start:
         return False
     return True
 

@@ -1,34 +1,18 @@
 from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 
+from partners.views.agreements_v2 import AgreementAmendmentDeleteView, AgreementDetailAPIView, AgreementListAPIView
 from partners.views.dashboards import InterventionPartnershipDashView
-from partners.views.v1 import PCAPDFView
-from partners.views.partner_organization_v2 import (
-    PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView, PartnerStaffMemberListAPIVIew,
-    PartnerOrganizationHactAPIView, PartnerOrganizationAssessmentDeleteView, PartnerOrganizationAddView,
-    PartnerOrganizationDeleteView
-)
-from partners.views.agreements_v2 import (
-    AgreementListAPIView,
-    AgreementDetailAPIView,
-    AgreementAmendmentDeleteView,
-)
 from partners.views.interventions_v2 import (
-    InterventionListAPIView,
-    InterventionListDashView,
-    InterventionDetailAPIView,
-    InterventionPlannedVisitsDeleteView,
-    InterventionAttachmentDeleteView,
-    InterventionResultLinkDeleteView,
-    InterventionAmendmentDeleteView,
-    InterventionSectorLocationLinkDeleteView,
-    InterventionListMapView,
-)
-
-from partners.views.v2 import (
-    PmpStaticDropdownsListApiView, PMPDropdownsListApiView,
-)
-
+    InterventionAmendmentDeleteView, InterventionAttachmentDeleteView, InterventionDetailAPIView,
+    InterventionListAPIView, InterventionListDashView, InterventionListMapView, InterventionPlannedVisitsDeleteView,
+    InterventionResultLinkDeleteView, InterventionSectorLocationLinkDeleteView,)
+from partners.views.partner_organization_v2 import (
+    PartnerOrganizationAddView, PartnerOrganizationAssessmentDeleteView, PartnerOrganizationDeleteView,
+    PartnerOrganizationDetailAPIView, PartnerOrganizationHactAPIView, PartnerOrganizationListAPIView,
+    PartnerStaffMemberListAPIVIew,)
+from partners.views.v1 import PCAPDFView
+from partners.views.v2 import PMPDropdownsListApiView, PmpStaticDropdownsListApiView
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/
 

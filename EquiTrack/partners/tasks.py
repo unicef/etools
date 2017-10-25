@@ -1,19 +1,19 @@
 from __future__ import unicode_literals
+
 import datetime
 import itertools
 
+from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.db import connection
 from django.db.models import F, Sum
 
-from celery.utils.log import get_task_logger
-
 from EquiTrack.celery import app
+from notification.models import Notification
 from partners.models import Agreement, Intervention
 from partners.validation.agreements import AgreementValid
 from partners.validation.interventions import InterventionValid
 from users.models import Country, User
-from notification.models import Notification
 
 logger = get_task_logger(__name__)
 

@@ -1,21 +1,15 @@
 from __future__ import unicode_literals
+
 import json
 
-from django.utils import timezone
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from django.contrib.auth.models import User
+from django.utils import timezone
 from rest_framework import serializers
 
+from partners.models import Assessment, Intervention, PartnerOrganization, PartnerStaffMember, PartnerType
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
-
-from partners.models import (
-    Assessment,
-    Intervention,
-    PartnerOrganization,
-    PartnerType,
-    PartnerStaffMember,
-)
 
 
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):

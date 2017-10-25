@@ -2,10 +2,7 @@ from __future__ import absolute_import
 
 from django.conf.urls import url
 
-from .views.v1 import (
-    PortalLoginFailedView,
-    PCAPDFView,
-)
+from partners.views.v1 import PCAPDFView, PortalLoginFailedView
 
 urlpatterns = (
     url(r'^accounts/loginfailed/(?P<email>.+)/$', PortalLoginFailedView.as_view(), name='sociallogin_notamember'),

@@ -1,46 +1,29 @@
-import operator
-import functools
 import datetime
+import functools
+import operator
 from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Q
-
 from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAdminUser
-from rest_framework_csv import renderers as r
 from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
-    DestroyAPIView,
-    CreateAPIView,
-    ListAPIView)
+    CreateAPIView, DestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView,)
+from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from rest_framework_csv import renderers as r
 
 from EquiTrack.utils import get_data_from_insight
 from EquiTrack.validation_mixins import ValidatorViewMixin
-
-from partners.models import (
-    PartnerStaffMember,
-    PartnerOrganization,
-    Assessment,
-)
-from partners.serializers.partner_organization_v2 import (
-    PartnerOrganizationExportSerializer,
-    PartnerOrganizationListSerializer,
-    PartnerOrganizationDetailSerializer,
-    PartnerOrganizationCreateUpdateSerializer,
-    PartnerStaffMemberCreateUpdateSerializer,
-    PartnerStaffMemberDetailSerializer,
-    PartnerOrganizationHactSerializer,
-    AssessmentDetailSerializer,
-    MinimalPartnerOrganizationListSerializer,
-)
-from t2f.models import TravelActivity
-from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
-from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer, PartnerOrganizationHactCsvRenderer
+from partners.filters import PartnerScopeFilter
+from partners.models import Assessment, PartnerOrganization, PartnerStaffMember
+from partners.permissions import PartneshipManagerPermission, PartneshipManagerRepPermission
+from partners.serializers.partner_organization_v2 import (
+    AssessmentDetailSerializer, MinimalPartnerOrganizationListSerializer, PartnerOrganizationCreateUpdateSerializer,
+    PartnerOrganizationDetailSerializer, PartnerOrganizationExportSerializer, PartnerOrganizationHactSerializer,
+    PartnerOrganizationListSerializer, PartnerStaffMemberCreateUpdateSerializer, PartnerStaffMemberDetailSerializer,)
+from t2f.models import TravelActivity
 
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):

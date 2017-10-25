@@ -1,23 +1,16 @@
 from __future__ import unicode_literals
-from unittest import TestCase
-import json
+
 import datetime
+import json
+from unittest import TestCase
+
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from EquiTrack.factories import (
-    PartnerFactory,
-    UserFactory,
-    AgreementFactory,
-    InterventionFactory,
-    CountryProgrammeFactory, GroupFactory)
+    AgreementFactory, CountryProgrammeFactory, GroupFactory, InterventionFactory, PartnerFactory, UserFactory,)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from partners.models import (
-    PartnerType,
-    Agreement,
-    Intervention,
-    AgreementAmendment
-)
+from partners.models import Agreement, AgreementAmendment, Intervention, PartnerType
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -29,7 +22,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
             ('agreement-detail', '1/', {'pk': 1}),
             ('pca_pdf', '1/generate_doc/', {'agr': 1}),
             ('agreement-amendment-del', 'amendments/1/', {'pk': 1}),
-            )
+        )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/agreements/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
