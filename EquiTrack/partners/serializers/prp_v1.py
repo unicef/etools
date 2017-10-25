@@ -8,8 +8,8 @@ from locations.models import Location
 from partners.models import (
     Intervention,
     PartnerStaffMember,
-    PartnerOrganization
-)
+    PartnerOrganization,
+    InterventionReportingPeriod)
 from reports.models import Result, AppliedIndicator, LowerResult, Disaggregation
 
 
@@ -19,7 +19,7 @@ class PartnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         depth = 1
-        fields = ('name', 'unicef_vendor_number', 'short_name')
+        fields = ('id', 'name', 'unicef_vendor_number', 'short_name')
 
 
 class AuthOfficerSerializer(serializers.ModelSerializer):
@@ -127,6 +127,12 @@ class PRPResultSerializer(serializers.ModelSerializer):
         )
 
 
+class ReportingPeriodsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReportingPeriod
+        fields = ('id', 'start_date', 'end_date', 'due_date')
+
+
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     # todo: do these need to be lowercased?
@@ -146,14 +152,17 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
                                              max_digits=20, decimal_places=2)
     unicef_budget_currency = serializers.CharField(source='default_budget_currency', read_only=True)
     # todo: is this the right field?
-    funds_received = serializers.DecimalField(source='total_budget', read_only=True,
-                                              max_digits=20, decimal_places=2)
+    funds_received = serializers.SerializerMethodField(read_only=True)
     funds_received_currency = serializers.CharField(source='fr_currency', read_only=True)
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
     update_date = serializers.DateTimeField(source='modified')
+    reporting_periods = ReportingPeriodsSerializer(many=True, read_only=True)
 
     def get_business_area_code(self, obj):
         return connection.tenant.business_area_code
+
+    def get_funds_received(self, obj):
+        return obj.total_frs['total_actual_amt']
 
     class Meta:
         model = Intervention
@@ -161,6 +170,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'id', 'title', 'business_area_code',
             'offices',  # todo: convert to names, not ids
             'number',
+            'status',
             'partner_org',
             'unicef_focal_points',
             'agreement_auth_officers',
@@ -169,7 +179,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'cso_budget', 'cso_budget_currency',
             'unicef_budget', 'unicef_budget_currency',
             'funds_received', 'funds_received_currency',
-            # 'reporting_frequencies',  # todo: figure out where this comes from
+            'reporting_periods',
             'expected_results',
             'update_date'
         )
