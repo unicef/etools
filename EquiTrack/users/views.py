@@ -121,7 +121,7 @@ class CountriesViewSet(ListAPIView):
     serializer_class = CountrySerializer
 
     def get_queryset(self):
-        return Country.objects.all()
+        return Country.objects.prefetch_related('local_currency').all()
 
 
 class MyProfileAPIView(RetrieveUpdateAPIView):
