@@ -15,7 +15,7 @@ from reports.models import (
     IndicatorBlueprint,
     AppliedIndicator,
     Disaggregation,
-)
+    DisaggregationValue)
 from reports.forms import IndicatorAdminForm
 
 
@@ -237,6 +237,34 @@ class AppliedIndicatorAdmin(admin.ModelAdmin):
     )
 
 
+class DisaggregationAdmin(admin.ModelAdmin):
+    model = Disaggregation
+    list_filter = (
+        'active',
+    )
+    list_display = (
+        'name',
+        'active'
+    )
+
+class DisaggregationValueAdmin(admin.ModelAdmin):
+    model = DisaggregationValue
+    list_filter = (
+        'disaggregation',
+        'active',
+    )
+    list_display = (
+        'get_disaggregation_name',
+        'value',
+        'active'
+    )
+
+    def get_disaggregation_name(self, obj):
+        return obj.disaggregation.name
+
+    get_disaggregation_name.short_description = 'Disaggregation Name'
+
+
 admin.site.register(Result, ResultAdmin)
 admin.site.register(CountryProgramme)
 admin.site.register(Sector, SectorAdmin)
@@ -249,3 +277,4 @@ admin.site.register(LowerResult, LowerResultAdmin)
 admin.site.register(IndicatorBlueprint)
 admin.site.register(AppliedIndicator, AppliedIndicatorAdmin)
 admin.site.register(Disaggregation)
+admin.site.register(DisaggregationValue, DisaggregationValueAdmin)

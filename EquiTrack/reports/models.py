@@ -428,7 +428,7 @@ class Disaggregation(TimeStampedModel):
     active = models.BooleanField(default=False)
 
     def __str__(self):
-        return "Disaggregation <pk:%s>" % self.id
+        return self.name
 
 
 @python_2_unicode_compatible
@@ -444,7 +444,7 @@ class DisaggregationValue(TimeStampedModel):
     active = models.BooleanField(default=False)
 
     def __str__(self):
-        return "Disaggregation Value <pk:%s>" % self.id
+        return "Disaggregation Value {} -> {}".format(self.disaggregation, self.value)
 
 
 class AppliedIndicator(TimeStampedModel):
