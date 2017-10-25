@@ -9,10 +9,10 @@ from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import (
     AgreementFactory,
+    AgreementAmendmentFactory,
     InterventionFactory,
     InterventionBudgetFactory,
     InterventionPlannedVisitsFactory,
-    PartnershipFactory,
     TravelFactory,
     TravelActivityFactory,
     UserFactory,
@@ -25,11 +25,8 @@ from reports.models import (
     ResultType,
 )
 from partners.models import (
-    PCA,
     Agreement,
-    AmendmentLog,
     FundingCommitment,
-    AgreementAmendmentLog,
     PartnerOrganization,
     Assessment,
     Result,
@@ -37,6 +34,7 @@ from partners.models import (
     GovernmentInterventionResult,
     Intervention,
     InterventionBudget,
+    PartnerType,
 )
 from t2f.models import Travel, TravelType
 
@@ -68,11 +66,7 @@ class TestAgreementNumberGeneration(TenantTestCase):
         self.assertEqual(agreement1.reference_number, expected_reference_number)
 
         # create amendment
-        AgreementAmendmentLog.objects.create(
-            agreement=agreement1,
-            amended_at=self.date,
-            status=PCA.ACTIVE
-        )
+        AgreementAmendmentFactory(agreement=agreement1)
         # reference number should be unchanged.
         self.assertEqual(agreement1.reference_number, expected_reference_number)
 
@@ -154,42 +148,6 @@ class TestAgreementNumberGeneration(TenantTestCase):
         self.assertEqual(agreement.base_number, expected_reference_number)
         self.assertEqual(agreement.agreement_number, expected_reference_number + '-42')
         self.assertEqual(agreement.reference_number, expected_reference_number)
-
-    @skip("Fix this")
-    def test_pd_numbering(self):
-
-        pd_ref = 'LEBA/PCA{year}01/{{}}{year}{{}}'.format(year=self.date.year)
-
-        # create one programme document
-        intervention1 = PartnershipFactory()
-        self.assertEqual(intervention1.reference_number, pd_ref.format('PD', '01'))
-
-        # create another under the same partner and agreement
-        intervention2 = PartnershipFactory(
-            partner=intervention1.partner,
-            agreement=intervention1.agreement
-        )
-        self.assertEqual(intervention2.reference_number, pd_ref.format('PD', '02'))
-
-        # create amendment
-        AmendmentLog.objects.create(
-            partnership=intervention2,
-            amended_at=self.date,
-            status=PCA.ACTIVE
-        )
-        self.assertEqual(intervention2.reference_number, pd_ref.format('PD', '02-01'))
-
-        intervention3 = PartnershipFactory(
-            partner=intervention1.partner,
-            agreement=intervention1.agreement,
-        )
-        self.assertEqual(intervention3.reference_number, pd_ref.format('PD', '03'))
-
-        # agreement numbering remains the same even if previous agreement is deleted
-        intervention3.signed_by_unicef_date = self.date
-        intervention3.save()
-        intervention1.delete()
-        self.assertEqual(intervention3.reference_number, pd_ref.format('PD', '03'))
 
 
 class TestHACTCalculations(TenantTestCase):
@@ -461,7 +419,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     @skip('Deprecated Functionality')
     def test_planned_cash_transfers_gov(self):
-        self.partner_organization.partner_type = "Government"
+        self.partner_organization.partner_type = PartnerType.GOVERNMENT
         self.partner_organization.save()
         CountryProgramme.objects.create(
             name="CP 1",
@@ -494,7 +452,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(hact['planned_cash_transfer'], 150000)
 
     def test_planned_cash_transfers_non_gov(self):
-        self.partner_organization.partner_type = "UN Agency"
+        self.partner_organization.partner_type = PartnerType.UN_AGENCY
         self.partner_organization.save()
         agreement = Agreement.objects.create(
             agreement_type=Agreement.PCA,
@@ -513,7 +471,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(hact['planned_cash_transfer'], 100001)
 
     def test_planned_visits_gov(self):
-        self.partner_organization.partner_type = "Government"
+        self.partner_organization.partner_type = PartnerType.GOVERNMENT
         self.partner_organization.save()
         intervention = InterventionFactory(
             agreement=self.pca_signed1,
@@ -533,8 +491,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['planned_visits'], 0)
 
     def test_planned_visits_non_gov(self):
-        self.partner_organization.partner_type = "UN Agency"
-        self.partner_organization.status = PCA.ACTIVE
+        self.partner_organization.partner_type = PartnerType.UN_AGENCY
         self.partner_organization.save()
         intervention = InterventionFactory(
             agreement=self.pca_signed1,
@@ -554,8 +511,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['planned_visits'], 3)
 
     def test_planned_visits_non_gov_no_pv_intervention(self):
-        self.partner_organization.partner_type = "UN Agency"
-        self.partner_organization.status = PCA.ACTIVE
+        self.partner_organization.partner_type = PartnerType.UN_AGENCY
         self.partner_organization.save()
         intervention1 = InterventionFactory(
             agreement=self.pca_signed1,
@@ -585,8 +541,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
 
     def test_planned_visits_non_gov_with_pv_intervention(self):
-        self.partner_organization.partner_type = "UN Agency"
-        self.partner_organization.status = PCA.ACTIVE
+        self.partner_organization.partner_type = PartnerType.UN_AGENCY
         self.partner_organization.save()
         intervention1 = InterventionFactory(
             agreement=self.pca_signed1,
