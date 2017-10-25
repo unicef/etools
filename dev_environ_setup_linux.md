@@ -17,7 +17,7 @@ These instructions assume you are starting with Ubuntu 16.04.
 Set up Python and Postgres
 --------------------------
 
-This step is unncessary if you already have Python 2.7, Postgres 9.5, and PostGIS 2.2 installed on
+This step is unnecessary if you already have Python 2.7, Postgres 9.5, and PostGIS 2.2 installed on
 your machine.
 
 ```bash
@@ -50,8 +50,6 @@ for details on the values you should use.
 
 ```bash
 $ pip install virtualenvwrapper
-$ export WORKON_HOME=$HOME/.virtualenvs
-$ export PROJECT_HOME=$HOME
 $ source virtualenvwrapper.sh
 ```
 
@@ -60,7 +58,7 @@ Get the code
 
 ```bash
 $ git clone git@github.com:unicef/etools.git
-$ cd etools
+$ cd etools/EquiTrack/
 ```
 
 Install the pip requirements
@@ -72,7 +70,7 @@ Installing GDAL requires us to point to the proper location of the GDAL header f
 $ export CPLUS_INCLUDE_PATH=/usr/include/gdal
 $ export C_INCLUDE_PATH=/usr/include/gdal
 $ mkvirtualenv -p `which python2.7` etools
-$ pip install -r EquiTrack/requirements/local.txt
+(etools)$ pip install -r requirements/local.txt
 ```
 
 Set up your database
@@ -80,7 +78,6 @@ Set up your database
 
 ```bash
 (etools)$ createdb etools
-(etools)$ cd EquiTrack
 (etools)$ python manage.py migrate_schemas --noinput
 (etools)$ python manage.py createsuperuser
 ```
