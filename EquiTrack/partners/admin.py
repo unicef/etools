@@ -1,41 +1,21 @@
 from __future__ import absolute_import
 
-from django.db import models
 from django.contrib import admin
-from django.utils.translation import ugettext_lazy as _
+from django.db import models
 from django.forms import SelectMultiple
-
-from import_export.admin import ExportMixin
+from django.utils.translation import ugettext_lazy as _
 from generic_links.admin import GenericLinkStackedInline
+from import_export.admin import ExportMixin
 
-from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
-
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from partners.exports import PartnerExport
-from partners.models import (
-    FileType,
-    PartnerOrganization,
-    Assessment,
-    Agreement,
-    PartnerStaffMember,
-    FundingCommitment,
-    InterventionPlannedVisits,
-    Intervention,
-    AgreementAmendment,
-    InterventionAmendment,
-    InterventionSectorLocationLink,
-    InterventionResultLink,
-    InterventionBudget,
-    InterventionAttachment,
-
-)
+from partners.forms import AgreementForm, PartnersAdminForm, PartnerStaffMemberForm, SectorLocationForm
 from partners.mixins import HiddenPartnerMixin
-from partners.forms import (
-    PartnersAdminForm,
-    AgreementForm,
-    PartnerStaffMemberForm,
-    SectorLocationForm
-)
+from partners.models import (
+    Agreement, AgreementAmendment, Assessment, FileType, FundingCommitment, Intervention, InterventionAmendment,
+    InterventionAttachment, InterventionBudget, InterventionPlannedVisits, InterventionResultLink,
+    InterventionSectorLocationLink, PartnerOrganization, PartnerStaffMember,)
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
@@ -264,11 +244,11 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, admin.ModelA
 class AssessmentAdmin(admin.ModelAdmin):
     model = Assessment
     fields = (
-         u'partner',
-         u'type',
-         u'completed_date',
-         u'current',
-         u'report',
+        u'partner',
+        u'type',
+        u'completed_date',
+        u'current',
+        u'report',
     )
     list_filter = (
         u'partner',

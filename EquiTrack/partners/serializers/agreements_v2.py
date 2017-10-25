@@ -1,16 +1,14 @@
 from __future__ import unicode_literals
+
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
+from partners.models import Agreement, AgreementAmendment
 from partners.permissions import AgreementPermissions
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
-from users.serializers import SimpleUserSerializer
 from partners.validation.agreements import AgreementValid
-from partners.models import (
-    Agreement,
-    AgreementAmendment,
-)
 from reports.models import CountryProgramme
+from users.serializers import SimpleUserSerializer
 
 
 class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):

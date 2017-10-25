@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
-import json
 import datetime
+import json
 from unittest import skip, TestCase
 
 from django.core.urlresolvers import reverse
@@ -9,20 +9,11 @@ from django.utils import timezone
 from rest_framework import status
 
 from EquiTrack.factories import (
-    PartnerFactory,
-    UserFactory,
-    ResultFactory,
-    AgreementFactory,
-    InterventionFactory,
-    FundsReservationHeaderFactory,
-    GroupFactory)
+    AgreementFactory, FundsReservationHeaderFactory, GroupFactory, InterventionFactory, PartnerFactory,
+    ResultFactory, UserFactory,)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from partners.models import Intervention, InterventionBudget, InterventionSectorLocationLink
 from reports.models import ResultType, Sector
-from partners.models import (
-    InterventionSectorLocationLink,
-    InterventionBudget,
-    Intervention
-)
 from utils.common.utils import get_all_field_names
 
 
@@ -40,7 +31,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
             ('intervention-amendments-del', 'amendments/1/', {'pk': 1}),
             ('intervention-sector-locations-del', 'sector-locations/1/', {'pk': 1}),
             ('intervention-map', 'map/', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/interventions/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 

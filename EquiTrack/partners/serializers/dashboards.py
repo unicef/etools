@@ -2,10 +2,7 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
-
-from partners.models import (
-    Intervention,
-)
+from partners.models import Intervention
 
 
 class InterventionDashSerializer(serializers.ModelSerializer):

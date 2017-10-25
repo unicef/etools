@@ -1,128 +1,108 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
+
 import datetime
 import json
 
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField, ArrayField
-from django.db import models, connection, transaction
+from django.contrib.postgres.fields import ArrayField, JSONField
+from django.db import connection, models, transaction
 from django.db.models import F
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
-from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
-
+from django.utils.translation import ugettext as _
 from django_fsm import FSMField, transition
-from smart_selects.db_fields import ChainedForeignKey
-from model_utils.models import (
-    TimeFramedModel,
-    TimeStampedModel,
-)
 from model_utils import Choices, FieldTracker
-from dateutil.relativedelta import relativedelta
+from model_utils.models import TimeFramedModel, TimeStampedModel
+from smart_selects.db_fields import ChainedForeignKey
 
-from EquiTrack.utils import import_permissions
 from EquiTrack.mixins import AdminURLMixin
+from EquiTrack.utils import import_permissions
 from funds.models import Grant
-from reports.models import (
-    Indicator,
-    Sector,
-    Result,
-    CountryProgramme,
-)
-from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
-from users.models import Section, Office
-from partners.validation.agreements import (
-    agreement_transition_to_ended_valid,
-    agreements_illegal_transition,
-    agreement_transition_to_signed_valid)
 from partners.validation import interventions as intervention_validation
+from partners.validation.agreements import (
+    agreement_transition_to_ended_valid, agreement_transition_to_signed_valid, agreements_illegal_transition,)
+from reports.models import CountryProgramme, Indicator, Result, Sector
+from t2f.models import Travel, TravelActivity, TravelType
+from users.models import Office, Section
 
 
-# TODO: streamline this ...
-def get_agreement_path(instance, filename):
+def _get_partner_base_path(partner):
     return '/'.join(
         [connection.schema_name,
          'file_attachments',
          'partner_organization',
-         str(instance.partner.id),
-         'agreements',
-         str(instance.agreement_number),
-         filename]
+         str(partner.id),
+         ]
     )
 
 
+def get_agreement_path(instance, filename):
+    return '/'.join([
+        _get_partner_base_path(instance.partner),
+        'agreements',
+        str(instance.agreement_number),
+        filename
+    ])
+
+
 def get_assesment_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organizations',
-         str(instance.partner.id),
-         'assesments',
-         str(instance.id),
-         filename]
+    return '/'.join([
+        _get_partner_base_path(instance.partner),
+        'assesments',
+        str(instance.id),
+        filename]
     )
 
 
 def get_intervention_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.agreement.partner.id),
-         'agreements',
-         str(instance.agreement.id),
-         'interventions',
-         str(instance.id),
-         filename]
+    return '/'.join([
+        _get_partner_base_path(instance.agreement.partner),
+        'agreements',
+        str(instance.agreement.id),
+        'interventions',
+        str(instance.id),
+        filename]
     )
 
 
 def get_prc_intervention_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.agreement.partner.id),
-         'agreements',
-         str(instance.agreement.id),
-         'interventions',
-         str(instance.id),
-         'prc',
-         filename]
+    return '/'.join([
+        _get_partner_base_path(instance.agreement.partner),
+        'agreements',
+        str(instance.agreement.id),
+        'interventions',
+        str(instance.id),
+        'prc',
+        filename]
     )
 
 
 def get_intervention_amendment_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.intervention.agreement.partner.id),
-         'agreements',
-         str(instance.intervention.agreement.id),
-         'interventions',
-         str(instance.intervention.id),
-         'amendments',
-         str(instance.id),
-         filename]
+    return '/'.join([
+        _get_partner_base_path(instance.intervention.agreement.partner),
+        'agreements',
+        str(instance.intervention.agreement.id),
+        'interventions',
+        str(instance.intervention.id),
+        'amendments',
+        str(instance.id),
+        filename]
     )
 
 
 def get_intervention_attachments_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.intervention.agreement.partner.id),
-         'agreements',
-         str(instance.intervention.agreement.id),
-         'interventions',
-         str(instance.intervention.id),
-         'attachments',
-         str(instance.id),
-         filename]
+    return '/'.join([
+        _get_partner_base_path(instance.intervention.agreement.partner),
+        'agreements',
+        str(instance.intervention.agreement.id),
+        'interventions',
+        str(instance.intervention.id),
+        'attachments',
+        str(instance.id),
+        filename]
     )
 
 
@@ -151,25 +131,6 @@ class WorkspaceFileType(models.Model):
 
     def __unicode__(self):
         return self.name
-
-
-# TODO: move this on the models
-HIGH = 'high'
-SIGNIFICANT = 'significant'
-MEDIUM = 'medium'
-LOW = 'low'
-RISK_RATINGS = (
-    (HIGH, 'High'),
-    (SIGNIFICANT, 'Significant'),
-    (MEDIUM, 'Medium'),
-    (LOW, 'Low'),
-)
-CSO_TYPES = Choices(
-   'International',
-   'National',
-   'Community Based Organization',
-   'Academic Institution',
-)
 
 
 class PartnerType(object):
@@ -233,6 +194,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('WFP', 'WFP'),
         ('WHO', 'WHO')
     )
+
+    CSO_TYPES = Choices(
+        'International',
+        'National',
+        'Community Based Organization',
+        'Academic Institution',
+    )
+
     partner_type = models.CharField(
         max_length=50,
         choices=PartnerType.CHOICES
@@ -242,13 +211,13 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     cso_type = models.CharField(
         max_length=50,
         choices=CSO_TYPES,
-        verbose_name='CSO Type',
+        verbose_name=_('CSO Type'),
         blank=True, null=True
     )
     name = models.CharField(
         max_length=255,
-        verbose_name='Full Name',
-        help_text='Please make sure this matches the name you enter in VISION'
+        verbose_name=_('Full Name'),
+        help_text=_('Please make sure this matches the name you enter in VISION')
     )
     short_name = models.CharField(
         max_length=50,
@@ -263,12 +232,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     # TODO remove this after migration to shared_with + add calculation to
     # hact_field
     shared_partner = models.CharField(
-        help_text='Partner shared with UNDP or UNFPA?',
+        help_text=_('Partner shared with UNDP or UNFPA?'),
         choices=Choices(
-           'No',
-           'with UNDP',
-           'with UNFPA',
-           'with UNDP & UNFPA',
+            _('No'),
+            _('with UNDP'),
+            _('with UNFPA'),
+            _('with UNDP & UNFPA'),
         ),
         default='No',
         max_length=50
@@ -324,7 +293,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     rating = models.CharField(
         max_length=50,
         null=True,
-        verbose_name='Risk Rating'
+        verbose_name=_('Risk Rating')
     )
     type_of_assessment = models.CharField(
         max_length=50,
@@ -335,26 +304,26 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     )
     core_values_assessment_date = models.DateField(
         blank=True, null=True,
-        verbose_name='Date positively assessed against core values'
+        verbose_name=_('Date positively assessed against core values')
     )
     core_values_assessment = models.FileField(
         blank=True, null=True,
         upload_to='partners/core_values/',
         max_length=1024,
-        help_text='Only required for CSO partners'
+        help_text=_('Only required for CSO partners')
     )
     vision_synced = models.BooleanField(default=False)
     blocked = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
-    deleted_flag = models.BooleanField(default=False, verbose_name='Marked for deletion')
+    deleted_flag = models.BooleanField(default=False, verbose_name=_('Marked for deletion'))
 
     total_ct_cp = models.DecimalField(
         decimal_places=2, max_digits=12, blank=True, null=True,
-        help_text='Total Cash Transferred for Country Programme'
+        help_text=_('Total Cash Transferred for Country Programme')
     )
     total_ct_cy = models.DecimalField(
         decimal_places=2, max_digits=12, blank=True, null=True,
-        help_text='Total Cash Transferred per Current Year'
+        help_text=_('Total Cash Transferred per Current Year')
     )
 
     # TODO: add shared partner on hact_values: boolean, yes if shared with any of: [UNDP, UNFPA]
@@ -432,7 +401,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         elif 'planned_cash_transfer' in hact and hact['planned_cash_transfer'] > 100000.00 \
                 and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
             hact['micro_assessment_needed'] = 'Yes'
-        elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
+        elif partner.rating in [Assessment.LOW, Assessment.MEDIUM, Assessment.SIGNIFICANT, Assessment.HIGH] \
                 and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
                 and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
             hact['micro_assessment_needed'] = 'Yes'
@@ -455,7 +424,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @classmethod
     def audit_done(cls, partner, assesment=None):
-        audits = 0
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         audits = partner.assessments.filter(type='Scheduled Audit report').count()
         if assesment:
@@ -672,6 +640,17 @@ class Assessment(models.Model):
         ('Other', 'Other'),
     )
 
+    HIGH = 'high'
+    SIGNIFICANT = 'significant'
+    MEDIUM = 'medium'
+    LOW = 'low'
+    RISK_RATINGS = (
+        (HIGH, 'High'),
+        (SIGNIFICANT, 'Significant'),
+        (MEDIUM, 'Medium'),
+        (LOW, 'Low'),
+    )
+
     partner = models.ForeignKey(
         PartnerOrganization,
         related_name='assessments'
@@ -683,17 +662,17 @@ class Assessment(models.Model):
     names_of_other_agencies = models.CharField(
         max_length=255,
         blank=True, null=True,
-        help_text='List the names of the other agencies they have worked with'
+        help_text=_('List the names of the other agencies they have worked with')
     )
     expected_budget = models.IntegerField(
-        verbose_name='Planned amount',
+        verbose_name=_('Planned amount'),
         blank=True, null=True,
     )
     notes = models.CharField(
         max_length=255,
         blank=True, null=True,
-        verbose_name='Special requests',
-        help_text='Note any special requests to be considered during the assessment'
+        verbose_name=_('Special requests'),
+        help_text=_('Note any special requests to be considered during the assessment')
     )
     requested_date = models.DateField(
         auto_now_add=True
@@ -727,7 +706,7 @@ class Assessment(models.Model):
     # Basis for Risk Rating
     current = models.BooleanField(
         default=False,
-        verbose_name='Basis for risk rating'
+        verbose_name=_('Basis for risk rating')
     )
 
     tracker = FieldTracker()
@@ -1145,7 +1124,7 @@ class Intervention(TimeStampedModel):
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
         (SHPD, 'Simplified Humanitarian Programme Document'),
-        (SSFA, 'SSFA'),
+        (SSFA, 'Small Scale Funding Agreement'),
     )
 
     tracker = FieldTracker()
@@ -1292,27 +1271,22 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution(self):
-        # TODO: test this
         return self.planned_budget.partner_contribution if self.planned_budget else 0
 
     @cached_property
     def total_unicef_cash(self):
-        # TODO: test this
         return self.planned_budget.unicef_cash if self.planned_budget else 0
 
     @cached_property
     def total_in_kind_amount(self):
-        # TODO: test this
         return self.planned_budget.in_kind_amount if self.planned_budget else 0
 
     @cached_property
     def total_budget(self):
-        # TODO: test this
         return self.total_unicef_cash + self.total_partner_contribution + self.total_in_kind_amount
 
     @cached_property
     def total_unicef_budget(self):
-        # TODO: test this
         return self.total_unicef_cash + self.total_in_kind_amount
 
     @cached_property
@@ -1329,7 +1303,6 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_budget_local(self):
-        # TODO: test this
         if self.planned_budget:
             return self.planned_budget.in_kind_amount_local
         return 0
@@ -1901,7 +1874,7 @@ def get_file_path(instance, filename):
     return '/'.join(
         [connection.schema_name,
          'file_attachments',
-         'partner_org',
+         'partner_orgMacioce',
          str(instance.pca.agreement.partner.id),
          'agreements',
          str(instance.pca.agreement.id),

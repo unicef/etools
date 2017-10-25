@@ -2,55 +2,33 @@ from __future__ import unicode_literals
 
 import csv
 import datetime
+import json
 from datetime import date, timedelta
 from decimal import Decimal
-import json
 from unittest import skip, TestCase
 from urlparse import urlparse
 
+from actstream.models import model_stream
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.utils import timezone
-
-from actstream.models import model_stream
 from rest_framework import status
 
-from EquiTrack.factories import (
-    AgreementAmendmentFactory,
-    PartnerFactory,
-    UserFactory,
-    ResultFactory,
-    LocationFactory,
-    AgreementFactory,
-    PartnerStaffFactory,
-    CountryProgrammeFactory,
-    GroupFactory,
-    InterventionFactory,
-    GovernmentInterventionFactory,
-    FundsReservationHeaderFactory)
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from reports.models import ResultType, Sector
-from funds.models import FundsCommitmentItem, FundsCommitmentHeader
-from partners.models import (
-    Agreement,
-    AgreementAmendment,
-    Assessment,
-    GovernmentInterventionResult,
-    Intervention,
-    InterventionAmendment,
-    InterventionAttachment,
-    InterventionBudget,
-    InterventionPlannedVisits,
-    InterventionResultLink,
-    InterventionSectorLocationLink,
-    FileType,
-    PartnerOrganization,
-    PartnerType,
-)
-from partners.serializers.partner_organization_v2 import PartnerOrganizationExportSerializer
 import partners.views.partner_organization_v2
+from EquiTrack.factories import (
+    AgreementAmendmentFactory, AgreementFactory, CountryProgrammeFactory, FundsReservationHeaderFactory,
+    GovernmentInterventionFactory, GroupFactory, InterventionFactory, LocationFactory, PartnerFactory,
+    PartnerStaffFactory, ResultFactory, UserFactory,)
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from funds.models import FundsCommitmentHeader, FundsCommitmentItem
+from partners.models import (
+    Agreement, AgreementAmendment, Assessment, FileType, GovernmentInterventionResult, Intervention,
+    InterventionAmendment, InterventionAttachment, InterventionBudget, InterventionPlannedVisits,
+    InterventionResultLink, InterventionSectorLocationLink, PartnerOrganization, PartnerType,)
+from partners.serializers.partner_organization_v2 import PartnerOrganizationExportSerializer
+from reports.models import ResultType, Sector
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -65,7 +43,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
             ('partner-assessment-del', 'assessments/1/', {'pk': 1}),
             ('partner-add', 'add/', {}),
             ('partner-staff-members-list', '1/staff-members/', {'partner_pk': 1}),
-            )
+        )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partners/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
@@ -90,7 +68,7 @@ class TestPartnerOrganizationListView(APITenantTestCase):
             ('blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name',
              'partner_type', 'phone_number', 'rating', 'shared_partner', 'shared_with',
              'short_name', 'total_ct_cp', 'total_ct_cy', 'vendor_number', )
-             )
+        )
 
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
@@ -441,9 +419,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_assessments_invalid(self):
         today = datetime.date.today()
         assessments = [{
-                "id": self.assessment2.id,
-                "completed_date": datetime.date(today.year + 1, 1, 1),
-            }]
+            "id": self.assessment2.id,
+            "completed_date": datetime.date(today.year + 1, 1, 1),
+        }]
         data = {
             "assessments": assessments,
         }
@@ -461,9 +439,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_assessments_longago(self):
         today = datetime.date.today()
         assessments = [{
-                "id": self.assessment2.id,
-                "completed_date": datetime.date(today.year - 3, 1, 1),
-            }]
+            "id": self.assessment2.id,
+            "completed_date": datetime.date(today.year - 3, 1, 1),
+        }]
         data = {
             "assessments": assessments,
         }
@@ -479,9 +457,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_assessments_today(self):
         completed_date = datetime.date.today()
         assessments = [{
-                "id": self.assessment2.id,
-                "completed_date": completed_date,
-            }]
+            "id": self.assessment2.id,
+            "completed_date": completed_date,
+        }]
         data = {
             "assessments": assessments,
         }
@@ -497,9 +475,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_assessments_yesterday(self):
         completed_date = datetime.date.today() - timedelta(days=1)
         assessments = [{
-                "id": self.assessment2.id,
-                "completed_date": completed_date,
-            }]
+            "id": self.assessment2.id,
+            "completed_date": completed_date,
+        }]
         data = {
             "assessments": assessments,
         }
@@ -547,9 +525,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_assessments_tomorrow(self):
         completed_date = datetime.date.today() + timedelta(days=1)
         assessments = [{
-                "id": self.assessment2.id,
-                "completed_date": completed_date,
-            }]
+            "id": self.assessment2.id,
+            "completed_date": completed_date,
+        }]
         data = {
             "assessments": assessments,
         }
@@ -1497,16 +1475,15 @@ class TestInterventionViews(APITenantTestCase):
                     "audit": 1
                 },
             ],
-            "planned_budget":
-                {
-                    "partner_contribution": "2.00",
-                    "unicef_cash": "3.00",
-                    "in_kind_amount": "1.00",
-                    "partner_contribution_local": "3.00",
-                    "unicef_cash_local": "3.00",
-                    "in_kind_amount_local": "0.00",
-                    "total": "6.00"
-                },
+            "planned_budget": {
+                "partner_contribution": "2.00",
+                "unicef_cash": "3.00",
+                "in_kind_amount": "1.00",
+                "partner_contribution_local": "3.00",
+                "unicef_cash_local": "3.00",
+                "in_kind_amount_local": "0.00",
+                "total": "6.00"
+            },
             "sector_locations": [
                 {
                     "sector": self.sector.id,
@@ -2009,16 +1986,15 @@ class TestPartnershipDashboardView(APITenantTestCase):
             "offices": [],
             "fr_numbers": None,
             "population_focus": "Some focus",
-            "planned_budget":
-                {
-                    "partner_contribution": "2.00",
-                    "unicef_cash": "3.00",
-                    "in_kind_amount": "1.00",
-                    "partner_contribution_local": "3.00",
-                    "unicef_cash_local": "3.00",
-                    "in_kind_amount_local": "0.00",
-                    "total": "6.00"
-                },
+            "planned_budget": {
+                "partner_contribution": "2.00",
+                "unicef_cash": "3.00",
+                "in_kind_amount": "1.00",
+                "partner_contribution_local": "3.00",
+                "unicef_cash_local": "3.00",
+                "in_kind_amount_local": "0.00",
+                "total": "6.00"
+            },
             "sector_locations": [
                 {
                     "sector": self.sector.id,

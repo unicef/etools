@@ -1,14 +1,9 @@
 import tablib
-
 from django import template
 from django.template.loader import render_to_string
 from django.utils.datastructures import OrderedDict as SortedDict
 
-from partners.models import (
-    FundingCommitment,
-    GovernmentIntervention,
-    Intervention,
-)
+from partners.models import FundingCommitment, GovernmentIntervention, Intervention
 
 register = template.Library()
 

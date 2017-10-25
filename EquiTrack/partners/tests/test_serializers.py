@@ -1,11 +1,7 @@
 # Python imports
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-import datetime
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-# Django imports
+import datetime
 
 # 3rd party imports
 # The DRF source code says, "The recommended style for using `ValidationError` is to keep it namespaced
@@ -14,17 +10,14 @@ from rest_framework import serializers
 
 # Project imports
 from EquiTrack.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
-    CountryProgrammeFactory,
-    InterventionFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-    UserFactory,
-    )
+    AgreementAmendmentFactory, AgreementFactory, CountryProgrammeFactory, InterventionFactory, PartnerFactory,
+    PartnerStaffFactory, UserFactory,)
 from EquiTrack.tests.mixins import FastTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
+
+# Django imports
+
 
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
@@ -147,7 +140,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             context_manager,
             'A PCA with this partner already exists for this Country Programme Cycle. '
             'If the record is in "Draft" status please edit that record.'
-            )
+        )
 
     def test_create_ok_non_PCA_with_same_programme_and_partner(self):
         '''Ensure it is OK to create non-PCA agreements that have the same country programme and partner.
@@ -192,7 +185,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             'Agreement start date needs to be earlier than or the same as the end date'
-            )
+        )
 
     def test_create_ok_with_start_date_equal_end_date(self):
         '''Ensure it's OK to create an agreement where the start & end dates are the same.'''
@@ -253,7 +246,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             self.assertSimpleExceptionFundamentals(
                 context_manager,
                 'Partner type must be CSO for PCA or SSFA agreement types.'
-                )
+            )
 
         # Test for all agreement types that are not PCA or SSFA. These should not fail.
         agreement_types = [agreement_type for agreement_type in _ALL_AGREEMENT_TYPES
@@ -303,7 +296,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             context_manager,
             'SSFA signatures are captured at the Document (TOR) level, please clear the '
             'signatures and dates and add them to the TOR'
-            )
+        )
 
     def test_create_ok_and_fail_due_to_signatures_non_SSFA(self):
         '''Ensure signature validation works correctly for non-SSFA types'''
@@ -364,7 +357,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             context_manager,
             'None of the dates can be in the future; '
             'If dates are set, signatories are required'
-            )
+        )
 
         # This should fail because signed_by_unicef_date and signed_by are both set, but the signed by date is
         # in the future.
@@ -382,7 +375,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             context_manager,
             'None of the dates can be in the future; '
             'If dates are set, signatories are required'
-            )
+        )
 
         # This should fail because signed_by_partner_date is set but not partner_manager
         data = {
@@ -397,7 +390,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             context_manager,
             'None of the dates can be in the future; '
             'If dates are set, signatories are required'
-            )
+        )
 
         # This should fail because signed_by_partner_date and partner_manager are both set, but the signed by date is
         # in the future.
@@ -415,7 +408,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             context_manager,
             'None of the dates can be in the future; '
             'If dates are set, signatories are required'
-            )
+        )
 
     def test_update_intervention(self):
         '''Ensure agreement update fails if intervention dates aren't appropriate.
@@ -448,7 +441,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             "Start and end dates don't match the Document's start and end"
-            )
+        )
 
         # Set start date and save again; it should still fail because end date isn't set.
         intervention.start = agreement.start
@@ -460,7 +453,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             "Start and end dates don't match the Document's start and end"
-            )
+        )
 
         # Set start date and save again; it should still fail because end date doesn't match agreement end date.
         intervention.end = agreement.end + datetime.timedelta(days=100)
@@ -472,7 +465,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             "Start and end dates don't match the Document's start and end"
-            )
+        )
 
         # Set start date and save again; it should now succeed.
         intervention.end = agreement.end
@@ -503,7 +496,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             "Cannot change fields while in draft: partner"
-            )
+        )
 
     def test_update_fail_due_to_amendments_unsigned(self):
         '''Ensure agreement update fails if amendments aren't signed.
@@ -531,7 +524,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertAmendmentExceptionFundamentals(
             context_manager,
             'Please check that the Document is attached and signatures are not in the future'
-            )
+        )
 
     def test_update_with_due_to_amendments_signed_date(self):
         '''Ensure agreement update fails if amendments don't have a signed_date or if it's in the future,
@@ -563,7 +556,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertAmendmentExceptionFundamentals(
             context_manager,
             'Please check that the Document is attached and signatures are not in the future'
-            )
+        )
 
         # Set the signed date, but set it to the future which should cause a failure.
         amendment.signed_date = self.today + datetime.timedelta(days=5)
@@ -575,7 +568,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertAmendmentExceptionFundamentals(
             context_manager,
             'Please check that the Document is attached and signatures are not in the future'
-            )
+        )
 
         # Change the amendment so it will pass validation.
         amendment.signed_date = self.today
@@ -609,7 +602,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             'Agreement cannot transition to signed until the start date is less than or equal to today'
-            )
+        )
 
         # Populate start date, but with a date that's still invalid (in the future)
         agreement.start = self.today + datetime.timedelta(days=5)
@@ -622,7 +615,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             'Agreement cannot transition to signed until the start date is less than or equal to today'
-            )
+        )
 
         # Fix problem with start date, now allow blank end date to cause a failure.
         agreement.start = self.today - datetime.timedelta(days=5)
@@ -634,7 +627,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             'Agreement cannot transition to signed unless the end date is today or after'
-            )
+        )
 
         # Populate end date, but with an invalid date.
         agreement.end = self.today - datetime.timedelta(days=3)
@@ -644,7 +637,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             'Agreement cannot transition to signed unless the end date is today or after'
-            )
+        )
 
         # Fix end date
         agreement.end = self.today
@@ -695,7 +688,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             'agreement_transition_to_ended_invalid'
-            )
+        )
 
     def test_ensure_field_read_write_status(self):
         '''Ensure that the fields I expect to be read-only are read-only; also confirm the converse'''
