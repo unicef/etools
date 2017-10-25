@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from ..models import Audit, AuditorFirm, AuditorStaffMember, Engagement, EngagementActionPoint, \
-    MicroAssessment, PurchaseOrder, SpotCheck, Finding
+    MicroAssessment, PurchaseOrder, SpotCheck, Finding, SpecificProcedure, SpecialAuditRecommendation
 from .engagement import DetailedFindingInfoSerializer
 from .risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from attachments.models import Attachment
@@ -122,7 +122,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
             'date_of_field_visit', 'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef', 'partner_contacted_at',
             'action_points', 'engagement_attachments', 'report_attachments',
-            'total_value', 'start_date', 'end_date',
+            'total_value', 'start_date', 'end_date', 'joint_audit', 'shared_ip_with'
         ]
 
     def get_status_display(self, obj):
@@ -207,3 +207,25 @@ class SpotCheckPDFSerializer(EngagementPDFSerializer):
 
     def get_low_priority_findings(self, obj):
         return FindingPDFSerializer(obj.findings.filter(priority=Finding.PRIORITIES.low), many=True).data
+
+
+class SpecificProcedurePDFSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecificProcedure
+        fields = ['id', 'description', 'finding']
+
+
+class SpecialAuditRecommendationPDFSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecialAuditRecommendation
+        fields = ['id', 'description']
+
+
+class SpecialAuditPDFSerializer(EngagementPDFSerializer):
+    specific_procedures = SpecificProcedurePDFSerializer(many=True)
+    other_recommendations = SpecialAuditRecommendationPDFSerializer(many=True)
+
+    class Meta(EngagementPDFSerializer.Meta):
+        fields = EngagementPDFSerializer.Meta.fields + [
+            'specific_procedures', 'other_recommendations',
+        ]

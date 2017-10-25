@@ -1,0 +1,56 @@
+{% extends "audit/engagement_pdf.html" %}
+
+{% block extra_content %}
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Specific Procedure To Be Performed</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td colspan="2">Finding Number</td>
+          <td colspan="3">Description</td>
+          <td colspan="3">Finding</td>
+        </tr>
+        {% if engagement.specific_procedures %}
+          {% for specific_procedure in engagement.specific_procedures %}
+          <tr>
+            <td colspan="2">{{ forloop.counter }}</td>
+            <td colspan="3">{{ specific_procedure.description|default:"-" }}</td>
+            <td colspan="3">{{ specific_procedure.finding|default:"-" }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="2">-</td><td colspan="3">-</td><td colspan="3">-</td>
+          </tr>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Other recommendations</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td colspan="2">Finding Number</td>
+          <td colspan="6">Description</td>
+        </tr>
+        {% if engagement.other_recommendations %}
+          {% for recommendation in engagement.other_recommendations %}
+          <tr>
+            <td colspan="2">{{ forloop.counter }}</td>
+            <td colspan="6">{{ recommendation.description|default:"-" }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="2">-</td><td colspan="6">-</td>
+          </tr>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+{% endblock %}
