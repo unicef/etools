@@ -639,7 +639,7 @@ class ActionPoint(models.Model):
         subject = '[eTools] ACTION POINT ASSIGNED to {}'.format(self.person_responsible)
         url = 'https://{host}/t2f/action-point/{action_point_id}/'.format(host=settings.HOST,
                                                                           action_point_id=self.id)
-        trip_url = 'https://{host}/t2f/edit-travel/{travel_id}'.format(host=settings.HOST, travel_id= self.travel.id)
+        trip_url = 'https://{host}/t2f/edit-travel/{travel_id}'.format(host=settings.HOST, travel_id=self.travel.id)
         html_content = render_to_string('emails/action_point_assigned.html',
                                         {'action_point': serializer.data, 'url': url, 'trip_url': trip_url})
 
