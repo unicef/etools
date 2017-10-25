@@ -186,7 +186,7 @@ class Result(MPTTModel):
     Represents a result, wbs is unique
 
     Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.Sector`
     Relates to :model:`reports.ResultType`
     """
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
@@ -309,26 +309,6 @@ class LowerResult(TimeStampedModel):
                 latest_ll_id + 1
             )
         return super(LowerResult, self).save(**kwargs)
-
-
-@python_2_unicode_compatible
-class Goal(models.Model):
-    """
-    Represents a goal for the humanitarian response plan
-
-    Relates to :model:`reports.ResultStructure`
-    Relates to :model:`reports.Sector`
-    """
-    sector = models.ForeignKey(Sector, related_name='goals')
-    name = models.CharField(max_length=512, unique=True)
-    description = models.CharField(max_length=512, blank=True)
-
-    class Meta:
-        verbose_name = 'CCC'
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
 
 
 @python_2_unicode_compatible
@@ -497,11 +477,10 @@ class Indicator(models.Model):
     """
     Represents an indicator
 
-    Relates to :model:`reports.ResultStructure`
-    Relates to :model:`reports.Sector`
+    Relates to :model:`reports.Unit`
     Relates to :model:`reports.Result`
     """
-    # TODO: rename this to RAMIndicator and rename/remove RAMIndicator
+    # TODO: rename this to RAMIndicator
 
     sector = models.ForeignKey(
         Sector,
@@ -537,32 +516,6 @@ class Indicator(models.Model):
             u'Baseline: {}'.format(self.baseline) if self.baseline else u'',
             u'Target: {}'.format(self.target) if self.target else u''
         )
-
-    def programmed_amounts(self):
-        from partners.models import PCA
-        return self.resultchain_set.filter(
-            partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
-        )
-
-    def programmed(self, result_structure=None):
-        programmed = self.programmed_amounts()
-        if result_structure:
-            programmed = programmed.filter(
-                partnership__result_structure=result_structure,
-
-            )
-        total = programmed.aggregate(models.Sum('target'))
-        return total[total.keys()[0]] or 0
-
-    def progress(self, result_structure=None):
-        programmed = self.programmed_amounts()
-        if result_structure:
-            programmed = programmed.filter(
-                partnership__result_structure=result_structure,
-
-            )
-        total = programmed.aggregate(models.Sum('current_progress'))
-        return (total[total.keys()[0]] or 0) + self.current if self.current else 0
 
     def save(self, *args, **kwargs):
         # Prevent from saving empty strings as code because of the unique together constraint

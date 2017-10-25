@@ -1,8 +1,8 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from reports.models import Sector
 from t2f.serializers.user_data import T2FUserDataSerializer
-from users.models import User, UserProfile, Group, Office, Section, Country
+from users.models import Country, Group, Office, UserProfile
 
 
 class SimpleCountrySerializer(serializers.ModelSerializer):
@@ -71,7 +71,7 @@ class UserSerializer(serializers.ModelSerializer):
     groups = GroupSerializer(many=True)
 
     class Meta:
-        model = User
+        model = get_user_model()
         exclude = ('password', 'groups', 'user_permissions')
 
 
@@ -129,7 +129,7 @@ class SimpleUserSerializer(serializers.ModelSerializer):
     profile = SimpleNestedProfileSerializer()
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             'id',
             'username',
@@ -147,7 +147,7 @@ class MinimalUserSerializer(SimpleUserSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = ('id', 'name', 'first_name', 'last_name')
 
 
@@ -177,7 +177,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
             countries = []
 
         try:
-            user = User.objects.create(**validated_data)
+            user = get_user_model().objects.create(**validated_data)
             user.profile.country = user_profile['country']
             user.profile.office = user_profile['office']
             user.profile.section = user_profile['section']
@@ -198,7 +198,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
         return user
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             'id',
             'username',

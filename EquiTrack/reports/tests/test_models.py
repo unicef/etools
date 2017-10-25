@@ -8,7 +8,6 @@ from unittest import skipIf, TestCase
 
 from EquiTrack.factories import (
     CountryProgrammeFactory,
-    GoalFactory,
     IndicatorFactory,
     IndicatorBlueprintFactory,
     LowerResultFactory,
@@ -74,15 +73,6 @@ class TestStrUnicode(TestCase):
         instance = LowerResultFactory.build(name=u'\xccsland', code=u'xyz')
         self.assertEqual(str(instance), b'xyz: \xc3\x8csland')
         self.assertEqual(unicode(instance), u'xyz: \xccsland')
-
-    def test_goal(self):
-        instance = GoalFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
-
-        instance = GoalFactory.build(name=u'\xccsland')
-        self.assertEqual(str(instance), b'\xc3\x8csland')
-        self.assertEqual(unicode(instance), u'\xccsland')
 
     def test_unit(self):
         instance = UnitFactory.build(type=b'xyz')

@@ -4,11 +4,10 @@ import json
 from unittest import skip
 from django.core.urlresolvers import reverse
 
-from rest_framework import status
-
-from EquiTrack.factories import UserFactory, GroupFactory, CountryFactory, SectionFactory, OfficeFactory
+from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, SectionFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory
+from rest_framework import status
 
 
 class TestSectionViews(APITenantTestCase):
