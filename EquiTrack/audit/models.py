@@ -105,7 +105,7 @@ def _has_action_permission(action):
 class Engagement(TimeStampedModel, models.Model):
     TYPES = Choices(
         ('audit', _('Audit')),
-        ('ma', _('Micro Accessment')),
+        ('ma', _('Micro Assessment')),
         ('sc', _('Spot Check')),
         ('sa', _('Special Audit')),
     )
