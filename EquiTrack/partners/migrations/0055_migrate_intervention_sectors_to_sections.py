@@ -4,11 +4,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models, connection, transaction
 
-# TODO: map the per-tenant reports.sectors to the general users.sections
-# we are still waiting for the mapping
-MAPPER = {
-    #expecting something like this: {'Sudan':{'EDUCATION(sector/tenant)': 'EDUCATION(section)'}}, {'Syria': {..}}
-}
 
 class Migration(migrations.Migration):
 
@@ -23,45 +18,10 @@ class Migration(migrations.Migration):
     @transaction.atomic
     def migrate_sector_location_links_to_intervention_section(apps, schema_editor):
         InterventionSectorLocationLink = apps.get_model('partners', 'InterventionSectorLocationLink')
-        Intervention = apps.get_model('partners', 'Intervention')
-        Section = apps.get_model('users', 'Section')
-        Country = apps.get_model('users', 'Country')
-        tenant = Country.objects.get(schema_name=connection.schema_name)
-        countrySectorMap = MAPPER.get(tenant.name, None)
-
-        if countrySectorMap is not None:
-            print 'mapping intervention sectors to user sections by hardcoded list for %s' % connection.schema_name
-        else:
-            print 'mapping intervention sectors to user sections by name matching for %s' % connection.schema_name
 
         for interventionsector in InterventionSectorLocationLink.objects.all():
-            # if we have a hardcoded mapping for the current tenant, use it. otherwise try to match them by name.
-            # also, for now, we assume that if a mapping exists, it maps ALL of the sectors to sections
-            if countrySectorMap is not None:
-                sectionName = countrySectorMap.get(interventionsector.sector.name, None)
-
-                try:
-                    sectionSectorMatch = Section.objects.get(name=sectionName)
-
-                    Intervention.objects.get(pk=interventionsector.intervention.id).sections.add(
-                        sectionSectorMatch
-                    )
-                except Section.DoesNotExist:
-                    print "################################################### " \
-                          "Could not find the corresponding section for sector %s" % (interventionsector.sector.name)
-
-            else:
-                #try to match intervention sectors with user sections by name
-                try:
-                    sectionSectorMatch = Section.objects.get(name=interventionsector.sector.name)
-
-                    Intervention.objects.get(pk=interventionsector.intervention.id).sections.add(
-                        sectionSectorMatch
-                    )
-                except Section.DoesNotExist:
-                    print "################################################### " \
-                          "Could not find the corresponding section for sector %s" % (interventionsector.sector.name)
-
+            intervention = interventionsector.intervention
+            intervention.sections.add(interventionsector.sector)
 
     operations = [
         migrations.RunPython(migrate_sector_location_links_to_intervention_section, reverse_code=reverse)
