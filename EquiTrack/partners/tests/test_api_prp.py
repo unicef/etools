@@ -70,6 +70,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
                 del expected_intervention['expected_results'][j]['indicators'][0]['id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['locations'][0]['id']
+                del expected_intervention['expected_results'][j]['indicators'][0]['locations'][0]['admin_level']
 
                 del actual_intervention['expected_results'][j]['id']
                 del actual_intervention['expected_results'][j]['result_link']
@@ -77,6 +78,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
                 del actual_intervention['expected_results'][j]['indicators'][0]['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['locations'][0]['id']
+                del actual_intervention['expected_results'][j]['indicators'][0]['locations'][0]['admin_level']
 
         self.assertEqual(response, expected_interventions)
 
