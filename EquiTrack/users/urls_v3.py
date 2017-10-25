@@ -1,11 +1,7 @@
-
 from django.conf.urls import url
+from views_v3 import CountryView, MyProfileAPIView, UsersDetailAPIView, UsersListApiView
 
-from .views import (
-    ChangeUserCountryView,
-)
-from views_v3 import UsersListApiView, UsersDetailAPIView, CountryView, MyProfileAPIView
-
+from users.views import ChangeUserCountryView
 
 urlpatterns = (
     # api

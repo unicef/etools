@@ -5,7 +5,6 @@ from django.db import connection
 from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.forms import Textarea
-from django.forms.models import BaseInlineFormSet
 
 
 class AutoSizeTextForm(forms.ModelForm):
@@ -17,16 +16,6 @@ class AutoSizeTextForm(forms.ModelForm):
             'name': Textarea(),
             'description': Textarea(),
         }
-
-
-class ParentInlineAdminFormSet(BaseInlineFormSet):
-    """
-    Passes the parent instance to the form constructor for easy
-    access by child inline forms to use for conditional filtering
-    """
-    def _construct_form(self, i, **kwargs):
-        kwargs['parent_object'] = self.instance
-        return super(ParentInlineAdminFormSet, self)._construct_form(i, **kwargs)
 
 
 class UserGroupForm(forms.ModelForm):

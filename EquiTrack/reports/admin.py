@@ -6,7 +6,6 @@ from mptt.admin import MPTTModelAdmin
 from EquiTrack.forms import AutoSizeTextForm
 from reports.models import (
     Sector,
-    Goal,
     Unit,
     Indicator,
     Result,
@@ -55,52 +54,6 @@ class SectorAdmin(admin.ModelAdmin):
     list_editable = ('color', 'dashboard',)
 
 
-class GoalAdmin(admin.ModelAdmin):
-    form = AutoSizeTextForm
-
-
-# class IndicatorProgressInlineAdmin(admin.TabularInline):
-#     can_delete = False
-#     model = IndicatorProgress
-#     verbose_name = 'Programmed'
-#     verbose_name_plural = 'Programmed'
-#     extra = 0
-#     fields = (
-#         'pca_sector',
-#         'pca_status',
-#         'result_structure',
-#         'amendment_number',
-#         'programmed',
-#         'changeform_link',
-#     )
-#     readonly_fields = (
-#         'pca_sector',
-#         'pca_status',
-#         'result_structure',
-#         'amendment_number',
-#         'programmed',
-#         'changeform_link',
-#     )
-#
-#     def has_add_permission(self, request):
-#         return False
-#
-#     def result_structure(self, obj):
-#         return obj.pca_sector.pca.result_structure
-#
-#     def amendment_number(self, obj):
-#         return obj.pca_sector.pca.amendment_number
-#
-#     def pca_status(self, obj):
-#         return obj.pca_sector.pca.status
-#
-#     def changeform_link(self, obj):
-#         return get_changeform_link(obj.pca_sector.pca,
-#                                    link_name='View Intervention')
-#     changeform_link.allow_tags = True
-#     changeform_link.short_description = 'View Intervention Details'
-
-
 class IndicatorAdmin(admin.ModelAdmin):
     form = IndicatorAdminForm
     search_fields = ('name', 'code')
@@ -121,9 +74,6 @@ class IndicatorAdmin(admin.ModelAdmin):
     readonly_fields = (
         'ram_indicator',
     )
-    # inlines = [
-    #     IndicatorProgressInlineAdmin,
-    # ]
 
 
 class LowerIndicatorAdmin(admin.ModelAdmin):
@@ -239,7 +189,6 @@ class AppliedIndicatorAdmin(admin.ModelAdmin):
 admin.site.register(Result, ResultAdmin)
 admin.site.register(CountryProgramme)
 admin.site.register(Sector, SectorAdmin)
-admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
 # admin.site.register(ResultChain)
