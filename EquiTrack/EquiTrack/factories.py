@@ -200,17 +200,6 @@ class FileTypeFactory(factory.django.DjangoModelFactory):
     name = partner_models.FileType.PROGRESS_REPORT
 
 
-class PartnershipFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = partner_models.PCA
-
-    partner = factory.SubFactory(PartnerFactory)
-    agreement = factory.SubFactory(AgreementFactory)
-    partnership_type = u'PD'
-    title = u'To save the galaxy from the Empire'
-    initiation_date = datetime.today()
-
-
 class InterventionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.Intervention
@@ -295,14 +284,6 @@ class LowerResultFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Lower Result {}'.format(n))
     code = factory.Sequence(lambda n: 'Lower Result Code {}'.format(n))
-
-
-class GoalFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Goal
-
-    name = factory.Sequence(lambda n: 'Goal {}'.format(n))
-    sector = factory.SubFactory(SectorFactory)
 
 
 class UnitFactory(factory.django.DjangoModelFactory):

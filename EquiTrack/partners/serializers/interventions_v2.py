@@ -18,7 +18,7 @@ from partners.models import (
     InterventionResultLink,
 )
 from reports.models import LowerResult
-from reports.serializers.v1 import SectorLightSerializer
+from reports.serializers.v1 import SectorSerializer
 from reports.serializers.v2 import (
     IndicatorSerializer,
     LowerResultCUSerializer,
@@ -140,7 +140,7 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
 
 class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
     locations = LocationLightSerializer(many=True)
-    sector = SectorLightSerializer()
+    sector = SectorSerializer()
 
     class Meta:
         model = InterventionSectorLocationLink
@@ -169,7 +169,6 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
     # cp_output = ResultLightSerializer()
-    # ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)
 
     class Meta:
@@ -402,7 +401,7 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
 
 
 class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer):
-    sector = SectorLightSerializer()
+    sector = SectorSerializer()
 
     class Meta:
         model = InterventionSectorLocationLink

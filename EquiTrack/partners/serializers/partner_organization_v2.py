@@ -7,7 +7,6 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from partners.serializers.v1 import PartnerOrganizationSerializer
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
 
 from partners.models import (
@@ -241,12 +240,3 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_min_requirements",
             "hact_values",
         )
-
-
-class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
-
-    partner = PartnerOrganizationSerializer(read_only=True)
-
-    class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
