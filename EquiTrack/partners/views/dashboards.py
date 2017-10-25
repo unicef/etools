@@ -40,7 +40,7 @@ class InterventionPartnershipDashView(ListCreateAPIView):
                                             output_field=DateTimeField())))
 
         qs = qs.annotate(days_since_last_pv=delta)
-        return qs
+        return qs.order_by('agreement__partner__name')
 
     def list(self, request):
         """
