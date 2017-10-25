@@ -311,5 +311,5 @@ class TPMVisitViewSet(
             request, "tpm/visit_letter_pdf.html", context={
                 "visit": visit
             },
-            filename="visit_letter_{}.csv".format(visit.reference_number)
+            filename="visit_letter_{}.pdf".format(visit.reference_number)
         )
