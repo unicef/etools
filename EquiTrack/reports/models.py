@@ -10,7 +10,6 @@ from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
 
 from locations.models import Location
-from users.models import Section
 
 
 class Quarter(models.Model):
@@ -461,7 +460,7 @@ class AppliedIndicator(TimeStampedModel):
 
     indicator = models.ForeignKey(IndicatorBlueprint, null=True, blank=True)
 
-    section = models.ForeignKey(Section, null=True, blank=True)
+    section = models.ForeignKey(Sector, null=True, blank=True)
 
     cluster_indicator_id = models.PositiveIntegerField(blank=True, null=True)
     cluster_indicator_title = models.CharField(max_length=1024, blank=True, null=True)
