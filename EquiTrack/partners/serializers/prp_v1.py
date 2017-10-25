@@ -53,11 +53,12 @@ class PartnerFocalPointSerializer(serializers.ModelSerializer):
 class IndicatorLocationSerializer(serializers.ModelSerializer):
     pcode = serializers.CharField(source='p_code', read_only=True)
     location_type = serializers.CharField(source='gateway.name', read_only=True)
+    admin_level = serializers.IntegerField(source='gateway.admin_level')
 
     class Meta:
         model = Location
         depth = 1
-        fields = ('name', 'pcode', 'location_type')
+        fields = ('id', 'name', 'pcode', 'location_type', 'admin_level')
 
 
 class DisaggregationSerializer(serializers.ModelSerializer):
@@ -139,6 +140,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     business_area_code = serializers.SerializerMethodField()
     partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
+    agreement = serializers.CharField(read_only=True, source='agreement.agreement_number')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
     agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True,
                                                     source='agreement.authorized_officers')
@@ -172,6 +174,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'number',
             'status',
             'partner_org',
+            'agreement',
             'unicef_focal_points',
             'agreement_auth_officers',
             'focal_points',

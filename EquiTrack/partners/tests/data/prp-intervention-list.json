@@ -15,6 +15,8 @@
             ],
             "locations": [
               {
+                "id": 1,
+                "admin_level": 0,
                 "pcode": "a-p-code",
                 "name": "A Location",
                 "location_type": "A Gateway"
@@ -33,6 +35,7 @@
         "title": "Lower Result 1"
       }
     ],
+    "agreement": "PCA20172036",
     "unicef_focal_points": [],
     "end_date": "2017-12-13",
     "agreement_auth_officers": [],
@@ -63,6 +66,7 @@
     "expected_results": [],
     "unicef_focal_points": [],
     "end_date": null,
+    "agreement": "PCA20172036",
     "agreement_auth_officers": [],
     "business_area_code": "ZZZ",
     "title": "Intervention 2",
@@ -91,6 +95,7 @@
     "expected_results": [],
     "unicef_focal_points": [],
     "end_date": null,
+    "agreement": "PCA20172036",
     "agreement_auth_officers": [],
     "business_area_code": "ZZZ",
     "title": "Intervention 1",

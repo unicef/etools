@@ -47,6 +47,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
 
         # uncomment if you need to see the response json / regenerate the test file
         # print json.dumps(response, indent=2)
+        # TODO: think of how to improve this test without having to dig through the object to delete ids
         json_filename = os.path.join(os.path.dirname(__file__), 'data', 'prp-intervention-list.json')
         with open(json_filename) as f:
             expected_interventions = json.loads(f.read())
@@ -60,18 +61,22 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
                 del actual_intervention[dynamic_key]
 
             del actual_intervention['partner_org']['id']
+            del actual_intervention['agreement']
             del expected_intervention['partner_org']['id']
+            del expected_intervention['agreement']
             for j in range(len(expected_intervention['expected_results'])):
                 del expected_intervention['expected_results'][j]['id']
                 del expected_intervention['expected_results'][j]['cp_output']['id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
+                del expected_intervention['expected_results'][j]['indicators'][0]['locations'][0]['id']
 
                 del actual_intervention['expected_results'][j]['id']
                 del actual_intervention['expected_results'][j]['result_link']
                 del actual_intervention['expected_results'][j]['cp_output']['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
+                del actual_intervention['expected_results'][j]['indicators'][0]['locations'][0]['id']
 
         self.assertEqual(response, expected_interventions)
 

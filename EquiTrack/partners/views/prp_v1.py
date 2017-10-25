@@ -39,7 +39,7 @@ class PRPInterventionListAPIView(ListAPIView):
             'result_links__ll_results',
             'result_links__ll_results__applied_indicators__indicator',
             'result_links__ll_results__applied_indicators__disaggregation',
-            'result_links__ll_results__applied_indicators__locations',
+            'result_links__ll_results__applied_indicators__locations__gateway',
             'reporting_periods',
             'planned_budget__currency',
             'frs',
