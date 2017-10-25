@@ -10,7 +10,6 @@ from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
 
 from locations.models import Location
-from users.models import Section
 
 
 class Quarter(models.Model):
@@ -429,7 +428,7 @@ class Disaggregation(TimeStampedModel):
     active = models.BooleanField(default=False)
 
     def __str__(self):
-        return "Disaggregation <pk:%s>" % self.id
+        return self.name
 
 
 @python_2_unicode_compatible
@@ -445,7 +444,7 @@ class DisaggregationValue(TimeStampedModel):
     active = models.BooleanField(default=False)
 
     def __str__(self):
-        return "Disaggregation Value <pk:%s>" % self.id
+        return "Disaggregation Value {} -> {}".format(self.disaggregation, self.value)
 
 
 class AppliedIndicator(TimeStampedModel):
@@ -461,7 +460,7 @@ class AppliedIndicator(TimeStampedModel):
 
     indicator = models.ForeignKey(IndicatorBlueprint, null=True, blank=True)
 
-    section = models.ForeignKey(Section, null=True, blank=True)
+    section = models.ForeignKey(Sector, null=True, blank=True)
 
     cluster_indicator_id = models.PositiveIntegerField(blank=True, null=True)
     cluster_indicator_title = models.CharField(max_length=1024, blank=True, null=True)

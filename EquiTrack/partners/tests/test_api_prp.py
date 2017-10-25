@@ -47,6 +47,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
 
         # uncomment if you need to see the response json / regenerate the test file
         # print json.dumps(response, indent=2)
+        # TODO: think of how to improve this test without having to dig through the object to delete ids
         json_filename = os.path.join(os.path.dirname(__file__), 'data', 'prp-intervention-list.json')
         with open(json_filename) as f:
             expected_interventions = json.loads(f.read())
@@ -58,16 +59,26 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
             for dynamic_key in ['id', 'number', 'start_date', 'end_date', 'update_date']:
                 del expected_intervention[dynamic_key]
                 del actual_intervention[dynamic_key]
+
+            del actual_intervention['partner_org']['id']
+            del actual_intervention['agreement']
+            del expected_intervention['partner_org']['id']
+            del expected_intervention['agreement']
             for j in range(len(expected_intervention['expected_results'])):
                 del expected_intervention['expected_results'][j]['id']
                 del expected_intervention['expected_results'][j]['cp_output']['id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
+                del expected_intervention['expected_results'][j]['indicators'][0]['locations'][0]['id']
+                del expected_intervention['expected_results'][j]['indicators'][0]['locations'][0]['admin_level']
+
                 del actual_intervention['expected_results'][j]['id']
                 del actual_intervention['expected_results'][j]['result_link']
                 del actual_intervention['expected_results'][j]['cp_output']['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
+                del actual_intervention['expected_results'][j]['indicators'][0]['locations'][0]['id']
+                del actual_intervention['expected_results'][j]['indicators'][0]['locations'][0]['admin_level']
 
         self.assertEqual(response, expected_interventions)
 
@@ -89,7 +100,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
             self.assertEqual(expected_results, len(response['results']))
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 19
+        EXPECTED_QUERIES = 21
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'

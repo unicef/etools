@@ -8,8 +8,8 @@ from locations.models import Location
 from partners.models import (
     Intervention,
     PartnerStaffMember,
-    PartnerOrganization
-)
+    PartnerOrganization,
+    InterventionReportingPeriod)
 from reports.models import Result, AppliedIndicator, LowerResult, Disaggregation
 
 
@@ -19,7 +19,7 @@ class PartnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         depth = 1
-        fields = ('name', 'unicef_vendor_number', 'short_name')
+        fields = ('id', 'name', 'unicef_vendor_number', 'short_name')
 
 
 class AuthOfficerSerializer(serializers.ModelSerializer):
@@ -53,11 +53,12 @@ class PartnerFocalPointSerializer(serializers.ModelSerializer):
 class IndicatorLocationSerializer(serializers.ModelSerializer):
     pcode = serializers.CharField(source='p_code', read_only=True)
     location_type = serializers.CharField(source='gateway.name', read_only=True)
+    admin_level = serializers.IntegerField(source='gateway.admin_level')
 
     class Meta:
         model = Location
         depth = 1
-        fields = ('name', 'pcode', 'location_type')
+        fields = ('id', 'name', 'pcode', 'location_type', 'admin_level')
 
 
 class DisaggregationSerializer(serializers.ModelSerializer):
@@ -127,12 +128,19 @@ class PRPResultSerializer(serializers.ModelSerializer):
         )
 
 
+class ReportingPeriodsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReportingPeriod
+        fields = ('id', 'start_date', 'end_date', 'due_date')
+
+
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     # todo: do these need to be lowercased?
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     business_area_code = serializers.SerializerMethodField()
     partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
+    agreement = serializers.CharField(read_only=True, source='agreement.agreement_number')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
     agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True,
                                                     source='agreement.authorized_officers')
@@ -146,14 +154,17 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
                                              max_digits=20, decimal_places=2)
     unicef_budget_currency = serializers.CharField(source='default_budget_currency', read_only=True)
     # todo: is this the right field?
-    funds_received = serializers.DecimalField(source='total_budget', read_only=True,
-                                              max_digits=20, decimal_places=2)
+    funds_received = serializers.SerializerMethodField(read_only=True)
     funds_received_currency = serializers.CharField(source='fr_currency', read_only=True)
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
     update_date = serializers.DateTimeField(source='modified')
+    reporting_periods = ReportingPeriodsSerializer(many=True, read_only=True)
 
     def get_business_area_code(self, obj):
         return connection.tenant.business_area_code
+
+    def get_funds_received(self, obj):
+        return obj.total_frs['total_actual_amt']
 
     class Meta:
         model = Intervention
@@ -161,7 +172,9 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'id', 'title', 'business_area_code',
             'offices',  # todo: convert to names, not ids
             'number',
+            'status',
             'partner_org',
+            'agreement',
             'unicef_focal_points',
             'agreement_auth_officers',
             'focal_points',
@@ -169,7 +182,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'cso_budget', 'cso_budget_currency',
             'unicef_budget', 'unicef_budget_currency',
             'funds_received', 'funds_received_currency',
-            # 'reporting_frequencies',  # todo: figure out where this comes from
+            'reporting_periods',
             'expected_results',
             'update_date'
         )

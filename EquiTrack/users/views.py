@@ -13,14 +13,15 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
 from audit.models import Auditor
+from reports.models import Sector
+from reports.serializers.v1 import SectorLightSerializer
 from users.serializers import MinimalUserSerializer
 from users.forms import ProfileForm
-from users.models import User, UserProfile, Country, Office, Section
+from users.models import User, UserProfile, Country, Office
 from .serializers import (
     UserSerializer,
     GroupSerializer,
     OfficeSerializer,
-    SectionSerializer,
     UserCreationSerializer,
     SimpleProfileSerializer,
     SimpleUserSerializer,
@@ -120,7 +121,7 @@ class CountriesViewSet(ListAPIView):
     serializer_class = CountrySerializer
 
     def get_queryset(self):
-        return Country.objects.all()
+        return Country.objects.prefetch_related('local_currency').all()
 
 
 class MyProfileAPIView(RetrieveUpdateAPIView):
@@ -353,16 +354,15 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
 
 class SectionViewSet(mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
-                     mixins.CreateModelMixin,
                      viewsets.GenericViewSet):
     """
     Returns a list of all Sections
     """
-    serializer_class = SectionSerializer
+    serializer_class = SectorLightSerializer
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        queryset = Section.objects.all()
+        queryset = Sector.objects.all()
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
             try:

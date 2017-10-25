@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from reports.models import Sector
 from t2f.serializers.user_data import T2FUserDataSerializer
 from users.models import User, UserProfile, Group, Office, Section, Country
 
@@ -72,18 +73,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         exclude = ('password', 'groups', 'user_permissions')
-
-
-class SectionSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Section
-        fields = (
-            'id',
-            'name'
-        )
 
 
 class UserProfileCreationSerializer(serializers.ModelSerializer):
@@ -228,6 +217,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
 
 class CountrySerializer(SimpleUserSerializer):
     local_currency_id = serializers.IntegerField(source='local_currency.id', read_only=True)
+    local_currency_code = serializers.CharField(source='local_currency.code', read_only=True)
 
     class Meta:
         model = Country
@@ -238,6 +228,7 @@ class CountrySerializer(SimpleUserSerializer):
             'longitude',
             'initial_zoom',
             'local_currency_id',
+            'local_currency_code',
             'business_area_code',
             'country_short_code',
         )

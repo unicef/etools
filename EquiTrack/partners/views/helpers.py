@@ -11,7 +11,7 @@ def set_tenant_or_fail(workspace):
         raise ValidationError('Workspace is required as a queryparam')
     else:
         try:
-            ws = Country.objects.get(business_area_code=workspace)
+            ws = Country.objects.exclude(name__in=['Global']).get(business_area_code=workspace)
         except Country.DoesNotExist:
             raise ValidationError('Workspace code provided is not a valid business_area_code: %s' % workspace)
         else:
