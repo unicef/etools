@@ -17,7 +17,7 @@ class Command(BaseCommand):
             connection.set_tenant(Country.objects.get(schema_name="palestine"))
 
         except Country.DoesNotExist:
-            print "The schema could not be set"
+            print("The schema could not be set")
 
         else:
             cps = CountryProgramme.objects.filter(invalid=False, wbs__contains='/PC/')

@@ -69,7 +69,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
             ('partner-assessment-del', 'assessments/1/', {'pk': 1}),
             ('partner-add', 'add/', {}),
             ('partner-staff-members-list', '1/staff-members/', {'partner_pk': 1}),
-            )
+        )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partners/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
@@ -91,10 +91,12 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
         # self.normal_field_names is the list of field names present in responses that don't use an out-of-the-ordinary
         # serializer.
         self.normal_field_names = sorted(
-            ('blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name',
-             'partner_type', 'phone_number', 'rating', 'shared_partner', 'shared_with',
-             'short_name', 'total_ct_cp', 'total_ct_cy', 'vendor_number', )
-             )
+            (
+                'blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name',
+                'partner_type', 'phone_number', 'rating', 'shared_partner', 'shared_with',
+                'short_name', 'total_ct_cp', 'total_ct_cy', 'vendor_number'
+            )
+        )
 
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
@@ -480,9 +482,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_assessments_invalid(self):
         today = datetime.date.today()
         assessments = [{
-                "id": self.assessment2.id,
-                "completed_date": datetime.date(today.year + 1, 1, 1),
-            }]
+            "id": self.assessment2.id,
+            "completed_date": datetime.date(today.year + 1, 1, 1),
+        }]
         data = {
             "assessments": assessments,
         }
@@ -500,9 +502,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_assessments_longago(self):
         today = datetime.date.today()
         assessments = [{
-                "id": self.assessment2.id,
-                "completed_date": datetime.date(today.year - 3, 1, 1),
-            }]
+            "id": self.assessment2.id,
+            "completed_date": datetime.date(today.year - 3, 1, 1),
+        }]
         data = {
             "assessments": assessments,
         }
@@ -518,9 +520,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_assessments_today(self):
         completed_date = datetime.date.today()
         assessments = [{
-                "id": self.assessment2.id,
-                "completed_date": completed_date,
-            }]
+            "id": self.assessment2.id,
+            "completed_date": completed_date,
+        }]
         data = {
             "assessments": assessments,
         }
@@ -536,9 +538,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_assessments_yesterday(self):
         completed_date = datetime.date.today() - datetime.timedelta(days=1)
         assessments = [{
-                "id": self.assessment2.id,
-                "completed_date": completed_date,
-            }]
+            "id": self.assessment2.id,
+            "completed_date": completed_date,
+        }]
         data = {
             "assessments": assessments,
         }
@@ -586,9 +588,9 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_assessments_tomorrow(self):
         completed_date = datetime.date.today() + datetime.timedelta(days=1)
         assessments = [{
-                "id": self.assessment2.id,
-                "completed_date": completed_date,
-            }]
+            "id": self.assessment2.id,
+            "completed_date": completed_date,
+        }]
         data = {
             "assessments": assessments,
         }
