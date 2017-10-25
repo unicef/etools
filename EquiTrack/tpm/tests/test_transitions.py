@@ -288,10 +288,8 @@ class PMEPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
         ('tpm_accepted', 'cancel'),
         ('tpm_rejected', 'assign'),
         ('tpm_rejected', 'cancel'),
-        ('tpm_reported', 'cancel'),
         ('tpm_reported', 'reject_report'),
         ('tpm_reported', 'approve'),
-        ('tpm_report_rejected', 'cancel'),
     ]
 
     @classmethod
