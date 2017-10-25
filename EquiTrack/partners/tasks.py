@@ -66,7 +66,7 @@ def _make_agreement_status_automatic_transitions(country_name):
     for agr in signed_ended_agrs:
         old_status = agr.status
         # this function mutates agreement
-        with transaction.atomic:
+        with transaction.atomic():
             validator = AgreementValid(agr, user=admin_user, disable_rigid_check=True)
             if validator.is_valid:
                 if agr.status != old_status:
@@ -127,7 +127,7 @@ def _make_intervention_status_automatic_transitions(country_name):
 
     for intervention in itertools.chain(active_ended, qs):
         old_status = intervention.status
-        with transaction.atomic:
+        with transaction.atomic():
             # this function mutates the intervention
             validator = InterventionValid(intervention, user=admin_user, disable_rigid_check=True)
             if validator.is_valid:
