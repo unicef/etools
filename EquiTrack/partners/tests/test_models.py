@@ -23,15 +23,18 @@ from EquiTrack.factories import (
     PartnerFactory,
     PartnershipFactory,
     PartnerStaffFactory,
+    TravelFactory,
+    TravelActivityFactory,
+    UserFactory,
 )
 
 from funds.models import Donor, Grant
-
 from reports.models import (
     CountryProgramme,
     ResultType,
 )
 from partners import models
+from t2f.models import Travel, TravelType
 
 
 def get_date_from_prior_year():
@@ -630,6 +633,45 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(
             self.partner_organization.hact_values['planned_visits'],
             3
+        )
+
+    def test_spot_checks_update_one(self):
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            0
+        )
+        models.PartnerOrganization.spot_checks(
+            self.partner_organization,
+            update_one=True
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            1
+        )
+
+    def test_spot_checks_update_travel_activity(self):
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            0
+        )
+        traveller = UserFactory()
+        travel = TravelFactory(
+            traveler=traveller,
+            status=Travel.COMPLETED,
+            completed_at=datetime.datetime.now()
+        )
+        TravelActivityFactory(
+            travels=[travel],
+            primary_traveler=traveller,
+            travel_type=TravelType.SPOT_CHECK,
+            partner=self.partner_organization,
+        )
+        models.PartnerOrganization.spot_checks(
+            self.partner_organization,
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            1
         )
 
 
