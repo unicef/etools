@@ -21,7 +21,6 @@ from EquiTrack.factories import (
     InterventionFactory,
     InterventionPlannedVisitsFactory,
     PartnerFactory,
-    PartnershipFactory,
     PartnerStaffFactory,
     TravelFactory,
     TravelActivityFactory,
@@ -440,7 +439,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     @skip('Deprecated Functionality')
     def test_planned_cash_transfers_gov(self):
-        self.partner_organization.partner_type = PartnerType.GOVERNMENT
+        self.partner_organization.partner_type = models.PartnerType.GOVERNMENT
         self.partner_organization.save()
         CountryProgramme.objects.create(
             name="CP 1",
@@ -473,7 +472,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(hact['planned_cash_transfer'], 150000)
 
     def test_planned_cash_transfers_non_gov(self):
-        self.partner_organization.partner_type = PartnerType.UN_AGENCY
+        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
         self.partner_organization.save()
         agreement = models.Agreement.objects.create(
             agreement_type=models.Agreement.PCA,
@@ -492,7 +491,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(hact['planned_cash_transfer'], 100001)
 
     def test_planned_visits_gov(self):
-        self.partner_organization.partner_type = PartnerType.GOVERNMENT
+        self.partner_organization.partner_type = models.PartnerType.GOVERNMENT
         self.partner_organization.save()
         intervention = InterventionFactory(
             agreement=self.pca_signed1,
@@ -512,7 +511,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['planned_visits'], 0)
 
     def test_planned_visits_non_gov(self):
-        self.partner_organization.status = models.PCA.ACTIVE
         self.partner_organization.save()
         intervention = InterventionFactory(
             agreement=self.pca_signed1,
@@ -532,7 +530,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['planned_visits'], 3)
 
     def test_planned_visits_non_gov_no_pv_intervention(self):
-        self.partner_organization.partner_type = PartnerType.UN_AGENCY
+        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
         self.partner_organization.save()
         intervention1 = InterventionFactory(
             agreement=self.pca_signed1,
@@ -562,7 +560,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
 
     def test_planned_visits_non_gov_with_pv_intervention(self):
-        self.partner_organization.partner_type = PartnerType.UN_AGENCY
+        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
         self.partner_organization.save()
         intervention1 = InterventionFactory(
             agreement=self.pca_signed1,
@@ -597,7 +595,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             self.partner_organization.hact_values["programmatic_visits"],
             0
         )
-        PartnerOrganization.programmatic_visits(
+        models.PartnerOrganization.programmatic_visits(
             self.partner_organization,
             update_one=True
         )
@@ -623,7 +621,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             travel_type=TravelType.PROGRAMME_MONITORING,
             partner=self.partner_organization,
         )
-        PartnerOrganization.programmatic_visits(
+        models.PartnerOrganization.programmatic_visits(
             self.partner_organization,
         )
         self.assertEqual(
