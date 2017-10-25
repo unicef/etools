@@ -88,11 +88,6 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
         Add a new Intervention
         :return: JSON
         """
-        # TODO: rename these
-        # supplies = request.data.pop("supplies", [])
-        # distributions = request.data.pop("distributions", [])
-
-        # TODO: add supplies, distributions
         related_fields = [
             'planned_budget',
             'planned_visits',
