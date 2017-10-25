@@ -1,10 +1,6 @@
 from django.conf.urls import url
 
-from .views import (
-    MyProfileAPIView,
-    CountryView
-)
-
+from users.views import CountryView, MyProfileAPIView
 
 urlpatterns = (
     url(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
