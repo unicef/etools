@@ -41,104 +41,95 @@ from partners.validation.agreements import (
 from partners.validation import interventions as intervention_validation
 
 
-# TODO: streamline this ...
+def _get_partner_base_path(partner):
+    return '/'.join([
+        connection.schema_name,
+        'file_attachments',
+        'partner_organization',
+        str(partner.id),
+    ])
+
+
 def get_agreement_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.partner.id),
-         'agreements',
-         str(instance.agreement_number),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.partner),
+        'agreements',
+        str(instance.agreement_number),
+        filename
+    ])
 
 
 def get_assesment_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organizations',
-         str(instance.partner.id),
-         'assesments',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.partner),
+        'assesments',
+        str(instance.id),
+        filename
+     ])
 
 
 def get_intervention_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.agreement.partner.id),
-         'agreements',
-         str(instance.agreement.id),
-         'interventions',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.agreement.partner),
+        'agreements',
+        str(instance.agreement.id),
+        'interventions',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_prc_intervention_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.agreement.partner.id),
-         'agreements',
-         str(instance.agreement.id),
-         'interventions',
-         str(instance.id),
-         'prc',
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.agreement.partner),
+        'agreements',
+        str(instance.agreement.id),
+        'interventions',
+        str(instance.id),
+        'prc',
+        filename
+    ])
 
 
 def get_intervention_amendment_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.intervention.agreement.partner.id),
-         'agreements',
-         str(instance.intervention.agreement.id),
-         'interventions',
-         str(instance.intervention.id),
-         'amendments',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.intervention.agreement.partner),
+        str(instance.intervention.agreement.partner.id),
+        'agreements',
+        str(instance.intervention.agreement.id),
+        'interventions',
+        str(instance.intervention.id),
+        'amendments',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_intervention_attachments_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.intervention.agreement.partner.id),
-         'agreements',
-         str(instance.intervention.agreement.id),
-         'interventions',
-         str(instance.intervention.id),
-         'attachments',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.intervention.agreement.partner),
+        'agreements',
+        str(instance.intervention.agreement.id),
+        'interventions',
+        str(instance.intervention.id),
+        'attachments',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_agreement_amd_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_org',
-         str(instance.agreement.partner.id),
-         'agreements',
-         instance.agreement.base_number,
-         'amendments',
-         str(instance.number),
-         filename]
-    )
+    return '/'.join([
+        connection.schema_name,
+        'file_attachments',
+        'partner_org',
+        str(instance.agreement.partner.id),
+        'agreements',
+        instance.agreement.base_number,
+        'amendments',
+        str(instance.number),
+        filename
+    ])
 
 
 def _get_currency_name_or_default(budget):
@@ -159,25 +150,6 @@ class WorkspaceFileType(models.Model):
 
     def __unicode__(self):
         return self.name
-
-
-# TODO: move this on the models
-HIGH = 'high'
-SIGNIFICANT = 'significant'
-MEDIUM = 'medium'
-LOW = 'low'
-RISK_RATINGS = (
-    (HIGH, 'High'),
-    (SIGNIFICANT, 'Significant'),
-    (MEDIUM, 'Medium'),
-    (LOW, 'Low'),
-)
-CSO_TYPES = Choices(
-    'International',
-    'National',
-    'Community Based Organization',
-    'Academic Institution',
-)
 
 
 class PartnerType(object):
@@ -241,6 +213,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('WFP', 'WFP'),
         ('WHO', 'WHO')
     )
+
+    CSO_TYPES = Choices(
+        'International',
+        'National',
+        'Community Based Organization',
+        'Academic Institution',
+    )
+
     partner_type = models.CharField(
         max_length=50,
         choices=PartnerType.CHOICES
@@ -440,7 +420,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         elif 'planned_cash_transfer' in hact and hact['planned_cash_transfer'] > 100000.00 \
                 and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
             hact['micro_assessment_needed'] = 'Yes'
-        elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
+        elif partner.rating in [Assessment.LOW, Assessment.MEDIUM, Assessment.SIGNIFICANT, Assessment.HIGH] \
                 and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
                 and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
             hact['micro_assessment_needed'] = 'Yes'
@@ -671,6 +651,16 @@ class Assessment(models.Model):
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`auth.User`
     """
+    HIGH = 'high'
+    SIGNIFICANT = 'significant'
+    MEDIUM = 'medium'
+    LOW = 'low'
+    RISK_RATINGS = (
+        (HIGH, 'High'),
+        (SIGNIFICANT, 'Significant'),
+        (MEDIUM, 'Medium'),
+        (LOW, 'Low'),
+    )
 
     ASSESSMENT_TYPES = (
         ('Micro Assessment', 'Micro Assessment'),
