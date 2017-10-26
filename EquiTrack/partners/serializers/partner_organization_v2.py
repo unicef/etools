@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from EquiTrack.serializers import SnapshotModelSerializer
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
 
 from partners.models import (
@@ -256,7 +257,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
+class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)

@@ -324,6 +324,13 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
         response = self.forced_auth_req('post', self.url, data=self.data)
         self.assertResponseFundamentals(response)
 
+        # Check snapshot creation
+        self.assertEqual(Activity.objects.all().count(), 1)
+        activity = Activity.objects.all()[0]
+        self.assertEqual(activity.action, Activity.CREATE)
+        self.assertEqual(activity.change, "")
+        self.assertEqual(activity.by_user, self.user)
+
     def test_no_permission_user_forbidden(self):
         '''Ensure a non-staff user gets the 403 smackdown'''
         response = self.forced_auth_req('post', self.url, data=self.data, user=UserFactory())
@@ -346,6 +353,7 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
 
     def test_create_with_staff_members(self):
         '''Exercise create with staff members'''
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = self.data.copy()
         data["staff_members"] = [{"title": "Some title",
                                   "first_name": "Jane",
@@ -360,6 +368,13 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
         staff_members = partner.staff_members.all()
         self.assertEqual(len(staff_members), 1)
         self.assertEqual(staff_members[0].email, 'a@example.com')
+
+        # Check snapshot creation
+        self.assertEqual(Activity.objects.all().count(), 1)
+        activity = Activity.objects.all()[0]
+        self.assertEqual(activity.action, Activity.CREATE)
+        self.assertEqual(activity.change, "")
+        self.assertEqual(activity.by_user, self.user)
 
 
 class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
@@ -445,9 +460,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.data, ["Cannot delete a completed assessment"])
 
     def test_api_partners_update_with_members(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -469,7 +485,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -477,7 +493,13 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["staff_members"]), 2)
 
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
+
     def test_api_partners_update_assessments_invalid(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         today = datetime.date.today()
         assessments = [{
                 "id": self.assessment2.id,
@@ -488,7 +510,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -496,8 +518,13 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"assessments":
                                          {"completed_date": ["The Date of Report cannot be in the future"]}})
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            0
+        )
 
     def test_api_partners_update_assessments_longago(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         today = datetime.date.today()
         assessments = [{
                 "id": self.assessment2.id,
@@ -508,14 +535,19 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_api_partners_update_assessments_today(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         completed_date = datetime.date.today()
         assessments = [{
                 "id": self.assessment2.id,
@@ -526,14 +558,19 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_api_partners_update_assessments_yesterday(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         completed_date = datetime.date.today() - datetime.timedelta(days=1)
         assessments = [{
                 "id": self.assessment2.id,
@@ -544,17 +581,22 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_api_partners_update_with_members_null_phone(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -574,16 +616,20 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["staff_members"][1]["phone"], None)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_api_partners_update_assessments_tomorrow(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         completed_date = datetime.date.today() + datetime.timedelta(days=1)
         assessments = [{
                 "id": self.assessment2.id,
@@ -594,7 +640,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -602,6 +648,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"assessments":
                                          {"completed_date": ["The Date of Report cannot be in the future"]}})
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            0
+        )
 
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
@@ -647,18 +697,23 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(len(response.data["staff_members"]), 1)
 
     def test_api_partners_update(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "name": "Updated name again",
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_api_partners_delete_with_signed_agreements(self):
 
@@ -719,17 +774,22 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
     def test_api_partners_update_hidden(self):
         # make some other type to filter against
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "hidden": True
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["hidden"], False)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
 
 class TestPartnershipViews(APITenantTestCase):
