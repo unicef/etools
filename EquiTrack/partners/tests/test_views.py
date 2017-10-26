@@ -55,6 +55,7 @@ from partners.models import (
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.serializers.partner_organization_v2 import PartnerOrganizationExportSerializer
 import partners.views.partner_organization_v2
+from snapshot.models import Activity
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -805,13 +806,14 @@ class TestAgreementCreateAPIView(APITenantTestCase):
 
     def test_minimal_create(self):
         '''Test passing as few fields as possible to create'''
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "agreement_type": Agreement.MOU,
             "partner": self.partner.id,
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/agreements/',
+            reverse("agreement-list"),
             user=self.partnership_manager_user,
             data=data
         )
@@ -822,6 +824,13 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         self.assertEqual(len(stream), 1)
         self.assertEqual(stream[0].verb, 'created')
         self.assertIsNone(stream[0].target.start)
+
+        # Check snapshot creation
+        self.assertEqual(Activity.objects.all().count(), 1)
+        activity = Activity.objects.all()[0]
+        self.assertEqual(activity.action, Activity.CREATE)
+        self.assertIsNone(activity.change)
+        self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_create_simple_fail(self):
         '''Verify that failing gives appropriate feedback'''
