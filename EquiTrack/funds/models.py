@@ -158,7 +158,7 @@ class FundsReservationHeader(models.Model):
 class FundsReservationItem(models.Model):
     fund_reservation = models.ForeignKey(
         FundsReservationHeader,
-        verbose_name=_("Fund Reservation Number"),
+        verbose_name=_("FR Number"),
         related_name="fr_items",
     )
     fr_ref_number = models.CharField(
@@ -312,7 +312,7 @@ class FundsCommitmentItem(models.Model):
         blank=True,
     )
     gl_account = models.CharField(
-        verbose_name=_("Account"),
+        verbose_name=_("GL Account"),
         max_length=15,
         null=True,
         blank=True,
@@ -323,7 +323,7 @@ class FundsCommitmentItem(models.Model):
         blank=True,
     )
     fr_number = models.CharField(
-        verbose_name=_("Reservation Number"),
+        verbose_name=_("FR Number"),
         max_length=20,
         blank=True,
         null=True,
