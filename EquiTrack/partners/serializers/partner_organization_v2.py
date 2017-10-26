@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
 import json
 
-from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Q
 from django.contrib.auth.models import User
+from django.utils import timezone
 from rest_framework import serializers
 
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
@@ -258,7 +259,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
 
-    staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    staff_members = PartnerStaffMemberNestedSerializer(many=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     hidden = serializers.BooleanField(read_only=True)
@@ -269,6 +270,14 @@ class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
+
+    @transaction.atomic
+    def create(self, validated_data):
+        staff_members = validated_data.pop('staff_members', None)
+        partner = PartnerOrganization.objects.create(**validated_data)
+        for staff in staff_members:
+            PartnerStaffMember.objects.create(partner=partner, **staff)
+        return partner
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
