@@ -147,33 +147,6 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
 
         return response
 
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        # TODO: on create we should call the insight API with the vendor number and use that information to populate:
-        # get all staff members
-        staff_members = request.data.pop('staff_members', None)
-
-        # validate and save partner org
-        po_serializer = self.get_serializer(data=request.data)
-        po_serializer.is_valid(raise_exception=True)
-
-        partner = po_serializer.save()
-
-        if staff_members:
-            for item in staff_members:
-                item.update({u"partner": partner.pk})
-            staff_members_serializer = PartnerStaffMemberCreateUpdateSerializer(data=staff_members, many=True)
-            try:
-                staff_members_serializer.is_valid(raise_exception=True)
-            except ValidationError as e:
-                e.detail = {'staff_members': e.detail}
-                raise e
-
-            staff_members = staff_members_serializer.save()
-
-        headers = self.get_success_headers(po_serializer.data)
-        return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
 
 class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
