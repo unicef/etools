@@ -26,7 +26,7 @@ def fill_in_empty_values(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('reports', '0016_auto_20170912_2113'),
+        ('reports', '0017_auto_20170912_2113'),
     ]
 
     operations = [

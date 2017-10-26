@@ -11,7 +11,7 @@ import model_utils.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0055_migrate_intervention_sectors_to_sections'),
+        ('partners', '0057_migrate_intervention_sectors_to_sections'),
     ]
 
     operations = [
