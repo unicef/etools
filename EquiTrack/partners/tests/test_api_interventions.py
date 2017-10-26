@@ -17,7 +17,6 @@ from EquiTrack.factories import (
     FundsReservationHeaderFactory,
     GroupFactory)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from funds.models import FundsReservationHeader
 from reports.models import ResultType, Sector
 from partners.models import (
     InterventionSectorLocationLink,
