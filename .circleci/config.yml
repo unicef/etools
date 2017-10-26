@@ -50,7 +50,7 @@ jobs:
     docker:
       - image: unicef/etools:test-base
         environment:
-          PGHOST: 0.0.0.0
+          PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
       - image: circleci/postgres:9.5-alpine-postgis
         environment:
