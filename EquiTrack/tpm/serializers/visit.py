@@ -104,8 +104,8 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         required=True,
     )
 
-    attachments = TPMAttachmentsSerializer(many=True, required=False)
-    report_attachments = TPMReportSerializer(many=True, required=False)
+    attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))
+    report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Activity'))
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
@@ -189,7 +189,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
 class TPMVisitSerializer(TPMVisitLightSerializer):
     tpm_activities = TPMActivitySerializer(many=True, required=False)
 
-    report_attachments = TPMReportAttachmentsSerializer(many=True, required=False)
+    report_attachments = TPMReportAttachmentsSerializer(many=True, required=False, label=_('Overall Visit Reports'))
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
