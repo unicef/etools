@@ -26,9 +26,6 @@ from locations.views import (
     LocationsLightViewSet,
 )
 from management.urls import urlpatterns as management_urls
-from partners.urls import (
-    staffm_api,
-)
 from partners.views.v1 import (
     FileTypeViewSet,
 )
@@ -99,7 +96,6 @@ urlpatterns = [
     url(r'^users/', include('users.urls')),
     url(r'^api/management/', include(management_urls)),
     url(r'^api/', include(api.urls)),
-    url(r'^api/', include(staffm_api.urls)),
     url(r'^api/', include(publics_patterns, namespace='public')),
 
     # ***************  API version 2  ******************
