@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import UserFactory
+from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
 
 class TestUserModel(TenantTestCase):
