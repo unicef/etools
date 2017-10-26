@@ -18,10 +18,11 @@ def set_relation_values(obj, data):
     instance_info = model_meta.get_field_info(obj.__class__)
     for field_name, relation_info in instance_info.relations.items():
         if relation_info.to_many:
-            field = getattr(obj, field_name)
-            obj_dict[field_name] = [x.pk for x in field.all()]
-            if data is not None and data.get(field_name):
-                data[field_name] = [x.pk for x in data[field_name]]
+            if hasattr(obj, field_name):
+                field = getattr(obj, field_name)
+                obj_dict[field_name] = [x.pk for x in field.all()]
+                if data is not None and data.get(field_name):
+                    data[field_name] = [x.pk for x in data[field_name]]
 
     return obj_dict, data
 
