@@ -6,16 +6,15 @@ from rest_framework.utils import model_meta
 from snapshot.models import Activity
 
 
-def jsonify(obj):
-    data = model_to_dict(obj)
+def jsonify(data):
     for key, value in data.items():
-        if type(value) not in [int, float, bool, str]:
+        if type(value) not in [int, float, bool, str, dict]:
             data[key] = unicode(data[key])
     return data
 
 
 def set_relation_values(obj, data):
-    obj_dict = jsonify(obj)
+    obj_dict = jsonify(model_to_dict(obj))
     instance_info = model_meta.get_field_info(obj.__class__)
     for field_name, relation_info in instance_info.relations.items():
         if relation_info.to_many:
@@ -39,6 +38,7 @@ def create_change_dict(target_before, data):
                         "after": data[k],
                     }
                 })
+        change = jsonify(change)
     else:
         change = ""
 
