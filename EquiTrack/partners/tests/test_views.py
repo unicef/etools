@@ -14,7 +14,6 @@ from django.core.urlresolvers import reverse, resolve
 from django.db import connection
 from django.utils import timezone
 
-from actstream.models import model_stream
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
@@ -819,12 +818,6 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # Check for activity action created
-        stream = model_stream(Agreement)
-        self.assertEqual(len(stream), 1)
-        self.assertEqual(stream[0].verb, 'created')
-        self.assertIsNone(stream[0].target.start)
-
         # Check snapshot creation
         self.assertEqual(Activity.objects.all().count(), 1)
         activity = Activity.objects.all()[0]
@@ -851,8 +844,8 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         self.assertIsInstance(response.data['country_programme'], list)
         self.assertEqual(response.data['country_programme'][0], 'Country Programme is required for PCAs!')
 
-        # Check that no activity action was created
-        self.assertEqual(len(model_stream(Agreement)), 0)
+        # Check that no snapshot was created
+        self.assertEqual(Activity.objects.all().count(), 0)
 
 
 class TestAgreementAPIFileAttachments(APITenantTestCase):
@@ -1074,7 +1067,6 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(model_stream(Agreement).count(), 0)
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -1114,8 +1106,11 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data["authorized_officers"]), 2)
 
         # Check for activity action created
-        self.assertEqual(model_stream(Agreement).count(), 1)
-        self.assertEqual(model_stream(Agreement)[0].verb, 'changed')
+        self.assertEqual(Activity.objects.all().count(), 1)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
@@ -1633,10 +1628,6 @@ class TestInterventionViews(APITenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        # Check for activity action created
-        self.assertEqual(model_stream(Intervention).count(), 3)
-        self.assertEqual(model_stream(Intervention)[0].verb, 'created')
 
     def test_intervention_create_unicef_user_fail(self):
         data = {

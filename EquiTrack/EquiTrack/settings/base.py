@@ -197,7 +197,6 @@ TENANT_APPS = (
     'supplies',
     't2f',
     'workplan',
-    'actstream',
     'attachments',
     'tpm',
     'audit',
@@ -387,14 +386,6 @@ LEAFLET_CONFIG = {
     'ATTRIBUTION_PREFIX': 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',  # noqa
     'MIN_ZOOM': 3,
     'MAX_ZOOM': 18,
-}
-
-# django-activity-stream: http://django-activity-stream.readthedocs.io/en/latest/configuration.html
-ACTSTREAM_SETTINGS = {
-    'FETCH_RELATIONS': True,
-    'GFK_FETCH_DEPTH': 1,
-    'USE_JSONFIELD': True,
-    'MANAGER': 'EquiTrack.stream_feed.managers.CustomDataActionManager',
 }
 
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas

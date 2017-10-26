@@ -15,7 +15,6 @@ from rest_framework_nested import routers
 import djangosaml2.views
 
 # Project imports
-from EquiTrack.stream_feed.feeds import JSONActivityFeedWithCustomData
 from EquiTrack.views import (
     MainView,
     OutdatedBrowserView,
@@ -141,14 +140,6 @@ urlpatterns = [
 
     url(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
 
-    # Activity stream
-    url(r'^activity/(?P<model_name>\w+)/json/$',
-        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_stream'),
-        name='custom_data_model_stream'),
-    url(r'^activity/(?P<model_name>\w+)/(?P<obj_id>\d+)/json/$',
-        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_detail_stream'),
-        name='custom_data_model_detail_stream'),
-    url('^activity/', include('actstream.urls')),
     url('^monitoring/', include('monitoring.urls')),
 ]
 

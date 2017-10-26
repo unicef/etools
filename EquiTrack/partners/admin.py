@@ -8,7 +8,6 @@ from django.forms import SelectMultiple
 from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
 
-from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
 
 from partners.exports import PartnerExport
@@ -263,9 +262,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, admin.ModelA
     section_names.short_description = "Sections"
 
     def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
-
+        # TODO add snapshot functionality here
         super(InterventionAdmin, self).save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
@@ -314,8 +311,7 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
+        # TODO add snapshot functionality here
 
         super(PartnerStaffMemberAdmin, self).save_model(request, obj, form, change)
 
@@ -495,8 +491,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
     )
 
     def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
+        # TODO add snapshot functionality here
 
         super(AgreementAdmin, self).save_model(request, obj, form, change)
 
@@ -535,8 +530,7 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
         return False
 
     def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
+        # TODO add snapshot functionality here
 
         super(FundingCommitmentAdmin, self).save_model(request, obj, form, change)
 
