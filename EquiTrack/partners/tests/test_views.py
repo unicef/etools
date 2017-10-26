@@ -829,7 +829,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         self.assertEqual(Activity.objects.all().count(), 1)
         activity = Activity.objects.all()[0]
         self.assertEqual(activity.action, Activity.CREATE)
-        self.assertIsNone(activity.change)
+        self.assertEqual(activity.change, "")
         self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_create_simple_fail(self):
