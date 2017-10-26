@@ -26,6 +26,7 @@ from .models import (
 
 logger = logging.getLogger('partners.forms')
 
+
 # TODO intervention sector locations cleanup
 class SectorLocationForm(forms.ModelForm):
     class Meta:

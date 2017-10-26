@@ -218,6 +218,7 @@ class PartnershipManagerRepPermission(permissions.BasePermission):
                 _is_user_in_groups(request.user, ['Partnership Manager', 'Senior Management Team',
                                                   'Representative Office'])
 
+
 class ListCreateAPIMixedPermission(permissions.BasePermission):
     '''Permission class for ListCreate views that want to allow read-only access to some groups and read-write
     to others.
