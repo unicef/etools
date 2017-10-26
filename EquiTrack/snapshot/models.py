@@ -5,11 +5,13 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 
 from model_utils.models import TimeStampedModel
 
 
+@python_2_unicode_compatible
 class Activity(TimeStampedModel):
     CREATE = "create"
     UPDATE = "update"
@@ -41,5 +43,5 @@ class Activity(TimeStampedModel):
     class Meta:
         ordering = ["-created"]
 
-    def __unicode__(self):
-        return u"{} {} {}".format(self.by_user, self.action, self.target)
+    def __str__(self):
+        return "{} {} {}".format(self.by_user, self.action, self.target)
