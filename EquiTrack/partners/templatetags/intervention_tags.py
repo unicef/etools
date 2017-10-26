@@ -5,7 +5,6 @@ from django.template.loader import render_to_string
 from django.utils.datastructures import OrderedDict as SortedDict
 
 from partners.models import (
-    PCA,
     FundingCommitment,
     GovernmentIntervention,
     Intervention,
@@ -19,52 +18,6 @@ def get_interventions(partner_id):
     interventions = Intervention.objects.filter(agreement__partner__pk=partner_id)
 
     return render_to_string('admin/partners/interventions_table.html', {'interventions': interventions})
-
-
-@register.simple_tag
-def show_work_plan(value):
-
-    if not value:
-        return ''
-
-    intervention = PCA.objects.get(id=int(value))
-    results = intervention.results.all()
-    data = tablib.Dataset()
-    work_plan = SortedDict()
-
-    if results:
-        try:
-            tf_cols = next(x.disaggregation for x in results if x.result_type.name == 'Activity').keys()
-        except BaseException:
-            tf_cols = []
-
-    for num, result in enumerate(results):
-        row = SortedDict()
-        row['Code'] = result.indicator.code if result.indicator else result.result.code
-        row['Details'] = result.indicator.name if result.indicator else result.result.name
-        row['Targets'] = result.target if result.target else ''
-
-        if result.result_type.name == 'Activity' and result.disaggregation:
-            row.update(result.disaggregation)
-        else:
-            row.update(dict.fromkeys(tf_cols, ''))
-
-        row['Total'] = result.total if result.total else ''
-        row['CSO'] = result.partner_contribution if result.partner_contribution else ''
-        row['UNICEF Cash'] = result.unicef_cash if result.unicef_cash else ''
-        row['UNICEF Supplies'] = result.in_kind_amount if result.in_kind_amount else ''
-
-        work_plan[num] = row
-
-    if work_plan:
-        for row in work_plan.values():
-            if not data.headers or len(data.headers) < len(row.values()):
-                data.headers = row.keys()
-            data.append(row.values())
-
-        return data.html
-
-    return '<p>No results</p>'
 
 
 @register.simple_tag
