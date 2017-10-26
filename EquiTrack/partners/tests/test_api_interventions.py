@@ -380,8 +380,16 @@ class TestAPIInterventionResultLinkListView(APITenantTestCase):
                            kwargs={'intervention_pk': self.intervention.id})
 
         # self.expected_field_names is the list of field names expected in responses.
-        self.expected_field_names = sorted(
-            ('cp_output', 'ram_indicators', 'cp_output_name', 'ram_indicator_names', 'id', 'intervention', ))
+        self.expected_field_names = sorted((
+            'cp_output',
+            'ram_indicators',
+            'cp_output_name',
+            'ram_indicator_names',
+            'id',
+            'intervention',
+            'created',
+            'modified',
+        ))
 
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)
@@ -499,8 +507,16 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
                            kwargs={'pk': self.intervention_result_link.id})
 
         # self.expected_keys are the keys expected in a JSON response.
-        self.expected_keys = sorted(('cp_output', 'ram_indicators', 'cp_output_name', 'ram_indicator_names',
-                                     'id', 'intervention'))
+        self.expected_keys = sorted((
+            'cp_output',
+            'ram_indicators',
+            'cp_output_name',
+            'ram_indicator_names',
+            'id',
+            'intervention',
+            'created',
+            'modified',
+        ))
 
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)
