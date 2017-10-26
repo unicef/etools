@@ -184,7 +184,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
         instance, old_instance, serializer = self.my_update(
             request,
             related_fields,
-            snapshot=True, **kwargs)
+            **kwargs)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to

@@ -195,7 +195,7 @@ class ValidatorViewMixin(object):
                 e.detail = {rel_prop_name: e.detail}
                 raise e
 
-    def my_create(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
+    def my_create(self, request, related_f, nested_related_names=None, **kwargs):
         my_relations = {}
         partial = kwargs.pop('partial', False)
         data = self._parse_data(request)
@@ -220,7 +220,7 @@ class ValidatorViewMixin(object):
 
         return main_serializer
 
-    def my_update(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
+    def my_update(self, request, related_f, nested_related_names=None, **kwargs):
         partial = kwargs.pop('partial', False)
         data = self._parse_data(request)
 
