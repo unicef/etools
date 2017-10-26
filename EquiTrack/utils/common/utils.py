@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
+from collections import Iterable, Mapping
 from itertools import chain
 
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -70,18 +72,29 @@ class every_country:
 
 
 def get_attribute_smart(instance, attrs):
+    """A bit smarter version of rest_framework.fields.get_attribute.
+    Has ability to work with lists, so it can be used to look deep inside relations.
+    Also is suitable for dicts.
+
+    Example usage:
+
+    get_attribute_smart({"instances": [{"id": 1}, {"id": 2}, {"id": 3}]}, "instances.id")
+    """
+
+    if instance is None or not attrs:
+        return instance
+
     if isinstance(attrs, six.string_types):
         attrs = attrs.split('.')
 
-    for attr in attrs:
-        if isinstance(instance, (list, set, QuerySet)):
-            instance = list([get_attribute_smart(obj, [attr]) for obj in instance])
-            if all([isinstance(obj, QuerySet) for obj in instance]):
-                instance = chain(*instance)
-        else:
-            instance = get_attribute(instance, [attr])
+    if isinstance(instance, (Iterable, QuerySet)) and not isinstance(instance, (Mapping, six.string_types)):
+        instance = list([get_attribute_smart(obj, [attrs[0]]) for obj in instance])
+        if all(map(lambda obj: isinstance(obj, QuerySet), instance)):
+            instance = chain(*instance)
+    else:
+        instance = get_attribute(instance, [attrs[0]])
 
         if isinstance(instance, Manager):
             instance = instance.all()
 
-    return instance
+    return get_attribute_smart(instance, attrs[1:])
