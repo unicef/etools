@@ -770,7 +770,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            reverse("agreement-list"),
+            reverse("partners_api:agreement-list"),
             user=self.partnership_manager_user,
             data=data
         )
