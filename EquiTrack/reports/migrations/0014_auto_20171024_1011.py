@@ -15,32 +15,12 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='appliedindicator',
-            name='created',
-            field=model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created'),
-        ),
-        migrations.AddField(
-            model_name='appliedindicator',
-            name='modified',
-            field=model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified'),
-        ),
-        migrations.AddField(
             model_name='indicator',
             name='created',
             field=model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created'),
         ),
         migrations.AddField(
             model_name='indicator',
-            name='modified',
-            field=model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified'),
-        ),
-        migrations.AddField(
-            model_name='indicatorblueprint',
-            name='created',
-            field=model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created'),
-        ),
-        migrations.AddField(
-            model_name='indicatorblueprint',
             name='modified',
             field=model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified'),
         ),
