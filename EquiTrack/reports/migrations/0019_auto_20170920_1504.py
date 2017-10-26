@@ -9,7 +9,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('reports', '0017_handle_null_fields'),
+        ('reports', '0018_handle_null_fields'),
     ]
 
     operations = [

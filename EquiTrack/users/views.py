@@ -1,27 +1,25 @@
-from django.db import connection
-from django.views.generic import FormView, RedirectView
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.shortcuts import get_object_or_404
-
-from rest_framework import viewsets, mixins
-from rest_framework.views import APIView
-from rest_framework.generics import RetrieveAPIView, ListAPIView, RetrieveUpdateAPIView
-from rest_framework import permissions
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from django.views.generic import FormView, RedirectView
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from audit.models import Auditor
 from reports.models import Sector
-from reports.serializers.v1 import SectorLightSerializer
-from users.serializers import MinimalUserSerializer
+from reports.serializers.v1 import SectorSerializer
 from users.forms import ProfileForm
-from users.models import User, UserProfile, Country, Office
+from users.models import UserProfile, Country, Office
 from .serializers import (
     UserSerializer,
     GroupSerializer,
     OfficeSerializer,
+    MinimalUserSerializer,
     UserCreationSerializer,
     SimpleProfileSerializer,
     SimpleUserSerializer,
@@ -32,7 +30,7 @@ from .serializers import (
 
 class UserAuthAPIView(RetrieveAPIView):
     # TODO: Consider removing now use JWT
-    model = User
+    model = get_user_model()
     serializer_class = UserSerializer
 
     def get_object(self, queryset=None, **kwargs):
@@ -255,7 +253,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Users
     """
-    queryset = User.objects.all()
+    queryset = get_user_model().objects.all()
     serializer_class = UserCreationSerializer
     permission_classes = (IsAdminUser,)
 
@@ -358,7 +356,7 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Sections
     """
-    serializer_class = SectorLightSerializer
+    serializer_class = SectorSerializer
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):

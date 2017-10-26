@@ -42,7 +42,7 @@
     "business_area_code": "ZZZ",
     "title": "Active Intervention",
     "funds_received": 0,
-    "unicef_budget": null,
+    "unicef_budget": "0.00",
     "unicef_budget_currency": null,
     "number": "/PCA2017394/PD2017642",
     "start_date": "2017-09-13",
@@ -59,7 +59,7 @@
     "funds_received_currency": null,
     "cso_budget_currency": null,
     "id": 642,
-    "cso_budget": null,
+    "cso_budget": "0.00",
     "update_date": "2017-10-12T08:10:43.708677Z"
   },
   {
@@ -71,7 +71,7 @@
     "business_area_code": "ZZZ",
     "title": "Intervention 2",
     "funds_received": 0,
-    "unicef_budget": null,
+    "unicef_budget": "0.00",
     "unicef_budget_currency": null,
     "number": "/PCA2017393/PD2017641",
     "start_date": null,
@@ -88,7 +88,7 @@
     "funds_received_currency": null,
     "cso_budget_currency": null,
     "id": 641,
-    "cso_budget": null,
+    "cso_budget": "0.00",
     "update_date": "2017-10-12T08:10:43.708677Z"
   },
   {

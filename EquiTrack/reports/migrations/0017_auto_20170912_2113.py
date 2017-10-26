@@ -11,7 +11,7 @@ import model_utils.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('reports', '0015_remove_indicators'),
+        ('reports', '0016_remove_indicators'),
     ]
 
     operations = [

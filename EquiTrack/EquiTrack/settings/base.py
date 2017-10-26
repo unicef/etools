@@ -189,7 +189,6 @@ SHARED_APPS = (
 TENANT_APPS = (
     'django_fsm',
     'logentry_admin',
-    'reversion',
     'funds',
     'locations',
     'reports',

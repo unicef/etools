@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('users', '0008_workspacecounter'),
         ('locations', '0004_auto_20170112_2051'),
-        ('reports', '0014_auto_20170908_1307'),
+        ('reports', '0015_auto_20171013_2147'),
     ]
 
     operations = [

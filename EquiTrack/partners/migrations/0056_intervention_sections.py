@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('users', '0008_workspacecounter'),
-        ('partners', '0053_read_only_api_permission_group'),
+        ('partners', '0055_read_only_api_permission_group'),
     ]
 
     operations = [

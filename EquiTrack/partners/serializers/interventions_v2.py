@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from funds.serializers import FRsSerializer
 from partners.permissions import InterventionPermissions
-from reports.serializers.v1 import SectorLightSerializer
+from reports.serializers.v1 import SectorSerializer
 from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 
 from partners.models import (
@@ -153,7 +153,7 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
 # TODO intervention sector locations cleanup
 class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
     locations = LocationLightSerializer(many=True)
-    sector = SectorLightSerializer()
+    sector = SectorSerializer()
 
     class Meta:
         model = InterventionSectorLocationLink
