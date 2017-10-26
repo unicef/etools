@@ -17,12 +17,14 @@ from EquiTrack.factories import (
     FundsReservationHeaderFactory,
     GroupFactory)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from funds.models import FundsReservationHeader
 from reports.models import ResultType, Sector
 from partners.models import (
     InterventionSectorLocationLink,
     InterventionBudget,
     Intervention
 )
+from snapshot.models import Activity
 from utils.common.utils import get_all_field_names
 
 
@@ -247,6 +249,7 @@ class TestInterventionsAPI(APITenantTestCase):
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
 
     def test_add_two_valid_frs_on_update_pd(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         frs_data = [self.fr_1.id, self.fr_2.id]
         data = {
             "frs": frs_data
@@ -263,6 +266,18 @@ class TestInterventionsAPI(APITenantTestCase):
                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
         self.assertEqual(response['frs_details']['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+        self.assertEqual(Activity.objects.all().count(), 1)
+        activity = Activity.objects.all()[0]
+        self.assertEqual(activity.target, self.intervention_2)
+        self.assertEqual(activity.action, Activity.UPDATE)
+        self.assertIsNotNone(activity.change)
+        self.assertEqual(activity.change, {
+            "frs": {
+                "before": [],
+                "after": [self.fr_1.pk, self.fr_2.pk]
+            }
+        })
+        self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_remove_an_fr_from_pd(self):
         frs_data = [self.fr_1.id, self.fr_2.id]

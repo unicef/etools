@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
+from EquiTrack.serializers import SnapshotModelSerializer
 from funds.serializers import FRsSerializer
 from partners.permissions import InterventionPermissions
 from reports.serializers.v1 import SectorLightSerializer
@@ -240,7 +241,7 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
+class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
 
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
