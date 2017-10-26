@@ -1536,16 +1536,15 @@ class TestInterventionViews(APITenantTestCase):
                     "audit": 1
                 },
             ],
-            "planned_budget":
-                {
-                    "partner_contribution": "2.00",
-                    "unicef_cash": "3.00",
-                    "in_kind_amount": "1.00",
-                    "partner_contribution_local": "3.00",
-                    "unicef_cash_local": "3.00",
-                    "in_kind_amount_local": "0.00",
-                    "total": "6.00"
-                },
+            "planned_budget": {
+                "partner_contribution": "2.00",
+                "unicef_cash": "3.00",
+                "in_kind_amount": "1.00",
+                "partner_contribution_local": "3.00",
+                "unicef_cash_local": "3.00",
+                "in_kind_amount_local": "0.00",
+                "total": "6.00"
+            },
             "sections": [self.section.id],
             "result_links": [
                 {
@@ -2205,22 +2204,21 @@ class TestPartnershipDashboardView(APITenantTestCase):
             "offices": [],
             "fr_numbers": None,
             "population_focus": "Some focus",
-            "planned_budget":
-                {
-                    "partner_contribution": "2.00",
-                    "unicef_cash": "3.00",
-                    "in_kind_amount": "1.00",
-                    "partner_contribution_local": "3.00",
-                    "unicef_cash_local": "3.00",
-                    "in_kind_amount_local": "0.00",
-                    "total": "6.00"
-                },
+            "planned_budget": {
+                "partner_contribution": "2.00",
+                "unicef_cash": "3.00",
+                "in_kind_amount": "1.00",
+                "partner_contribution_local": "3.00",
+                "unicef_cash_local": "3.00",
+                "in_kind_amount_local": "0.00",
+                "total": "6.00"
+            },
             "sections": [self.section.id],
             "result_links": [
                 {
                     "cp_output": ResultFactory().id,
                     "ram_indicators": []
-                }
+                },
             ],
             "amendments": [],
             "attachments": [],

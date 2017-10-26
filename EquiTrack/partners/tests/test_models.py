@@ -16,9 +16,8 @@ from EquiTrack.factories import (
     TravelFactory,
     TravelActivityFactory,
     UserFactory,
-)
+    CountryProgrammeFactory, GovernmentInterventionFactory, ResultFactory, GrantFactory, DonorFactory)
 
-from funds.models import Donor, Grant
 from reports.models import (
     CountryProgramme,
     ResultType,
@@ -28,11 +27,8 @@ from partners.models import (
     FundingCommitment,
     PartnerOrganization,
     Assessment,
-    Result,
-    GovernmentIntervention,
     GovernmentInterventionResult,
     Intervention,
-    InterventionBudget,
     PartnerType,
 )
 from t2f.models import Travel, TravelType
@@ -751,6 +747,15 @@ class TestInterventionModel(TenantTestCase):
         self.intervention.start_date = datetime.date(datetime.date.today().year - 1, 1, 1)
         self.intervention.end_date = datetime.date(datetime.date.today().year + 1, 1, 1)
         # self.assertEqual(self.intervention.duration, 24)
+
+    def test_total_no_intervention(self):
+        self.assertEqual(int(self.intervention.total_unicef_cash), 0)
+        self.assertEqual(int(self.intervention.total_partner_contribution), 0)
+        self.assertEqual(int(self.intervention.total_budget), 0)
+        self.assertEqual(int(self.intervention.total_unicef_budget), 0)
+        self.assertEqual(int(self.intervention.total_partner_contribution_local), 0)
+        self.assertEqual(int(self.intervention.total_unicef_cash_local), 0)
+        self.assertEqual(int(self.intervention.total_budget_local), 0)
 
     def test_total_unicef_cash(self):
         InterventionBudgetFactory(

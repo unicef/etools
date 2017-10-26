@@ -33,5 +33,5 @@ class Command(BaseCommand):
                                      agreement_type__in=['MOU']).update(country_programme=None)
 
             bad_agreements = Agreement.objects.filter(country_programme__isnull=True, agreement_type='PCA')
-            print "Number of Bad Agreements: {}".format(bad_agreements.count())
-            print "Ids {}".format(', '.join([a.id for a in bad_agreements.all()]))
+            print("Number of Bad Agreements: {}".format(bad_agreements.count()))
+            print("Ids {}".format(', '.join([a.id for a in bad_agreements.all()])))

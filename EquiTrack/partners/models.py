@@ -5,7 +5,6 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, transaction
 from django.db.models import F
 from django.db.models.signals import post_save, pre_delete
@@ -65,7 +64,7 @@ def get_assesment_path(instance, filename):
         'assesments',
         str(instance.id),
         filename
-     ])
+    ])
 
 
 def get_intervention_file_path(instance, filename):
@@ -1309,11 +1308,7 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.partner_contribution
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.partner_contribution if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def default_budget_currency(self):
@@ -1331,19 +1326,11 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_unicef_cash(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.unicef_cash
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.unicef_cash if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_in_kind_amount(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.in_kind_amount
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.in_kind_amount if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_budget(self):
@@ -1355,24 +1342,15 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution_local(self):
-        try:
-            return self.planned_budget.partner_contribution_local
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_unicef_cash_local(self):
-        try:
-            return self.planned_budget.unicef_cash_local
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_budget_local(self):
-        try:
-            return self.planned_budget.in_kind_amount_local
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def all_lower_results(self):
