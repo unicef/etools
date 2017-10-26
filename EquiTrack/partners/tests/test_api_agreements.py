@@ -18,6 +18,7 @@ from partners.models import (
     Intervention,
     AgreementAmendment
 )
+from snapshot.models import Activity
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -73,6 +74,7 @@ class TestAgreementsAPI(APITenantTestCase):
         return response.status_code, json.loads(response.rendered_content)
 
     def test_add_new_PCA(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner1.id,
@@ -82,8 +84,13 @@ class TestAgreementsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertEqual(response['agreement_type'], Agreement.PCA)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.CREATE).count(),
+            1
+        )
 
     def test_fail_add_new_PCA_without_agreement_type(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "partner": self.partner1.id,
             "country_programme": self.country_programme.id,
@@ -92,8 +99,10 @@ class TestAgreementsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['agreement_type'], ['This field is required.'])
+        self.assertEqual(Activity.objects.all().count(), 0)
 
     def test_fail_add_new_PCA_without_country_programme(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner1.id
@@ -102,8 +111,10 @@ class TestAgreementsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['country_programme'], ['Country Programme is required for PCAs!'])
+        self.assertEqual(Activity.objects.all().count(), 0)
 
     def test_add_new_SSFA_without_country_programme(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "agreement_type": Agreement.SSFA,
             "partner": self.partner1.id
@@ -112,8 +123,13 @@ class TestAgreementsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertEqual(response['agreement_type'], Agreement.SSFA)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.CREATE).count(),
+            1
+        )
 
     def test_add_new_SSFA_with_country_programme_null(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "agreement_type": Agreement.SSFA,
             "partner": self.partner1.id,
@@ -123,14 +139,20 @@ class TestAgreementsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertEqual(response['agreement_type'], Agreement.SSFA)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.CREATE).count(),
+            1
+        )
 
     def test_fail_patch_PCA_without_country_programme(self):
         # create new agreement
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "agreement_type": Agreement.SSFA,
             "partner": self.partner1.id
         }
         status_code, response = self.run_request_list_ep(data)
+        self.assertEqual(Activity.objects.all().count(), 1)
         agreement_id = response['id']
 
         # change agreement type to a PCA
@@ -140,18 +162,22 @@ class TestAgreementsAPI(APITenantTestCase):
         status_code, response = self.run_request(agreement_id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['country_programme'], ['Country Programme is required for PCAs!'])
+        self.assertEqual(Activity.objects.all().count(), 1)
 
     def test_fail_patch_PCA_without_PartnershipManagerPermission(self):
         # create new agreement
         # change agreement type to a PCA
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "agreement_type": Agreement.PCA
         }
         status_code, response = self.run_request(self.agreement1.id, data, method='patch', user=self.unicef_staff)
         self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response['detail'], 'Accessing this item is not allowed.')
+        self.assertEqual(Activity.objects.all().count(), 0)
 
     def test_fail_add_PCA_without_PartnershipManagerPermission(self):
+        self.assertEqual(Activity.objects.all().count(), 0)
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner1.id,
@@ -160,6 +186,7 @@ class TestAgreementsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.unicef_staff)
         self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response['detail'], 'Accessing this item is not allowed.')
+        self.assertEqual(Activity.objects.all().count(), 0)
 
     def test_list_agreements(self):
         with self.assertNumQueries(1):
