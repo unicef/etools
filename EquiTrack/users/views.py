@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 
 from audit.models import Auditor
 from reports.models import Sector
-from reports.serializers.v1 import SectorLightSerializer
+from reports.serializers.v1 import SectorSerializer
 from users.forms import ProfileForm
 from users.models import UserProfile, Country, Office
 from .serializers import (
@@ -356,7 +356,7 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Sections
     """
-    serializer_class = SectorLightSerializer
+    serializer_class = SectorSerializer
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
