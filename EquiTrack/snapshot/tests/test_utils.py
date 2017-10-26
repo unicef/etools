@@ -4,13 +4,14 @@ from EquiTrack.factories import (
     InterventionFactory,
     UserFactory,
 )
+from django.forms import model_to_dict
 from snapshot import utils
 
 
 class TestJsonify(TenantTestCase):
     def test_jsonify(self):
         intervention = InterventionFactory()
-        j = utils.jsonify(intervention)
+        j = utils.jsonify(model_to_dict(intervention))
         self.assertEqual(j["title"], intervention.title)
 
 
