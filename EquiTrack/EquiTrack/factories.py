@@ -17,6 +17,7 @@ from partners import models as partner_models
 from publics import models as publics_models
 from funds import models as funds_models
 from notification import models as notification_models
+from t2f import models as t2f_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
@@ -173,17 +174,6 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
-class PartnershipFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = partner_models.PCA
-
-    partner = factory.SubFactory(PartnerFactory)
-    agreement = factory.SubFactory(AgreementFactory)
-    partnership_type = u'PD'
-    title = u'To save the galaxy from the Empire'
-    initiation_date = datetime.today()
-
-
 class InterventionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.Intervention
@@ -243,14 +233,6 @@ class LowerResultFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Lower Result {}'.format(n))
     code = factory.Sequence(lambda n: 'Lower Result Code {}'.format(n))
-
-
-class GoalFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Goal
-
-    name = factory.Sequence(lambda n: 'Goal {}'.format(n))
-    sector = factory.SubFactory(SectorFactory)
 
 
 class UnitFactory(factory.django.DjangoModelFactory):
@@ -620,3 +602,41 @@ class DSARateFactory(factory.django.DjangoModelFactory):
     dsa_amount_60plus_local = 1
     room_rate = 10
     finalization_date = date.today()
+
+
+class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
+    def fuzz(self):
+        return factory.fuzzy._random.choice(
+            [t[0] for t in t2f_models.Travel.CHOICES]
+        )
+
+
+class TravelFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = t2f_models.Travel
+
+    status = FuzzyTravelStatus()
+
+
+class FuzzyTravelType(factory.fuzzy.BaseFuzzyAttribute):
+    def fuzz(self):
+        return factory.fuzzy._random.choice(
+            [t[0] for t in t2f_models.TravelType.CHOICES]
+        )
+
+
+class TravelActivityFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = t2f_models.TravelActivity
+
+    travel_type = FuzzyTravelType()
+    primary_traveler = factory.SubFactory(UserFactory)
+
+    @factory.post_generation
+    def travels(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for travel in extracted:
+                self.travels.add(travel)

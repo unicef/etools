@@ -1,20 +1,15 @@
 from __future__ import unicode_literals
 
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-
-from rest_framework.generics import RetrieveAPIView, ListAPIView, RetrieveUpdateAPIView
-from rest_framework import permissions
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import permissions, status
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
+from rest_framework.response import Response
 
+from users.models import Country, UserProfile
 from users.serializers_v3 import (
-    MinimalUserDetailSerializer,
-    MinimalUserSerializer,
-    CountrySerializer,
-    ProfileRetrieveUpdateSerializer
-)
-from .models import User, Country, UserProfile
+    CountrySerializer, MinimalUserDetailSerializer, MinimalUserSerializer, ProfileRetrieveUpdateSerializer,)
 
 
 class MyProfileAPIView(RetrieveUpdateAPIView):
@@ -30,10 +25,9 @@ class MyProfileAPIView(RetrieveUpdateAPIView):
         Always returns current user's profile
         """
         try:
-            obj = self.request.user.profile
+            self.request.user.profile
         except AttributeError:
             self.request.user.save()
-            obj = self.request.user.profile
 
         obj = get_object_or_404(UserProfile, user__id=self.request.user.id)
         # May raise a permission denied
@@ -45,20 +39,21 @@ class UsersDetailAPIView(RetrieveAPIView):
     """
     Retrieve a User in the current country
     """
-    queryset = User.objects.all()
+    queryset = get_user_model().objects.all()
     serializer_class = MinimalUserDetailSerializer
 
     def retrieve(self, request, pk=None):
         """
         Returns a UserProfile object for this PK
         """
-        data = None
+        data = {}
         try:
             queryset = self.queryset.get(id=pk)
             serializer = self.serializer_class(queryset)
             data = serializer.data
-        except User.DoesNotExist:
-            data = {}
+        except get_user_model().DoesNotExist:
+            pass
+
         return Response(
             data,
             status=status.HTTP_200_OK
@@ -70,7 +65,7 @@ class UsersListApiView(ListAPIView):
     Gets a list of Unicef Staff users in the current country.
     Country is determined by the currently logged in user.
     """
-    model = User
+    model = get_user_model()
     serializer_class = MinimalUserSerializer
 
     def get_queryset(self, pk=None):
