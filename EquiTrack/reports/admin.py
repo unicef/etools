@@ -197,6 +197,7 @@ class DisaggregationAdmin(admin.ModelAdmin):
         'active'
     )
 
+
 class DisaggregationValueAdmin(admin.ModelAdmin):
     model = DisaggregationValue
     list_filter = (
