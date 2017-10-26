@@ -349,7 +349,6 @@ class LowerResult(TimeStampedModel):
     # link to intermediary model to intervention and cp ouptut
     result_link = models.ForeignKey(
         'partners.InterventionResultLink',
-        verbose_name=_("Reference Number"),
         related_name='ll_results',
         null=True,
     )
@@ -458,7 +457,7 @@ class AppliedIndicator(models.Model):
     # the result this indicator is contributing to.
     lower_result = models.ForeignKey(
         LowerResult,
-        verbose_name=_("Lower Level Result"),
+        verbose_name=_("PD Result"),
         related_name='applied_indicators',
     )
 

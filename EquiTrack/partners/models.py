@@ -249,7 +249,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         null=True,
     )
     name = models.CharField(
-        verbose_name=_('Full Name'),
+        verbose_name=_('Name'),
         max_length=255,
         help_text='Please make sure this matches the name you enter in VISION'
     )
@@ -1407,7 +1407,7 @@ class Intervention(TimeStampedModel):
 
     offices = models.ManyToManyField(
         Office,
-        verbose_name=_("UNICEF Office"),
+        verbose_name=_("Office"),
         blank=True,
         related_name='office_interventions+',
     )
@@ -1726,7 +1726,7 @@ class InterventionAmendment(TimeStampedModel):
         default=0,
     )
     signed_amendment = models.FileField(
-        verbose_name=_("Amendment"),
+        verbose_name=_("Amendment Document"),
         max_length=1024,
         upload_to=get_intervention_amendment_file_path
     )
