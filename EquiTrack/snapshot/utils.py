@@ -8,7 +8,7 @@ from snapshot.models import Activity
 
 def jsonify(data):
     for key, value in data.items():
-        if type(value) not in [int, float, bool, str, dict]:
+        if type(value) not in [int, float, bool, str, list]:
             data[key] = unicode(data[key])
     return data
 
@@ -33,12 +33,11 @@ def create_change_dict(target_before, data):
         for k, v in data.items():
             if k in previous_obj_dict and data[k] != previous_obj_dict[k]:
                 change.update({
-                    k: {
+                    k: jsonify({
                         "before": previous_obj_dict[k],
                         "after": data[k],
-                    }
+                    })
                 })
-        change = jsonify(change)
     else:
         change = ""
 
