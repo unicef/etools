@@ -204,6 +204,7 @@ TENANT_APPS = (
     'audit',
     'firms',
     'management',
+    'snapshot',
 )
 INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
 
