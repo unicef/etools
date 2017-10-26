@@ -1,7 +1,6 @@
 import datetime
 import operator
 
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import models
 from django.db.models.functions import Concat
 from django.db.models import F, Value
@@ -9,11 +8,7 @@ from model_utils import Choices
 
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.generics import (
-    ListAPIView,
-    RetrieveAPIView,
-    RetrieveUpdateDestroyAPIView,
-)
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 
@@ -28,7 +23,6 @@ from funds.models import Donor
 
 from partners.models import (
     PartnerOrganization,
-    PCA,
     Agreement,
     PartnerStaffMember,
     PartnerType,
@@ -40,49 +34,10 @@ from partners.models import (
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
-    PartnerStaffMemberPropertiesSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
 )
-from partners.permissions import PartneshipManagerPermission, PartnerPermission
-from partners.serializers.v1 import InterventionSerializer
+from partners.permissions import PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
-
-
-class PartnerInterventionListAPIView(ListAPIView):
-    queryset = Intervention.objects.detail_qs().all()
-    serializer_class = InterventionSerializer
-    permission_classes = (PartnerPermission,)
-
-    def list(self, request, pk=None, format=None):
-        """
-        Return All Interventions for Partner
-        """
-        interventions = Intervention.objects.detail_qs().filter(partner_id=pk)
-        serializer = InterventionSerializer(interventions, many=True)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
-
-
-class AgreementInterventionsListAPIView(ListAPIView):
-    serializer_class = InterventionSerializer
-    filter_backends = (PartnerScopeFilter,)
-    permission_classes = (PartneshipManagerPermission,)
-
-    def list(self, request, partner_pk=None, pk=None, format=None):
-        """
-        Return All Interventions for Partner and Agreement
-        """
-        if partner_pk:
-            interventions = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk)
-        else:
-            interventions = PCA.objects.filter(agreement_id=pk)
-        serializer = InterventionSerializer(interventions, many=True)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
 
 
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -95,38 +50,6 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerStaffMemberCreateUpdateSerializer
         return super(PartnerStaffMemberDetailAPIView, self).get_serializer_class()
-
-
-class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
-    """
-    Gets the details of Staff Member that belongs to a partner
-    """
-    serializer_class = PartnerStaffMemberPropertiesSerializer
-    queryset = PartnerStaffMember.objects.all()
-    permission_classes = (PartneshipManagerPermission,)
-
-    def get_object(self):
-        queryset = self.get_queryset()
-
-        # Get the current partnerstaffmember
-        try:
-            current_member = PartnerStaffMember.objects.get(id=self.request.user.profile.partner_staff_member)
-        except PartnerStaffMember.DoesNotExist:
-            raise Exception('there is no PartnerStaffMember record associated with this user')
-
-        # Perform the lookup filtering.
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        # If current member is actually looking for themselves return right away.
-        if self.kwargs[lookup_url_kwarg] == str(current_member.id):
-            return current_member
-
-        filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-        # allow lookup only for PSMs inside the same partnership
-        filter['partner'] = current_member.partner
-
-        obj = get_object_or_404(queryset, **filter)
-        self.check_object_permissions(self.request, obj)
-        return obj
 
 
 def choices_to_json_ready(choices):
@@ -195,8 +118,6 @@ class PmpStaticDropdownsListApiView(APIView):
 
 
 class PMPDropdownsListApiView(APIView):
-    # serializer_class = InterventionSerializer
-    # filter_backends = (PartnerScopeFilter,)
     permission_classes = (IsAdminUser,)
 
     def get(self, request):

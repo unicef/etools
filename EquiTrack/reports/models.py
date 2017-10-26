@@ -186,7 +186,7 @@ class Result(MPTTModel):
     Represents a result, wbs is unique
 
     Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.Sector`
     Relates to :model:`reports.ResultType`
     """
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
@@ -309,26 +309,6 @@ class LowerResult(TimeStampedModel):
 
 
 @python_2_unicode_compatible
-class Goal(models.Model):
-    """
-    Represents a goal for the humanitarian response plan
-
-    Relates to :model:`reports.ResultStructure`
-    Relates to :model:`reports.Sector`
-    """
-    sector = models.ForeignKey(Sector, related_name='goals')
-    name = models.CharField(max_length=512, unique=True)
-    description = models.CharField(max_length=512, blank=True)
-
-    class Meta:
-        verbose_name = 'CCC'
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-
-@python_2_unicode_compatible
 class Unit(models.Model):
     """
     Represents an unit of measurement
@@ -393,11 +373,11 @@ class AppliedIndicator(TimeStampedModel):
     assumptions = models.TextField(null=True, blank=True)
     means_of_verification = models.CharField(max_length=255, null=True, blank=True)
 
-    # current total, transactional and dynamically calculated based on IndicatorReports
+    # current total, transactional and dynamically calculated
     total = models.IntegerField(null=True, blank=True, default=0,
                                 verbose_name="Current Total")
 
-    # variable disaggregation's that may be present in the work plan
+    # variable disaggregations that may be present in the work plan
     # this can only be present if the indicatorBlueprint has dissagregatable = true
     disaggregation_logic = JSONField(null=True)
 
@@ -410,11 +390,10 @@ class Indicator(TimeStampedModel):
     """
     Represents an indicator
 
-    Relates to :model:`reports.ResultStructure`
-    Relates to :model:`reports.Sector`
+    Relates to :model:`reports.Unit`
     Relates to :model:`reports.Result`
     """
-    # TODO: rename this to RAMIndicator and rename/remove RAMIndicator
+    # TODO: rename this to RAMIndicator
 
     sector = models.ForeignKey(
         Sector,
@@ -450,32 +429,6 @@ class Indicator(TimeStampedModel):
             u'Baseline: {}'.format(self.baseline) if self.baseline else u'',
             u'Target: {}'.format(self.target) if self.target else u''
         )
-
-    def programmed_amounts(self):
-        from partners.models import PCA
-        return self.resultchain_set.filter(
-            partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
-        )
-
-    def programmed(self, result_structure=None):
-        programmed = self.programmed_amounts()
-        if result_structure:
-            programmed = programmed.filter(
-                partnership__result_structure=result_structure,
-
-            )
-        total = programmed.aggregate(models.Sum('target'))
-        return total[total.keys()[0]] or 0
-
-    def progress(self, result_structure=None):
-        programmed = self.programmed_amounts()
-        if result_structure:
-            programmed = programmed.filter(
-                partnership__result_structure=result_structure,
-
-            )
-        total = programmed.aggregate(models.Sum('current_progress'))
-        return (total[total.keys()[0]] or 0) + self.current if self.current else 0
 
     def save(self, *args, **kwargs):
         # Prevent from saving empty strings as code because of the unique together constraint

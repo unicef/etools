@@ -3,11 +3,10 @@ from __future__ import unicode_literals
 import json
 from unittest import skip
 
-from rest_framework import status
-
-from EquiTrack.factories import UserFactory, GroupFactory, CountryFactory, SectionFactory, OfficeFactory
+from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, SectionFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory
+from rest_framework import status
 
 
 class TestSectionViews(APITenantTestCase):

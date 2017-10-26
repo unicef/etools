@@ -42,3 +42,5 @@ class ActionPointMailSerializer(serializers.Serializer):
     travel_reference_number = serializers.CharField(source='travel.reference_number')
     description = serializers.CharField()
     due_date = serializers.DateTimeField(format='%m/%d/%Y %H:%M')
+    completed_at = serializers.DateTimeField(format='%m/%d/%Y %H:%M')
+    status = serializers.CharField()
