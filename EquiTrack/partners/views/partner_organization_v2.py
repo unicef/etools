@@ -52,7 +52,6 @@ from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationHactCSVRenderer,
-    PartnerStaffMemberCSVRenderer,
 )
 
 
@@ -242,7 +241,7 @@ class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
-        PartnerStaffMemberCSVRenderer,
+        r.CSVRenderer,
         CSVFlatRenderer,
     )
 
