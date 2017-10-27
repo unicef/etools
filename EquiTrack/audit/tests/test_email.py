@@ -17,7 +17,8 @@ class TestEmail(FastTenantTestCase):
                      'audit/engagement/reported_by_auditor',
                      'audit/engagement/action_point_assigned', ):
             q = EmailTemplate.objects.filter(name=name)
-            # There's a migration that creates these EmailTemplate objects, but with empty content. They're pretty
-            # useless, so I want to ensure the fixture versions (with non-null content) were created.
+            # There's a migration that creates these EmailTemplate objects, but with empty content. The empty
+            # content versions are pretty useless, so I want to ensure the fixture versions (with non-null content)
+            # were created.
             q = q.exclude(content__isnull=True).exclude(content__exact='')
             self.assertTrue(q.exists())
