@@ -48,7 +48,7 @@ def create_change_dict(target_before, data):
 def create_snapshot(target, target_before, by_user, data):
     """If target_before is None, then action is create, otherwise update
 
-    For to many relation fields add them to the target
+    For many to many relation fields add them to the target
     and use their pk for values
     """
     action = Activity.CREATE if target_before is None else Activity.UPDATE
