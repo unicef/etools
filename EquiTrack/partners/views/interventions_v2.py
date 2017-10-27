@@ -43,6 +43,18 @@ from partners.serializers.exports.interventions import (
     InterventionSectorLocationLinkExportSerializer,
     InterventionSectorLocationLinkExportFlatSerializer,
 )
+from partners.serializers.exports.interventions import (
+    InterventionAmendmentExportSerializer,
+    InterventionAmendmentExportFlatSerializer,
+    InterventionExportSerializer,
+    InterventionExportFlatSerializer,
+    InterventionIndicatorExportSerializer,
+    InterventionIndicatorExportFlatSerializer,
+    InterventionResultExportSerializer,
+    InterventionResultExportFlatSerializer,
+    InterventionSectorLocationLinkExportSerializer,
+    InterventionSectorLocationLinkExportFlatSerializer,
+)
 from partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionDetailSerializer,
@@ -51,6 +63,7 @@ from partners.serializers.interventions_v2 import (
     InterventionAttachmentSerializer,
     InterventionAmendmentCUSerializer,
     InterventionIndicatorSerializer,
+    InterventionSectorLocationCUSerializer,
     InterventionResultCUSerializer,
     InterventionResultSerializer,
     InterventionListMapSerializer,

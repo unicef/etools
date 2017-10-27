@@ -457,3 +457,4 @@ class TestAppliedIndicatorExportList(APITenantTestCase):
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 22)
         self.assertEqual(len(dataset[0]), 22)
+        self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])

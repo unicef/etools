@@ -693,6 +693,35 @@ class DSARateFactory(factory.django.DjangoModelFactory):
     finalization_date = date.today()
 
 
+class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionResultLink
+
+    intervention = factory.SubFactory(InterventionFactory)
+    cp_output = factory.SubFactory(ResultFactory)
+
+
+class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionSectorLocationLink
+
+    intervention = factory.SubFactory(InterventionFactory)
+    sector = factory.SubFactory(SectorFactory)
+
+
+class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = report_models.AppliedIndicator
+
+    indicator = factory.SubFactory(IndicatorBlueprintFactory)
+    lower_result = factory.SubFactory(LowerResultFactory)
+    context_code = fuzzy.FuzzyText(length=5)
+    target = fuzzy.FuzzyText(length=15)
+
+
 class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
     def fuzz(self):
         return factory.fuzzy._random.choice(
