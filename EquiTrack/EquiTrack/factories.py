@@ -235,7 +235,7 @@ class InterventionReportingPeriodFactory(factory.django.DjangoModelFactory):
     due_date = factory.LazyAttribute(lambda o: o.end_date + timedelta(days=3))
 
 
-class InterventionPlannedVisitFactory(factory.django.DjangoModelFactory):
+class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.InterventionPlannedVisits
 
@@ -748,4 +748,4 @@ class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
     indicator = factory.SubFactory(IndicatorBlueprintFactory)
     lower_result = factory.SubFactory(LowerResultFactory)
     context_code = fuzzy.FuzzyText(length=5)
-    target = fuzzy.FuzzyText(length=15)
+    target = fuzzy.FuzzyInteger(0, 100)
