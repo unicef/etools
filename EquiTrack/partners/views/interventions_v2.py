@@ -540,24 +540,6 @@ class InterventionSectorLocationLinkListAPIView(ExportModelMixin, ListAPIView):
         return q
 
 
-class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerRepPermission,)
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            intervention_sector_location = InterventionSectorLocationLink.objects.get(id=int(kwargs['pk']))
-        except InterventionSectorLocationLink.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_sector_location.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_sector_location.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_sector_location.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete a sector location")
-
-
 class InterventionListMapView(ListCreateAPIView):
     """
     Create new Interventions.

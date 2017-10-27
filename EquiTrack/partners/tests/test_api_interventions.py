@@ -53,7 +53,6 @@ class URLsTestCase(URLAssertionMixin, TestCase):
             ('intervention-amendments', 'amendments/', {}),
             ('intervention-amendments-del', 'amendments/1/', {'pk': 1}),
             ('intervention-sector-locations', 'sector-locations/', {}),
-            ('intervention-sector-locations-del', 'sector-locations/1/', {'pk': 1}),
             ('intervention-map', 'map/', {}),
             )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/interventions/')

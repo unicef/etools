@@ -2004,34 +2004,6 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["You do not have permissions to delete an amendment"])
 
-    def test_intervention_sector_locations_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                "partners_api:intervention-sector-locations-del",
-                args=[self.isll.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_intervention_sector_locations_delete_invalid(self):
-        intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = Intervention.ACTIVE
-        intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                "partners_api:intervention-sector-locations-del",
-                args=[self.isll.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete a sector location"])
-
     def test_api_interventions_values(self):
         params = {"values": "{}".format(self.intervention["id"])}
         response = self.forced_auth_req(
