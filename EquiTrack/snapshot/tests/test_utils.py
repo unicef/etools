@@ -51,7 +51,7 @@ class TestSetRelationValues(TenantTestCase):
 
 class TestCreateChangeDict(TenantTestCase):
     def test_no_target_before(self):
-        self.assertEqual(utils.create_change_dict(None, {"key": "value"}), "")
+        self.assertEqual(utils.create_change_dict(None, {"key": "value"}), {})
 
     def test_no_data(self):
         intervention = InterventionFactory()
@@ -69,9 +69,20 @@ class TestCreateSnapshot(TenantTestCase):
     def test_create(self):
         user = UserFactory()
         intervention = InterventionFactory()
-        activity = utils.create_snapshot(intervention, None, user, {})
+        activity = utils.create_snapshot(intervention, user, {})
         self.assertEqual(activity.target, intervention)
         self.assertEqual(activity.action, activity.CREATE)
         self.assertEqual(activity.by_user, user)
         self.assertEqual(activity.data["title"], intervention.title)
         self.assertEqual(activity.change, "")
+
+    def test_update(self):
+        user = UserFactory()
+        intervention = InterventionFactory()
+        change = {"title": {"before": "Random", "after": intervention.title}}
+        activity = utils.create_snapshot(intervention, user, change)
+        self.assertEqual(activity.target, intervention)
+        self.assertEqual(activity.action, activity.UPDATE)
+        self.assertEqual(activity.by_user, user)
+        self.assertEqual(activity.data["title"], intervention.title)
+        self.assertEqual(activity.change, change)

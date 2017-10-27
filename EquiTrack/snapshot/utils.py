@@ -48,15 +48,14 @@ def create_change_dict(target_before, data):
     return change
 
 
-def create_snapshot(target, target_before, by_user, data):
-    """If target_before is None, then action is create, otherwise update
+def create_snapshot(target, by_user, change):
+    """If change is not empty, then action is update, otherwise create
 
     For many to many relation fields add them to the target
     and use their pk for values
     """
-    action = Activity.CREATE if target_before is None else Activity.UPDATE
+    action = Activity.UPDATE if change else Activity.CREATE
     current_obj_dict, _ = set_relation_values(target, None)
-    change = create_change_dict(target_before, data)
 
     activity = Activity.objects.create(
         target=target,
