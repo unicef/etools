@@ -159,13 +159,6 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
     to_date = date(date.today().year, 12, 31)
 
 
-class AppliedIndicatorFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = report_models.AppliedIndicator
-
-    lower_result = factory.SubFactory('EquiTrack.factories.LowerResultFactory')
-
-
 class AgreementFactory(factory.django.DjangoModelFactory):
     '''Factory for Agreements. If the agreement type is PCA (the default), the agreement's end date is set from
     the country_programme so any end date passed to this factory is ignored.
