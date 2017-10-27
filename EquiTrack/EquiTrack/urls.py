@@ -18,8 +18,8 @@ import djangosaml2.views
 from EquiTrack.stream_feed.feeds import JSONActivityFeedWithCustomData
 from EquiTrack.views import (
     MainView,
-    OutdatedBrowserView
-)
+    OutdatedBrowserView,
+    IssueJWTRedirectView)
 from locations.views import (
     LocationTypesViewSet,
     LocationsViewSet,
@@ -138,6 +138,8 @@ urlpatterns = [
     url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
         name='workspace-inactive'),
     url(r'^api/v2/workspaces', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
+
+    url(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
 
     # Activity stream
     url(r'^activity/(?P<model_name>\w+)/json/$',
