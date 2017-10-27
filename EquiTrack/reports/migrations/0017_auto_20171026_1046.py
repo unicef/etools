@@ -21,6 +21,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='lowerresult',
             name='result_link',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='ll_results', to='partners.InterventionResultLink'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ll_results', to='partners.InterventionResultLink'),
         ),
     ]
