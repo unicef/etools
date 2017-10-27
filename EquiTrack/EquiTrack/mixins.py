@@ -1,7 +1,7 @@
 """
 Project wide mixins for models and classes
 """
-
+import json
 import logging
 
 import jwt
@@ -16,6 +16,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.http.response import HttpResponseRedirect
 
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_jwt.utils import jwt_payload_handler
 
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
@@ -182,12 +183,13 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
             if getattr(settings, 'JWT_ALLOW_NON_EXISTENT_USERS', False):
                 try:
                     # try and see if the token is valid
-                    jwt_decode_handler(jwt_value)
+                    payload = jwt_decode_handler(jwt_value)
                 except (jwt.ExpiredSignature, jwt.DecodeError):
                     raise PermissionDenied(detail='Authentication Failed')
                 else:
                     # signature is valid user does not exist... setting default authenticated user
                     user = get_user_model().objects.get(username=settings.DEFAULT_UNICEF_USER)
+                    setattr(user, 'jwt_payload', payload)
             else:
                 raise PermissionDenied(detail='Authentication Failed')
 
@@ -199,7 +201,6 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
             user.profile.save()
 
         set_country(user, request)
-
         return user, jwt_value
 
 
@@ -244,3 +245,9 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
         return
+
+
+def custom_jwt_payload_handler(user):
+    payload = jwt_payload_handler(user)
+    payload['groups'] = list(user.groups.values_list('name', flat=True))
+    return payload
