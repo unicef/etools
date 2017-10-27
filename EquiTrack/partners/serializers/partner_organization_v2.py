@@ -218,6 +218,8 @@ class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        # TODO: on create we should call the insight API with the vendor number
+        # and use that information to populate:
         staff_members = validated_data.pop('staff_members', None)
         partner = PartnerOrganization.objects.create(**validated_data)
         for staff in staff_members:
