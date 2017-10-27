@@ -45,10 +45,8 @@ class AuditorStaffMember(BaseStaffMember):
     auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('firm'), related_name='staff_members')
 
     def __str__(self):
-        return '{} ({})'.format(
-            self.get_full_name(),
-            self.auditor_firm.name
-        )
+        auditor_firm_name = ' ({})'.format(self.auditor_firm.name) if hasattr(self, 'auditor_firm') else ''
+        return self.get_full_name() + auditor_firm_name
 
     def send_user_appointed_email(self, engagement):
         context = {
