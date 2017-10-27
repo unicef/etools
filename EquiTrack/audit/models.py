@@ -674,6 +674,7 @@ class AuditPermissionQueryset(StatusBasePermissionQueryset):
         return super(AuditPermissionQueryset, self).filter(*args, **kwargs)
 
 
+@python_2_unicode_compatible
 class AuditPermission(StatusBasePermission):
     STATUSES = StatusBasePermission.STATUSES + Engagement.STATUSES
 
