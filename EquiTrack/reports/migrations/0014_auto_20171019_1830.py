@@ -26,11 +26,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='appliedindicator',
-            name='disaggregation_logic',
-            field=django.contrib.postgres.fields.jsonb.JSONField(null=True, verbose_name='Disaggregation Logic'),
-        ),
-        migrations.AlterField(
-            model_name='appliedindicator',
             name='lower_result',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='applied_indicators', to='reports.LowerResult', verbose_name='Lower Level Result'),
         ),
@@ -61,8 +56,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='indicatorblueprint',
-            name='name',
-            field=models.CharField(max_length=1024, verbose_name='Name'),
+            name='title',
+            field=models.CharField(max_length=1024, verbose_name='Title'),
         ),
         migrations.AlterField(
             model_name='indicatorblueprint',

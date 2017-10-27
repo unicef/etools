@@ -588,15 +588,9 @@ class AppliedIndicator(TimeStampedModel):
         null=True,
         blank=True,
     )
-    target = models.CharField(
-        verbose_name=_("Target"),
-        max_length=255,
-        null=True,
-        blank=True,
-    )
-    baseline = models.CharField(
+    target = models.PositiveIntegerField(verbose_name=_("Target"), default=0)
+    baseline = models.PositiveIntegerField(
         verbose_name=_("Baseline"),
-        max_length=255,
         null=True,
         blank=True,
     )
@@ -622,7 +616,7 @@ class AppliedIndicator(TimeStampedModel):
 
     # variable disaggregation's that may be present in the work plan
     # this can only be present if the indicatorBlueprint has dissagregatable = true
-    disaggregation_logic = models.ManyToManyField(
+    disaggregation = models.ManyToManyField(
         Disaggregation,
         verbose_name=_("Disaggregation Logic"),
         related_name='applied_indicators',

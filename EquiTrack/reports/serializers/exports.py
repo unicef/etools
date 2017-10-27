@@ -14,13 +14,13 @@ from reports.models import (
 class AppliedIndicatorExportSerializer(serializers.ModelSerializer):
     intervention = serializers.CharField(source="lower_result.result_link.intervention.pk")
     lower_result = serializers.CharField(source="lower_result.pk")
-    name = serializers.CharField(source="indicator.name")
+    title = serializers.CharField(source="indicator.title")
     unit = serializers.CharField(source="indicator.unit")
     description = serializers.CharField(source="indicator.description")
     code = serializers.CharField(source="indicator.code")
     subdomain = serializers.CharField(source="indicator.subdomain")
     disaggregatable = serializers.SerializerMethodField()
-    disaggregation_logic = serializers.SerializerMethodField()
+    disaggregation = serializers.SerializerMethodField()
 
     class Meta:
         model = AppliedIndicator
@@ -29,10 +29,10 @@ class AppliedIndicatorExportSerializer(serializers.ModelSerializer):
     def get_disaggregatable(self, obj):
         return "Yes" if obj.indicator.disaggregatable else "No"
 
-    def get_disaggregation_logic(self, obj):
-        res = obj.disaggregation_logic
-        if isinstance(obj.disaggregation_logic, str):
-            res = json.loads(obj.disaggregation_logic)
+    def get_disaggregation(self, obj):
+        res = obj.disaggregation
+        if isinstance(obj.disaggregation, str):
+            res = json.loads(obj.disaggregation)
         return res
 
 
