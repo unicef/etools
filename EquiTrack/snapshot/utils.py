@@ -11,7 +11,7 @@ from snapshot.models import Activity
 
 def jsonify(data):
     for key, value in data.items():
-        if type(value) not in [int, float, bool, str, list]:
+        if not isinstance(value, (int, float, bool, str, list, tuple, dict)):
             data[key] = unicode(data[key])
     return data
 
