@@ -191,7 +191,7 @@ class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
     """Returns a list of Agreement Amendments"""
     serializer_class = AgreementAmendmentListSerializer
     filter_backends = (PartnerScopeFilter,)
-    permission_classes = (PartneshipManagerPermission, )
+    permission_classes = (PartnershipManagerPermission, )
     renderer_classes = (
         r.JSONRenderer,
         r.CSVRenderer,
