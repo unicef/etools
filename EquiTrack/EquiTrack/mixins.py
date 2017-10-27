@@ -4,6 +4,8 @@ Project wide mixins for models and classes
 
 import logging
 
+import jwt
+from django.contrib.auth import get_user_model
 from django.db import connection
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -12,6 +14,8 @@ from django.core.urlresolvers import reverse
 from django.template.response import SimpleTemplateResponse
 from django.utils.http import urlsafe_base64_encode
 from django.http.response import HttpResponseRedirect
+
+from rest_framework.exceptions import AuthenticationFailed
 
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
@@ -173,6 +177,19 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
             user, jwt_value = super(EToolsTenantJWTAuthentication, self).authenticate(request)
         except TypeError:
             raise PermissionDenied(detail='No valid authentication provided')
+        except AuthenticationFailed:
+            # Try again
+            if getattr(settings, 'JWT_ALLOW_NON_EXISTENT_USERS', False):
+                try:
+                    # try and see if the token is valid
+                    jwt_decode_handler(jwt_value)
+                except (jwt.ExpiredSignature, jwt.DecodeError):
+                    raise PermissionDenied(detail='Authentication Failed')
+                else:
+                    # signature is valid user does not exist... setting default authenticated user
+                    user = get_user_model().objects.get(username=settings.DEFAULT_UNICEF_USER)
+            else:
+                raise PermissionDenied(detail='Authentication Failed')
 
         if not user.profile.country:
             raise PermissionDenied(detail='No country found for user')
