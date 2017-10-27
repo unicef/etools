@@ -42,7 +42,7 @@ from funds.serializers import (
     GrantSerializer,
 )
 from partners.filters import PartnerScopeFilter
-from partners.permissions import PartneshipManagerPermission
+from partners.permissions import PartnershipManagerPermission
 
 
 class FRsView(APIView):
@@ -82,7 +82,7 @@ class FundsReservationHeaderListAPIView(ExportModelMixin, ListAPIView):
     Returns a list of FundsReservationHeaders.
     """
     serializer_class = FRHeaderSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,
@@ -126,7 +126,7 @@ class FundsReservationItemListAPIView(ExportModelMixin, ListAPIView):
     Returns a list of FundsReservationItems.
     """
     serializer_class = FundsReservationItemSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,
@@ -170,7 +170,7 @@ class FundsCommitmentHeaderListAPIView(ExportModelMixin, ListAPIView):
     Returns a list of FundsCommitmentHeaders.
     """
     serializer_class = FundsCommitmentHeaderSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,
@@ -201,7 +201,7 @@ class FundsCommitmentItemListAPIView(ExportModelMixin, ListAPIView):
     Returns a list of FundsCommitmentItems.
     """
     serializer_class = FundsCommitmentItemSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,
@@ -243,7 +243,7 @@ class GrantListAPIView(ExportModelMixin, ListAPIView):
     Returns a list of Grants.
     """
     serializer_class = GrantSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,
@@ -285,7 +285,7 @@ class DonorListAPIView(ExportModelMixin, ListAPIView):
     Returns a list of Donors.
     """
     serializer_class = DonorSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,
