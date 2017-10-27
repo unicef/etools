@@ -31,6 +31,7 @@ def set_relation_values(obj, data):
 
 
 def create_change_dict(target_before, data):
+    change = {}
     if target_before is not None:
         previous_obj_dict, data = set_relation_values(target_before, data)
         change = {}
@@ -42,8 +43,6 @@ def create_change_dict(target_before, data):
                         "after": data[k],
                     })
                 })
-    else:
-        change = ""
 
     return change
 

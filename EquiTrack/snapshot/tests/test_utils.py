@@ -74,7 +74,7 @@ class TestCreateSnapshot(TenantTestCase):
         self.assertEqual(activity.action, activity.CREATE)
         self.assertEqual(activity.by_user, user)
         self.assertEqual(activity.data["title"], intervention.title)
-        self.assertEqual(activity.change, "")
+        self.assertEqual(activity.change, {})
 
     def test_update(self):
         user = UserFactory()
