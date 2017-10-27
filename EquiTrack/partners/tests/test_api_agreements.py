@@ -74,7 +74,7 @@ class TestAgreementsAPI(APITenantTestCase):
         return response.status_code, json.loads(response.rendered_content)
 
     def test_add_new_PCA(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner1.id,
@@ -90,7 +90,7 @@ class TestAgreementsAPI(APITenantTestCase):
         )
 
     def test_fail_add_new_PCA_without_agreement_type(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "partner": self.partner1.id,
             "country_programme": self.country_programme.id,
@@ -99,10 +99,10 @@ class TestAgreementsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['agreement_type'], ['This field is required.'])
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
 
     def test_fail_add_new_PCA_without_country_programme(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner1.id
@@ -111,10 +111,10 @@ class TestAgreementsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['country_programme'], ['Country Programme is required for PCAs!'])
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
 
     def test_add_new_SSFA_without_country_programme(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.SSFA,
             "partner": self.partner1.id
@@ -129,7 +129,7 @@ class TestAgreementsAPI(APITenantTestCase):
         )
 
     def test_add_new_SSFA_with_country_programme_null(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.SSFA,
             "partner": self.partner1.id,
@@ -146,7 +146,7 @@ class TestAgreementsAPI(APITenantTestCase):
 
     def test_fail_patch_PCA_without_country_programme(self):
         # create new agreement
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.SSFA,
             "partner": self.partner1.id
@@ -167,17 +167,17 @@ class TestAgreementsAPI(APITenantTestCase):
     def test_fail_patch_PCA_without_PartnershipManagerPermission(self):
         # create new agreement
         # change agreement type to a PCA
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.PCA
         }
         status_code, response = self.run_request(self.agreement1.id, data, method='patch', user=self.unicef_staff)
         self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response['detail'], 'Accessing this item is not allowed.')
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
 
     def test_fail_add_PCA_without_PartnershipManagerPermission(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner1.id,
@@ -186,7 +186,7 @@ class TestAgreementsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.unicef_staff)
         self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response['detail'], 'Accessing this item is not allowed.')
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
 
     def test_list_agreements(self):
         with self.assertNumQueries(1):

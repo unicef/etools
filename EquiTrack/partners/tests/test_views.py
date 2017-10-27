@@ -321,12 +321,13 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
 
     def test_create_simple(self):
         '''Exercise simple create'''
+        self.assertFalse(Activity.objects.exists())
         response = self.forced_auth_req('post', self.url, data=self.data)
         self.assertResponseFundamentals(response)
 
         # Check snapshot creation
         self.assertEqual(Activity.objects.all().count(), 1)
-        activity = Activity.objects.all()[0]
+        activity = Activity.objects.first()
         self.assertEqual(activity.action, Activity.CREATE)
         self.assertEqual(activity.change, "")
         self.assertEqual(activity.by_user, self.user)
@@ -353,7 +354,7 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
 
     def test_create_with_staff_members(self):
         '''Exercise create with staff members'''
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = self.data.copy()
         data["staff_members"] = [{"title": "Some title",
                                   "first_name": "Jane",
@@ -371,7 +372,7 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
 
         # Check snapshot creation
         self.assertEqual(Activity.objects.all().count(), 1)
-        activity = Activity.objects.all()[0]
+        activity = Activity.objects.first()
         self.assertEqual(activity.action, Activity.CREATE)
         self.assertEqual(activity.change, "")
         self.assertEqual(activity.by_user, self.user)
@@ -460,7 +461,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.data, ["Cannot delete a completed assessment"])
 
     def test_api_partners_update_with_members(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         response = self.forced_auth_req(
             'get',
             reverse('partners_api:partner-detail', args=[self.partner.pk]),
@@ -499,7 +500,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
     def test_api_partners_update_assessments_invalid(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         today = datetime.date.today()
         assessments = [{
                 "id": self.assessment2.id,
@@ -524,7 +525,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
     def test_api_partners_update_assessments_longago(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         today = datetime.date.today()
         assessments = [{
                 "id": self.assessment2.id,
@@ -547,7 +548,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
     def test_api_partners_update_assessments_today(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         completed_date = datetime.date.today()
         assessments = [{
                 "id": self.assessment2.id,
@@ -570,7 +571,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
     def test_api_partners_update_assessments_yesterday(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         completed_date = datetime.date.today() - datetime.timedelta(days=1)
         assessments = [{
                 "id": self.assessment2.id,
@@ -593,7 +594,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
     def test_api_partners_update_with_members_null_phone(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         response = self.forced_auth_req(
             'get',
             reverse('partners_api:partner-detail', args=[self.partner.pk]),
@@ -629,7 +630,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
     def test_api_partners_update_assessments_tomorrow(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         completed_date = datetime.date.today() + datetime.timedelta(days=1)
         assessments = [{
                 "id": self.assessment2.id,
@@ -697,7 +698,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(len(response.data["staff_members"]), 1)
 
     def test_api_partners_update(self):
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "name": "Updated name again",
         }
@@ -774,7 +775,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
     def test_api_partners_update_hidden(self):
         # make some other type to filter against
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "hidden": True
         }
@@ -865,7 +866,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
 
     def test_minimal_create(self):
         '''Test passing as few fields as possible to create'''
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.MOU,
             "partner": self.partner.id,
@@ -880,7 +881,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
 
         # Check snapshot creation
         self.assertEqual(Activity.objects.all().count(), 1)
-        activity = Activity.objects.all()[0]
+        activity = Activity.objects.first()
         self.assertEqual(activity.action, Activity.CREATE)
         self.assertEqual(activity.change, "")
         self.assertEqual(activity.by_user, self.partnership_manager_user)
@@ -905,7 +906,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         self.assertEqual(response.data['country_programme'][0], 'Country Programme is required for PCAs!')
 
         # Check that no snapshot was created
-        self.assertEqual(Activity.objects.all().count(), 0)
+        self.assertFalse(Activity.objects.exists())
 
 
 class TestAgreementAPIFileAttachments(APITenantTestCase):
