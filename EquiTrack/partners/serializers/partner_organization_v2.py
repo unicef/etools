@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 import json
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.utils import timezone
