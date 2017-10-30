@@ -42,6 +42,10 @@ class TestCreateDictWithRelations(TenantTestCase):
         obj_dict = utils.create_dict_with_relations(intervention)
         self.assertEqual(obj_dict["frs"], [fr.pk])
 
+    def test_obj_none(self):
+        obj_dict = utils.create_dict_with_relations(None)
+        self.assertEqual(obj_dict, {})
+
 
 class TestCreateChangeDict(TenantTestCase):
     def test_no_prev_dict(self):
