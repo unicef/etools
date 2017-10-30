@@ -537,6 +537,10 @@ VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
 
+PDF_API_URL = os.getenv('PDF_API_URL', '')
+PDF_API_USER = os.getenv('PDF_API_USER', '')
+PDF_API_PASSWORD = os.getenv('PDF_API_PASSWORD', '')
+
 ISSUE_CHECKS = [
     'management.issues.project_checks.ActivePCANoSignedDocCheck',
     'management.issues.project_checks.PdOutputsWrongCheck',

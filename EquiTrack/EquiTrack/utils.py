@@ -61,6 +61,7 @@ def get_data_from_insight(endpoint, data={}):
         auth=(settings.VISION_USER, settings.VISION_PASSWORD),
         verify=False
     )
+
     if response.status_code != 200:
         return False, 'Loading data from Vision Failed, status {}'.format(response.status_code)
     try:
@@ -68,6 +69,25 @@ def get_data_from_insight(endpoint, data={}):
     except ValueError:
         return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
     return True, result
+
+
+def load_internal_pdf_template(data={}):
+    api_url = 'http://{}/{}/'.format(
+        settings.PDF_API_URL,
+        'api/pdf'
+    )
+
+    # return api_url
+    response = requests.post(
+        api_url,
+        # data=data,
+        json=data,
+        headers={'Content-Type': 'application/json'},
+        auth=(settings.PDF_API_USER, settings.PDF_API_PASSWORD),
+        verify=False
+    )
+
+    return response
 
 
 def etag_cached(cache_key, public_cache=False):

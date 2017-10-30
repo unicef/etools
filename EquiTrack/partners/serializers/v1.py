@@ -23,6 +23,8 @@ from partners.models import (
     PartnerType,
 )
 
+from reports.serializers.v1 import CountryProgrammeSerializer
+
 
 class PCASectorGoalSerializer(serializers.ModelSerializer):
 
@@ -252,6 +254,13 @@ class PartnerOrganizationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PartnerStaffMemberSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = '__all__'
+
+
 class AgreementSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -259,11 +268,17 @@ class AgreementSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PartnerStaffMemberSerializer(serializers.ModelSerializer):
+class AgreementNestedSerializer(serializers.ModelSerializer):
+    authorized_officers = PartnerStaffMemberSerializer(many=True, read_only=True)
+    country_programme = CountryProgrammeSerializer(read_only=True)
+    partner = PartnerOrganizationSerializer(read_only=True)
 
     class Meta:
-        model = PartnerStaffMember
-        fields = '__all__'
+        model = Agreement
+        fields = (
+            "agreement_number", "agreement_type", "attached_agreement", "authorized_officers",
+            "country_programme", "end", "id", "partner", "start", "status",
+        )
 
 
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):

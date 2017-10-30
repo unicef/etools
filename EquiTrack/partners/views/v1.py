@@ -1,10 +1,13 @@
 from __future__ import absolute_import, unicode_literals
 import datetime
+import json
 
 from collections import namedtuple
 from django.conf import settings
 from django.db import transaction
+from django.core import serializers
 from django.http import HttpResponse
+from django.forms import model_to_dict
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
@@ -16,7 +19,6 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from actstream import action
-from easy_pdf.views import PDFTemplateView
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
@@ -60,35 +62,35 @@ from partners.serializers.v1 import (
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
     AgreementSerializer,
+    AgreementNestedSerializer,
     PartnershipBudgetSerializer,
     PCAFileSerializer,
 )
-from EquiTrack.utils import get_data_from_insight
+from EquiTrack.utils import get_data_from_insight, load_internal_pdf_template
 
 
-class PCAPDFView(PDFTemplateView):
-    template_name = "partners/pca/english_pdf.html"
-    # TODO add proper templates for different languages
-    language_templates_mapping = {
-        "arabic": "partners/pca/arabic_pdf.html",
-        "english": "partners/pca/english_pdf.html",
-        "french": "partners/pca/french_pdf.html",
-        "portuguese": "partners/pca/portuguese_pdf.html",
-        "russian": "partners/pca/russian_pdf.html",
-        "spanish": "partners/pca/spanish_pdf.html",
-        "ifrc_english": "partners/pca/ifrc_english_pdf.html",
-        "ifrc_french": "partners/pca/ifrc_french_pdf.html"
-    }
+class PCAPDFView(TemplateView):
+    languages = ("arabic", "english", "french", "portuguese",
+                 "russian", "spanish", "ifrc_english", "ifrc_french")
+
+
+    def get(self, request, *args, **kwargs):
+        pdf_response = load_internal_pdf_template(self.get_context_data(**kwargs))
+
+        # return HttpResponse(pdf_response)
+        # return HttpResponse(pdf_response.status_code, pdf_response.content)
+        # return HttpResponse(json.dumps(self.get_context_data(**kwargs)))
+
+        return HttpResponse(pdf_response, content_type='application/pdf')
+
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
         lang = self.request.GET.get('lang', None)
         error = None
 
-        try:
-            self.template_name = self.language_templates_mapping[lang]
-        except KeyError:
-            return {"error": "Cannot find document with given query parameter lang={}".format(lang)}
+        if not lang in self.languages:
+            return {"error": "Language does not exist for given query parameter lang={}".format(lang)}
 
         try:
             agreement = Agreement.objects.get(id=agr_id)
@@ -130,20 +132,36 @@ class PCAPDFView(PDFTemplateView):
                  'title': officer.title}
             )
 
+        country_programme = {}
+        country_programme.update({
+            "from_date": agreement.country_programme.from_date.strftime("%Y"),
+            "to_date": agreement.country_programme.to_date.strftime("%Y"),
+        })
+
+        serialized_agreement = AgreementNestedSerializer(agreement, read_only=True)
+
         font_path = settings.SITE_ROOT + '/assets/fonts/'
 
-        return super(PCAPDFView, self).get_context_data(
-            error=error,
-            pagesize="Letter",
-            title="Partnership",
-            agreement=agreement,
-            bank_details=bank_objects,
-            cp=agreement.country_programme,
-            auth_officers=officers_list,
-            country=self.request.tenant.long_name,
-            font_path=font_path,
-            **kwargs
-        )
+        # return super(PCAPDFView, self).get_context_data(
+        return {
+            "error": error,
+            "pagesize": "Letter",
+            "title": "Partnership",
+            "language": lang,
+            #"agreement": model_to_dict(agreement),
+            #"agreement": serializers.serialize('json', [agreement]),
+            #"agreement": agreement,
+            "agreement": serialized_agreement.data,
+            "bank_details": bank_objects,
+            #"cp": model_to_dict(agreement.country_programme),
+            #"cp": serializers.serialize('json', [agreement.country_programme]),
+            #"cp": agreement.country_programme,
+            "cp": country_programme,
+            "auth_officers": officers_list,
+            "country": self.request.tenant.long_name,
+            "font_path": font_path,
+            # **kwargs
+        }
 
 
 class InterventionLocationView(ListAPIView):
