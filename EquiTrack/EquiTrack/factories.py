@@ -704,3 +704,13 @@ class ActivityFactory(factory.django.DjangoModelFactory):
     by_user = factory.SubFactory(UserFactory)
     data = {"random": "data"}
     change = ""
+
+
+class FundingCommitmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.FundingCommitment
+
+    grant = factory.SubFactory(GrantFactory)
+    fr_number = fuzzy.FuzzyText(length=50)
+    wbs = fuzzy.FuzzyText(length=50)
+    fc_type = fuzzy.FuzzyText(length=50)
