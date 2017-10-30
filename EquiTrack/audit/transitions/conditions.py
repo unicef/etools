@@ -95,8 +95,8 @@ class EngagementHasReportAttachmentsCheck(BaseTransitionCheck):
     def get_errors(self, instance, *args, **kwargs):
         errors = super(EngagementHasReportAttachmentsCheck, self).get_errors(*args, **kwargs)
 
-        if instance.report_attachments.count() <= 0:
-            errors['report_attachments'] = _('You should attach at least one file.')
+        if instance.report_attachments.filter(file_type__name='report').count() <= 0:
+            errors['report_attachments'] = _('You should attach report.')
         return errors
 
 

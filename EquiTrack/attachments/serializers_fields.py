@@ -30,7 +30,7 @@ class ModelChoiceField(serializers.PrimaryKeyRelatedField):
 
 class FileTypeModelChoiceField(ModelChoiceField):
     def get_choice(self, obj):
-        return obj.id, obj.name
+        return obj.id, obj.label
 
 
 class Base64FileField(serializers.FileField):
