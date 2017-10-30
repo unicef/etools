@@ -43,7 +43,6 @@ from partners.forms import (
 )
 
 
-
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
     verbose_name = u'Amendment'
     model = InterventionAmendment
