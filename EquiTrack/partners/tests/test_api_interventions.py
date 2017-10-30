@@ -254,7 +254,7 @@ class TestInterventionsAPI(APITenantTestCase):
         activity = Activity.objects.first()
         self.assertEqual(activity.target, self.intervention_2)
         self.assertEqual(activity.action, Activity.UPDATE)
-        self.assertEqual(activity.change, {
+        self.assertDictEqual(activity.change, {
             "frs": {
                 "before": [],
                 "after": [self.fr_1.pk, self.fr_2.pk]
