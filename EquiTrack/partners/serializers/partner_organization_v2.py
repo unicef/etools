@@ -204,7 +204,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
 
-    staff_members = PartnerStaffMemberNestedSerializer(many=True)
+    staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     hidden = serializers.BooleanField(read_only=True)
@@ -215,16 +215,6 @@ class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
-
-    @transaction.atomic
-    def create(self, validated_data):
-        # TODO: on create we should call the insight API with the vendor number
-        # and use that information to populate:
-        staff_members = validated_data.pop('staff_members', None)
-        partner = PartnerOrganization.objects.create(**validated_data)
-        for staff in staff_members:
-            PartnerStaffMember.objects.create(partner=partner, **staff)
-        return partner
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):

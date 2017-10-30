@@ -76,18 +76,15 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
         """
         Use restriceted field set for listing
         """
-        if self.request.method == "GET":
-            query_params = self.request.query_params
-            if "format" in query_params.keys():
-                if query_params.get("format") == 'csv':
-                    return PartnerOrganizationExportSerializer
-                if query_params.get("format") == 'csv_flat':
-                    return PartnerOrganizationExportFlatSerializer
-            if "verbosity" in query_params.keys():
-                if query_params.get("verbosity") == 'minimal':
-                    return MinimalPartnerOrganizationListSerializer
-        if self.request.method == "POST":
-            return PartnerOrganizationCreateUpdateSerializer
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return PartnerOrganizationExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return PartnerOrganizationExportFlatSerializer
+        if "verbosity" in query_params.keys():
+            if query_params.get("verbosity") == 'minimal':
+                return MinimalPartnerOrganizationListSerializer
         return super(PartnerOrganizationListAPIView, self).get_serializer_class()
 
     def get_queryset(self, format=None):

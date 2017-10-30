@@ -322,48 +322,6 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
 
         return response_json['id']
 
-    def test_create_simple(self):
-        '''Exercise simple create'''
-        response = self.forced_auth_req('post', self.url, data=self.data)
-        self.assertResponseFundamentals(response)
-
-    def test_no_permission_user_forbidden(self):
-        '''Ensure a non-staff user gets the 403 smackdown'''
-        response = self.forced_auth_req('post', self.url, data=self.data, user=UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_unauthenticated_user_forbidden(self):
-        '''Ensure an unauthenticated user gets the 403 smackdown'''
-        factory = APIRequestFactory()
-        view_info = resolve(self.url)
-        request = factory.post(self.url, data=self.data, format='json')
-        response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_group_permission(self):
-        '''Ensure a non-staff user in the 'special' group still gets 403 when attempting to create/POST'''
-        user = UserFactory()
-        user.groups.add(Group.objects.get(name=READ_ONLY_API_GROUP_NAME))
-        response = self.forced_auth_req('post', self.url, data=self.data, user=user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_create_with_staff_members(self):
-        '''Exercise create with staff members'''
-        data = self.data.copy()
-        data["staff_members"] = [{"title": "Some title",
-                                  "first_name": "Jane",
-                                  "last_name": "Doe",
-                                  "email": "a@example.com",
-                                  "active": True,
-                                  }]
-
-        response = self.forced_auth_req('post', self.url, data=data)
-        new_id = self.assertResponseFundamentals(response)
-        partner = PartnerOrganization.objects.get(pk=new_id)
-        staff_members = partner.staff_members.all()
-        self.assertEqual(len(staff_members), 1)
-        self.assertEqual(staff_members[0].email, 'a@example.com')
-
 
 class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     '''Exercise the retrieve, update, and delete views for PartnerOrganization'''
