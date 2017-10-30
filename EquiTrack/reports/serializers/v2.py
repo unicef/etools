@@ -122,7 +122,7 @@ class DisaggregationSerializer(serializers.ModelSerializer):
 
 class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
-    indicator = IndicatorBlueprintCUSerializer(required=False)
+    indicator = IndicatorBlueprintCUSerializer(required=False, allow_null=True)
 
     class Meta:
         model = AppliedIndicator
