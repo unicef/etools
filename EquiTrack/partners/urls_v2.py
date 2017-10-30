@@ -42,7 +42,7 @@ urlpatterns = (
         name='agreement-amendment-del'),
 
     url(r'^partners/$',
-        view=PartnerOrganizationListAPIView.as_view(http_method_names=['get', 'post']),
+        view=PartnerOrganizationListAPIView.as_view(http_method_names=['get']),
         name='partner-list'),
     url(r'^partners/hact/$',
         view=PartnerOrganizationHactAPIView.as_view(http_method_names=['get', ]),

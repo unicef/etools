@@ -283,39 +283,6 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
 
         return response_json['id']
 
-    def test_create_simple(self):
-        '''Exercise simple create'''
-        data = {
-            "name": "PO 1",
-            "partner_type": PartnerType.GOVERNMENT,
-            "vendor_number": "AAA",
-            "staff_members": [],
-        }
-        response = self.forced_auth_req('post', self.url, data=data)
-        self.assertResponseFundamentals(response)
-
-    def test_create_with_staff_members(self):
-        '''Exercise create with staff members'''
-        staff_members = [{
-            "title": "Some title",
-            "first_name": "Jane",
-            "last_name": "Doe",
-            "email": "a@example.com",
-            "active": True,
-        }]
-        data = {
-            "name": "PO 1",
-            "partner_type": PartnerType.GOVERNMENT,
-            "vendor_number": "AAA",
-            "staff_members": staff_members,
-        }
-        response = self.forced_auth_req('post', self.url, data=data)
-        new_id = self.assertResponseFundamentals(response)
-        partner = PartnerOrganization.objects.get(pk=new_id)
-        staff_members = partner.staff_members.all()
-        self.assertEqual(len(staff_members), 1)
-        self.assertEqual(staff_members[0].email, 'a@example.com')
-
 
 class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     '''Exercise the retrieve, update, and delete views for PartnerOrganization'''
