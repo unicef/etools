@@ -326,10 +326,10 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
         self.assertResponseFundamentals(response)
 
         # Check snapshot creation
-        self.assertEqual(Activity.objects.all().count(), 1)
+        self.assertTrue(Activity.objects.exists())
         activity = Activity.objects.first()
         self.assertEqual(activity.action, Activity.CREATE)
-        self.assertEqual(activity.change, "")
+        self.assertEqual(activity.change, {})
         self.assertEqual(activity.by_user, self.user)
 
     def test_no_permission_user_forbidden(self):
@@ -371,10 +371,10 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
         self.assertEqual(staff_members[0].email, 'a@example.com')
 
         # Check snapshot creation
-        self.assertEqual(Activity.objects.all().count(), 1)
+        self.assertTrue(Activity.objects.exists)
         activity = Activity.objects.first()
         self.assertEqual(activity.action, Activity.CREATE)
-        self.assertEqual(activity.change, "")
+        self.assertEqual(activity.change, {})
         self.assertEqual(activity.by_user, self.user)
 
 
@@ -880,17 +880,10 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Check snapshot creation
-        self.assertEqual(Activity.objects.all().count(), 1)
+        self.assertTrue(Activity.objects.exists())
         activity = Activity.objects.first()
         self.assertEqual(activity.action, Activity.CREATE)
-        self.assertEqual(activity.change, "")
-        self.assertEqual(activity.by_user, self.partnership_manager_user)
-
-        # Check snapshot creation
-        self.assertEqual(Activity.objects.all().count(), 1)
-        activity = Activity.objects.all()[0]
-        self.assertEqual(activity.action, Activity.CREATE)
-        self.assertEqual(activity.change, "")
+        self.assertEqual(activity.change, {})
         self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_create_simple_fail(self):
@@ -1174,7 +1167,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data["authorized_officers"]), 2)
 
         # Check for activity action created
-        self.assertEqual(Activity.objects.all().count(), 1)
+        self.assertTrue(Activity.objects.exists())
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             1

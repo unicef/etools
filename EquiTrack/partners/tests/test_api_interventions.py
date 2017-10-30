@@ -250,11 +250,10 @@ class TestInterventionsAPI(APITenantTestCase):
                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
         self.assertEqual(response['frs_details']['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
-        self.assertEqual(Activity.objects.all().count(), 1)
+        self.assertTrue(Activity.objects.exists())
         activity = Activity.objects.first()
         self.assertEqual(activity.target, self.intervention_2)
         self.assertEqual(activity.action, Activity.UPDATE)
-        self.assertIsNotNone(activity.change)
         self.assertEqual(activity.change, {
             "frs": {
                 "before": [],
@@ -306,7 +305,7 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
-        self.assertEqual(Activity.objects.all().count(), 1)
+        self.assertTrue(Activity.objects.exists())
 
     def test_fail_add_used_fr_on_pd(self):
         self.assertFalse(Activity.objects.exists())
@@ -334,7 +333,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
-        self.assertEqual(Activity.objects.all().count(), 1)
+        self.assertTrue(Activity.objects.exists())
 
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)

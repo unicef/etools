@@ -152,7 +152,7 @@ class TestAgreementsAPI(APITenantTestCase):
             "partner": self.partner1.id
         }
         status_code, response = self.run_request_list_ep(data)
-        self.assertEqual(Activity.objects.all().count(), 1)
+        self.assertTrue(Activity.objects.exists())
         agreement_id = response['id']
 
         # change agreement type to a PCA
@@ -162,7 +162,7 @@ class TestAgreementsAPI(APITenantTestCase):
         status_code, response = self.run_request(agreement_id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['country_programme'], ['Country Programme is required for PCAs!'])
-        self.assertEqual(Activity.objects.all().count(), 1)
+        self.assertTrue(Activity.objects.exists())
 
     def test_fail_patch_PCA_without_PartnershipManagerPermission(self):
         # create new agreement
