@@ -11,7 +11,7 @@ from django.forms import SelectMultiple
 from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
 
-from EquiTrack.admin import SnapshotModelAdmin
+from EquiTrack.admin import SnapshotModelAdmin, ActivityInline
 from EquiTrack.mixins import CountryUsersAdminMixin
 
 from partners.exports import PartnerExport
@@ -41,6 +41,7 @@ from partners.forms import (
     # TODO intervention sector locations cleanup
     SectorLocationForm,
 )
+
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
@@ -253,6 +254,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         # ResultsLinkInline,
         # SectorLocationInline,
         InterventionAttachmentsInline,
+        ActivityInline,
     )
 
     def created_date(self, obj):
@@ -309,6 +311,9 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
         u'last_name',
         u'email'
     )
+    inlines = [
+        ActivityInline,
+    ]
 
     def has_module_permission(self, request):
         return request.user.is_superuser
@@ -484,6 +489,9 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, Sn
     filter_horizontal = (
         u'authorized_officers',
     )
+    inlines = [
+        ActivityInline,
+    ]
 
     def has_module_permission(self, request):
         return request.user.is_superuser
@@ -512,6 +520,9 @@ class FundingCommitmentAdmin(SnapshotModelAdmin):
         u'start',
         u'end',
     )
+    inlines = [
+        ActivityInline,
+    ]
 
     def has_add_permission(self, request):
         return False
