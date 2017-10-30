@@ -1,7 +1,6 @@
 """
 Project wide mixins for models and classes
 """
-import json
 import logging
 
 import jwt
