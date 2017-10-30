@@ -4,57 +4,76 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from django.forms import model_to_dict
-from rest_framework.utils import model_meta
 
 from snapshot.models import Activity
 
 
 def jsonify(data):
+    """Convert data into a dictionary that can be json encoded"""
     for key, value in data.items():
         if not isinstance(value, (int, float, bool, str, list, tuple, dict)):
             data[key] = unicode(data[key])
     return data
 
 
-def set_relation_values(obj, data):
-    obj_dict = jsonify(model_to_dict(obj))
-    instance_info = model_meta.get_field_info(obj.__class__)
-    for field_name, relation_info in instance_info.relations.items():
-        if relation_info.to_many:
+def get_to_many_field_names(obj):
+    """Get all the many_to_many and one_to_many field names for an object"""
+    fields = []
+    for field in obj._meta.get_fields():
+        if field.one_to_many or field.many_to_many:
+            fields.append(field.name)
+    return fields
+
+
+def create_dict_with_relations(obj):
+    """Convert obj instance to a dictionary and then set
+    many_to_many and one_to_many relation values, using their pk values
+
+    These relations do not show up initially in the conversion of object
+    to a dictionary format.
+    """
+    obj_dict = {}
+    if obj is not None:
+        # re-query obj to by-pass any caching (prefetch_related)
+        obj = obj.__class__.objects.get(pk=obj.pk)
+        obj_dict = jsonify(model_to_dict(obj))
+        fields = get_to_many_field_names(obj)
+        for field_name in fields:
             if hasattr(obj, field_name):
                 field = getattr(obj, field_name)
                 obj_dict[field_name] = [x.pk for x in field.all()]
-                if data is not None and data.get(field_name):
-                    data[field_name] = [x.pk for x in data[field_name]]
 
-    return obj_dict, data
+    return obj_dict
 
 
-def create_change_dict(target_before, data):
+def create_change_dict(prev_dict, current_dict):
+    """Create a dictionary showing the differences between the
+    initial target and the target after being saved.
+
+    If prev_dict is empty, then change is empty as well
+    """
     change = {}
-    if target_before is not None:
-        previous_obj_dict, data = set_relation_values(target_before, data)
-        change = {}
-        for k, v in data.items():
-            if k in previous_obj_dict and data[k] != previous_obj_dict[k]:
+    if prev_dict:
+        for k, v in prev_dict.items():
+            if k in current_dict and current_dict[k] != prev_dict[k]:
                 change.update({
                     k: jsonify({
-                        "before": previous_obj_dict[k],
-                        "after": data[k],
+                        "before": prev_dict[k],
+                        "after": current_dict[k],
                     })
                 })
 
     return change
 
 
-def create_snapshot(target, by_user, change):
-    """If change is not empty, then action is update, otherwise create
+def create_snapshot(target, target_before, by_user):
+    """If target_before is empty, then action is create, otherwise update
 
-    For many to many relation fields add them to the target
-    and use their pk for values
+    Create a dictionary of change between target before save and after.
     """
-    action = Activity.UPDATE if change else Activity.CREATE
-    current_obj_dict, _ = set_relation_values(target, None)
+    action = Activity.UPDATE if target_before else Activity.CREATE
+    current_obj_dict = create_dict_with_relations(target)
+    change = create_change_dict(target_before, current_obj_dict)
 
     activity = Activity.objects.create(
         target=target,

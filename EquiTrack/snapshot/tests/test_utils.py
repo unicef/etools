@@ -20,56 +20,50 @@ class TestJsonify(TenantTestCase):
         self.assertEqual(j["title"], intervention.title)
 
 
-class TestSetRelationValues(TenantTestCase):
+class TestGetToManyFieldNames(TenantTestCase):
+    def test_intervention(self):
+        intervention = InterventionFactory()
+        fields = utils.get_to_many_field_names(intervention.__class__)
+        # check many_to_one field
+        self.assertIn("frs", fields)
+        # check many_to_many field
+        self.assertIn("sections", fields)
+
+
+class TestCreateDictWithRelations(TenantTestCase):
     def test_no_relation(self):
         intervention = InterventionFactory()
-        obj_dict, data = utils.set_relation_values(intervention, {})
+        obj_dict = utils.create_dict_with_relations(intervention)
         self.assertEqual(obj_dict["frs"], [])
-        self.assertEqual(data, {})
 
-    def test_data_relation(self):
-        intervention = InterventionFactory()
-        fr = FundsReservationHeaderFactory(intervention=None)
-        obj_dict, data = utils.set_relation_values(intervention, {"frs": [fr]})
-        self.assertEqual(obj_dict["frs"], [])
-        self.assertDictEqual(data, {"frs": [fr.pk]})
-
-    def test_obj_relation(self):
+    def test_relation(self):
         intervention = InterventionFactory()
         fr = FundsReservationHeaderFactory(intervention=intervention)
-        obj_dict, data = utils.set_relation_values(intervention, {})
+        obj_dict = utils.create_dict_with_relations(intervention)
         self.assertEqual(obj_dict["frs"], [fr.pk])
-        self.assertDictEqual(data, {})
-
-    def test_both_relation(self):
-        intervention = InterventionFactory()
-        fr = FundsReservationHeaderFactory(intervention=intervention)
-        obj_dict, data = utils.set_relation_values(intervention, {"frs": [fr]})
-        self.assertEqual(obj_dict["frs"], [fr.pk])
-        self.assertDictEqual(data, {"frs": [fr.pk]})
 
 
 class TestCreateChangeDict(TenantTestCase):
-    def test_no_target_before(self):
+    def test_no_prev_dict(self):
         self.assertEqual(utils.create_change_dict(None, {"key": "value"}), {})
 
-    def test_no_data(self):
-        intervention = InterventionFactory()
-        change = utils.create_change_dict(intervention, {})
-        self.assertEqual(change, {})
-
     def test_change(self):
-        intervention = InterventionFactory()
-        fr = FundsReservationHeaderFactory(intervention=None)
-        change = utils.create_change_dict(intervention, {"frs": [fr]})
-        self.assertEqual(change, {"frs": {"before": [], "after": [fr.pk]}})
+        before = {"test": "unknown"}
+        after = {"test": "known"}
+        change = utils.create_change_dict(before, after)
+        self.assertEqual(change, {
+            "test": {
+                "before": "unknown",
+                "after": "known"
+            }
+        })
 
 
 class TestCreateSnapshot(TenantTestCase):
     def test_create(self):
         user = UserFactory()
         intervention = InterventionFactory()
-        activity = utils.create_snapshot(intervention, user, {})
+        activity = utils.create_snapshot(intervention, {}, user)
         self.assertEqual(activity.target, intervention)
         self.assertEqual(activity.action, activity.CREATE)
         self.assertEqual(activity.by_user, user)
@@ -79,10 +73,16 @@ class TestCreateSnapshot(TenantTestCase):
     def test_update(self):
         user = UserFactory()
         intervention = InterventionFactory()
-        change = {"title": {"before": "Random", "after": intervention.title}}
-        activity = utils.create_snapshot(intervention, user, change)
+        obj_dict = utils.create_dict_with_relations(intervention)
+        fr = FundsReservationHeaderFactory(intervention=intervention)
+        activity = utils.create_snapshot(intervention, obj_dict, user)
         self.assertEqual(activity.target, intervention)
         self.assertEqual(activity.action, activity.UPDATE)
         self.assertEqual(activity.by_user, user)
         self.assertEqual(activity.data["title"], intervention.title)
-        self.assertEqual(activity.change, change)
+        self.assertEqual(activity.change, {
+            "frs": {
+                "before": [],
+                "after": [fr.pk]
+            }
+        })

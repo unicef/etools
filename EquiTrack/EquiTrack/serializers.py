@@ -2,7 +2,7 @@ import json
 
 from rest_framework import serializers
 
-from snapshot.utils import create_change_dict, create_snapshot
+from snapshot.utils import create_dict_with_relations, create_snapshot
 
 
 class JsonFieldSerializer(serializers.Field):
@@ -16,12 +16,7 @@ class JsonFieldSerializer(serializers.Field):
 
 class SnapshotModelSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
-        data = dict(
-            list(self.validated_data.items()) +
-            list(kwargs.items())
-        )
-        change = create_change_dict(self.instance, data)
-
+        pre_save = create_dict_with_relations(self.instance)
         super(SnapshotModelSerializer, self).save(**kwargs)
-        create_snapshot(self.instance, self.context["request"].user, change)
+        create_snapshot(self.instance, pre_save, self.context["request"].user)
         return self.instance
