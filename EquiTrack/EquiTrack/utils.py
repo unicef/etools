@@ -71,10 +71,10 @@ def get_data_from_insight(endpoint, data={}):
     return True, result
 
 
-def load_internal_pdf_template(data={}):
+def load_internal_pdf_template(endpoint='', data={}):
     api_url = 'http://{}/{}/'.format(
         settings.PDF_API_URL,
-        'api/pdf'
+        'api/pdf/' + endpoint
     )
 
     # return api_url

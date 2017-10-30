@@ -75,12 +75,9 @@ class PCAPDFView(TemplateView):
 
 
     def get(self, request, *args, **kwargs):
-        pdf_response = load_internal_pdf_template(self.get_context_data(**kwargs))
+        pdf_response = load_internal_pdf_template("agreements/", self.get_context_data(**kwargs))
 
         # return HttpResponse(pdf_response)
-        # return HttpResponse(pdf_response.status_code, pdf_response.content)
-        # return HttpResponse(json.dumps(self.get_context_data(**kwargs)))
-
         return HttpResponse(pdf_response, content_type='application/pdf')
 
 
@@ -140,27 +137,16 @@ class PCAPDFView(TemplateView):
 
         serialized_agreement = AgreementNestedSerializer(agreement, read_only=True)
 
-        font_path = settings.SITE_ROOT + '/assets/fonts/'
-
-        # return super(PCAPDFView, self).get_context_data(
         return {
             "error": error,
             "pagesize": "Letter",
             "title": "Partnership",
             "language": lang,
-            #"agreement": model_to_dict(agreement),
-            #"agreement": serializers.serialize('json', [agreement]),
-            #"agreement": agreement,
             "agreement": serialized_agreement.data,
             "bank_details": bank_objects,
-            #"cp": model_to_dict(agreement.country_programme),
-            #"cp": serializers.serialize('json', [agreement.country_programme]),
-            #"cp": agreement.country_programme,
             "cp": country_programme,
             "auth_officers": officers_list,
             "country": self.request.tenant.long_name,
-            "font_path": font_path,
-            # **kwargs
         }
 
 
