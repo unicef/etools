@@ -45,6 +45,13 @@ class Activity(TimeStampedModel):
 
     class Meta:
         ordering = ["-created"]
+        verbose_name_plural = _("Activities")
 
     def __str__(self):
         return "{} {} {}".format(self.by_user, self.action, self.target)
+
+    def by_user_display(self):
+        by_user = str(self.by_user)
+        if not by_user.strip():
+            by_user = self.by_user.email
+        return by_user
