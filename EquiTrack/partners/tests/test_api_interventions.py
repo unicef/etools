@@ -254,12 +254,10 @@ class TestInterventionsAPI(APITenantTestCase):
         activity = Activity.objects.first()
         self.assertEqual(activity.target, self.intervention_2)
         self.assertEqual(activity.action, Activity.UPDATE)
-        self.assertDictEqual(activity.change, {
-            "frs": {
-                "before": [],
-                "after": [self.fr_1.pk, self.fr_2.pk]
-            }
-        })
+        self.assertIn("frs", activity.change)
+        frs = activity.change["frs"]
+        self.assertEqual(frs["before"], [])
+        self.assertItemsEqual(frs["After"], [self.fr_1.pk, self.fr_2.pk])
         self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_remove_an_fr_from_pd(self):
