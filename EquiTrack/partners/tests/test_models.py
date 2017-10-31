@@ -8,8 +8,6 @@ from unittest import skip
 
 from django.utils import timezone
 
-from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -26,6 +24,9 @@ from EquiTrack.factories import (
     TravelActivityFactory,
     UserFactory,
 )
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from EquiTrack.validation_mixins import TransitionError
 
 from funds.models import Donor, Grant
 from reports.models import (
@@ -242,6 +243,29 @@ class TestPartnerOrganizationModel(TenantTestCase):
             signed_by_unicef_date=None,
             signed_by_partner_date=None,
             status=models.Agreement.DRAFT
+        )
+
+    def test_latest_assessment(self):
+        date = datetime.date(2001, 1, 1)
+        assessment_type = "Micro Assessment"
+        AssessmentFactory(
+            partner=self.partner_organization,
+            type=assessment_type,
+            completed_date=date + datetime.timedelta(days=1)
+        )
+        AssessmentFactory(
+            partner=self.partner_organization,
+            type=assessment_type,
+            completed_date=date + datetime.timedelta(days=2)
+        )
+        assessment = AssessmentFactory(
+            partner=self.partner_organization,
+            type=assessment_type,
+            completed_date=date + datetime.timedelta(days=3)
+        )
+        self.assertEqual(
+            self.partner_organization.latest_assessment(assessment_type),
+            assessment
         )
 
     def test_get_last_pca(self):
@@ -668,6 +692,19 @@ class TestPartnerOrganizationModel(TenantTestCase):
             1
         )
 
+    def test_follow_up_flags(self):
+        self.partner_organization.hact_values["follow_up_flags"] = 1
+        self.partner_organization.save()
+        self.assertEqual(
+            self.partner_organization.hact_values["follow_up_flags"],
+            1
+        )
+        models.PartnerOrganization.follow_up_flags(self.partner_organization)
+        partner_update = models.PartnerOrganization.objects.get(
+            pk=self.partner_organization.pk
+        )
+        self.assertEqual(partner_update.hact_values["follow_up_flags"], 0)
+
 
 class TestAgreementModel(TenantTestCase):
     fixtures = ['initial_data.json']
@@ -676,7 +713,7 @@ class TestAgreementModel(TenantTestCase):
         self.partner_organization = models.PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
-        cp = CountryProgramme.objects.create(
+        cp = CountryProgrammeFactory(
             name="CP 1",
             wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
