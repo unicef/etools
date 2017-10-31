@@ -80,6 +80,6 @@ JWT_AUTH.update({  # noqa: F405
     'JWT_ALGORITHM': 'RS256',
     'JWT_LEEWAY': 60,
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),  # noqa: F405
-    # TODO: FIX THIS, NEEDS SETUP WITH ADFS
     'JWT_AUDIENCE': 'https://etools.unicef.org/',
+    'JWT_PAYLOAD_HANDLER': 'EquiTrack.mixins.custom_jwt_payload_handler'
 })
