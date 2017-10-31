@@ -946,28 +946,28 @@ class Agreement(TimeStampedModel):
 
     @transition(field=status,
                 source=[DRAFT],
-                target=[SIGNED],
+                target=SIGNED,
                 conditions=[agreement_transition_to_signed_valid])
     def transition_to_signed(self):
         pass
 
     @transition(field=status,
                 source=[SIGNED],
-                target=[ENDED],
+                target=ENDED,
                 conditions=[agreement_transition_to_ended_valid])
     def transition_to_ended(self):
         pass
 
     @transition(field=status,
                 source=[SIGNED],
-                target=[SUSPENDED],
+                target=SUSPENDED,
                 conditions=[])
     def transition_to_suspended(self):
         pass
 
     @transition(field=status,
                 source=[SUSPENDED, SIGNED],
-                target=[DRAFT],
+                target=DRAFT,
                 conditions=[agreements_illegal_transition])
     def transition_to_cancelled(self):
         pass

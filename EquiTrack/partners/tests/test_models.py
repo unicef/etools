@@ -4,6 +4,7 @@ from unittest import skip
 from actstream.models import model_stream
 
 from django.utils import timezone
+from django_fsm import TransitionNotAllowed
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
@@ -17,6 +18,7 @@ from EquiTrack.factories import (
     TravelActivityFactory,
     UserFactory,
 )
+from EquiTrack.validation_mixins import TransitionError
 
 from funds.models import Donor, Grant
 from reports.models import (
@@ -700,6 +702,144 @@ class TestAgreementModel(TenantTestCase):
         # Check if the changes had the updated date fields
         self.assertEqual(changes['start'], str(self.agreement.start))
         self.assertEqual(changes['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
+
+    def test_transition_to_signed(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date.today() + datetime.timedelta(days=1),
+            status=Agreement.DRAFT
+        )
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+        agreement.transition_to_signed()
+        self.assertEqual(agreement.status, Agreement.SIGNED)
+
+    def test_transition_to_signed_invalid(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            start=None,
+            status=Agreement.DRAFT
+        )
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+        with self.assertRaises(TransitionError):
+            agreement.transition_to_signed()
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+
+    def test_transition_to_ended(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date.today() - datetime.timedelta(days=1),
+        )
+        self.assertEqual(agreement.status, Agreement.SIGNED)
+        agreement.transition_to_ended()
+        self.assertEqual(agreement.status, Agreement.ENDED)
+
+    def test_transition_to_ended_invalid(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            status=Agreement.DRAFT
+        )
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+        with self.assertRaises(TransitionNotAllowed):
+            agreement.transition_to_ended()
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+
+    def test_transition_to_suspended(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date.today() + datetime.timedelta(days=1),
+        )
+        self.assertEqual(agreement.status, Agreement.SIGNED)
+        agreement.transition_to_suspended()
+        self.assertEqual(agreement.status, Agreement.SUSPENDED)
+
+    def test_transition_to_suspended_invalid(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            status=Agreement.DRAFT
+        )
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+        with self.assertRaises(TransitionNotAllowed):
+            agreement.transition_to_suspended()
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+
+    def test_transition_to_signed_cancelled(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date.today() + datetime.timedelta(days=1),
+        )
+        self.assertEqual(agreement.status, Agreement.SIGNED)
+        with self.assertRaises(TransitionNotAllowed):
+            agreement.transition_to_cancelled()
+        self.assertEqual(agreement.status, Agreement.SIGNED)
+
+    def test_transition_to_suspended_cancelled(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date.today() + datetime.timedelta(days=1),
+            status=Agreement.SUSPENDED
+        )
+        self.assertEqual(agreement.status, Agreement.SUSPENDED)
+        with self.assertRaises(TransitionNotAllowed):
+            agreement.transition_to_cancelled()
+        self.assertEqual(agreement.status, Agreement.SUSPENDED)
+
+    def test_transition_to_cancelled_invalid(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            status=Agreement.TERMINATED
+        )
+        self.assertEqual(agreement.status, Agreement.TERMINATED)
+        with self.assertRaises(TransitionNotAllowed):
+            agreement.transition_to_cancelled()
+        self.assertEqual(agreement.status, Agreement.TERMINATED)
+
+    def test_transition_to_terminated_terminated(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            status=Agreement.DRAFT
+        )
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+        with self.assertRaises(TransitionNotAllowed):
+            agreement.transition_to_terminated()
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+
+    def test_transition_to_terminated_suspended(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            status=Agreement.DRAFT
+        )
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+        with self.assertRaises(TransitionNotAllowed):
+            agreement.transition_to_terminated()
+        self.assertEqual(agreement.status, Agreement.DRAFT)
+
+    def test_transition_to_terminated_invalid(self):
+        agreement = AgreementFactory(
+            partner=self.partner_organization,
+            agreement_type=Agreement.MOU,
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date.today() + datetime.timedelta(days=1),
+        )
+        self.assertEqual(agreement.status, Agreement.SIGNED)
+        with self.assertRaises(TransitionNotAllowed):
+            agreement.transition_to_terminated()
+        self.assertEqual(agreement.status, Agreement.SIGNED)
 
 
 class TestInterventionModel(TenantTestCase):
