@@ -762,23 +762,21 @@ class TestInterventionModel(TenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
-        self.partner_organization = models.PartnerOrganization.objects.create(
-            name="Partner Org 1",
-        )
-        cp = CountryProgramme.objects.create(
+        self.partner_organization = PartnerFactory(name="Partner Org 1")
+        cp = CountryProgrammeFactory(
             name="CP 1",
             wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        agreement = models.Agreement.objects.create(
+        self.agreement = AgreementFactory(
             agreement_type=models.Agreement.PCA,
             partner=self.partner_organization,
             country_programme=cp,
         )
-        self.intervention = models.Intervention.objects.create(
+        self.intervention = InterventionFactory(
             title="Intervention 1",
-            agreement=agreement,
+            agreement=self.agreement,
             submission_date=datetime.date(datetime.date.today().year, 1, 1),
         )
 
@@ -844,17 +842,52 @@ class TestInterventionModel(TenantTestCase):
         expected_reference_number += str(self.intervention.signed_by_unicef_date.year) + str(self.intervention.id)
         self.assertEqual(self.intervention.reference_number, expected_reference_number)
 
-    @skip("Fix when HACT available")
-    def test_planned_cash_transfers(self):
-        models.InterventionBudget.objects.create(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
+    def test_days_from_submission_to_signed_no_submission_date(self):
+        intervention = InterventionFactory(
+            agreement=self.agreement,
+            submission_date=None
         )
-        self.assertEqual(int(self.intervention.planned_cash_transfers), 15000)
+        self.assertIsNone(intervention.submission_date)
+        res = intervention.days_from_review_to_signed
+        self.assertEqual(res, "Not Reviewed")
+
+    def test_days_from_submission_to_signed_not_signed_by_unicef(self):
+        self.assertIsNotNone(self.intervention.submission_date)
+        self.assertIsNone(self.intervention.signed_by_unicef_date)
+        res = self.intervention.days_from_submission_to_signed
+        self.assertEqual(res, "Not fully signed")
+
+    def test_days_from_submission_to_signed_not_signed_by_partner(self):
+        self.intervention.signed_by_unicef_date = datetime.date.today()
+        self.intervention.save()
+        self.assertIsNotNone(self.intervention.submission_date)
+        self.assertIsNotNone(self.intervention.signed_by_unicef_date)
+        self.assertIsNone(self.intervention.signed_by_partner_date)
+        res = self.intervention.days_from_submission_to_signed
+        self.assertEqual(res, "Not fully signed")
+
+    def test_days_from_review_to_signed_no_review_date_prc(self):
+        self.assertIsNone(self.intervention.review_date_prc)
+        res = self.intervention.days_from_review_to_signed
+        self.assertEqual(res, "Not Reviewed")
+
+    def test_days_from_review_to_signed_not_signed_by_unicef(self):
+        self.intervention.review_date_prc = datetime.date.today()
+        self.intervention.save()
+        self.assertIsNotNone(self.intervention.review_date_prc)
+        self.assertIsNone(self.intervention.signed_by_unicef_date)
+        res = self.intervention.days_from_review_to_signed
+        self.assertEqual(res, "Not fully signed")
+
+    def test_days_from_review_to_signed_not_signed_by_partner(self):
+        self.intervention.review_date_prc = datetime.date.today()
+        self.intervention.signed_by_unicef_date = datetime.date.today()
+        self.intervention.save()
+        self.assertIsNotNone(self.intervention.review_date_prc)
+        self.assertIsNotNone(self.intervention.signed_by_unicef_date)
+        self.assertIsNone(self.intervention.signed_by_partner_date)
+        res = self.intervention.days_from_review_to_signed
+        self.assertEqual(res, "Not fully signed")
 
 
 class TestGetFilePaths(TenantTestCase):
@@ -1152,3 +1185,15 @@ class TestAgreement(TenantTestCase):
             pk=intervention.pk
         )
         self.assertEqual(intervention_updated.status, agreement.status)
+
+
+class TestAgreementAmendment(TenantTestCase):
+    def test_unicode(self):
+        agreement = AgreementFactory()
+        amendment = AgreementAmendmentFactory(
+            agreement=agreement
+        )
+        self.assertEqual(
+            unicode(amendment),
+            "{} {}".format(agreement.reference_number, amendment.number)
+        )
