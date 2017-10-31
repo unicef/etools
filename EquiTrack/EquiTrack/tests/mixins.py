@@ -83,6 +83,20 @@ class URLAssertionMixin(object):
 
 
 class FastTenantTestCase(TenantTestCase):
+    @classmethod
+    def _load_fixtures(cls):
+        '''Load fixtures for current connection (shared/public or tenant)'''
+        if cls.fixtures:
+            for db_name in cls._databases_names(include_mirrors=False):
+                try:
+                    call_command('loaddata', *cls.fixtures, **{
+                                 'verbosity': 0,
+                                 'commit': False,
+                                 'database': db_name,
+                                 })
+                except Exception:
+                    cls._rollback_atomics(cls.cls_atomics)
+                    raise
 
     @classmethod
     def setUpClass(cls):
@@ -104,21 +118,16 @@ class FastTenantTestCase(TenantTestCase):
         except ObjectDoesNotExist:
             WorkspaceCounter.objects.create(workspace=cls.tenant)
 
-        connection.set_tenant(cls.tenant)
-
         cls.cls_atomics = cls._enter_atomics()
 
-        if cls.fixtures:
-            for db_name in cls._databases_names(include_mirrors=False):
-                    try:
-                        call_command('loaddata', *cls.fixtures, **{
-                            'verbosity': 0,
-                            'commit': False,
-                            'database': db_name,
-                        })
-                    except Exception:
-                        cls._rollback_atomics(cls.cls_atomics)
-                        raise
+        # Load fixtures for shared schema
+        cls._load_fixtures()
+
+        connection.set_tenant(cls.tenant)
+
+        # Load fixtures for tenant schema
+        cls._load_fixtures()
+
         try:
             cls.setUpTestData()
         except Exception:

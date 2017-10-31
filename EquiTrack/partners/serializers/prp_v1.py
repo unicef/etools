@@ -10,7 +10,7 @@ from partners.models import (
     PartnerStaffMember,
     PartnerOrganization,
     InterventionReportingPeriod)
-from reports.models import Result, AppliedIndicator, LowerResult, Disaggregation
+from reports.models import Result, AppliedIndicator, LowerResult, Disaggregation, DisaggregationValue
 
 
 class PartnerSerializer(serializers.ModelSerializer):
@@ -61,16 +61,27 @@ class IndicatorLocationSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'pcode', 'location_type', 'admin_level')
 
 
+class DisaggregationValueSerilizer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DisaggregationValue
+        fields = (
+            'value',
+            'active',
+            'id'
+        )
+
+
 class DisaggregationSerializer(serializers.ModelSerializer):
+    disaggregation_values = DisaggregationValueSerilizer(read_only=True, many=True)
 
     class Meta:
         model = Disaggregation
-        depth = 1
         fields = (
             'id',
             # 'prp_id',
             'name',
-            # 'parameter'
+            'disaggregation_values'
         )
 
 
