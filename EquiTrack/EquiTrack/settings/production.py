@@ -67,7 +67,6 @@ if not os.getenv('DISABLE_JWT_LOGIN', False):
     private_key_text = open(join(DJANGO_ROOT, 'keys/jwt/key.pem'), 'r').read()  # noqa: F405
     public_key_text = open(join(DJANGO_ROOT, 'keys/jwt/certificate.pem'), 'r').read()  # noqa: F405
 
-
     JWT_PRIVATE_KEY = serialization.load_pem_private_key(private_key_text, password=None,
                                                          backend=default_backend())
 
