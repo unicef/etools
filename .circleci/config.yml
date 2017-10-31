@@ -1,0 +1,135 @@
+version: 2
+jobs:
+  test:
+    working_directory: ~/code
+    # The primary container is an instance of the first list image listed. Your build commands run in this container.
+    docker:
+      - image: unicef/etools:test-base
+        environment:
+          PGHOST: 127.0.0.1
+          DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
+      - image: circleci/postgres:9.5-alpine-postgis
+        environment:
+          POSTGRES_USER: postgres 
+          PGUSER: postgres
+          POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: postgres
+    steps:
+      - checkout
+      - restore_cache:
+          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
+      - run:
+          command: |
+            virtualenv env1
+            . env1/bin/activate
+            pip install -r requirements.txt
+            # for tests to run
+            pip install django-extensions
+      - save_cache:
+          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
+          paths:
+            - "env1"
+      - run:
+          name: Postgres Extensions
+          command: |
+            psql -U postgres -d template1 -c 'create extension if not exists hstore;'
+            
+      - run:
+          name: Run Tests
+          command: |
+            . env1/bin/activate
+            cd EquiTrack
+            mkdir media
+            bash runtests.sh;
+      - store_artifacts:
+          path: test-reports/
+          destination: tr1
+
+  build_and_deploy:
+    working_directory: ~/code
+    # The primary container is an instance of the first list image listed. Your build commands run in this container.
+    docker:
+      - image: unicef/etools:test-base
+        environment:
+          PGHOST: 127.0.0.1
+          DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
+      - image: circleci/postgres:9.5-alpine-postgis
+        environment:
+          POSTGRES_USER: postgres 
+          PGUSER: postgres
+          POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: postgres
+    steps:
+      - checkout
+      - setup_remote_docker:
+          reusable: true
+          exclusive: true
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            VER="17.03.0-ce"
+            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
+      - run:
+          name: Postgres Extensions
+          command: |
+            psql -U postgres -d template1 -c 'create extension if not exists hstore;'
+      - run:
+          name: see all docker containers
+          command: |
+            docker ps -a
+      - restore_cache:
+          keys:
+            - docker-{{ .Branch }}-docker-cache
+      - run:
+          name: see if postgres is available locally
+          command: |
+            pg_isready
+      - run:
+          name: Start DB Image
+          command: |
+            docker run --name docker-postgres -e PGUSER=postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=circle_test -d circleci/postgres:9.5-alpine-postgis
+      - run:
+          name: Postgres Extensions
+          command: |
+            sleep 20 && docker exec docker-postgres psql -U postgres -d template1 -c 'create extension if not exists hstore;'
+      - run:
+          name: Building the image
+          command: |
+            TAG=${CIRCLE_BRANCH}
+            docker build -t unicef/etools:$TAG .
+      - save_cache:
+          key: docker-{{ .Branch }}-docker-cache
+          paths:
+            - /var/lib/docker/
+      - run:
+          name: Test in the image
+          command: |
+            TAG=${CIRCLE_BRANCH}
+            HOSTIP=`/sbin/ip route|awk '/default/ { print $3 }'`
+            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e SECRET_KEY unicef/etools:$TAG bash runtests.sh
+      - run:
+          name: Pushing to Docker Hub
+          command: |
+            TAG=${CIRCLE_BRANCH}
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push unicef/etools:$TAG
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test
+      - build_and_deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
+                - staging
+                - develop
+                - prp-refactoring
+                - ci-updates
