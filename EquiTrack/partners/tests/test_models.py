@@ -9,8 +9,8 @@ from unittest import skip
 from django.utils import timezone
 
 from EquiTrack.factories import (
-    AgreementFactory,
     AgreementAmendmentFactory,
+    AgreementFactory,
     AssessmentFactory,
     CountryProgrammeFactory,
     DonorFactory,
