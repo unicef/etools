@@ -53,7 +53,7 @@ def create_change_dict(prev_dict, current_dict):
     If prev_dict is empty, then change is empty as well
     """
     change = {}
-    if prev_dict:
+    if prev_dict is not None:
         for k, v in prev_dict.items():
             if k in current_dict and current_dict[k] != prev_dict[k]:
                 change.update({
