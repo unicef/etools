@@ -15,7 +15,7 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from actstream import action
@@ -69,15 +69,15 @@ from partners.serializers.v1 import (
 from EquiTrack.utils import get_data_from_insight, load_internal_pdf_template
 
 
-class PCAPDFView(TemplateView):
+class PCAPDFView(RetrieveAPIView):
     languages = ("arabic", "english", "french", "portuguese",
                  "russian", "spanish", "ifrc_english", "ifrc_french")
 
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        pdf_response = load_internal_pdf_template("agreements/", self.get_context_data(**kwargs))
+        pdf_response = load_internal_pdf_template("agreements", self.get_context_data(**kwargs))
 
-        # return HttpResponse(pdf_response)
         return HttpResponse(pdf_response, content_type='application/pdf')
 
 

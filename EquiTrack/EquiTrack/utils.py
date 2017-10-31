@@ -77,10 +77,8 @@ def load_internal_pdf_template(endpoint='', data={}):
         'api/pdf/' + endpoint
     )
 
-    # return api_url
     response = requests.post(
         api_url,
-        # data=data,
         json=data,
         headers={'Content-Type': 'application/json'},
         auth=(settings.PDF_API_USER, settings.PDF_API_PASSWORD),
