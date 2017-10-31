@@ -5,11 +5,10 @@ from django.db import transaction
 from rest_framework import serializers
 
 from EquiTrack.serializers import SnapshotModelSerializer
+from funds.models import FundsCommitmentItem, FundsReservationHeader
 from funds.serializers import FRsSerializer
+from locations.serializers import LocationSerializer, LocationLightSerializer
 from partners.permissions import InterventionPermissions
-from reports.serializers.v1 import SectorSerializer
-from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
-
 from partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
@@ -22,8 +21,12 @@ from partners.models import (
     InterventionReportingPeriod,
 )
 from reports.models import LowerResult
-from locations.serializers import LocationSerializer, LocationLightSerializer
-from funds.models import FundsCommitmentItem, FundsReservationHeader
+from reports.serializers.v1 import SectorSerializer
+from reports.serializers.v2 import (
+    IndicatorSerializer,
+    LowerResultCUSerializer,
+    LowerResultSerializer,
+)
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):
@@ -316,6 +319,37 @@ class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
         return data
 
 
+class InterventionResultSerializer(serializers.ModelSerializer):
+    humanitarian_tag = serializers.SerializerMethodField()
+    hidden = serializers.SerializerMethodField()
+    ram = serializers.SerializerMethodField()
+    ram_indicators = IndicatorSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = InterventionResultLink
+        fields = "__all__"
+
+    def get_humanitarian_tag(self, obj):
+        return "Yes" if obj.cp_output.humanitarian_tag else "No"
+
+    def get_hidden(self, obj):
+        return "Yes" if obj.cp_output.hidden else "No"
+
+    def get_ram(self, obj):
+        return "Yes" if obj.cp_output.ram else "No"
+
+
+class InterventionIndicatorSerializer(serializers.ModelSerializer):
+    ram_indicators = IndicatorSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = InterventionResultLink
+        fields = (
+            "intervention",
+            "ram_indicators",
+        )
+
+
 class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
     fc_type = serializers.CharField(source='fund_commitment.fc_type')
 
@@ -422,126 +456,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names"
         )
-
-
-class InterventionExportSerializer(serializers.ModelSerializer):
-
-    # TODO CP Outputs, RAM Indicators, Fund Commitment(s), Supply Plan, Distribution Plan, URL
-
-    partner_name = serializers.CharField(source='agreement.partner.name')
-    partner_type = serializers.CharField(source='agreement.partner.partner_type')
-    agreement_name = serializers.CharField(source='agreement.agreement_number')
-    country_programme = serializers.CharField(source='agreement.country_programme.name')
-    offices = serializers.SerializerMethodField()
-    sections = serializers.SerializerMethodField()
-    locations = serializers.SerializerMethodField()
-    fr_numbers = serializers.SerializerMethodField()
-    planned_budget_local = serializers.DecimalField(
-        source='total_unicef_cash_local',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2)
-    unicef_budget = serializers.DecimalField(
-        source='total_unicef_budget',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2)
-    cso_contribution = serializers.DecimalField(
-        source='total_partner_contribution',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2)
-    partner_contribution_local = serializers.DecimalField(
-        source='total_partner_contribution_local',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2)
-    # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
-    unicef_signatory = serializers.SerializerMethodField()
-    partner_focal_points = serializers.SerializerMethodField()
-    unicef_focal_points = serializers.SerializerMethodField()
-    partner_authorized_officer_signatory = serializers.SerializerMethodField()
-    cp_outputs = serializers.SerializerMethodField()
-    ram_indicators = serializers.SerializerMethodField()
-    planned_visits = serializers.SerializerMethodField()
-    spot_checks = serializers.SerializerMethodField()
-    audit = serializers.SerializerMethodField()
-    url = serializers.SerializerMethodField()
-    days_from_submission_to_signed = serializers.SerializerMethodField()
-    days_from_review_to_signed = serializers.SerializerMethodField()
-    migration_error_msg = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Intervention
-        fields = (
-            "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
-            "title", "start", "end", "offices", "sections", "locations", "planned_budget_local",
-            "unicef_focal_points", "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators",
-            "fr_numbers", "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
-            "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
-            "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
-            "migration_error_msg",
-            "signed_by_partner_date", "url", "days_from_submission_to_signed", "days_from_review_to_signed"
-        )
-
-    def get_unicef_signatory(self, obj):
-        return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
-
-    def get_offices(self, obj):
-        return ', '.join([o.name for o in obj.offices.all()])
-
-    def get_sections(self, obj):
-        return [l.name for l in obj.sections.all()]
-
-    def get_locations(self, obj):
-        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
-
-    def get_partner_authorized_officer_signatory(self, obj):
-        if obj.partner_authorized_officer_signatory:
-            return obj.partner_authorized_officer_signatory.get_full_name()
-        else:
-            return ''
-
-    def get_partner_focal_points(self, obj):
-        return ', '.join([pf.get_full_name() for pf in obj.partner_focal_points.all()])
-
-    def get_unicef_focal_points(self, obj):
-        return ', '.join([pf.get_full_name() for pf in obj.unicef_focal_points.all()])
-
-    def get_cp_outputs(self, obj):
-        return ', '.join([rs.cp_output.name for rs in obj.result_links.all()])
-
-    def get_ram_indicators(self, obj):
-        ram_indicators = []
-        for rs in obj.result_links.all():
-            if rs.ram_indicators:
-                for ram in rs.ram_indicators.all():
-                    ram_indicators.append("[{}] {}, ".format(rs.cp_output.name, ram.name))
-        return ' '.join([ram for ram in ram_indicators])
-
-    def get_planned_visits(self, obj):
-        return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_spot_checks(self, obj):
-        return ', '.join(['{} ({})'.format(pv.spot_checks, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_audit(self, obj):
-        return ', '.join(['{} ({})'.format(pv.audit, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_url(self, obj):
-        return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
-
-    def get_days_from_submission_to_signed(self, obj):
-        return obj.days_from_submission_to_signed
-
-    def get_days_from_review_to_signed(self, obj):
-        return obj.days_from_review_to_signed
-
-    def get_fr_numbers(self, obj):
-        return ', '.join([x.fr_number for x in obj.frs.all()]) if obj.frs.all().count() > 0 else ""
-
-    def get_migration_error_msg(self, obj):
-        return ', '.join([a for a in obj.metadata['error_msg']]) if 'error_msg' in obj.metadata.keys() else ''
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):

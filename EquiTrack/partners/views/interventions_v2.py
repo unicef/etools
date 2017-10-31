@@ -13,13 +13,15 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 
 from rest_framework.generics import (
+    ListAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
 )
 
+from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
-
 from partners.models import (
     Intervention,
     InterventionPlannedVisits,
@@ -27,32 +29,51 @@ from partners.models import (
     InterventionAmendment,
     InterventionResultLink,
     InterventionReportingPeriod,
+    InterventionSectorLocationLink,
+)
+from partners.serializers.exports.interventions import (
+    InterventionAmendmentExportSerializer,
+    InterventionAmendmentExportFlatSerializer,
+    InterventionExportSerializer,
+    InterventionExportFlatSerializer,
+    InterventionIndicatorExportSerializer,
+    InterventionIndicatorExportFlatSerializer,
+    InterventionResultExportSerializer,
+    InterventionResultExportFlatSerializer,
+    InterventionSectorLocationLinkExportSerializer,
+    InterventionSectorLocationLinkExportFlatSerializer,
 )
 from partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionDetailSerializer,
     InterventionCreateUpdateSerializer,
-    InterventionExportSerializer,
     InterventionBudgetCUSerializer,
-    PlannedVisitsCUSerializer,
     InterventionAttachmentSerializer,
     InterventionAmendmentCUSerializer,
+    InterventionIndicatorSerializer,
     InterventionResultCUSerializer,
+    InterventionResultSerializer,
     InterventionListMapSerializer,
     MinimalInterventionListSerializer,
     InterventionResultLinkSimpleCUSerializer,
     InterventionReportingPeriodSerializer,
+    InterventionSectorLocationCUSerializer,
+    PlannedVisitsCUSerializer,
 )
-from partners.exports_v2 import InterventionCvsRenderer
-from partners.filters import PartnerScopeFilter, InterventionResultLinkFilter, InterventionFilter, \
-    AppliedIndicatorsFilter
+from partners.exports_v2 import InterventionCSVRenderer
+from partners.filters import (
+    AppliedIndicatorsFilter,
+    InterventionFilter,
+    InterventionResultLinkFilter,
+    PartnerScopeFilter,
+)
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 from reports.models import LowerResult, AppliedIndicator
 from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicatorSerializer
 
 
-class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
+class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -60,7 +81,11 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     serializer_class = InterventionListSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, InterventionCvsRenderer)
+    renderer_classes = (
+        r.JSONRenderer,
+        InterventionCSVRenderer,
+        CSVFlatRenderer,
+    )
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
@@ -72,13 +97,15 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         if self.request.method == "GET":
             query_params = self.request.query_params
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return InterventionExportSerializer
+                if query_params.get("format") == 'csv_flat':
+                    return InterventionExportFlatSerializer
             if "verbosity" in query_params.keys():
                 if query_params.get("verbosity") == 'minimal':
                     return MinimalInterventionListSerializer
@@ -182,7 +209,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
         query_params = self.request.query_params
         response = super(InterventionListAPIView, self).list(request)
         if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
+            if query_params.get("format") in ['csv', "csv_flat"]:
                 response['Content-Disposition'] = "attachment;filename=interventions.csv"
 
         return response
@@ -224,7 +251,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     def get_serializer_class(self):
         """
-        Use different serilizers for methods
+        Use different serializers for methods
         """
         if self.request.method in ["PATCH", "PUT"]:
             return InterventionCreateUpdateSerializer
@@ -294,6 +321,97 @@ class InterventionAttachmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
+    """
+    Returns a list of InterventionResultLinks.
+    """
+    serializer_class = InterventionResultSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serializers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return InterventionResultExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return InterventionResultExportFlatSerializer
+        return super(InterventionResultListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = InterventionResultLink.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(intervention__number__icontains=query_params.get("search")) |
+                    Q(cp_output__name__icontains=query_params.get("search")) |
+                    Q(cp_output__code__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+        return q
+
+
+class InterventionIndicatorListAPIView(ExportModelMixin, ListAPIView):
+    """
+    Returns a list of InterventionResultLink Indicators.
+    """
+    serializer_class = InterventionIndicatorSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serializers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return InterventionIndicatorExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return InterventionIndicatorExportFlatSerializer
+        return super(InterventionIndicatorListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = InterventionResultLink.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(intervention__number__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        if query_params.get("format") in ['csv', "csv_flat"]:
+            res = []
+            for i in q.all():
+                res = res + list(i.ram_indicators.all())
+            return res
+
+        return q
+
+
 class InterventionResultLinkDeleteView(DestroyAPIView):
     permission_classes = (PartnershipManagerRepPermission,)
 
@@ -313,6 +431,48 @@ class InterventionResultLinkDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListAPIView):
+    """
+    Returns a list of InterventionAmendments.
+    """
+    serializer_class = InterventionAmendmentCUSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serializers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return InterventionAmendmentExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return InterventionAmendmentExportFlatSerializer
+        return super(InterventionAmendmentListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = InterventionAmendment.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(intervention__number__icontains=query_params.get("search")) |
+                    Q(amendment_number__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+        return q
+
+
 class InterventionAmendmentDeleteView(DestroyAPIView):
     permission_classes = (PartnershipManagerRepPermission,)
 
@@ -329,6 +489,55 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete an amendment")
+
+
+class InterventionSectorLocationLinkListAPIView(ExportModelMixin, ListAPIView):
+    """
+    Returns a list of InterventionSectorLocationLinks.
+    """
+    serializer_class = InterventionSectorLocationCUSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serializers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return InterventionSectorLocationLinkExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return InterventionSectorLocationLinkExportFlatSerializer
+        return super(InterventionSectorLocationLinkListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = InterventionSectorLocationLink.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(intervention__number__icontains=query_params.get("search")) |
+                    Q(sector__name__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+
+        if query_params.get("format") in ['csv', "csv_flat"]:
+            res = []
+            for i in q.all():
+                res = res + list(i.locations.all())
+            return res
+
+        return q
 
 
 class InterventionListMapView(ListCreateAPIView):

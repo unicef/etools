@@ -2,8 +2,15 @@ from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from reports.models import Result, AppliedIndicator, IndicatorBlueprint, LowerResult, \
-    Disaggregation, DisaggregationValue
+from reports.models import (
+    AppliedIndicator,
+    Disaggregation,
+    DisaggregationValue,
+    Indicator,
+    IndicatorBlueprint,
+    LowerResult,
+    Result,
+)
 
 
 class OutputListSerializer(serializers.ModelSerializer):
@@ -242,3 +249,10 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
         self.update_applied_indicators(instance, applied_indicators)
 
         return super(LowerResultCUSerializer, self).update(instance, validated_data)
+
+
+class IndicatorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Indicator
+        fields = "__all__"

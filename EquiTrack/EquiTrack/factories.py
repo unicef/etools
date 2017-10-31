@@ -160,13 +160,6 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
     to_date = date(date.today().year, 12, 31)
 
 
-class AppliedIndicatorFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = report_models.AppliedIndicator
-
-    lower_result = factory.SubFactory('EquiTrack.factories.LowerResultFactory')
-
-
 class AgreementFactory(factory.django.DjangoModelFactory):
     '''Factory for Agreements. If the agreement type is PCA (the default), the agreement's end date is set from
     the country_programme so any end date passed to this factory is ignored.
@@ -181,6 +174,32 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     status = 'signed'
     attached_agreement = factory.django.FileField(filename='test_file.pdf')
     country_programme = factory.SubFactory(CountryProgrammeFactory)
+
+
+class AssessmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.Assessment
+
+    partner = factory.SubFactory(PartnerFactory)
+    type = u"Micro Assessment"
+    names_of_other_agencies = u"WFP"
+    expected_budget = 10000
+    notes = u"Random Notes"
+    requested_date = date.today()
+    requesting_officer = factory.SubFactory(UserFactory)
+    approving_officer = factory.SubFactory(UserFactory)
+    planned_date = date.today()
+    completed_date = date.today()
+    rating = "high"
+    report = factory.django.FileField(filename='test_file.pdf')
+    current = True
+
+
+class FileTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.FileType
+
+    name = partner_models.FileType.PROGRESS_REPORT
 
 
 class InterventionFactory(factory.django.DjangoModelFactory):
@@ -222,6 +241,31 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
         model = partner_models.InterventionPlannedVisits
 
     intervention = factory.SubFactory(InterventionFactory)
+    year = datetime.today().year
+    programmatic = 1
+    spot_checks = 2
+    audit = 3
+
+
+class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAttachment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    type = factory.Iterator(partner_models.FileType.objects.all())
+    attachment = factory.django.FileField(filename='test_file.pdf')
+
+
+class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAmendment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    types = [partner_models.InterventionAmendment.BUDGET]
+    other_description = "Other description"
+    signed_date = date.today()
+    amendment_number = 123
+    signed_amendment = factory.django.FileField(filename='test_file.pdf')
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
@@ -650,6 +694,15 @@ class DSARateFactory(factory.django.DjangoModelFactory):
     finalization_date = date.today()
 
 
+class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionSectorLocationLink
+
+    intervention = factory.SubFactory(InterventionFactory)
+    sector = factory.SubFactory(SectorFactory)
+
+
 class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
     def fuzz(self):
         return factory.fuzzy._random.choice(
@@ -714,3 +767,14 @@ class FundingCommitmentFactory(factory.django.DjangoModelFactory):
     fr_number = fuzzy.FuzzyText(length=50)
     wbs = fuzzy.FuzzyText(length=50)
     fc_type = fuzzy.FuzzyText(length=50)
+
+
+class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = report_models.AppliedIndicator
+
+    indicator = factory.SubFactory(IndicatorBlueprintFactory)
+    lower_result = factory.SubFactory(LowerResultFactory)
+    context_code = fuzzy.FuzzyText(length=5)
+    target = fuzzy.FuzzyInteger(0, 100)
