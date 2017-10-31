@@ -45,7 +45,6 @@ class TestActivity(TenantTestCase):
         user.delete()
         self.assertTrue(Activity.objects.filter(pk=activity.pk).exists())
         activity_updated = Activity.objects.get(pk=activity.pk)
-        print(activity_updated.target)
         self.assertEqual(
             activity_updated.target_content_type,
             activity.target_content_type
@@ -54,3 +53,4 @@ class TestActivity(TenantTestCase):
             activity_updated.target_object_id,
             str(activity.target_object_id)
         )
+        self.assertIsNone(activity_updated.target)
