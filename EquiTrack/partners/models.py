@@ -13,7 +13,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
-from django_fsm import FSMField, transition, RETURN_VALUE
+from django_fsm import FSMField, transition
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
