@@ -5,7 +5,6 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, transaction
 from django.db.models import F
 from django.db.models.signals import post_save, pre_delete
@@ -41,104 +40,95 @@ from partners.validation.agreements import (
 from partners.validation import interventions as intervention_validation
 
 
-# TODO: streamline this ...
+def _get_partner_base_path(partner):
+    return '/'.join([
+        connection.schema_name,
+        'file_attachments',
+        'partner_organization',
+        str(partner.id),
+    ])
+
+
 def get_agreement_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.partner.id),
-         'agreements',
-         str(instance.agreement_number),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.partner),
+        'agreements',
+        str(instance.agreement_number),
+        filename
+    ])
 
 
 def get_assesment_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organizations',
-         str(instance.partner.id),
-         'assesments',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.partner),
+        'assesments',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_intervention_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.agreement.partner.id),
-         'agreements',
-         str(instance.agreement.id),
-         'interventions',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.agreement.partner),
+        'agreements',
+        str(instance.agreement.id),
+        'interventions',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_prc_intervention_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.agreement.partner.id),
-         'agreements',
-         str(instance.agreement.id),
-         'interventions',
-         str(instance.id),
-         'prc',
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.agreement.partner),
+        'agreements',
+        str(instance.agreement.id),
+        'interventions',
+        str(instance.id),
+        'prc',
+        filename
+    ])
 
 
 def get_intervention_amendment_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.intervention.agreement.partner.id),
-         'agreements',
-         str(instance.intervention.agreement.id),
-         'interventions',
-         str(instance.intervention.id),
-         'amendments',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.intervention.agreement.partner),
+        str(instance.intervention.agreement.partner.id),
+        'agreements',
+        str(instance.intervention.agreement.id),
+        'interventions',
+        str(instance.intervention.id),
+        'amendments',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_intervention_attachments_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.intervention.agreement.partner.id),
-         'agreements',
-         str(instance.intervention.agreement.id),
-         'interventions',
-         str(instance.intervention.id),
-         'attachments',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.intervention.agreement.partner),
+        'agreements',
+        str(instance.intervention.agreement.id),
+        'interventions',
+        str(instance.intervention.id),
+        'attachments',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_agreement_amd_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_org',
-         str(instance.agreement.partner.id),
-         'agreements',
-         instance.agreement.base_number,
-         'amendments',
-         str(instance.number),
-         filename]
-    )
+    return '/'.join([
+        connection.schema_name,
+        'file_attachments',
+        'partner_org',
+        str(instance.agreement.partner.id),
+        'agreements',
+        instance.agreement.base_number,
+        'amendments',
+        str(instance.number),
+        filename
+    ])
 
 
 def _get_currency_name_or_default(budget):
@@ -159,25 +149,6 @@ class WorkspaceFileType(models.Model):
 
     def __unicode__(self):
         return self.name
-
-
-# TODO: move this on the models
-HIGH = 'high'
-SIGNIFICANT = 'significant'
-MEDIUM = 'medium'
-LOW = 'low'
-RISK_RATINGS = (
-    (HIGH, 'High'),
-    (SIGNIFICANT, 'Significant'),
-    (MEDIUM, 'Medium'),
-    (LOW, 'Low'),
-)
-CSO_TYPES = Choices(
-   'International',
-   'National',
-   'Community Based Organization',
-   'Academic Institution',
-)
 
 
 class PartnerType(object):
@@ -241,6 +212,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('WFP', 'WFP'),
         ('WHO', 'WHO')
     )
+
+    CSO_TYPES = Choices(
+        'International',
+        'National',
+        'Community Based Organization',
+        'Academic Institution',
+    )
+
     partner_type = models.CharField(
         verbose_name=_("Partner Type"),
         max_length=50,
@@ -283,10 +262,10 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         verbose_name=_("Shared Partner (old)"),
         help_text='Partner shared with UNDP or UNFPA?',
         choices=Choices(
-           'No',
-           'with UNDP',
-           'with UNFPA',
-           'with UNDP & UNFPA',
+            'No',
+            'with UNDP',
+            'with UNFPA',
+            'with UNDP & UNFPA',
         ),
         default='No',
         max_length=50
@@ -490,7 +469,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         elif 'planned_cash_transfer' in hact and hact['planned_cash_transfer'] > 100000.00 \
                 and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
             hact['micro_assessment_needed'] = 'Yes'
-        elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
+        elif partner.rating in [Assessment.LOW, Assessment.MEDIUM, Assessment.SIGNIFICANT, Assessment.HIGH] \
                 and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
                 and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
             hact['micro_assessment_needed'] = 'Yes'
@@ -740,6 +719,16 @@ class Assessment(models.Model):
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`auth.User`
     """
+    HIGH = 'high'
+    SIGNIFICANT = 'significant'
+    MEDIUM = 'medium'
+    LOW = 'low'
+    RISK_RATINGS = (
+        (HIGH, 'High'),
+        (SIGNIFICANT, 'Significant'),
+        (MEDIUM, 'Medium'),
+        (LOW, 'Low'),
+    )
 
     ASSESSMENT_TYPES = (
         ('Micro Assessment', 'Micro Assessment'),
@@ -1496,11 +1485,7 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.partner_contribution
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.partner_contribution if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def default_budget_currency(self):
@@ -1518,51 +1503,31 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_unicef_cash(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.unicef_cash
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.unicef_cash if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_in_kind_amount(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.in_kind_amount
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.in_kind_amount if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_budget(self):
-        # TODO: test this
         return self.total_unicef_cash + self.total_partner_contribution + self.total_in_kind_amount
 
     @cached_property
     def total_unicef_budget(self):
-        # TODO: test this
         return self.total_unicef_cash + self.total_in_kind_amount
 
     @cached_property
     def total_partner_contribution_local(self):
-        try:
-            return self.planned_budget.partner_contribution_local
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_unicef_cash_local(self):
-        try:
-            return self.planned_budget.unicef_cash_local
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_budget_local(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.in_kind_amount_local
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def all_lower_results(self):
