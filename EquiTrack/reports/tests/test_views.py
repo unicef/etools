@@ -1,17 +1,25 @@
 import datetime
 
+from unittest import TestCase
+
 from django.core.urlresolvers import reverse
 from rest_framework import status
 from partners.tests.test_utils import setup_intervention_test_data
+from tablib.core import Dataset
 
 from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
 from EquiTrack.factories import (
+    AppliedIndicatorFactory,
+    IndicatorBlueprintFactory,
+    InterventionResultLinkFactory,
+    LowerResultFactory,
     UserFactory,
     ResultFactory,
     CountryProgrammeFactory,
     DisaggregationFactory,
-    DisaggregationValueFactory)
-from EquiTrack.tests.mixins import APITenantTestCase
+    DisaggregationValueFactory,
+)
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from reports.serializers.v2 import DisaggregationSerializer
 
 
@@ -74,7 +82,6 @@ class TestReportViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     # V2 URLs
-
     def test_apiv2_results_list(self):
         response = self.forced_auth_req('get', self.v2_results_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -340,3 +347,113 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         response = self.forced_auth_req('delete', self._get_url(disaggregation))
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertTrue(Disaggregation.objects.filter(pk=disaggregation.pk).exists())
+
+
+class UrlsTestCase(URLAssertionMixin, TestCase):
+    '''Simple test case to verify URL reversal'''
+    def test_urls(self):
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        names_and_paths = (
+            ('applied-indicator', 'applied-indicators/', {}),
+            ('lower-results', 'lower_results/', {}),
+        )
+        self.assertReversal(names_and_paths, '', '/api/v2/reports/')
+
+
+class TestLowerResultExportList(APITenantTestCase):
+    def setUp(self):
+        super(TestLowerResultExportList, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.result_link = InterventionResultLinkFactory()
+        self.lower_result = LowerResultFactory(
+            result_link=self.result_link
+        )
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('lower-results'),
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('lower-results'),
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(len(dataset._get_headers()), 6)
+        self.assertEqual(len(dataset[0]), 6)
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('lower-results'),
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(len(dataset._get_headers()), 6)
+        self.assertEqual(len(dataset[0]), 6)
+
+
+class TestAppliedIndicatorExportList(APITenantTestCase):
+    def setUp(self):
+        super(TestAppliedIndicatorExportList, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.result_link = InterventionResultLinkFactory()
+        self.lower_result = LowerResultFactory(
+            result_link=self.result_link
+        )
+        self.indicator = IndicatorBlueprintFactory()
+        self.applied = AppliedIndicatorFactory(
+            indicator=self.indicator,
+            lower_result=self.lower_result
+        )
+
+    def test_invalid_format_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('applied-indicator'),
+            user=self.unicef_staff,
+            data={"format": "unknown"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_csv_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('applied-indicator'),
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(len(dataset._get_headers()), 22)
+        self.assertEqual(len(dataset[0]), 22)
+
+    def test_csv_flat_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('applied-indicator'),
+            user=self.unicef_staff,
+            data={"format": "csv_flat"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(len(dataset._get_headers()), 22)
+        self.assertEqual(len(dataset[0]), 22)

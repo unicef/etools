@@ -29,6 +29,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
             ('agreement-detail', '1/', {'pk': 1}),
             ('pca_pdf', '1/generate_doc/', {'agr': 1}),
             ('agreement-amendment-del', 'amendments/1/', {'pk': 1}),
+            ('agreement-amendment-list', 'amendments/', {}),
         )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/agreements/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
