@@ -1,8 +1,8 @@
 from django.contrib import admin
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 
-from users.models import UserProfile, Country, Office, Section, WorkspaceCounter
+from users.models import Country, Office, Section, UserProfile, WorkspaceCounter
 
 
 class ProfileInline(admin.StackedInline):
@@ -141,10 +141,10 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if form.data.get('supervisor'):
-            supervisor = User.objects.get(id=int(form.data['supervisor']))
+            supervisor = get_user_model().objects.get(id=int(form.data['supervisor']))
             obj.supervisor = supervisor
         if form.data.get('oic'):
-            oic = User.objects.get(id=int(form.data['oic']))
+            oic = get_user_model().objects.get(id=int(form.data['oic']))
             obj.oic = oic
         obj.save()
 
@@ -220,8 +220,8 @@ class CountryAdmin(admin.ModelAdmin):
 
 
 # Re-register UserAdmin
-admin.site.unregister(User)
-admin.site.register(User, UserAdminPlus)
+admin.site.unregister(get_user_model())
+admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Office)
