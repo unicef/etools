@@ -11,7 +11,7 @@ import mptt.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('locations', '0004_auto_20170112_2051'),
+        ('locations', '0005_gatewaytype_admin_level'),
     ]
 
     operations = [
