@@ -18,6 +18,8 @@ from rest_framework.generics import (
     CreateAPIView,
     ListAPIView)
 
+from EquiTrack.mixins import ExportModelMixin
+from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.utils import get_data_from_insight
 from EquiTrack.validation_mixins import ValidatorViewMixin
 
@@ -27,25 +29,35 @@ from partners.models import (
     Assessment,
 )
 from partners.permissions import ListCreateAPIMixedPermission
-from partners.serializers.partner_organization_v2 import (
+from partners.serializers.exports.partner_organization import (
+    AssessmentExportFlatSerializer,
+    AssessmentExportSerializer,
+    PartnerOrganizationExportFlatSerializer,
     PartnerOrganizationExportSerializer,
+    PartnerStaffMemberExportFlatSerializer,
+    PartnerStaffMemberExportSerializer,
+)
+from partners.serializers.partner_organization_v2 import (
+    AssessmentDetailSerializer,
     PartnerOrganizationListSerializer,
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationCreateUpdateSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
-    AssessmentDetailSerializer,
     MinimalPartnerOrganizationListSerializer,
 )
 from partners.views.helpers import set_tenant_or_fail
 from t2f.models import TravelActivity
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 from partners.filters import PartnerScopeFilter
-from partners.exports_v2 import PartnerOrganizationCsvRenderer, PartnerOrganizationHactCsvRenderer
+from partners.exports_v2 import (
+    PartnerOrganizationCSVRenderer,
+    PartnerOrganizationHactCSVRenderer,
+)
 
 
-class PartnerOrganizationListAPIView(ListCreateAPIView):
+class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
     """
     Create new Partners.
     Returns a list of Partners.
@@ -54,7 +66,11 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     serializer_class = PartnerOrganizationListSerializer
     permission_classes = (ListCreateAPIMixedPermission,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, PartnerOrganizationCsvRenderer)
+    renderer_classes = (
+        r.JSONRenderer,
+        PartnerOrganizationCSVRenderer,
+        CSVFlatRenderer
+    )
 
     def get_serializer_class(self, format=None):
         """
@@ -65,6 +81,8 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return PartnerOrganizationExportSerializer
+                if query_params.get("format") == 'csv_flat':
+                    return PartnerOrganizationExportFlatSerializer
             if "verbosity" in query_params.keys():
                 if query_params.get("verbosity") == 'minimal':
                     return MinimalPartnerOrganizationListSerializer
@@ -99,7 +117,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
                 if query_params.get("hidden").lower() == "true":
                     hidden = True
                     # return all partners when exporting and hidden=true
-                    if query_params.get("format", None) == 'csv':
+                    if query_params.get("format", None) in ['csv', 'csv_flat']:
                         hidden = None
                 if query_params.get("hidden").lower() == "false":
                     hidden = False
@@ -124,7 +142,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         query_params = self.request.query_params
         response = super(PartnerOrganizationListAPIView, self).list(request)
         if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
+            if query_params.get("format") in ['csv', 'csv_flat']:
                 response['Content-Disposition'] = "attachment;filename=partner.csv"
 
         return response
@@ -203,7 +221,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.filter(Q(total_ct_cp__gt=0) | Q(total_ct_cy__gt=0)).all()
     serializer_class = PartnerOrganizationHactSerializer
-    renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCSVRenderer)
 
     def list(self, request, format=None):
         """
@@ -218,7 +236,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         return response
 
 
-class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
+class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListCreateAPIView):
     """
     Returns a list of all Partner staff members
     """
@@ -226,6 +244,53 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
+    )
+
+    def get_serializer_class(self, format=None):
+        """
+        Use restriceted field set for listing
+        """
+        if self.request.method == "GET":
+            query_params = self.request.query_params
+            if "format" in query_params.keys():
+                if query_params.get("format") == 'csv':
+                    return PartnerStaffMemberExportSerializer
+                if query_params.get("format") == 'csv_flat':
+                    return PartnerStaffMemberExportFlatSerializer
+        if self.request.method == "POST":
+            return PartnerStaffMemberCreateUpdateSerializer
+        return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
+
+
+class PartnerOrganizationAssessmentListView(ExportModelMixin, ListAPIView):
+    """
+    Returns a list of all Partner staff members
+    """
+    queryset = Assessment.objects.all()
+    serializer_class = AssessmentDetailSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        r.JSONRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
+    )
+
+    def get_serializer_class(self, format=None):
+        """
+        Use restriceted field set for listing
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return AssessmentExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return AssessmentExportFlatSerializer
+        return super(PartnerOrganizationAssessmentListView, self).get_serializer_class()
 
 
 class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):

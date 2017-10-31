@@ -49,11 +49,12 @@ from partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionReportingPeriod,
+    InterventionSectorLocationLink,
     PartnerOrganization,
     PartnerType,
 )
 from partners.permissions import READ_ONLY_API_GROUP_NAME
-from partners.serializers.partner_organization_v2 import PartnerOrganizationExportSerializer
+from partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 import partners.views.partner_organization_v2
 
 
@@ -428,7 +429,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_delete_asssessment_valid(self):
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/partners/assessments/{}/'.format(self.assessment1.id),
+            reverse(
+                'partners_api:partner-assessment-del',
+                args=[self.assessment1.pk]
+            ),
             user=self.unicef_staff,
         )
 
@@ -437,7 +441,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_delete_asssessment_error(self):
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/partners/assessments/{}/'.format(self.assessment2.id),
+            reverse(
+                'partners_api:partner-assessment-del',
+                args=[self.assessment2.pk]
+            ),
             user=self.unicef_staff,
         )
 
@@ -447,7 +454,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_with_members(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -469,7 +476,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -488,7 +495,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -508,7 +515,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -526,7 +533,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -544,7 +551,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -554,7 +561,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_update_with_members_null_phone(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -574,7 +581,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -594,7 +601,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -606,7 +613,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
 
@@ -628,7 +635,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -638,7 +645,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
 
@@ -652,7 +659,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data,
         )
@@ -675,7 +682,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/partners/delete/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-delete', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -703,7 +710,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/partners/delete/{}/'.format(partner.id),
+            reverse('partners_api:partner-delete', args=[partner.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -712,7 +719,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         partner = PartnerFactory()
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/partners/delete/{}/'.format(partner.id),
+            reverse('partners_api:partner-delete', args=[partner.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -724,7 +731,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
             data=data
         )
@@ -811,7 +818,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.partnership_manager_user,
             data=data
         )
@@ -831,7 +838,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.partnership_manager_user,
             data=data
         )
@@ -1020,7 +1027,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.partner_staff_user,
             data=data
         )
@@ -1033,7 +1040,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.country_programme.save()
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.partner_staff_user,
             data=data
         )
@@ -1045,7 +1052,7 @@ class TestAgreementAPIView(APITenantTestCase):
     def test_agreements_list(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.unicef_staff
         )
 
@@ -1060,7 +1067,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
             user=self.partnership_manager_user,
             data=data
         )
@@ -1070,7 +1077,7 @@ class TestAgreementAPIView(APITenantTestCase):
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
             user=self.unicef_staff
         )
 
@@ -1080,7 +1087,7 @@ class TestAgreementAPIView(APITenantTestCase):
     def test_agreements_retrieve_staff_members(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
             user=self.unicef_staff
         )
 
@@ -1096,7 +1103,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
             user=self.partnership_manager_user,
             data=data
         )
@@ -1111,7 +1118,7 @@ class TestAgreementAPIView(APITenantTestCase):
     def test_agreements_delete(self):
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
             user=self.partnership_manager_user
         )
 
@@ -1121,7 +1128,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"agreement_type": Agreement.PCA}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.unicef_staff,
             data=params
         )
@@ -1135,7 +1142,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"status": "signed"}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.unicef_staff,
             data=params
         )
@@ -1149,7 +1156,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"partner_name": self.partner.name}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.unicef_staff,
             data=params
         )
@@ -1162,7 +1169,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"search": "Partner"}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.unicef_staff,
             data=params
         )
@@ -1175,7 +1182,7 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {"search": datetime.date.today().year}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/',
+            reverse('partners_api:agreement-list'),
             user=self.unicef_staff,
             data=params
         )
@@ -1208,7 +1215,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/agreements/{}/'.format(agreement.id),
+            reverse('partners_api:agreement-detail', args=[agreement.pk]),
             user=self.partnership_manager_user,
             data=data
         )
@@ -1227,7 +1234,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
             user=self.partnership_manager_user,
             data=data
         )
@@ -1238,7 +1245,10 @@ class TestAgreementAPIView(APITenantTestCase):
     def test_agreement_amendment_delete_error(self):
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/agreements/amendments/{}/'.format(self.agreement.amendments.first().id),
+            reverse(
+                'partners_api:agreement-amendment-del',
+                args=[self.agreement.amendments.first().pk]
+            ),
             user=self.partnership_manager_user,
         )
 
@@ -1248,7 +1258,7 @@ class TestAgreementAPIView(APITenantTestCase):
     def test_agreement_generate_pdf_default(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/{}/generate_doc/'.format(self.agreement.id),
+            reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
             user=self.unicef_staff
         )
 
@@ -1260,7 +1270,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/agreements/{}/generate_doc/'.format(self.agreement.id),
+            reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
             user=self.unicef_staff,
             data=params
         )
@@ -1279,7 +1289,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            reverse('partners_api:agreement-detail', args=[self.agreement.pk]),
             user=self.partnership_manager_user,
             data=data
         )
@@ -1469,7 +1479,7 @@ class TestInterventionViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/interventions/',
+            reverse('partners_api:intervention-list'),
             user=self.partnership_manager_user,
             data=data
         )
@@ -1557,7 +1567,7 @@ class TestInterventionViews(APITenantTestCase):
 
         response = self.forced_auth_req(
             'post',
-            '/api/v2/interventions/',
+            reverse('partners_api:intervention-list'),
             user=self.partnership_manager_user,
             data=self.intervention_data
         )
@@ -1588,7 +1598,7 @@ class TestInterventionViews(APITenantTestCase):
     def test_intervention_list(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/',
+            reverse('partners_api:intervention-list'),
             user=self.unicef_staff,
         )
 
@@ -1599,7 +1609,7 @@ class TestInterventionViews(APITenantTestCase):
         params = {"verbosity": "minimal"}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/',
+            reverse('partners_api:intervention-list'),
             user=self.unicef_staff,
             data=params
         )
@@ -1619,7 +1629,7 @@ class TestInterventionViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/interventions/',
+            reverse('partners_api:intervention-list'),
             user=self.partnership_manager_user,
             data=data
         )
@@ -1641,7 +1651,7 @@ class TestInterventionViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/interventions/',
+            reverse('partners_api:intervention-list'),
             user=self.unicef_staff,
             data=data
         )
@@ -1656,7 +1666,10 @@ class TestInterventionViews(APITenantTestCase):
 
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            reverse(
+                'partners_api:intervention-detail',
+                args=[self.intervention_data.get("id")]
+            ),
             user=self.unicef_staff,
         )
         r_data = json.loads(response.rendered_content)
@@ -1672,7 +1685,10 @@ class TestInterventionViews(APITenantTestCase):
         self.intervention_data.update(status="active")
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            reverse(
+                'partners_api:intervention-detail',
+                args=[self.intervention_data.get("id")]
+            ),
             user=self.partnership_manager_user,
             data=self.intervention_data
         )
@@ -1688,7 +1704,10 @@ class TestInterventionViews(APITenantTestCase):
         self.intervention_data.update(planned_budget=[])
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            reverse(
+                'partners_api:intervention-detail',
+                args=[self.intervention_data.get("id")]
+            ),
             user=self.unicef_staff,
             data=self.intervention_data
         )
@@ -1709,7 +1728,10 @@ class TestInterventionViews(APITenantTestCase):
 
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            reverse(
+                'partners_api:intervention-detail',
+                args=[self.intervention_data.get("id")]
+            ),
             user=self.unicef_staff,
             data=self.intervention_data
         )
@@ -1717,10 +1739,33 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["Cannot change fields while intervention is active: unicef_cash"])
 
+    @skip('TODO: update test when new validation requirement is built')
+    def test_intervention_active_update_sector_locations(self):
+        intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention_obj.status = Intervention.DRAFT
+        intervention_obj.save()
+        InterventionSectorLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
+        self.intervention_data.update(sector_locations=[])
+        self.intervention_data.update(status="active")
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'partners_api:intervention-detail',
+                args=[self.intervention_data.get("id")]
+            ),
+            user=self.unicef_staff,
+            data=self.intervention_data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data,
+            ["Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
+
     def test_intervention_validation(self):
         response = self.forced_auth_req(
             'post',
-            '/api/v2/interventions/',
+            reverse("partners_api:intervention-list"),
             user=self.partnership_manager_user,
             data={}
         )
@@ -1737,7 +1782,10 @@ class TestInterventionViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention["id"]]
+            ),
             user=self.partnership_manager_user,
             data=data,
         )
@@ -1753,7 +1801,10 @@ class TestInterventionViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention["id"]]
+            ),
             user=self.partnership_manager_user,
             data=data,
         )
@@ -1769,7 +1820,10 @@ class TestInterventionViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention["id"]]
+            ),
             user=self.partnership_manager_user,
             data=data,
         )
@@ -1792,7 +1846,10 @@ class TestInterventionViews(APITenantTestCase):
 
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention["id"]]
+            ),
             user=self.partnership_manager_user,
             data=data,
         )
@@ -1813,7 +1870,7 @@ class TestInterventionViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/',
+            reverse("partners_api:intervention-list"),
             user=self.unicef_staff,
             data=params
         )
@@ -1827,7 +1884,7 @@ class TestInterventionViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/',
+            reverse("partners_api:intervention-list"),
             user=self.unicef_staff,
             data=params
         )
@@ -1838,7 +1895,10 @@ class TestInterventionViews(APITenantTestCase):
     def test_intervention_planned_visits_delete(self):
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/interventions/planned-visits/{}/'.format(self.planned_visit.id),
+            reverse(
+                "partners_api:intervention-visits-del",
+                args=[self.planned_visit.pk]
+            ),
             user=self.unicef_staff,
         )
 
@@ -1850,7 +1910,10 @@ class TestInterventionViews(APITenantTestCase):
         intervention.save()
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/interventions/planned-visits/{}/'.format(self.planned_visit.id),
+            reverse(
+                "partners_api:intervention-visits-del",
+                args=[self.planned_visit.pk]
+            ),
             user=self.unicef_staff,
         )
 
@@ -1860,7 +1923,10 @@ class TestInterventionViews(APITenantTestCase):
     def test_intervention_attachments_delete(self):
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/interventions/attachments/{}/'.format(self.attachment.id),
+            reverse(
+                "partners_api:intervention-attachments-del",
+                args=[self.attachment.pk]
+            ),
             user=self.unicef_staff,
         )
 
@@ -1872,7 +1938,10 @@ class TestInterventionViews(APITenantTestCase):
         intervention.save()
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/interventions/attachments/{}/'.format(self.attachment.id),
+            reverse(
+                "partners_api:intervention-attachments-del",
+                args=[self.attachment.pk]
+            ),
             user=self.unicef_staff,
         )
 
@@ -1882,7 +1951,10 @@ class TestInterventionViews(APITenantTestCase):
     def test_intervention_results_delete(self):
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/interventions/results/{}/'.format(self.result.id),
+            reverse(
+                "partners_api:intervention-results-del",
+                args=[self.result.pk]
+            ),
             user=self.unicef_staff,
         )
 
@@ -1894,7 +1966,10 @@ class TestInterventionViews(APITenantTestCase):
         intervention.save()
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/interventions/results/{}/'.format(self.result.id),
+            reverse(
+                "partners_api:intervention-results-del",
+                args=[self.result.pk]
+            ),
             user=self.unicef_staff,
         )
 
@@ -1904,7 +1979,10 @@ class TestInterventionViews(APITenantTestCase):
     def test_intervention_amendments_delete(self):
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/interventions/amendments/{}/'.format(self.amendment.id),
+            reverse(
+                "partners_api:intervention-amendments-del",
+                args=[self.amendment.pk]
+            ),
             user=self.unicef_staff,
         )
 
@@ -1916,7 +1994,10 @@ class TestInterventionViews(APITenantTestCase):
         intervention.save()
         response = self.forced_auth_req(
             'delete',
-            '/api/v2/interventions/amendments/{}/'.format(self.amendment.id),
+            reverse(
+                "partners_api:intervention-amendments-del",
+                args=[self.amendment.pk]
+            ),
             user=self.unicef_staff,
         )
 
@@ -1927,7 +2008,7 @@ class TestInterventionViews(APITenantTestCase):
         params = {"values": "{}".format(self.intervention["id"])}
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/',
+            reverse("partners_api:intervention-list"),
             user=self.unicef_staff,
             data=params
         )
@@ -2173,7 +2254,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/interventions/',
+            reverse("partners_api:intervention-list"),
             user=self.unicef_staff,
             data=data
         )
@@ -2225,7 +2306,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/interventions/',
+            reverse("partners_api:intervention-list"),
             user=self.unicef_staff,
             data=self.intervention_data
         )
