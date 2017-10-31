@@ -16,9 +16,8 @@ from EquiTrack.factories import (
     TravelFactory,
     TravelActivityFactory,
     UserFactory,
-)
+    CountryProgrammeFactory, GovernmentInterventionFactory, ResultFactory, GrantFactory, DonorFactory)
 
-from funds.models import Donor, Grant
 from reports.models import (
     CountryProgramme,
     ResultType,
@@ -28,11 +27,8 @@ from partners.models import (
     FundingCommitment,
     PartnerOrganization,
     Assessment,
-    Result,
-    GovernmentIntervention,
     GovernmentInterventionResult,
     Intervention,
-    InterventionBudget,
     PartnerType,
 )
 from t2f.models import Travel, TravelType
@@ -157,16 +153,16 @@ class TestHACTCalculations(TenantTestCase):
         self.intervention = InterventionFactory(
             status=u'active'
         )
-        current_cp = CountryProgramme.objects.create(
+        current_cp = CountryProgrammeFactory(
             name='Current Country Programme',
             from_date=datetime.date(year, 1, 1),
             to_date=datetime.date(year + 1, 12, 31)
         )
-        grant = Grant.objects.create(
-            donor=Donor.objects.create(name='Test Donor'),
+        grant = GrantFactory(
+            donor=DonorFactory(name='Test Donor'),
             name='SM12345678'
         )
-        InterventionBudget.objects.create(
+        InterventionBudgetFactory(
             intervention=self.intervention,
             partner_contribution=10000,
             unicef_cash=60000,
@@ -216,31 +212,36 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
-        self.cp = CountryProgramme.objects.create(
+        self.cp = CountryProgrammeFactory(
             name="CP 1",
             wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
         year = datetime.date.today().year
-        self.pca_signed1 = Agreement.objects.create(
+        self.pca_signed1 = AgreementFactory(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
             signed_by_unicef_date=datetime.date(year - 1, 1, 1),
             signed_by_partner_date=datetime.date(year - 1, 1, 1),
             country_programme=self.cp,
+            status=Agreement.DRAFT
         )
-        Agreement.objects.create(
+        AgreementFactory(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
             signed_by_unicef_date=datetime.date(year - 2, 1, 1),
             signed_by_partner_date=datetime.date(year - 2, 1, 1),
             country_programme=self.cp,
+            status=Agreement.DRAFT
         )
-        Agreement.objects.create(
+        AgreementFactory(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
             country_programme=self.cp,
+            signed_by_unicef_date=None,
+            signed_by_partner_date=None,
+            status=Agreement.DRAFT
         )
 
     def test_get_last_pca(self):
@@ -420,17 +421,17 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_planned_cash_transfers_gov(self):
         self.partner_organization.partner_type = PartnerType.GOVERNMENT
         self.partner_organization.save()
-        CountryProgramme.objects.create(
+        CountryProgrammeFactory(
             name="CP 1",
             wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        gi = GovernmentIntervention.objects.create(
+        gi = GovernmentInterventionFactory(
             partner=self.partner_organization,
         )
         rt = ResultType.objects.get(id=1)
-        r = Result.objects.create(
+        r = ResultFactory(
             result_type=rt,
         )
         GovernmentInterventionResult.objects.create(
@@ -453,7 +454,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_planned_cash_transfers_non_gov(self):
         self.partner_organization.partner_type = PartnerType.UN_AGENCY
         self.partner_organization.save()
-        agreement = Agreement.objects.create(
+        agreement = AgreementFactory(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
             country_programme=self.cp,
@@ -709,18 +710,18 @@ class TestInterventionModel(TenantTestCase):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
-        cp = CountryProgramme.objects.create(
+        cp = CountryProgrammeFactory(
             name="CP 1",
             wbs="0001/A0/01",
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        agreement = Agreement.objects.create(
+        agreement = AgreementFactory(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
             country_programme=cp,
         )
-        self.intervention = Intervention.objects.create(
+        self.intervention = InterventionFactory(
             title="Intervention 1",
             agreement=agreement,
             submission_date=datetime.date(datetime.date.today().year, 1, 1),
@@ -747,8 +748,17 @@ class TestInterventionModel(TenantTestCase):
         self.intervention.end_date = datetime.date(datetime.date.today().year + 1, 1, 1)
         # self.assertEqual(self.intervention.duration, 24)
 
+    def test_total_no_intervention(self):
+        self.assertEqual(int(self.intervention.total_unicef_cash), 0)
+        self.assertEqual(int(self.intervention.total_partner_contribution), 0)
+        self.assertEqual(int(self.intervention.total_budget), 0)
+        self.assertEqual(int(self.intervention.total_unicef_budget), 0)
+        self.assertEqual(int(self.intervention.total_partner_contribution_local), 0)
+        self.assertEqual(int(self.intervention.total_unicef_cash_local), 0)
+        self.assertEqual(int(self.intervention.total_budget_local), 0)
+
     def test_total_unicef_cash(self):
-        InterventionBudget.objects.create(
+        InterventionBudgetFactory(
             intervention=self.intervention,
             unicef_cash=100000,
             unicef_cash_local=10,
@@ -758,8 +768,8 @@ class TestInterventionModel(TenantTestCase):
         )
         self.assertEqual(int(self.intervention.total_unicef_cash), 100000)
 
-    def test_total_budget(self):
-        InterventionBudget.objects.create(
+    def test_total_partner_contribution(self):
+        InterventionBudgetFactory(
             intervention=self.intervention,
             unicef_cash=100000,
             unicef_cash_local=10,
@@ -767,7 +777,73 @@ class TestInterventionModel(TenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_budget), 100200)
+        self.assertEqual(int(self.intervention.total_partner_contribution), 200)
+
+    def test_total_budget(self):
+        InterventionBudgetFactory(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            partner_contribution_local=20,
+            in_kind_amount_local=10,
+        )
+        self.assertEqual(int(self.intervention.total_budget), 100210)
+
+    def test_total_in_kind_amount(self):
+        InterventionBudgetFactory(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            in_kind_amount=3300,
+            in_kind_amount_local=10,
+        )
+        self.assertEqual(int(self.intervention.total_in_kind_amount), 3300)
+
+    def test_total_unicef_budget(self):
+        InterventionBudgetFactory(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            in_kind_amount=2000,
+            in_kind_amount_local=10,
+        )
+        self.assertEqual(int(self.intervention.total_unicef_budget), 102000)
+
+    def test_total_partner_contribution_local(self):
+        InterventionBudgetFactory(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution_local=7000,
+            in_kind_amount=2000,
+            in_kind_amount_local=10,
+        )
+        self.assertEqual(int(self.intervention.total_partner_contribution_local), 7000)
+
+    def test_total_unicef_cash_local(self):
+        InterventionBudgetFactory(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution_local=7000,
+            in_kind_amount=2000,
+            in_kind_amount_local=10,
+        )
+        self.assertEqual(int(self.intervention.total_unicef_cash_local), 10)
+
+    def test_total_budget_local(self):
+        InterventionBudgetFactory(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution_local=7000,
+            in_kind_amount=2000,
+            in_kind_amount_local=3000,
+        )
+        self.assertEqual(int(self.intervention.total_budget_local), 3000)
 
     def test_year(self):
         '''Exercise the year property'''
@@ -790,7 +866,7 @@ class TestInterventionModel(TenantTestCase):
 
     @skip("Fix when HACT available")
     def test_planned_cash_transfers(self):
-        InterventionBudget.objects.create(
+        InterventionBudgetFactory(
             intervention=self.intervention,
             unicef_cash=100000,
             unicef_cash_local=10,

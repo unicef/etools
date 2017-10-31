@@ -275,11 +275,11 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, admin.ModelA
 class AssessmentAdmin(admin.ModelAdmin):
     model = Assessment
     fields = (
-         u'partner',
-         u'type',
-         u'completed_date',
-         u'current',
-         u'report',
+        u'partner',
+        u'type',
+        u'completed_date',
+        u'current',
+        u'report',
     )
     list_filter = (
         u'partner',
