@@ -31,10 +31,7 @@ from EquiTrack.factories import (
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
-from reports.models import (
-    CountryProgramme,
-    ResultType,
-)
+from reports.models import ResultType
 from partners import models
 from t2f.models import Travel, TravelType
 
@@ -66,11 +63,7 @@ class TestAgreementNumberGeneration(TenantTestCase):
         self.assertEqual(agreement1.reference_number, expected_reference_number)
 
         # create amendment
-        models.AgreementAmendmentLog.objects.create(
-            agreement=agreement1,
-            amended_at=self.date,
-            status=models.PCA.ACTIVE
-        )
+        AgreementAmendmentFactory(agreement=agreement1)
         # reference number should be unchanged.
         self.assertEqual(agreement1.reference_number, expected_reference_number)
 
@@ -1168,7 +1161,7 @@ class TestAssessment(TenantTestCase):
 
     def test_save_update_micro_assessment(self):
         partner = PartnerFactory(
-            rating=models.LOW,
+            rating=models.Assessment.LOW,
             type_of_assessment="Micro Assessment",
         )
         assessment = AssessmentFactory(
@@ -1187,7 +1180,7 @@ class TestAssessment(TenantTestCase):
 
     def test_save_update_scheduled_audit_report(self):
         partner = PartnerFactory(
-            rating=models.LOW,
+            rating=models.Assessment.LOW,
             type_of_assessment="Micro Assessment",
         )
         assessment = AssessmentFactory(
