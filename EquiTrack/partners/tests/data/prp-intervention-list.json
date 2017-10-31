@@ -10,7 +10,8 @@
             "disaggregation": [
               {
                 "id": 4,
-                "name": "A Disaggregation"
+                "name": "A Disaggregation",
+                "disaggregation_values": []
               }
             ],
             "locations": [

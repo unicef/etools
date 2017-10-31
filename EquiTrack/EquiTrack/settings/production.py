@@ -63,23 +63,23 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
             new_jwt_cert.write(jwt_cert.read())
 
 # production overrides for django-rest-framework-jwt
-private_key_text = open(join(DJANGO_ROOT, 'keys/jwt/key.pem'), 'r').read()  # noqa: F405
-public_key_text = open(join(DJANGO_ROOT, 'keys/jwt/certificate.pem'), 'r').read()  # noqa: F405
+if not os.getenv('DISABLE_JWT_LOGIN', False):
+    private_key_text = open(join(DJANGO_ROOT, 'keys/jwt/key.pem'), 'r').read()  # noqa: F405
+    public_key_text = open(join(DJANGO_ROOT, 'keys/jwt/certificate.pem'), 'r').read()  # noqa: F405
 
+    JWT_PRIVATE_KEY = serialization.load_pem_private_key(private_key_text, password=None,
+                                                         backend=default_backend())
 
-JWT_PRIVATE_KEY = serialization.load_pem_private_key(private_key_text, password=None,
-                                                     backend=default_backend())
+    certificate = load_pem_x509_certificate(public_key_text, default_backend())
+    JWT_PUBLIC_KEY = certificate.public_key()
 
-certificate = load_pem_x509_certificate(public_key_text, default_backend())
-JWT_PUBLIC_KEY = certificate.public_key()
-
-JWT_AUTH.update({  # noqa: F405
-    'JWT_SECRET_KEY': SECRET_KEY,
-    'JWT_PUBLIC_KEY': JWT_PUBLIC_KEY,
-    'JWT_PRIVATE_KEY': JWT_PRIVATE_KEY,
-    'JWT_ALGORITHM': 'RS256',
-    'JWT_LEEWAY': 60,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),  # noqa: F405
-    'JWT_AUDIENCE': 'https://etools.unicef.org/',
-    'JWT_PAYLOAD_HANDLER': 'EquiTrack.mixins.custom_jwt_payload_handler'
-})
+    JWT_AUTH.update({  # noqa: F405
+        'JWT_SECRET_KEY': SECRET_KEY,
+        'JWT_PUBLIC_KEY': JWT_PUBLIC_KEY,
+        'JWT_PRIVATE_KEY': JWT_PRIVATE_KEY,
+        'JWT_ALGORITHM': 'RS256',
+        'JWT_LEEWAY': 60,
+        'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),  # noqa: F405
+        'JWT_AUDIENCE': 'https://etools.unicef.org/',
+        'JWT_PAYLOAD_HANDLER': 'EquiTrack.mixins.custom_jwt_payload_handler'
+    })
