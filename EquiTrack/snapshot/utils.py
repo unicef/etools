@@ -16,10 +16,10 @@ def jsonify(data):
     return data
 
 
-def get_to_many_field_names(obj):
-    """Get all the many_to_many and one_to_many field names for an object"""
+def get_to_many_field_names(cls):
+    """Get all the many_to_many and one_to_many field names for a class"""
     fields = []
-    for field in obj._meta.get_fields():
+    for field in cls._meta.get_fields():
         if field.one_to_many or field.many_to_many:
             fields.append(field.name)
     return fields
