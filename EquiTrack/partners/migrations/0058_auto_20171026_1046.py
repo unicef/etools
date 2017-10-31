@@ -9,7 +9,7 @@ import partners.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0057_merge'),
+        ('partners', '0056_auto_20171020_1530'),
     ]
 
     operations = [

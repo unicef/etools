@@ -9,7 +9,7 @@ import django.db.models.manager
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0052_auto_20170929_1933'),
+        ('partners', '0058_interventionreportingperiod'),
     ]
 
     operations = [
