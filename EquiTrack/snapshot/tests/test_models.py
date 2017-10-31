@@ -37,3 +37,20 @@ class TestActivity(TenantTestCase):
         activity = ActivityFactory(by_user=user)
         self.assertEqual(str(user), "First")
         self.assertEqual(activity.by_user_display(), "First")
+
+    def test_delete_target(self):
+        user = UserFactory(first_name="First")
+        activity = ActivityFactory(target=user)
+        self.assertEqual(activity.target, user)
+        user.delete()
+        self.assertTrue(Activity.objects.filter(pk=activity.pk).exists())
+        activity_updated = Activity.objects.get(pk=activity.pk)
+        print(activity_updated.target)
+        self.assertEqual(
+            activity_updated.target_content_type,
+            activity.target_content_type
+        )
+        self.assertEqual(
+            activity_updated.target_object_id,
+            str(activity.target_object_id)
+        )
