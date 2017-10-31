@@ -5,8 +5,11 @@ from __future__ import unicode_literals
 
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import (
+    AgreementFactory,
     FundsReservationHeaderFactory,
     InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
     UserFactory,
 )
 from django.forms import model_to_dict
@@ -28,6 +31,27 @@ class TestGetToManyFieldNames(TenantTestCase):
         self.assertIn("frs", fields)
         # check many_to_many field
         self.assertIn("sections", fields)
+
+    def test_partner(self):
+        partner = PartnerFactory()
+        fields = utils.get_to_many_field_names(partner.__class__)
+        # check many_to_one field
+        self.assertIn("staff_members", fields)
+
+    def test_partner_staff(self):
+        partner = PartnerFactory()
+        partner_staff = PartnerStaffFactory(partner=partner)
+        fields = utils.get_to_many_field_names(partner_staff.__class__)
+        # check many_to_one field
+        self.assertIn("signed_interventions", fields)
+        # check many_to_many field
+        self.assertIn("agreement_authorizations", fields)
+
+    def test_agreement(self):
+        agreement = AgreementFactory()
+        fields = utils.get_to_many_field_names(agreement.__class__)
+        # check many_to_one field
+        self.assertIn("amendments", fields)
 
 
 class TestCreateDictWithRelations(TenantTestCase):
