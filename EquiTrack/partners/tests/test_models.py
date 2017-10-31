@@ -26,7 +26,6 @@ from EquiTrack.factories import (
 )
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.validation_mixins import TransitionError
 
 from funds.models import Donor, Grant
 from reports.models import (
