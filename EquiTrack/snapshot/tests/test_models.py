@@ -10,6 +10,7 @@ from EquiTrack.factories import (
 )
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from snapshot.models import Activity
+from partners.models import WorkspaceFileType
 
 
 class TestActivity(TenantTestCase):
@@ -39,10 +40,10 @@ class TestActivity(TenantTestCase):
         self.assertEqual(activity.by_user_display(), "First")
 
     def test_delete_target(self):
-        user = UserFactory(first_name="First")
-        activity = ActivityFactory(target=user)
-        self.assertEqual(activity.target, user)
-        user.delete()
+        workspace = WorkspaceFileType.objects.create(name="Workspace")
+        activity = ActivityFactory(target=workspace)
+        self.assertEqual(activity.target, workspace)
+        workspace.delete()
         self.assertTrue(Activity.objects.filter(pk=activity.pk).exists())
         activity_updated = Activity.objects.get(pk=activity.pk)
         self.assertEqual(
