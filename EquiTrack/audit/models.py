@@ -80,7 +80,6 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         unique=True,
         max_length=30
     )
-    item_number = models.IntegerField(_('PO Item Number'), null=True, blank=True)
     auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('auditor'), related_name='purchase_orders')
     contract_start_date = models.DateField(_('PO Date'), null=True, blank=True)
     contract_end_date = models.DateField(_('Contract Expiry Date'), null=True, blank=True)
@@ -92,6 +91,14 @@ class PurchaseOrder(TimeStampedModel, models.Model):
 
     def natural_key(self):
         return (self.order_number, )
+
+
+class PurchaseOrderItem(models.Model):
+    purchase_order = models.ForeignKey(PurchaseOrder, related_name='item_numbers')
+    number = models.IntegerField(_('PO Item Number'))
+
+    class Meta:
+        unique_together = ('purchase_order', 'number')
 
 
 def _has_action_permission(action):
@@ -170,6 +177,7 @@ class Engagement(TimeStampedModel, models.Model):
 
     # auditor - partner organization from agreement
     agreement = models.ForeignKey(PurchaseOrder, verbose_name=_('purchase order'))
+    po_item = models.ForeignKey(PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True)
 
     partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('partner'))
     partner_contacted_at = models.DateField(_('Date IP was contacted'), blank=True, null=True)
