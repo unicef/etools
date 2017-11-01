@@ -11,6 +11,7 @@ from django.utils import timezone
 from EquiTrack.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
+    AppliedIndicatorFactory,
     AssessmentFactory,
     CountryProgrammeFactory,
     CurrencyFactory,
@@ -23,7 +24,10 @@ from EquiTrack.factories import (
     InterventionBudgetFactory,
     InterventionFactory,
     InterventionPlannedVisitsFactory,
+    InterventionResultLinkFactory,
     InterventionSectorLocationLinkFactory,
+    LocationFactory,
+    LowerResultFactory,
     PartnerFactory,
     PartnerStaffFactory,
     ResultFactory,
@@ -1002,6 +1006,10 @@ class TestInterventionModel(TenantTestCase):
         self.intervention.signed_by_unicef_date = get_date_from_prior_year()
         self.assertEqual(self.intervention.year, self.intervention.signed_by_unicef_date.year)
 
+    def test_year_no_pk(self):
+        i = models.Intervention()
+        self.assertEqual(i.year, datetime.date.today().year)
+
     def test_reference_number(self):
         '''Exercise the reference number property'''
         expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
@@ -1060,6 +1068,162 @@ class TestInterventionModel(TenantTestCase):
         self.assertIsNone(self.intervention.signed_by_partner_date)
         res = self.intervention.days_from_review_to_signed
         self.assertEqual(res, "Not fully signed")
+
+    def test_all_lower_results_empty(self):
+        self.assertEqual(self.intervention.all_lower_results, [])
+
+    def test_all_lower_results(self):
+        intervention = InterventionFactory()
+        link = InterventionResultLinkFactory(
+            intervention=intervention,
+        )
+        lower_result_1 = LowerResultFactory(result_link=link)
+        lower_result_2 = LowerResultFactory(result_link=link)
+        self.assertItemsEqual(intervention.all_lower_results, [
+            lower_result_1,
+            lower_result_2,
+        ])
+
+    def test_intervention_locations_empty(self):
+        self.assertFalse(self.intervention.intervention_locations)
+
+    def test_intervention_locations(self):
+        intervention = InterventionFactory()
+        link = InterventionResultLinkFactory(
+            intervention=intervention,
+        )
+        lower_result_1 = LowerResultFactory(result_link=link)
+        location_1 = LocationFactory()
+        applied_indicator_1 = AppliedIndicatorFactory(
+            lower_result=lower_result_1
+        )
+        applied_indicator_1.locations.add(location_1)
+        lower_result_2 = LowerResultFactory(result_link=link)
+        location_2 = LocationFactory()
+        applied_indicator_2 = AppliedIndicatorFactory(
+            lower_result=lower_result_2
+        )
+        applied_indicator_2.locations.add(location_2)
+        self.assertItemsEqual(intervention.intervention_locations, [
+            location_1,
+            location_2,
+        ])
+
+    def test_intervention_clusters_empty(self):
+        self.assertFalse(self.intervention.intervention_clusters)
+
+    def test_intervention_clusters(self):
+        intervention = InterventionFactory()
+        link = InterventionResultLinkFactory(
+            intervention=intervention,
+        )
+        lower_result_1 = LowerResultFactory(result_link=link)
+        AppliedIndicatorFactory(
+            lower_result=lower_result_1,
+            cluster_indicator_title="Title 1",
+        )
+        lower_result_2 = LowerResultFactory(result_link=link)
+        AppliedIndicatorFactory(
+            lower_result=lower_result_2,
+            cluster_indicator_title="Title 2",
+        )
+        AppliedIndicatorFactory(
+            lower_result=lower_result_2,
+            cluster_indicator_title=None,
+        )
+        AppliedIndicatorFactory(lower_result=lower_result_2)
+        self.assertItemsEqual(intervention.intervention_clusters, [
+            "Title 1",
+            "Title 2",
+        ])
+
+    def validate_total_frs(
+            self,
+            frs,
+            frs_amt=0,
+            ot_amt=0,
+            int_amt=0,
+            amt=0,
+            start=None,
+            end=None,
+    ):
+        self.assertEqual(frs['total_frs_amt'], frs_amt)
+        self.assertEqual(frs['total_outstanding_amt'], ot_amt)
+        self.assertEqual(frs['total_intervention_amt'], int_amt)
+        self.assertEqual(frs['total_actual_amt'], amt)
+        self.assertEqual(frs['earliest_start_date'], start)
+        self.assertEqual(frs['latest_end_date'], end)
+
+    def test_total_frs_empty(self):
+        """Ensure that we handle an empty queryset"""
+        self.validate_total_frs(self.intervention.total_frs)
+
+    def test_total_frs_single(self):
+        """Ensure that values are set correctly"""
+        intervention = InterventionFactory()
+        FundsReservationHeaderFactory(
+            intervention=intervention,
+            total_amt=10.00,
+            outstanding_amt=20.00,
+            intervention_amt=30.00,
+            actual_amt=40.00,
+            start_date=datetime.date(2001, 1, 1),
+            end_date=datetime.date(2002, 1, 1),
+        )
+        self.validate_total_frs(
+            intervention.total_frs,
+            10.00,
+            20.00,
+            30.00,
+            40.00,
+            datetime.date(2001, 1, 1),
+            datetime.date(2002, 1, 1),
+        )
+
+    def test_total_frs_earliest_latest(self):
+        """Ensure values are updated correctly
+
+        - amounts are added up
+        - start date is the earliest
+        - end date is the latest
+        """
+        intervention = InterventionFactory()
+        FundsReservationHeaderFactory(
+            intervention=intervention,
+            total_amt=10.00,
+            outstanding_amt=20.00,
+            intervention_amt=30.00,
+            actual_amt=40.00,
+            start_date=datetime.date(2010, 1, 1),
+            end_date=datetime.date(2002, 1, 1),
+        )
+        FundsReservationHeaderFactory(
+            intervention=intervention,
+            total_amt=10.00,
+            outstanding_amt=20.00,
+            intervention_amt=30.00,
+            actual_amt=40.00,
+            start_date=datetime.date(2001, 1, 1),
+            end_date=datetime.date(2020, 1, 1),
+        )
+        FundsReservationHeaderFactory(
+            intervention=intervention,
+            total_amt=10.00,
+            outstanding_amt=20.00,
+            intervention_amt=30.00,
+            actual_amt=40.00,
+            start_date=datetime.date(2005, 1, 1),
+            end_date=datetime.date(2010, 1, 1),
+        )
+        self.validate_total_frs(
+            intervention.total_frs,
+            10.00*3,
+            20.00*3,
+            30.00*3,
+            40.00*3,
+            datetime.date(2001, 1, 1),
+            datetime.date(2020, 1, 1),
+        )
 
 
 class TestGetFilePaths(TenantTestCase):
