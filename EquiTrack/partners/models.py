@@ -1542,11 +1542,10 @@ class Intervention(TimeStampedModel):
     def intervention_locations(self):
         # return intervention locations as a set of Location objects
         locations = set()
-        for result_link in self.result_links.all():
-            for lower_result in result_link.ll_results.all():
-                for applied_indicator in lower_result.applied_indicators.all():
-                    for location in applied_indicator.locations.all():
-                        locations.add(location)
+        for lower_result in self.all_lower_results:
+            for applied_indicator in lower_result.applied_indicators.all():
+                for location in applied_indicator.locations.all():
+                    locations.add(location)
 
         return locations
 
@@ -1554,11 +1553,10 @@ class Intervention(TimeStampedModel):
     def intervention_clusters(self):
         # return intervention clusters as an array of strings
         clusters = []
-        for result_link in self.result_links.all():
-            for lower_result in result_link.ll_results.all():
-                for applied_indicator in lower_result.applied_indicators.all():
-                    if applied_indicator.cluster_indicator_title:
-                        clusters.append(applied_indicator.cluster_indicator_title)
+        for lower_result in self.all_lower_results:
+            for applied_indicator in lower_result.applied_indicators.all():
+                if applied_indicator.cluster_indicator_title:
+                    clusters.append(applied_indicator.cluster_indicator_title)
 
         return clusters
 
