@@ -16,6 +16,7 @@ from ordered_model.models import OrderedModel
 @python_2_unicode_compatible
 class FileType(OrderedModel, models.Model):
     name = models.CharField(max_length=64)
+    label = models.CharField(max_length=64)
 
     code = models.CharField(max_length=64, default="")
 
