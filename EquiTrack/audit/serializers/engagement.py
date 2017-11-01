@@ -139,7 +139,7 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
 
     def validate(self, attrs):
         attrs = super(EngagementLightSerializer, self).validate(attrs)
-        
+
         po_item = attrs.get('po_item')
         agreement = attrs.get('agreement')
         if po_item and agreement and po_item.purchase_order != agreement:
