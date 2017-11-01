@@ -13,7 +13,9 @@ from EquiTrack.factories import (
     AgreementFactory,
     AssessmentFactory,
     CountryProgrammeFactory,
+    CurrencyFactory,
     DonorFactory,
+    FundsReservationHeaderFactory,
     GovernmentInterventionFactory,
     GrantFactory,
     InterventionAmendmentFactory,
@@ -21,9 +23,11 @@ from EquiTrack.factories import (
     InterventionBudgetFactory,
     InterventionFactory,
     InterventionPlannedVisitsFactory,
+    InterventionSectorLocationLinkFactory,
     PartnerFactory,
     PartnerStaffFactory,
     ResultFactory,
+    SectorFactory,
     TravelFactory,
     TravelActivityFactory,
     UserFactory,
@@ -39,6 +43,24 @@ from t2f.models import Travel, TravelType
 def get_date_from_prior_year():
     '''Return a date for which year < the current year'''
     return datetime.date.today() - datetime.timedelta(days=700)
+
+
+class TestGetCurrencyNameOrDefault(TenantTestCase):
+    def test_none(self):
+        self.assertIsNone(models._get_currency_name_or_default(False))
+
+    def test_no_currency(self):
+        budget = InterventionBudgetFactory(
+            currency=None
+        )
+        self.assertIsNone(models._get_currency_name_or_default(budget))
+
+    def test_currency(self):
+        currency = CurrencyFactory(code="USD")
+        budget = InterventionBudgetFactory(
+            currency=currency
+        )
+        self.assertEqual(models._get_currency_name_or_default(budget), "USD")
 
 
 class TestAgreementNumberGeneration(TenantTestCase):
@@ -783,12 +805,53 @@ class TestInterventionModel(TenantTestCase):
             submission_date=datetime.date(datetime.date.today().year, 1, 1),
         )
 
+    def test_unicode(self):
+        number = self.intervention.number
+        self.assertEqual(unicode(self.intervention), number)
+
+    def test_permission_structure(self):
+        permissions = models.Intervention.permission_structure()
+        self.assertTrue(isinstance(permissions, dict))
+        self.assertEqual(permissions["amendments"], {
+            'edit': {
+                'true': [
+                    {'status': 'draft', 'group': 'Partnership Manager', 'condition': ''},
+                    {'status': 'signed', 'group': 'Partnership Manager', 'condition': ''},
+                    {'status': 'active', 'group': 'Partnership Manager', 'condition': ''},
+                    {'status': 'draft', 'group': 'Partnership Manager', 'condition': ''},
+                    {'status': 'signed', 'group': 'Partnership Manager', 'condition': ''},
+                    {'status': 'active', 'group': 'Partnership Manager', 'condition': ''}
+                ]
+            }
+        })
+
     # TODO relativedelta() returns 0, may be a bug in the model code
     def test_days_from_submission_signed(self):
         self.intervention.submission_date = datetime.date(datetime.date.today().year - 1, 1, 1)
         self.intervention.signed_by_partner_date = datetime.date(datetime.date.today().year - 1, 5, 1)
         # days = (self.intervention.signed_by_partner_date - self.intervention.submission_date).days
         # self.assertEqual(self.intervention.days_from_submission_to_signed, days)
+
+    def test_submitted_to_prc_submission_date_prc(self):
+        self.intervention.submission_date_prc = datetime.date.today()
+        self.intervention.save()
+        self.assertTrue(self.intervention.submitted_to_prc)
+
+    def test_submitted_to_prc_review_date_prc(self):
+        self.intervention.review_date_prc = datetime.date.today()
+        self.intervention.save()
+        self.assertTrue(self.intervention.submitted_to_prc)
+
+    def test_submitted_to_prc_review_document(self):
+        self.intervention.prc_review_document = "test.pdf"
+        self.intervention.save()
+        self.assertTrue(self.intervention.submitted_to_prc)
+
+    def test_submitted_to_prc_false(self):
+        self.intervention.submission_date_prc = None
+        self.intervention.save()
+        self.assertIsNone(self.intervention.submission_date_prc)
+        self.assertFalse(self.intervention.submitted_to_prc)
 
     # TODO relativedelta() returns 0, may be a bug in the model code
     def test_days_from_review_to_signed(self):
@@ -798,11 +861,42 @@ class TestInterventionModel(TenantTestCase):
         # days = (self.intervention.signed_by_partner_date - self.intervention.review_date).days
         # self.assertEqual(self.intervention.days_from_review_to_signed, days)
 
-    # TODO relativedelta() returns 0, may be a bug in the model code
-    def test_duration(self):
-        self.intervention.start_date = datetime.date(datetime.date.today().year - 1, 1, 1)
-        self.intervention.end_date = datetime.date(datetime.date.today().year + 1, 1, 1)
-        # self.assertEqual(self.intervention.duration, 24)
+    def test_sector_names(self):
+        sector_1 = SectorFactory(name="ABC")
+        sector_2 = SectorFactory(name="CBA")
+        intervention = InterventionFactory()
+        InterventionSectorLocationLinkFactory(
+            intervention=intervention,
+            sector=sector_1,
+        )
+        InterventionSectorLocationLinkFactory(
+            intervention=intervention,
+            sector=sector_2,
+        )
+        self.assertEqual(intervention.sector_names, "ABC, CBA")
+
+    def test_sector_names_empty(self):
+        self.assertEqual(self.intervention.sector_names, "")
+
+    def test_default_budget_currency(self):
+        currency = CurrencyFactory(code="USD")
+        intervention = InterventionFactory()
+        InterventionBudgetFactory(
+            currency=currency,
+            intervention=intervention
+        )
+        self.assertEqual(intervention.default_budget_currency, "USD")
+
+    def test_fr_currency_empty(self):
+        self.assertIsNone(self.intervention.fr_currency)
+
+    def test_fr_currency(self):
+        intervention = InterventionFactory()
+        FundsReservationHeaderFactory(
+            currency="USD",
+            intervention=intervention,
+        )
+        self.assertEqual(intervention.fr_currency, "USD")
 
     def test_total_no_intervention(self):
         self.assertEqual(int(self.intervention.total_unicef_cash), 0)
