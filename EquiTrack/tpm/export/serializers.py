@@ -93,7 +93,7 @@ class TPMLocationExportSerializer(serializers.Serializer):
 
 class TPMVisitExportSerializer(serializers.Serializer):
     ref = serializers.CharField(source='reference_number')
-    visit = serializers.CharField(source='__str__')
+    visit = serializers.CharField(source='*')
     status = serializers.CharField(source='get_status_display')
     activities = CommaSeparatedExportField(source='tpm_activities')
     sections = CommaSeparatedExportField(source='tpm_activities.section')
