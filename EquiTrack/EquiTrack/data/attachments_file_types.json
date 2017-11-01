@@ -4,7 +4,8 @@
         "pk": 1,
         "fields": {
             "order": 0,
-            "name": "FACE",
+            "label": "FACE",
+            "name": "programme_document",
             "code": "tpm"
         }
     },
@@ -13,7 +14,8 @@
         "pk": 2,
         "fields": {
             "order": 1,
-            "name": "Progress report",
+            "label": "Progress report",
+            "name": "supply_manual_list",
             "code": "tpm"
         }
     },
@@ -22,7 +24,8 @@
         "pk": 3,
         "fields": {
             "order": 2,
-            "name": "Partnership review",
+            "label": "Partnership review",
+            "name": "unicef_trip_report_action_point_report",
             "code": "tpm"
         }
     },
@@ -31,7 +34,8 @@
         "pk": 4,
         "fields": {
             "order": 3,
-            "name": "Final Partnership Review",
+            "label": "Final Partnership Review",
+            "name": "partner_report",
             "code": "tpm"
         }
     },
@@ -40,7 +44,8 @@
         "pk": 5,
         "fields": {
             "order": 4,
-            "name": "Correspondence",
+            "label": "Correspondence",
+            "name": "previous_trip_reports",
             "code": "tpm"
         }
     },
@@ -49,7 +54,8 @@
         "pk": 6,
         "fields": {
             "order": 5,
-            "name": "Supply/Distribution Plan",
+            "label": "Supply/Distribution Plan",
+            "name": "training_materials",
             "code": "tpm"
         }
     },
@@ -58,7 +64,8 @@
         "pk": 7,
         "fields": {
             "order": 6,
-            "name": "Workplan",
+            "label": "Workplan",
+            "name": "tors",
             "code": "tpm"
         }
     },
@@ -67,7 +74,8 @@
         "pk": 8,
         "fields": {
             "order": 4,
-            "name": "ICE form",
+            "label": "ICE form",
+            "name": "ice_form",
             "code": "audit_engagement"
         }
     },
@@ -76,7 +84,8 @@
         "pk": 9,
         "fields": {
             "order": 3,
-            "name": "FACE form",
+            "label": "FACE form",
+            "name": "face_form",
             "code": "audit_engagement"
         }
     },
@@ -85,7 +94,8 @@
         "pk": 10,
         "fields": {
             "order": 5,
-            "name": "Other",
+            "label": "Other",
+            "name": "other",
             "code": "audit_engagement"
         }
     },
@@ -94,7 +104,8 @@
         "pk": 11,
         "fields": {
             "order": 0,
-            "name": "Report",
+            "label": "Report",
+            "name": "report",
             "code": "audit_report"
         }
     },
@@ -103,7 +114,8 @@
         "pk": 14,
         "fields": {
             "order": 1,
-            "name": "Other",
+            "label": "Other",
+            "name": "other",
             "code": "audit_report"
         }
     },
@@ -112,7 +124,8 @@
         "pk": 15,
         "fields": {
             "order": 0,
-            "name": "PCA",
+            "label": "PCA",
+            "name": "pca",
             "code": "audit_engagement"
         }
     },
@@ -121,7 +134,8 @@
         "pk": 16,
         "fields": {
             "order": 1,
-            "name": "PD",
+            "label": "PD",
+            "name": "pd",
             "code": "audit_engagement"
         }
     },
@@ -130,7 +144,8 @@
         "pk": 17,
         "fields": {
             "order": 2,
-            "name": "Workplan",
+            "label": "Workplan",
+            "name": "workplan",
             "code": "audit_engagement"
         }
     },

@@ -34,9 +34,9 @@
             "description": "Email that send to auditor when engagement have been created.",
             "created": "2017-05-05T13:47:34.937Z",
             "last_updated": "2017-05-06T10:56:17.261Z",
-            "subject": "[Auditor Portal] ACCESS GRANTED for {{ engagement.get_type_display }}, {{ engagement.unique_id }}",
-            "content": "Dear {{ staff_member.user.get_full_name }},\r\n\r\nUNICEF is granting access to the auditor portal for a {{ engagement.get_type_display }}. Please refer below for additional information.\r\n\r\nEngagement Type: {{ engagement.get_type_display }}\r\nPartner: {{ engagement.partner }}\r\n\r\nPlease click this link to complete the report: {{ engagement_url }}\r\n\r\nThank you.",
-            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ staff_member.user.get_full_name }},<br/><br/>\r\n\r\nUNICEF is granting access to the auditor portal for a {{ engagement.get_type_display }}. Please refer below for additional information.<br/><br/>\r\n\r\nEngagement Type: {{ engagement.get_type_display }}<br/>\r\nPartner: {{ engagement.partner }}<br/><br/>\r\n\r\nPlease click this link to complete the report: {{ engagement_url }}<br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
+            "subject": "[Auditor Portal] ACCESS GRANTED for {{ engagement.get_engagement_type_display }}, {{ engagement.unique_id }}",
+            "content": "Dear {{ staff_member.user.get_full_name }},\r\n\r\nUNICEF is granting access to the auditor portal for a {{ engagement.get_engagement_type_display }}. Please refer below for additional information.\r\n\r\nEngagement Type: {{ engagement.get_engagement_type_display }}\r\nPartner: {{ engagement.partner }}\r\n\r\nPlease click this link to complete the report: {{ engagement_url }}\r\n\r\nThank you.",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ staff_member.user.get_full_name }},<br/><br/>\r\n\r\nUNICEF is granting access to the auditor portal for a {{ engagement.get_engagement_type_display }}. Please refer below for additional information.<br/><br/>\r\n\r\nEngagement Type: {{ engagement.get_engagement_type_display }}<br/>\r\nPartner: {{ engagement.partner }}<br/><br/>\r\n\r\nPlease click this link to complete the report: {{ engagement_url }}<br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
             "language": "",
             "default_template": null
         }
@@ -48,9 +48,9 @@
             "description": "Email that send when auditor fill engagement's report.",
             "created": "2017-05-05T13:47:34.945Z",
             "last_updated": "2017-05-06T10:56:04.170Z",
-            "subject": "{{ engagement.agreement.auditor_firm }} has completed the final report for {{ engagement.get_type_display }}, {{ engagement.unique_id }}",
-            "content": "Dear {{ focal_point.get_full_name }},\r\n\r\n{{ engagement.agreement.auditor_firm }} has completed the final report for {{ engagement.get_type_display }}. Please refer below for additional information.\r\n\r\nEngagement Type: {{ engagement.get_type_display }}\r\nPartner: {{ engagement.partner }}\r\n\r\nPlease click this link to view the final report: {{ engagement.get_object_url }}\r\n\r\nThank you.",
-            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ focal_point.get_full_name }},<br/><br/>\r\n\r\n{{ engagement.agreement.auditor_firm }} has completed the final report for {{ engagement.get_type_display }}. Please refer below for additional information.<br/><br/>\r\n\r\nEngagement Type: {{ engagement.get_type_display }}<br/>\r\nPartner: {{ engagement.partner }}<br/><br/>\r\n\r\nPlease click this link to view the final report: {{ engagement.get_object_url }}<br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
+            "subject": "{{ engagement.agreement.auditor_firm }} has completed the final report for {{ engagement.get_engagement_type_display }}, {{ engagement.unique_id }}",
+            "content": "Dear {{ focal_point.get_full_name }},\r\n\r\n{{ engagement.agreement.auditor_firm }} has completed the final report for {{ engagement.get_engagement_type_display }}. Please refer below for additional information.\r\n\r\nEngagement Type: {{ engagement.get_engagement_type_display }}\r\nPartner: {{ engagement.partner }}\r\n\r\nPlease click this link to view the final report: {{ engagement.get_object_url }}\r\n\r\nThank you.",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ focal_point.get_full_name }},<br/><br/>\r\n\r\n{{ engagement.agreement.auditor_firm }} has completed the final report for {{ engagement.get_engagement_type_display }}. Please refer below for additional information.<br/><br/>\r\n\r\nEngagement Type: {{ engagement.get_engagement_type_display }}<br/>\r\nPartner: {{ engagement.partner }}<br/><br/>\r\n\r\nPlease click this link to view the final report: {{ engagement.get_object_url }}<br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
             "language": "",
             "default_template": null
         }

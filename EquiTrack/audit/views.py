@@ -23,7 +23,8 @@ from .serializers.auditor import AuditorFirmSerializer, AuditorFirmLightSerializ
     AuditorStaffMemberSerializer, AuditorFirmExportSerializer
 from .serializers.engagement import EngagementSerializer, MicroAssessmentSerializer, AuditSerializer, \
     SpotCheckSerializer, SpecialAuditSerializer, EngagementLightSerializer, EngagementExportSerializer
-from .serializers.export import MicroAssessmentPDFSerializer, AuditPDFSerializer, SpotCheckPDFSerializer
+from .serializers.export import MicroAssessmentPDFSerializer, AuditPDFSerializer, SpotCheckPDFSerializer, \
+    SpecialAuditPDFSerializer
 from .metadata import AuditBaseMetadata, EngagementMetadata
 from .exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
 from .filters import DisplayStatusFilter, UniqueIDOrderingFilter
@@ -204,6 +205,9 @@ class EngagementViewSet(
         elif isinstance(obj, SpotCheck):
             serializer_class = SpotCheckPDFSerializer
             template = 'audit/spotcheck_pdf.html'
+        elif isinstance(obj, SpecialAudit):
+            serializer_class = SpecialAuditPDFSerializer
+            template = 'audit/special_audit_pdf.html'
         else:
             raise NotImplementedError
 

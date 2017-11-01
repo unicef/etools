@@ -35,8 +35,8 @@ class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
         model = User
         fields = ['first_name', 'last_name', 'email', 'is_active', 'profile']
         extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True},
+            'first_name': {'required': True, 'allow_blank': False, 'label': _('First Name')},
+            'last_name': {'required': True, 'allow_blank': False, 'label': _('Last Name')},
         }
 
     def create(self, validated_data):

@@ -3,13 +3,12 @@ try:
 except ImportError:
     from urlparse import urljoin
 
-from django.db.models import Count, Q
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
 from ..models import Audit, AuditorFirm, AuditorStaffMember, Engagement, EngagementActionPoint, \
-    MicroAssessment, PurchaseOrder, SpotCheck, Finding
+    MicroAssessment, PurchaseOrder, SpotCheck, Finding, SpecificProcedure, SpecialAuditRecommendation
 from .engagement import DetailedFindingInfoSerializer
 from .risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from attachments.models import Attachment
@@ -51,7 +50,6 @@ class PartnerPDFSerializer(serializers.ModelSerializer):
 
 
 class StaffMemberPDFSerializer(serializers.ModelSerializer):
-    has_access = serializers.BooleanField()
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
     job_title = serializers.CharField(source='user.profile.job_title')
@@ -61,7 +59,7 @@ class StaffMemberPDFSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditorStaffMember
         fields = (
-            'has_access', 'first_name', 'last_name', 'job_title', 'phone_number', 'email'
+            'first_name', 'last_name', 'job_title', 'phone_number', 'email'
         )
 
 
@@ -100,7 +98,10 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
     unique_id = serializers.ReadOnlyField()
     authorized_officers = serializers.SerializerMethodField()
     active_pd = serializers.SerializerMethodField()
-    staff_members = serializers.SerializerMethodField()
+    staff_members = StaffMemberPDFSerializer(many=True)
+
+    start_date = serializers.DateField(label='Start Date', format='%d %b %Y')
+    end_date = serializers.DateField(label='End Date', format='%d %b %Y')
 
     date_of_field_visit = serializers.DateField(format='%d %b %Y')
     date_of_draft_report_to_ip = serializers.DateField(format='%d %b %Y')
@@ -119,8 +120,9 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
             'id', 'agreement', 'partner', 'engagement_type_display', 'engagement_type', 'status_display', 'status',
             'unique_id', 'authorized_officers', 'active_pd', 'staff_members',
             'date_of_field_visit', 'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
-            'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
+            'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef', 'partner_contacted_at',
             'action_points', 'engagement_attachments', 'report_attachments',
+            'total_value', 'start_date', 'end_date', 'joint_audit', 'shared_ip_with'
         ]
 
     def get_status_display(self, obj):
@@ -131,13 +133,6 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
 
     def get_active_pd(self, obj):
         return ', '.join(map(str, obj.active_pd.all()))
-
-    def get_staff_members(self, obj):
-        return StaffMemberPDFSerializer(
-            obj.agreement.auditor_firm.staff_members.annotate(
-                has_access=Count(Q(engagement__id=obj.id))
-            ), many=True
-        ).data
 
 
 class MicroAssessmentPDFSerializer(EngagementPDFSerializer):
@@ -194,17 +189,12 @@ class SpotCheckPDFSerializer(EngagementPDFSerializer):
     high_priority_findings = serializers.SerializerMethodField()
     low_priority_findings = serializers.SerializerMethodField()
 
-    face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', source='start_date',
-                                                 format='%d %b %Y')
-    face_form_end_date = serializers.DateField(label='FACE Form(s) End Date', source='end_date', format='%d %b %Y')
-
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
 
     class Meta(EngagementPDFSerializer.Meta):
         model = SpotCheck
         fields = EngagementPDFSerializer.Meta.fields + [
-            'total_value', 'face_form_start_date', 'face_form_end_date', 'total_amount_tested',
-            'total_amount_of_ineligible_expenditure',
+            'total_amount_tested', 'total_amount_of_ineligible_expenditure',
             'internal_controls', 'high_priority_findings', 'low_priority_findings',
 
             'amount_refunded', 'additional_supporting_documentation_provided',
@@ -217,3 +207,25 @@ class SpotCheckPDFSerializer(EngagementPDFSerializer):
 
     def get_low_priority_findings(self, obj):
         return FindingPDFSerializer(obj.findings.filter(priority=Finding.PRIORITIES.low), many=True).data
+
+
+class SpecificProcedurePDFSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecificProcedure
+        fields = ['id', 'description', 'finding']
+
+
+class SpecialAuditRecommendationPDFSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecialAuditRecommendation
+        fields = ['id', 'description']
+
+
+class SpecialAuditPDFSerializer(EngagementPDFSerializer):
+    specific_procedures = SpecificProcedurePDFSerializer(many=True)
+    other_recommendations = SpecialAuditRecommendationPDFSerializer(many=True)
+
+    class Meta(EngagementPDFSerializer.Meta):
+        fields = EngagementPDFSerializer.Meta.fields + [
+            'specific_procedures', 'other_recommendations',
+        ]

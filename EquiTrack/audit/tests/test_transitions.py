@@ -4,10 +4,11 @@ from factory import fuzzy
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
+from audit.models import SpecificProcedure
 from audit.transitions.conditions import EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck, \
     AuditSubmitReportRequiredFieldsCheck
 from audit.tests.base import EngagementTransitionsTestCaseMixin
-from audit.tests.factories import MicroAssessmentFactory, AuditFactory, SpotCheckFactory
+from audit.tests.factories import MicroAssessmentFactory, AuditFactory, SpotCheckFactory, SpecialAuditFactory
 
 
 class EngagementCheckTransitionsTestCaseMixin(object):
@@ -61,6 +62,14 @@ class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         super(AuditTransitionsTestCaseMixin, self)._init_filled_engagement()
         self._fill_audit_specified_fields()
         self._fill_category('audit_key_weakness')
+
+
+class SpecialAuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
+    engagement_factory = SpecialAuditFactory
+    endpoint = 'special-audits'
+
+    def _fill_specific_procedure(self):
+        SpecificProcedure(audit=self.engagement, description=fuzzy.FuzzyText(length=20).fuzz()).save()
 
 
 class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
@@ -128,6 +137,25 @@ class TestAuditTransitionsTestCase(
 
     def test_submit_filled_report(self):
         self._init_filled_engagement()
+        self._test_submit(self.auditor, status.HTTP_200_OK)
+
+
+class TestSATransitionsTestCase(
+    EngagementCheckTransitionsTestCaseMixin, SpecialAuditTransitionsTestCaseMixin, APITenantTestCase
+):
+    def test_submit_without_finding_object(self):
+        self._fill_specific_procedure()
+        self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['specific_procedures'])
+
+    def test_submit_without_report(self):
+        self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['report_attachments'])
+
+    def test_success_submit(self):
+        self._init_filled_engagement()
+        self._fill_specific_procedure()
+        for sp in self.engagement.specific_procedures.all():
+            sp.finding = 'Test'
+            sp.save()
         self._test_submit(self.auditor, status.HTTP_200_OK)
 
 

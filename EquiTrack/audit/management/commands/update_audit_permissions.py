@@ -135,8 +135,7 @@ class Command(BaseCommand):
             'purchaseorder.contract_end_date',
         ])
         self.add_permissions(self.new_engagement, self.focal_point, 'edit', [
-            'specialaudit.specific_procedures',
-            'specificprocedure.number',
+            'engagement.specific_procedures',
             'specificprocedure.description',
         ])
 
@@ -165,7 +164,7 @@ class Command(BaseCommand):
         self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
             'specialaudit.specific_procedures',
             'specificprocedure.finding',
-            'specialaudit.specialauditrecommendation',
+            'specialaudit.other_recommendations',
         ])
 
         self.add_permissions(self.partner_contacted, self.all_unicef_users, 'view', self.everything)

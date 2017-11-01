@@ -150,13 +150,78 @@
                 <div class="input-container__label">Engagement Type</div>
                 <div class="input-container__value">{{ engagement.engagement_type_display }}</div>
               </td>
-              <td class="input-container">
-                <div class="input-container__label">Status</div>
-                <div class="input-container__value">{{ engagement.status_display }}</div>
-              </td>
+              {% if engagement.engagement_type == 'audit' or engagement.engagement_type == 'sc' or engagement.engagement_type == 'sa' %}
+                <td class="input-container">
+                  <div class="input-container__label">Period start date</div>
+                  <div class="input-container__value">{{ engagement.start_date }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">Period end date</div>
+                  <div class="input-container__value">{{ engagement.end_date }}</div>
+                </td>
+              {% else %}
+                <td class="input-container">
+                  <div class="input-container__label">Shared IP with</div>
+                  <div class="input-container__value">{{ engagement.get_shared_ip_with_display }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">Joint Audit</div>
+                  <div class="input-container__value">{% if engagement.joint_audit %}Y{% else %}N{% endif %}</div>
+                </td>
+              {% endif %}
+            </tr>
+            {% if engagement.engagement_type == 'audit' or engagement.engagement_type == 'sc' or engagement.engagement_type == 'sa' %}
+              <tr>
+                <td class="input-container">
+                  <div class="input-container__label">Total value of selected FACE form(s)</div>
+                  <div class="input-container__value">$ {{ engagement.total_value|default_if_none:"0.00" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">Shared IP with</div>
+                  <div class="input-container__value">{{ engagement.get_shared_ip_with_display|default:"-" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">Joint Audit</div>
+                  <div class="input-container__value">{% if engagement.joint_audit %}Y{% else %}N{% endif %}</div>
+                </td>
+              </tr>
+            {% endif %}
+            <tr>
+                <td class="input-container">
+                  <div class="input-container__label">Status</div>
+                  <div class="input-container__value">{{ engagement.status_display }}</div>
+                </td>
             </tr>
           </table>
         </div>
+        {% if engagement.engagement_type == 'sa' %}
+          <pdf:nextpage></pdf:nextpage>
+          <div class="content-section">
+            <div class="content-section__header">
+              <div class="content-section__header__title">Specific Procedure To Be Performed</div>
+            </div>
+            <div class="content-section__wrapper">
+              <table class="content-section__table">
+                <tr class="content-section__table__header">
+                  <td colspan="2">Finding Number</td>
+                  <td colspan="6">Description</td>
+                </tr>
+                {% if engagement.specific_procedures %}
+                  {% for specific_procedure in engagement.specific_procedures %}
+                  <tr>
+                    <td colspan="2">{{ forloop.counter }}</td>
+                    <td colspan="6">{{ specific_procedure.description|default:"-" }}</td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="2">-</td><td colspan="6">-</td>
+                  </tr>
+                {% endif %}
+              </table>
+            </div>
+          </div>
+        {% endif %}
         <div class="content-section">
           <div class="content-section__header">
             <div class="content-section__header__title">Partner Details</div>
@@ -202,7 +267,6 @@
           <div class="content-section__wrapper">
             <table class="content-section__table">
               <tr class="content-section__table__header">
-                <td class="text-center">Has access</td>
                 <td>Position</td>
                 <td>First Name</td>
                 <td>Last Name</td>
@@ -212,13 +276,6 @@
               {% if engagement.staff_members %}
                 {% for staff_member in engagement.staff_members %}
                 <tr>
-                  <td class="text-center">
-                    {% if staff_member.has_access %}
-                      Y
-                    {% else %}
-                      N
-                    {% endif %}
-                  </td>
                   <td>{{ staff_member.job_title|default:"-" }}</td>
                   <td>{{ staff_member.first_name|default:"-" }}</td>
                   <td>{{ staff_member.last_name|default:"-" }}</td>
@@ -295,7 +352,7 @@
                   {% endfor %}
                 {% else %}
                   <tr>
-                    <td>-</td>
+                    <td colspan="2">-</td>
                     <td>-</td>
                     <td>-</td>
                     <td colspan="2">-</td>
