@@ -94,7 +94,7 @@ class PurchaseOrder(TimeStampedModel, models.Model):
 
 
 class PurchaseOrderItem(models.Model):
-    purchase_order = models.ForeignKey(PurchaseOrder, related_name='item_numbers')
+    purchase_order = models.ForeignKey(PurchaseOrder, related_name='items')
     number = models.IntegerField(_('PO Item Number'))
 
     class Meta:

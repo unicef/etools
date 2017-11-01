@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='purchaseorderitem',
             name='purchase_order',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='item_numbers', to='audit.PurchaseOrder'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='audit.PurchaseOrder'),
         ),
         migrations.AlterUniqueTogether(
             name='purchaseorderitem',
