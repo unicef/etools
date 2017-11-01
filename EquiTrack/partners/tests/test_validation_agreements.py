@@ -16,6 +16,15 @@ from partners.validation import agreements
 
 class TestAgreementTransitionToSignedValid(TenantTestCase):
     def test_invalid_pca(self):
+        """The agreement transition validation fails if;
+        - Agreement type is PCA
+        AND there exists an agreement that has ALL of the following;
+        - same partner
+        - status is SIGNED
+        - agreement type is PCA
+        - same country programme
+        - start date > 2015-07-01
+        """
         partner = PartnerFactory()
         country = CountryProgrammeFactory()
         AgreementFactory(
@@ -35,6 +44,7 @@ class TestAgreementTransitionToSignedValid(TenantTestCase):
             agreements.agreement_transition_to_signed_valid(agreement)
 
     def test_invalid_no_start(self):
+        """Agreement transition validation fails if no start date"""
         agreement = AgreementFactory(
             agreement_type=Agreement.MOU,
         )
@@ -42,6 +52,7 @@ class TestAgreementTransitionToSignedValid(TenantTestCase):
             agreements.agreement_transition_to_signed_valid(agreement)
 
     def test_invalid_no_end(self):
+        """Agreement transition validation fails if no end date"""
         agreement = AgreementFactory(
             agreement_type=Agreement.MOU,
             start=datetime.date.today()

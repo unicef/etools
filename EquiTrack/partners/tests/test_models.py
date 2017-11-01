@@ -721,6 +721,9 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
 
     def test_follow_up_flags(self):
+        """Test that follow_up_flags method resets the hact_value
+        'follow_up_flags' to 0
+        """
         self.partner_organization.hact_values["follow_up_flags"] = 1
         self.partner_organization.save()
         self.assertEqual(
