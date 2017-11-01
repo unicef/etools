@@ -10,7 +10,7 @@ import model_utils.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('locations', '0004_auto_20170112_2051'),
+        ('locations', '0005_auto_20171020_0958'),
     ]
 
     operations = [
