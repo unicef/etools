@@ -288,5 +288,15 @@
             "name": "other",
             "code": "tpm_report_attachments"
         }
+    },
+    {
+        "model": "attachments.filetype",
+        "pk": 33,
+        "fields": {
+            "order": 0,
+            "label": "Overall Report",
+            "name": "overall_report",
+            "code": "tpm_report_attachments"
+        }
     }
 ]

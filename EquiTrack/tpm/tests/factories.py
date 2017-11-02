@@ -90,6 +90,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
 
     attachments__count = 0
     report_attachments__count = 0
+    report_attachments__reports_count = 0
 
     @factory.post_generation
     def cp_output(self, create, extracted, **kwargs):
@@ -116,12 +117,15 @@ class TPMActivityFactory(factory.DjangoModelFactory):
             AttachmentFactory(code='activity_attachments', content_object=self)
 
     @factory.post_generation
-    def report_attachments(self, create, extracted, count, **kwargs):
+    def report_attachments(self, create, extracted, count, reports_count, **kwargs):
         if not create:
             return
 
         for i in range(count):
             AttachmentFactory(code='activity_report', content_object=self)
+
+        for i in range(reports_count):
+            AttachmentFactory(code='activity_report', file_type__name='report', content_object=self)
 
 
 class InheritedTrait(factory.Trait):
@@ -205,6 +209,9 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
     report_reject_comments__count = 0
 
+    report_attachments__count = 0
+    report_attachments__reports_count = 0
+
     class Params:
         draft = factory.Trait()
 
@@ -249,7 +256,7 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             status=TPMVisit.STATUSES.tpm_reported,
             date_of_tpm_reported=factory.LazyFunction(timezone.now),
 
-            tpm_activities__report_attachments__count=3,
+            tpm_activities__report_attachments__reports_count=1,
         )
 
         tpm_report_rejected = InheritedTrait(
@@ -324,3 +331,14 @@ class TPMVisitFactory(factory.DjangoModelFactory):
                 tpm_visit=self,
                 reject_reason='Just because.',
             )
+
+    @factory.post_generation
+    def report_attachments(self, create, extracted, count, reports_count, **kwargs):
+        if not create:
+            return
+
+        for i in range(count):
+            AttachmentFactory(code='visit_report', content_object=self)
+
+        for i in range(reports_count):
+            AttachmentFactory(code='visit_report', file_type__name='overall_report', content_object=self)

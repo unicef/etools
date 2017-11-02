@@ -1,23 +1,27 @@
-import itertools
+from __future__ import absolute_import
 
+import itertools
 from copy import copy
+
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from ..models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActionPoint, \
+    TPMPartnerStaffMember
+from .attachments import TPMAttachmentsSerializer, TPMReportSerializer, TPMReportAttachmentsSerializer
+from .partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from activities.serializers import ActivitySerializer
+from attachments.models import Attachment
 from partners.models import InterventionResultLink, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
-from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActionPoint, \
-    TPMPartnerStaffMember
-from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
 from utils.common.serializers.fields import SeparatedReadWriteField
-from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
-from users.serializers import MinimalUserSerializer, OfficeSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
+from users.serializers import MinimalUserSerializer, OfficeSerializer
 from users.serializers import SectionSerializer
 from locations.serializers import LocationLightSerializer
 from reports.serializers.v1 import ResultSerializer
@@ -26,6 +30,7 @@ from reports.serializers.v1 import ResultSerializer
 class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
     class Meta(StatusPermissionsBasedSerializerMixin.Meta):
         permission_class = TPMPermission
+
 
 
 class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
@@ -107,11 +112,14 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))
     report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Activity'))
 
+    pv_applicable = serializers.SerializerMethodField()
+
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
             'id', 'implementing_partner', 'partnership', 'cp_output', 'section',
             'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
+            'pv_applicable',
         ]
         extra_kwargs = {
             'id': {'label': _('Activity ID')},
@@ -119,6 +127,21 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
             'implementing_partner': {'required': True},
             'partnership': {'required': True, 'label': _('PD/SSFA')},
         }
+
+    def get_pv_applicable(self, obj):
+        return Attachment.objects.filter(
+            models.Q(
+                object_id=obj.tpm_visit_id,
+                content_type__app_label=obj.tpm_visit._meta.app_label,
+                content_type__model=obj.tpm_visit._meta.model_name,
+                file_type__name='overall_report'
+            ) | models.Q(
+                object_id=obj.id,
+                content_type__app_label=obj._meta.app_label,
+                content_type__model=obj._meta.model_name,
+                file_type__name='report'
+            )
+        ).exists()
 
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
