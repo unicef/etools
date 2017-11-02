@@ -81,6 +81,11 @@ def transition_to_active(i):
         raise TransitionError([
             _('PD cannot be activated if the associated Agreement is not active')
         ])
+    return True
+
+
+def transition_to_signed(i):
+    # Only transitional validation
     if i.total_unicef_budget == 0:
         raise TransitionError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
     return True
