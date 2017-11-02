@@ -10,6 +10,7 @@ from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import (
     AgreementFactory,
     AgreementAmendmentFactory,
+    InterventionAmendmentFactory,
     InterventionFactory,
     InterventionBudgetFactory,
     InterventionPlannedVisitsFactory,
@@ -29,6 +30,7 @@ from partners.models import (
     Assessment,
     GovernmentInterventionResult,
     Intervention,
+    InterventionAmendment,
     PartnerType,
 )
 from t2f.models import Travel, TravelType
@@ -875,3 +877,28 @@ class TestInterventionModel(TenantTestCase):
             in_kind_amount_local=10,
         )
         self.assertEqual(int(self.intervention.planned_cash_transfers), 15000)
+
+
+class TestInterventionAmendment(TenantTestCase):
+    def test_compute_reference_number_no_signed_date_none(self):
+        """If no signed date set, then set temp reference number
+        Seeded with count of intervention amendments.
+        Handle no amendments as yet scenario
+        """
+        intervention = InterventionFactory()
+        ia = InterventionAmendment(intervention=intervention, signed_date=None)
+        self.assertEqual(ia.compute_reference_number(), -1)
+
+    def test_compute_reference_number_no_signed_date(self):
+        """If no signed date set, then set temp reference number
+        Seeded with count of intervention amendments.
+        Handle amendments exist scenario
+        """
+        intervention = InterventionFactory()
+        for _ in xrange(0, 2):
+            InterventionAmendmentFactory(
+                intervention=intervention,
+                signed_date=None
+            )
+        ia = InterventionAmendment(intervention=intervention, signed_date=None)
+        self.assertEqual(ia.compute_reference_number(), -3)
