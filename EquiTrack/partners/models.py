@@ -1891,7 +1891,7 @@ class InterventionBudget(TimeStampedModel):
         super(InterventionBudget, self).save(**kwargs)
 
     def __str__(self):
-        return '{}: {}'.format(
+        return '{}: {:.2f}'.format(
             self.intervention,
             self.total
         )
@@ -1968,7 +1968,7 @@ class InterventionReportingPeriod(TimeStampedModel):
         ordering = ['-due_date']
 
     def __str__(self):
-        return '%s (%s-%s) due on %s' % (
+        return '{} ({} - {}) due on {}'.format(
             self.intervention, self.start_date, self.end_date, self.due_date
         )
 

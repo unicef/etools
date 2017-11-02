@@ -24,6 +24,7 @@ from EquiTrack.factories import (
     InterventionBudgetFactory,
     InterventionFactory,
     InterventionPlannedVisitsFactory,
+    InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
     InterventionSectorLocationLinkFactory,
     LocationFactory,
@@ -1632,4 +1633,77 @@ class TestAgreementAmendment(TenantTestCase):
         self.assertEqual(
             unicode(amendment),
             "{} {}".format(agreement.reference_number, amendment.number)
+        )
+
+
+class TestInterventionAmendment(TenantTestCase):
+    def test_unicode(self):
+        ia = models.InterventionAmendment(
+            amendment_number="123",
+            signed_date=None
+        )
+        self.assertEqual(unicode(ia), "123:- None")
+        ia.signed_date = datetime.date(2001, 1, 1)
+        self.assertEqual(unicode(ia), "123:- 2001-01-01")
+
+
+class TestInterventionResultLink(TenantTestCase):
+    def test_unicode(self):
+        intervention = InterventionFactory()
+        result = ResultFactory(
+            name="Name",
+            code="Code"
+        )
+        link = InterventionResultLinkFactory(
+            intervention=intervention,
+            cp_output=result,
+        )
+        intervention_str = str(intervention)
+        result_str = str(result)
+        self.assertEqual(
+            unicode(link),
+            "{} {}".format(intervention_str, result_str)
+        )
+
+
+class TestInterventionBudget(TenantTestCase):
+    def test_str(self):
+        intervention = InterventionFactory()
+        intervention_str = str(intervention)
+        budget = InterventionBudgetFactory(
+            intervention=intervention,
+            unicef_cash=10.00,
+            in_kind_amount=5.00,
+            partner_contribution=20.00,
+        )
+        self.assertEqual(str(budget), "{}: 35.00".format(intervention_str))
+
+
+class TestFileType(TenantTestCase):
+    def test_unicode(self):
+        f = models.FileType(name="FileType")
+        self.assertEqual(unicode(f), "FileType")
+
+
+class TestInterventionAttachment(TenantTestCase):
+    def test_unicode(self):
+        a = models.InterventionAttachment(attachment="test.pdf")
+        self.assertEqual(unicode(a), "test.pdf")
+
+
+class TestInterventionReportingPeriod(TenantTestCase):
+    def test_str(self):
+        intervention = InterventionFactory()
+        intervention_str = str(intervention)
+        period = InterventionReportingPeriodFactory(
+            intervention=intervention,
+            start_date=datetime.date(2001, 1, 1),
+            end_date=datetime.date(2002, 2, 2),
+            due_date=datetime.date(2003, 3, 3),
+        )
+        self.assertEqual(
+            str(period),
+            "{} (2001-01-01 - 2002-02-02) due on 2003-03-03".format(
+                intervention_str
+            )
         )
