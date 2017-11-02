@@ -12,6 +12,8 @@ from django.utils.translation import ugettext as _
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
+from utils.files.storage import save_name_default_storage
+
 
 @python_2_unicode_compatible
 class FileType(OrderedModel, models.Model):
@@ -40,7 +42,7 @@ def generate_file_path(attachment, filename):
 class Attachment(TimeStampedModel, models.Model):
     file_type = models.ForeignKey(FileType)
 
-    file = models.FileField(upload_to=generate_file_path, blank=True, null=True)
+    file = models.FileField(upload_to=generate_file_path, blank=True, null=True, storage=save_name_default_storage)
     hyperlink = models.CharField(max_length=255, blank=True, null=True)
 
     content_type = models.ForeignKey(ContentType)
