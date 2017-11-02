@@ -1,5 +1,5 @@
 from EquiTrack.tests.mixins import FastTenantTestCase
-from .factories import TPMVisitFactory, TPMActivityFactory
+from .factories import TPMVisitFactory
 
 
 class TestTPMVisit(FastTenantTestCase):
