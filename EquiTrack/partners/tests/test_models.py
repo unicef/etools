@@ -1228,6 +1228,103 @@ class TestInterventionModel(TenantTestCase):
             datetime.date(2020, 1, 1),
         )
 
+    def test_update_ssfa_properties_dates_differ(self):
+        """If document type is SSFA and start/end date do not match
+        agreement start/end date then update agreement start/end
+        and save
+        """
+        agreement = AgreementFactory(
+            agreement_type=models.Agreement.MOU,
+            start=datetime.date(2001, 1, 6),
+            end=datetime.date(2001, 2, 7),
+        )
+        self.assertEqual(agreement.start, datetime.date(2001, 1, 6))
+        self.assertEqual(agreement.end, datetime.date(2001, 2, 7))
+        intervention = InterventionFactory(
+            document_type=models.Intervention.SSFA,
+            agreement=agreement,
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date(2001, 2, 1),
+        )
+        self.assertEqual(intervention.start, agreement.start)
+        self.assertEqual(intervention.end, agreement.end)
+
+    def test_update_ssfa_properties_signed(self):
+        """If status is signed and agreement status is not signed
+        update agreement status to signed and save
+        """
+        for status in [models.Intervention.SIGNED, models.Intervention.ACTIVE]:
+            agreement = AgreementFactory(
+                status=models.Agreement.DRAFT,
+            )
+            self.assertEqual(agreement.status, models.Agreement.DRAFT)
+            intervention = InterventionFactory(
+                document_type=models.Intervention.SSFA,
+                agreement=agreement,
+                start=datetime.date(2001, 1, 1),
+                end=datetime.date(2001, 2, 1),
+                status=status
+            )
+            self.assertEqual(intervention.status, status)
+            self.assertEqual(agreement.status, models.Agreement.SIGNED)
+
+    def test_update_ssfa_properties_active(self):
+        """If status is active and agreement status is not signed
+        update agreement status to signed and save
+        """
+        agreement = AgreementFactory(
+            status=models.Agreement.DRAFT,
+        )
+        self.assertEqual(agreement.status, models.Agreement.DRAFT)
+        intervention = InterventionFactory(
+            document_type=models.Intervention.SSFA,
+            agreement=agreement,
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date(2001, 2, 1),
+            status=models.Intervention.ACTIVE
+        )
+        self.assertEqual(intervention.status, models.Intervention.ACTIVE)
+        intervention.update_ssfa_properties()
+        agreement_update = models.Agreement.objects.get(pk=agreement.pk)
+        self.assertEqual(agreement_update.status, models.Agreement.SIGNED)
+
+    def test_update_ssfa_properties_complete(self):
+        """If status is in completed status and agreement status is not
+        update agreement status to match and save
+        """
+        for status in models.Intervention.STATUS_COMPLETE:
+            agreement = AgreementFactory(
+                status=models.Agreement.DRAFT,
+            )
+            self.assertEqual(agreement.status, models.Agreement.DRAFT)
+            intervention = InterventionFactory(
+                document_type=models.Intervention.SSFA,
+                agreement=agreement,
+                start=datetime.date(2001, 1, 1),
+                end=datetime.date(2001, 2, 1),
+                status=status
+            )
+            self.assertEqual(intervention.status, status)
+            self.assertEqual(agreement.status, status)
+
+    def test_update_ssfa_properties_closed(self):
+        """If status is close and agreement status is not ended
+        update agreement status and save
+        """
+        agreement = AgreementFactory(
+            status=models.Agreement.DRAFT,
+        )
+        self.assertEqual(agreement.status, models.Agreement.DRAFT)
+        intervention = InterventionFactory(
+            document_type=models.Intervention.SSFA,
+            agreement=agreement,
+            start=datetime.date(2001, 1, 1),
+            end=datetime.date(2001, 2, 1),
+            status=models.Intervention.CLOSED
+        )
+        self.assertEqual(intervention.status, models.Intervention.CLOSED)
+        self.assertEqual(agreement.status, models.Agreement.ENDED)
+
 
 class TestGetFilePaths(TenantTestCase):
     def test_get_agreement_path(self):

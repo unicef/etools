@@ -1255,6 +1255,11 @@ class Intervention(TimeStampedModel):
     SUSPENDED = 'suspended'
     TERMINATED = 'terminated'
 
+    STATUS_COMPLETE = (
+        ENDED,
+        SUSPENDED,
+        TERMINATED,
+    )
     AUTO_TRANSITIONS = {
         DRAFT: [SIGNED],
         SIGNED: [ACTIVE],
@@ -1683,7 +1688,7 @@ class Intervention(TimeStampedModel):
                 save_agreement = True
                 self.agreement.status = Agreement.SIGNED
 
-            elif self.status in [self.ENDED, self.SUSPENDED, self.TERMINATED] and self.status != self.agreement.status:
+            elif self.status in self.STATUS_COMPLETE and self.status != self.agreement.status:
                 save_agreement = True
                 self.agreement.status = self.status
 
