@@ -607,14 +607,12 @@ def remediation_intervention_unicef_budget():
     for intervention in interventions:
         old_status = intervention.status
         if intervention.total_unicef_budget == 0:
-            print('{} intervention {} of type {} invalid unicef_cash = 0 or unicef_supplies = 0'.format(intervention.status,
-                                                                    intervention.id,
-                                                                    intervention.document_type))
+            print('{} intervention {} of type {} invalid unicef_cash = 0 or unicef_supplies = 0'.format(
+                intervention.status,
+                intervention.id,
+                intervention.document_type))
             intervention.status = Intervention.DRAFT
             intervention.metadata = {'migrated': True,
                                      'old_status': old_status,
                                      'error_msg': ["UNICEF Cash $ or UNICEF Supplies $ should not be 0"]}
             intervention.save()
-
-
-
