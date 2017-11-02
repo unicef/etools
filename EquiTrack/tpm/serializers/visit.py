@@ -32,7 +32,6 @@ class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
         permission_class = TPMPermission
 
 
-
 class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source="cp_output.name")
 
