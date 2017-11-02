@@ -3,8 +3,8 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .serializers_fields import Base64FileField
-from .models import Attachment
+from attachments.models import Attachment
+from attachments.serializers_fields import Base64FileField
 
 
 class BaseAttachmentsSerializer(serializers.ModelSerializer):

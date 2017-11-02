@@ -3,7 +3,7 @@ import datetime
 import itertools
 
 from django.conf import settings
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import F, Sum
 
 from celery.utils.log import get_task_logger
@@ -66,14 +66,15 @@ def _make_agreement_status_automatic_transitions(country_name):
     for agr in signed_ended_agrs:
         old_status = agr.status
         # this function mutates agreement
-        validator = AgreementValid(agr, user=admin_user, disable_rigid_check=True)
-        if validator.is_valid:
-            if agr.status != old_status:
-                # this one transitioned forward
-                agr.save()
-                processed += 1
-        else:
-            bad_agreements.append(agr)
+        with transaction.atomic():
+            validator = AgreementValid(agr, user=admin_user, disable_rigid_check=True)
+            if validator.is_valid:
+                if agr.status != old_status:
+                    # this one transitioned forward
+                    agr.save()
+                    processed += 1
+            else:
+                bad_agreements.append(agr)
 
     logger.error('Bad agreements {}'.format(len(bad_agreements)))
     logger.error('Bad agreements ids: ' + ' '.join(str(a.id) for a in bad_agreements))
@@ -97,6 +98,7 @@ def intervention_status_automatic_transition():
         _make_intervention_status_automatic_transitions(country.name)
 
 
+@transaction.atomic
 def _make_intervention_status_automatic_transitions(country_name):
     '''Implementation core of intervention_status_automatic_transition() (q.v.)'''
     logger.info('Starting intervention auto status transition for country {}'.format(country_name))
@@ -125,16 +127,16 @@ def _make_intervention_status_automatic_transitions(country_name):
 
     for intervention in itertools.chain(active_ended, qs):
         old_status = intervention.status
-
-        # this function mutates the intervention
-        validator = InterventionValid(intervention, user=admin_user, disable_rigid_check=True)
-        if validator.is_valid:
-            if intervention.status != old_status:
-                # this one transitioned forward
-                intervention.save()
-                processed += 1
-        else:
-            bad_interventions.append(intervention)
+        with transaction.atomic():
+            # this function mutates the intervention
+            validator = InterventionValid(intervention, user=admin_user, disable_rigid_check=True)
+            if validator.is_valid:
+                if intervention.status != old_status:
+                    # this one transitioned forward
+                    intervention.save()
+                    processed += 1
+            else:
+                bad_interventions.append(intervention)
 
     logger.error('Bad interventions {}'.format(len(bad_interventions)))
     logger.error('Bad interventions ids: ' + ' '.join(str(a.id) for a in bad_interventions))

@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
 
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from serializers import GroupSerializer, SimpleCountrySerializer
+
 from t2f.serializers.user_data import T2FUserDataSerializer
-from .models import User, UserProfile, Country
-from serializers import SimpleCountrySerializer, GroupSerializer
+from users.models import Country, UserProfile
 
 
 # used for user list view
@@ -11,7 +13,7 @@ class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = ('id', 'name', 'first_name', 'last_name', 'username', 'email', )
 
 
@@ -22,7 +24,7 @@ class MinimalUserDetailSerializer(serializers.ModelSerializer):
     vendor_number = serializers.CharField(source='profile.vendor_number')
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = ('name', 'first_name', 'last_name', 'username', 'email', 'job_title', 'vendor_number',)
 
 
@@ -67,7 +69,7 @@ class SimpleUserSerializer(serializers.ModelSerializer):
     country = serializers.CharField(source='profile.country', read_only=True)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             'id',
             'username',

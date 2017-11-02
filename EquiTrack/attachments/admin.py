@@ -1,7 +1,8 @@
 from django.contrib import admin
+
 from ordered_model.admin import OrderedModelAdmin
 
-from . import models as app_models
+from attachments import models as app_models
 
 
 @admin.register(app_models.FileType)
