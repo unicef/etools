@@ -233,7 +233,7 @@ class ValidatorViewMixin(object):
             my_relations[f] = data.pop(f, [])
 
         old_instance = self.get_object()
-
+        instance = self.get_object()
         main_serializer = self.get_serializer(instance, data=data, partial=partial)
         main_serializer.context['skip_global_validator'] = True
         main_serializer.is_valid(raise_exception=True)
