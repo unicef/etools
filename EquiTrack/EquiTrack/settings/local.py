@@ -88,3 +88,27 @@ LOGGING['formatters'] = {
 }
 LOGGING['handlers']['console']['filters'] = ['tenant_context']
 LOGGING['handlers']['console']['formatter'] = 'tenant_context'
+
+
+# djangorestframework: http://www.django-rest-framework.org/api-guide/settings/
+REST_FRAMEWORK = {
+    # this setting fixes the bug where user can be logged in as AnonymousUser
+    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework_csv.renderers.CSVRenderer',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'EquiTrack.mixins.CsrfExemptSessionAuthentication',
+        'EquiTrack.mixins.EToolsTenantJWTAuthentication',
+        'EquiTrack.mixins.EtoolsTokenAuthentication',
+    ),
+    'TEST_REQUEST_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework_csv.renderers.CSVRenderer',
+        'rest_framework_xml.renderers.XMLRenderer',
+    )
+}

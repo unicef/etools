@@ -210,3 +210,11 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     def login(self, request, user):
         # if we need to add any other login validation, here would be the place.
         return super(CustomAccountAdapter, self).login(request, user)
+
+
+from rest_framework.authentication import SessionAuthentication
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return False
