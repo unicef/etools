@@ -76,8 +76,12 @@ def transition_to_closed(i):
 
 def transtion_to_signed(i):
     from partners.models import Agreement
-    if i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
-        raise TransitionError([_('Cannot Sign the PD since the related Agreement is Suspended or Terminated')])
+    if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
+        raise TransitionError([_('The PCA related to this record is Suspended or Terminated. '
+                                 'This Programme Document will not change status until the related PCA '
+                                 'is in Signed status')])
+    if i.total_unicef_budget == 0:
+        raise TransitionError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
     return True
 
 
@@ -89,13 +93,6 @@ def transition_to_active(i):
         raise TransitionError([
             _('PD cannot be activated if the associated Agreement is not active')
         ])
-    return True
-
-
-def transition_to_signed(i):
-    # Only transitional validation
-    if i.total_unicef_budget == 0:
-        raise TransitionError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
     return True
 
 
