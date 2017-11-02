@@ -7,6 +7,7 @@ from django.utils.translation import ugettext as _
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, check_rigid_related, \
     BasicValidationError, check_rigid_fields, check_required_fields
+
 from partners.permissions import InterventionPermissions
 
 logger = logging.getLogger('partners.interventions.validation')
@@ -70,6 +71,13 @@ def transition_to_closed(i):
 
     # TODO: figure out Action Point Validation once the spec is completed
 
+    return True
+
+
+def transtion_to_signed(i):
+    from partners.models import Agreement
+    if i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
+        raise TransitionError([_('Cannot Sign the PD since the related Agreement is Suspended or Terminated')])
     return True
 
 
