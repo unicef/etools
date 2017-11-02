@@ -358,7 +358,14 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
             'engagement_type': {'read_only': True, 'label': _('Engagement Type')},
             'audited_expenditure': {'label': _('Audited Expenditure $')},
             'financial_findings': {'label': _('Financial Findings $')},
-            'percent_of_audited_expenditure': {'label': _('% Of Audited Expenditure')},
+            'percent_of_audited_expenditure': {
+                'label': _('% Of Audited Expenditure'),
+                'error_messages': {
+                    'min_value': _('Value can\'t be less than {min_value}.'),
+                    'max_value': _('Value can\'t be greater than {max_value}.'),
+                    'max_whole_digits': _('No more than {max_whole_digits} digits allowed.'),
+                }
+            },
 
             'recommendation': {'required': True},
             'audit_observation': {'required': True},
