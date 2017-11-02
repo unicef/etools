@@ -15,6 +15,7 @@ from django.db import connection
 from django.utils import timezone
 
 from actstream.models import model_stream
+from model_utils import Choices
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
@@ -55,6 +56,7 @@ from partners.models import (
 )
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
+from partners.views import v2
 import partners.views.partner_organization_v2
 
 
@@ -73,6 +75,46 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partners/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
+
+
+class TestChoicesToJSONReady(APITenantTestCase):
+    def test_tuple(self):
+        """Make tuple JSON ready"""
+        ready = v2.choices_to_json_ready(((1, "One"), (2, "Two")))
+        self.assertEqual(ready, [
+            {"label": "One", "value": 1},
+            {"label": "Two", "value": 2}
+        ])
+
+    def test_list(self):
+        """Make simple list JSON ready"""
+        ready = v2.choices_to_json_ready([1, 2, 3])
+        self.assertEqual(ready, [
+            {"label": 1, "value": 1},
+            {"label": 2, "value": 2},
+            {"label": 3, "value": 3},
+        ])
+
+    def test_list_of_tuples(self):
+        """Make list of tuples JSON ready"""
+        ready = v2.choices_to_json_ready([(1, "One"), (2, "Two")])
+        self.assertEqual(ready, [
+            {"label": "One", "value": 1},
+            {"label": "Two", "value": 2}
+        ])
+
+    def test_dict(self):
+        """Make dict JSON ready"""
+        ready = v2.choices_to_json_ready({"k": "v"})
+        self.assertEqual(ready, [{"label": "v", "value": "k"}])
+
+    def test_choices(self):
+        """Make model_utils.Choices JSON ready"""
+        ready = v2.choices_to_json_ready(Choices("one", "two"))
+        self.assertEqual(ready, [
+            {"label": "one", "value": "one"},
+            {"label": "two", "value": "two"},
+        ])
 
 
 class TestAPIPartnerOrganizationListView(APITenantTestCase):
