@@ -212,6 +212,8 @@ class InterventionValid(CompleteValidation):
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if intervention.total_unicef_budget == 0:
+            raise StateValidError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
 
     def state_suspended_valid(self, intervention, user=None):

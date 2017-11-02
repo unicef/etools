@@ -27,4 +27,6 @@ def show_country_select(context, profile):
 
 @register.simple_tag(takes_context=True)
 def tenant_model_filter(context, app_name):
-    return not (context.request.tenant.schema_name == 'public' and app_name in settings.TENANT_APPS)
+    if hasattr(context.request, 'tenant'):
+        return not (context.request.tenant.schema_name == 'public' and app_name in settings.TENANT_APPS)
+    return True

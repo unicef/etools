@@ -492,7 +492,7 @@ def create_test_user(email, password):
     u.first_name = email.split("@")[0]
     u.last_name = email.split("@")[0]
     u.set_password(password)
-    u.is_superuser = False
+    u.is_superuser = True
     u.is_staff = True
     u.save()
     g.user_set.add(u)
@@ -600,3 +600,21 @@ def interventions_associated_ssfa():
         for i in interventions:
             print('intervention {} type {} status {} has agreement type {}'.format(
                 i.id, i.document_type, i.agreement.agreement_type, i.status))
+
+
+def remediation_intervention_unicef_budget():
+    interventions = Intervention.objects.filter(status__in=['active', 'signed'])
+    for intervention in interventions:
+        old_status = intervention.status
+        if intervention.total_unicef_budget == 0:
+            print('{} intervention {} of type {} invalid unicef_cash = 0 or unicef_supplies = 0'.format(intervention.status,
+                                                                    intervention.id,
+                                                                    intervention.document_type))
+            intervention.status = Intervention.DRAFT
+            intervention.metadata = {'migrated': True,
+                                     'old_status': old_status,
+                                     'error_msg': ["UNICEF Cash $ or UNICEF Supplies $ should not be 0"]}
+            intervention.save()
+
+
+
