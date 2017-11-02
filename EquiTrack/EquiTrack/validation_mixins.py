@@ -269,8 +269,7 @@ class ValidatorViewMixin(object):
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
                                   k, _get_reverse_for_field(k), partial, nested_related_names)
 
-        instance = self.get_object()
-        return instance, old_instance, main_serializer
+        return self.get_object(), old_instance, main_serializer
 
 
 def _unicode_if(s):

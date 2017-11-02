@@ -224,6 +224,8 @@ class InterventionValid(CompleteValidation):
         self.check_rigid_fields(intervention, related=True)
         print intervention.title
         print intervention.total_unicef_budget
+        print intervention.old_instance.title
+        print intervention.old_instance.total_unicef_budget
         if intervention.total_unicef_budget == 0:
             raise StateValidError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
