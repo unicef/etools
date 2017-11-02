@@ -80,8 +80,6 @@ def transtion_to_signed(i):
         raise TransitionError([_('The PCA related to this record is Suspended or Terminated. '
                                  'This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
-    if i.total_unicef_budget == 0:
-        raise TransitionError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
     return True
 
 
@@ -224,6 +222,8 @@ class InterventionValid(CompleteValidation):
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if intervention.total_unicef_budget == 0:
+            raise StateValidError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
 
     def state_suspended_valid(self, intervention, user=None):
@@ -238,6 +238,8 @@ class InterventionValid(CompleteValidation):
         today = date.today()
         if not (intervention.start <= today):
             raise StateValidError([_('Today is not after the start date')])
+        if intervention.total_unicef_budget == 0:
+            raise StateValidError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
 
     def state_ended_valid(self, intervention, user=None):
