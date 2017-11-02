@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import itertools
 from copy import copy
 
-from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -14,7 +13,6 @@ from ..models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectC
 from .attachments import TPMAttachmentsSerializer, TPMReportSerializer, TPMReportAttachmentsSerializer
 from .partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from activities.serializers import ActivitySerializer
-from attachments.models import Attachment
 from partners.models import InterventionResultLink, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
@@ -111,7 +109,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))
     report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Activity'))
 
-    pv_applicable = serializers.SerializerMethodField()
+    pv_applicable = serializers.BooleanField(read_only=True)
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
@@ -126,21 +124,6 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
             'implementing_partner': {'required': True},
             'partnership': {'required': True, 'label': _('PD/SSFA')},
         }
-
-    def get_pv_applicable(self, obj):
-        return Attachment.objects.filter(
-            models.Q(
-                object_id=obj.tpm_visit_id,
-                content_type__app_label=obj.tpm_visit._meta.app_label,
-                content_type__model=obj.tpm_visit._meta.model_name,
-                file_type__name='overall_report'
-            ) | models.Q(
-                object_id=obj.id,
-                content_type__app_label=obj._meta.app_label,
-                content_type__model=obj._meta.model_name,
-                file_type__name='report'
-            )
-        ).exists()
 
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,

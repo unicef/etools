@@ -99,38 +99,6 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertNotEquals(TPMActionPoint.objects.filter(tpm_visit=visit).count(), 0)
 
-    def test_attachments_pv_applicable(self):
-        visit = TPMVisitFactory(status='tpm_reported', tpm_activities__count=3)
-        visit.tpm_activities.first().report_attachments.all().delete()
-
-        response = self.forced_auth_req(
-            'get',
-            '/api/tpm/visits/{0}/'.format(visit.id),
-            user=self.pme_user
-        )
-        self.assertListEqual(
-            [a['pv_applicable'] for a in response.data['tpm_activities']],
-            [False, True, True]
-        )
-
-    def test_visit_attachments_pv_applicable(self):
-        visit = TPMVisitFactory(
-            status='tpm_reported',
-            tpm_activities__count=3,
-            report_attachments__reports_count=2,
-            tpm_activities__report_attachments__reports_count=0
-        )
-
-        response = self.forced_auth_req(
-            'get',
-            '/api/tpm/visits/{0}/'.format(visit.id),
-            user=self.pme_user
-        )
-        self.assertListEqual(
-            [a['pv_applicable'] for a in response.data['tpm_activities']],
-            [True, True, True]
-        )
-
     def test_visits_csv(self):
         self._test_export(self.pme_user, 'visits/export')
 

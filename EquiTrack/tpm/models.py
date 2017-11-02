@@ -352,6 +352,22 @@ class TPMActivity(Activity):
         verbose_name_plural = _('TPM Activities')
         ordering = ['tpm_visit', 'id', ]
 
+    @property
+    def pv_applicable(self):
+        return Attachment.objects.filter(
+            models.Q(
+                object_id=self.tpm_visit_id,
+                content_type__app_label=TPMVisit._meta.app_label,
+                content_type__model=TPMVisit._meta.model_name,
+                file_type__name='overall_report'
+            ) | models.Q(
+                object_id=self.id,
+                content_type__app_label=TPMActivity._meta.app_label,
+                content_type__model=TPMActivity._meta.model_name,
+                file_type__name='report'
+            )
+        ).exists()
+
 
 @python_2_unicode_compatible
 class TPMActionPoint(TimeStampedModel, models.Model):
