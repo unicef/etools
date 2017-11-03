@@ -1074,53 +1074,6 @@ class TestInterventionModel(TenantTestCase):
         expected_reference_number += str(self.intervention.signed_by_unicef_date.year) + str(self.intervention.id)
         self.assertEqual(self.intervention.reference_number, expected_reference_number)
 
-    def test_days_from_submission_to_signed_no_submission_date(self):
-        intervention = InterventionFactory(
-            agreement=self.agreement,
-            submission_date=None
-        )
-        self.assertIsNone(intervention.submission_date)
-        res = intervention.days_from_review_to_signed
-        self.assertEqual(res, "Not Reviewed")
-
-    def test_days_from_submission_to_signed_not_signed_by_unicef(self):
-        self.assertIsNotNone(self.intervention.submission_date)
-        self.assertIsNone(self.intervention.signed_by_unicef_date)
-        res = self.intervention.days_from_submission_to_signed
-        self.assertEqual(res, "Not fully signed")
-
-    def test_days_from_submission_to_signed_not_signed_by_partner(self):
-        self.intervention.signed_by_unicef_date = datetime.date.today()
-        self.intervention.save()
-        self.assertIsNotNone(self.intervention.submission_date)
-        self.assertIsNotNone(self.intervention.signed_by_unicef_date)
-        self.assertIsNone(self.intervention.signed_by_partner_date)
-        res = self.intervention.days_from_submission_to_signed
-        self.assertEqual(res, "Not fully signed")
-
-    def test_days_from_review_to_signed_no_review_date_prc(self):
-        self.assertIsNone(self.intervention.review_date_prc)
-        res = self.intervention.days_from_review_to_signed
-        self.assertEqual(res, "Not Reviewed")
-
-    def test_days_from_review_to_signed_not_signed_by_unicef(self):
-        self.intervention.review_date_prc = datetime.date.today()
-        self.intervention.save()
-        self.assertIsNotNone(self.intervention.review_date_prc)
-        self.assertIsNone(self.intervention.signed_by_unicef_date)
-        res = self.intervention.days_from_review_to_signed
-        self.assertEqual(res, "Not fully signed")
-
-    def test_days_from_review_to_signed_not_signed_by_partner(self):
-        self.intervention.review_date_prc = datetime.date.today()
-        self.intervention.signed_by_unicef_date = datetime.date.today()
-        self.intervention.save()
-        self.assertIsNotNone(self.intervention.review_date_prc)
-        self.assertIsNotNone(self.intervention.signed_by_unicef_date)
-        self.assertIsNone(self.intervention.signed_by_partner_date)
-        res = self.intervention.days_from_review_to_signed
-        self.assertEqual(res, "Not fully signed")
-
     def test_all_lower_results_empty(self):
         self.assertEqual(self.intervention.all_lower_results, [])
 
