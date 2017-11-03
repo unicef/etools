@@ -37,6 +37,7 @@ from EquiTrack.factories import (
     TravelActivityFactory,
     UserFactory,
 )
+
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
@@ -1651,6 +1652,20 @@ class TestInterventionAmendment(TenantTestCase):
         ia.signed_date = datetime.date(2001, 1, 1)
         self.assertEqual(unicode(ia), "123:- 2001-01-01")
 
+    def test_compute_reference_number_no_amendments(self):
+        intervention = InterventionFactory()
+        ia = models.InterventionAmendment(intervention=intervention)
+        self.assertEqual(ia.compute_reference_number(), 1)
+
+    def test_compute_reference_number(self):
+        intervention = InterventionFactory()
+        InterventionAmendmentFactory(
+            intervention=intervention,
+            signed_date=datetime.date.today()
+        )
+        ia = models.InterventionAmendment(intervention=intervention)
+        self.assertEqual(ia.compute_reference_number(), 2)
+
 
 class TestInterventionResultLink(TenantTestCase):
     def test_unicode(self):
@@ -1712,3 +1727,4 @@ class TestInterventionReportingPeriod(TenantTestCase):
                 intervention_str
             )
         )
+        self.assertEqual(int(self.intervention.planned_cash_transfers), 15000)
