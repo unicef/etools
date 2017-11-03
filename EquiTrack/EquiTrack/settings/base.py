@@ -144,7 +144,6 @@ SHARED_APPS = (
     'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.humanize',
-    'mathfilters',
 
     'easy_thumbnails',
     'storages',
