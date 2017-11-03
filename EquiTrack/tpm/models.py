@@ -353,7 +353,7 @@ class TPMActivity(Activity):
         ordering = ['tpm_visit', 'id', ]
 
     @property
-    def pv_applicable(self):
+    def related_reports(self):
         return Attachment.objects.filter(
             models.Q(
                 object_id=self.tpm_visit_id,
@@ -366,7 +366,11 @@ class TPMActivity(Activity):
                 content_type__model=TPMActivity._meta.model_name,
                 file_type__name='report'
             )
-        ).exists()
+        )
+
+    @property
+    def pv_applicable(self):
+        return self.related_reports.exists()
 
 
 @python_2_unicode_compatible

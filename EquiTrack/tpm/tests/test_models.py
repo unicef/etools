@@ -1,5 +1,5 @@
-from EquiTrack.tests.mixins import FastTenantTestCase
 from .factories import TPMVisitFactory
+from EquiTrack.tests.mixins import FastTenantTestCase
 
 
 class TestTPMVisit(FastTenantTestCase):
@@ -16,8 +16,9 @@ class TestTPMVisit(FastTenantTestCase):
         visit = TPMVisitFactory(
             status='tpm_reported',
             tpm_activities__count=3,
-            report_attachments__reports_count=1,
-            tpm_activities__report_attachments__reports_count=0
+            report_attachments__count=1,
+            report_attachments__file_type__name='overall_report',
+            tpm_activities__report_attachments__count=0
         )
 
         self.assertListEqual(
