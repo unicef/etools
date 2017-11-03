@@ -1774,12 +1774,9 @@ class InterventionAmendment(TimeStampedModel):
     tracker = FieldTracker()
 
     def compute_reference_number(self):
-        qs = self.intervention.amendments
-        if self.signed_date:
-            seq = qs.filter(signed_date__isnull=False).count() + 1
-        else:
-            seq = -1 * (qs.filter(signed_date__isnull=True).count() + 1)
-        return seq
+        return self.intervention.amendments.filter(
+            signed_date__isnull=False
+        ).count() + 1
 
     @transaction.atomic
     def save(self, **kwargs):

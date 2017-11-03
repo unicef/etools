@@ -928,25 +928,16 @@ class TestInterventionModel(TenantTestCase):
 
 
 class TestInterventionAmendment(TenantTestCase):
-    def test_compute_reference_number_no_signed_date_none(self):
-        """If no signed date set, then set temp reference number
-        Seeded with count of intervention amendments.
-        Handle no amendments as yet scenario
-        """
+    def test_compute_reference_number_no_amendments(self):
         intervention = InterventionFactory()
-        ia = InterventionAmendment(intervention=intervention, signed_date=None)
-        self.assertEqual(ia.compute_reference_number(), -1)
+        ia = InterventionAmendment(intervention=intervention)
+        self.assertEqual(ia.compute_reference_number(), 1)
 
-    def test_compute_reference_number_no_signed_date(self):
-        """If no signed date set, then set temp reference number
-        Seeded with count of intervention amendments.
-        Handle amendments exist scenario
-        """
+    def test_compute_reference_number(self):
         intervention = InterventionFactory()
-        for _ in xrange(0, 2):
-            InterventionAmendmentFactory(
-                intervention=intervention,
-                signed_date=None
-            )
-        ia = InterventionAmendment(intervention=intervention, signed_date=None)
-        self.assertEqual(ia.compute_reference_number(), -3)
+        InterventionAmendmentFactory(
+            intervention=intervention,
+            signed_date=datetime.date.today()
+        )
+        ia = InterventionAmendment(intervention=intervention)
+        self.assertEqual(ia.compute_reference_number(), 2)
