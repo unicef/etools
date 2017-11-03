@@ -5,11 +5,11 @@ from __future__ import unicode_literals
 
 from django.conf.urls import url
 
-from features.views import get_flags
+from features.views import ActiveFlagAPIView
 
 urlpatterns = (
     url(r'^flags/$',
-        view=get_flags,
+        view=ActiveFlagAPIView.as_view(http_method_names=['get']),
         name='flags-list'),
 
 )
