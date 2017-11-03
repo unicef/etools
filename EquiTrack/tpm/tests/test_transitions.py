@@ -110,6 +110,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
     def test_tpm_report_success(self):
         visit = TPMVisitFactory(status='tpm_accepted',
                                 tpm_activities__report_attachments__count=1,
+                                tpm_activities__report_attachments__file_type__name='report',
                                 tpm_partner=self.tpm_partner,
                                 tpm_partner_focal_points=[self.tpm_staff])
 
