@@ -50,7 +50,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
         return ",".join(o.name for o in obj.offices.all())
 
     def get_sections(self, obj):
-        return ", ".join([l.name for l in obj.sections.all()])
+        return ",".join([l.name for l in obj.sections.all()])
 
     def get_partner_name(self, obj):
         return obj.partner_name
