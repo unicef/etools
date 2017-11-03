@@ -145,7 +145,6 @@ SHARED_APPS = (
     'django.contrib.admin',
     'django.contrib.humanize',
 
-    'easy_thumbnails',
     'storages',
     'rest_framework',
     'rest_framework_swagger',

@@ -54,7 +54,6 @@ xhtml2pdf==0.1b3
 html5lib==1.0b8 #must be added after xhtml2pdf
 reportlab==3.3.0
 flower==0.9.1
-easy-thumbnails==2.3
 django-debug-toolbar==1.6 # add debug-toolbar to be able to test in dev while we have the current docker build
 pyyaml==3.12
 django-ordered-model==1.3.0
