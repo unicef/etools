@@ -1618,7 +1618,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[DRAFT, SUSPENDED],
                 target=[SIGNED],
-                conditions=[intervention_validation.transition_ok])
+                conditions=[intervention_validation.transtion_to_signed])
     def transition_to_signed(self):
         pass
 
