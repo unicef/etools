@@ -129,7 +129,6 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
         nested_related_names = ['ll_results']
         serializer = self.my_create(request,
                                     related_fields,
-                                    snapshot=True,
                                     nested_related_names=nested_related_names,
                                     **kwargs)
 
@@ -268,7 +267,8 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             request,
             related_fields,
             nested_related_names=nested_related_names,
-            snapshot=True, **kwargs)
+            **kwargs
+        )
 
         validator = InterventionValid(instance, old=old_instance, user=request.user)
         if not validator.is_valid:
