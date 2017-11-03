@@ -204,7 +204,7 @@ TENANT_APPS = (
     'management',
     'snapshot',
 )
-INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
+INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
 # DJANGO: SECURITY
 ALLOWED_HOSTS = [

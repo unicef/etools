@@ -76,18 +76,15 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
         """
         Use restriceted field set for listing
         """
-        if self.request.method == "GET":
-            query_params = self.request.query_params
-            if "format" in query_params.keys():
-                if query_params.get("format") == 'csv':
-                    return PartnerOrganizationExportSerializer
-                if query_params.get("format") == 'csv_flat':
-                    return PartnerOrganizationExportFlatSerializer
-            if "verbosity" in query_params.keys():
-                if query_params.get("verbosity") == 'minimal':
-                    return MinimalPartnerOrganizationListSerializer
-        if self.request.method == "POST":
-            return PartnerOrganizationCreateUpdateSerializer
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return PartnerOrganizationExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return PartnerOrganizationExportFlatSerializer
+        if "verbosity" in query_params.keys():
+            if query_params.get("verbosity") == 'minimal':
+                return MinimalPartnerOrganizationListSerializer
         return super(PartnerOrganizationListAPIView, self).get_serializer_class()
 
     def get_queryset(self, format=None):
@@ -146,33 +143,6 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
                 response['Content-Disposition'] = "attachment;filename=partner.csv"
 
         return response
-
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        # TODO: on create we should call the insight API with the vendor number and use that information to populate:
-        # get all staff members
-        staff_members = request.data.pop('staff_members', None)
-
-        # validate and save partner org
-        po_serializer = self.get_serializer(data=request.data)
-        po_serializer.is_valid(raise_exception=True)
-
-        partner = po_serializer.save()
-
-        if staff_members:
-            for item in staff_members:
-                item.update({u"partner": partner.pk})
-            staff_members_serializer = PartnerStaffMemberCreateUpdateSerializer(data=staff_members, many=True)
-            try:
-                staff_members_serializer.is_valid(raise_exception=True)
-            except ValidationError as e:
-                e.detail = {'staff_members': e.detail}
-                raise e
-
-            staff_members = staff_members_serializer.save()
-
-        headers = self.get_success_headers(po_serializer.data)
-        return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
