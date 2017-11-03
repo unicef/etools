@@ -6,7 +6,6 @@ from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
 
 from import_export.admin import ExportMixin
-from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
@@ -68,10 +67,6 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
             return self.max_num
 
         return 0
-
-
-class LinksInlineAdmin(GenericLinkStackedInline):
-    extra = 1
 
 
 class InterventionBudgetAdmin(admin.ModelAdmin):

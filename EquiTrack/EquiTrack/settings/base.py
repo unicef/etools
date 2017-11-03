@@ -152,7 +152,6 @@ SHARED_APPS = (
     'rest_framework.authtoken',
     'import_export',
     'smart_selects',
-    'generic_links',
     'gunicorn',
     'post_office',
     'djcelery',
