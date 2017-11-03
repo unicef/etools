@@ -189,7 +189,7 @@ class Country(SoftDeleteMixin, models.Model):
     valid_to = models.DateField(null=True)
     formal_names = JSONField(null=True)
 
-    def get_formal_name(lang='en'):
+    def get_formal_name(self, lang='en'):
         assert lang in ['en', 'fr', 'es', 'ar', 'cn', 'ru']
         if self.formal_names:
             try:
