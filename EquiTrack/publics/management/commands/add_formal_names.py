@@ -6,11 +6,7 @@ from django.db.transaction import atomic
 
 from publics.models import Country
 
-# from https://docs.python.org/2/library/csv.html                               
 import csv
-import codecs
-import cStringIO
-
 
 
 class Command(BaseCommand):
@@ -53,7 +49,7 @@ class Command(BaseCommand):
                 self.stdout.write('Skipping ' + country.name)
                 continue
             try:
-                # find a dict in our names list that 
+                # find a dict in our names list that
                 # matches this country's iso_3
                 index = names.index(filter(lambda n: n.get('ISO3166-1-Alpha-3') == country.iso_3, names)[0])
             except IndexError:
