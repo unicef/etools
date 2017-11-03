@@ -1727,4 +1727,3 @@ class TestInterventionReportingPeriod(TenantTestCase):
                 intervention_str
             )
         )
-        self.assertEqual(int(self.intervention.planned_cash_transfers), 15000)
