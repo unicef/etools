@@ -187,6 +187,19 @@ class Country(SoftDeleteMixin, models.Model):
     currency = models.ForeignKey('Currency', null=True)
     valid_from = models.DateField(null=True)
     valid_to = models.DateField(null=True)
+    formal_names = JSONField(null=True)
+
+    def get_formal_name(lang='en'):
+        assert lang in ['en', 'fr', 'es', 'ar', 'cn', 'ru']
+        if self.formal_names:
+            try:
+                return self.formal_names[lang]
+            except KeyError:
+                # source data has all of these languages,
+                # but check anyway in case someone was naughty in django admin
+                if self.formal_names['en'] not in [None, '', ' ']:
+                    return self.formal_names['en']
+        return None
 
     def __str__(self):
         return self.name
