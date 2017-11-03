@@ -15,7 +15,7 @@ class TPMVisitReportValidations(BaseTransitionCheck):
     def get_errors(self, instance, *args, **kwargs):
         errors = {}
 
-        if not any([a.related_reports for a in instance.tpm_activities.all()]):
+        if not any((a.related_reports for a in instance.tpm_activities.all())):
             errors['report_attachments'] = _('You should attach report.')
 
         return errors
