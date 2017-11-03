@@ -90,7 +90,6 @@ class TPMActivityFactory(factory.DjangoModelFactory):
 
     attachments__count = 0
     report_attachments__count = 0
-    report_attachments__reports_count = 0
 
     @factory.post_generation
     def cp_output(self, create, extracted, **kwargs):
@@ -117,15 +116,12 @@ class TPMActivityFactory(factory.DjangoModelFactory):
             AttachmentFactory(code='activity_attachments', content_object=self)
 
     @factory.post_generation
-    def report_attachments(self, create, extracted, count, reports_count, **kwargs):
+    def report_attachments(self, create, extracted, count, **kwargs):
         if not create:
             return
 
         for i in range(count):
             AttachmentFactory(code='activity_report', content_object=self, **kwargs)
-
-        for i in range(reports_count):
-            AttachmentFactory(code='activity_report', file_type__name='report', content_object=self)
 
 
 class InheritedTrait(factory.Trait):

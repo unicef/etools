@@ -109,7 +109,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
 
     def test_tpm_report_success(self):
         visit = TPMVisitFactory(status='tpm_accepted',
-                                tpm_activities__report_attachments__reports_count=1,
+                                tpm_activities__report_attachments__count=1,
                                 tpm_partner=self.tpm_partner,
                                 tpm_partner_focal_points=[self.tpm_staff])
 
@@ -245,7 +245,8 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
             opts['tpm_activities__count'] = 1
 
         if transition == 'send_report':
-            opts['tpm_activities__report_attachments__reports_count'] = 1
+            opts['tpm_activities__report_attachments__count'] = 1
+            opts['tpm_activities__report_attachments__file_type__name'] = 'report'
 
         opts.update(kwargs)
         return super(TPMTransitionPermissionsTestCase, self).create_object(transition, **opts)
