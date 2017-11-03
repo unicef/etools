@@ -566,6 +566,18 @@ class AppliedIndicator(TimeStampedModel):
         blank=True,
         null=True,
     )
+    response_plan_name = models.CharField(
+        verbose_name=_("Response plan name"),
+        max_length=1024,
+        blank=True,
+        null=True,
+    )
+    cluster_name = models.CharField(
+        verbose_name=_("Cluster Name"),
+        max_length=512,
+        blank=True,
+        null=True,
+    )
     cluster_indicator_title = models.CharField(
         verbose_name=_("Cluster Indicator Title"),
         max_length=1024,
