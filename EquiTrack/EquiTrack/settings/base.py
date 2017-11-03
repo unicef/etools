@@ -144,7 +144,6 @@ SHARED_APPS = (
     'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.humanize',
-    'mathfilters',
 
     'easy_thumbnails',
     'storages',
@@ -155,7 +154,6 @@ SHARED_APPS = (
     'smart_selects',
     'gunicorn',
     'post_office',
-    'djrill',
     'djcelery',
     'djcelery_email',
     'leaflet',
