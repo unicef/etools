@@ -1468,7 +1468,7 @@ class Intervention(TimeStampedModel):
         if not self.signed_by_unicef_date or not self.signed_by_partner_date:
             return 'Not fully signed'
         signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
-        return relativedelta(signed_date - self.submission_date).days
+        return relativedelta(signed_date, self.submission_date).days
 
     @property
     def submitted_to_prc(self):
@@ -1481,7 +1481,7 @@ class Intervention(TimeStampedModel):
         if not self.signed_by_unicef_date or not self.signed_by_partner_date:
             return 'Not fully signed'
         signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
-        return relativedelta(signed_date - self.review_date_prc).days
+        return relativedelta(signed_date, self.review_date_prc).days
 
     @property
     def sector_names(self):
