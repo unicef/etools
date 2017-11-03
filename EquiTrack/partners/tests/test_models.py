@@ -2,10 +2,8 @@ import copy
 import datetime
 import json
 
-from actstream.models import model_stream
-from mock import patch, Mock
 from unittest import skip
-
+from mock import patch, Mock
 from django.utils import timezone
 
 from EquiTrack.factories import (
@@ -37,8 +35,6 @@ from EquiTrack.factories import (
     TravelActivityFactory,
     UserFactory,
 )
-
-from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
 from reports.models import ResultType
@@ -757,39 +753,9 @@ class TestAgreementModel(TenantTestCase):
             partner=self.partner_organization,
             country_programme=cp
         )
-        # Trigger created event activity stream
-        create_snapshot_activity_stream(
-            self.partner_organization, self.agreement, created=True)
 
     def test_reference_number(self):
         self.assertIn("PCA", self.agreement.reference_number)
-
-    def test_snapshot_activity_stream(self):
-        self.agreement.start = datetime.date.today()
-        self.agreement.signed_by_unicef_date = datetime.date.today()
-
-        create_snapshot_activity_stream(
-            self.partner_organization, self.agreement)
-        self.agreement.save()
-
-        # Check if new activity action has been created
-        self.assertEqual(model_stream(models.Agreement).count(), 2)
-
-        # Check the previous content
-        previous = model_stream(models.Agreement).first().data['previous']
-        self.assertNotEqual(previous, {})
-
-        # Check the changes content
-        changes = model_stream(models.Agreement).first().data['changes']
-        self.assertNotEqual(changes, {})
-
-        # Check if the previous had the empty date fields
-        self.assertEqual(previous['start'], 'None')
-        self.assertEqual(previous['signed_by_unicef_date'], 'None')
-
-        # Check if the changes had the updated date fields
-        self.assertEqual(changes['start'], str(self.agreement.start))
-        self.assertEqual(changes['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
 
 
 class TestInterventionModel(TenantTestCase):

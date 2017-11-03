@@ -371,7 +371,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
-        self.assertEqual(response_json['activities'][0]['locations'], [location.id, location_2.id])
+        self.assertItemsEqual(response_json['activities'][0]['locations'], [location.id, location_2.id])
         self.assertEqual(response_json['activities'][1]['locations'], [location_3.id])
 
     def test_activity_results(self):

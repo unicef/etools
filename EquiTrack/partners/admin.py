@@ -1,4 +1,7 @@
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from django.db import models
 from django.contrib import admin
@@ -7,7 +10,7 @@ from django.forms import SelectMultiple
 
 from import_export.admin import ExportMixin
 
-from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+from EquiTrack.admin import SnapshotModelAdmin, ActivityInline
 from EquiTrack.mixins import CountryUsersAdminMixin
 
 from partners.exports import PartnerExport
@@ -172,7 +175,7 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     )
 
 
-class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, admin.ModelAdmin):
+class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotModelAdmin):
     model = Intervention
 
     date_hierarchy = 'start'
@@ -245,6 +248,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, admin.ModelA
         # ResultsLinkInline,
         # SectorLocationInline,
         InterventionAttachmentsInline,
+        ActivityInline,
     )
 
     def created_date(self, obj):
@@ -256,12 +260,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, admin.ModelA
         return ' '.join([section.name for section in obj.sections.all()])
 
     section_names.short_description = "Sections"
-
-    def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
-
-        super(InterventionAdmin, self).save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
         return request.user.is_superuser
@@ -284,7 +282,7 @@ class AssessmentAdmin(admin.ModelAdmin):
     verbose_name_plural = u'Assessments'
 
 
-class PartnerStaffMemberAdmin(admin.ModelAdmin):
+class PartnerStaffMemberAdmin(SnapshotModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
 
@@ -307,12 +305,9 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
         u'last_name',
         u'email'
     )
-
-    def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
-
-        super(PartnerStaffMemberAdmin, self).save_model(request, obj, form, change)
+    inlines = [
+        ActivityInline,
+    ]
 
     def has_module_permission(self, request):
         return request.user.is_superuser
@@ -453,7 +448,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
         return 0
 
 
-class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
+class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, SnapshotModelAdmin):
     form = AgreementForm
     list_filter = (
         u'partner',
@@ -488,18 +483,15 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
     filter_horizontal = (
         u'authorized_officers',
     )
-
-    def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
-
-        super(AgreementAdmin, self).save_model(request, obj, form, change)
+    inlines = [
+        ActivityInline,
+    ]
 
     def has_module_permission(self, request):
         return request.user.is_superuser
 
 
-class FundingCommitmentAdmin(admin.ModelAdmin):
+class FundingCommitmentAdmin(SnapshotModelAdmin):
     search_fields = (
         u'fr_number',
         u'grant__name',
@@ -522,18 +514,15 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
         u'start',
         u'end',
     )
+    inlines = [
+        ActivityInline,
+    ]
 
     def has_add_permission(self, request):
         return False
 
     def has_delete_permission(self, request, obj=None):
         return False
-
-    def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
-
-        super(FundingCommitmentAdmin, self).save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
         return request.user.is_superuser
