@@ -13,6 +13,7 @@ from features.models import TenantFlag
 # add the TenantFlag as an Inline on the Flag Admin
 class TenantFlagInline(admin.StackedInline):
     model = TenantFlag
+    filter_horizontal = ('countries', )
 
 
 class TenantFlagAdmin(FlagAdmin):
