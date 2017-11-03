@@ -47,7 +47,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
         return obj.last_pv_date
 
     def get_offices_names(self, obj):
-        return ", ".join(o.name for o in obj.offices.all())
+        return ",".join(o.name for o in obj.offices.all())
 
     def get_sections(self, obj):
         return ", ".join([l.name for l in obj.sections.all()])
