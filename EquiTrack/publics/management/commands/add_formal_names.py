@@ -19,27 +19,27 @@ class Command(BaseCommand):
         self.stdout.write('Loading formal names')
 
         # column names from csv mapped to key we'll use to store
-	keys = {'UNTERM Arabic Formal': 'ar',
-	        'UNTERM Chinese Formal': 'cn',
+        keys = {'UNTERM Arabic Formal': 'ar',
+                'UNTERM Chinese Formal': 'cn',
                 'UNTERM English Formal': 'en',
                 'UNTERM French Formal': 'fr',
                 'UNTERM Russian Formal': 'ru',
                 'UNTERM Spanish Formal': 'es'}
 
         # columns we want values from
-	to_pluck = ['ISO3166-1-Alpha-3'] + keys.keys()
+        to_pluck = ['ISO3166-1-Alpha-3'] + keys.keys()
 
         # https://raw.githubusercontent.com/datasets/country-codes/master/data/country-codes.csv
         # put the csv in the same directory as manage.py
-	reader = csv.DictReader(open('country-codes.csv'))
-	# decode the column names once
-	columns = dict((k, k.decode('utf-8')) for k in reader.fieldnames)
+        reader = csv.DictReader(open('country-codes.csv'))
+        # decode the column names once
+        columns = dict((k, k.decode('utf-8')) for k in reader.fieldnames)
 
         # grab only the values we want (as dicts)
         names = []
-	for row in reader:
-	    names.append(dict((columns[k], v.decode('utf-8')) for k, v
-                in row.iteritems() if k in to_pluck))
+        for row in reader:
+            names.append(dict((columns[k], v.decode('utf-8')) for k, v
+                         in row.iteritems() if k in to_pluck))
 
         countries = Country.objects.all()
         for country in countries:
