@@ -71,7 +71,7 @@ def choices_to_json_ready(choices):
     return [{'label': choice[1], 'value': choice[0]} for choice in choice_list]
 
 
-class PmpStaticDropdownsListApiView(APIView):
+class PMPStaticDropdownsListAPIView(APIView):
     permission_classes = (IsAdminUser,)
 
     def get(self, request):
