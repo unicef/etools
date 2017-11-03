@@ -1,7 +1,7 @@
 from django.core.management import BaseCommand
 from django.db import connection
 from django.utils import six
-from tenant_schemas import get_tenant_model
+from tenant_schemas.utils import get_tenant_model
 
 from audit.models import AuditPermission, UNICEFAuditFocalPoint, UNICEFUser, Auditor
 

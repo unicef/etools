@@ -144,19 +144,15 @@ SHARED_APPS = (
     'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.humanize',
-    'mathfilters',
 
-    'easy_thumbnails',
     'storages',
     'rest_framework',
     'rest_framework_swagger',
     'rest_framework.authtoken',
     'import_export',
     'smart_selects',
-    'generic_links',
     'gunicorn',
     'post_office',
-    'djrill',
     'djcelery',
     'djcelery_email',
     'leaflet',
@@ -204,7 +200,7 @@ TENANT_APPS = (
     'firms',
     'management',
 )
-INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
+INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
 # DJANGO: SECURITY
 ALLOWED_HOSTS = [
