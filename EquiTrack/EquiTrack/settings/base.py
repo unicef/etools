@@ -144,7 +144,6 @@ SHARED_APPS = (
     'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.humanize',
-    'mathfilters',
 
     'storages',
     'rest_framework',
@@ -152,10 +151,8 @@ SHARED_APPS = (
     'rest_framework.authtoken',
     'import_export',
     'smart_selects',
-    'generic_links',
     'gunicorn',
     'post_office',
-    'djrill',
     'djcelery',
     'djcelery_email',
     'leaflet',
