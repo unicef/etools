@@ -1618,7 +1618,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[DRAFT, SUSPENDED],
                 target=[SIGNED],
-                conditions=[intervention_validation.transition_ok])
+                conditions=[intervention_validation.transtion_to_signed])
     def transition_to_signed(self):
         pass
 
@@ -1774,11 +1774,9 @@ class InterventionAmendment(TimeStampedModel):
     tracker = FieldTracker()
 
     def compute_reference_number(self):
-        if self.signed_date:
-            return '{0:02d}'.format(self.intervention.amendments.filter(signed_date__isnull=False).count() + 1)
-        else:
-            seq = self.intervention.amendments.filter(signed_date__isnull=True).count() + 1
-            return 'tmp{0:02d}'.format(seq)
+        return self.intervention.amendments.filter(
+            signed_date__isnull=False
+        ).count() + 1
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -1789,18 +1787,10 @@ class InterventionAmendment(TimeStampedModel):
 
         # check if temporary number is needed or amendment number needs to be
         # set
-        update_intervention_number_needed = False
-        oldself = InterventionAmendment.objects.get(id=self.pk) if self.pk else None
-        if self.signed_amendment:
-            if not oldself or not oldself.signed_amendment:
-                self.amendment_number = self.compute_reference_number()
-                update_intervention_number_needed = True
-        else:
-            if not oldself:
-                self.number = self.compute_reference_number()
-
-        if update_intervention_number_needed:
+        if self.pk is None:
+            self.amendment_number = self.compute_reference_number()
             self.intervention.save(amendment_number=self.amendment_number)
+
         return super(InterventionAmendment, self).save(**kwargs)
 
     def __unicode__(self):
