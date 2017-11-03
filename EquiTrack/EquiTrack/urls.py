@@ -116,6 +116,7 @@ urlpatterns = [
     url(r'^api/prp/v1/', include('partners.prp_urls', namespace='prp_api_v1')),
     url(r'^api/v2/users/', include('users.urls_v2')),
     url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
+    url(r'^api/v2/features/', include('features.urls', namespace='features')),
 
 
     # ***************  API version 3  ******************
