@@ -121,7 +121,6 @@ class TestAgreementsIllegalTransitionPermissions(TenantTestCase):
             )
 
 
-
 class TestAmendmentsValid(TenantTestCase):
     def test_invalid_name(self):
         agreement = AgreementFactory()
