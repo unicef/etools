@@ -4,11 +4,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from django.db import models
+from django.utils.encoding import python_2_unicode_compatible
 from waffle.models import Flag
 
 from users.models import Country
 
 
+@python_2_unicode_compatible
 class TenantFlag(models.Model):
     """
     Associate one or more countries with a Flag.
@@ -16,6 +18,9 @@ class TenantFlag(models.Model):
     countries = models.ManyToManyField(Country, blank=True, help_text=(
         'Activate this flag for these countries.'))
     flag = models.OneToOneField(Flag)
+
+    def __str__(self):
+        return self.flag.name
 
     def is_active(self, request):
         "Is this flag on for this tenant, or for any other reason?"
