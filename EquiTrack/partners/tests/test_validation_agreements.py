@@ -103,12 +103,23 @@ class TestAgreementsIllegalTransition(TenantTestCase):
 class TestAgreementsIllegalTransitionPermissions(TenantTestCase):
     def test_true(self):
         agreement = AgreementFactory()
+        agreement.old_instance = None
         self.assertTrue(
             agreements.agreements_illegal_transition_permissions(
                 agreement,
                 None
             )
         )
+
+    def test_assert(self):
+        """If no old_instance attribute set on agreement, raise an exception"""
+        agreement = AgreementFactory()
+        with self.assertRaises(AssertionError):
+            agreements.agreements_illegal_transition_permissions(
+                agreement,
+                None
+            )
+
 
 
 class TestAmendmentsValid(TenantTestCase):

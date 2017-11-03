@@ -50,6 +50,8 @@ def agreements_illegal_transition(agreement):
 
 
 def agreements_illegal_transition_permissions(agreement, user):
+    assert hasattr(agreement, "old_instance")
+    logging.debug(agreement.old_instance)
     logging.debug(agreement)
     logging.debug(user)
     # The type of validation that can be done on the user:
