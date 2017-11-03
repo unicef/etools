@@ -1,23 +1,25 @@
-import itertools
+from __future__ import absolute_import
 
+import itertools
 from copy import copy
+
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from ..models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActionPoint, \
+    TPMPartnerStaffMember
+from .attachments import TPMAttachmentsSerializer, TPMReportSerializer, TPMReportAttachmentsSerializer
+from .partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from activities.serializers import ActivitySerializer
 from partners.models import InterventionResultLink, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
-from tpm.models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActionPoint, \
-    TPMPartnerStaffMember
-from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportSerializer, TPMReportAttachmentsSerializer
 from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
     StatusPermissionsBasedRootSerializerMixin
 from utils.common.serializers.fields import SeparatedReadWriteField
-from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
-from users.serializers import MinimalUserSerializer, OfficeSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
+from users.serializers import MinimalUserSerializer, OfficeSerializer
 from users.serializers import SectionSerializer
 from locations.serializers import LocationLightSerializer
 from reports.serializers.v1 import ResultSerializer
@@ -107,11 +109,14 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     attachments = TPMAttachmentsSerializer(many=True, required=False, label=_('Related Documents'))
     report_attachments = TPMReportSerializer(many=True, required=False, label=_('Reports by Activity'))
 
+    pv_applicable = serializers.BooleanField(read_only=True)
+
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
             'id', 'implementing_partner', 'partnership', 'cp_output', 'section',
             'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
+            'pv_applicable',
         ]
         extra_kwargs = {
             'id': {'label': _('Activity ID')},

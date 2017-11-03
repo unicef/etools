@@ -1,5 +1,6 @@
 from django.core.management import call_command
 from django.utils import six
+from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
@@ -100,6 +101,8 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
 
         response = self._do_transition(visit, 'send_report', self.tpm_user)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('report_attachments', response.data.keys())
+        self.assertEqual(response.data['report_attachments'], _('You should attach report.'))
 
         visit = self._refresh_tpm_visit_instace(visit)
         self.assertEquals(visit.status, 'tpm_accepted')
@@ -107,6 +110,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
     def test_tpm_report_success(self):
         visit = TPMVisitFactory(status='tpm_accepted',
                                 tpm_activities__report_attachments__count=1,
+                                tpm_activities__report_attachments__file_type__name='report',
                                 tpm_partner=self.tpm_partner,
                                 tpm_partner_focal_points=[self.tpm_staff])
 
@@ -243,6 +247,7 @@ class TPMTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, TPMTr
 
         if transition == 'send_report':
             opts['tpm_activities__report_attachments__count'] = 1
+            opts['tpm_activities__report_attachments__file_type__name'] = 'report'
 
         opts.update(kwargs)
         return super(TPMTransitionPermissionsTestCase, self).create_object(transition, **opts)

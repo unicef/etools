@@ -121,7 +121,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
             return
 
         for i in range(count):
-            AttachmentFactory(code='activity_report', content_object=self)
+            AttachmentFactory(code='activity_report', content_object=self, **kwargs)
 
 
 class InheritedTrait(factory.Trait):
@@ -205,6 +205,8 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
     report_reject_comments__count = 0
 
+    report_attachments__count = 0
+
     class Params:
         draft = factory.Trait()
 
@@ -249,7 +251,8 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             status=TPMVisit.STATUSES.tpm_reported,
             date_of_tpm_reported=factory.LazyFunction(timezone.now),
 
-            tpm_activities__report_attachments__count=3,
+            tpm_activities__report_attachments__count=1,
+            tpm_activities__report_attachments__file_type__name='report',
         )
 
         tpm_report_rejected = InheritedTrait(
@@ -324,3 +327,11 @@ class TPMVisitFactory(factory.DjangoModelFactory):
                 tpm_visit=self,
                 reject_reason='Just because.',
             )
+
+    @factory.post_generation
+    def report_attachments(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        for i in range(count):
+            AttachmentFactory(code='visit_report', content_object=self, **kwargs)
