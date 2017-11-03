@@ -1294,7 +1294,11 @@ class TestInterventionModel(TenantTestCase):
         """If status is in completed status and agreement status is not
         update agreement status to match and save
         """
-        for status in models.Intervention.STATUS_COMPLETE:
+        for status in [
+                models.Intervention.ENDED,
+                models.Intervention.SUSPENDED,
+                models.Intervention.TERMINATED
+        ]:
             agreement = AgreementFactory(
                 status=models.Agreement.DRAFT,
             )
