@@ -718,31 +718,79 @@ class TestInterventionModel(TenantTestCase):
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        agreement = AgreementFactory(
+        self.agreement = AgreementFactory(
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
             country_programme=cp,
         )
         self.intervention = InterventionFactory(
             title="Intervention 1",
-            agreement=agreement,
+            agreement=self.agreement,
             submission_date=datetime.date(datetime.date.today().year, 1, 1),
         )
 
-    # TODO relativedelta() returns 0, may be a bug in the model code
-    def test_days_from_submission_signed(self):
-        self.intervention.submission_date = datetime.date(datetime.date.today().year - 1, 1, 1)
-        self.intervention.signed_by_partner_date = datetime.date(datetime.date.today().year - 1, 5, 1)
-        # days = (self.intervention.signed_by_partner_date - self.intervention.submission_date).days
-        # self.assertEqual(self.intervention.days_from_submission_to_signed, days)
+    def test_days_from_submission_to_signed(self):
+        intervention = InterventionFactory(
+            submission_date=datetime.date(2001, 1, 1),
+            signed_by_partner_date=datetime.date(2001, 1, 3),
+            signed_by_unicef_date=datetime.date(2001, 1, 3),
+        )
+        self.assertEqual(intervention.days_from_submission_to_signed, 2)
 
-    # TODO relativedelta() returns 0, may be a bug in the model code
+    def test_days_from_submission_to_signed_no_submission_date(self):
+        intervention = InterventionFactory(
+            agreement=self.agreement,
+            submission_date=None
+        )
+        self.assertIsNone(intervention.submission_date)
+        res = intervention.days_from_submission_to_signed
+        self.assertEqual(res, "Not Submitted")
+
+    def test_days_from_submission_to_signed_not_signed_by_unicef(self):
+        self.assertIsNotNone(self.intervention.submission_date)
+        self.assertIsNone(self.intervention.signed_by_unicef_date)
+        res = self.intervention.days_from_submission_to_signed
+        self.assertEqual(res, "Not fully signed")
+
+    def test_days_from_submission_to_signed_not_signed_by_partner(self):
+        self.intervention.signed_by_unicef_date = datetime.date.today()
+        self.intervention.save()
+        self.assertIsNotNone(self.intervention.submission_date)
+        self.assertIsNotNone(self.intervention.signed_by_unicef_date)
+        self.assertIsNone(self.intervention.signed_by_partner_date)
+        res = self.intervention.days_from_submission_to_signed
+        self.assertEqual(res, "Not fully signed")
+
     def test_days_from_review_to_signed(self):
-        self.intervention.submission_date = datetime.date(datetime.date.today().year - 1, 1, 1)
-        self.intervention.review_date = datetime.date(datetime.date.today().year - 1, 2, 1)
-        self.intervention.signed_by_partner_date = datetime.date(datetime.date.today().year - 1, 5, 1)
-        # days = (self.intervention.signed_by_partner_date - self.intervention.review_date).days
-        # self.assertEqual(self.intervention.days_from_review_to_signed, days)
+        intervention = InterventionFactory(
+            review_date_prc=datetime.date(2001, 1, 1),
+            signed_by_partner_date=datetime.date(2001, 1, 3),
+            signed_by_unicef_date=datetime.date(2001, 1, 3),
+        )
+        self.assertEqual(intervention.days_from_review_to_signed, 2)
+
+    def test_days_from_review_to_signed_no_review_date_prc(self):
+        self.assertIsNone(self.intervention.review_date_prc)
+        res = self.intervention.days_from_review_to_signed
+        self.assertEqual(res, "Not Reviewed")
+
+    def test_days_from_review_to_signed_not_signed_by_unicef(self):
+        self.intervention.review_date_prc = datetime.date.today()
+        self.intervention.save()
+        self.assertIsNotNone(self.intervention.review_date_prc)
+        self.assertIsNone(self.intervention.signed_by_unicef_date)
+        res = self.intervention.days_from_review_to_signed
+        self.assertEqual(res, "Not fully signed")
+
+    def test_days_from_review_to_signed_not_signed_by_partner(self):
+        self.intervention.review_date_prc = datetime.date.today()
+        self.intervention.signed_by_unicef_date = datetime.date.today()
+        self.intervention.save()
+        self.assertIsNotNone(self.intervention.review_date_prc)
+        self.assertIsNotNone(self.intervention.signed_by_unicef_date)
+        self.assertIsNone(self.intervention.signed_by_partner_date)
+        res = self.intervention.days_from_review_to_signed
+        self.assertEqual(res, "Not fully signed")
 
     # TODO relativedelta() returns 0, may be a bug in the model code
     def test_duration(self):
