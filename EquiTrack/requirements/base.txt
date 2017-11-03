@@ -1,6 +1,5 @@
 # Django packages
 Django==1.9.10
-django-braces==1.10.0
 django-model-utils==2.6
 dj-database-url==0.4.1
 dj-static==0.0.6
