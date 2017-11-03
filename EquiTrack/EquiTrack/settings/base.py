@@ -156,7 +156,6 @@ SHARED_APPS = (
     'generic_links',
     'gunicorn',
     'post_office',
-    'djrill',
     'djcelery',
     'djcelery_email',
     'leaflet',
