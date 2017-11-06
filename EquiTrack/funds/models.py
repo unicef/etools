@@ -1,11 +1,12 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
+from model_utils.models import TimeStampedModel
 from django.utils.translation import ugettext as _
 
 
 @python_2_unicode_compatible
-class Donor(models.Model):
+class Donor(TimeStampedModel):
     """
     Represents Donor for a Grant.
     """
@@ -25,7 +26,7 @@ class GrantManager(models.Manager):
 
 
 @python_2_unicode_compatible
-class Grant(models.Model):
+class Grant(TimeStampedModel):
     """
     Represents the name of a Grant with expiration date, and Donor name.
 
@@ -59,7 +60,7 @@ class Grant(models.Model):
 
 
 @python_2_unicode_compatible
-class FundsReservationHeader(models.Model):
+class FundsReservationHeader(TimeStampedModel):
     intervention = models.ForeignKey(
         'partners.Intervention',
         verbose_name=_("Reference Number"),
@@ -155,7 +156,7 @@ class FundsReservationHeader(models.Model):
 
 
 @python_2_unicode_compatible
-class FundsReservationItem(models.Model):
+class FundsReservationItem(TimeStampedModel):
     fund_reservation = models.ForeignKey(
         FundsReservationHeader,
         verbose_name=_("FR Number"),
@@ -227,7 +228,7 @@ class FundsReservationItem(models.Model):
 
 
 @python_2_unicode_compatible
-class FundsCommitmentHeader(models.Model):
+class FundsCommitmentHeader(TimeStampedModel):
     vendor_code = models.CharField(
         verbose_name=_("Vendor Code"),
         max_length=20,
@@ -280,7 +281,7 @@ class FundsCommitmentHeader(models.Model):
 
 
 @python_2_unicode_compatible
-class FundsCommitmentItem(models.Model):
+class FundsCommitmentItem(TimeStampedModel):
     fund_commitment = models.ForeignKey(
         FundsCommitmentHeader,
         related_name='fc_items',

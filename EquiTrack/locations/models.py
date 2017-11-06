@@ -9,6 +9,7 @@ from django.dispatch.dispatcher import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 
+from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
 
@@ -88,6 +89,8 @@ class Location(MPTTModel):
         blank=True,
     )
     point = models.PointField(verbose_name=_("Point"), null=True, blank=True)
+    created = AutoCreatedField(_('created'))
+    modified = AutoLastModifiedField(_('modified'))
 
     objects = LocationManager()
 

@@ -279,8 +279,8 @@ class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 38)
-        self.assertEqual(len(dataset[0]), 38)
+        self.assertEqual(len(dataset._get_headers()), 42)
+        self.assertEqual(len(dataset[0]), 42)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -293,8 +293,8 @@ class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 38)
-        self.assertEqual(len(dataset[0]), 38)
+        self.assertEqual(len(dataset._get_headers()), 42)
+        self.assertEqual(len(dataset[0]), 42)
 
 
 class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
@@ -329,8 +329,8 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 17)
-        self.assertEqual(len(dataset[0]), 17)
+        self.assertEqual(len(dataset._get_headers()), 19)
+        self.assertEqual(len(dataset[0]), 19)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -343,8 +343,8 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 17)
-        self.assertEqual(len(dataset[0]), 17)
+        self.assertEqual(len(dataset._get_headers()), 19)
+        self.assertEqual(len(dataset[0]), 19)
 
 
 class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportTestCase):
@@ -378,8 +378,8 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 17)
-        self.assertEqual(len(dataset[0]), 17)
+        self.assertEqual(len(dataset._get_headers()), 19)
+        self.assertEqual(len(dataset[0]), 19)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -392,5 +392,5 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 16)
-        self.assertEqual(len(dataset[0]), 16)
+        self.assertEqual(len(dataset._get_headers()), 18)
+        self.assertEqual(len(dataset[0]), 18)
