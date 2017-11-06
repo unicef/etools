@@ -28,6 +28,7 @@ from EquiTrack.factories import (
     SectorFactory,
     UserFactory,
 )
+from snapshot.models import Activity
 from utils.common.utils import get_all_field_names
 
 
@@ -65,10 +66,10 @@ class TestInterventionsAPI(APITenantTestCase):
         'draft': ["status", "attachments", "prc_review_document", 'travel_activities',
                   "partner_authorized_officer_signatory", "partner_focal_points", "id",
                   "country_programme", "amendments", "unicef_focal_points", "end", "title",
-                  "signed_by_partner_date", "review_date_prc", "target_actions", "frs", "start",
-                  "metadata", "submission_date", "action_object_actions", "agreement", "unicef_signatory_id",
+                  "signed_by_partner_date", "review_date_prc", "frs", "start",
+                  "metadata", "submission_date", "agreement", "unicef_signatory_id",
                   "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
-                  "partner_authorized_officer_signatory_id", "actor_actions", "created", "planned_visits",
+                  "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections"],
         'signed': [],
@@ -112,6 +113,7 @@ class TestInterventionsAPI(APITenantTestCase):
         return response.status_code, json.loads(response.rendered_content)
 
     def test_api_pd_output_not_populated(self):
+        self.assertFalse(Activity.objects.exists())
         data = {
             "result_links": [
                 {"cp_output": self.result.id,
@@ -122,13 +124,20 @@ class TestInterventionsAPI(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/interventions/' + str(self.intervention.id) + '/',
+            reverse(
+                "partners_api:intervention-detail",
+                args=[self.intervention.pk]
+            ),
             user=self.partnership_manager_user,
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         result = json.loads(response.rendered_content)
         self.assertEqual(result.get('result_links'), {'name': ['This field may not be null.']})
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            0
+        )
 
     def test_dashboard_list_focal_point(self):
         self.active_intervention.unicef_focal_points.add(self.unicef_staff)
@@ -160,6 +169,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
     def test_add_one_valid_fr_on_create_pd(self):
+        self.assertFalse(Activity.objects.exists())
         frs_data = [self.fr_1.id]
         data = {
             "document_type": Intervention.PD,
@@ -173,8 +183,13 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.CREATE).count(),
+            1
+        )
 
     def test_add_two_valid_frs_on_create_pd(self):
+        self.assertFalse(Activity.objects.exists())
         frs_data = [self.fr_1.id, self.fr_2.id]
         data = {
             "document_type": Intervention.PD,
@@ -188,8 +203,13 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.CREATE).count(),
+            1
+        )
 
     def test_fr_details_is_accurate_on_creation(self):
+        self.assertFalse(Activity.objects.exists())
         frs_data = [self.fr_1.id, self.fr_2.id]
         data = {
             "document_type": Intervention.PD,
@@ -211,8 +231,13 @@ class TestInterventionsAPI(APITenantTestCase):
                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
         self.assertEqual(response['frs_details']['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.CREATE).count(),
+            1
+        )
 
     def test_add_two_valid_frs_on_update_pd(self):
+        self.assertFalse(Activity.objects.exists())
         frs_data = [self.fr_1.id, self.fr_2.id]
         data = {
             "frs": frs_data
@@ -229,8 +254,18 @@ class TestInterventionsAPI(APITenantTestCase):
                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
         self.assertEqual(response['frs_details']['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+        self.assertTrue(Activity.objects.exists())
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, self.intervention_2)
+        self.assertEqual(activity.action, Activity.UPDATE)
+        self.assertIn("frs", activity.change)
+        frs = activity.change["frs"]
+        self.assertEqual(frs["before"], [])
+        self.assertItemsEqual(frs["after"], [self.fr_1.pk, self.fr_2.pk])
+        self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_remove_an_fr_from_pd(self):
+        self.assertFalse(Activity.objects.exists())
         frs_data = [self.fr_1.id, self.fr_2.id]
         data = {
             "frs": frs_data
@@ -239,6 +274,10 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
         # Remove fr_1
         frs_data = [self.fr_2.id]
@@ -249,8 +288,13 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            2
+        )
 
     def test_fail_add_expired_fr_on_pd(self):
+        self.assertFalse(Activity.objects.exists())
         self.fr_1.end_date = timezone.now().date() - datetime.timedelta(days=1)
         self.fr_1.save()
 
@@ -263,8 +307,10 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
+        self.assertTrue(Activity.objects.exists())
 
     def test_fail_add_used_fr_on_pd(self):
+        self.assertFalse(Activity.objects.exists())
         self.fr_1.intervention = self.intervention
         self.fr_1.save()
 
@@ -278,8 +324,10 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(response['frs'],
                          ['One or more of the FRs selected is related '
                           'to a different PD/SSFA, {}'.format(self.fr_1.fr_number)])
+        self.assertFalse(Activity.objects.exists())
 
     def test_add_same_frs_twice_on_pd(self):
+        self.assertFalse(Activity.objects.exists())
         frs_data = [self.fr_1.id, self.fr_2.id]
         data = {
             "frs": frs_data
@@ -287,18 +335,22 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
+        self.assertTrue(Activity.objects.exists())
 
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
+        self.assertEqual(Activity.objects.all().count(), 2)
 
     def test_patch_title_fail_as_unicef_user(self):
+        self.assertFalse(Activity.objects.exists())
         data = {
             "title": 'Changed Title'
         }
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch',
                                                  user=self.unicef_staff)
         self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(Activity.objects.exists())
 
     def test_permissions_for_intervention_status_draft(self):
         # intervention is in Draft status

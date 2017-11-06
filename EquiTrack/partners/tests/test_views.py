@@ -14,7 +14,6 @@ from django.core.urlresolvers import reverse, resolve
 from django.db import connection
 from django.utils import timezone
 
-from actstream.models import model_stream
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
@@ -56,6 +55,7 @@ from partners.models import (
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 import partners.views.partner_organization_v2
+from snapshot.models import Activity
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):
@@ -412,6 +412,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.data, ["Cannot delete a completed assessment"])
 
     def test_api_partners_update_with_members(self):
+        self.assertFalse(Activity.objects.exists())
         response = self.forced_auth_req(
             'get',
             reverse('partners_api:partner-detail', args=[self.partner.pk]),
@@ -444,7 +445,13 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["staff_members"]), 2)
 
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
+
     def test_api_partners_update_assessments_invalid(self):
+        self.assertFalse(Activity.objects.exists())
         today = datetime.date.today()
         assessments = [{
             "id": self.assessment2.id,
@@ -463,8 +470,13 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"assessments":
                                          {"completed_date": ["The Date of Report cannot be in the future"]}})
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            0
+        )
 
     def test_api_partners_update_assessments_longago(self):
+        self.assertFalse(Activity.objects.exists())
         today = datetime.date.today()
         assessments = [{
             "id": self.assessment2.id,
@@ -481,8 +493,13 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_api_partners_update_assessments_today(self):
+        self.assertFalse(Activity.objects.exists())
         completed_date = datetime.date.today()
         assessments = [{
             "id": self.assessment2.id,
@@ -499,8 +516,13 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_api_partners_update_assessments_yesterday(self):
+        self.assertFalse(Activity.objects.exists())
         completed_date = datetime.date.today() - datetime.timedelta(days=1)
         assessments = [{
             "id": self.assessment2.id,
@@ -517,8 +539,13 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_api_partners_update_with_members_null_phone(self):
+        self.assertFalse(Activity.objects.exists())
         response = self.forced_auth_req(
             'get',
             reverse('partners_api:partner-detail', args=[self.partner.pk]),
@@ -547,10 +574,14 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["staff_members"][1]["phone"], None)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_api_partners_update_assessments_tomorrow(self):
+        self.assertFalse(Activity.objects.exists())
         completed_date = datetime.date.today() + datetime.timedelta(days=1)
         assessments = [{
             "id": self.assessment2.id,
@@ -569,6 +600,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"assessments":
                                          {"completed_date": ["The Date of Report cannot be in the future"]}})
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            0
+        )
 
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
@@ -614,6 +649,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(len(response.data["staff_members"]), 1)
 
     def test_api_partners_update(self):
+        self.assertFalse(Activity.objects.exists())
         data = {
             "name": "Updated name again",
         }
@@ -626,6 +662,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_api_partners_delete_with_signed_agreements(self):
 
@@ -686,6 +726,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
     def test_api_partners_update_hidden(self):
         # make some other type to filter against
+        self.assertFalse(Activity.objects.exists())
         data = {
             "hidden": True
         }
@@ -697,6 +738,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["hidden"], False)
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
 
 class TestPartnershipViews(APITenantTestCase):
@@ -772,23 +817,25 @@ class TestAgreementCreateAPIView(APITenantTestCase):
 
     def test_minimal_create(self):
         '''Test passing as few fields as possible to create'''
+        self.assertFalse(Activity.objects.exists())
         data = {
             "agreement_type": Agreement.MOU,
             "partner": self.partner.id,
         }
         response = self.forced_auth_req(
             'post',
-            reverse('partners_api:agreement-list'),
+            reverse("partners_api:agreement-list"),
             user=self.partnership_manager_user,
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # Check for activity action created
-        stream = model_stream(Agreement)
-        self.assertEqual(len(stream), 1)
-        self.assertEqual(stream[0].verb, 'created')
-        self.assertIsNone(stream[0].target.start)
+        # Check snapshot creation
+        self.assertTrue(Activity.objects.exists())
+        activity = Activity.objects.first()
+        self.assertEqual(activity.action, Activity.CREATE)
+        self.assertEqual(activity.change, {})
+        self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_create_simple_fail(self):
         '''Verify that failing gives appropriate feedback'''
@@ -809,8 +856,8 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         self.assertIsInstance(response.data['country_programme'], list)
         self.assertEqual(response.data['country_programme'][0], 'Country Programme is required for PCAs!')
 
-        # Check that no activity action was created
-        self.assertEqual(len(model_stream(Agreement)), 0)
+        # Check that no snapshot was created
+        self.assertFalse(Activity.objects.exists())
 
 
 class TestAgreementAPIFileAttachments(APITenantTestCase):
@@ -1032,7 +1079,6 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(model_stream(Agreement).count(), 0)
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -1072,8 +1118,11 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data["authorized_officers"]), 2)
 
         # Check for activity action created
-        self.assertEqual(model_stream(Agreement).count(), 1)
-        self.assertEqual(model_stream(Agreement)[0].verb, 'changed')
+        self.assertTrue(Activity.objects.exists())
+        self.assertEqual(
+            Activity.objects.filter(action=Activity.UPDATE).count(),
+            1
+        )
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
@@ -1593,10 +1642,6 @@ class TestInterventionViews(APITenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        # Check for activity action created
-        self.assertEqual(model_stream(Intervention).count(), 3)
-        self.assertEqual(model_stream(Intervention)[0].verb, 'created')
 
     def test_intervention_create_unicef_user_fail(self):
         data = {
