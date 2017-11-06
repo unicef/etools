@@ -29,8 +29,6 @@ def migrate_interventions_by_valid_status(apps, schema_editor):
     print 'Interventions moved to Draft from cancelled: {}'.format(cancelled)
 
 
-
-
 def remove_old_agreements(apps, schema_editor):
     IC = 'IC'
     AWP = 'AWP'

@@ -1434,6 +1434,11 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
+    in_amendment = models.BooleanField(
+        verbose_name=_("Amendment Open"),
+        default=False,
+    )
+
     # Flag if this has been migrated to a status that is not correct
     # previous status
     metadata = JSONField(
@@ -1789,7 +1794,7 @@ class InterventionAmendment(TimeStampedModel):
         # set
         if self.pk is None:
             self.amendment_number = self.compute_reference_number()
-            self.intervention.save(amendment_number=self.amendment_number)
+            self.intervention.save(amendment_number=self.amendment_number, in_amendment=True)
 
         return super(InterventionAmendment, self).save(**kwargs)
 

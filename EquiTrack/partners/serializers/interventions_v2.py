@@ -375,6 +375,7 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
+    in_amendment = serializers.BooleanField(read_only=True, required=False)
     frs = serializers.PrimaryKeyRelatedField(many=True,
                                              queryset=FundsReservationHeader.objects.prefetch_related('intervention')
                                              .all(),
@@ -454,7 +455,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
-            "locations", "location_names", "cluster_names"
+            "locations", "location_names", "cluster_names", "in_amendment"
         )
 
 
