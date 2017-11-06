@@ -14,12 +14,12 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 from __future__ import absolute_import
 
+import datetime
 import os
 from os.path import abspath, basename, dirname, join, normpath
-import datetime
 
-import djcelery
 import dj_database_url
+import djcelery
 import saml2
 from saml2 import saml
 

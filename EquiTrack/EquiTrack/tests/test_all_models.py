@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import inspect
 import sys
@@ -30,7 +27,7 @@ EXCLUDED_PACKAGES = (
     'users',
     'vision',
     'workplan',
-    )
+)
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
