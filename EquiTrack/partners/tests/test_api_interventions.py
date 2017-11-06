@@ -436,8 +436,16 @@ class TestAPIInterventionResultLinkListView(APITenantTestCase):
                            kwargs={'intervention_pk': self.intervention.id})
 
         # self.expected_field_names is the list of field names expected in responses.
-        self.expected_field_names = sorted(
-            ('cp_output', 'ram_indicators', 'cp_output_name', 'ram_indicator_names', 'id', 'intervention', ))
+        self.expected_field_names = sorted((
+            'cp_output',
+            'ram_indicators',
+            'cp_output_name',
+            'ram_indicator_names',
+            'id',
+            'intervention',
+            'created',
+            'modified',
+        ))
 
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)
@@ -555,8 +563,16 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
                            kwargs={'pk': self.intervention_result_link.id})
 
         # self.expected_keys are the keys expected in a JSON response.
-        self.expected_keys = sorted(('cp_output', 'ram_indicators', 'cp_output_name', 'ram_indicator_names',
-                                     'id', 'intervention'))
+        self.expected_keys = sorted((
+            'cp_output',
+            'ram_indicators',
+            'cp_output_name',
+            'ram_indicator_names',
+            'id',
+            'intervention',
+            'created',
+            'modified',
+        ))
 
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)
@@ -867,10 +883,10 @@ class TestAPIInterventionIndicatorsListView(APITenantTestCase):
                           kwargs={'lower_result_pk': cls.lower_result.id})
 
         # cls.expected_field_names is the list of field names expected in responses.
-        cls.expected_field_names = sorted(('id', 'assumptions', 'baseline', 'cluster_indicator_id',
+        cls.expected_field_names = sorted(('id', 'assumptions', 'baseline', 'cluster_indicator_id', 'cluster_name',
                                            'cluster_indicator_title', 'context_code', 'disaggregation',
                                            'indicator', 'locations', 'lower_result', 'means_of_verification',
-                                           'section', 'target', 'total', 'created', 'modified', ))
+                                           'section', 'target', 'total', 'created', 'modified', 'response_plan_name', ))
 
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)

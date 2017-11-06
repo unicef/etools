@@ -176,7 +176,7 @@ def hact_default():
     }
 
 
-class PartnerOrganization(AdminURLMixin, models.Model):
+class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     """
     Represents a partner organization
 
@@ -634,7 +634,7 @@ class PartnerStaffMemberManager(models.Manager):
         return super(PartnerStaffMemberManager, self).get_queryset().select_related('partner')
 
 
-class PartnerStaffMember(models.Model):
+class PartnerStaffMember(TimeStampedModel):
     """
     Represents a staff member at the partner organization.
     A User is created for each staff member
@@ -712,7 +712,7 @@ class PartnerStaffMember(models.Model):
         return super(PartnerStaffMember, self).save(**kwargs)
 
 
-class Assessment(models.Model):
+class Assessment(TimeStampedModel):
     """
     Represents an assessment for a partner organization.
 
@@ -1555,8 +1555,8 @@ class Intervention(TimeStampedModel):
         clusters = []
         for lower_result in self.all_lower_results:
             for applied_indicator in lower_result.applied_indicators.all():
-                if applied_indicator.cluster_indicator_title:
-                    clusters.append(applied_indicator.cluster_indicator_title)
+                if applied_indicator.cluster_name and applied_indicator.cluster_name not in clusters:
+                    clusters.append(applied_indicator.cluster_name)
 
         return clusters
 
@@ -1798,7 +1798,7 @@ class InterventionAmendment(TimeStampedModel):
         )
 
 
-class InterventionPlannedVisits(models.Model):
+class InterventionPlannedVisits(TimeStampedModel):
     """
     Represents planned visits for the intervention
     """
@@ -1819,7 +1819,7 @@ class InterventionPlannedVisits(models.Model):
         unique_together = ('intervention', 'year')
 
 
-class InterventionResultLink(models.Model):
+class InterventionResultLink(TimeStampedModel):
     intervention = models.ForeignKey(Intervention, related_name='result_links')
     cp_output = models.ForeignKey(Result, related_name='intervention_links')
     ram_indicators = models.ManyToManyField(Indicator, blank=True)
@@ -1959,7 +1959,7 @@ class InterventionReportingPeriod(TimeStampedModel):
 
 
 # TODO intervention sector locations cleanup
-class InterventionSectorLocationLink(models.Model):
+class InterventionSectorLocationLink(TimeStampedModel):
     intervention = models.ForeignKey(Intervention, related_name='sector_locations')
     sector = models.ForeignKey(Sector, related_name='intervention_locations')
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)

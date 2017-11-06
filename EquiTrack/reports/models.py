@@ -6,6 +6,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
+from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
@@ -134,7 +135,7 @@ class ResultType(models.Model):
 
 
 @python_2_unicode_compatible
-class Sector(models.Model):
+class Sector(TimeStampedModel):
     """
     Represents a sector
     """
@@ -285,6 +286,8 @@ class Result(MPTTModel):
 
     hidden = models.BooleanField(verbose_name=_("Hidden"), default=False)
     ram = models.BooleanField(verbose_name=_("RAM"), default=False)
+    created = AutoCreatedField(_('created'))
+    modified = AutoLastModifiedField(_('modified'))
 
     objects = ResultManager()
     outputs = OutputManager()
@@ -566,6 +569,18 @@ class AppliedIndicator(TimeStampedModel):
         blank=True,
         null=True,
     )
+    response_plan_name = models.CharField(
+        verbose_name=_("Response plan name"),
+        max_length=1024,
+        blank=True,
+        null=True,
+    )
+    cluster_name = models.CharField(
+        verbose_name=_("Cluster Name"),
+        max_length=512,
+        blank=True,
+        null=True,
+    )
     cluster_indicator_title = models.CharField(
         verbose_name=_("Cluster Indicator Title"),
         max_length=1024,
@@ -633,7 +648,7 @@ class AppliedIndicator(TimeStampedModel):
 
 
 @python_2_unicode_compatible
-class Indicator(models.Model):
+class Indicator(TimeStampedModel):
     """
     Represents an indicator
 
