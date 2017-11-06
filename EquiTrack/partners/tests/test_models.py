@@ -1092,16 +1092,16 @@ class TestInterventionModel(TenantTestCase):
         lower_result_1 = LowerResultFactory(result_link=link)
         AppliedIndicatorFactory(
             lower_result=lower_result_1,
-            cluster_indicator_title="Title 1",
+            cluster_name="Title 1",
         )
         lower_result_2 = LowerResultFactory(result_link=link)
         AppliedIndicatorFactory(
             lower_result=lower_result_2,
-            cluster_indicator_title="Title 2",
+            cluster_name="Title 2",
         )
         AppliedIndicatorFactory(
             lower_result=lower_result_2,
-            cluster_indicator_title=None,
+            cluster_name=None,
         )
         AppliedIndicatorFactory(lower_result=lower_result_2)
         self.assertItemsEqual(intervention.intervention_clusters, [
