@@ -1557,8 +1557,8 @@ class Intervention(TimeStampedModel):
         for result_link in self.result_links.all():
             for lower_result in result_link.ll_results.all():
                 for applied_indicator in lower_result.applied_indicators.all():
-                    if applied_indicator.cluster_indicator_title:
-                        clusters.append(applied_indicator.cluster_indicator_title)
+                    if applied_indicator.cluster_name and applied_indicator.cluster_name not in clusters:
+                        clusters.append(applied_indicator.cluster_name)
 
         return clusters
 
