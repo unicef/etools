@@ -37,7 +37,7 @@ from EquiTrack.factories import (
 )
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
-from reports.models import ResultType
+from reports.models import ResultType, Sector
 from partners import models
 from t2f.models import Travel, TravelType
 
@@ -800,27 +800,6 @@ class TestInterventionModel(TenantTestCase):
             }
         })
 
-    def test_submitted_to_prc_submission_date_prc(self):
-        self.intervention.submission_date_prc = datetime.date.today()
-        self.intervention.save()
-        self.assertTrue(self.intervention.submitted_to_prc)
-
-    def test_submitted_to_prc_review_date_prc(self):
-        self.intervention.review_date_prc = datetime.date.today()
-        self.intervention.save()
-        self.assertTrue(self.intervention.submitted_to_prc)
-
-    def test_submitted_to_prc_review_document(self):
-        self.intervention.prc_review_document = "test.pdf"
-        self.intervention.save()
-        self.assertTrue(self.intervention.submitted_to_prc)
-
-    def test_submitted_to_prc_false(self):
-        self.intervention.submission_date_prc = None
-        self.intervention.save()
-        self.assertIsNone(self.intervention.submission_date_prc)
-        self.assertFalse(self.intervention.submitted_to_prc)
-
     def test_days_from_submission_to_signed(self):
         intervention = InterventionFactory(
             submission_date=datetime.date(2001, 1, 1),
@@ -852,6 +831,27 @@ class TestInterventionModel(TenantTestCase):
         self.assertIsNone(self.intervention.signed_by_partner_date)
         res = self.intervention.days_from_submission_to_signed
         self.assertEqual(res, "Not fully signed")
+
+    def test_submitted_to_prc_submission_date_prc(self):
+        self.intervention.submission_date_prc = datetime.date.today()
+        self.intervention.save()
+        self.assertTrue(self.intervention.submitted_to_prc)
+
+    def test_submitted_to_prc_review_date_prc(self):
+        self.intervention.review_date_prc = datetime.date.today()
+        self.intervention.save()
+        self.assertTrue(self.intervention.submitted_to_prc)
+
+    def test_submitted_to_prc_review_document(self):
+        self.intervention.prc_review_document = "test.pdf"
+        self.intervention.save()
+        self.assertTrue(self.intervention.submitted_to_prc)
+
+    def test_submitted_to_prc_false(self):
+        self.intervention.submission_date_prc = None
+        self.intervention.save()
+        self.assertIsNone(self.intervention.submission_date_prc)
+        self.assertFalse(self.intervention.submitted_to_prc)
 
     def test_days_from_review_to_signed(self):
         intervention = InterventionFactory(
@@ -920,6 +920,11 @@ class TestInterventionModel(TenantTestCase):
             intervention=intervention,
         )
         self.assertEqual(intervention.fr_currency, "USD")
+
+    def test_duration(self):
+        self.intervention.start_date = datetime.date(datetime.date.today().year - 1, 1, 1)
+        self.intervention.end_date = datetime.date(datetime.date.today().year + 1, 1, 1)
+        # self.assertEqual(self.intervention.duration, 24)
 
     def test_total_no_intervention(self):
         self.assertEqual(int(self.intervention.total_unicef_cash), 0)
