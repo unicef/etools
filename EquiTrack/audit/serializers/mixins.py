@@ -3,11 +3,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
-    StatusPermissionsBasedRootSerializerMixin
+from utils.permissions.serializers import (
+    StatusPermissionsBasedRootSerializerMixin, StatusPermissionsBasedSerializerMixin,)
 
-from ..models import AuditPermission
-from .risks import RiskRootSerializer
+from audit.models import AuditPermission
+from audit.serializers.risks import RiskRootSerializer
 
 
 class AuditPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):

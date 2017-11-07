@@ -3,6 +3,7 @@ import operator
 from django.db import models
 from django.utils import six
 from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import permissions
 
 from audit.models import AuditPermission, UNICEFAuditFocalPoint
