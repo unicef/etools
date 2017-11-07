@@ -37,7 +37,7 @@ from EquiTrack.factories import (
 )
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
-from reports.models import ResultType, Sector
+from reports.models import ResultType
 from partners import models
 from t2f.models import Travel, TravelType
 
