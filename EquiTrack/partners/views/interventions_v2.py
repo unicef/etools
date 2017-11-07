@@ -299,7 +299,6 @@ class InterventionPlannedVisitsDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete a planned visit")
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InterventionAttachmentDeleteView(DestroyAPIView):
@@ -318,7 +317,6 @@ class InterventionAttachmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete an attachment")
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
@@ -428,7 +426,6 @@ class InterventionResultLinkDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete a result")
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListAPIView):

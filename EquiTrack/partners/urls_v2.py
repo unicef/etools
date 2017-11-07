@@ -39,7 +39,7 @@ from partners.views.interventions_v2 import (
 )
 
 from partners.views.v2 import (
-    PmpStaticDropdownsListApiView, PMPDropdownsListApiView,
+    PMPStaticDropdownsListAPIView, PMPDropdownsListApiView,
 )
 
 
@@ -172,7 +172,7 @@ urlpatterns = (
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
     url(r'^dropdowns/static/$',
-        view=PmpStaticDropdownsListApiView.as_view(http_method_names=['get']),
+        view=PMPStaticDropdownsListAPIView.as_view(http_method_names=['get']),
         name='dropdown-static-list'),
     url(r'^dropdowns/pmp/$', view=PMPDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-pmp-list'),
 )

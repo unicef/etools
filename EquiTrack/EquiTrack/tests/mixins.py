@@ -172,17 +172,22 @@ class APITenantTestCase(FastTenantTestCase):
         :type data: dict
         """
         factory = APIRequestFactory()
-        view_info = resolve(url)
 
         data = data or {}
-        view = view_info.func
         req_to_call = getattr(factory, method)
         request = req_to_call(url, data, format=request_format, **kwargs)
 
         user = user or self.user
         force_authenticate(request, user=user)
 
-        response = view(request, *view_info.args, **view_info.kwargs)
+        if "view" in kwargs:
+            view = kwargs.pop("view")
+            response = view(request)
+        else:
+            view_info = resolve(url)
+            view = view_info.func
+            response = view(request, *view_info.args, **view_info.kwargs)
+
         if hasattr(response, 'render'):
             response.render()
 

@@ -54,7 +54,9 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
 
 
 def choices_to_json_ready(choices):
-    if isinstance(choices, dict) or isinstance(choices, Choices):
+    if isinstance(choices, dict):
+        choice_list = [(k, v) for k, v in choices.items()]
+    elif isinstance(choices, Choices):
         choice_list = [(k, v) for k, v in choices]
     elif isinstance(choices, list):
         choice_list = []
@@ -69,7 +71,7 @@ def choices_to_json_ready(choices):
     return [{'label': choice[1], 'value': choice[0]} for choice in choice_list]
 
 
-class PmpStaticDropdownsListApiView(APIView):
+class PMPStaticDropdownsListAPIView(APIView):
     permission_classes = (IsAdminUser,)
 
     def get(self, request):

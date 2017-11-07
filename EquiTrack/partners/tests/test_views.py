@@ -14,6 +14,7 @@ from django.core.urlresolvers import reverse, resolve
 from django.db import connection
 from django.utils import timezone
 
+from model_utils import Choices
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
@@ -27,6 +28,7 @@ from EquiTrack.factories import (
     InterventionFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
+    OfficeFactory,
     PartnerFactory,
     PartnerStaffFactory,
     ResultFactory,
@@ -54,6 +56,7 @@ from partners.models import (
 )
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
+from partners.views import v2
 import partners.views.partner_organization_v2
 from snapshot.models import Activity
 
@@ -73,6 +76,46 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partners/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
+
+
+class TestChoicesToJSONReady(APITenantTestCase):
+    def test_tuple(self):
+        """Make tuple JSON ready"""
+        ready = v2.choices_to_json_ready(((1, "One"), (2, "Two")))
+        self.assertEqual(ready, [
+            {"label": "One", "value": 1},
+            {"label": "Two", "value": 2}
+        ])
+
+    def test_list(self):
+        """Make simple list JSON ready"""
+        ready = v2.choices_to_json_ready([1, 2, 3])
+        self.assertEqual(ready, [
+            {"label": 1, "value": 1},
+            {"label": 2, "value": 2},
+            {"label": 3, "value": 3},
+        ])
+
+    def test_list_of_tuples(self):
+        """Make list of tuples JSON ready"""
+        ready = v2.choices_to_json_ready([(1, "One"), (2, "Two")])
+        self.assertEqual(ready, [
+            {"label": "One", "value": 1},
+            {"label": "Two", "value": 2}
+        ])
+
+    def test_dict(self):
+        """Make dict JSON ready"""
+        ready = v2.choices_to_json_ready({"k": "v"})
+        self.assertEqual(ready, [{"label": "v", "value": "k"}])
+
+    def test_choices(self):
+        """Make model_utils.Choices JSON ready"""
+        ready = v2.choices_to_json_ready(Choices("one", "two"))
+        self.assertEqual(ready, [
+            {"label": "one", "value": "one"},
+            {"label": "two", "value": "two"},
+        ])
 
 
 class TestAPIPartnerOrganizationListView(APITenantTestCase):
@@ -411,6 +454,18 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["Cannot delete a completed assessment"])
 
+    def test_api_partners_delete_asssessment_not_found(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners_api:partner-assessment-del',
+                args=[404]
+            ),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_api_partners_update_with_members(self):
         self.assertFalse(Activity.objects.exists())
         response = self.forced_auth_req(
@@ -666,63 +721,6 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             Activity.objects.filter(action=Activity.UPDATE).count(),
             1
         )
-
-    def test_api_partners_delete_with_signed_agreements(self):
-
-        # create draft agreement with partner
-        AgreementFactory(
-            partner=self.partner,
-            signed_by_unicef_date=None,
-            signed_by_partner_date=None,
-            attached_agreement=None,
-            status='draft')
-
-        # should have 1 signed and 1 draft agreement with self.partner
-        self.assertEqual(self.partner.agreements.count(), 2)
-
-        response = self.forced_auth_req(
-            'delete',
-            reverse('partners_api:partner-delete', args=[self.partner.pk]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data[0], "There was a PCA/SSFA signed with this partner or a transaction "
-                                           "was performed against this partner. The Partner record cannot be deleted")
-
-    def test_api_partners_delete_with_draft_agreements(self):
-        partner = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            cso_type="International",
-            hidden=False,
-            vendor_number="EEE",
-            short_name="Shorter name",
-        )
-
-        # create draft agreement with partner
-        AgreementFactory(
-            partner=partner,
-            signed_by_unicef_date=None,
-            signed_by_partner_date=None,
-            attached_agreement=None,
-            status='draft')
-
-        self.assertEqual(partner.agreements.count(), 1)
-
-        response = self.forced_auth_req(
-            'delete',
-            reverse('partners_api:partner-delete', args=[partner.pk]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_api_partners_delete(self):
-        partner = PartnerFactory()
-        response = self.forced_auth_req(
-            'delete',
-            reverse('partners_api:partner-delete', args=[partner.pk]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_api_partners_update_hidden(self):
         # make some other type to filter against
@@ -1861,6 +1859,9 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_intervention_filter(self):
+        country_programme = CountryProgrammeFactory()
+        office = OfficeFactory()
+        user = UserFactory()
         # Test filter
         params = {
             "partnership_type": Intervention.PD,
@@ -1871,6 +1872,10 @@ class TestInterventionViews(APITenantTestCase):
             "cluster": "Cluster",
             "section": self.section.id,
             "search": "2009",
+            "document_type": Intervention.PD,
+            "country_programme": country_programme.pk,
+            "unicef_focal_points": user.pk,
+            "office": office.pk
         }
         response = self.forced_auth_req(
             'get',
@@ -1895,118 +1900,6 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-
-    def test_intervention_planned_visits_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                "partners_api:intervention-visits-del",
-                args=[self.planned_visit.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_intervention_planned_visits_delete_invalid(self):
-        intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = Intervention.ACTIVE
-        intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                "partners_api:intervention-visits-del",
-                args=[self.planned_visit.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete a planned visit"])
-
-    def test_intervention_attachments_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                "partners_api:intervention-attachments-del",
-                args=[self.attachment.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_intervention_attachments_delete_invalid(self):
-        intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = "active"
-        intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                "partners_api:intervention-attachments-del",
-                args=[self.attachment.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete an attachment"])
-
-    def test_intervention_results_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                "partners_api:intervention-results-del",
-                args=[self.result.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_intervention_results_delete_invalid(self):
-        intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = Intervention.ACTIVE
-        intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                "partners_api:intervention-results-del",
-                args=[self.result.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete a result"])
-
-    def test_intervention_amendments_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                "partners_api:intervention-amendments-del",
-                args=[self.amendment.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_intervention_amendments_delete_invalid(self):
-        intervention = Intervention.objects.get(id=self.intervention_data["id"])
-        intervention.status = Intervention.ACTIVE
-        intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                "partners_api:intervention-amendments-del",
-                args=[self.amendment.pk]
-            ),
-            user=self.unicef_staff,
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete an amendment"])
 
     def test_api_interventions_values(self):
         params = {"values": "{}".format(self.intervention["id"])}
