@@ -21,41 +21,6 @@ def get_interventions(partner_id):
 
 
 @register.simple_tag
-def show_fr_fc(value):
-
-    if not value:
-        return ''
-
-    intervention = Intervention.objects.get(id=int(value))
-    if not intervention.fr_numbers:
-        return ''
-    commitments = FundingCommitment.objects.filter(fr_number__in=intervention.fr_numbers)
-    data = tablib.Dataset()
-    fr_fc_summary = []
-
-    for commit in commitments:
-        row = SortedDict()
-        row['Grant'] = unicode(commit.grant)
-        row['FR Number'] = commit.fr_number
-        row['WBS'] = commit.wbs
-        row['FC Type'] = commit.fc_type
-        row['FC Ref'] = commit.fc_ref
-        row['Agreement Amount'] = commit.agreement_amount
-        row['Commitment Amount'] = commit.commitment_amount
-        row['Expenditure Amount'] = commit.expenditure_amount
-        fr_fc_summary.append(row)
-
-    if fr_fc_summary:
-        data.headers = fr_fc_summary[0].keys()
-        for row in fr_fc_summary:
-            data.append(row.values())
-
-        return data.html
-
-    return '<p>No FR Set</p>'
-
-
-@register.simple_tag
 def show_government_funding(value):
 
     if not value:

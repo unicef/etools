@@ -181,10 +181,16 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
         model = partner_models.Assessment
 
     partner = factory.SubFactory(PartnerFactory)
-    type = u"Micro Assessment"
-    names_of_other_agencies = u"WFP"
-    expected_budget = 10000
-    notes = u"Random Notes"
+    type = fuzzy.FuzzyChoice([
+        u'Micro Assessment',
+        u'Simplified Checklist',
+        u'Scheduled Audit report',
+        u'Special Audit report',
+        u'Other',
+    ])
+    names_of_other_agencies = fuzzy.FuzzyText(length=50)
+    expected_budget = fuzzy.FuzzyInteger(1000)
+    notes = fuzzy.FuzzyText(length=50)
     requested_date = date.today()
     requesting_officer = factory.SubFactory(UserFactory)
     approving_officer = factory.SubFactory(UserFactory)
@@ -199,7 +205,15 @@ class FileTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.FileType
 
-    name = partner_models.FileType.PROGRESS_REPORT
+    name = fuzzy.FuzzyChoice([
+        u'FACE',
+        u'Progress Report',
+        u'Partnership Review',
+        u'Final Partnership Review',
+        u'Correspondence',
+        u'Supply/Distribution Plan',
+        u'Other',
+    ])
 
 
 class InterventionFactory(factory.django.DjangoModelFactory):
@@ -209,6 +223,32 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     agreement = factory.SubFactory(AgreementFactory)
     title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
     submission_date = datetime.today()
+
+
+class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAmendment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    types = fuzzy.FuzzyChoice([
+        [u'Change IP name'],
+        [u'Change authorized officer'],
+        [u'Change banking info'],
+        [u'Change in clause'],
+    ])
+    other_description = fuzzy.FuzzyText(length=50)
+    amendment_number = fuzzy.FuzzyInteger(1000)
+    signed_date = date.today()
+    signed_amendment = factory.django.FileField(filename='test_file.pdf')
+
+
+class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAttachment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    attachment = factory.django.FileField(filename='test_file.pdf')
+    type = factory.Iterator(partner_models.FileType.objects.all())
 
 
 class InterventionBudgetFactory(factory.django.DjangoModelFactory):
@@ -245,27 +285,6 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
     programmatic = 1
     spot_checks = 2
     audit = 3
-
-
-class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = partner_models.InterventionAttachment
-
-    intervention = factory.SubFactory(InterventionFactory)
-    type = factory.Iterator(partner_models.FileType.objects.all())
-    attachment = factory.django.FileField(filename='test_file.pdf')
-
-
-class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = partner_models.InterventionAmendment
-
-    intervention = factory.SubFactory(InterventionFactory)
-    types = [partner_models.InterventionAmendment.BUDGET]
-    other_description = "Other description"
-    signed_date = date.today()
-    amendment_number = 123
-    signed_amendment = factory.django.FileField(filename='test_file.pdf')
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):

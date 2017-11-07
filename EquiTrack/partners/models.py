@@ -574,8 +574,8 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         else:
             pv = InterventionPlannedVisits.objects.filter(
                 intervention__agreement__partner=partner, year=year,
-                intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).aggregate(
-                models.Sum('programmatic'))['programmatic__sum'] or 0
+                intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]
+            ).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         hact["planned_visits"] = pv
@@ -1542,11 +1542,10 @@ class Intervention(TimeStampedModel):
     def intervention_locations(self):
         # return intervention locations as a set of Location objects
         locations = set()
-        for result_link in self.result_links.all():
-            for lower_result in result_link.ll_results.all():
-                for applied_indicator in lower_result.applied_indicators.all():
-                    for location in applied_indicator.locations.all():
-                        locations.add(location)
+        for lower_result in self.all_lower_results:
+            for applied_indicator in lower_result.applied_indicators.all():
+                for location in applied_indicator.locations.all():
+                    locations.add(location)
 
         return locations
 
@@ -1554,11 +1553,10 @@ class Intervention(TimeStampedModel):
     def intervention_clusters(self):
         # return intervention clusters as an array of strings
         clusters = []
-        for result_link in self.result_links.all():
-            for lower_result in result_link.ll_results.all():
-                for applied_indicator in lower_result.applied_indicators.all():
-                    if applied_indicator.cluster_name and applied_indicator.cluster_name not in clusters:
-                        clusters.append(applied_indicator.cluster_name)
+        for lower_result in self.all_lower_results:
+            for applied_indicator in lower_result.applied_indicators.all():
+                if applied_indicator.cluster_name and applied_indicator.cluster_name not in clusters:
+                    clusters.append(applied_indicator.cluster_name)
 
         return clusters
 
@@ -1878,7 +1876,7 @@ class InterventionBudget(TimeStampedModel):
         super(InterventionBudget, self).save(**kwargs)
 
     def __str__(self):
-        return '{}: {}'.format(
+        return '{}: {:.2f}'.format(
             self.intervention,
             self.total
         )
@@ -1955,7 +1953,7 @@ class InterventionReportingPeriod(TimeStampedModel):
         ordering = ['-due_date']
 
     def __str__(self):
-        return '%s (%s-%s) due on %s' % (
+        return '{} ({} - {}) due on {}'.format(
             self.intervention, self.start_date, self.end_date, self.due_date
         )
 
