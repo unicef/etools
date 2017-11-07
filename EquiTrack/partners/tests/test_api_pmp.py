@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from django.core.urlresolvers import reverse
 from rest_framework import status
+from tenant_schemas.test.client import TenantClient
 from unittest import TestCase
 
 from EquiTrack.factories import UserFactory
@@ -34,4 +35,17 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
 
     def test_get(self):
         response = self.forced_auth_req('get', self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestPMPDropdownsListApiView(APITenantTestCase):
+    def setUp(self):
+        super(TestPMPDropdownsListApiView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.url = reverse("partners_api:dropdown-pmp-list")
+        self.client = TenantClient(self.tenant)
+
+    def test_get(self):
+        self.client.force_login(self.unicef_staff)
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
