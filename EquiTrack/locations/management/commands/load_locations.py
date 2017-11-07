@@ -1,7 +1,7 @@
 from django.contrib.gis.gdal import DataSource
 from django.core.management.base import BaseCommand, CommandError
 
-from locations.models import Location, GatewayType
+from locations.models import GatewayType, Location
 
 location_mapping = {
     'name': 'ACS_NAME_1',
@@ -28,15 +28,15 @@ class Command(BaseCommand):
             gateway_type = GatewayType.objects.get(name=gateway)
 
             ds = DataSource(shape_file)
-            print('{} Layers: {}'.format(ds, len(ds)))
+            self.stdout.write('{} Layers: {}'.format(ds, len(ds)))
 
             lyr = ds[0]
-            print('Layer 1: {} {} {}'.format(lyr, len(lyr), lyr.geom_type))
-            print(lyr.srs)
+            self.stdout.write('Layer 1: {} {} {}'.format(lyr, len(lyr), lyr.geom_type))
+            self.stdout.write(lyr.srs)
 
-            print 'Fields:'
+            self.stdout.write('Fields:')
             for field in lyr.fields:
-                print (field)
+                self.stdout.write(field)
 
             for feat in lyr:
 
@@ -45,11 +45,11 @@ class Command(BaseCommand):
                     field_values[key] = feat.get(value)
 
                 if not field_values['p_code'] or field_values['p_code'] == '0':
-                    print 'No P_Code for location: {}'.format(field_values)
+                    self.stdout.write('No P_Code for location: {}'.format(field_values))
                     skipped_points.append(field_values)
                     continue
 
-                print "\nImporting values: {}".format(field_values)
+                self.stdout.write("\nImporting values: {}".format(field_values))
 
                 location, created = Location.objects.get_or_create(
                     name=field_values['name'].encode('utf-8'),
@@ -62,7 +62,7 @@ class Command(BaseCommand):
                 location.point = feat.geom.wkt
                 location.save()
 
-                print("Location {} {}".format(
+                self.stdout.write("Location {} {}".format(
                     location.name,
                     "created" if created else 'updated'
                 ))
@@ -71,5 +71,5 @@ class Command(BaseCommand):
         except Exception as exp:
             raise CommandError(exp)
 
-        print "{} points skipped".format(len(skipped_points))
-        print "{} points imported".format(imported_points)
+        self.stdout.write("{} points skipped".format(len(skipped_points)))
+        self.stdout.write("{} points imported".format(imported_points))
