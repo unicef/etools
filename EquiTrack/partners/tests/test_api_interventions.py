@@ -12,21 +12,29 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from partners.tests.test_utils import setup_intervention_test_data
-from partners.models import (
-    Intervention,
-    InterventionResultLink,
-)
-
 from EquiTrack.factories import (
+    AgreementFactory,
     AppliedIndicatorFactory,
+    CountryProgrammeFactory,
+    IndicatorFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
     InterventionFactory,
+    InterventionPlannedVisitsFactory,
     InterventionResultLinkFactory,
+    InterventionSectorLocationLinkFactory,
     LocationFactory,
     LowerResultFactory,
+    PartnerFactory,
     ResultFactory,
     SectorFactory,
     UserFactory,
+)
+from partners.tests.test_utils import setup_intervention_test_data
+from partners.models import (
+    Intervention,
+    InterventionAmendment,
+    InterventionResultLink,
 )
 from snapshot.models import Activity
 from utils.common.utils import get_all_field_names
@@ -1033,3 +1041,476 @@ class TestAPInterventionIndicatorsCreateView(APITenantTestCase):
         self.assertIsInstance(response_json['non_field_errors'], list)
         self.assertEqual(response_json['non_field_errors'],
                          ['This indicator is already being monitored for this Result'])
+
+
+class TestInterventionPlannedVisitsDeleteView(APITenantTestCase):
+    def setUp(self):
+        super(TestInterventionPlannedVisitsDeleteView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.intervention = InterventionFactory()
+        self.planned_visit = InterventionPlannedVisitsFactory(
+            intervention=self.intervention,
+        )
+        self.url = reverse(
+            "partners_api:intervention-visits-del",
+            args=[self.planned_visit.pk]
+        )
+
+    def test_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_invalid(self):
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete a planned visit"])
+
+    def test_delete_not_found(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse("partners_api:intervention-visits-del", args=[404]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestInterventionAttachmentDeleteView(APITenantTestCase):
+    def setUp(self):
+        super(TestInterventionAttachmentDeleteView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.intervention = InterventionFactory()
+        self.attachment = InterventionAttachmentFactory(
+            intervention=self.intervention,
+            attachment="random_attachment.pdf",
+        )
+        self.url = reverse(
+            "partners_api:intervention-attachments-del",
+            args=[self.attachment.pk]
+        )
+
+    def test_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_invalid(self):
+        self.intervention.status = "active"
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete an attachment"])
+
+    def test_delete_not_found(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse("partners_api:intervention-attachments-del", args=[404]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestInterventionResultListAPIView(APITenantTestCase):
+    def setUp(self):
+        super(TestInterventionResultListAPIView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        InterventionResultLinkFactory()
+        self.intervention = InterventionFactory()
+        self.result = ResultFactory(
+            name="Result Name",
+            code="Result Code",
+        )
+        self.link = InterventionResultLinkFactory(
+            intervention=self.intervention,
+            cp_output=self.result
+        )
+        self.url = reverse("partners_api:intervention-results")
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response.'''
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertEqual(len(response_json), 1)
+        first = response_json[0]
+        self.assertIn('id', first.keys())
+        return response_json, first
+
+    def test_search_empty(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "random"}
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertFalse(response_json)
+
+    def test_search_number(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": self.intervention.number[:-2]}
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], self.link.pk)
+
+    def test_search_cp_output_name(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "Name"}
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], self.link.pk)
+
+    def test_search_cp_output_code(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "Code"}
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], self.link.pk)
+
+
+class TestInterventionIndicatorListAPIView(APITenantTestCase):
+    def setUp(self):
+        super(TestInterventionIndicatorListAPIView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        InterventionResultLinkFactory()
+        self.intervention = InterventionFactory()
+        self.indicator = IndicatorFactory()
+        self.link = InterventionResultLinkFactory(
+            intervention=self.intervention,
+        )
+        self.link.ram_indicators.add(self.indicator)
+        self.url = reverse("partners_api:intervention-indicators")
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response.'''
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertEqual(len(response_json), 1)
+        first = response_json[0]
+        self.assertIn('intervention', first.keys())
+        return response_json, first
+
+    def test_search(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": self.intervention.number[:-2]}
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["intervention"], self.intervention.pk)
+
+    def test_search_empty(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "random"}
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertFalse(response_json)
+
+
+class TestInterventionResultLinkDeleteView(APITenantTestCase):
+    def setUp(self):
+        super(TestInterventionResultLinkDeleteView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.intervention = InterventionFactory()
+        self.result = InterventionResultLinkFactory(
+            intervention=self.intervention,
+        )
+        self.url = reverse(
+            "partners_api:intervention-results-del",
+            args=[self.result.pk]
+        )
+
+    def test_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_invalid(self):
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete a result"])
+
+    def test_delete_not_found(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse("partners_api:intervention-results-del", args=[404]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestInterventionAmendmentListAPIView(APITenantTestCase):
+    def setUp(self):
+        super(TestInterventionAmendmentListAPIView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        InterventionAmendmentFactory()
+        self.intervention = InterventionFactory()
+        self.amendment = InterventionAmendmentFactory(
+            intervention=self.intervention,
+            amendment_number="321",
+        )
+        self.url = reverse("partners_api:intervention-amendments")
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response.'''
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertEqual(len(response_json), 1)
+        first = response_json[0]
+        self.assertIn('id', first.keys())
+        return response_json, first
+
+    def test_search_intervention_number(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": self.intervention.number[:-2]}
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], self.amendment.pk)
+
+    @skip("fix count issue")
+    def test_search_amendment_number(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": self.amendment.amendment_number}
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], self.amendment.pk)
+
+    def test_search_empty(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "random"}
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertFalse(response_json)
+
+
+class TestInterventionAmendmentDeleteView(APITenantTestCase):
+    def setUp(self):
+        super(TestInterventionAmendmentDeleteView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.intervention = InterventionFactory()
+        self.amendment = InterventionAmendmentFactory(
+            intervention=self.intervention,
+            types=[InterventionAmendment.RESULTS],
+            signed_date=datetime.date.today(),
+            signed_amendment="random_amendment.pdf"
+        )
+        self.url = reverse(
+            "partners_api:intervention-amendments-del",
+            args=[self.amendment.pk]
+        )
+
+    def test_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_invalid(self):
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete an amendment"])
+
+    def test_intervention_amendments_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse("partners_api:intervention-amendments-del", args=[404]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestInterventionSectorLocationLinkListAPIView(APITenantTestCase):
+    def setUp(self):
+        super(TestInterventionSectorLocationLinkListAPIView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        InterventionSectorLocationLinkFactory()
+        self.intervention = InterventionFactory()
+        self.sector = SectorFactory(name="Sector Name")
+        self.link = InterventionSectorLocationLinkFactory(
+            intervention=self.intervention,
+            sector=self.sector
+        )
+        self.url = reverse("partners_api:intervention-sector-locations")
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response.'''
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertEqual(len(response_json), 1)
+        first = response_json[0]
+        self.assertIn('id', first.keys())
+        return response_json, first
+
+    def test_search_intervention_number(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": self.intervention.number[:-2]}
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], self.link.pk)
+
+    def test_search_sector_name(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "Name"}
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], self.link.pk)
+
+    def test_search_empty(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"search": "random"}
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertFalse(response_json)
+
+
+class TestInterventionListMapView(APITenantTestCase):
+    def setUp(self):
+        super(TestInterventionListMapView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.url = reverse("partners_api:intervention-map")
+        self.intervention = InterventionFactory(status=Intervention.DRAFT)
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response.'''
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, list)
+        self.assertEqual(len(response_json), 1)
+        first = response_json[0]
+        self.assertIn('id', first.keys())
+        return response_json, first
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], self.intervention.pk)
+
+    def test_get_param_country_programme(self):
+        country_programme = CountryProgrammeFactory()
+        agreement = AgreementFactory(country_programme=country_programme)
+        intervention = InterventionFactory(agreement=agreement)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"country_programme": country_programme.pk},
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], intervention.pk)
+
+    def test_get_param_section(self):
+        sector = SectorFactory()
+        intervention = InterventionFactory()
+        intervention.sections.add(sector)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"section": sector.pk},
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], intervention.pk)
+
+    def test_get_param_status(self):
+        InterventionFactory(status=Intervention.ACTIVE)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"status": self.intervention.status},
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], self.intervention.pk)
+
+    def test_get_param_partner(self):
+        partner = PartnerFactory()
+        agreement = AgreementFactory(partner=partner)
+        intervention = InterventionFactory(agreement=agreement)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"partner": partner.pk},
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], intervention.pk)
