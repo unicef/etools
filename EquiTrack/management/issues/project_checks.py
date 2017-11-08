@@ -1,9 +1,11 @@
 import logging
+
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .checks import BaseIssueCheck, ModelCheckData
+
+from management.issues.checks import BaseIssueCheck, ModelCheckData
 from management.issues.exceptions import IssueFoundException
-from partners.models import Agreement, Intervention, InterventionAmendment, AgreementAmendment
+from partners.models import Agreement, AgreementAmendment, Intervention, InterventionAmendment
 from partners.validation.interventions import InterventionValid
 from reports.models import CountryProgramme
 
@@ -87,12 +89,11 @@ class InterventionsAssociatedSSFACheck(BaseIssueCheck):
         # in the future
         fails_test = (
             (
-                model_instance.agreement.agreement_type == Agreement.SSFA
-                and model_instance.document_type == Intervention.PD
-            )
-            or (
-                model_instance.agreement.agreement_type == Agreement.PCA
-                and model_instance.document_type == Intervention.SSFA
+                model_instance.agreement.agreement_type == Agreement.SSFA and
+                model_instance.document_type == Intervention.PD
+            ) or (
+                model_instance.agreement.agreement_type == Agreement.PCA and
+                model_instance.document_type == Intervention.SSFA
             )
         )
         if fails_test:
