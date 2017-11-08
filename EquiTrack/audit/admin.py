@@ -4,7 +4,8 @@ from ordered_model.admin import OrderedModelAdmin
 
 from audit.models import (
     Audit, AuditorFirm, AuditorStaffMember, AuditPermission, Engagement, FinancialFinding, Finding, MicroAssessment,
-    PurchaseOrder, PurchaseOrderItem, Risk, RiskBluePrint, RiskCategory, SpotCheck,)
+    PurchaseOrder, PurchaseOrderItem, Risk, RiskBluePrint, RiskCategory, SpecialAuditRecommendation, SpecificProcedure,
+    SpotCheck,)
 
 
 @admin.register(AuditPermission)
@@ -123,11 +124,11 @@ class FinancialFindingAdmin(admin.ModelAdmin):
     search_fields = ['title', ]
 
 
-@admin.register(models.SpecificProcedure)
+@admin.register(SpecificProcedure)
 class SpecificProcedureAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(models.SpecialAuditRecommendation)
+@admin.register(SpecialAuditRecommendation)
 class SpecialAuditRecommendationAdmin(admin.ModelAdmin):
     pass
