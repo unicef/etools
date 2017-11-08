@@ -1,18 +1,19 @@
 from __future__ import unicode_literals
 
+import json
 from datetime import date, datetime
 from decimal import Decimal
-import json
 
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
+
 from freezegun import freeze_time
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARate
-from publics.tests.factories import DSARegionFactory, DSARateFactory, BusinessAreaFactory, CountryFactory
+from publics.tests.factories import BusinessAreaFactory, CountryFactory, DSARateFactory, DSARegionFactory
 
 
 class DSARateTest(APITenantTestCase):

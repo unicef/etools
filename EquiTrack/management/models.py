@@ -1,10 +1,11 @@
 from __future__ import absolute_import
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
-from management.issues.exceptions import IssueFoundException
 
+from management.issues.exceptions import IssueFoundException
 
 ISSUE_CATEGORY_DATA = 'data'
 ISSUE_CATEGORY_COMPLIANCE = 'compliance'

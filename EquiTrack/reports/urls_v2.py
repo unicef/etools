@@ -1,8 +1,7 @@
 from django.conf.urls import url
 
-from reports.views.v2 import OutputListAPIView, OutputDetailAPIView, ResultIndicatorListAPIView, LowerResultsDeleteView
 from reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView
-
+from reports.views.v2 import LowerResultsDeleteView, OutputDetailAPIView, OutputListAPIView, ResultIndicatorListAPIView
 
 urlpatterns = (
     url(r'^reports/results/$', view=OutputListAPIView.as_view(), name='report-result-list'),
