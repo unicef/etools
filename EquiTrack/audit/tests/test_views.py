@@ -2,11 +2,12 @@ import random
 
 from rest_framework import status
 
+from audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
+from audit.tests.factories import (
+    AuditFactory, AuditPartnerFactory, MicroAssessmentFactory, PartnerWithAgreementsFactory, RiskBluePrintFactory,
+    RiskCategoryFactory,)
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerType
-from .factories import RiskCategoryFactory, RiskBluePrintFactory, \
-    MicroAssessmentFactory, AuditFactory, AuditPartnerFactory, PartnerWithAgreementsFactory
-from .base import EngagementTransitionsTestCaseMixin, AuditTestCaseMixin
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -263,6 +264,7 @@ class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenant
             'partner_contacted_at': self.engagement.partner_contacted_at,
             'total_value': self.engagement.total_value,
             'agreement': self.engagement.agreement_id,
+            'po_item': self.engagement.agreement.items.first().id,
             'partner': self.engagement.partner_id,
             'engagement_type': self.engagement.engagement_type,
             'authorized_officers': self.engagement.authorized_officers.values_list('id', flat=True),

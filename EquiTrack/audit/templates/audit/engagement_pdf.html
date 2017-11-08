@@ -128,7 +128,7 @@
               </td>
               <td class="input-container">
                 <div class="input-container__label">PO Item Number</div>
-                <div class="input-container__value">{{ engagement.agreement.item_number|default_if_none:"-" }}</div>
+                <div class="input-container__value">{{ engagement.po_item|default_if_none:"-" }}</div>
               </td>
             </tr>
             <tr>

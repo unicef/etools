@@ -189,7 +189,6 @@ SHARED_APPS = (
 TENANT_APPS = (
     'django_fsm',
     'logentry_admin',
-    'reversion',
     'funds',
     'locations',
     'reports',
@@ -206,7 +205,7 @@ TENANT_APPS = (
     'firms',
     'management',
 )
-INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
+INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
 # DJANGO: SECURITY
 ALLOWED_HOSTS = [

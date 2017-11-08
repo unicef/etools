@@ -6,34 +6,35 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from django_fsm import transition, FSMField
-from model_utils import Choices
-from model_utils import FieldTracker
+
+from django_fsm import FSMField, transition
+from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from post_office import mail
 
-from EquiTrack.utils import get_environment
 from attachments.models import Attachment
+from audit.transitions.conditions import (
+    AuditSubmitReportRequiredFieldsCheck, EngagementHasReportAttachmentsCheck,
+    EngagementSubmitReportRequiredFieldsCheck, SpecialAuditSubmitRelatedModelsCheck, SPSubmitReportRequiredFieldsCheck,
+    ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra,)
+from audit.transitions.serializers import EngagementCancelSerializer
+from EquiTrack.utils import get_environment
 from firms.models import BaseFirm, BaseStaffMember
 from partners.models import PartnerStaffMember
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
 from utils.groups.wrappers import GroupWrapper
-from utils.permissions.utils import has_action_permission
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
-from .transitions.conditions import AuditSubmitReportRequiredFieldsCheck, ValidateAuditRiskCategories, \
-    EngagementHasReportAttachmentsCheck, SPSubmitReportRequiredFieldsCheck, ValidateMARiskCategories, \
-    EngagementSubmitReportRequiredFieldsCheck, ValidateMARiskExtra, SpecialAuditSubmitRelatedModelsCheck
-from .transitions.serializers import EngagementCancelSerializer
+from utils.permissions.utils import has_action_permission
 
 
 class AuditorFirm(BaseFirm):
@@ -80,7 +81,6 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         unique=True,
         max_length=30
     )
-    item_number = models.IntegerField(_('PO Item Number'), null=True, blank=True)
     auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('auditor'), related_name='purchase_orders')
     contract_start_date = models.DateField(_('PO Date'), null=True, blank=True)
     contract_end_date = models.DateField(_('Contract Expiry Date'), null=True, blank=True)
@@ -92,6 +92,14 @@ class PurchaseOrder(TimeStampedModel, models.Model):
 
     def natural_key(self):
         return (self.order_number, )
+
+
+class PurchaseOrderItem(models.Model):
+    purchase_order = models.ForeignKey(PurchaseOrder, related_name='items')
+    number = models.IntegerField(_('PO Item Number'))
+
+    class Meta:
+        unique_together = ('purchase_order', 'number')
 
 
 def _has_action_permission(action):
@@ -170,6 +178,7 @@ class Engagement(TimeStampedModel, models.Model):
 
     # auditor - partner organization from agreement
     agreement = models.ForeignKey(PurchaseOrder, verbose_name=_('purchase order'))
+    po_item = models.ForeignKey(PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True)
 
     partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('partner'))
     partner_contacted_at = models.DateField(_('Date IP was contacted'), blank=True, null=True)

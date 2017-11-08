@@ -1,7 +1,7 @@
 import factory
 import factory.django
 
-from attachments.models import FileType, Attachment
+from attachments.models import Attachment, FileType
 
 
 class FileTypeFactory(factory.django.DjangoModelFactory):
