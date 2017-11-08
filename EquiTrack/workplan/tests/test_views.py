@@ -1,7 +1,8 @@
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory, CommentFactory, WorkplanFactory, \
-    ResultWorkplanPropertyFactory, WorkplanProjectFactory, LabelFactory, ResultFactory
+from EquiTrack.factories import (
+    CommentFactory, LabelFactory, ResultFactory, ResultWorkplanPropertyFactory, UserFactory, WorkplanFactory,
+    WorkplanProjectFactory,)
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType
 
@@ -23,10 +24,10 @@ class TestWorkplanViews(APITenantTestCase):
         self.result = ResultFactory(result_type=self.result_type)
 
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(
-                                            workplan=self.workplan,
-                                            result=self.result,
-                                            labels=self.labels
-                                        )
+            workplan=self.workplan,
+            result=self.result,
+            labels=self.labels
+        )
         self.extra_label = LabelFactory()
         self.user2 = UserFactory()
 
