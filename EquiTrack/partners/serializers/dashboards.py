@@ -36,8 +36,8 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     last_pv_date = serializers.SerializerMethodField()
 
     def get_disbursement_percent(self, obj):
-        percent = obj.total_frs["total_actual_amt"] / obj.total_frs["total_frs_amt"] * 100 \
-            if obj.total_frs["total_frs_amt"] > 0 else 0
+        percent = obj.total_frs["total_actual_amt"] / obj.total_unicef_cash * 100 \
+            if obj.total_unicef_cash and obj.total_unicef_cash > 0 else 0
         return "%.1f" % percent
 
     def get_days_last_pv(self, obj):
@@ -47,10 +47,10 @@ class InterventionDashSerializer(serializers.ModelSerializer):
         return obj.last_pv_date
 
     def get_offices_names(self, obj):
-        return ", ".join(o.name for o in obj.offices.all())
+        return ",".join(o.name for o in obj.offices.all())
 
     def get_sectors(self, obj):
-        return ", " .join(l.sector.name for l in obj.sector_locations.all())
+        return "," .join(l.sector.name for l in obj.sector_locations.all())
 
     def get_partner_name(self, obj):
         return obj.partner_name

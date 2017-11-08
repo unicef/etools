@@ -196,7 +196,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     Returns a list of Partners.
     """
     permission_classes = (IsAdminUser,)
-    queryset = PartnerOrganization.objects.filter(total_ct_cp__gt=0).all()
+    queryset = PartnerOrganization.objects.filter(Q(total_ct_cp__gt=0) | Q(total_ct_cy__gt=0)).all()
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
 

@@ -1,15 +1,15 @@
 import random
 
-import factory
 from django.contrib.auth.models import Group
+
+import factory
 from factory import fuzzy
 
-from EquiTrack.factories import InterventionFactory, AgreementFactory, PartnerFactory
-
-from audit.models import AuditorFirm, PurchaseOrder, Engagement, RiskCategory, \
-    RiskBluePrint, Risk, AuditorStaffMember, MicroAssessment, \
-    Audit, SpotCheck, Auditor, SpecialAudit
-from firms.factories import BaseStaffMemberFactory, BaseFirmFactory
+from audit.models import (
+    Audit, Auditor, AuditorFirm, AuditorStaffMember, Engagement, MicroAssessment, PurchaseOrder, Risk, RiskBluePrint,
+    RiskCategory, SpecialAudit, SpotCheck,)
+from EquiTrack.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):

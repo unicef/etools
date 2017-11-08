@@ -88,11 +88,6 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
         Add a new Intervention
         :return: JSON
         """
-        # TODO: rename these
-        # supplies = request.data.pop("supplies", [])
-        # distributions = request.data.pop("distributions", [])
-
-        # TODO: add supplies, distributions
         related_fields = [
             'planned_budget',
             'planned_visits',
@@ -200,7 +195,8 @@ class InterventionListDashView(ValidatorViewMixin, ListCreateAPIView):
         if self.request.user.groups.filter(name='Partnership Manager').exists():
             return Intervention.objects.detail_qs().all()
 
-        return Intervention.objects.detail_qs().filter(unicef_focal_points__in=[self.request.user])
+        return Intervention.objects.detail_qs().filter(unicef_focal_points__in=[self.request.user],
+                                                       status__in=[Intervention.ACTIVE])
 
 
 class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):

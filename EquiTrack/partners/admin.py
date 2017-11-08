@@ -1,40 +1,24 @@
 from __future__ import absolute_import
 
-from django.db import connection, models
+from django.db import models
 from django.contrib import admin
-from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
 
-from reversion.admin import VersionAdmin
-from import_export.admin import ExportMixin, base_formats
+from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
-from EquiTrack.forms import ParentInlineAdminFormSet
-from reports.models import Result
-from users.models import Section
 
-from partners.exports import (
-    PartnerExport,
-    InterventionExport,
-)
+from partners.exports import PartnerExport
 from partners.models import (
-    PCA,
-    PCAFile,
     FileType,
-    PCAGrant,
-    PCASector,
-    GwPCALocation,
     PartnerOrganization,
     Assessment,
     Agreement,
-    RAMIndicator,
     PartnerStaffMember,
-    PartnershipBudget,
     FundingCommitment,
-    IndicatorDueDates,
     InterventionPlannedVisits,
     Intervention,
     AgreementAmendment,
@@ -45,73 +29,13 @@ from partners.models import (
     InterventionAttachment,
 
 )
-from partners.filters import (
-    PCASectorFilter,
-    PCADonorFilter,
-    PCAGrantFilter,
-    PCAGatewayTypeFilter,
-)
-from partners.mixins import ReadOnlyMixin, HiddenPartnerMixin
+from partners.mixins import HiddenPartnerMixin
 from partners.forms import (
-    PartnershipForm,
     PartnersAdminForm,
-    AmendmentForm,
     AgreementForm,
-    PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
-    LocationForm,
     SectorLocationForm
 )
-
-
-class PCALocationInlineAdmin(admin.TabularInline):
-    form = LocationForm
-    model = GwPCALocation
-    verbose_name = 'Location'
-    verbose_name_plural = 'Locations'
-    fields = (
-        'sector',
-        'location',
-        'tpm_visit',
-    )
-    extra = 5
-
-
-class PCASectorInlineAdmin(admin.TabularInline):
-    model = PCASector
-    form = AmendmentForm
-    formset = ParentInlineAdminFormSet
-    verbose_name = 'Programme/Sector/Section'
-    verbose_name_plural = 'Programmes/Sectors/Sections'
-    extra = 0
-    fields = (
-        'sector',
-        'amendment',
-    )
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-
-        if db_field.rel.to is Section:
-            kwargs['queryset'] = connection.tenant.sections.all()
-
-        return super(PCASectorInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-
-class PCAFileInline(admin.TabularInline):
-    model = PCAFile
-    verbose_name = 'File'
-    verbose_name_plural = 'Files'
-    extra = 0
-    fields = (
-        'type',
-        'attachment',
-        'download_url',
-    )
-    readonly_fields = (
-        'download_url',
-    )
 
 
 class InterventionAmendmentsAdmin(admin.ModelAdmin):
@@ -144,59 +68,8 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
         return 0
 
 
-class PartnershipBudgetInlineAdmin(admin.TabularInline):
-    model = PartnershipBudget
-    form = PartnershipBudgetAdminForm
-    formset = ParentInlineAdminFormSet
-    verbose_name = 'Budget'
-    verbose_name_plural = 'Budget'
-    extra = 0
-    fields = (
-        'partner_contribution',
-        'unicef_cash',
-        'in_kind_amount',
-        'total',
-        'amendment',
-    )
-    readonly_fields = (
-        'total',
-    )
-
-
-class PCAGrantInlineAdmin(admin.TabularInline):
-
-    model = PCAGrant
-    verbose_name = 'Grant'
-    verbose_name_plural = 'Grants'
-    extra = 0
-    fields = (
-        'grant',
-        'funds',
-        'amendment',
-    )
-    ordering = ['amendment']
-
-
 class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
-
-
-class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
-    model = RAMIndicator
-    verbose_name = 'RAM Result'
-    verbose_name_plural = 'RAM Results'
-    extra = 1
-    fields = ('result',)
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-
-        if db_field.name == u'result':
-            kwargs['queryset'] = Result.objects.filter(
-                result_type__name=u'Output', ram=True, hidden=False)
-
-        return super(IndicatorsInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
 
 
 class InterventionBudgetAdmin(admin.ModelAdmin):
@@ -301,147 +174,7 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     )
 
 
-class IndicatorDueDatesAdmin(admin.TabularInline):
-    model = IndicatorDueDates
-    extra = 1
-
-
-class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
-    form = PartnershipForm
-    resource_class = InterventionExport
-    # Add custom exports
-    formats = (
-        base_formats.CSV,
-        # DonorsFormat,
-        # KMLFormat,
-    )
-    date_hierarchy = 'start_date'
-    list_display = (
-        'number',
-        'partnership_type',
-        'status',
-        'created_date',
-        'signed_by_unicef_date',
-        'start_date',
-        'end_date',
-        'partner',
-        'sector_names',
-        'title',
-        'total_unicef_cash',
-        'total_budget',
-    )
-    list_filter = (
-        'partnership_type',
-        PCASectorFilter,
-        'status',
-        'current',
-        'partner',
-        PCADonorFilter,
-        PCAGatewayTypeFilter,
-        PCAGrantFilter,
-    )
-    search_fields = (
-        'number',
-        'title',
-    )
-    readonly_fields = (
-        'number',
-        'total_budget',
-        'days_from_submission_to_signed',
-        'days_from_review_to_signed',
-        'duration',
-        'work_plan_template',
-    )
-    filter_horizontal = (
-        'unicef_managers',
-    )
-    fieldsets = (
-        (_('Intervention Details'), {
-            'fields':
-                ('partner',
-                 'agreement',
-                 'partnership_type',
-                 'number',
-                 ('title', 'project_type',),
-                 'status',
-                 'initiation_date',)
-        }),
-        (_('Dates and Signatures'), {
-            'fields':
-                (('submission_date',),
-                 'review_date',
-                 ('partner_manager', 'signed_by_partner_date',),
-                 ('unicef_manager', 'signed_by_unicef_date',),
-                 ('partner_focal_point', 'planned_visits',),
-                 'unicef_managers',
-                 ('days_from_submission_to_signed', 'days_from_review_to_signed',),
-                 ('start_date', 'end_date', 'duration',),
-                 'fr_number',),
-        }),
-        (_('Add sites by P Code'), {
-            'fields': ('location_sector', 'p_codes',),
-        }),
-        (_('Import work plan'), {
-            'fields': ('work_plan', 'work_plan_template'),
-        }),
-    )
-    remove_fields_if_read_only = (
-        'location_sector',
-        'p_codes',
-        'work_plan',
-    )
-
-    inlines = (
-        PCASectorInlineAdmin,
-        PartnershipBudgetInlineAdmin,
-        PCAGrantInlineAdmin,
-        IndicatorsInlineAdmin,
-        PCALocationInlineAdmin,
-        PCAFileInline,
-        LinksInlineAdmin,
-        # ResultsInlineAdmin,
-        IndicatorDueDatesAdmin,
-    )
-
-    def work_plan_template(self, obj):
-        return u'<a class="btn btn-primary default" ' \
-               u'href="{}" >Download Template</a>'.format(
-                   static(
-                       'partner/templates/workplan_template.xlsx')
-               )
-    work_plan_template.allow_tags = True
-    work_plan_template.short_description = 'Template'
-
-    def created_date(self, obj):
-        return obj.created_at.strftime('%d-%m-%Y')
-    created_date.admin_order_field = '-created_at'
-
-    def get_form(self, request, obj=None, **kwargs):
-        """
-        Set up the form with extra data and initial values
-        """
-        form = super(PartnershipAdmin, self).get_form(request, obj, **kwargs)
-
-        # add the current request and object to the form
-        form.request = request
-        form.obj = obj
-
-        if obj and obj.sector_children:
-            form.base_fields['location_sector'].queryset = obj.sector_children
-
-        return form
-
-    def save_model(self, request, obj, form, change):
-        created = False if change else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
-
-        super(PartnershipAdmin, self).save_model(request, obj, form, change)
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser
-
-
-class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
+class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, admin.ModelAdmin):
 
     date_hierarchy = 'start'
     list_display = (
@@ -823,6 +556,5 @@ admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
 
 
-admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(FileType, FileTypeAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)

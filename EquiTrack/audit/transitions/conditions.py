@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from rest_framework.serializers import ValidationError
-
 from django.utils.decorators import classonlymethod
 from django.utils.translation import ugettext as _
+
+from rest_framework.serializers import ValidationError
 
 
 class BaseTransitionCheck(object):

@@ -1,10 +1,11 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import datetime
 import json
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField, ArrayField
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, transaction
 from django.db.models import F
 from django.db.models.signals import post_save, pre_delete
@@ -21,21 +22,18 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
-from EquiTrack.utils import get_changeform_link, get_current_site, import_permissions
+from EquiTrack.utils import import_permissions
 from EquiTrack.mixins import AdminURLMixin
 from funds.models import Grant
 from reports.models import (
     Indicator,
     Sector,
-    Goal,
     Result,
     CountryProgramme,
-    AppliedIndicator
 )
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
 from users.models import Section, Office
-from notification.models import Notification
 from partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreements_illegal_transition,
@@ -561,7 +559,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 travel_type=TravelType.PROGRAMME_MONITORING,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
-                travels__completed_at__year=datetime.datetime.now().year(),
+                travels__completed_at__year=datetime.datetime.now().year,
                 partner=partner,
             ).count() or 0
 
@@ -581,7 +579,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 travel_type=TravelType.SPOT_CHECK,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
-                travels__completed_at__year=datetime.datetime.now().year(),
+                travels__completed_at__year=datetime.datetime.now().year,
                 partner=partner,
             ).count() or 0
 
@@ -768,34 +766,6 @@ class Assessment(models.Model):
         super(Assessment, self).save(**kwargs)
 
 
-class BankDetails(models.Model):
-    """
-    Represents bank information on the partner agreement and/or agreement amendment log.
-
-    Relates to :model:`partners.Agreement`
-    Relates to :model:`partners.AgreementAmendmentLog`
-    """
-
-    # TODO: remove the ability to add blank for the partner_organization field
-    partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details', null=True, blank=True)
-    bank_name = models.CharField(max_length=255, null=True, blank=True)
-    bank_address = models.CharField(
-        max_length=256,
-        blank=True
-    )
-    account_title = models.CharField(max_length=255, null=True, blank=True)
-    account_number = models.CharField(max_length=50, null=True, blank=True)
-    routing_details = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        help_text='Routing Details, including SWIFT/IBAN (if applicable)'
-    )
-    bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
-
-    tracker = FieldTracker()
-
-
 class AgreementManager(models.Manager):
 
     def get_queryset(self):
@@ -873,7 +843,7 @@ class Agreement(TimeStampedModel):
 
     signed_by_unicef_date = models.DateField(null=True, blank=True)
 
-    # Unicef staff members that sign the agreemetns
+    # Unicef staff members that sign the agreements
     # this user needs to be in the partnership management group
     signed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -1130,10 +1100,10 @@ class Intervention(TimeStampedModel):
 
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`partners.Agreement`
-    Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.CountryProgramme`
     Relates to :model:`auth.User`
     Relates to :model:`partners.PartnerStaffMember`
+    Relates to :model:`users.Office`
     """
 
     DRAFT = 'draft'
@@ -1324,17 +1294,26 @@ class Intervention(TimeStampedModel):
     @cached_property
     def total_partner_contribution(self):
         # TODO: test this
-        return self.planned_budget.partner_contribution if self.planned_budget else 0
+        try:
+            return self.planned_budget.partner_contribution
+        except ObjectDoesNotExist:
+            return 0
 
     @cached_property
     def total_unicef_cash(self):
         # TODO: test this
-        return self.planned_budget.unicef_cash if self.planned_budget else 0
+        try:
+            return self.planned_budget.unicef_cash
+        except ObjectDoesNotExist:
+            return 0
 
     @cached_property
     def total_in_kind_amount(self):
         # TODO: test this
-        return self.planned_budget.in_kind_amount if self.planned_budget else 0
+        try:
+            return self.planned_budget.in_kind_amount
+        except ObjectDoesNotExist:
+            return 0
 
     @cached_property
     def total_budget(self):
@@ -1348,22 +1327,25 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution_local(self):
-        if self.planned_budget:
+        try:
             return self.planned_budget.partner_contribution_local
-        return 0
+        except ObjectDoesNotExist:
+            return 0
 
     @cached_property
     def total_unicef_cash_local(self):
-        if self.planned_budget:
+        try:
             return self.planned_budget.unicef_cash_local
-        return 0
+        except ObjectDoesNotExist:
+            return 0
 
     @cached_property
     def total_budget_local(self):
         # TODO: test this
-        if self.planned_budget:
+        try:
             return self.planned_budget.in_kind_amount_local
-        return 0
+        except ObjectDoesNotExist:
+            return 0
 
     @cached_property
     def total_frs(self):
@@ -1421,7 +1403,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[DRAFT, SUSPENDED],
                 target=[SIGNED],
-                conditions=[intervention_validation.transition_ok])
+                conditions=[intervention_validation.transtion_to_signed])
     def transition_to_signed(self):
         pass
 
@@ -1635,9 +1617,6 @@ class InterventionResultLink(models.Model):
 class InterventionBudget(TimeStampedModel):
     """
     Represents a budget for the intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`partners.AmendmentLog`
     """
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True)
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0)
@@ -1757,7 +1736,7 @@ class GovernmentIntervention(models.Model):
     Represents a government intervention.
 
     Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.CountryProgramme`
     """
     objects = GovernmentInterventionManager()
 
@@ -1879,51 +1858,6 @@ class GovernmentInterventionResultActivity(models.Model):
     description = models.CharField(max_length=1024)
 
 
-class IndicatorReport(TimeStampedModel, TimeFramedModel):
-    """
-    Represents an indicator report for the result chain on the location
-
-    Relates to :model:`partners.AppliedIndicator`
-    Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`locations.Location`
-    """
-
-    STATUS_CHOICES = Choices(
-        ('ontrack', _('On Track')),
-        ('constrained', _('Constrained')),
-        ('noprogress', _('No Progress')),
-        ('targetmet', _('Target Met'))
-    )
-
-    # FOR WHOM / Beneficiary
-    #  -  AppliedIndicator
-    indicator = models.ForeignKey(AppliedIndicator, related_name='reports')
-
-    # WHO
-    #  -  Implementing Partner
-    partner_staff_member = models.ForeignKey('partners.PartnerStaffMember', related_name='indicator_reports')
-
-    # WHAT
-    #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
-    total = models.PositiveIntegerField()
-    # is this a disaggregated report?
-    disaggregated = models.BooleanField(default=False)
-    # the structure should always be computed from applied_indicator
-    disaggregation = JSONField(default=dict)
-
-    # WHERE
-    #  -  Location
-    location = models.ForeignKey('locations.Location', blank=True, null=True)
-
-    # Metadata
-    #  - Remarks, Report Status
-    # TODO: set max_length property
-    remarks = models.TextField(blank=True, null=True)
-    report_status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES.ontrack, max_length=15)
-
-    tracker = FieldTracker()
-
-
 # TODO: Move to funds
 class FCManager(models.Manager):
 
@@ -1974,499 +1908,8 @@ class DirectCashTransfer(models.Model):
     tracker = FieldTracker()
 
 
-# TODO: remove these models
-class PCA(AdminURLMixin, models.Model):
-    """
-    Represents a partner intervention.
-
-    Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`partners.Agreement`
-    Relates to :model:`reports.ResultStructure`
-    Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`auth.User`
-    Relates to :model:`partners.PartnerStaffMember`
-    """
-
-    IN_PROCESS = 'in_process'
-    ACTIVE = 'active'
-    IMPLEMENTED = 'implemented'
-    CANCELLED = 'cancelled'
-    SUSPENDED = 'suspended'
-    TERMINATED = 'terminated'
-    PCA_STATUS = (
-        (IN_PROCESS, u"In Process"),
-        (ACTIVE, u"Active"),
-        (IMPLEMENTED, u"Implemented"),
-        (CANCELLED, u"Cancelled"),
-        (SUSPENDED, u"Suspended"),
-        (TERMINATED, u"Terminated"),
-    )
-    PD = 'PD'
-    SHPD = 'SHPD'
-    AWP = 'AWP'
-    SSFA = 'SSFA'
-    IC = 'IC'
-    PARTNERSHIP_TYPES = (
-        (PD, 'Programme Document'),
-        (SHPD, 'Simplified Humanitarian Programme Document'),
-        (AWP, 'Cash Transfers to Government'),
-        (SSFA, 'SSFA TOR'),
-        (IC, 'IC TOR'),
-    )
-    # TODO: remove partner foreign key, already on the agreement model
-    partner = models.ForeignKey(
-        PartnerOrganization,
-        related_name='documents',
-    )
-    # TODO: remove chained foreign key
-    agreement = ChainedForeignKey(
-        Agreement,
-        related_name='pca_interventions',
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=True,
-        blank=True, null=True,
-    )
-    partnership_type = models.CharField(
-        choices=PARTNERSHIP_TYPES,
-        default=PD,
-        blank=True, null=True,
-        max_length=255,
-        verbose_name='Document type'
-    )
-    number = models.CharField(
-        max_length=45,
-        blank=True, null=True,
-        verbose_name='Reference Number'
-    )
-    title = models.CharField(max_length=256)
-    project_type = models.CharField(
-        max_length=20,
-        blank=True, null=True,
-        choices=Choices(
-            'Bulk Procurement',
-            'Construction Project',
-        )
-    )
-    status = models.CharField(
-        max_length=32,
-        blank=True,
-        choices=PCA_STATUS,
-        default='in_process',
-        help_text='In Process = In discussion with partner, '
-        'Active = Currently ongoing, '
-        'Implemented = completed, '
-        'Cancelled = cancelled or not approved'
-    )
-    # dates
-    start_date = models.DateField(
-        null=True, blank=True,
-        help_text='The date the Intervention will start'
-    )
-    end_date = models.DateField(
-        null=True, blank=True,
-        help_text='The date the Intervention will end'
-    )
-    initiation_date = models.DateField(
-        verbose_name='Submission Date',
-        help_text='The date the partner submitted complete partnership documents to Unicef',
-    )
-    submission_date = models.DateField(
-        verbose_name='Submission Date to PRC',
-        help_text='The date the documents were submitted to the PRC',
-        null=True, blank=True,
-    )
-    review_date = models.DateField(
-        verbose_name='Review date by PRC',
-        help_text='The date the PRC reviewed the partnership',
-        null=True, blank=True,
-    )
-    signed_by_unicef_date = models.DateField(null=True, blank=True)
-    signed_by_partner_date = models.DateField(null=True, blank=True)
-
-    # managers and focal points
-    unicef_manager = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='approved_partnerships',
-        verbose_name='Signed by',
-        blank=True, null=True
-    )
-    unicef_managers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        verbose_name='Unicef focal points',
-        blank=True,
-    )
-    partner_manager = ChainedForeignKey(
-        PartnerStaffMember,
-        verbose_name='Signed by partner',
-        related_name='signed_partnerships',
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=False,
-        blank=True, null=True,
-    )
-
-    # TODO: remove chainedForeignKEy
-    partner_focal_point = ChainedForeignKey(
-        PartnerStaffMember,
-        related_name='my_partnerships',
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=False,
-        blank=True, null=True,
-    )
-    fr_number = models.CharField(max_length=50, blank=True, null=True)
-    planned_visits = models.IntegerField(default=0)
-
-    # meta fields
-    sectors = models.CharField(max_length=255, null=True, blank=True)
-    current = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    tracker = FieldTracker()
-
-    class Meta:
-        verbose_name = 'Old Intervention'
-        verbose_name_plural = 'Old Interventions'
-        ordering = ['-created_at']
-
-    def __unicode__(self):
-        return '{}: {}'.format(
-            self.partner.name,
-            self.number if self.number else self.reference_number
-        )
-
-    @property
-    def sector_children(self):
-        sectors = self.pcasector_set.all().values_list('sector__id', flat=True)
-        return Sector.objects.filter(id__in=sectors)
-
-    @property
-    def sector_id(self):
-        if self.sector_children:
-            return self.sector_children[0].id
-        return 0
-
-    @property
-    def sector_names(self):
-        return ', '.join(self.sector_children.values_list('name', flat=True))
-
-    @property
-    def days_from_submission_to_signed(self):
-        if not self.submission_date:
-            return 'Not Submitted'
-        if not self.signed_by_unicef_date or self.signed_by_partner_date:
-            return 'Not fully signed'
-        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
-        return relativedelta(signed_date - self.submission_date).days
-
-    @property
-    def days_from_review_to_signed(self):
-        if not self.review_date:
-            return 'Not Reviewed'
-        if not self.signed_by_unicef_date or self.signed_by_partner_date:
-            return 'Not fully signed'
-        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
-        return relativedelta(signed_date - self.review_date).days
-
-    @property
-    def duration(self):
-        if self.start_date and self.end_date:
-            return '{} Months'.format(
-                relativedelta(self.end_date - self.start_date).months
-            )
-        else:
-            return ''
-
-    @property
-    def amendment_num(self):
-        return self.amendments_log.all().count()
-
-    @cached_property
-    def total_partner_contribution(self):
-
-        if self.budget_log.exists():
-            return sum([b['partner_contribution'] for b in
-                        self.budget_log.values('created', 'year', 'partner_contribution').
-                        order_by('year', '-created').distinct('year').all()
-                        ])
-        return 0
-
-    @cached_property
-    def total_unicef_cash(self):
-
-        if self.budget_log.exists():
-            return sum([b['unicef_cash'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash').
-                        order_by('year', '-created').distinct('year').all()
-                        ])
-        return 0
-
-    @cached_property
-    def total_budget(self):
-
-        if self.budget_log.exists():
-            return sum([b['unicef_cash'] + b['in_kind_amount'] + b['partner_contribution'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash',
-                                               'in_kind_amount', 'partner_contribution').
-                        order_by('year', '-created').distinct('year').all()])
-        return 0
-
-    @cached_property
-    def total_partner_contribution_local(self):
-
-        if self.budget_log.exists():
-            return sum([b['partner_contribution_local'] for b in
-                        self.budget_log.values('created', 'year', 'partner_contribution_local').
-                        order_by('year', '-created').distinct('year').all()
-                        ])
-        return 0
-
-    @cached_property
-    def total_unicef_cash_local(self):
-
-        if self.budget_log.exists():
-            return sum([b['unicef_cash_local'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local').
-                        order_by('year', '-created').distinct('year').all()
-                        ])
-        return 0
-
-    @cached_property
-    def total_budget_local(self):
-
-        if self.budget_log.exists():
-            return sum([b['unicef_cash_local'] + b['in_kind_amount_local'] + b['partner_contribution_local'] for b in
-                        self.budget_log.values('created', 'year', 'unicef_cash_local',
-                                               'in_kind_amount_local', 'partner_contribution_local').
-                        order_by('year', '-created').distinct('year').all()])
-        return 0
-
-    @property
-    def year(self):
-        if self.id:
-            if self.signed_by_unicef_date is not None:
-                return self.signed_by_unicef_date.year
-            else:
-                return self.created_at.year
-        else:
-            return datetime.date.today().year
-
-    @property
-    def reference_number(self):
-
-        if self.partnership_type in [Agreement.SSFA, Agreement.MOU]:
-            number = self.agreement.reference_number
-        elif self.number:
-            number = self.number
-        else:
-            objects = list(PCA.objects.filter(
-                partner=self.partner,
-                created_at__year=self.year,
-                partnership_type=self.partnership_type
-            ).order_by('created_at').values_list('id', flat=True))
-            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-            number = '{agreement}/{type}{year}{seq}'.format(
-                agreement=self.agreement.reference_number.split("-")[0] if self.id and self.agreement else '',
-                type=self.partnership_type,
-                year=self.year,
-                seq=sequence
-            )
-        return '{}{}'.format(
-            number,
-            '-{0:02d}'.format(self.amendments_log.last().amendment_number)
-            if self.amendments_log.last() else ''
-        )
-
-    @property
-    def planned_cash_transfers(self):
-        """
-        Planned cash transfers for the current year
-        """
-        if not self.budget_log.exists():
-            return 0
-        year = datetime.date.today().year
-        total = self.budget_log.filter(year=year).order_by('-created').first()
-        return total.unicef_cash if total else 0
-
-    def save(self, **kwargs):
-
-        # commit the referece number to the database once the intervention is
-        # signed
-        if self.status != PCA.IN_PROCESS and self.signed_by_unicef_date and not self.number:
-            self.number = self.reference_number
-
-        if not self.pk:
-            if self.partnership_type != self.PD:
-                self.signed_by_partner_date = self.agreement.signed_by_partner_date
-                self.partner_manager = self.agreement.partner_manager
-                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
-                self.unicef_manager = self.agreement.signed_by
-                self.start_date = self.agreement.start
-                self.end_date = self.agreement.end
-
-            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-                PartnerOrganization.planned_visits(self.partner, self)
-        else:
-            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-                prev_pca = PCA.objects.filter(id=self.id)[0]
-                if self.planned_visits != prev_pca.planned_visits:
-                    PartnerOrganization.planned_visits(self.partner, self)
-
-        # set start date to latest of signed by partner or unicef date
-        if self.partnership_type == self.PD:
-            if self.agreement.signed_by_unicef_date\
-                    and self.agreement.signed_by_partner_date and self.start_date is None:
-                if self.agreement.signed_by_unicef_date > self.agreement.signed_by_partner_date:
-                    self.start_date = self.agreement.signed_by_unicef_date
-                else:
-                    self.start_date = self.agreement.signed_by_partner_date
-
-            if self.agreement.signed_by_unicef_date\
-                    and not self.agreement.signed_by_partner_date and self.start_date is None:
-                self.start_date = self.agreement.signed_by_unicef_date
-
-            if not self.agreement.signed_by_unicef_date\
-                    and self.agreement.signed_by_partner_date and self.start_date is None:
-                self.start_date = self.agreement.signed_by_partner_date
-
-        super(PCA, self).save(**kwargs)
-
-    @classmethod
-    def get_active_partnerships(cls):
-        return cls.objects.filter(current=True, status=cls.ACTIVE)
-
-    @classmethod
-    def send_changes(cls, sender, instance, created, **kwargs):
-        # send emails to managers on changes
-        manager, created = Group.objects.get_or_create(
-            name='Partnership Manager'
-        )
-        managers = set(manager.user_set.filter(profile__country=connection.tenant, is_staff=True) |
-                       instance.unicef_managers.all())
-        recipients = [user.email for user in managers]
-
-        email_context = {
-            'number': unicode(instance),
-            'state': 'Created',
-            'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
-        }
-
-        if created:  # new partnership
-            notification = Notification.objects.create(
-                sender=instance,
-                recipients=recipients, template_name="partners/partnership/created/updated",
-                template_data=email_context
-            )
-
-        else:  # change to existing
-            email_context['state'] = 'Updated'
-
-            notification = Notification.objects.create(
-                sender=instance,
-                recipients=recipients, template_name="partners/partnership/created/updated",
-                template_data=email_context
-            )
-
-        notification.send_notification()
-
-        # attach any FCs immediately
-        # if instance:
-        #     for fr_number in instance.fr_numbers:
-        #         commitments = FundingCommitment.objects.filter(fr_number=fr_number)
-        #         for commit in commitments:
-        #             commit.intervention = instance
-        #             commit.save()
-
-
-class RAMIndicator(models.Model):
-    """
-    Represents a RAM Indicator for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`reports.Result`
-    Relates to :model:`reports.Indicator`
-    """
-    # TODO: Remove This indicator and connect direcly to higher indicators M2M
-    # related
-    intervention = models.ForeignKey(PCA, related_name='indicators')
-    result = models.ForeignKey(Result)
-    indicator = ChainedForeignKey(
-        Indicator,
-        chained_field="result",
-        chained_model_field="result",
-        show_all=False,
-        auto_choose=True,
-        blank=True,
-        null=True
-    )
-
-    tracker = FieldTracker()
-
-    @property
-    def baseline(self):
-        return self.indicator.baseline
-
-    @property
-    def target(self):
-        return self.indicator.target
-
-    def __unicode__(self):
-        return '{} -> {}'.format(
-            self.result.sector.name if self.result.sector else '',
-            unicode(self.result),
-        )
-
-
-class AmendmentLog(TimeStampedModel):
-    """
-    Represents an amendment log for the partner intervention.
-
-    Relates to :model:`partners.PCA`
-    """
-
-    partnership = models.ForeignKey(PCA, related_name='amendments_log')
-    type = models.CharField(
-        max_length=50,
-        choices=Choices(
-            'No Cost',
-            'Cost',
-            'Activity',
-            'Other',
-        ))
-    amended_at = models.DateField(null=True, verbose_name='Signed At')
-    amendment_number = models.IntegerField(default=0)
-    status = models.CharField(
-        max_length=32,
-        blank=True,
-        choices=PCA.PCA_STATUS,
-    )
-
-    tracker = FieldTracker()
-
-    def __unicode__(self):
-        return '{}: {} - {}'.format(
-            self.amendment_number,
-            self.type,
-            self.amended_at
-        )
-
-    @property
-    def amendment_number(self):
-        """
-        Increment amendment number automatically
-        """
-        objects = list(AmendmentLog.objects.filter(
-            partnership=self.partnership
-        ).order_by('created').values_list('id', flat=True))
-
-        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
-
-
+# get_file_path() isn't used as of October 2017, but it's referenced by partners/migrations/0001_initial.py.
+# Once migrations are squashed, this can be removed.
 def get_file_path(instance, filename):
     return '/'.join(
         [connection.schema_name,
@@ -2479,310 +1922,3 @@ def get_file_path(instance, filename):
          str(instance.pca.id),
          filename]
     )
-
-
-class PCAFile(models.Model):
-    """
-    Represents a file for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`partners.FileType`
-    """
-
-    pca = models.ForeignKey(PCA, related_name='attachments')
-    type = models.ForeignKey(FileType)
-    attachment = models.FileField(
-        max_length=255,
-        upload_to=get_file_path
-    )
-
-    tracker = FieldTracker()
-
-    def __unicode__(self):
-        return self.attachment.name
-
-    def download_url(self):
-        if self.file:
-            return '<a class="btn btn-primary default" ' \
-                   'href="{}" >Download</a>'.format(self.file.file.url)
-        return ''
-    download_url.allow_tags = True
-    download_url.short_description = 'Download Files'
-
-
-class PCAGrant(TimeStampedModel):
-    """
-    Represents a grant for the partner intervention, which links a grant to a partnership with a specified amount
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`funds.Grant`
-    Relates to :model:`partners.AmendmentLog`
-    """
-    partnership = models.ForeignKey(PCA, related_name='grants')
-    grant = models.ForeignKey(Grant)
-    funds = models.IntegerField(null=True, blank=True)
-    # TODO: Add multi-currency support
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='grants',
-        blank=True, null=True,
-    )
-
-    tracker = FieldTracker()
-
-    class Meta:
-        ordering = ['-funds']
-
-    def __unicode__(self):
-        return '{}: {}'.format(
-            self.grant,
-            self.funds
-        )
-
-
-class GwPCALocation(models.Model):
-    """
-    Represents a location for the partner intervention, which links a location to a partnership
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`users.Sector`
-    Relates to :model:`locations.Location`
-    """
-
-    pca = models.ForeignKey(PCA, related_name='locations')
-    sector = models.ForeignKey(Sector, null=True, blank=True)
-    location = models.ForeignKey(
-        Location,
-        null=True,
-        blank=True
-    )
-    tpm_visit = models.BooleanField(default=False)
-
-    tracker = FieldTracker()
-
-    class Meta:
-        verbose_name = 'Partnership Location'
-
-    def __unicode__(self):
-        return unicode(self.location) if self.location else ''
-
-    def view_location(self):
-        return get_changeform_link(self)
-    view_location.allow_tags = True
-    view_location.short_description = 'View Location'
-
-
-class PCASector(TimeStampedModel):
-    """
-    Represents a sector for the partner intervention, which links a sector to a partnership
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`users.Sector`
-    Relates to :model:`partners.AmendmentLog`
-    """
-
-    pca = models.ForeignKey(PCA)
-    sector = models.ForeignKey(Sector)
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='sectors',
-        blank=True, null=True,
-    )
-
-    tracker = FieldTracker()
-
-    class Meta:
-        verbose_name = 'PCA Sector'
-
-    def __unicode__(self):
-        return '{}: {}: {}'.format(
-            self.pca.partner.name,
-            self.pca.number,
-            self.sector.name,
-        )
-
-
-class PCASectorGoal(models.Model):
-    """
-    Represents a goal for the partner intervention sector, which links a sector to a partnership
-
-    Relates to :model:`partners.PCASector`
-    Relates to :model:`reports.Goal`
-    """
-
-    pca_sector = models.ForeignKey(PCASector)
-    goal = models.ForeignKey(Goal)
-
-    tracker = FieldTracker()
-
-    class Meta:
-        verbose_name = 'CCC'
-        verbose_name_plural = 'CCCs'
-
-
-class IndicatorDueDates(models.Model):
-    """
-    Represents an indicator due date for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    """
-
-    intervention = models.ForeignKey(
-        'PCA',
-        blank=True, null=True,
-        related_name='indicator_due_dates'
-    )
-    due_date = models.DateField(blank=True, null=True)
-
-    tracker = FieldTracker()
-
-    class Meta:
-        verbose_name = 'Report Due Date'
-        verbose_name_plural = 'Report Due Dates'
-        ordering = ['-due_date']
-
-
-class PartnershipBudget(TimeStampedModel):
-    """
-    Represents a budget for the intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`partners.AmendmentLog`
-    """
-
-    partnership = models.ForeignKey(PCA, related_name='budget_log', null=True, blank=True)
-    partner_contribution = models.IntegerField(default=0)
-    unicef_cash = models.IntegerField(default=0)
-    in_kind_amount = models.IntegerField(
-        default=0,
-        verbose_name='UNICEF Supplies'
-    )
-    year = models.CharField(
-        max_length=5,
-        blank=True, null=True
-    )
-    # TODO add Currency field
-    total = models.IntegerField(default=0)
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='budgets',
-        blank=True, null=True,
-    )
-
-    tracker = FieldTracker()
-
-    def total_unicef_contribution(self):
-        return self.unicef_cash + self.in_kind_amount
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        """
-        Calculate total budget on save
-        """
-        self.total = \
-            self.total_unicef_contribution() \
-            + self.partner_contribution
-
-        super(PartnershipBudget, self).save(**kwargs)
-
-    def __unicode__(self):
-        return '{}: {}'.format(
-            self.partnership,
-            self.total
-        )
-
-
-class AgreementAmendmentLog(TimeStampedModel):
-    """
-    Represents an amendment log for the partner agreement.
-
-    Relates to :model:`partners.Agreement`
-    """
-
-    agreement = models.ForeignKey(Agreement, related_name='amendments_log')
-    type = models.CharField(
-        max_length=50,
-        choices=Choices(
-            'Authorised Officers',
-            'Banking Info',
-            'Agreement Changes',
-            'Additional Clauses',
-        ))
-    amended_at = models.DateField(null=True, verbose_name='Signed At')
-
-    signed_document = models.FileField(
-        max_length=1024,
-        upload_to=get_agreement_amd_file_path,
-        blank=True,
-        null=True,
-    )
-    status = models.CharField(
-        max_length=32,
-        blank=True,
-        choices=PCA.PCA_STATUS,
-    )
-
-    tracker = FieldTracker()
-
-    def __unicode__(self):
-        return '{}: {} - {}'.format(
-            self.amendment_number,
-            self.type,
-            self.amended_at
-        )
-
-    @property
-    def amendment_number(self):
-        """
-        Increment amendment number automatically
-        """
-        objects = list(AgreementAmendmentLog.objects.filter(
-            agreement=self.agreement
-        ).order_by('created').values_list('id', flat=True))
-
-        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
-
-
-class AuthorizedOfficer(models.Model):
-    # TODO: write a script to move this to authorized officers on the model
-    # TODO: change on admin to use the model
-    """
-    Represents an authorized UNICEF officer on the partner agreement.
-
-    Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`partners.AgreementAmendmentLog`
-    """
-
-    agreement = models.ForeignKey(
-        Agreement,
-    )
-    officer = models.ForeignKey(
-        PartnerStaffMember
-    )
-    amendment = models.ForeignKey(
-        'AgreementAmendmentLog',
-        blank=True, null=True,
-    )
-
-    tracker = FieldTracker()
-
-    def __unicode__(self):
-        return unicode(self.officer)
-
-    @classmethod
-    def create_officer(cls, sender, instance, created, **kwargs):
-        """
-        Signal handler to create authorized_officers automatically
-        """
-        if instance.partner_manager and \
-                instance.partner_manager.id not in \
-                instance.authorized_officers:
-
-            cls.objects.create(agreement=instance,
-                               officer=instance.partner_manager)
-
-
-# post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
-
-post_save.connect(PCA.send_changes, sender=PCA)
