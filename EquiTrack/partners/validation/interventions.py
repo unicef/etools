@@ -14,7 +14,7 @@ logger = logging.getLogger('partners.interventions.validation')
 
 
 def partnership_manager_only(i, user):
-    # Transition cannot happen by a user that';s not a Partnership Manager
+    # Transition cannot happen by a user that's not a Partnership Manager
     if not user.groups.filter(name__in=['Partnership Manager']).count():
         raise TransitionError(['Only Partnership Managers can execute this transition'])
     return True
@@ -36,7 +36,7 @@ def transition_to_closed(i):
         'earliest_start_date': None,
         'latest_end_date': None
     }
-    for fr in i.frs.filter():
+    for fr in i.frs.all():
         r['total_frs_amt'] += fr.total_amt
         r['total_outstanding_amt'] += fr.outstanding_amt
         r['total_intervention_amt'] += fr.intervention_amt
@@ -59,7 +59,7 @@ def transition_to_closed(i):
 
     if i.total_frs['total_intervention_amt'] != i.total_frs['total_actual_amt'] or \
             i.total_frs['total_outstanding_amt'] != 0:
-        raise TransitionError([_('Total FR amount needs to equal total actual amount, and'
+        raise TransitionError([_('Total FR amount needs to equal total actual amount, and '
                                  'Total Outstanding DCTs need to equal to 0')])
 
     # If total_actual_amt >100,000 then attachments has to include
