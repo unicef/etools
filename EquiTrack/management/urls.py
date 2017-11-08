@@ -1,18 +1,10 @@
 from __future__ import absolute_import
+
 from django.conf.urls import url
 
-from management.views.reports import (
-    LoadResultStructure,
-)
-from management.views.general import (
-    InvalidateCache,
-)
-from management.views.v1 import (
-    ActiveUsersSection,
-    AgreementsStatisticsView,
-    PortalDashView,
-)
-
+from management.views.general import InvalidateCache
+from management.views.reports import LoadResultStructure
+from management.views.v1 import ActiveUsersSection, AgreementsStatisticsView, PortalDashView
 
 urlpatterns = ((
     url(r'^$', PortalDashView.as_view(), name='dashboard'),
