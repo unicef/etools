@@ -2,6 +2,9 @@ import logging
 import sys
 
 from EquiTrack.settings.base import *  # noqa: F403
+from cryptography.hazmat.primitives import serialization
+from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.backends import default_backend
 
 DEBUG = True
 CELERY_ALWAYS_EAGER = True
@@ -95,3 +98,28 @@ LOGGING['formatters'] = {
 }
 LOGGING['handlers']['console']['filters'] = ['tenant_context']
 LOGGING['handlers']['console']['formatter'] = 'tenant_context'
+
+# production overrides for django-rest-framework-jwt
+private_key_text = open(join(DJANGO_ROOT, 'keys/jwt/key.pem'), 'r').read()  # noqa: F405
+public_key_text = open(join(DJANGO_ROOT, 'keys/jwt/certificate.pem'), 'r').read()  # noqa: F405
+
+
+JWT_PRIVATE_KEY = serialization.load_pem_private_key(private_key_text, password=None,
+                                                     backend=default_backend())
+
+certificate = load_pem_x509_certificate(public_key_text, default_backend())
+JWT_PUBLIC_KEY = certificate.public_key()
+
+JWT_AUTH.update({  # noqa: F405
+    'JWT_SECRET_KEY': SECRET_KEY,
+    'JWT_PUBLIC_KEY': JWT_PUBLIC_KEY,
+    'JWT_PRIVATE_KEY': JWT_PRIVATE_KEY,
+    'JWT_ALGORITHM': 'RS256',
+    'JWT_LEEWAY': 60,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),  # noqa: F405
+    'JWT_AUDIENCE': 'https://etools.unicef.org/',
+    'JWT_PAYLOAD_HANDLER': 'EquiTrack.mixins.custom_jwt_payload_handler'
+})
+
+DEFAULT_UNICEF_USER = 'ntrncic@unicef.org'
+JWT_ALLOW_NON_EXISTENT_USERS = True
