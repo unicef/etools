@@ -12,8 +12,8 @@ from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         extra_kwargs = {
-            'first_name': {'required': True, 'label': _('First Name')},
-            'last_name': {'required': True, 'label': _('Last Name')},
+            'first_name': {'required': True, 'allow_blank': False, 'label': _('First Name')},
+            'last_name': {'required': True, 'allow_blank': False, 'label': _('Last Name')},
         }
 
     def update(self, instance, validated_data):
