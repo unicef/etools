@@ -40,6 +40,7 @@ class Command(BaseCommand):
 
     engagement_overview_block = [
         'engagement.agreement',
+        'engagement.po_item',
         'engagement.related_agreement',
         'engagement.partner_contacted_at',
         'engagement.engagement_type',

@@ -1,3 +1,5 @@
+from audit.serializers.auditor import PurchaseOrderItemSerializer
+
 try:
     from urllib.parse import urljoin
 except ImportError:
@@ -30,7 +32,7 @@ class AgreementPDFSerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = (
-            'order_number', 'item_number', 'contract_start_date', 'contract_end_date',
+            'order_number', 'contract_start_date', 'contract_end_date',
             'auditor_firm'
         )
 
@@ -92,6 +94,7 @@ class AttachmentPDFSerializer(serializers.ModelSerializer):
 
 class EngagementPDFSerializer(serializers.ModelSerializer):
     agreement = AgreementPDFSerializer()
+    po_item = PurchaseOrderItemSerializer()
     partner = PartnerPDFSerializer()
     engagement_type_display = serializers.ReadOnlyField(source='get_engagement_type_display')
     status_display = serializers.SerializerMethodField()
