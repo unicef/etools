@@ -70,6 +70,17 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                         [(field_name, value) for field_name, value in mapped_item.items()
                          if model._meta.get_field(field_name).unique]
                     )
+
+                    if not kwargs:
+                        for fields in model._meta.unique_together:
+                            if all(field in mapped_item.keys() for field in fields):
+                                unique_fields = fields
+                                break
+
+                        kwargs = {
+                            field: mapped_item[field] for field in unique_fields
+                        }
+
                     defaults = dict(
                         [(field_name, value) for field_name, value in mapped_item.items()
                          if field_name not in kwargs.keys()]

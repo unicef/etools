@@ -29,6 +29,11 @@ class AuditorFirmAdmin(admin.ModelAdmin):
     ]
 
 
+class PurchaseOrderItemAdmin(admin.TabularInline):
+    model = models.PurchaseOrderItem
+    extra = 0
+
+
 @admin.register(models.PurchaseOrder)
 class PurchaseOrderAdmin(admin.ModelAdmin):
     list_display = [
@@ -39,6 +44,7 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
         'auditor_firm', 'contract_start_date', 'contract_end_date',
     ]
     search_fields = ['order_number', 'auditor_firm__name', ]
+    inlines = [PurchaseOrderItemAdmin]
 
 
 @admin.register(models.Engagement)

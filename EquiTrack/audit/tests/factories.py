@@ -8,7 +8,7 @@ from EquiTrack.factories import InterventionFactory, AgreementFactory, PartnerFa
 
 from audit.models import AuditorFirm, PurchaseOrder, Engagement, RiskCategory, \
     RiskBluePrint, Risk, AuditorStaffMember, MicroAssessment, \
-    Audit, SpotCheck, Auditor, SpecialAudit
+    Audit, SpotCheck, Auditor, SpecialAudit, PurchaseOrderItem
 from firms.factories import BaseStaffMemberFactory, BaseFirmFactory
 
 
@@ -44,12 +44,19 @@ class AuditPartnerFactory(BaseFirmFactory):
     staff_members = factory.RelatedFactory(AuditorStaffMemberFactory, 'auditor_firm')
 
 
+class PurchaseOrderItemFactory(factory.DjangoModelFactory):
+    number = fuzzy.FuzzyInteger(10, 1000, 10)
+
+    class Meta:
+        model = PurchaseOrderItem
+
+
 class PurchaseOrderFactory(factory.DjangoModelFactory):
     class Meta:
         model = PurchaseOrder
 
     auditor_firm = factory.SubFactory(AuditPartnerFactory)
-    order_number = fuzzy.FuzzyText(length=30)
+    items = factory.RelatedFactory(PurchaseOrderItemFactory, 'purchase_order')
 
 
 class EngagementFactory(factory.DjangoModelFactory):

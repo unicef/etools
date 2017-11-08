@@ -263,6 +263,7 @@ class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenant
             'partner_contacted_at': self.engagement.partner_contacted_at,
             'total_value': self.engagement.total_value,
             'agreement': self.engagement.agreement_id,
+            'po_item': self.engagement.agreement.items.first().id,
             'partner': self.engagement.partner_id,
             'engagement_type': self.engagement.engagement_type,
             'authorized_officers': self.engagement.authorized_officers.values_list('id', flat=True),
