@@ -11,6 +11,7 @@ from partners.models import (
     PartnerOrganization,
     InterventionReportingPeriod)
 from reports.models import Result, AppliedIndicator, LowerResult, Disaggregation, DisaggregationValue
+from reports.serializers.v1 import SectorSerializer
 
 
 class PartnerSerializer(serializers.ModelSerializer):
@@ -89,6 +90,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
     # todo: this class hasn't been tested at all because there are no `AppliedIndicator`s in the current DB
     # todo: need to validate these and fill in missing fields
     title = serializers.CharField(source='indicator.title', read_only=True)
+    blueprint_id = serializers.IntegerField(source='indicator.id', read_only=True)
     locations = IndicatorLocationSerializer(read_only=True, many=True)
     disaggregation = DisaggregationSerializer(read_only=True, many=True)
 
@@ -97,6 +99,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+            'blueprint_id',
             # 'is_cluster',
             'cluster_indicator_id',
             # 'parent_id',
@@ -170,6 +173,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
     update_date = serializers.DateTimeField(source='modified')
     reporting_periods = ReportingPeriodsSerializer(many=True, read_only=True)
+    sections = SectorSerializer(source="combined_sections", many=True, read_only=True)
 
     def get_business_area_code(self, obj):
         return connection.tenant.business_area_code
@@ -185,6 +189,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'number',
             'status',
             'partner_org',
+            'sections',
             'agreement',
             'unicef_focal_points',
             'agreement_auth_officers',

@@ -1483,6 +1483,18 @@ class Intervention(TimeStampedModel):
         return ', '.join(Sector.objects.filter(intervention_locations__intervention=self).
                          values_list('name', flat=True))
 
+    @property
+    def combined_sections(self):
+        # sections defined on the indicators + sections selected at the pd level
+        # In the case in which on the pd there are more sections selected then all the indicators
+        # the reason for the loops is to avoid creating new db queries
+        sections = set(self.sections.all())
+        for lower_result in self.all_lower_results:
+            for applied_indicator in lower_result.applied_indicators.all():
+                if applied_indicator.section:
+                    sections.add(applied_indicator.section)
+        return sections
+
     @cached_property
     def total_partner_contribution(self):
         return self.planned_budget.partner_contribution if hasattr(self, 'planned_budget') else 0
