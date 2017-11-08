@@ -15,5 +15,5 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
         names_and_paths = (
             ('dropdown-static-list', 'static/', {}),
             ('dropdown-pmp-list', 'pmp/', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/dropdowns/')

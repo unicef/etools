@@ -1,19 +1,19 @@
 from __future__ import unicode_literals
 import json
 
-from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth.models import User
+from django.utils import timezone
 from rest_framework import serializers
 
+from EquiTrack.serializers import SnapshotModelSerializer
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
 
 from partners.models import (
     Assessment,
     Intervention,
     PartnerOrganization,
-    PartnerType,
     PartnerStaffMember,
 )
 
@@ -128,60 +128,6 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
-
-    staff_members = serializers.SerializerMethodField()
-    assessments = serializers.SerializerMethodField()
-    staff_members = serializers.SerializerMethodField()
-    organization_full_name = serializers.CharField(source='name')
-    email_address = serializers.CharField(source='email')
-    risk_rating = serializers.CharField(source='rating')
-    date_last_assessment_against_core_values = serializers.CharField(source='core_values_assessment_date')
-    actual_cash_transfer_for_cp = serializers.CharField(source='total_ct_cp')
-    actual_cash_transfer_for_current_year = serializers.CharField(source='total_ct_cy')
-    marked_for_deletion = serializers.SerializerMethodField()
-    blocked = serializers.SerializerMethodField()
-    date_assessed = serializers.CharField(source='last_assessment_date')
-    url = serializers.SerializerMethodField()
-    shared_with = serializers.SerializerMethodField()
-    partner_type = serializers.SerializerMethodField()
-
-    class Meta:
-
-        model = PartnerOrganization
-        # TODO add missing fields:
-        #   Bank Info (just the number of accounts synced from VISION)
-        fields = ('vendor_number', 'marked_for_deletion', 'blocked', 'organization_full_name',
-                  'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
-                  'email_address', 'phone_number', 'risk_rating', 'type_of_assessment', 'date_assessed',
-                  'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'staff_members',
-                  'date_last_assessment_against_core_values', 'assessments', 'url',)
-
-    def get_staff_members(self, obj):
-        return ', '.join(['{} ({})'.format(sm.get_full_name(), sm.email)
-                          for sm in obj.staff_members.filter(active=True).all()])
-
-    def get_assessments(self, obj):
-        return ', '.join(["{} ({})".format(a.type, a.completed_date) for a in obj.assessments.all()])
-
-    def get_url(self, obj):
-        return 'https://{}/pmp/partners/{}/details/'.format(self.context['request'].get_host(), obj.id)
-
-    def get_shared_with(self, obj):
-        return ', '.join([x for x in obj.shared_with]) if obj.shared_with else ""
-
-    def get_marked_for_deletion(self, obj):
-        return "Yes" if obj.deleted_flag else "No"
-
-    def get_blocked(self, obj):
-        return "Yes" if obj.blocked else "No"
-
-    def get_partner_type(self, obj):
-        if obj.partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION and obj.cso_type:
-            return "{}/{}".format(obj.partner_type, obj.cso_type)
-        return "{}".format(obj.partner_type)
-
-
 class AssessmentDetailSerializer(serializers.ModelSerializer):
 
     report_file = serializers.FileField(source='report', read_only=True)
@@ -256,7 +202,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
+class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)

@@ -18,6 +18,7 @@ from EquiTrack.forms import (
 
 from .models import (
     Agreement,
+    # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
     PartnerOrganization,
     PartnerStaffMember,
@@ -26,6 +27,7 @@ from .models import (
 logger = logging.getLogger('partners.forms')
 
 
+# TODO intervention sector locations cleanup
 class SectorLocationForm(forms.ModelForm):
     class Meta:
         model = InterventionSectorLocationLink

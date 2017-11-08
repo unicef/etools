@@ -84,11 +84,11 @@ class TestStrUnicode(TestCase):
         self.assertTrue(unicode(instance).endswith(u'\xccsland'))
 
     def test_indicator_blueprint(self):
-        instance = IndicatorBlueprintFactory.build(name=b'xyz')
+        instance = IndicatorBlueprintFactory.build(title=b'xyz')
         self.assertEqual(str(instance), b'xyz')
         self.assertEqual(unicode(instance), u'xyz')
 
-        instance = IndicatorBlueprintFactory.build(name=u'\xccsland')
+        instance = IndicatorBlueprintFactory.build(title=u'\xccsland')
         self.assertEqual(str(instance), b'\xc3\x8csland')
         self.assertEqual(unicode(instance), u'\xccsland')
 

@@ -5,7 +5,6 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, transaction
 from django.db.models import F
 from django.db.models.signals import post_save, pre_delete
@@ -41,104 +40,102 @@ from partners.validation.agreements import (
 from partners.validation import interventions as intervention_validation
 
 
-# TODO: streamline this ...
+def _get_partner_base_path(partner):
+    return '/'.join([
+        connection.schema_name,
+        'file_attachments',
+        'partner_organization',
+        str(partner.id),
+    ])
+
+
 def get_agreement_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.partner.id),
-         'agreements',
-         str(instance.agreement_number),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.partner),
+        'agreements',
+        str(instance.agreement_number),
+        filename
+    ])
 
 
 def get_assesment_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organizations',
-         str(instance.partner.id),
-         'assesments',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.partner),
+        'assesments',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_intervention_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.agreement.partner.id),
-         'agreements',
-         str(instance.agreement.id),
-         'interventions',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.agreement.partner),
+        'agreements',
+        str(instance.agreement.id),
+        'interventions',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_prc_intervention_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.agreement.partner.id),
-         'agreements',
-         str(instance.agreement.id),
-         'interventions',
-         str(instance.id),
-         'prc',
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.agreement.partner),
+        'agreements',
+        str(instance.agreement.id),
+        'interventions',
+        str(instance.id),
+        'prc',
+        filename
+    ])
 
 
 def get_intervention_amendment_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.intervention.agreement.partner.id),
-         'agreements',
-         str(instance.intervention.agreement.id),
-         'interventions',
-         str(instance.intervention.id),
-         'amendments',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.intervention.agreement.partner),
+        str(instance.intervention.agreement.partner.id),
+        'agreements',
+        str(instance.intervention.agreement.id),
+        'interventions',
+        str(instance.intervention.id),
+        'amendments',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_intervention_attachments_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_organization',
-         str(instance.intervention.agreement.partner.id),
-         'agreements',
-         str(instance.intervention.agreement.id),
-         'interventions',
-         str(instance.intervention.id),
-         'attachments',
-         str(instance.id),
-         filename]
-    )
+    return '/'.join([
+        _get_partner_base_path(instance.intervention.agreement.partner),
+        'agreements',
+        str(instance.intervention.agreement.id),
+        'interventions',
+        str(instance.intervention.id),
+        'attachments',
+        str(instance.id),
+        filename
+    ])
 
 
 def get_agreement_amd_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_org',
-         str(instance.agreement.partner.id),
-         'agreements',
-         instance.agreement.base_number,
-         'amendments',
-         str(instance.number),
-         filename]
-    )
+    return '/'.join([
+        connection.schema_name,
+        'file_attachments',
+        'partner_org',
+        str(instance.agreement.partner.id),
+        'agreements',
+        instance.agreement.base_number,
+        'amendments',
+        str(instance.number),
+        filename
+    ])
+
+
+def _get_currency_name_or_default(budget):
+    if budget and budget.currency:
+        return budget.currency.code
+    return None
+
 
 # TODO: move this to a workspace app for common configuration options
 
@@ -152,25 +149,6 @@ class WorkspaceFileType(models.Model):
 
     def __unicode__(self):
         return self.name
-
-
-# TODO: move this on the models
-HIGH = 'high'
-SIGNIFICANT = 'significant'
-MEDIUM = 'medium'
-LOW = 'low'
-RISK_RATINGS = (
-    (HIGH, 'High'),
-    (SIGNIFICANT, 'Significant'),
-    (MEDIUM, 'Medium'),
-    (LOW, 'Low'),
-)
-CSO_TYPES = Choices(
-   'International',
-   'National',
-   'Community Based Organization',
-   'Academic Institution',
-)
 
 
 class PartnerType(object):
@@ -198,7 +176,7 @@ def hact_default():
     }
 
 
-class PartnerOrganization(AdminURLMixin, models.Model):
+class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     """
     Represents a partner organization
 
@@ -234,127 +212,180 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('WFP', 'WFP'),
         ('WHO', 'WHO')
     )
+
+    CSO_TYPES = Choices(
+        'International',
+        'National',
+        'Community Based Organization',
+        'Academic Institution',
+    )
+
     partner_type = models.CharField(
+        verbose_name=_("Partner Type"),
         max_length=50,
         choices=PartnerType.CHOICES
     )
 
     # this is only applicable if type is CSO
     cso_type = models.CharField(
+        verbose_name=_('CSO Type'),
         max_length=50,
         choices=CSO_TYPES,
-        verbose_name='CSO Type',
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     name = models.CharField(
+        verbose_name=_('Name'),
         max_length=255,
-        verbose_name='Full Name',
         help_text='Please make sure this matches the name you enter in VISION'
     )
     short_name = models.CharField(
+        verbose_name=_("Short Name"),
         max_length=50,
         blank=True
     )
     description = models.CharField(
+        verbose_name=_("Description"),
         max_length=256,
         blank=True
     )
-    shared_with = ArrayField(models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES), blank=True, null=True)
+    shared_with = ArrayField(
+        models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES),
+        verbose_name=_("Shared Partner"),
+        blank=True,
+        null=True
+    )
 
     # TODO remove this after migration to shared_with + add calculation to
     # hact_field
     shared_partner = models.CharField(
+        verbose_name=_("Shared Partner (old)"),
         help_text='Partner shared with UNDP or UNFPA?',
         choices=Choices(
-           'No',
-           'with UNDP',
-           'with UNFPA',
-           'with UNDP & UNFPA',
+            'No',
+            'with UNDP',
+            'with UNFPA',
+            'with UNDP & UNFPA',
         ),
         default='No',
         max_length=50
     )
     street_address = models.CharField(
+        verbose_name=_("Street Address"),
         max_length=500,
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     city = models.CharField(
+        verbose_name=_("City"),
         max_length=32,
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     postal_code = models.CharField(
+        verbose_name=_("Postal Code"),
         max_length=32,
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     country = models.CharField(
+        verbose_name=_("Country"),
         max_length=32,
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
 
     # TODO: remove this when migration to the new fields is done. check for references
     # BEGIN REMOVE
     address = models.TextField(
+        verbose_name=_("Address"),
         blank=True,
         null=True
     )
     # END REMOVE
 
     email = models.CharField(
+        verbose_name=_("Email Address"),
         max_length=255,
         blank=True, null=True
     )
     phone_number = models.CharField(
+        verbose_name=_("Phone Number"),
         max_length=32,
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     vendor_number = models.CharField(
+        verbose_name=_("Vendor Number"),
         blank=True,
         null=True,
         unique=True,
         max_length=30
     )
     alternate_id = models.IntegerField(
+        verbose_name=_("Alternate ID"),
         blank=True,
         null=True
     )
     alternate_name = models.CharField(
+        verbose_name=_("Alternate Name"),
         max_length=255,
         blank=True,
         null=True
     )
     rating = models.CharField(
+        verbose_name=_('Risk Rating'),
         max_length=50,
         null=True,
-        verbose_name='Risk Rating'
     )
     type_of_assessment = models.CharField(
+        verbose_name=_("Assessment Type"),
         max_length=50,
         null=True,
     )
     last_assessment_date = models.DateField(
-        blank=True, null=True
+        verbose_name=_("Last Assessment Date"),
+        blank=True,
+        null=True,
     )
     core_values_assessment_date = models.DateField(
-        blank=True, null=True,
-        verbose_name='Date positively assessed against core values'
+        verbose_name=_('Date positively assessed against core values'),
+        blank=True,
+        null=True,
     )
     core_values_assessment = models.FileField(
-        blank=True, null=True,
+        verbose_name=_("Core Values Assessment"),
+        blank=True,
+        null=True,
         upload_to='partners/core_values/',
         max_length=1024,
         help_text='Only required for CSO partners'
     )
-    vision_synced = models.BooleanField(default=False)
-    blocked = models.BooleanField(default=False)
-    hidden = models.BooleanField(default=False)
-    deleted_flag = models.BooleanField(default=False, verbose_name='Marked for deletion')
+    vision_synced = models.BooleanField(
+        verbose_name=_("VISION Synced"),
+        default=False,
+    )
+    blocked = models.BooleanField(verbose_name=_("Blocked"), default=False)
+    hidden = models.BooleanField(verbose_name=_("Hidden"), default=False)
+    deleted_flag = models.BooleanField(
+        verbose_name=_('Marked for deletion'),
+        default=False,
+    )
 
     total_ct_cp = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
+        verbose_name=_("Total Cash Transferred for Country Programme"),
+        decimal_places=2,
+        max_digits=12,
+        blank=True,
+        null=True,
         help_text='Total Cash Transferred for Country Programme'
     )
     total_ct_cy = models.DecimalField(
-        decimal_places=2, max_digits=12, blank=True, null=True,
+        verbose_name=_("Total Cash Transferred per Current Year"),
+        decimal_places=2,
+        max_digits=12,
+        blank=True,
+        null=True,
         help_text='Total Cash Transferred per Current Year'
     )
 
@@ -367,7 +398,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     #     "planned_cash_transfer": 0,
     #     "micro_assessment_needed": "Missing",
     #     "audits_mr": 0}
-    hact_values = JSONField(blank=True, null=True, default=hact_default)
+    hact_values = JSONField(
+        verbose_name=_("HACT"),
+        blank=True,
+        null=True,
+        default=hact_default,
+    )
 
     tracker = FieldTracker()
 
@@ -433,7 +469,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         elif 'planned_cash_transfer' in hact and hact['planned_cash_transfer'] > 100000.00 \
                 and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
             hact['micro_assessment_needed'] = 'Yes'
-        elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
+        elif partner.rating in [Assessment.LOW, Assessment.MEDIUM, Assessment.SIGNIFICANT, Assessment.HIGH] \
                 and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
                 and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
             hact['micro_assessment_needed'] = 'Yes'
@@ -538,8 +574,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         else:
             pv = InterventionPlannedVisits.objects.filter(
                 intervention__agreement__partner=partner, year=year,
-                intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]).aggregate(
-                models.Sum('programmatic'))['programmatic__sum'] or 0
+                intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]
+            ).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         hact["planned_visits"] = pv
@@ -598,7 +634,7 @@ class PartnerStaffMemberManager(models.Manager):
         return super(PartnerStaffMemberManager, self).get_queryset().select_related('partner')
 
 
-class PartnerStaffMember(models.Model):
+class PartnerStaffMember(TimeStampedModel):
     """
     Represents a staff member at the partner organization.
     A User is created for each staff member
@@ -611,13 +647,32 @@ class PartnerStaffMember(models.Model):
     """
 
     partner = models.ForeignKey(
-        PartnerOrganization, related_name='staff_members')
-    title = models.CharField(max_length=64, null=True, blank=True)
-    first_name = models.CharField(max_length=64)
-    last_name = models.CharField(max_length=64)
-    email = models.CharField(max_length=128, unique=True, blank=False)
-    phone = models.CharField(max_length=64, blank=True, null=True)
+        PartnerOrganization,
+        verbose_name=_("Partner"),
+        related_name='staff_members'
+    )
+    title = models.CharField(
+        verbose_name=_("Title"),
+        max_length=64,
+        null=True,
+        blank=True,
+    )
+    first_name = models.CharField(verbose_name=_("First Name"), max_length=64)
+    last_name = models.CharField(verbose_name=_("Last Name"), max_length=64)
+    email = models.CharField(
+        verbose_name=_("Email Address"),
+        max_length=128,
+        unique=True,
+        blank=False,
+    )
+    phone = models.CharField(
+        verbose_name=_("Phone Number"),
+        max_length=64,
+        blank=True,
+        null=True,
+    )
     active = models.BooleanField(
+        verbose_name=_("Active"),
         default=True
     )
 
@@ -657,15 +712,25 @@ class PartnerStaffMember(models.Model):
         return super(PartnerStaffMember, self).save(**kwargs)
 
 
-class Assessment(models.Model):
+class Assessment(TimeStampedModel):
     """
     Represents an assessment for a partner organization.
 
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`auth.User`
     """
+    HIGH = 'high'
+    SIGNIFICANT = 'significant'
+    MEDIUM = 'medium'
+    LOW = 'low'
+    RISK_RATINGS = (
+        (HIGH, 'High'),
+        (SIGNIFICANT, 'Significant'),
+        (MEDIUM, 'Medium'),
+        (LOW, 'Low'),
+    )
 
-    ASSESMENT_TYPES = (
+    ASSESSMENT_TYPES = (
         ('Micro Assessment', 'Micro Assessment'),
         ('Simplified Checklist', 'Simplified Checklist'),
         ('Scheduled Audit report', 'Scheduled Audit report'),
@@ -675,60 +740,75 @@ class Assessment(models.Model):
 
     partner = models.ForeignKey(
         PartnerOrganization,
+        verbose_name=_("Partner"),
         related_name='assessments'
     )
     type = models.CharField(
+        verbose_name=_("Type"),
         max_length=50,
-        choices=ASSESMENT_TYPES,
+        choices=ASSESSMENT_TYPES,
     )
     names_of_other_agencies = models.CharField(
+        verbose_name=_("Other Agencies"),
         max_length=255,
         blank=True, null=True,
         help_text='List the names of the other agencies they have worked with'
     )
     expected_budget = models.IntegerField(
-        verbose_name='Planned amount',
+        verbose_name=_('Planned amount'),
         blank=True, null=True,
     )
     notes = models.CharField(
         max_length=255,
         blank=True, null=True,
-        verbose_name='Special requests',
+        verbose_name=_('Special requests'),
         help_text='Note any special requests to be considered during the assessment'
     )
     requested_date = models.DateField(
-        auto_now_add=True
+        verbose_name=_("Requested Date"),
+        auto_now_add=True,
     )
     requesting_officer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Requesting Officer"),
         related_name='requested_assessments',
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     approving_officer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        blank=True, null=True
+        verbose_name=_("Approving Officer"),
+        blank=True,
+        null=True,
     )
     planned_date = models.DateField(
-        blank=True, null=True
+        verbose_name=_("Planned Date"),
+        blank=True,
+        null=True,
     )
     completed_date = models.DateField(
-        blank=True, null=True
+        verbose_name=_("Completed Date"),
+        blank=True,
+        null=True,
     )
     rating = models.CharField(
+        verbose_name=_("Rating"),
         max_length=50,
         choices=RISK_RATINGS,
         default=HIGH,
     )
     # Assesment Report
     report = models.FileField(
-        blank=True, null=True,
+        verbose_name=_("Report"),
+        blank=True,
+        null=True,
         max_length=1024,
         upload_to=get_assesment_path
     )
     # Basis for Risk Rating
     current = models.BooleanField(
+        verbose_name=_('Basis for risk rating'),
         default=False,
-        verbose_name='Basis for risk rating'
     )
 
     tracker = FieldTracker()
@@ -817,47 +897,73 @@ class Agreement(TimeStampedModel):
     }
 
     partner = models.ForeignKey(PartnerOrganization, related_name="agreements")
-    country_programme = models.ForeignKey('reports.CountryProgramme', related_name='agreements', blank=True, null=True)
+    country_programme = models.ForeignKey(
+        'reports.CountryProgramme',
+        verbose_name=_("Country Programme"),
+        related_name='agreements',
+        blank=True,
+        null=True,
+    )
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
+        verbose_name=_("Partner Authorized Officer"),
         blank=True,
         related_name="agreement_authorizations")
     agreement_type = models.CharField(
+        verbose_name=_("Agreement Type"),
         max_length=10,
         choices=AGREEMENT_TYPES
     )
     agreement_number = models.CharField(
+        verbose_name=_('Reference Number'),
         max_length=45,
         blank=True,
-        verbose_name='Reference Number',
         # TODO: write a script to insure this before merging.
         unique=True,
     )
     attached_agreement = models.FileField(
+        verbose_name=_("Attached Agreement"),
         upload_to=get_agreement_path,
         blank=True,
         max_length=1024
     )
-    start = models.DateField(null=True, blank=True)
-    end = models.DateField(null=True, blank=True)
+    start = models.DateField(
+        verbose_name=_("Start Date"),
+        null=True,
+        blank=True,
+    )
+    end = models.DateField(
+        verbose_name=_("End Date"),
+        null=True,
+        blank=True,
+    )
 
-    signed_by_unicef_date = models.DateField(null=True, blank=True)
+    signed_by_unicef_date = models.DateField(
+        verbose_name=_("Signed By UNICEF Date"),
+        null=True,
+        blank=True,
+    )
 
     # Unicef staff members that sign the agreements
     # this user needs to be in the partnership management group
     signed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Signed By UNICEF"),
         related_name='agreements_signed+',
         null=True, blank=True
     )
 
-    signed_by_partner_date = models.DateField(null=True, blank=True)
+    signed_by_partner_date = models.DateField(
+        verbose_name=_("Signed By Partner Date"),
+        null=True,
+        blank=True,
+    )
 
     # Signatory on behalf of the PartnerOrganization
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
         related_name='agreements_signed',
-        verbose_name='Signed by partner',
+        verbose_name=_('Signed by partner'),
         chained_field="partner",
         chained_model_field="partner",
         show_all=False,
@@ -867,6 +973,7 @@ class Agreement(TimeStampedModel):
 
     # TODO: Write a script that sets a status to each existing record
     status = FSMField(
+        verbose_name=_("Status"),
         max_length=32,
         blank=True,
         choices=STATUS_CHOICES,
@@ -1012,6 +1119,12 @@ class Agreement(TimeStampedModel):
         return super(Agreement, self).save()
 
 
+class AgreementAmendmentManager(models.Manager):
+
+    def get_queryset(self):
+        return super(AgreementAmendmentManager, self).get_queryset().select_related('agreement__partner')
+
+
 class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement
@@ -1028,9 +1141,14 @@ class AgreementAmendment(TimeStampedModel):
         (CLAUSE, 'Change in clause'),
     )
 
-    number = models.CharField(max_length=5)
-    agreement = models.ForeignKey(Agreement, related_name='amendments')
+    number = models.CharField(verbose_name=_("Number"), max_length=5)
+    agreement = models.ForeignKey(
+        Agreement,
+        verbose_name=_("Agreement"),
+        related_name='amendments',
+    )
     signed_amendment = models.FileField(
+        verbose_name=_("Signed Amendment"),
         max_length=1024,
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
@@ -1038,9 +1156,15 @@ class AgreementAmendment(TimeStampedModel):
     types = ArrayField(models.CharField(
         max_length=50,
         choices=AMENDMENT_TYPES))
-    signed_date = models.DateField(null=True, blank=True)
+    signed_date = models.DateField(
+        verbose_name=_("Signed Date"),
+        null=True,
+        blank=True,
+    )
 
     tracker = FieldTracker()
+    view_objects = AgreementAmendmentManager()
+    objects = models.Manager()
 
     def __unicode__(self):
         return "{} {}".format(
@@ -1075,15 +1199,31 @@ class AgreementAmendment(TimeStampedModel):
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
-        return super(InterventionManager, self).get_queryset().prefetch_related('agreement__partner',
-                                                                                'sector_locations__sector',
-                                                                                'frs',
-                                                                                'offices',
-                                                                                'planned_budget')
+        return super(InterventionManager, self).get_queryset().prefetch_related(
+            'agreement__partner',
+            'frs',
+            'partner_focal_points',
+            'unicef_focal_points',
+            'offices',
+            'planned_budget',
+            'sections',
+        )
 
     def detail_qs(self):
-        return self.get_queryset().prefetch_related('result_links__cp_output',
-                                                    'unicef_focal_points')
+        return self.get_queryset().prefetch_related(
+            'agreement__partner',
+            'frs',
+            'partner_focal_points',
+            'unicef_focal_points',
+            'offices',
+            'planned_budget',
+            'sections',
+            'result_links__cp_output',
+            'result_links__ll_results',
+            'result_links__ll_results__applied_indicators__indicator',
+            'result_links__ll_results__applied_indicators__disaggregation',
+            'result_links__ll_results__applied_indicators__locations',
+        )
 
 
 def side_effect_one(i, old_instance=None, user=None):
@@ -1153,30 +1293,33 @@ class Intervention(TimeStampedModel):
     objects = InterventionManager()
 
     document_type = models.CharField(
+        verbose_name=_('Document Type'),
         choices=INTERVENTION_TYPES,
         max_length=255,
-        verbose_name='Document type'
     )
     agreement = models.ForeignKey(
         Agreement,
+        verbose_name=_("Agreement"),
         related_name='interventions'
     )
     # Even though CP is defined at the Agreement Level, for a particular intervention this can be different.
     country_programme = models.ForeignKey(
         CountryProgramme,
+        verbose_name=_("Country Programme"),
         related_name='interventions',
         blank=True, null=True, on_delete=models.DO_NOTHING,
         help_text='Which Country Programme does this Intervention belong to?'
     )
     number = models.CharField(
+        verbose_name=_('Reference Number'),
         max_length=64,
         blank=True,
         null=True,
-        verbose_name='Reference Number',
         unique=True,
     )
-    title = models.CharField(max_length=256)
+    title = models.CharField(verbose_name=_("Document Title"), max_length=256)
     status = FSMField(
+        verbose_name=_("Status"),
         max_length=32,
         blank=True,
         choices=INTERVENTION_STATUS,
@@ -1184,72 +1327,121 @@ class Intervention(TimeStampedModel):
     )
     # dates
     start = models.DateField(
-        null=True, blank=True,
+        verbose_name=_("Start Date"),
+        null=True,
+        blank=True,
         help_text='The date the Intervention will start'
     )
     end = models.DateField(
-        null=True, blank=True,
+        verbose_name=_("End Date"),
+        null=True,
+        blank=True,
         help_text='The date the Intervention will end'
     )
     submission_date = models.DateField(
-        null=True, blank=True,
+        verbose_name=_("Document Submission Date by CSO"),
+        null=True,
+        blank=True,
         help_text='The date the partner submitted complete PD/SSFA documents to Unicef',
     )
     submission_date_prc = models.DateField(
-        verbose_name='Submission Date to PRC',
+        verbose_name=_('Submission Date to PRC'),
         help_text='The date the documents were submitted to the PRC',
-        null=True, blank=True,
+        null=True,
+        blank=True,
     )
     review_date_prc = models.DateField(
-        verbose_name='Review date by PRC',
+        verbose_name=_('Review Date by PRC'),
         help_text='The date the PRC reviewed the partnership',
-        null=True, blank=True,
+        null=True,
+        blank=True,
     )
     prc_review_document = models.FileField(
+        verbose_name=_("Review Document by PRC"),
         max_length=1024,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         upload_to=get_prc_intervention_file_path
     )
     signed_pd_document = models.FileField(
+        verbose_name=_("Signed PD Document"),
         max_length=1024,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         upload_to=get_prc_intervention_file_path
     )
-    signed_by_unicef_date = models.DateField(null=True, blank=True)
-    signed_by_partner_date = models.DateField(null=True, blank=True)
+    signed_by_unicef_date = models.DateField(
+        verbose_name=_("Signed by UNICEF Date"),
+        null=True,
+        blank=True,
+    )
+    signed_by_partner_date = models.DateField(
+        verbose_name=_("Signed by Partner Date"),
+        null=True,
+        blank=True,
+    )
 
     # partnership managers
     unicef_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Signed by UNICEF"),
         related_name='signed_interventions+',
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     # part of the Agreement authorized officers
     partner_authorized_officer_signatory = models.ForeignKey(
         PartnerStaffMember,
+        verbose_name=_("Signed by Partner"),
         related_name='signed_interventions',
-        blank=True, null=True,
+        blank=True,
+        null=True,
     )
     # anyone in unicef country office
     unicef_focal_points = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("UNICEF Focal Points"),
         blank=True,
         related_name='unicef_interventions_focal_points+'
     )
     # any PartnerStaffMember on the ParterOrganization
     partner_focal_points = models.ManyToManyField(
         PartnerStaffMember,
+        verbose_name=_("CSO Authorized Officials"),
         related_name='interventions_focal_points+',
         blank=True
     )
 
-    contingency_pd = models.BooleanField(default=False)
-
-    offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
-    population_focus = models.CharField(max_length=130, null=True, blank=True)
+    contingency_pd = models.BooleanField(
+        verbose_name=_("Contingency PD"),
+        default=False,
+    )
+    sections = models.ManyToManyField(
+        Sector,
+        verbose_name=_("Sections"),
+        blank=True,
+        related_name='interventions',
+    )
+    offices = models.ManyToManyField(
+        Office,
+        verbose_name=_("Office"),
+        blank=True,
+        related_name='office_interventions+',
+    )
+    population_focus = models.CharField(
+        verbose_name=_("Population Focus"),
+        max_length=130,
+        null=True,
+        blank=True,
+    )
     # Flag if this has been migrated to a status that is not correct
     # previous status
-    metadata = JSONField(blank=True, null=True, default=dict)
+    metadata = JSONField(
+        verbose_name=_("Metadata"),
+        blank=True,
+        null=True,
+        default=dict,
+    )
 
     class Meta:
         ordering = ['-created']
@@ -1271,7 +1463,7 @@ class Intervention(TimeStampedModel):
         if not self.signed_by_unicef_date or not self.signed_by_partner_date:
             return 'Not fully signed'
         signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
-        return relativedelta(signed_date - self.submission_date).days
+        return relativedelta(signed_date, self.submission_date).days
 
     @property
     def submitted_to_prc(self):
@@ -1284,7 +1476,7 @@ class Intervention(TimeStampedModel):
         if not self.signed_by_unicef_date or not self.signed_by_partner_date:
             return 'Not fully signed'
         signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
-        return relativedelta(signed_date - self.review_date_prc).days
+        return relativedelta(signed_date, self.review_date_prc).days
 
     @property
     def sector_names(self):
@@ -1293,59 +1485,80 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.partner_contribution
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.partner_contribution if hasattr(self, 'planned_budget') else 0
+
+    @cached_property
+    def default_budget_currency(self):
+        # todo: this seems to always come from self.planned_budget so not splitting it out
+        # by different categories - e.g. partner vs unicef. is this valid?
+        return _get_currency_name_or_default(self.planned_budget)
+
+    @cached_property
+    def fr_currency(self):
+        # todo: implicit assumption here that there aren't conflicting currencies
+        # eventually, this should be checked/reconciled if there are conflicts
+        # also, this doesn't do filtering in the db so that it can be used efficiently with `prefetch_related`
+        if self.frs.exists():
+            return self.frs.all()[0].currency
 
     @cached_property
     def total_unicef_cash(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.unicef_cash
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.unicef_cash if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_in_kind_amount(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.in_kind_amount
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.in_kind_amount if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_budget(self):
-        # TODO: test this
         return self.total_unicef_cash + self.total_partner_contribution + self.total_in_kind_amount
 
     @cached_property
     def total_unicef_budget(self):
-        # TODO: test this
         return self.total_unicef_cash + self.total_in_kind_amount
 
     @cached_property
     def total_partner_contribution_local(self):
-        try:
-            return self.planned_budget.partner_contribution_local
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_unicef_cash_local(self):
-        try:
-            return self.planned_budget.unicef_cash_local
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_budget_local(self):
-        # TODO: test this
-        try:
-            return self.planned_budget.in_kind_amount_local
-        except ObjectDoesNotExist:
-            return 0
+        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
+
+    @cached_property
+    def all_lower_results(self):
+        # todo: it'd be nice to be able to do this as a queryset but that may not be possible
+        # with prefetch_related
+        return [
+            lower_result for link in self.result_links.all()
+            for lower_result in link.ll_results.all()
+        ]
+
+    @cached_property
+    def intervention_locations(self):
+        # return intervention locations as a set of Location objects
+        locations = set()
+        for lower_result in self.all_lower_results:
+            for applied_indicator in lower_result.applied_indicators.all():
+                for location in applied_indicator.locations.all():
+                    locations.add(location)
+
+        return locations
+
+    @cached_property
+    def intervention_clusters(self):
+        # return intervention clusters as an array of strings
+        clusters = []
+        for lower_result in self.all_lower_results:
+            for applied_indicator in lower_result.applied_indicators.all():
+                if applied_indicator.cluster_name and applied_indicator.cluster_name not in clusters:
+                    clusters.append(applied_indicator.cluster_name)
+
+        return clusters
 
     @cached_property
     def total_frs(self):
@@ -1525,17 +1738,33 @@ class InterventionAmendment(TimeStampedModel):
         (OTHER, 'Other')
     )
 
-    intervention = models.ForeignKey(Intervention, related_name='amendments')
+    intervention = models.ForeignKey(
+        Intervention,
+        verbose_name=_("Reference Number"),
+        related_name='amendments'
+    )
 
     types = ArrayField(models.CharField(
         max_length=50,
         choices=AMENDMENT_TYPES))
 
-    other_description = models.CharField(max_length=512, null=True, blank=True)
+    other_description = models.CharField(
+        verbose_name=_("Description"),
+        max_length=512,
+        null=True,
+        blank=True,
+    )
 
-    signed_date = models.DateField(null=True)
-    amendment_number = models.IntegerField(default=0)
+    signed_date = models.DateField(
+        verbose_name=_("Signed Date"),
+        null=True,
+    )
+    amendment_number = models.IntegerField(
+        verbose_name=_("Number"),
+        default=0,
+    )
     signed_amendment = models.FileField(
+        verbose_name=_("Amendment Document"),
         max_length=1024,
         upload_to=get_intervention_amendment_file_path
     )
@@ -1543,11 +1772,9 @@ class InterventionAmendment(TimeStampedModel):
     tracker = FieldTracker()
 
     def compute_reference_number(self):
-        if self.signed_date:
-            return '{0:02d}'.format(self.intervention.amendments.filter(signed_date__isnull=False).count() + 1)
-        else:
-            seq = self.intervention.amendments.filter(signed_date__isnull=True).count() + 1
-            return 'tmp{0:02d}'.format(seq)
+        return self.intervention.amendments.filter(
+            signed_date__isnull=False
+        ).count() + 1
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -1558,18 +1785,10 @@ class InterventionAmendment(TimeStampedModel):
 
         # check if temporary number is needed or amendment number needs to be
         # set
-        update_intervention_number_needed = False
-        oldself = InterventionAmendment.objects.get(id=self.pk) if self.pk else None
-        if self.signed_amendment:
-            if not oldself or not oldself.signed_amendment:
-                self.amendment_number = self.compute_reference_number()
-                update_intervention_number_needed = True
-        else:
-            if not oldself:
-                self.number = self.compute_reference_number()
-
-        if update_intervention_number_needed:
+        if self.pk is None:
+            self.amendment_number = self.compute_reference_number()
             self.intervention.save(amendment_number=self.amendment_number)
+
         return super(InterventionAmendment, self).save(**kwargs)
 
     def __unicode__(self):
@@ -1579,7 +1798,7 @@ class InterventionAmendment(TimeStampedModel):
         )
 
 
-class InterventionPlannedVisits(models.Model):
+class InterventionPlannedVisits(TimeStampedModel):
     """
     Represents planned visits for the intervention
     """
@@ -1600,7 +1819,7 @@ class InterventionPlannedVisits(models.Model):
         unique_together = ('intervention', 'year')
 
 
-class InterventionResultLink(models.Model):
+class InterventionResultLink(TimeStampedModel):
     intervention = models.ForeignKey(Intervention, related_name='result_links')
     cp_output = models.ForeignKey(Result, related_name='intervention_links')
     ram_indicators = models.ManyToManyField(Indicator, blank=True)
@@ -1657,7 +1876,7 @@ class InterventionBudget(TimeStampedModel):
         super(InterventionBudget, self).save(**kwargs)
 
     def __str__(self):
-        return '{}: {}'.format(
+        return '{}: {:.2f}'.format(
             self.intervention,
             self.total
         )
@@ -1716,7 +1935,31 @@ class InterventionAttachment(TimeStampedModel):
         return self.attachment.name
 
 
-class InterventionSectorLocationLink(models.Model):
+@python_2_unicode_compatible
+class InterventionReportingPeriod(TimeStampedModel):
+    """
+    Represents a set of 3 dates associated with an Intervention (start, end,
+    and due).
+
+    There can be multiple sets of these dates for each intervention, but
+    within each set, start < end < due.
+    """
+    intervention = models.ForeignKey(Intervention, related_name='reporting_periods')
+    start_date = models.DateField(verbose_name='Reporting Period Start Date')
+    end_date = models.DateField(verbose_name='Reporting Period End Date')
+    due_date = models.DateField(verbose_name='Report Due Date')
+
+    class Meta:
+        ordering = ['-due_date']
+
+    def __str__(self):
+        return '{} ({} - {}) due on {}'.format(
+            self.intervention, self.start_date, self.end_date, self.due_date
+        )
+
+
+# TODO intervention sector locations cleanup
+class InterventionSectorLocationLink(TimeStampedModel):
     intervention = models.ForeignKey(Intervention, related_name='sector_locations')
     sector = models.ForeignKey(Sector, related_name='intervention_locations')
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)

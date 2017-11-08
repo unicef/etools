@@ -144,19 +144,15 @@ SHARED_APPS = (
     'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.humanize',
-    'mathfilters',
 
-    'easy_thumbnails',
     'storages',
     'rest_framework',
     'rest_framework_swagger',
     'rest_framework.authtoken',
     'import_export',
     'smart_selects',
-    'generic_links',
     'gunicorn',
     'post_office',
-    'djrill',
     'djcelery',
     'djcelery_email',
     'leaflet',
@@ -197,12 +193,12 @@ TENANT_APPS = (
     'supplies',
     't2f',
     'workplan',
-    'actstream',
     'attachments',
     'tpm',
     'audit',
     'firms',
     'management',
+    'snapshot',
 )
 INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
@@ -388,14 +384,6 @@ LEAFLET_CONFIG = {
     'MAX_ZOOM': 18,
 }
 
-# django-activity-stream: http://django-activity-stream.readthedocs.io/en/latest/configuration.html
-ACTSTREAM_SETTINGS = {
-    'FETCH_RELATIONS': True,
-    'GFK_FETCH_DEPTH': 1,
-    'USE_JSONFIELD': True,
-    'MANAGER': 'EquiTrack.stream_feed.managers.CustomDataActionManager',
-}
-
 # django-tenant-schemas: https://github.com/bernardopires/django-tenant-schemas
 TENANT_MODEL = "users.Country"  # app.Model
 
@@ -535,6 +523,14 @@ TASK_ADMIN_USER = os.environ.get('TASK_ADMIN_USER', 'etools_task_admin')
 VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
+
+
+# ALLOW BASIC AUTH FOR DEMO SITE
+ALLOW_BASIC_AUTH = os.getenv('ALLOW_BASIC_AUTH', False)
+if ALLOW_BASIC_AUTH:
+    REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
+        'EquiTrack.mixins.DRFBasicAuthMixin',
+    )
 
 ISSUE_CHECKS = [
     'management.issues.project_checks.ActivePCANoSignedDocCheck',
