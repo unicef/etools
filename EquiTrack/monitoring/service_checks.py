@@ -3,13 +3,12 @@ A collection of functions which test the most basic operations of various servic
 """
 from collections import namedtuple
 
-
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import connections
 from django.db.utils import OperationalError
-from celery import Celery
 
+from celery import Celery
 
 # much of this modeled from https://github.com/dimagi/commcare-hq/blob/master/corehq/apps/hqadmin/service_checks.py
 

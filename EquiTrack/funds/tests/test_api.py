@@ -14,5 +14,5 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
         '''Verify URL pattern names generate the URLs we expect them to.'''
         names_and_paths = (
             ('frs', 'frs/', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 'funds:', '/api/v2/funds/')

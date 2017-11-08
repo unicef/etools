@@ -2,16 +2,16 @@ from __future__ import unicode_literals
 
 from datetime import date, datetime, timedelta
 
-from pytz import UTC
-
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import QuerySet
 from django.db.models.query_utils import Q
 from django.db.utils import IntegrityError
-from django.utils.timezone import now
-from django.contrib.postgres.fields import JSONField
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.timezone import now
+
+from pytz import UTC
 
 # UTC have to be here to be able to directly compare with the values from the db (orm always returns tz aware values)
 EPOCH_ZERO = datetime(1970, 1, 1, tzinfo=UTC)
@@ -327,7 +327,7 @@ class DSARateUpload(models.Model):
             self.status = DSARateUpload.UPLOADED
             super(DSARateUpload, self).save(*args, **kwargs)
             # resolve circular imports with inline importing
-            from .tasks import upload_dsa_rates
+            from publics.tasks import upload_dsa_rates
             upload_dsa_rates.delay(self.pk)
         else:
             super(DSARateUpload, self).save(*args, **kwargs)
