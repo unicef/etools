@@ -16,7 +16,7 @@ from EquiTrack.parsers import parse_multipart_data
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from utils.common.utils import get_all_field_names
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def check_editable_fields(obj, fields):
@@ -488,10 +488,6 @@ class CompleteValidation(object):
                 if i in list_of_status_choices]
 
         for potential_transition_to in pttl:
-            # test to see if it's a viable transition:
-            # template = "test to see if transition is possible : {} -> {}"
-            # try to find a possible transition... if no possible transition (transition was not defined on the model
-            # it will always validate
             possible_fsm_transition = self._get_fsm_defined_transitions(self.new.status, potential_transition_to)
             if not possible_fsm_transition:
                 template = "transition: {} -> {} is possible since there was no transition defined on the model"
@@ -533,8 +529,6 @@ class CompleteValidation(object):
 
         while self._make_auto_transition():
             any_transition_made = True
-
-        # template = "*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}"
 
         # reset rigid check:
         self.disable_rigid_check = originial_rigid_check_setting

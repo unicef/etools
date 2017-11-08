@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import logging
@@ -18,11 +18,11 @@ from t2f.models import TravelActivity
 from users.models import Country, UserProfile
 from utils.common.utils import every_country
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def printtf(*args):
-    print([arg for arg in args])
+    logging.info([arg for arg in args])
     f = open('mylogs.txt', 'a')
     print([arg for arg in args], file=f)
     f.close()
@@ -37,7 +37,7 @@ def log_to_file(file_name='fail_logs.txt', *args):
 
 def set_country(name):
     connection.set_tenant(Country.objects.get(name=name))
-    logger.info('Set in {} workspace'.format(name))
+    logger.info(u'Set in {} workspace'.format(name))
 
 
 def fix_duplicate_indicators(country_name):
@@ -330,7 +330,7 @@ def before_code_merge():
     # Delete all fcs
     all_countries_do(delete_all_fcs, 'Deleting FCs')
 
-    logger.info('FINISHED WITH BEFORE MERGE')
+    logger.info(u'FINISHED WITH BEFORE MERGE')
 
 
 def after_code_merge():  # and after migrations
@@ -341,7 +341,7 @@ def after_code_merge():  # and after migrations
     # disassociate result structures
     all_countries_do(dissasociate_result_structures, 'Dissasociate Result Structure')
 
-    logger.info("Don't forget to sync")
+    logger.info(u"Don't forget to sync")
 
 
 # run this before migration partners_0005
@@ -411,22 +411,22 @@ def local_country_keep():
 
 def change_partner_shared_women(country_name):
     if not country_name:
-        logger.info("country name required")
+        logger.info(u"country name required")
     set_country(country_name)
-    logger.info("Migrating UN Women for {}".format(country_name))
+    logger.info(u"Migrating UN Women for {}".format(country_name))
     partners = PartnerOrganization.objects.filter(shared_with__contains=['Women'])
     for partner in partners:
         partner.shared_with.remove('Women')
         partner.shared_with.append('UN Women')
         partner.save()
-        logger.info('updating partner {}'.format(partner.id))
+        logger.info(u'updating partner {}'.format(partner.id))
 
 
 def change_partner_cso_type(country_name):
     if not country_name:
-        logger.info("country name required")
+        logger.info(u"country name required")
     set_country(country_name)
-    logger.info("Migrating cso_type for {}".format(country_name))
+    logger.info(u"Migrating cso_type for {}".format(country_name))
     partners = PartnerOrganization.objects.filter(cso_type__isnull=False)
     for partner in partners:
         if partner.cso_type == 'International NGO':
@@ -445,44 +445,43 @@ def release_3_migrations():
 
 def migrate_to_good_partner(country_name, partner_list):
     if not country_name:
-        logger.info("country name required")
+        logger.info(u"country name required")
 
     set_country(country_name)
     if not partner_list:
-        logger.info("partner list of tuples required")
+        logger.info(u"partner list of tuples required")
 
     for partner_tuple in partner_list:
         partner_old = PartnerOrganization.objects.get(id=partner_tuple[0])
         partner_new = PartnerOrganization.objects.get(id=partner_tuple[1])
-        logger.info("old partner: {} --- new partner: {}".format(partner_old, partner_new))
+        logger.info(u"old partner: {} --- new partner: {}".format(partner_old, partner_new))
 
         # agreements
         agreements = Agreement.objects.filter(partner=partner_old)
         for agreement in agreements:
             agreement.partner = partner_new
             agreement.save()
-            logger.info("agreement: {}".format(agreement.reference_number))
+            logger.info(u"agreement: {}".format(agreement.reference_number))
 
         # staff members
         staff_members = PartnerStaffMember.objects.filter(partner=partner_old)
         for staff_member in staff_members:
             staff_member.partner = partner_new
             staff_member.save()
-            logger.info("staff_member name: {}".format(staff_member.get_full_name()))
+            logger.info(u"staff_member name: {}".format(staff_member.get_full_name()))
 
-        # assesments
-        assesments = Assessment.objects.filter(partner=partner_old)
-        for assesment in assesments:
-            assesment.partner = partner_new
-            assesment.save()
-            logger.info("assessment id: {}".format(assesment.id))
+        assessments = Assessment.objects.filter(partner=partner_old)
+        for assessment in assessments:
+            assessment.partner = partner_new
+            assessment.save()
+            logger.info(u"assessment id: {}".format(assessment.id))
 
         # travel activities
         travel_activities = TravelActivity.objects.filter(partner=partner_old)
         for travel_activity in travel_activities:
             travel_activity.partner = partner_new
             travel_activity.save()
-            logger.info("travel_activity id: {}".format(travel_activity.id))
+            logger.info(u"travel_activity id: {}".format(travel_activity.id))
 
 
 def create_test_user(email, password):
@@ -510,7 +509,7 @@ def create_test_user(email, password):
     userp.country = country
     userp.country_override = country
     userp.save()
-    logger.info("user {} created".format(u.email))
+    logger.info(u"user {} created".format(u.email))
 
 
 def run(function):
@@ -528,7 +527,7 @@ def remediation_intervention_migration():
     for intervention in active_interventions:
         validator = InterventionValid(intervention, user=master_user, disable_rigid_check=True)
         if not validator.is_valid:
-            logger.info('active intervention {} of type {} is invalid'.format(
+            logger.info(u'active intervention {} of type {} is invalid'.format(
                 intervention.id, intervention.document_type))
             logger.error(validator.errors)
             intervention.status = Intervention.DRAFT
@@ -541,7 +540,7 @@ def remediation_intervention_migration():
                 new_validator = InterventionValid(intervention, master_user, disable_rigid_check=True)
                 if new_validator.is_valid:
                     if intervention.status == 'signed':
-                        logger.info('intervention moved to signed {}'.format(intervention.status))
+                        logger.info(u'intervention moved to signed {}'.format(intervention.status))
                         intervention.metadata = {
                             'migrated': True,
                             'old_status': Intervention.DRAFT,
@@ -550,7 +549,7 @@ def remediation_intervention_migration():
                 else:
                     logger.debug('draft invalid')
         else:
-            logger.info('intervention {} of type {} successfully ported as active'.format(
+            logger.info(u'intervention {} of type {} successfully ported as active'.format(
                 intervention.id, intervention.document_type))
 
 
@@ -563,10 +562,10 @@ def assert_interventions_valid():
     for i in ints:
         if i.document_type == i.SSFA:
             if not i.agreement.agreement_type == i.agreement.SSFA:
-                logger.info('NO WAY')
+                logger.info(u'NO WAY')
         elif i.document_type in [Intervention.PD, Intervention.SHPD]:
             if not i.agreement.agreement_type == i.agreement.PCA:
-                logger.info('NO WAY PCA')
+                logger.info(u'NO WAY PCA')
 
 
 def wow():
@@ -583,13 +582,13 @@ def intervention_update_task():
         old_status = intervention.status
         validator = InterventionValid(intervention, master_user)
         if not validator.is_valid:
-            logger.info('intervention {} of type {} is invalid: (Status:{})'.format(
+            logger.info(u'intervention {} of type {} is invalid: (Status:{})'.format(
                 intervention.id, intervention.document_type, intervention.status))
             logger.error(validator.errors)
         else:
             if old_status != intervention.status:
                 intervention.save()
-                logger.info('intervention {} of type {} successfully updated from {} to {}'.format(
+                logger.info(u'intervention {} of type {} successfully updated from {} to {}'.format(
                     intervention.id, intervention.document_type, old_status, intervention.status))
 
 
@@ -603,7 +602,7 @@ def interventions_associated_ssfa():
                                                             document_type=Intervention.SSFA)
         interventions = intervention_pds_ssfa | intervention_ssfa_pca
         for i in interventions:
-            logger.info('intervention {} type {} status {} has agreement type {}'.format(
+            logger.info(u'intervention {} type {} status {} has agreement type {}'.format(
                 i.id, i.document_type, i.agreement.agreement_type, i.status))
 
 
@@ -612,7 +611,7 @@ def remediation_intervention_unicef_budget():
     for intervention in interventions:
         old_status = intervention.status
         if intervention.total_unicef_budget == 0:
-            logger.info('{} intervention {} of type {} invalid unicef_cash = 0 or unicef_supplies = 0'.format(
+            logger.info(u'{} intervention {} of type {} invalid unicef_cash = 0 or unicef_supplies = 0'.format(
                 intervention.status,
                 intervention.id,
                 intervention.document_type))
