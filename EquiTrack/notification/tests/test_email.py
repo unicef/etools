@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from mock import patch
-from post_office.models import EmailTemplate, Email
 
-from EquiTrack.tests.mixins import FastTenantTestCase
+from mock import patch
+from post_office.models import Email, EmailTemplate
+
 from EquiTrack.factories import NotificationFactory, UserFactory
+from EquiTrack.tests.mixins import FastTenantTestCase
 from notification.models import Notification
 
 

@@ -1,18 +1,20 @@
 from __future__ import unicode_literals
 
-import logging
 import csv
-from decimal import Decimal, InvalidOperation
+import logging
 from collections import defaultdict
-from datetime import datetime, date
+from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
+
 from storages.backends.azure_storage import AzureStorage
 
 from EquiTrack.celery import app
-from publics.models import TravelAgent, Currency, ExchangeRate, WBS, Grant, Fund, TravelExpenseType, \
-    BusinessArea, DSARateUpload, Country, DSARegion, DSARate
+from publics.models import (
+    BusinessArea, Country, Currency, DSARate, DSARateUpload, DSARegion, ExchangeRate, Fund, Grant, TravelAgent,
+    TravelExpenseType, WBS,)
 
 try:
     import xml.etree.cElementTree as ET
@@ -199,19 +201,19 @@ def import_cost_assignments(xml_structure):
 
 class DSARateUploader(object):
     FIELDS = (
-         'Country Code',
-         'Country Name',
-         'DSA Area Name',
-         'Area Code',
-         'Unique Name',
-         'Unique ID',
-         'USD_60Plus',
-         'USD_60',
-         'Local_60',
-         'Local_60Plus',
-         'Room_Percentage',
-         'Finalization_Date',
-         'DSA_Eff_Date',
+        'Country Code',
+        'Country Name',
+        'DSA Area Name',
+        'Area Code',
+        'Unique Name',
+        'Unique ID',
+        'USD_60Plus',
+        'USD_60',
+        'Local_60',
+        'Local_60Plus',
+        'Room_Percentage',
+        'Finalization_Date',
+        'DSA_Eff_Date',
     )
 
     def __init__(self, dsa_rate_upload):
@@ -223,9 +225,9 @@ class DSARateUploader(object):
         storage = AzureStorage()
         with storage.open(filename) as input_file:
             return [dict(r) for r in csv.DictReader(
-                                            input_file,
-                                            restkey='__extra_columns__',
-                                            restval='__missing_columns__')]
+                input_file,
+                restkey='__extra_columns__',
+                restval='__missing_columns__')]
 
     @atomic
     def update_dsa_regions(self):
@@ -256,7 +258,7 @@ class DSARateUploader(object):
                 raw = raw.replace(' ', '')  # remove space delimiter
                 n = Decimal(raw)
             except InvalidOperation as e:
-                self.errors['{} (line {})'.format(field, line+1)] = e.message
+                self.errors['{} (line {})'.format(field, line + 1)] = e.message
                 return None
             else:
                 return n
@@ -269,7 +271,7 @@ class DSARateUploader(object):
                     year += 2000
                 d = date(year, month, day)
             except ValueError as e:
-                self.errors['{} (line {})'.format(field, line+1)] = e.message
+                self.errors['{} (line {})'.format(field, line + 1)] = e.message
                 return None
             else:
                 return d

@@ -2,6 +2,7 @@ import functools
 import operator
 
 from django.db.models import Q
+
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView, ListCreateAPIView, \
     RetrieveUpdateAPIView
