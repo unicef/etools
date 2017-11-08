@@ -74,7 +74,7 @@ def transition_to_closed(i):
     return True
 
 
-def transtion_to_signed(i):
+def transition_to_signed(i):
     from partners.models import Agreement
     if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
         raise TransitionError([_('The PCA related to this record is Suspended or Terminated. '
