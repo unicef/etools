@@ -15,7 +15,7 @@ from users.models import Country, Section, User, UserProfile
 from vision.models import VisionSyncLog
 from vision.vision_data_synchronizer import VisionException
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class UserMapper(object):
