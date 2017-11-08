@@ -13,7 +13,7 @@ from EquiTrack.factories import (
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
     GrantFactory,
-    )
+)
 from EquiTrack.tests.mixins import FastTenantTestCase
 from funds.models import FundsReservationItem, FundsCommitmentItem
 
