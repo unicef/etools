@@ -170,10 +170,10 @@ class AgreementForm(UserGroupForm):
             if start is None:
                 # if both signed dates exist
                 if signed_by_partner_date and signed_by_unicef_date:
-                    if signed_by_partner_date > signed_by_unicef_date:
-                        self.cleaned_data[u'start'] = signed_by_partner_date
-                    else:
-                        self.cleaned_data[u'start'] = signed_by_unicef_date
+                    self.cleaned_data[u"start"] = max([
+                        signed_by_partner_date,
+                        signed_by_unicef_date
+                    ])
 
         if agreement_type == Agreement.PCA and partner.partner_type != u'Civil Society Organization':
             raise ValidationError(
@@ -191,17 +191,13 @@ class AgreementForm(UserGroupForm):
 
         # check if start date is greater than or equal than greatest signed date
         if signed_by_partner_date and signed_by_unicef_date and start:
-            if signed_by_partner_date > signed_by_unicef_date:
-                if start < signed_by_partner_date:
-                    raise ValidationError({'start': self.ERROR_MESSAGES['start_date_val']})
-            else:
-                if start < signed_by_unicef_date:
-                    raise ValidationError({'start': self.ERROR_MESSAGES['start_date_val']})
+            if start < max([signed_by_partner_date, signed_by_unicef_date]):
+                raise ValidationError({'start': self.ERROR_MESSAGES['start_date_val']})
 
         if self.instance.id and self.instance.agreement_type != agreement_type \
                 and signed_by_partner_date and signed_by_unicef_date:
             raise ValidationError(
-                _(u'Agreement type can not be changed once signed by unicef and partner ')
+                _(u'Agreement type can not be changed once signed by unicef and partner')
             )
 
         # TODO: prevent more than one agreement being created for the current period
