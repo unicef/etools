@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import types
 
 from django.core.management.commands.loaddata import Command as LoaddataCommand
+
 from post_office.models import EmailTemplate
 
 

@@ -1,23 +1,11 @@
-from rest_framework import viewsets, mixins
-from rest_framework.generics import RetrieveAPIView, ListAPIView
+from rest_framework import mixins, viewsets
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
 
-from reports.models import (
-    ResultType,
-    Result,
-    Sector,
-    Indicator,
-    Unit,
-    CountryProgramme
-)
+from reports.models import CountryProgramme, Indicator, Result, ResultType, Sector, Unit
 from reports.serializers.v1 import (
-    ResultTypeSerializer,
-    ResultSerializer,
-    SectorCreateSerializer,
-    IndicatorCreateSerializer,
-    UnitSerializer,
-    CountryProgrammeSerializer
-)
+    CountryProgrammeSerializer, IndicatorCreateSerializer, ResultSerializer, ResultTypeSerializer,
+    SectorCreateSerializer, UnitSerializer,)
 
 
 class ResultTypeViewSet(mixins.ListModelMixin,

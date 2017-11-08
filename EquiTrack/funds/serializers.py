@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
-from .models import FundsReservationHeader
+from funds.models import FundsReservationHeader
 
 
 class FRHeaderSerializer(serializers.ModelSerializer):

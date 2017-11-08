@@ -7,9 +7,8 @@ from unittest import skipIf, TestCase
 
 from django.core import mail
 
-from EquiTrack.tests.mixins import FastTenantTestCase
-
-from .factories import (
+from audit.models import Auditor, AuditorStaffMember
+from audit.tests.factories import (
     AuditPartnerFactory,
     AuditorStaffMemberFactory,
     EngagementFactory,
@@ -19,7 +18,8 @@ from .factories import (
     RiskFactory,
     SpotCheckFactory,
     )
-from ..models import AuditorStaffMember, Auditor
+from EquiTrack.tests.mixins import FastTenantTestCase
+
 from firms.factories import UserFactory
 
 
