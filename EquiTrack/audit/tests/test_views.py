@@ -2,11 +2,12 @@ import random
 
 from rest_framework import status
 
+from audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
+from audit.tests.factories import (
+    AuditFactory, AuditPartnerFactory, MicroAssessmentFactory, PartnerWithAgreementsFactory, RiskBluePrintFactory,
+    RiskCategoryFactory,)
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerType
-from .factories import RiskCategoryFactory, RiskBluePrintFactory, \
-    MicroAssessmentFactory, AuditFactory, AuditPartnerFactory, PartnerWithAgreementsFactory
-from .base import EngagementTransitionsTestCaseMixin, AuditTestCaseMixin
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
