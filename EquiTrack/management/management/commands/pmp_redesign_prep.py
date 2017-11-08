@@ -1,11 +1,15 @@
 # flake8: noqa
-from django.core.management import BaseCommand
+import logging
 from datetime import date, datetime, timedelta
-from users.models import Country, User
-from partners.models import *
-from funds.models import *
-from EquiTrack.util_scripts import *
 
+from django.core.management import BaseCommand
+
+from EquiTrack.util_scripts import *
+from funds.models import *
+from partners.models import *
+from users.models import Country, User
+
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = 'A set of scripts that checks the data models for anything that ' \
@@ -26,7 +30,7 @@ class Command(BaseCommand):
 def pd_frs_not_found():
     if not hasattr(Intervention, 'fr_numbers'):
         # this attribute doesn't seem to exist
-        print('No fr_numbers attribute found. Skipping this step.')
+        logger.info(u'No fr_numbers attribute found. Skipping this step.')
         return
     for i in Intervention.objects.all():
         fr_numbers = i.fr_numbers if i.fr_numbers else []
@@ -48,7 +52,7 @@ def active_pca_no_signed_doc():
     issue_id = 'active_pca_no_signed_doc'
     for agr in Agreement.objects.filter(agreement_type=Agreement.PCA).exclude(status='draft'):
         if not agr.attached_agreement:
-            print('{} Agreement [{}] does not have a signed PCA attached'.format(agr.agreement_type, agr.id))
+            logger.info(u'{} Agreement [{}] does not have a signed PCA attached'.format(agr.agreement_type, agr.id))
 
 
 # pd wrong cp outputs
@@ -62,8 +66,7 @@ def pd_outputs_wrong():
                 if rl.cp_output.country_programme != cp:
                     wrong_cp.append(rl.cp_output.wbs)
             if len(wrong_cp) > 0:
-
-                print ("PD [P{}] STATUS [{}] CP [{}] has wrongly mapped outputs {}".format(intervention.id, intervention.status, cp.wbs, wrong_cp))
+                logger.info(u"PD [P{}] STATUS [{}] CP [{}] has wrongly mapped outputs {}".format(intervention.id, intervention.status, cp.wbs, wrong_cp))
 
 
 # PDs attached to SSFA agreements
@@ -73,18 +76,18 @@ def interventions_associated_ssfa():
                                                         document_type=Intervention.SSFA)
     interventions = intervention_pds_ssfa | intervention_ssfa_pca
     for i in interventions:
-        print('intervention {} type {} status {} has agreement type {}'.format(i.id, i.document_type, i.status, i.agreement.agreement_type))
+        logger.info(u'intervention {} type {} status {} has agreement type {}'.format(i.id, i.document_type, i.status, i.agreement.agreement_type))
 
 
 # PD amendments missing files
 def interventions_amendments_no_file():
     ias = InterventionAmendment.objects.filter(signed_amendment='')
     for amd in ias:
-        print('intervention {} type {} status {} has missing amendment file'.format(amd.intervention.id, amd.intervention.document_type, amd.intervention.status))
+        logger.info(u'intervention {} type {} status {} has missing amendment file'.format(amd.intervention.id, amd.intervention.document_type, amd.intervention.status))
 
 
 # PCA amendments missing files
 def agreement_amendments_no_file():
     aas = AgreementAmendment.objects.filter(signed_amendment='')
     for amd in aas:
-        print('agreement {} type {} status {} has missing amendment file'.format(amd.agreement.id, amd.agreement.agreement_type, amd.agreement.status))
+        logger.info(u'agreement {} type {} status {} has missing amendment file'.format(amd.agreement.id, amd.agreement.agreement_type, amd.agreement.status))

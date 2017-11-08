@@ -1,10 +1,11 @@
 from django.db import connection
 from django.test import TestCase
+
 from rest_framework import serializers
 
-from .models import StaffMember
-from ..factories import UserFactory
-from ..serializers import BaseStaffMemberSerializer
+from firms.factories import UserFactory
+from firms.serializers import BaseStaffMemberSerializer
+from firms.tests.models import StaffMember
 
 
 class StaffMemberSerializer(BaseStaffMemberSerializer):
