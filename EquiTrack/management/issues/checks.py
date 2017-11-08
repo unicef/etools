@@ -1,15 +1,16 @@
+import logging
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
-import logging
+
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
 from django.utils.module_loading import import_string
+
 from environment.models import IssueCheckConfig
-from .exceptions import IssueFoundException, IssueCheckNotFoundException
+from management.issues.exceptions import IssueCheckNotFoundException, IssueFoundException
 from management.models import FlaggedIssue, ISSUE_STATUS_RESOLVED
 from utils.common.utils import run_on_all_tenants
-
 
 ModelCheckData = namedtuple('ModelCheckData', 'object metadata')
 

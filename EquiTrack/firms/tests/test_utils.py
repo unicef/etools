@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from django.utils import six
 
-from ..utils import generate_username
+from firms.utils import generate_username
 
 
 class UsernameGeneratorTestCase(TestCase):
