@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 from django.conf.urls import url
 
-from publics.views import StaticDataView, WBSGrantFundView, CurrenciesView, DSARegionsView, BusinessAreasView,\
-    ExpenseTypesView, AirlinesView
+from publics.views import (
+    AirlinesView, BusinessAreasView, CurrenciesView, DSARegionsView, ExpenseTypesView, StaticDataView, WBSGrantFundView)
 
 urlpatterns = (
     url(r'^static_data/$', StaticDataView.as_view({'get': 'list'}), name='static'),
