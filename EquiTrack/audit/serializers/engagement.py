@@ -4,23 +4,24 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 
-from audit.models import Engagement, Finding, SpotCheck, MicroAssessment, Audit, \
-    FinancialFinding, DetailedFindingInfo, EngagementActionPoint
-from utils.common.serializers.fields import SeparatedReadWriteField
-from partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer, \
-    PartnerStaffMemberNestedSerializer
-from partners.serializers.interventions_v2 import InterventionListSerializer
-from partners.models import PartnerType
 from attachments.models import FileType
 from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
+from audit.models import (
+    Audit, DetailedFindingInfo, Engagement, EngagementActionPoint, FinancialFinding, Finding, MicroAssessment,
+    SpotCheck,)
+from audit.serializers.auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
+from audit.serializers.mixins import (
+    AuditPermissionsBasedRootSerializerMixin, EngagementDatesValidation, RiskCategoriesUpdateMixin,)
+from audit.serializers.risks import AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer, RiskRootSerializer
+from partners.models import PartnerType
+from partners.serializers.interventions_v2 import InterventionListSerializer
+from partners.serializers.partner_organization_v2 import (
+    PartnerOrganizationListSerializer, PartnerStaffMemberNestedSerializer,)
 from users.serializers import MinimalUserSerializer
+from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.common.serializers.mixins import UserContextSerializerMixin
 from utils.writable_serializers.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
-
-from .auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
-from .mixins import RiskCategoriesUpdateMixin, EngagementDatesValidation, AuditPermissionsBasedRootSerializerMixin
-from .risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -214,8 +215,8 @@ class EngagementSerializer(EngagementDatesValidation,
 
         if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0 and status == 'new':
             raise serializers.ValidationError({
-                    'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
-                })
+                'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
+            })
         return validated_data
 
 

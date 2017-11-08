@@ -1,7 +1,7 @@
 Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.2,agreement,Partnership Manager,,Draft,Edit,TRUE
 3.2.3,document_type,Partnership Manager,,Draft,Edit,TRUE
-3.2.4,number,UNICEF User,,*,Edit,FALSE
+3.2.4,number,Partnership Manager,user adds amendment,*,Edit,TRUE
 3.2.5,title,Partnership Manager,,Draft,Edit,TRUE
 3.2.7,partner_focal_points,Partnership Manager,,Draft,Edit,TRUE
 3.2.7,partner_focal_points,Partnership Manager,,Signed,Edit,TRUE
