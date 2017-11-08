@@ -1,5 +1,6 @@
 from django.template import Origin, TemplateDoesNotExist
 from django.template.loaders.base import Loader as BaseLoader
+
 from post_office.models import EmailTemplate
 from post_office.utils import get_email_template
 

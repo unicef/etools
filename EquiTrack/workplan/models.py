@@ -1,12 +1,13 @@
+from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.contrib.auth.models import User
+
 from model_utils.models import TimeStampedModel
 
-from users.models import Section
 from locations.models import Location
 from partners.models import PartnerOrganization
 from reports.models import Result
+from users.models import Section
 
 
 class Comment(TimeStampedModel):
