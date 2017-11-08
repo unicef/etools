@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, User
+from django.contrib.postgres.fields import JSONField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models, transaction
 from django.db.models.signals import post_save, pre_delete
@@ -65,6 +66,20 @@ class Country(TenantMixin):
 
     threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
     threshold_tae_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
+
+    formal_names = JSONField(null=True)
+
+    def get_formal_name(self, lang='en'):
+        assert lang in ['en', 'fr', 'es', 'ar', 'cn', 'ru']
+        if self.formal_names:
+            try:
+                return self.formal_names[lang]
+            except KeyError:
+                # source data has all of these languages,
+                # but check anyway in case someone was naughty in django admin
+                if self.formal_names['en'] not in [None, '', ' ']:
+                    return self.formal_names['en']
+        return None
 
     def __unicode__(self):
         return self.name
