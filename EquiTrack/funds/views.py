@@ -7,8 +7,8 @@ from rest_framework import (
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import FundsReservationHeader
-from .serializers import FRsSerializer
+from funds.models import FundsReservationHeader
+from funds.serializers import FRsSerializer
 
 
 class FRsView(APIView):
