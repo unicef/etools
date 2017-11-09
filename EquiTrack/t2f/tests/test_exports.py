@@ -155,7 +155,8 @@ class TravelExports(APITenantTestCase):
                           'partnership',
                           'results',
                           'locations',
-                          'when',
+                          'start_date',
+                          'end_date'
                           'is_secondary_traveler',
                           'primary_traveler_name'])
 
