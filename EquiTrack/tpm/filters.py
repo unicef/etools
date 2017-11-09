@@ -9,7 +9,7 @@ class ReferenceNumberOrderingFilter(BaseFilterBackend):
         if not ordering.lstrip('-') == 'reference_number':
             return queryset
 
-        ordering_params = ['created_year', 'tpm_partner__vendor_number', 'id']
+        ordering_params = ['created_year', 'id']
 
         return queryset.annotate(created_year=YearTransform('created'))\
             .order_by(*map(lambda param: ('' if ordering == 'reference_number' else '-') + param, ordering_params))
