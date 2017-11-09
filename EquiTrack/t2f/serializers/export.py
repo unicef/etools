@@ -38,7 +38,7 @@ class TravelActivityExportSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'trip_type', 'partner', 'partnership',
-                  'results', 'locations', 'start_date', 'end_date', 'is_secondary_traveler',	'primary_traveler_name')
+                  'results', 'locations', 'start_date', 'end_date', 'is_secondary_traveler', 'primary_traveler_name')
 
     def get_locations(self, obj):
         return ', '.join([l.name for l in obj.activity.locations.all()])
