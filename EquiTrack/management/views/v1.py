@@ -8,14 +8,8 @@ from django.views.generic import View
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from users.models import (
-    Country,
-    Section,
-    UserProfile
-)
-from partners.models import (
-    Agreement,
-)
+from partners.models import Agreement
+from users.models import Country, Section, UserProfile
 
 
 class PortalDashView(View):

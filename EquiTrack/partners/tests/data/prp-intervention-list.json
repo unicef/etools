@@ -4,6 +4,7 @@
       {
         "indicators": [
           {
+            "blueprint_id": 0,
             "means_of_verification": null,
             "target": 0,
             "title": "The Blueprint",
@@ -36,6 +37,7 @@
         "title": "Lower Result 1"
       }
     ],
+    "sections": [],
     "agreement": "PCA20172036",
     "unicef_focal_points": [],
     "end_date": "2017-12-13",
@@ -67,6 +69,7 @@
     "expected_results": [],
     "unicef_focal_points": [],
     "end_date": null,
+    "sections": [],
     "agreement": "PCA20172036",
     "agreement_auth_officers": [],
     "business_area_code": "ZZZ",
@@ -96,6 +99,7 @@
     "expected_results": [],
     "unicef_focal_points": [],
     "end_date": null,
+    "sections": [],
     "agreement": "PCA20172036",
     "agreement_auth_officers": [],
     "business_area_code": "ZZZ",

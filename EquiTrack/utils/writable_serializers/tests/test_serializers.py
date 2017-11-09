@@ -1,16 +1,17 @@
 from unittest import skip
 
+from django.apps import apps
 from django.contrib.contenttypes.management import update_contenttypes
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import TestCase
-from django.apps import apps
+
 from mock import Mock
 from rest_framework import serializers
 
-from .models import Child1, Parent, Child2, GenericChild, Child3, CodedGenericChild
-from ..serializers import WritableNestedChildSerializerMixin, WritableNestedParentSerializerMixin, \
-    DeletableSerializerMixin
+from utils.writable_serializers.serializers import (
+    DeletableSerializerMixin, WritableNestedChildSerializerMixin, WritableNestedParentSerializerMixin,)
+from utils.writable_serializers.tests.models import Child1, Child2, Child3, CodedGenericChild, GenericChild, Parent
 
 
 class BaseWritableSerializersTestCase(TestCase):

@@ -18,12 +18,6 @@ django-celery==3.1.17
 django-fsm==2.4.0
 django-celery-email==1.1.5
 django-import-export==0.5.1
-django-activity-stream==0.6.3
-
-# Needed for django-activity-stream
-#package to store custom activity data
-git+https://github.com/bradjasper/django-jsonfield.git
-#django-jsonfield==1.0.3
 
 # Django REST Framework packages
 djangorestframework==3.5.3

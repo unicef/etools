@@ -6,8 +6,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from audit.models import RiskCategory, RiskBluePrint, Risk
-from utils.common.serializers.fields import WriteListSerializeFriendlyRecursiveField, RecursiveListSerializer
+from audit.models import Risk, RiskBluePrint, RiskCategory
+from utils.common.serializers.fields import RecursiveListSerializer, WriteListSerializeFriendlyRecursiveField
 from utils.writable_serializers.serializers import WritableListSerializer, WritableNestedSerializerMixin
 
 
