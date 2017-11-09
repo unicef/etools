@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from .manual import ManualVisionSynchronizer
-from audit.models import PurchaseOrder, AuditorFirm
+from audit.models import PurchaseOrder, AuditorFirm, PurchaseOrderItem
 from funds.models import Grant, Donor
 
 
@@ -19,11 +19,14 @@ class POSynchronizer(ManualVisionSynchronizer):
     )
 
     MAPPING = {
-        'order': {
+        'purchase_order': {
             "order_number": "PO_NUMBER",
-            "item_number": "PO_ITEM",
             "contract_start_date": "PO_DATE",
             "auditor_firm": "VENDOR_CODE",
+        },
+        'order_item': {
+            "number": "PO_ITEM",
+            "purchase_order": "PO_NUMBER",
         },
         'auditor_firm': {
             "vendor_number": "VENDOR_CODE",
@@ -43,7 +46,8 @@ class POSynchronizer(ManualVisionSynchronizer):
         'donor': Donor,
         'grant': Grant,
         'auditor_firm': AuditorFirm,
-        'order': PurchaseOrder,
+        'purchase_order': PurchaseOrder,
+        'order_item': PurchaseOrderItem,
     })
     DEFAULTS = {
         AuditorFirm: {

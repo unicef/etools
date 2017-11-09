@@ -1,210 +1,104 @@
-Development Environment Setup Instructions (Linux Ubuntu)
-================================================
+Development Environment Setup Instructions (Ubuntu)
+===================================================
 
-Setup Server
+The UNICEF eTools repo represents the backend of the eTools application. In order to see the full
+application in action, ignore this document and instead follow the steps in the [etools-infra
+README](https://github.com/unicef/etools-infra#etools-backend-infrastructure-configuration).
+
+Some developers, however, may wish to focus only on the backend. If so, these instructions will help
+you get the backend running on your laptop without needing Docker or any of the other frontend
+applications. This will allow you to run tests, use the Django shell, and view the Django admin.
+
+Requirements
 ------------
 
-Step 1. Install PostgreSQL and PostGIS, and Dev libraries
+These instructions assume you are starting with Ubuntu 16.04.
+
+Set up Python and Postgres
+--------------------------
+
+This step is unnecessary if you already have Python 2.7, Postgres 9.5, and PostGIS 2.2 installed on
+your machine.
 
 ```bash
-$ sudo apt-get update
-$ sudo lsb_release -a   (copy ubuntu version number)
-$ sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt (enter ubuntu version number)-pgdg main" >> /etc/apt/sources.list'
-$ wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo apt-key add -
-$ sudo apt-get update
-$ sudo apt-get install postgresql-9.5-postgis-2.2 pgadmin3 postgresql-contrib-9.5
-$ sudo apt-get install libpq-dev
+$ sudo apt update
+$ sudo apt install python2.7 python-pip virtualenv libgdal-dev \
+                   postgresql postgresql-9.5-postgis-2.2 libpq-dev
 ```
 
-Step 2. Connect to database
+Prepare Postgres
+----------------
+
+This step is unnecessary if your user can create databases, and if you already
+have installed some commonly used extensions into your template1 database.
 
 ```bash
-$ sudo -u postgres psql postgres
+$ sudo -u postgres createuser <your-username> --createdb
+$ sudo -u postgres psql template1 -c "create extension hstore;"
+$ sudo -u postgres psql template1 -c "create extension postgis;"
+$ sudo -u postgres psql template1 -c "create extension pg_trgm;"
 ```
 
-Step 3. Set Postgres user password to "postgres", and create PostGIS required extensions:
-
-```bash
-# ALTER USER postgres WITH PASSWORD 'postgres';
-# CREATE EXTENSION postgis;
-# CREATE EXTENSION postgis_topology;
-# CREATE EXTENSION fuzzystrmatch;
-# \q
-```
-
-Modifiy the base template so all newly created test databases will have hstore extension:
-
-```bash
-$ psql -d template1 -c 'CREATE EXTENSION hstore;'
-```
-
-Step 4. Install Redis
-
-```bash
-$ wget http://download.redis.io/redis-stable.tar.gz
-$ tar xvzf redis-stable.tar.gz
-$ cd redis-stable
-$ cd deps
-$ # Dependencies have to be built before
-$ make hiredis lua jemalloc linenoise geohash-int
-$ cd ..
-$ sudo make install
-$ make test
-```
-
-Step 5. Install git and clone eTools repository
-
-```bash
-$ sudo apt install git
-$ git clone https://github.com/unicef/etools.git
-```
-
-* Replace URL with https://github.com/(your-username)/etools.git if working from a fork.
-
-Step 6. Install latest pip, Python dev libraries, VirtualEnv, and VirtualEnvWrapper
-
-```bash
-$ sudo apt-get install python-pip python-dev build-essential
-$ sudo pip install virtualenv
-$ sudo pip install virtualenvwrapper
-```
-
-Step 7. Create Virtual Environment
-
-* Add `. /usr/local/bin/virtualenvwrapper.sh` to the end of ~/.bashrc
-
-Restart the terminal
-
-```bash
-$ mkdir ~/.virtualenvs
-$ export WORKON_HOME=~/.virtualenvs
-$ mkvirtualenv env1
-```
-
-Step 8. Install GDAL dependencies
-
-```bash
-$ sudo apt-get install libgdal-dev
-$ export CPLUS_INCLUDE_PATH=/usr/include/gdal
-$ export C_INCLUDE_PATH=/usr/include/gdal
-```
-
-Step 9. Install Cryptography dependencies
-
-```bash
-$ sudo apt-get install libffi-dev
-$ sudo apt-get install libssl-dev
-```
-
-Step 10. Load Python packages
-
-```bash
-$ pip install -r path/to/etools/EquiTrack/requirements/local.txt
-```
-
-Step 11. Set environment variables:
-
-```bash
-$ export REDIS_URL=redis://localhost:6379/0
-$ export DATABASE_URL=postgis://postgres:(your-password-here)@localhost:5432/postgres
-```
-
-Step 12. Connect to database and create required hstore extension
-
-```bash
-$ sudo -u postgres psql postgres
-# CREATE EXTENSION hstore;
-# \q
-```
-
-Step 13. Activate virtual env, migrate database schemas and create database superuser
-
-```bash
-$ workon env1
-$ python path/to/etools/EquiTrack/manage.py migrate_schemas --fake-initial --noinput
-$ python path/to/etools/EquiTrack/manage.py createsuperuser --username:etoolsusr
-```
-
-Load Default Data
------------------
-
-Import the test data:
-
-```bash
-$ bzcat db_dumps/pg_backup1_27-07-16.bz2 | sudo -u postgres nice pg_restore --verbose -F t -d postgres
-
-```
-
-Assign the test country (UAT) to the user:
-
-```bash
-$ workon env1
-$ python manage.py shell
-```
-
-In the shell:
-
-```bash
->>> from users.models import UserProfile, Country, Office, Section
->>> from django.contrib.auth.models import User
->>> user = User.objects.get(id=1)
->>> userp = UserProfile.objects.get(user=user)
->>> country=Country.objects.get(name='UAT')
->>> userp.country = country
->>> userp.country_override = country
->>> userp.save()
-```
-
-Run Server
-----------
-
-```bash
-$ workon env1
-$ export DATABASE_URL=postgis://postgres:(your-password-here)@localhost:5432/postgres
-$ python path/to/etools/EquiTrack/manage.py runserver 8080
-```
-
-Setup Debugger (PyCharm)
+Set up virtualenvwrapper
 ------------------------
 
-Step 1:
-* Once the project is loaded in PyCharm go to menu -&gt; <code>PyCharm - &gt; Preferences -&gt; Project</code>
-* Make sure your project is chosen
-* Select the python interpreter present inside of the virtualenvironment
+This step is unnecessary if you have already installed virtualenvwrapper previously.
 
-Step 2:
-* Go to menu -&gt; <code>PyCharm - &gt; Preferences -&gt; Languages &amp; Frameworks -&gt; Django</code>
-* Select your project and:
-    * enable Django Support
-    * Set Django Project root
-    * choose base.py as the settings file
-    * add all of the previously mentioned environment vars
+Add the following statements to your `.profile`. See the [virtualenvwrapper
+documentation](https://virtualenvwrapper.readthedocs.io/en/latest/install.html#shell-startup-file)
+for details on the values you should use.
 
-Step 3:
-* Go to menu -&gt; <code>Run -&gt; Edit Configurations</code>
-* Add Django Server and name it.
-* Set the Host to `localhost`
-* In the Configuration make sure to add the environment variables again +
-    * DEBUG=True
-* Choose the python interpreter (The interpreter inside of the virtual environment)
-* Choose a working Directory
+```bash
+$ pip install virtualenvwrapper
+$ source virtualenvwrapper.sh
+```
 
-Step 4:
-* Quit Pycharm and restart it
+Get the code
+------------
 
-Step 5:
-* Run the server
-* Go back to Edit Configurations
-* Change the environment variable `DJANGO_SETTINGS_MODULE` to `EquiTrack.settings.local`
-* Rerun the server
+```bash
+$ git clone git@github.com:unicef/etools.git
+$ cd etools/EquiTrack/
+```
 
-Resources
----------
+Install the pip requirements
+----------------------------
 
-https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-14-04
+Installing GDAL requires us to point to the proper location of the GDAL header files.
 
-https://trac.osgeo.org/postgis/wiki/UsersWikiPostGIS22UbuntuPGSQL95Apt
+```bash
+$ export CPLUS_INCLUDE_PATH=/usr/include/gdal
+$ export C_INCLUDE_PATH=/usr/include/gdal
+$ mkvirtualenv -p `which python2.7` etools
+(etools)$ pip install -r requirements/local.txt
+```
 
-http://redis.io/topics/quickstart
+Set up your database
+--------------------
 
-http://roundhere.net/journal/virtualenv-ubuntu-12-10/
+```bash
+(etools)$ createdb etools
+(etools)$ python manage.py migrate_schemas --noinput
+(etools)$ python manage.py createsuperuser
+```
+
+Run the server
+--------------
+
+```bash
+(etools)$ python manage.py runserver
+```
+
+Run lint and tests
+------------------
+
+```bash
+(etools)$ ./runtests.sh
+```
+
+Run tests on just one module
+----------------------------
+
+```bash
+(etools)$ ./runtests.sh partners
+```

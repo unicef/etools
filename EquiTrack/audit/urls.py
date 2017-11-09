@@ -5,9 +5,8 @@ from django.conf.urls import include, url
 from rest_framework_nested import routers
 
 from audit.views import (
-    AuditorFirmViewSet, AuditViewSet, SpecialAuditViewSet,
-    EngagementViewSet, MicroAssessmentViewSet, SpotCheckViewSet,
-    PurchaseOrderViewSet, AuditorStaffMembersViewSet)
+    AuditorFirmViewSet, AuditorStaffMembersViewSet, AuditViewSet, EngagementViewSet,
+    MicroAssessmentViewSet, PurchaseOrderViewSet, SpecialAuditViewSet, SpotCheckViewSet,)
 from utils.common.routers import NestedComplexRouter
 
 auditor_firms_api = routers.SimpleRouter()

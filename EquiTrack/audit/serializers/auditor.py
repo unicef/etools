@@ -2,7 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from audit.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
+from audit.models import AuditorFirm, AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from audit.serializers.mixins import AuditPermissionsBasedSerializerMixin
 from firms.serializers import BaseStaffMemberSerializer, UserSerializer as BaseUserSerializer
 from utils.common.serializers.fields import SeparatedReadWriteField
@@ -12,8 +12,8 @@ from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         extra_kwargs = {
-            'first_name': {'required': True, 'label': _('First Name')},
-            'last_name': {'required': True, 'label': _('Last Name')},
+            'first_name': {'required': True, 'allow_blank': False, 'label': _('First Name')},
+            'last_name': {'required': True, 'allow_blank': False, 'label': _('Last Name')},
         }
 
     def update(self, instance, validated_data):
@@ -59,6 +59,12 @@ class AuditorFirmExportSerializer(serializers.ModelSerializer):
         ]
 
 
+class PurchaseOrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseOrderItem
+        fields = ['id', 'number']
+
+
 class PurchaseOrderSerializer(
     AuditPermissionsBasedSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer
 ):
@@ -66,9 +72,11 @@ class PurchaseOrderSerializer(
         read_field=AuditorFirmLightSerializer(read_only=True, label=_('Auditor')),
     )
 
+    items = PurchaseOrderItemSerializer(many=True)
+
     class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = PurchaseOrder
         fields = [
-            'id', 'order_number', 'item_number', 'auditor_firm',
+            'id', 'order_number', 'auditor_firm', 'items',
             'contract_start_date', 'contract_end_date'
         ]

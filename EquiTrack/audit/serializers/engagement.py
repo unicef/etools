@@ -4,25 +4,25 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 
-from audit.models import Engagement, Finding, SpotCheck, MicroAssessment, Audit, \
-    FinancialFinding, DetailedFindingInfo, EngagementActionPoint, SpecialAudit, SpecificProcedure, \
-    SpecialAuditRecommendation
-from utils.common.serializers.fields import SeparatedReadWriteField
-from partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer, \
-    PartnerStaffMemberNestedSerializer
-from partners.serializers.interventions_v2 import InterventionListSerializer
-from partners.models import PartnerType
 from attachments.models import FileType
 from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
+from audit.models import (
+    Audit, DetailedFindingInfo, Engagement, EngagementActionPoint, FinancialFinding, Finding, MicroAssessment,
+    SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck,)
+from audit.serializers.auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer, PurchaseOrderItemSerializer
+from audit.serializers.mixins import (
+    AuditPermissionsBasedRootSerializerMixin, AuditPermissionsBasedSerializerMixin, EngagementDatesValidation,
+    RiskCategoriesUpdateMixin,)
+from audit.serializers.risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
+from partners.models import PartnerType
+from partners.serializers.interventions_v2 import InterventionListSerializer
+from partners.serializers.partner_organization_v2 import (
+    PartnerOrganizationListSerializer, PartnerStaffMemberNestedSerializer,)
 from users.serializers import MinimalUserSerializer
+from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.common.serializers.mixins import UserContextSerializerMixin
 from utils.writable_serializers.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
-
-from .auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
-from .mixins import RiskCategoriesUpdateMixin, EngagementDatesValidation, AuditPermissionsBasedRootSerializerMixin, \
-    AuditPermissionsBasedSerializerMixin
-from .risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -112,6 +112,9 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
     agreement = SeparatedReadWriteField(
         read_field=PurchaseOrderSerializer(read_only=True),
     )
+    po_item = SeparatedReadWriteField(
+        read_field=PurchaseOrderItemSerializer(read_only=True),
+    )
     related_agreement = PurchaseOrderSerializer(write_only=True, required=False)
     partner = SeparatedReadWriteField(
         read_field=PartnerOrganizationLightSerializer(read_only=True),
@@ -128,9 +131,24 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
     class Meta(AuditPermissionsBasedRootSerializerMixin.Meta):
         model = Engagement
         fields = [
-            'id', 'unique_id', 'agreement', 'related_agreement', 'partner', 'engagement_type', 'status', 'status_date',
+            'id', 'unique_id', 'agreement', 'po_item',
+            'related_agreement', 'partner', 'engagement_type',
+            'status', 'status_date',
 
         ]
+
+    def validate(self, attrs):
+        attrs = super(EngagementLightSerializer, self).validate(attrs)
+
+        po_item = attrs.get('po_item')
+        agreement = attrs.get('agreement')
+        if po_item and agreement and po_item.purchase_order != agreement:
+            msg = self.fields['po_item'].error_messages['does_not_exist']
+            raise serializers.ValidationError({
+                'po_item': [msg.format(pk_value=po_item.pk)]
+            })
+
+        return attrs
 
 
 class SpecificProcedureSerializer(AuditPermissionsBasedSerializerMixin,
@@ -185,6 +203,7 @@ class EngagementSerializer(EngagementDatesValidation,
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
+                'po_item',
                 'start_date', 'end_date', 'total_value',
 
                 'partner_contacted_at',
@@ -231,8 +250,8 @@ class EngagementSerializer(EngagementDatesValidation,
 
         if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0 and status == 'new':
             raise serializers.ValidationError({
-                    'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
-                })
+                'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
+            })
         return validated_data
 
 

@@ -1,7 +1,7 @@
-from django.db.models.signals import post_save, post_delete, m2m_changed
+from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 
-from audit.models import AuditorStaffMember, Auditor, Engagement, EngagementActionPoint
+from audit.models import Auditor, AuditorStaffMember, Engagement, EngagementActionPoint
 
 
 @receiver(post_save, sender=AuditorStaffMember)
