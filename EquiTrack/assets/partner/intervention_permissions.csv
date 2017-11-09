@@ -37,6 +37,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.12,amendments,Partnership Manager,,Draft,Edit,TRUE
 3.12,amendments,Partnership Manager,,Signed,Edit,TRUE
 3.12,amendments,Partnership Manager,,Active,Edit,TRUE
+3.12.6,in_amendment,Partnership Manager,,Signed,Edit,TRUE
+3.12.6,in_amendment,Partnership Manager,,Active,Edit,TRUE
 3.11,amendments,Partnership Manager,,Draft,Edit,TRUE
 3.11,amendments,Partnership Manager,,Signed,Edit,TRUE
 3.11,amendments,Partnership Manager,,Active,Edit,TRUE
