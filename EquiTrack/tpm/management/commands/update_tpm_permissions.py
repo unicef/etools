@@ -218,12 +218,12 @@ class Command(BaseCommand):
         for tenant in all_tenants:
             connection.set_tenant(tenant)
             if verbosity >= 3:
-                print('Using {} tenant'.format(tenant.name))
+                self.stdout.write('Using {} tenant'.format(tenant.name))
 
             old_permissions = TPMPermission.objects.all()
             for user in self.everybody:
                 if verbosity >= 3:
-                    print('Updating permissions for {}. {} -> {}'.format(
+                    self.stdout.write('Updating permissions for {}. {} -> {}'.format(
                         user,
                         len(filter(lambda p: p.user_type == self.user_roles[user], old_permissions)),
                         len(filter(lambda p: p.user_type == self.user_roles[user], self.permissions)),
@@ -233,7 +233,7 @@ class Command(BaseCommand):
             TPMPermission.objects.bulk_create(self.permissions)
 
         if verbosity >= 1:
-            print(
+            self.stdout.write(
                 'TPM permissions was successfully updated for {}'.format(
                     ', '.join(map(lambda t: t.name, all_tenants)))
             )
