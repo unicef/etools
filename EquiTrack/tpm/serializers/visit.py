@@ -89,7 +89,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         read_field=PartnerOrganizationLightSerializer(read_only=True),
     )
     partnership = SeparatedReadWriteField(
-        read_field=InterventionCreateUpdateSerializer(read_only=True),
+        read_field=InterventionCreateUpdateSerializer(read_only=True, label=_('PD/SSFA')),
     )
 
     cp_output = SeparatedReadWriteField(
@@ -144,11 +144,11 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
         read_field=TPMPartnerStaffMemberSerializer(read_only=True, many=True, label=_('TPM Focal Points')),
     )
 
-    status_date = serializers.ReadOnlyField()
+    status_date = serializers.ReadOnlyField(label=_('Status Date'))
 
-    implementing_partners = serializers.SerializerMethodField()
-    locations = serializers.SerializerMethodField()
-    sections = serializers.SerializerMethodField()
+    implementing_partners = serializers.SerializerMethodField(label=_('Implementing Partners'))
+    locations = serializers.SerializerMethodField(label=_('Locations'))
+    sections = serializers.SerializerMethodField(label=_('Sections'))
 
     def get_implementing_partners(self, obj):
         return PartnerOrganizationLightSerializer(
@@ -192,13 +192,13 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
 
 
 class TPMVisitSerializer(TPMVisitLightSerializer):
-    tpm_activities = TPMActivitySerializer(many=True, required=False)
+    tpm_activities = TPMActivitySerializer(many=True, required=False, label=_('Activities Information'))
 
     report_attachments = TPMReportAttachmentsSerializer(many=True, required=False, label=_('Overall Visit Reports'))
 
     report_reject_comments = TPMVisitReportRejectCommentSerializer(many=True, read_only=True)
 
-    action_points = TPMActionPointSerializer(label=_('Activity information'), many=True, required=False)
+    action_points = TPMActionPointSerializer(label=_('Activity Information'), many=True, required=False)
 
     def validate(self, attrs):
         validated_data = super(TPMVisitSerializer, self).validate(attrs)
@@ -230,7 +230,6 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
             'visit_information', 'report_reject_comments',
         ]
         extra_kwargs = {
-            'tpm_activities': {'label': _('Activities Information')},
             'tpm_partner': {'required': True, 'label': _('TPM Name')},
             'unicef_focal_points': {'required': True},
         }
