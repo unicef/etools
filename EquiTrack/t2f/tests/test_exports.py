@@ -149,12 +149,6 @@ class TravelExports(APITenantTestCase):
         self.assertEqual(len(rows), 5)
 
         # check header
-        print('0     ',rows[0])
-        print('1     ',rows[1])
-        print('2     ',rows[2])
-        print('3     ',rows[3])
-        print('4     ',rows[4])
-
         self.assertEqual(rows[0],
                          ['reference_number',
                           'traveler',
