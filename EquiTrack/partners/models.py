@@ -1691,6 +1691,10 @@ class Intervention(TimeStampedModel):
                 self.agreement.start = self.start
                 self.agreement.end = self.end
 
+            if self.agreement.agreement_number != self.number:
+                save_agreement = True
+                self.agreement.agreement_number = self.number
+
             if self.status in [self.SIGNED, self.ACTIVE] and self.agreement.status != Agreement.SIGNED:
                 save_agreement = True
                 self.agreement.status = Agreement.SIGNED
