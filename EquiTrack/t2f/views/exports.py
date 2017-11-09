@@ -49,6 +49,7 @@ class TravelActivityExport(ExportBaseView):
                 dto_list.append(self.SimpleDTO(travel, activity))
 
         serializer = self.get_serializer(dto_list, many=True)
+
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename="TravelActivityExport.csv"'
         return response
