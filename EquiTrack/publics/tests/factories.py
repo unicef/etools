@@ -1,14 +1,16 @@
 from __future__ import unicode_literals
 
 from datetime import datetime, timedelta
+
+from django.conf import settings
+
 import factory
 from factory import fuzzy
 from pytz import timezone
 
-from django.conf import settings
-
-from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, TravelExpenseType, Country,\
-    BusinessArea, BusinessRegion, ExchangeRate, TravelAgent, DSARate
+from publics.models import (
+    AirlineCompany, BusinessArea, BusinessRegion, Country, Currency, DSARate, DSARegion, ExchangeRate, Fund, Grant,
+    TravelAgent, TravelExpenseType, WBS,)
 
 TZ = timezone(settings.TIME_ZONE)
 _FUZZY_START_DATE = TZ.localize(datetime.now() - timedelta(days=5))

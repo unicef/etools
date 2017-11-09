@@ -1,8 +1,6 @@
 # Python imports
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from unittest import TestCase
 
 from EquiTrack.tests.mixins import URLAssertionMixin
@@ -18,5 +16,5 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
             ('invalidate_cache', 'invalidate-cache/', {}),
             ('stats_user_counts', 'api/stats/usercounts/', {}),
             ('stats_agreements', 'api/stats/agreements/', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 'management:', '/api/management/')

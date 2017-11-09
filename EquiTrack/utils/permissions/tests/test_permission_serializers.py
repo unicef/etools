@@ -1,11 +1,12 @@
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from django.db import IntegrityError
 from django.test import TestCase
+
 from rest_framework import serializers
 
 from utils.permissions.serializers import PermissionsBasedSerializerMixin
+from utils.permissions.tests.models import Child2, Parent, Permission
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
-from .models import Parent, Child2, Permission
 
 
 class PermissionsBasedSerializerTestCase(TestCase):

@@ -1,4 +1,5 @@
 import weakref
+
 from django.contrib.auth.models import Group
 from django.utils.six import python_2_unicode_compatible, string_types
 

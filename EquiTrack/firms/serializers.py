@@ -6,9 +6,9 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .utils import generate_username
-from utils.writable_serializers.serializers import WritableNestedSerializerMixin
+from firms.utils import generate_username
 from users.models import UserProfile
+from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
 class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):

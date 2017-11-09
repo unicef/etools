@@ -2,15 +2,9 @@ import datetime
 
 from rest_framework import status
 
-from reports.models import ResultType, CountryProgramme
-from EquiTrack.factories import (
-    UserFactory,
-    ResultFactory,
-    SectionFactory,
-    LocationFactory,
-    CountryProgrammeFactory,
-)
+from EquiTrack.factories import CountryProgrammeFactory, LocationFactory, ResultFactory, SectionFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from reports.models import CountryProgramme, ResultType
 
 
 class TestReportViews(APITenantTestCase):
