@@ -54,19 +54,17 @@
           <td>Description of Finding</td>
           <td>Recommendation and IP Management Response</td>
         </tr>
-        {% if engagement.findings %}
-          {% for finding in engagement.findings %}
-            <tr>
-              <td>{{ finding.finding }}</td>
-              <td>{{ finding.recommendation }}</td>
-            </tr>
-          {% endfor %}
-        {% else %}
+        {% for finding in engagement.findings %}
+          <tr>
+            <td>{{ finding.finding }}</td>
+            <td>{{ finding.recommendation }}</td>
+          </tr>
+        {% empty %}
           <tr>
             <td>-</td>
             <td>-</td>
           </tr>
-        {% endif %}
+        {% endfor %}
       </table>
     </div>
   </div>

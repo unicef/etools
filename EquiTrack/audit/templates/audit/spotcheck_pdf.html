@@ -52,17 +52,15 @@
           <td colspan="4">Recommendation</td>
           <td colspan="4">Agreed action by IP</td>
         </tr>
-        {% if engagement.high_priority_findings %}
-          {% for finding in engagement.high_priority_findings %}
-            <tr>
-              <td>{{ forloop.counter }}</td>
-              <td colspan="3">{{ finding.category_of_observation }}</td>
-              <td colspan="2">{{ finding.deadline_of_action }}</td>
-              <td colspan="4">{{ finding.recommendation }}</td>
-              <td colspan="4">{{ finding.agreed_action_by_ip }}</td>
-            </tr>
-          {% endfor %}
-        {% else %}
+        {% for finding in engagement.high_priority_findings %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td colspan="3">{{ finding.category_of_observation }}</td>
+            <td colspan="2">{{ finding.deadline_of_action }}</td>
+            <td colspan="4">{{ finding.recommendation }}</td>
+            <td colspan="4">{{ finding.agreed_action_by_ip }}</td>
+          </tr>
+        {% empty %}
           <tr>
             <td>-</td>
             <td colspan="3">-</td>
@@ -70,7 +68,7 @@
             <td colspan="4">-</td>
             <td colspan="4">-</td>
           </tr>
-        {% endif %}
+        {% endfor %}
       </table>
     </div>
   </div>
@@ -88,17 +86,15 @@
           <td colspan="4">Recommendation</td>
           <td colspan="4">Agreed action by IP</td>
         </tr>
-        {% if engagement.low_priority_findings %}
-          {% for finding in engagement.low_priority_findings %}
-            <tr>
-              <td>{{ forloop.counter }}</td>
-              <td colspan="3">{{ finding.category_of_observation }}</td>
-              <td colspan="2">{{ finding.deadline_of_action }}</td>
-              <td colspan="4">{{ finding.recommendation }}</td>
-              <td colspan="4">{{ finding.agreed_action_by_ip }}</td>
-            </tr>
-          {% endfor %}
-        {% else %}
+        {% for finding in engagement.low_priority_findings %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td colspan="3">{{ finding.category_of_observation }}</td>
+            <td colspan="2">{{ finding.deadline_of_action }}</td>
+            <td colspan="4">{{ finding.recommendation }}</td>
+            <td colspan="4">{{ finding.agreed_action_by_ip }}</td>
+          </tr>
+        {% empty %}
           <tr>
             <td>-</td>
             <td colspan="3">-</td>
@@ -106,7 +102,7 @@
             <td colspan="4">-</td>
             <td colspan="4">-</td>
           </tr>
-        {% endif %}
+        {% endfor %}
       </table>
     </div>
   </div>
