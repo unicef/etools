@@ -25,10 +25,6 @@ def migrate_numbers(apps, schema_editor):
             engagement.save()
 
 
-def do_nothing(apps, schema_editor):
-    pass
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -59,7 +55,7 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(
             migrate_numbers,
-            do_nothing,
+            migrations.RunPython.noop,
         ),
         migrations.RemoveField(
             model_name='purchaseorder',

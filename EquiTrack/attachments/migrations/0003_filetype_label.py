@@ -18,10 +18,6 @@ def set_labels(apps, schema_editor):
                                              function='REPLACE'))
 
 
-def do_nothing(apps, schema_editor):
-    pass
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -37,6 +33,6 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(
             set_labels,
-            do_nothing,
+            migrations.RunPython.noop,
         ),
     ]
