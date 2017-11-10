@@ -3,11 +3,11 @@ import random
 from factory import fuzzy
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
-from audit.transitions.conditions import EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck, \
-    AuditSubmitReportRequiredFieldsCheck
 from audit.tests.base import EngagementTransitionsTestCaseMixin
-from audit.tests.factories import MicroAssessmentFactory, AuditFactory, SpotCheckFactory
+from audit.tests.factories import AuditFactory, MicroAssessmentFactory, SpotCheckFactory
+from audit.transitions.conditions import (
+    AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck,)
+from EquiTrack.tests.mixins import APITenantTestCase
 
 
 class EngagementCheckTransitionsTestCaseMixin(object):

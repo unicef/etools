@@ -1,6 +1,6 @@
 from rest_framework.filters import BaseFilterBackend
 
-from .models import Engagement
+from audit.models import Engagement
 
 
 class DisplayStatusFilter(BaseFilterBackend):

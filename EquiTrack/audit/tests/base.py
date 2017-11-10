@@ -7,11 +7,11 @@ from django.core.files import File
 from django.core.management import call_command
 from django.utils import timezone
 
+from attachments.models import Attachment, FileType
+from audit.models import RiskBluePrint, UNICEFAuditFocalPoint, UNICEFUser
+from audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory, RiskFactory
 from EquiTrack.factories import UserFactory
-from attachments.models import FileType, Attachment
-from audit.models import RiskBluePrint, UNICEFUser, UNICEFAuditFocalPoint
 from utils.groups.wrappers import GroupWrapper
-from .factories import RiskFactory, AuditorStaffMemberFactory, AuditPartnerFactory
 
 
 class AuditTestCaseMixin(object):

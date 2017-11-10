@@ -7,8 +7,8 @@ from rest_framework import (
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import FundsReservationHeader
-from .serializers import FRsSerializer
+from funds.models import FundsReservationHeader
+from funds.serializers import FRsSerializer
 
 
 class FRsView(APIView):
@@ -33,8 +33,8 @@ class FRsView(APIView):
 
         if qs.count() != len(values):
             return Response(
-                data={'error': _('One or more of the FRs selected is either expired, '
-                                 'has been used by another intervention or could not be found in eTools')},
+                data={'error': _('One or more of the FRs are used by another PD/SSFA '
+                                 'or could not be found in eTools.')},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

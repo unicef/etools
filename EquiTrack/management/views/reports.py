@@ -1,10 +1,10 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from vision.adapters.programme import ProgrammeSynchronizer
-from users.models import Country as Workspace
 from EquiTrack.permissions import IsSuperUser
 from EquiTrack.utils import set_country
+from users.models import Country as Workspace
+from vision.adapters.programme import ProgrammeSynchronizer
 
 
 class LoadResultStructure(APIView):
