@@ -1,19 +1,18 @@
-from audit.serializers.auditor import PurchaseOrderItemSerializer
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-try:
-    from urllib.parse import urljoin
-except ImportError:
-    from urlparse import urljoin
+from audit.serializers.auditor import PurchaseOrderItemSerializer
 
 from django.utils.translation import ugettext_lazy as _
 
+from six.moves import urllib_parse
 from rest_framework import serializers
 
-from ..models import Audit, AuditorFirm, AuditorStaffMember, Engagement, EngagementActionPoint, \
-    MicroAssessment, PurchaseOrder, SpotCheck, Finding, SpecificProcedure, SpecialAuditRecommendation
-from .engagement import DetailedFindingInfoSerializer
-from .risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from attachments.models import Attachment
+from audit.models import (
+    Audit, AuditorFirm, AuditorStaffMember, Engagement, EngagementActionPoint, MicroAssessment, PurchaseOrder,
+    SpotCheck, Finding, SpecificProcedure, SpecialAuditRecommendation)
+from audit.serializers.engagement import DetailedFindingInfoSerializer
+from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from partners.models import PartnerOrganization
 from utils.common.urlresolvers import site_url
 
@@ -89,7 +88,7 @@ class AttachmentPDFSerializer(serializers.ModelSerializer):
         ]
 
     def get_url(self, obj):
-        return urljoin(site_url(), obj.url)
+        return urllib_parse.urljoin(site_url(), obj.url)
 
 
 class EngagementPDFSerializer(serializers.ModelSerializer):

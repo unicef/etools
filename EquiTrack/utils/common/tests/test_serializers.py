@@ -1,8 +1,10 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.test import TestCase
 from rest_framework import serializers
 
-from .models import Parent
-from ..serializers.mixins import PkSerializerMixin
+from utils.common.tests.models import Parent
+from utils.common.serializers.mixins import PkSerializerMixin
 
 
 class PKFieldSerializerTestCase(TestCase):

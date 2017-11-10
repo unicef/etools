@@ -1,10 +1,12 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.db import connection
 from django.test import TestCase
 
 from rest_framework import serializers
 
-from .models import Parent, Child1
-from ..serializers.fields import SeparatedReadWriteField
+from utils.common.tests.models import Parent, Child1
+from utils.common.serializers.fields import SeparatedReadWriteField
 
 
 class ParentSerializer(serializers.ModelSerializer):

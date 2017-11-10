@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
 
@@ -7,7 +7,7 @@ import factory
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 
-from .utils import generate_username
+from firms.utils import generate_username
 from users.models import UserProfile
 
 
