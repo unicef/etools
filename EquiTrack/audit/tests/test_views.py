@@ -353,9 +353,9 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenant
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            sorted(map(lambda pd: pd['id'], response.data['active_pd'])),
-            sorted(map(lambda i: i.id, partner.agreements.first().interventions.all()))
+        self.assertItemsEqual(
+            map(lambda pd: pd['id'], response.data['active_pd']),
+            map(lambda i: i.id, partner.agreements.first().interventions.all())
         )
 
     def test_government_partner_changed(self):
@@ -378,9 +378,9 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            sorted(map(lambda x: x['id'], response.data['results'])),
-            sorted(map(lambda x: x.id, expected_firms))
+        self.assertItemsEqual(
+            map(lambda x: x['id'], response.data['results']),
+            map(lambda x: x.id, expected_firms)
         )
 
     def test_unicef_list_view(self):
