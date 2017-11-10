@@ -22,17 +22,12 @@ logger = logging.getLogger(__name__)
 
 
 def printtf(*args):
-    logging.info([arg for arg in args])
-    f = open('mylogs.txt', 'a')
-    print([arg for arg in args], file=f)
-    f.close()
-
-
-def log_to_file(file_name='fail_logs.txt', *args):
-    print([arg for arg in args])
-    f = open(file_name, 'a')
-    print([arg for arg in args], file=f)
-    f.close()
+    file_name = 'mylogs.txt'
+    args_list = [unicode(arg) for arg in args]
+    logger.info(args_list)
+    with open(file_name, 'ab') as f:
+        f.write(', '.join(args_list))
+        f.write('\n')
 
 
 def set_country(name):
