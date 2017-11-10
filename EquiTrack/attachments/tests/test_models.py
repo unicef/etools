@@ -13,7 +13,7 @@ class TestAttachmentsModels(FastTenantTestCase):
 
     def test_valid_file(self):
         valid_file_attachment = AttachmentFactory(
-            file=SimpleUploadedFile('simple_file.txt', 'these are the file contents!'),
+            file=SimpleUploadedFile('simple_file.txt', b'these are the file contents!'),
             content_object=self.simple_object
         )
         valid_file_attachment.clean()

@@ -12,7 +12,7 @@ def generate_username():
     digits = []
     while uid:
         digits.append(ABC[uid % base])
-        uid /= base
+        uid //= base
 
     digits.reverse()
     uid = ''.join(digits)

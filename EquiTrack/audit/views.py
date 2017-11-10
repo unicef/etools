@@ -156,20 +156,35 @@ class EngagementViewSet(
                        'partner__name', 'engagement_type', 'status')
     filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'engagement_type')
 
+    ENGAGEMENT_MAPPING = {
+        Engagement.TYPES.audit: {
+            'serializer_class': AuditSerializer,
+            'pdf_serializer_class': AuditPDFSerializer,
+            'pdf_template': 'audit/audit_pdf.html',
+        },
+        Engagement.TYPES.ma: {
+            'serializer_class': MicroAssessmentSerializer,
+            'pdf_serializer_class': MicroAssessmentPDFSerializer,
+            'pdf_template': 'audit/microassessment_pdf.html',
+        },
+        Engagement.TYPES.sa: {
+            'serializer_class': SpecialAuditSerializer,
+            'pdf_serializer_class': SpecialAuditPDFSerializer,
+            'pdf_template': 'audit/special_audit_pdf.html',
+        },
+        Engagement.TYPES.sc: {
+            'serializer_class': SpotCheckSerializer,
+            'pdf_serializer_class': SpotCheckPDFSerializer,
+            'pdf_template': 'audit/spotcheck_pdf.html',
+        },
+    }
+
     def get_serializer_class(self):
         serializer_class = None
 
         if self.action == 'create':
             engagement_type = self.request.data.get('engagement_type', None)
-
-            if engagement_type == Engagement.TYPES.audit:
-                serializer_class = AuditSerializer
-            elif engagement_type == Engagement.TYPES.ma:
-                serializer_class = MicroAssessmentSerializer
-            elif engagement_type == Engagement.TYPES.sc:
-                serializer_class = SpotCheckSerializer
-            elif engagement_type == Engagement.TYPES.sa:
-                serializer_class = SpecialAuditSerializer
+            serializer_class = self.ENGAGEMENT_MAPPING.get(engagement_type, {}).get('serializer_class', None)
 
         return serializer_class or super(EngagementViewSet, self).get_serializer_class()
 
@@ -203,19 +218,11 @@ class EngagementViewSet(
                 request, message=_('You have no access to this engagement.')
             )
 
-        if isinstance(obj, MicroAssessment):
-            serializer_class = MicroAssessmentPDFSerializer
-            template = 'audit/microassessment_pdf.html'
-        elif isinstance(obj, Audit):
-            serializer_class = AuditPDFSerializer
-            template = 'audit/audit_pdf.html'
-        elif isinstance(obj, SpotCheck):
-            serializer_class = SpotCheckPDFSerializer
-            template = 'audit/spotcheck_pdf.html'
-        elif isinstance(obj, SpecialAudit):
-            serializer_class = SpecialAuditPDFSerializer
-            template = 'audit/special_audit_pdf.html'
-        else:
+        engagement_params = self.ENGAGEMENT_MAPPING.get(obj.engagement_type, {})
+        serializer_class = engagement_params.get('pdf_serializer_class', None)
+        template = engagement_params.get('pdf_template', None)
+
+        if not serializer_class or not template:
             raise NotImplementedError
 
         return render_to_pdf_response(
