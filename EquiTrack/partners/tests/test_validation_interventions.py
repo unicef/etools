@@ -18,7 +18,11 @@ from EquiTrack.factories import (
     UserFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase
-from EquiTrack.validation_mixins import BasicValidationError, TransitionError
+from EquiTrack.validation_mixins import (
+    BasicValidationError,
+    StateValidError,
+    TransitionError,
+)
 from partners.models import (
     Agreement,
     FileType,
@@ -27,6 +31,7 @@ from partners.models import (
 )
 from partners.validation.interventions import (
     amendments_valid,
+    InterventionValid,
     partnership_manager_only,
     signed_date_valid,
     ssfa_agreement_has_no_other_intervention,
@@ -570,3 +575,94 @@ class TestSSFAgreementHasNoOtherIntervention(FastTenantTestCase):
                 "Agreement selected is not of type SSFA"
         ):
             ssfa_agreement_has_no_other_intervention(self.intervention)
+
+
+class TestInterventionValid(FastTenantTestCase):
+    def setUp(self):
+        super(TestInterventionValid, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.intervention = InterventionFactory()
+        self.intervention.old_instance = self.intervention
+        self.validator = InterventionValid(
+            self.intervention,
+            user=self.unicef_staff,
+            disable_rigid_check=True,
+        )
+        self.validator.permissions = self.validator.get_permissions(
+            self.intervention
+        )
+        self.future_date = datetime.date.today() + datetime.timedelta(days=2)
+
+    def test_check_rigid_fields_disabled_rigid_check(self):
+        """If disabled rigid check return None"""
+        self.assertIsNone(self.validator.check_rigid_fields(self.intervention))
+
+    def test_check_rigid_fields_invalid(self):
+        mock_check = Mock(return_value=(False, None))
+        validator = InterventionValid(
+            self.intervention,
+            user=self.unicef_staff,
+        )
+        validator.permissions = validator.get_permissions(self.intervention)
+        with patch(
+                "partners.validation.interventions.check_rigid_fields",
+                mock_check
+        ):
+            with self.assertRaisesRegexp(
+                    StateValidError,
+                    "Cannot change fields while"
+            ):
+                validator.check_rigid_fields(self.intervention)
+
+    def test_state_signed_valid_invalid(self):
+        """Invalid if unicef budget is 0"""
+        self.intervention.total_unicef_budget = 0
+        with self.assertRaisesRegexp(StateValidError, "UNICEF Cash"):
+            self.validator.state_signed_valid(self.intervention)
+
+    def test_state_signed_valid(self):
+        """Valid if unicef budget is not 0"""
+        self.intervention.total_unicef_budget = 10
+        self.assertTrue(self.validator.state_signed_valid(self.intervention))
+
+    def test_state_suspended_valid(self):
+        self.assertTrue(self.validator.state_suspended_valid(self.intervention))
+
+    def test_state_active_valid_invalid_start(self):
+        """Invalid if start is after today"""
+        self.intervention.total_unicef_budget = 10
+        self.intervention.start = self.future_date
+        with self.assertRaisesRegexp(
+                StateValidError,
+                "Today is not after the start date"
+        ):
+            self.validator.state_active_valid(self.intervention)
+
+    def test_state_active_valid_invalid_budget(self):
+        """Invalid if unicef budget is 0"""
+        self.intervention.total_unicef_budget = 0
+        self.intervention.start = datetime.date(2001, 1, 1)
+        with self.assertRaisesRegexp(StateValidError, "UNICEF Cash"):
+            self.validator.state_active_valid(self.intervention)
+
+    def test_state_active_valid(self):
+        """Valid if unicef budget is not 0 and start is before today"""
+        self.intervention.total_unicef_budget = 10
+        self.intervention.start = datetime.date(2001, 1, 1)
+        self.assertTrue(
+            self.validator.state_active_valid(self.intervention)
+        )
+
+    def test_state_ended_valid_invalid(self):
+        """Invalid if end date is after today"""
+        self.intervention.end = self.future_date
+        with self.assertRaisesRegexp(
+                StateValidError,
+                "Today is not after the end date"
+        ):
+            self.validator.state_ended_valid(self.intervention)
+
+    def test_state_ended_valid(self):
+        """Invalid if end date is after today"""
+        self.intervention.end = datetime.date(2001, 1, 1)
+        self.assertTrue(self.validator.state_ended_valid(self.intervention))
