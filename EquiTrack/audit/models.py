@@ -342,7 +342,9 @@ class RiskCategory(OrderedModel, models.Model):
     parent = models.ForeignKey(
         'self', verbose_name=_('Parent'), null=True, blank=True, related_name='children', db_index=True
     )
-    category_type = models.CharField(verbose_name=_('Category Type'), max_length=20, choices=TYPES, default=TYPES.default)
+    category_type = models.CharField(
+        verbose_name=_('Category Type'), max_length=20, choices=TYPES, default=TYPES.default,
+    )
     code = models.CharField(verbose_name=_('Code'), max_length=20, blank=True)
 
     code_tracker = FieldTracker()
@@ -417,9 +419,10 @@ class Risk(models.Model):
 class SpotCheck(Engagement):
     total_amount_tested = models.DecimalField(verbose_name=_('Total Amount Tested'), null=True, blank=True,
                                               decimal_places=2, max_digits=20)
-    total_amount_of_ineligible_expenditure = models.DecimalField(verbose_name=_('Total Amount of Ineligible Expenditure'),
-                                                                 null=True, blank=True,
-                                                                 decimal_places=2, max_digits=20)
+    total_amount_of_ineligible_expenditure = models.DecimalField(
+        verbose_name=_('Total Amount of Ineligible Expenditure'), null=True, blank=True,
+        decimal_places=2, max_digits=20,
+    )
 
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
 
@@ -508,7 +511,9 @@ class Finding(models.Model):
 
     priority = models.CharField(verbose_name=_('Priority'), max_length=4, choices=PRIORITIES)
 
-    category_of_observation = models.CharField(verbose_name=_('Category of Observation'), max_length=100, choices=CATEGORIES)
+    category_of_observation = models.CharField(
+        verbose_name=_('Category of Observation'), max_length=100, choices=CATEGORIES,
+    )
     recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
     agreed_action_by_ip = models.TextField(verbose_name=_('Agreed Action by IP'), blank=True)
     deadline_of_action = models.DateField(verbose_name=_('Deadline of Action'), null=True, blank=True)
@@ -581,7 +586,9 @@ class Audit(Engagement):
             MaxValueValidator(100.0)
         ],
     )
-    audit_opinion = models.CharField(verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, null=True, blank=True)
+    audit_opinion = models.CharField(
+        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, null=True, blank=True,
+    )
 
     recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
     audit_observation = models.TextField(verbose_name=_('Audit Observation'), blank=True)
