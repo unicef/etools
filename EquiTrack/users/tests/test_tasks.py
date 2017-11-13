@@ -20,6 +20,7 @@ from EquiTrack.factories import (
 from EquiTrack.tests.mixins import SCHEMA_NAME, FastTenantTestCase
 from users import tasks
 from users.models import Section, User, UserProfile
+from vision.models import VisionSyncLog
 from vision.vision_data_synchronizer import VisionException
 
 
@@ -302,6 +303,144 @@ class TestUserMapper(FastTenantTestCase):
         self.assertIsNone(profile.supervisor)
         self.assertTrue(self.mapper._set_supervisor(profile, manager_id))
         self.assertEqual(profile.supervisor, supervisor.user)
+
+    def test_map_users_no_sections(self):
+        self.assertEqual(self.mapper.section_users, {})
+        self.mapper.map_users()
+        self.assertEqual(self.mapper.section_users, {})
+
+    def test_map_users_response_empty(self):
+        profile = ProfileFactory()
+        profile.section_code = "SEC"
+        profile.save()
+        data = {
+            "ORG_UNIT_NAME": "UNICEF",
+            "STAFF_ID": None,
+            "MANAGER_ID": "",
+            "ORG_UNIT_CODE": "101",
+            "VENDOR_CODE": "202",
+            "STAFF_EMAIL": "map@example.com",
+        }
+
+        self.assertEqual(self.mapper.section_users, {})
+        mock_request = Mock()
+        mock_request.get().json.return_value = json.dumps([data])
+        mock_request.get().status_code = 200
+        self.assertFalse(self.mapper.section_users, {})
+        with patch("users.tasks.requests", mock_request):
+            self.mapper.map_users()
+        self.assertEqual(self.mapper.section_users, {})
+
+    def test_map_users_no_user(self):
+        profile = ProfileFactory()
+        profile.section_code = "SEC"
+        profile.save()
+        data = {
+            "ORG_UNIT_NAME": "UNICEF",
+            "STAFF_ID": "404",
+            "MANAGER_ID": "",
+            "ORG_UNIT_CODE": "101",
+            "VENDOR_CODE": "202",
+            "STAFF_EMAIL": "map@example.com",
+        }
+
+        self.assertEqual(self.mapper.section_users, {})
+        mock_request = Mock()
+        mock_request.get().json.return_value = json.dumps([data])
+        mock_request.get().status_code = 200
+        self.assertFalse(self.mapper.section_users, {})
+        with patch("users.tasks.requests", mock_request):
+            self.mapper.map_users()
+        self.assertEqual(self.mapper.section_users, {})
+
+    def test_map_users(self):
+        profile = ProfileFactory()
+        profile.section_code = "SEC"
+        profile.staff_id = profile.user.pk
+        profile.save()
+        data = {
+            "ORG_UNIT_NAME": "UNICEF",
+            "STAFF_ID": profile.staff_id,
+            "MANAGER_ID": "",
+            "ORG_UNIT_CODE": "101",
+            "VENDOR_CODE": "202",
+            "STAFF_EMAIL": "map@example.com",
+            "STAFF_POST_NO": "123",
+        }
+        mock_request = Mock()
+        mock_request.get().json.return_value = json.dumps([data])
+        mock_request.get().status_code = 200
+        self.assertFalse(self.mapper.section_users, {})
+        with patch("users.tasks.requests", mock_request):
+            self.mapper.map_users()
+        self.assertEqual(
+            self.mapper.section_users,
+            {profile.user.pk: profile.user}
+        )
+
+
+@skip("Issues with using public schema")
+class TestSyncUsers(FastTenantTestCase):
+    def setUp(self):
+        super(TestSyncUsers, self).setUp()
+        self.mock_log = Mock()
+
+    def test_sync(self):
+        mock_sync = Mock()
+        with patch("users.tasks.VisionSyncLog", self.mock_log):
+            with patch("users.tasks.sync_users_remote", mock_sync):
+                tasks.sync_users()
+        self.assertEqual(mock_sync.call_count, 1)
+        self.assertTrue(self.mock_log.call_count(), 1)
+        self.assertTrue(self.mock_log.save.call_count(), 1)
+
+    def test_sync_exception(self):
+        mock_sync = Mock(side_effect=Exception)
+        with patch("users.tasks.VisionSyncLog", self.mock_log):
+            with patch("users.tasks.sync_users_remote", mock_sync):
+                with self.assertRaises(VisionException):
+                    tasks.sync_users()
+        self.assertTrue(self.mock_log.call_count(), 1)
+        self.assertTrue(self.mock_log.save.call_count(), 1)
+
+
+@skip("Issues with using public schema")
+class TestMapUsers(FastTenantTestCase):
+    def setUp(self):
+        super(TestMapUsers, self).setUp()
+        self.mock_log = Mock()
+
+    def test_map(self):
+        profile = ProfileFactory()
+        profile.section_code = "SEC"
+        profile.staff_id = profile.user.pk
+        profile.save()
+        data = {
+            "ORG_UNIT_NAME": "UNICEF",
+            "STAFF_ID": profile.staff_id,
+            "MANAGER_ID": "",
+            "ORG_UNIT_CODE": "101",
+            "VENDOR_CODE": "202",
+            "STAFF_EMAIL": "map@example.com",
+            "STAFF_POST_NO": "123",
+        }
+        mock_request = Mock()
+        mock_request.get().json.return_value = json.dumps([data])
+        mock_request.get().status_code = 200
+        with patch("users.tasks.VisionSyncLog", self.mock_log):
+            with patch("users.tasks.requests", mock_request):
+                tasks.map_users()
+        self.assertTrue(self.mock_log.call_count(), 1)
+        self.assertTrue(self.mock_log.save.call_count(), 1)
+
+    def test_map_exception(self):
+        mock_mapper = Mock(side_effect=Exception)
+        with patch("users.tasks.VisionSyncLog", self.mock_log):
+            with patch("users.tasks.UserMapper", mock_mapper):
+                with self.assertRaises(VisionException):
+                    tasks.map_users()
+        self.assertTrue(self.mock_log.call_count(), 1)
+        self.assertTrue(self.mock_log.save.call_count(), 1)
 
 
 class TestUserSynchronizer(FastTenantTestCase):
