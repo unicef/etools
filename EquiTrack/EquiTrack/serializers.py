@@ -1,7 +1,6 @@
 import json
 
 from rest_framework import serializers
-
 from snapshot.utils import create_dict_with_relations, create_snapshot
 
 
