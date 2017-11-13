@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
+import django_fsm
 
 
 class Migration(migrations.Migration):
@@ -86,5 +87,79 @@ class Migration(migrations.Migration):
             model_name='tpmpartnerstaffmember',
             name='user',
             field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='tpm_tpmpartnerstaffmember', to=settings.AUTH_USER_MODEL, verbose_name='User'),
+        ),migrations.AlterField(
+            model_name='tpmactionpoint',
+            name='author',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='created_tpm_action_points', to=settings.AUTH_USER_MODEL, verbose_name='Assigned By'),
+        ),
+        migrations.AlterField(
+            model_name='tpmactionpoint',
+            name='comments',
+            field=models.TextField(blank=True, verbose_name='Comments'),
+        ),
+        migrations.AlterField(
+            model_name='tpmactionpoint',
+            name='description',
+            field=models.TextField(verbose_name='Description'),
+        ),
+        migrations.AlterField(
+            model_name='tpmactionpoint',
+            name='due_date',
+            field=models.DateField(verbose_name='Due Date'),
+        ),
+        migrations.AlterField(
+            model_name='tpmactionpoint',
+            name='person_responsible',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tpm_action_points', to=settings.AUTH_USER_MODEL, verbose_name='Person Responsible'),
+        ),
+        migrations.AlterField(
+            model_name='tpmactionpoint',
+            name='tpm_visit',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='action_points', to='tpm.TPMVisit', verbose_name='Visit'),
+        ),
+        migrations.AlterField(
+            model_name='tpmactivity',
+            name='is_pv',
+            field=models.BooleanField(default=False, verbose_name='HACT Programmatic Visit'),
+        ),
+        migrations.AlterField(
+            model_name='tpmactivity',
+            name='section',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tpm_activities', to='users.Section', verbose_name='Section'),
+        ),
+        migrations.AlterField(
+            model_name='tpmactivity',
+            name='tpm_visit',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tpm_activities', to='tpm.TPMVisit', verbose_name='Visit'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisit',
+            name='approval_comment',
+            field=models.TextField(blank=True, verbose_name='Approval Comments'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisit',
+            name='reject_comment',
+            field=models.TextField(blank=True, verbose_name='Request For More Information'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisit',
+            name='status',
+            field=django_fsm.FSMField(choices=[('draft', 'Draft'), ('assigned', 'Assigned'), ('cancelled', 'Cancelled'), ('tpm_accepted', 'TPM Accepted'), ('tpm_rejected', 'TPM Rejected'), ('tpm_reported', 'TPM Reported'), ('tpm_report_rejected', 'Sent Back to TPM'), ('unicef_approved', 'UNICEF Approved')], default='draft', max_length=20, protected=True, verbose_name='Status'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisitreportrejectcomment',
+            name='reject_reason',
+            field=models.TextField(verbose_name='Reason of Rejection'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisitreportrejectcomment',
+            name='rejected_at',
+            field=models.DateTimeField(auto_now_add=True, verbose_name='Rejected At'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisitreportrejectcomment',
+            name='tpm_visit',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='report_reject_comments', to='tpm.TPMVisit', verbose_name='Visit'),
         ),
     ]

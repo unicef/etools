@@ -59,10 +59,10 @@ class TPMVisitReportRejectCommentSerializer(TPMPermissionsBasedSerializerMixin,
 class TPMActionPointSerializer(TPMPermissionsBasedSerializerMixin,
                                WritableNestedSerializerMixin,
                                serializers.ModelSerializer):
-    author = MinimalUserSerializer(read_only=True)
+    author = MinimalUserSerializer(read_only=True, label=_('Assigned By'))
 
     person_responsible = SeparatedReadWriteField(
-        read_field=MinimalUserSerializer(read_only=True),
+        read_field=MinimalUserSerializer(read_only=True, label=_('Person Responsible')),
         required=True
     )
 
@@ -86,7 +86,7 @@ class TPMActionPointSerializer(TPMPermissionsBasedSerializerMixin,
 class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             ActivitySerializer):
     implementing_partner = SeparatedReadWriteField(
-        read_field=PartnerOrganizationLightSerializer(read_only=True),
+        read_field=PartnerOrganizationLightSerializer(read_only=True, label=_('Implementing Partner')),
     )
     partnership = SeparatedReadWriteField(
         read_field=InterventionCreateUpdateSerializer(read_only=True, label=_('PD/SSFA')),
@@ -98,11 +98,11 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     )
 
     locations = SeparatedReadWriteField(
-        read_field=LocationLightSerializer(many=True, read_only=True),
+        read_field=LocationLightSerializer(many=True, read_only=True, label=_('Locations')),
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True),
+        read_field=SectionSerializer(read_only=True, label=_('Section')),
         required=True,
     )
 
@@ -122,14 +122,14 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
             'id': {'label': _('Activity ID')},
             'date': {'required': True},
             'implementing_partner': {'required': True},
-            'partnership': {'required': True, 'label': _('PD/SSFA')},
+            'partnership': {'required': True},
         }
 
 
 class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, WritableNestedSerializerMixin,
                               serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(
-        read_field=TPMPartnerLightSerializer(label=_('TPM Name'), read_only=True),
+        read_field=TPMPartnerLightSerializer(label=_('TPM Partner'), read_only=True),
     )
 
     offices = SeparatedReadWriteField(
@@ -189,6 +189,11 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
             'date_of_tpm_rejected', 'date_of_tpm_reported', 'date_of_unicef_approved',
             'date_of_tpm_report_rejected', 'date_of_cancelled',
         ]
+        extra_kwargs = {
+            'reference_number': {
+                'label': _('Reference Number'),
+            },
+        }
 
 
 class TPMVisitSerializer(TPMVisitLightSerializer):
@@ -230,7 +235,7 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
             'visit_information', 'report_reject_comments',
         ]
         extra_kwargs = {
-            'tpm_partner': {'required': True, 'label': _('TPM Name')},
+            'tpm_partner': {'required': True},
             'unicef_focal_points': {'required': True},
         }
 
