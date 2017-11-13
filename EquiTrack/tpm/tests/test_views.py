@@ -146,21 +146,24 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
     def test_detail_view(self):
         response = self.forced_auth_req(
             'get',
-            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
+            reverse('tpm:tpmstaffmembers-detail',
+                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             user=self.pme_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
-            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
+            reverse('tpm:tpmstaffmembers-detail',
+                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             user=self.tpm_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
-            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
+            reverse('tpm:tpmstaffmembers-detail',
+                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             user=self.unicef_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -208,7 +211,8 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
 
         response = self.forced_auth_req(
             'patch',
-            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
+            reverse('tpm:tpmstaffmembers-detail',
+                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             data=user_data,
             user=self.pme_user
         )
@@ -216,7 +220,8 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
 
         response = self.forced_auth_req(
             'patch',
-            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
+            reverse('tpm:tpmstaffmembers-detail',
+                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             data=user_data,
             user=self.tpm_user
         )
@@ -224,7 +229,8 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
 
         response = self.forced_auth_req(
             'patch',
-            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
+            reverse('tpm:tpmstaffmembers-detail',
+                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             data=user_data,
             user=self.unicef_user
         )
