@@ -11,7 +11,7 @@ from allauth.account.utils import user_pk_to_url_str
 from model_utils.models import TimeStampedModel
 from post_office import mail
 
-from EquiTrack.utils import get_environment, get_current_site
+from EquiTrack.utils import get_current_site, get_environment
 
 
 class BaseFirmManager(models.Manager):

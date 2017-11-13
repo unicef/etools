@@ -12,8 +12,8 @@ from mock import Mock
 from rest_framework import serializers
 
 from utils.writable_serializers.serializers import (
-    WritableNestedChildSerializerMixin, WritableNestedParentSerializerMixin, DeletableSerializerMixin,)
-from utils.writable_serializers.tests.models import Child1, Parent, Child2, GenericChild, Child3, CodedGenericChild
+    DeletableSerializerMixin, WritableNestedChildSerializerMixin, WritableNestedParentSerializerMixin,)
+from utils.writable_serializers.tests.models import Child1, Child2, Child3, CodedGenericChild, GenericChild, Parent
 
 
 class BaseWritableSerializersTestCase(TestCase):

@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import TestCase
 
-from utils.common.tests.models import Parent, CodedGenericChild
+from utils.common.tests.models import CodedGenericChild, Parent
 
 
 class CodedGenericTestCase(TestCase):

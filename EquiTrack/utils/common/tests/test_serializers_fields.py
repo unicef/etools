@@ -5,8 +5,8 @@ from django.test import TestCase
 
 from rest_framework import serializers
 
-from utils.common.tests.models import Parent, Child1
 from utils.common.serializers.fields import SeparatedReadWriteField
+from utils.common.tests.models import Child1, Parent
 
 
 class ParentSerializer(serializers.ModelSerializer):

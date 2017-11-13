@@ -269,6 +269,13 @@ class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
+        extra_kwargs = {
+            "partner_type": {
+                "error_messages": {
+                    "null": u'Vendor record must belong to PRG2 account group (start from 2500 series)'
+                }
+            }
+        }
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):

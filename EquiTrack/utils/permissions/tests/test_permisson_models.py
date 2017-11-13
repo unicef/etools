@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.contrib.auth.models import User, Group
-from django.test import TestCase, override_settings
+from django.contrib.auth.models import Group, User
+from django.test import override_settings, TestCase
 
 from utils.permissions.models.models import BasePermission
 

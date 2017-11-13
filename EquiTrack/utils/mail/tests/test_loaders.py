@@ -1,10 +1,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.test import TestCase
 from django.core import mail
+from django.test import TestCase
 
-from post_office.models import EmailTemplate
 from post_office import mail as post_office_mail
+from post_office.models import EmailTemplate
 
 
 class EmailTemplateLoaderTestCase(TestCase):

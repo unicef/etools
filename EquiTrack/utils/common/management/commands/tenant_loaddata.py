@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.core.management.base import BaseCommand
 from django.core.management import call_command
+from django.core.management.base import BaseCommand
 from django.db import connection, DEFAULT_DB_ALIAS
 
 from tenant_schemas.utils import get_tenant_model

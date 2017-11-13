@@ -1,10 +1,10 @@
-from rest_framework import mixins, viewsets, status
-from rest_framework.response import Response
+from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 
-from workplan.models import Workplan, Comment, ResultWorkplanProperty, WorkplanProject, Label, Milestone
-from workplan.serializers import CommentSerializer, WorkplanSerializer,\
-    WorkplanProjectSerializer, LabelSerializer, MilestoneSerializer
+from workplan.models import Comment, Label, Milestone, ResultWorkplanProperty, Workplan, WorkplanProject
+from workplan.serializers import (
+    CommentSerializer, LabelSerializer, MilestoneSerializer, WorkplanProjectSerializer, WorkplanSerializer,)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

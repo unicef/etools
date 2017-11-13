@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.db import connection
 from django.test import TestCase
+
 from rest_framework import serializers
 
 from firms.factories import UserFactory

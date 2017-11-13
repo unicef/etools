@@ -6,7 +6,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
-from django.db.models.fields import related_descriptors, related
+from django.db.models.fields import related, related_descriptors
 from django.utils import six
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
@@ -14,11 +14,11 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.fields import get_attribute
 from rest_framework.serializers import SerializerMetaclass
-from rest_framework.validators import UniqueValidator, UniqueTogetherValidator, BaseUniqueForValidator
+from rest_framework.validators import BaseUniqueForValidator, UniqueTogetherValidator, UniqueValidator
 
+from utils.common.models.fields import CodedGenericRelation
 from utils.common.serializers.mixins import PkSerializerMixin
 from utils.common.utils import pop_keys
-from utils.common.models.fields import CodedGenericRelation
 
 
 @six.add_metaclass(SerializerMetaclass)
@@ -245,8 +245,8 @@ class WritableNestedParentSerializerMixin(object):
         if isinstance(related_descriptor, related_descriptors.ReverseManyToOneDescriptor):
             return related_descriptor.field, 'forward'
 
-        if (isinstance(related_descriptor, related_descriptors.ForwardManyToOneDescriptor)
-                and isinstance(related_descriptor.field, related.OneToOneField)):
+        if (isinstance(related_descriptor, related_descriptors.ForwardManyToOneDescriptor) and
+                isinstance(related_descriptor.field, related.OneToOneField)):
             return related_descriptor.field, 'reverse'
 
         assert False, "We doen't support many to many relation and forward many to one " \

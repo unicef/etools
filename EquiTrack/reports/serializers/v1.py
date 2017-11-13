@@ -1,17 +1,12 @@
 from __future__ import unicode_literals
+
 from django.db import connection
+
 from rest_framework import serializers
 
-from workplan.serializers import ResultWorkplanPropertySerializer
+from reports.models import CountryProgramme, Indicator, Result, ResultType, Sector, Unit
 from workplan.models import ResultWorkplanProperty
-from reports.models import (
-    ResultType,
-    Unit,
-    Sector,
-    Indicator,
-    Result,
-    CountryProgramme
-)
+from workplan.serializers import ResultWorkplanPropertySerializer
 
 
 class SectorSerializer(serializers.ModelSerializer):
