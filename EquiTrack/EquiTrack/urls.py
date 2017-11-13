@@ -1,59 +1,27 @@
 from __future__ import absolute_import
 
-# Django imports
 from django.conf import settings
 from django.conf.urls import include, url
-from django.views.generic import TemplateView
 from django.contrib import admin
+from django.views.generic import TemplateView
 
-# 3rd party imports
-from rest_framework_swagger.views import get_swagger_view
-from rest_framework_swagger.renderers import OpenAPIRenderer
-from rest_framework.schemas import get_schema_view
-import rest_framework_jwt.views
-from rest_framework_nested import routers
 import djangosaml2.views
+import rest_framework_jwt.views
+from rest_framework.schemas import get_schema_view
+from rest_framework_nested import routers
+from rest_framework_swagger.renderers import OpenAPIRenderer
+from rest_framework_swagger.views import get_swagger_view
 
-# Project imports
-from EquiTrack.views import (
-    MainView,
-    OutdatedBrowserView,
-    IssueJWTRedirectView)
-from locations.views import (
-    LocationTypesViewSet,
-    LocationsViewSet,
-    LocationsLightViewSet,
-)
+from EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
+from locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
 from management.urls import urlpatterns as management_urls
-from partners.views.v1 import (
-    FileTypeViewSet,
-)
+from partners.views.v1 import FileTypeViewSet
 from publics import urls as publics_patterns
 from publics.views import StaticDataView
-from reports.views.v1 import (
-    ResultTypeViewSet,
-    SectorViewSet,
-    IndicatorViewSet,
-    ResultViewSet,
-    UnitViewSet
-)
+from reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, SectorViewSet, UnitViewSet
 from t2f.urls import urlpatterns as t2f_patterns
-from users.views import (
-    CountriesViewSet,
-    GroupViewSet,
-    ModuleRedirectView,
-    OfficeViewSet,
-    SectionViewSet,
-    UserViewSet,
-    )
-from workplan.views import (
-    CommentViewSet,
-    WorkplanViewSet,
-    WorkplanProjectViewSet,
-    LabelViewSet,
-    MilestoneViewSet
-)
-
+from users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet
+from workplan.views import CommentViewSet, LabelViewSet, MilestoneViewSet, WorkplanProjectViewSet, WorkplanViewSet
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')

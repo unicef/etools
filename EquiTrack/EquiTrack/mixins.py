@@ -3,31 +3,28 @@ Project wide mixins for models and classes
 """
 import logging
 
-import jwt
-from django.contrib.auth import get_user_model
-from django.db import connection
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.db import connection
+from django.http.response import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
 from django.utils.http import urlsafe_base64_encode
-from django.http.response import HttpResponseRedirect
 
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_jwt.utils import jwt_payload_handler
-
-from tenant_schemas.middleware import TenantMiddleware
-from tenant_schemas.utils import get_public_schema_name
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
-from rest_framework.exceptions import PermissionDenied
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from rest_framework_jwt.settings import api_settings
-
-from allauth.exceptions import ImmediateHttpResponse
-from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+import jwt
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.utils import perform_login
+from allauth.exceptions import ImmediateHttpResponse
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication, TokenAuthentication
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework_jwt.settings import api_settings
+from rest_framework_jwt.utils import jwt_payload_handler
+from tenant_schemas.middleware import TenantMiddleware
+from tenant_schemas.utils import get_public_schema_name
 
 from EquiTrack.utils import set_country
 

@@ -1,26 +1,27 @@
 """
 Model factories used for generating models dynamically for tests
 """
-from datetime import datetime, timedelta, date
 import json
+from datetime import date, datetime, timedelta
 
-from django.db.models.signals import post_save
-from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
+from django.contrib.gis.geos import GEOSGeometry
+from django.db.models.signals import post_save
+
 import factory
 from factory import fuzzy
+from snapshot import models as snapshot_models
 
-from users import models as user_models
-from reports import models as report_models
+from funds import models as funds_models
 from locations import models as location_models
+from notification import models as notification_models
 from partners import models as partner_models
 from publics import models as publics_models
-from funds import models as funds_models
-from notification import models as notification_models
-from snapshot import models as snapshot_models
+from reports import models as report_models
 from t2f import models as t2f_models
+from users import models as user_models
 from workplan import models as workplan_models
-from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
+from workplan.models import CoverPage, CoverPageBudget, WorkplanProject
 
 
 class OfficeFactory(factory.django.DjangoModelFactory):
@@ -536,10 +537,10 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     actual_amt = fuzzy.FuzzyDecimal(1, 300)
     outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
 
-    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1)-timedelta(days=10),
+    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1) - timedelta(days=10),
                                  date(date.today().year, 1, 1))
     end_date = fuzzy.FuzzyDate(date(date.today().year + 1, 1, 1),
-                               date(date.today().year + 1, 1, 1)+timedelta(days=10))
+                               date(date.today().year + 1, 1, 1) + timedelta(days=10))
 
     class Meta:
         model = funds_models.FundsReservationHeader

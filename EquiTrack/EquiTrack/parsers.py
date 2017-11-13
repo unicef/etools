@@ -28,7 +28,7 @@ def form_path_from_list(p_l, list=False, end=False):
     for i in range(0, len(p_l)):
         k = p_l[i]
         if isinstance(k, int):
-            if list and i == len(p_l)-1:
+            if list and i == len(p_l) - 1:
                 r += '.append({})'
             else:
                 r += '[' + str(k) + ']'
@@ -92,14 +92,14 @@ def parse_multipart_data(myd):
     for k in lok:
         i = 0
         parcurs = []
-        if i >= len(k)-1:
+        if i >= len(k) - 1:
             r[k[i]] = myd[k[i]]
-        while i < len(k)-1:
+        while i < len(k) - 1:
             parcurs.append(k[i])
             e = k[i]
-            r = set_in_path(r, parcurs, k[i+1], k)
+            r = set_in_path(r, parcurs, k[i + 1], k)
             if i == len(k) - 2:
-                if not isinstance(k[i+1], int):
+                if not isinstance(k[i + 1], int):
                     parcurs.append(k[i + 1])
                     pth = form_path_from_list(parcurs)
                     exec_str = 'r' + pth + ' = ' + 'myd[form_myd_path(parcurs)]'

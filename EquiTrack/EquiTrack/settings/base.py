@@ -14,12 +14,12 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 from __future__ import absolute_import
 
+import datetime
 import os
 from os.path import abspath, basename, dirname, join, normpath
-import datetime
 
-import djcelery
 import dj_database_url
+import djcelery
 import saml2
 from saml2 import saml
 
@@ -378,7 +378,7 @@ MPTT_ADMIN_LEVEL_INDENT = 20
 
 # django-leaflet: django-leaflet
 LEAFLET_CONFIG = {
-    'TILES':  'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    'TILES': 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
     'ATTRIBUTION_PREFIX': 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',  # noqa
     'MIN_ZOOM': 3,
     'MAX_ZOOM': 18,
@@ -470,36 +470,36 @@ SAML_SIGNED_LOGOUT = True
 
 # django-rest-framework-jwt: http://getblimp.github.io/django-rest-framework-jwt/
 JWT_AUTH = {
-   'JWT_ENCODE_HANDLER':
-   'rest_framework_jwt.utils.jwt_encode_handler',
+    'JWT_ENCODE_HANDLER':
+    'rest_framework_jwt.utils.jwt_encode_handler',
 
-   'JWT_DECODE_HANDLER':
-   'rest_framework_jwt.utils.jwt_decode_handler',
+    'JWT_DECODE_HANDLER':
+    'rest_framework_jwt.utils.jwt_decode_handler',
 
-   'JWT_PAYLOAD_HANDLER':
-   'rest_framework_jwt.utils.jwt_payload_handler',
+    'JWT_PAYLOAD_HANDLER':
+    'rest_framework_jwt.utils.jwt_payload_handler',
 
-   'JWT_PAYLOAD_GET_USER_ID_HANDLER':
-   'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
+    'JWT_PAYLOAD_GET_USER_ID_HANDLER':
+    'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
 
-   'JWT_PAYLOAD_GET_USERNAME_HANDLER':
-   'rest_framework_jwt.utils.jwt_get_username_from_payload_handler',
+    'JWT_PAYLOAD_GET_USERNAME_HANDLER':
+    'rest_framework_jwt.utils.jwt_get_username_from_payload_handler',
 
-   'JWT_RESPONSE_PAYLOAD_HANDLER':
-   'rest_framework_jwt.utils.jwt_response_payload_handler',
+    'JWT_RESPONSE_PAYLOAD_HANDLER':
+    'rest_framework_jwt.utils.jwt_response_payload_handler',
 
-   'JWT_ALGORITHM': 'HS256',
-   'JWT_VERIFY': True,
-   'JWT_VERIFY_EXPIRATION': True,
-   'JWT_LEEWAY': 30,
-   'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=30000),
-   'JWT_AUDIENCE': None,
-   'JWT_ISSUER': None,
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_VERIFY': True,
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_LEEWAY': 30,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=30000),
+    'JWT_AUDIENCE': None,
+    'JWT_ISSUER': None,
 
-   'JWT_ALLOW_REFRESH': False,
-   'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
+    'JWT_ALLOW_REFRESH': False,
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
 
-   'JWT_AUTH_HEADER_PREFIX': 'JWT',
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
 
 
