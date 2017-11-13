@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 
@@ -105,7 +105,7 @@ class EngagementHasReportAttachmentsCheck(BaseTransitionCheck):
     def get_errors(self, instance, *args, **kwargs):
         errors = super(EngagementHasReportAttachmentsCheck, self).get_errors(*args, **kwargs)
 
-        if instance.report_attachments.filter(file_type__name='report').count() <= 0:
+        if not instance.report_attachments.filter(file_type__name='report').exists():
             errors['report_attachments'] = _('You should attach report.')
         return errors
 

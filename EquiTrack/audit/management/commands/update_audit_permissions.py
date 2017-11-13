@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.core.management import BaseCommand
 from django.db import connection
 from django.utils import six

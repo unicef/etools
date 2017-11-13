@@ -1,8 +1,10 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from collections import OrderedDict
 
-from .manual import ManualVisionSynchronizer
 from audit.models import PurchaseOrder, AuditorFirm, PurchaseOrderItem
 from funds.models import Grant, Donor
+from vision.adapters.manual import ManualVisionSynchronizer
 
 
 class POSynchronizer(ManualVisionSynchronizer):

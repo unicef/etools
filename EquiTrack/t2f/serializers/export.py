@@ -31,13 +31,14 @@ class TravelActivityExportSerializer(serializers.Serializer):
     partnership = serializers.CharField(source='activity.partnership.title')
     results = serializers.CharField(source='activity.result.name')
     locations = serializers.SerializerMethodField()
-    when = serializers.DateTimeField(source='activity.date', format='%d-%b-%Y')
+    start_date = serializers.DateTimeField(source='travel.start_date', format='%d-%b-%Y')
+    end_date = serializers.DateTimeField(source='travel.end_date', format='%d-%b-%Y')
     is_secondary_traveler = serializers.SerializerMethodField()
     primary_traveler_name = serializers.SerializerMethodField()
 
     class Meta:
         fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'trip_type', 'partner', 'partnership',
-                  'results', 'locations', 'when', 'is_secondary_traveler',	'primary_traveler_name')
+                  'results', 'locations', 'start_date', 'end_date', 'is_secondary_traveler', 'primary_traveler_name')
 
     def get_locations(self, obj):
         return ', '.join([l.name for l in obj.activity.locations.all()])

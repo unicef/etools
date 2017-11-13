@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import random
 
 from factory import fuzzy
@@ -21,7 +23,7 @@ class EngagementCheckTransitionsTestCaseMixin(object):
 
         self.assertEqual(response.status_code, expected_response)
         if errors:
-            self.assertListEqual(sorted(response.data.keys()), sorted(errors or []))
+            self.assertItemsEqual(response.data.keys(), errors or [])
 
     def _test_submit(self, user, expected_response, errors=None, data=None):
         return self._test_transition(user, 'submit', expected_response, errors=errors, data=data)
@@ -216,13 +218,7 @@ class EngagementCheckTransitionsMetadataTestCaseMixin(object):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            sorted(map(
-                lambda t: t['code'],
-                response.data['actions']['allowed_FSM_transitions']
-            )),
-            sorted(actions)
-        )
+        self.assertItemsEqual(response.data['actions']['allowed_FSM_transitions'], actions)
 
 
 class TestSCTransitionsMetadataTestCase(

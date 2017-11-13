@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
@@ -10,7 +10,7 @@ from rest_framework import exceptions
 from rest_framework.fields import ChoiceField
 from rest_framework.request import clone_request
 
-from .serializers.fields import SeparatedReadWriteField
+from utils.common.serializers.fields import SeparatedReadWriteField
 
 
 class SeparatedReadWriteFieldMetadata(object):

@@ -18,10 +18,6 @@ def unwrap_risks_extra(apps, schema_editor):
         risk.save()
 
 
-def do_nothing(appps, schema_editor):
-    pass
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -29,5 +25,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(unwrap_risks_extra, do_nothing)
+        migrations.RunPython(unwrap_risks_extra, migrations.RunPython.noop)
     ]

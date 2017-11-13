@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
@@ -11,7 +11,7 @@ from allauth.account.utils import user_pk_to_url_str
 from model_utils.models import TimeStampedModel
 from post_office import mail
 
-from EquiTrack.utils import get_environment, get_current_site
+from EquiTrack.utils import get_current_site, get_environment
 
 
 class BaseFirmManager(models.Manager):
