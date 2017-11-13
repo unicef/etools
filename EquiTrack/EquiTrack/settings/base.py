@@ -19,7 +19,6 @@ import os
 from os.path import abspath, basename, dirname, join, normpath
 
 import dj_database_url
-import djcelery
 import saml2
 from saml2 import saml
 
@@ -154,7 +153,8 @@ SHARED_APPS = (
     'smart_selects',
     'gunicorn',
     'post_office',
-    'djcelery',
+    'django_celery_beat',
+    'django_celery_results',
     'djcelery_email',
     'leaflet',
     'corsheaders',
@@ -298,20 +298,18 @@ POST_OFFICE = {
     }
 }
 
-# django-celery: https://github.com/celery/django-celery
-djcelery.setup_loader()
-
 # celery: http://docs.celeryproject.org/en/3.1/configuration.html
-BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
 BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(BROKER_VISIBILITY_VAR)}
-CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
-CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+CELERY_RESULT_BACKEND = 'django_celery_results.backends.database:DatabaseBackend'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 # Sensible settings for celery
-CELERY_ALWAYS_EAGER = False
-CELERY_ACKS_LATE = True
+CELERY_TASK_ALWAYS_EAGER = CELERY_ALWAYS_EAGER = False
+CELERY_TASK_ACKS_LATE = CELERY_ACKS_LATE = True
 CELERY_TASK_PUBLISH_RETRY = True
-CELERY_DISABLE_RATE_LIMITS = False
+CELERY_WORKER_DISABLE_RATE_LIMITS = CELERY_DISABLE_RATE_LIMITS = False
+
 # By default we will ignore result
 # If you want to see results and try out tasks interactively, change it to False
 # Or change this setting on tasks level
