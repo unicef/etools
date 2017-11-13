@@ -10,6 +10,7 @@ from django.contrib.auth.models import Group
 import factory
 from factory import fuzzy
 
+from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
 from users import models as user_models
 from reports import models as report_models
 from locations import models as location_models
@@ -42,8 +43,8 @@ class CountryFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('schema_name',)
 
     name = "Test Country"
-    schema_name = 'test'
-    domain_url = 'tenant.test.com'
+    schema_name = SCHEMA_NAME
+    domain_url = TENANT_DOMAIN
 
 
 class GroupFactory(factory.django.DjangoModelFactory):
