@@ -112,10 +112,10 @@ class EngagementExportSerializer(serializers.ModelSerializer):
 
 class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serializers.ModelSerializer):
     agreement = SeparatedReadWriteField(
-        read_field=PurchaseOrderSerializer(read_only=True),
+        read_field=PurchaseOrderSerializer(read_only=True, label=_('Purchase Order')),
     )
     po_item = SeparatedReadWriteField(
-        read_field=PurchaseOrderItemSerializer(read_only=True),
+        read_field=PurchaseOrderItemSerializer(read_only=True, label=_('PO Item')),
     )
     related_agreement = PurchaseOrderSerializer(write_only=True, required=False)
     partner = SeparatedReadWriteField(
@@ -127,7 +127,7 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
         source='displayed_status',
         read_only=True
     )
-    status_date = serializers.ReadOnlyField(source='displayed_status_date')
+    status_date = serializers.ReadOnlyField(source='displayed_status_date', label=_('Date of Status'))
     unique_id = serializers.ReadOnlyField(label=_('Unique ID'))
 
     class Meta(AuditPermissionsBasedRootSerializerMixin.Meta):
@@ -174,7 +174,7 @@ class EngagementSerializer(EngagementDatesValidation,
         required=False
     )
     authorized_officers = SeparatedReadWriteField(
-        read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+        read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True, label=_('Authorized Officers'))
     )
 
     specific_procedures = SpecificProcedureSerializer(many=True, label=_('Specific Procedure To Be Performed'))
@@ -289,7 +289,7 @@ class SpotCheckSerializer(EngagementSerializer):
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
-            'engagement_type': {'read_only': True, 'label': _('Engagement Type')}
+            'engagement_type': {'read_only': True}
         })
         extra_kwargs.update({
             field: {'required': True} for field in [
@@ -304,10 +304,6 @@ class DetailedFindingInfoSerializer(WritableNestedSerializerMixin, serializers.M
         fields = (
             'id', 'finding', 'recommendation',
         )
-        extra_kwargs = {
-            'finding': {'label': _('Description of Finding')},
-            'recommendation': {'label': _('Recommendation and IP Management Response')},
-        }
 
 
 class MicroAssessmentSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
@@ -331,7 +327,7 @@ class MicroAssessmentSerializer(RiskCategoriesUpdateMixin, EngagementSerializer)
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
-            'engagement_type': {'read_only': True, 'label': _('Engagement Type')},
+            'engagement_type': {'read_only': True},
             'start_date': {'required': False},
             'end_date': {'required': False},
             'total_value': {'required': False},
@@ -346,9 +342,6 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
             'local_amount', 'amount',
             'description', 'recommendation', 'ip_comments'
         ]
-        extra_kwargs = {
-            'ip_comments': {'label': _('IP Comments')},
-        }
 
 
 class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
@@ -376,11 +369,7 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
-            'engagement_type': {'read_only': True, 'label': _('Engagement Type')},
-            'audited_expenditure': {'label': _('Audited Expenditure $')},
-            'financial_findings': {'label': _('Financial Findings $')},
-            'percent_of_audited_expenditure': {'label': _('% Of Audited Expenditure')},
-
+            'engagement_type': {'read_only': True},
             'recommendation': {'required': True},
             'audit_observation': {'required': True},
             'ip_response': {'required': True},

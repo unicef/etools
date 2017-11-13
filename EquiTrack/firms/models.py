@@ -22,58 +22,58 @@ class BaseFirmManager(models.Manager):
 @python_2_unicode_compatible
 class BaseFirm(TimeStampedModel, models.Model):
     vendor_number = models.CharField(
-        _('vendor number'),
+        verbose_name=_('Vendor Number'),
         blank=True,
         null=True,
         unique=True,
         max_length=30
     )
     name = models.CharField(
-        _('vendor name'),
+        verbose_name=_('Vendor Name'),
         max_length=255,
     )
 
     street_address = models.CharField(
-        _('address'),
+        verbose_name=_('Address'),
         max_length=500,
         blank=True, null=True
     )
     city = models.CharField(
-        _('city'),
+        verbose_name=_('City'),
         max_length=255,
         blank=True, null=True
     )
     postal_code = models.CharField(
-        _('postal code'),
+        verbose_name=_('Postal Code'),
         max_length=32,
         blank=True, null=True
     )
     country = models.CharField(
-        _('country'),
+        verbose_name=_('Country'),
         max_length=255,
         blank=True, null=True
     )
 
     email = models.CharField(
-        _('email'),
+        verbose_name=_('Email'),
         max_length=255,
         blank=True, null=True
     )
     phone_number = models.CharField(
-        _('phone number'),
+        verbose_name=_('Phone Number'),
         max_length=32,
         blank=True, null=True
     )
 
-    blocked = models.BooleanField(_('blocked'), default=False)
-    hidden = models.BooleanField(_('hidden'), default=False)
+    blocked = models.BooleanField(verbose_name=_('Blocked'), default=False)
+    hidden = models.BooleanField(verbose_name=_('Hidden'), default=False)
 
     objects = BaseFirmManager()
 
     class Meta:
         abstract = True
-        verbose_name = _('organization')
-        verbose_name_plural = _('organizations')
+        verbose_name = _('Organization')
+        verbose_name_plural = _('Organizations')
 
     def __str__(self):
         return self.name
@@ -84,12 +84,12 @@ class BaseFirm(TimeStampedModel, models.Model):
 
 @python_2_unicode_compatible
 class BaseStaffMember(models.Model):
-    user = models.OneToOneField('auth.User', verbose_name=_('user'), related_name='%(app_label)s_%(class)s')
+    user = models.OneToOneField('auth.User', verbose_name=_('User'), related_name='%(app_label)s_%(class)s')
 
     class Meta:
         abstract = True
-        verbose_name = _('staff member')
-        verbose_name_plural = _('staff members')
+        verbose_name = _('Staff Member')
+        verbose_name_plural = _('Staff Members')
 
     def get_full_name(self):
         return self.user.get_full_name()
