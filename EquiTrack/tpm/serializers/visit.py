@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import itertools
 from copy import copy
@@ -8,15 +8,15 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from ..models import TPMVisit, TPMPermission, TPMActivity, TPMVisitReportRejectComment, TPMActionPoint, \
-    TPMPartnerStaffMember
-from .attachments import TPMAttachmentsSerializer, TPMReportSerializer, TPMReportAttachmentsSerializer
-from .partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from activities.serializers import ActivitySerializer
 from partners.models import InterventionResultLink, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
-from utils.permissions.serializers import StatusPermissionsBasedSerializerMixin, \
-    StatusPermissionsBasedRootSerializerMixin
+from tpm.models import (
+    TPMActionPoint, TPMActivity, TPMPartnerStaffMember, TPMPermission, TPMVisit, TPMVisitReportRejectComment,)
+from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, TPMReportSerializer
+from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
+from utils.permissions.serializers import (
+    StatusPermissionsBasedRootSerializerMixin, StatusPermissionsBasedSerializerMixin,)
 from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from users.serializers import MinimalUserSerializer, OfficeSerializer

@@ -1,7 +1,9 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.contrib import admin
 
 from publics.admin import AdminListMixin
-from . import models
+from tpm import models
 
 
 @admin.register(models.TPMActivity)

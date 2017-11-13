@@ -1,24 +1,23 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from datetime import timedelta, datetime
 
 from django.core.management import call_command
+from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
-from .base import TPMTestCaseMixin
-from .factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
-
-from ..models import TPMActionPoint
+from tpm.models import TPMActionPoint
+from tpm.tests.base import TPMTestCaseMixin
+from tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
 
 
 class TestExportMixin(object):
-    def _test_export(self, user, url_postfix, status_code=status.HTTP_200_OK):
-        if not url_postfix.endswith('/'):
-            url_postfix += '/'
-
+    def _test_export(self, user, url_name, args=tuple(), kwargs=None, status_code=status.HTTP_200_OK):
         response = self.forced_auth_req(
             'get',
-            '/api/tpm/{}'.format(url_postfix),
+            reverse(url_name, args=args, kwargs=kwargs or {}),
             user=user
         )
 
@@ -39,7 +38,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
     def _test_list_view(self, user, expected_visits):
         response = self.forced_auth_req(
             'get',
-            '/api/tpm/visits/',
+            reverse('tpm:visits-list'),
             user=user
         )
 
@@ -70,7 +69,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
     def test_create_empty(self):
         create_response = self.forced_auth_req(
             'post',
-            '/api/tpm/visits/',
+            reverse('tpm:visits-list'),
             user=self.pme_user,
             data={}
         )
@@ -80,11 +79,11 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
     def test_action_points(self):
         visit = TPMVisitFactory(status='tpm_reported', unicef_focal_points__count=1)
         unicef_focal_point = visit.unicef_focal_points.first()
-        self.assertEquals(TPMActionPoint.objects.filter(tpm_visit=visit).count(), 0)
+        self.assertFalse(TPMActionPoint.objects.filter(tpm_visit=visit).exists())
 
         response = self.forced_auth_req(
             'patch',
-            '/api/tpm/visits/{}/'.format(visit.id),
+            reverse('tpm:visits-detail', args=(visit.id,)),
             user=unicef_focal_point,
             data={
                 'action_points': [
@@ -97,20 +96,20 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
             }
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertNotEquals(TPMActionPoint.objects.filter(tpm_visit=visit).count(), 0)
+        self.assertTrue(TPMActionPoint.objects.filter(tpm_visit=visit).exists())
 
     def test_visits_csv(self):
-        self._test_export(self.pme_user, 'visits/export')
+        self._test_export(self.pme_user, 'tpm:visits-export')
 
     def test_activities_csv(self):
-        self._test_export(self.pme_user, 'visits/activities/export')
+        self._test_export(self.pme_user, 'tpm:visits-activities/export')
 
     def test_locations_csv(self):
-        self._test_export(self.pme_user, 'visits/locations/export')
+        self._test_export(self.pme_user, 'tpm:visits-locations/export')
 
     def test_visit_letter(self):
         visit = TPMVisitFactory(status='tpm_accepted')
-        self._test_export(self.pme_user, 'visits/{}/visit-letter'.format(visit.id))
+        self._test_export(self.pme_user, 'tpm:visits-visit-letter', args=(visit.id,))
 
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
@@ -125,21 +124,21 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
     def test_list_view(self):
         response = self.forced_auth_req(
             'get',
-            '/api/tpm/partners/{0}/staff-members/'.format(self.tpm_partner.id),
+            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
             user=self.pme_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
-            '/api/tpm/partners/{0}/staff-members/'.format(self.tpm_partner.id),
+            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
             user=self.tpm_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
-            '/api/tpm/partners/{0}/staff-members/'.format(self.tpm_partner.id),
+            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
             user=self.unicef_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -147,30 +146,21 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
     def test_detail_view(self):
         response = self.forced_auth_req(
             'get',
-            '/api/tpm/partners/{0}/staff-members/{1}/'.format(
-                self.tpm_partner.id,
-                self.tpm_partner.staff_members.first().id
-            ),
+            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             user=self.pme_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
-            '/api/tpm/partners/{0}/staff-members/{1}/'.format(
-                self.tpm_partner.id,
-                self.tpm_partner.staff_members.first().id
-            ),
+            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             user=self.tpm_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
-            '/api/tpm/partners/{0}/staff-members/{1}/'.format(
-                self.tpm_partner.id,
-                self.tpm_partner.staff_members.first().id
-            ),
+            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             user=self.unicef_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -186,10 +176,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
 
         response = self.forced_auth_req(
             'post',
-            '/api/tpm/partners/{0}/staff-members/'.format(
-                self.tpm_partner.id,
-                self.tpm_partner.staff_members.first().id
-            ),
+            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
             data=user_data,
             user=self.pme_user
         )
@@ -197,10 +184,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
 
         response = self.forced_auth_req(
             'post',
-            '/api/tpm/partners/{0}/staff-members/'.format(
-                self.tpm_partner.id,
-                self.tpm_partner.staff_members.first().id
-            ),
+            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
             data=user_data,
             user=self.tpm_user
         )
@@ -208,10 +192,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
 
         response = self.forced_auth_req(
             'post',
-            '/api/tpm/partners/{0}/staff-members/'.format(
-                self.tpm_partner.id,
-                self.tpm_partner.staff_members.first().id
-            ),
+            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
             data=user_data,
             user=self.unicef_user
         )
@@ -227,10 +208,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
 
         response = self.forced_auth_req(
             'patch',
-            '/api/tpm/partners/{0}/staff-members/{1}/'.format(
-                self.tpm_partner.id,
-                self.tpm_partner.staff_members.first().id
-            ),
+            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             data=user_data,
             user=self.pme_user
         )
@@ -238,10 +216,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
 
         response = self.forced_auth_req(
             'patch',
-            '/api/tpm/partners/{0}/staff-members/{1}/'.format(
-                self.tpm_partner.id,
-                self.tpm_partner.staff_members.first().id
-            ),
+            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             data=user_data,
             user=self.tpm_user
         )
@@ -249,17 +224,14 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTes
 
         response = self.forced_auth_req(
             'patch',
-            '/api/tpm/partners/{0}/staff-members/{1}/'.format(
-                self.tpm_partner.id,
-                self.tpm_partner.staff_members.first().id
-            ),
+            reverse('tpm:tpmstaffmembers-detail', args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             data=user_data,
             user=self.unicef_user
         )
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_members_csv(self):
-        self._test_export(self.pme_user, 'partners/{}/staff-members/export'.format(self.tpm_partner.id))
+        self._test_export(self.pme_user, 'tpm:tpmstaffmembers-export', args=(self.tpm_partner.id,))
 
 
 class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
@@ -275,7 +247,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
     def _test_list_view(self, user, expected_firms):
         response = self.forced_auth_req(
             'get',
-            '/api/tpm/partners/',
+            reverse('tpm:partners-list'),
             user=user
         )
 
@@ -288,7 +260,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
     def _test_list_options(self, user, can_create=True, writable_fields=None):
         response = self.forced_auth_req(
             'options',
-            '/api/tpm/partners/',
+            reverse('tpm:partners-list'),
             user=user
         )
 
@@ -306,7 +278,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
     def _test_detail_options(self, user, can_update=True, writable_fields=None):
         response = self.forced_auth_req(
             'options',
-            '/api/tpm/partners/{}/'.format(self.tpm_partner.id),
+            reverse('tpm:partners-detail', args=(self.tpm_partner.id,)),
             user=user
         )
 
@@ -349,4 +321,4 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
         self._test_detail_options(self.tpm_user, can_update=False)
 
     def test_partners_csv(self):
-        self._test_export(self.pme_user, 'partners/export')
+        self._test_export(self.pme_user, 'tpm:partners-export')

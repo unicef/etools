@@ -1,7 +1,9 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.http import Http404
 from django.utils import timezone
-from easy_pdf.rendering import render_to_pdf_response
 
+from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, viewsets, mixins
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBackend
@@ -12,22 +14,24 @@ from partners.models import PartnerOrganization
 from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from reports.models import Result
 from reports.serializers.v1 import ResultLightSerializer
+from tpm.export.renderers import (
+    TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer, TPMPartnerContactsCSVRenderer,
+    TPMVisitCSVRenderer,)
+from tpm.export.serializers import (
+    TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer, TPMPartnerContactsSerializer,
+    TPMVisitExportSerializer,)
+from tpm.filters import ReferenceNumberOrderingFilter
+from tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
+from tpm.models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity
+from tpm.permissions import IsPMEorReadonlyPermission
+from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
+from tpm.serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from users.models import Section
 from users.serializers import SectionSerializer
-from utils.common.views import MultiSerializerViewSetMixin, FSMTransitionActionMixin, \
-    NestedViewSetMixin, SafeTenantViewSetMixin
 from utils.common.pagination import DynamicPageNumberPagination
+from utils.common.views import (
+    MultiSerializerViewSetMixin, FSMTransitionActionMixin, NestedViewSetMixin, SafeTenantViewSetMixin,)
 from vision.adapters.tpm_adapter import TPMPartnerManualSynchronizer
-from .filters import ReferenceNumberOrderingFilter
-from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity
-from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
-from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
-from .permissions import IsPMEorReadonlyPermission
-from .export.renderers import TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer, \
-    TPMPartnerContactsCSVRenderer, TPMVisitCSVRenderer
-from .export.serializers import TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer, \
-    TPMPartnerContactsSerializer, TPMVisitExportSerializer
 
 
 class BaseTPMViewSet(

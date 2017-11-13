@@ -1,8 +1,10 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from .models import PME
+from tpm.models import PME
 
 
 class IsPMEorReadonlyPermission(BasePermission):

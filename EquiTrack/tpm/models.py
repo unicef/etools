@@ -1,31 +1,32 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils import timezone, six
 from django.utils.encoding import python_2_unicode_compatible
-from django_fsm import FSMField, transition
 from django.utils.translation import ugettext_lazy as _
+
+from django_fsm import FSMField, transition
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from post_office import mail
 
-from EquiTrack.utils import get_environment
 from activities.models import Activity
 from attachments.models import Attachment
+from EquiTrack.utils import get_environment
 from firms.models import BaseFirm, BaseStaffMember
 from publics.models import SoftDeleteMixin
+from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer
+from tpm.transitions.conditions import (
+    TPMVisitAssignRequiredFieldsCheck, TPMVisitReportValidations, ValidateTPMVisitActivities,)
 from utils.common.models.fields import CodedGenericRelation
-from utils.common.urlresolvers import site_url, build_frontend_url
+from utils.common.urlresolvers import build_frontend_url, site_url
 from utils.groups.wrappers import GroupWrapper
-from utils.permissions.utils import has_action_permission
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
-from .transitions.serializers import TPMVisitRejectSerializer, TPMVisitApproveSerializer
-from .transitions.conditions import ValidateTPMVisitActivities, \
-                                    TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
+from utils.permissions.utils import has_action_permission
 
 
 class TPMPartner(BaseFirm):
@@ -427,8 +428,9 @@ UNICEFUser = GroupWrapper(code='unicef_user',
 
 class TPMPermissionsQueryset(StatusBasePermissionQueryset):
     def filter(self, *args, **kwargs):
-        if 'user' in kwargs and 'instance' in kwargs and kwargs['instance']:
-            kwargs['user_type'] = self.model._get_user_type(kwargs.pop('user'), instance=kwargs['instance'])
+        instance = kwargs.get('instance', None)
+        if 'user' in kwargs and instance:
+            kwargs['user_type'] = self.model._get_user_type(kwargs.pop('user'), instance=instance)
             return self.filter(**kwargs)
 
         if 'user' in kwargs and 'instance__in' in kwargs:
@@ -470,9 +472,11 @@ class TPMPermission(StatusBasePermission):
                 return user_type
 
             try:
-                if user.tpm_tpmpartnerstaffmember not in instance.tpm_partner.staff_members.all():
-                    return None
+                member = user.tpm_tpmpartnerstaffmember
             except TPMPartnerStaffMember.DoesNotExist:
                 return None
+            else:
+                if member not in instance.tpm_partner.staff_members.all():
+                    return None
 
         return user_type

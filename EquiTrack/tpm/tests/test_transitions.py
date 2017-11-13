@@ -1,15 +1,16 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.core.management import call_command
+from django.core.urlresolvers import reverse
 from django.utils import six
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
+from tpm.models import TPMVisit
 from tpm.tests.base import TPMTestCaseMixin
-
-from ..models import TPMVisit
-
-from .factories import TPMVisitFactory, UserFactory
+from tpm.tests.factories import TPMVisitFactory, UserFactory
 
 
 class TPMTransitionTestCase(TPMTestCaseMixin, APITenantTestCase):
@@ -21,12 +22,12 @@ class TPMTransitionTestCase(TPMTestCaseMixin, APITenantTestCase):
         data = data or {}
         return self.forced_auth_req(
             'post',
-            '/api/tpm/visits/{0}/{1}/'.format(visit.id, action),
+            reverse('tpm:visits-(?P<action>\D+)', args=(visit.id, action)),
             user=user,
             data=data
         )
 
-    def _refresh_tpm_visit_instace(self, visit):
+    def _refresh_tpm_visit_instance(self, visit):
         # Calling refresh_from_db will cause an exception.
         return TPMVisit.objects.get(id=visit.id)
 
@@ -49,7 +50,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         response = self._do_transition(visit, 'assign', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        visit = self._refresh_tpm_visit_instace(visit)
+        visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'draft')
 
     def test_assign_without_focal_points(self):
@@ -60,7 +61,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         response = self._do_transition(visit, 'assign', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        visit = self._refresh_tpm_visit_instace(visit)
+        visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'draft')
 
     def test_success_assign(self):
@@ -71,7 +72,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         response = self._do_transition(visit, 'assign', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        visit = self._refresh_tpm_visit_instace(visit)
+        visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'assigned')
 
     def test_success_cancel(self):
@@ -80,7 +81,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         response = self._do_transition(visit, 'cancel', self.pme_user)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        visit = self._refresh_tpm_visit_instace(visit)
+        visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'cancelled')
 
     def test_tpm_accept_success(self):
@@ -91,7 +92,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         response = self._do_transition(visit, 'accept', self.tpm_user)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        visit = self._refresh_tpm_visit_instace(visit)
+        visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'tpm_accepted')
 
     def test_tpm_report_without_report(self):
@@ -104,7 +105,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         self.assertIn('report_attachments', response.data.keys())
         self.assertEqual(response.data['report_attachments'], _('You should attach report.'))
 
-        visit = self._refresh_tpm_visit_instace(visit)
+        visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'tpm_accepted')
 
     def test_tpm_report_success(self):
@@ -117,19 +118,19 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         response = self._do_transition(visit, 'send_report', self.tpm_user)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        visit = self._refresh_tpm_visit_instace(visit)
+        visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'tpm_reported')
 
     def test_tpm_report_reject(self):
         visit = TPMVisitFactory(status='tpm_reported')
-        self.assertEquals(visit.report_reject_comments.count(), 0)
+        self.assertFalse(visit.report_reject_comments.exists())
 
         response = self._do_transition(visit, 'reject_report', self.pme_user, data={
             "reject_comment": 'Just because'
         })
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        visit = self._refresh_tpm_visit_instace(visit)
+        visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'tpm_report_rejected')
         self.assertEquals(visit.report_reject_comments.count(), 1)
 
@@ -141,7 +142,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         response = self._do_transition(visit, 'send_report', self.tpm_user)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        visit = self._refresh_tpm_visit_instace(visit)
+        visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'tpm_reported')
 
     def test_approve_report_success(self):
@@ -152,7 +153,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
         })
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        visit = self._refresh_tpm_visit_instace(visit)
+        visit = self._refresh_tpm_visit_instance(visit)
         self.assertEquals(visit.status, 'unicef_approved')
 
 
