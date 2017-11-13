@@ -71,7 +71,7 @@ class PurchaseOrderSerializer(
     AuditPermissionsBasedSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer
 ):
     auditor_firm = SeparatedReadWriteField(
-        read_field=AuditorFirmLightSerializer(read_only=True, label=_('Auditor')),
+        read_field=AuditorFirmLightSerializer(read_only=True),
     )
 
     items = PurchaseOrderItemSerializer(many=True)
