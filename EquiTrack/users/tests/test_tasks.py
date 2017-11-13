@@ -3,6 +3,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import json
+
+from django.conf import settings
+from mock import patch, Mock
 from tenant_schemas.utils import schema_context
 from unittest import skip
 
@@ -16,6 +20,7 @@ from EquiTrack.factories import (
 from EquiTrack.tests.mixins import SCHEMA_NAME, FastTenantTestCase
 from users import tasks
 from users.models import Section, User, UserProfile
+from vision.vision_data_synchronizer import VisionException
 
 
 class TestUserMapper(FastTenantTestCase):
@@ -297,3 +302,85 @@ class TestUserMapper(FastTenantTestCase):
         self.assertIsNone(profile.supervisor)
         self.assertTrue(self.mapper._set_supervisor(profile, manager_id))
         self.assertEqual(profile.supervisor, supervisor.user)
+
+
+class TestUserSynchronizer(FastTenantTestCase):
+    def setUp(self):
+        super(TestUserSynchronizer, self).setUp()
+        self.synchronizer = tasks.UserSynchronizer(
+            "GetOrgChartUnitsInfo_JSON",
+            "end"
+        )
+        self.record = {
+            "ORG_UNIT_NAME": "UNICEF",
+            "STAFF_ID": "123",
+            "MANAGER_ID": "321",
+            "ORG_UNIT_CODE": "101",
+            "VENDOR_CODE": "202",
+            "STAFF_EMAIL": "staff@example.com",
+        }
+
+    def test_init(self):
+        synchronizer = tasks.UserSynchronizer(
+            "GetOrgChartUnitsInfo_JSON",
+            "end"
+        )
+        self.assertEqual(
+            synchronizer.url,
+            "{}/GetOrgChartUnitsInfo_JSON/end".format(
+                settings.VISION_URL
+            )
+        )
+        self.assertEqual(
+            synchronizer.required_keys,
+            tasks.UserSynchronizer.REQUIRED_KEYS_MAP[
+                "GetOrgChartUnitsInfo_JSON"
+            ]
+        )
+
+    def test_get_json_no_data(self):
+        self.assertEqual(
+            self.synchronizer._get_json("No Data Available"),
+            "{}"
+        )
+
+    def test_get_json(self):
+        data = {"test": "data"}
+        self.assertEqual(self.synchronizer._get_json(data), data)
+
+    def test_filter_records_no_key(self):
+        """If key is not in the record provided then False"""
+        self.assertFalse(self.synchronizer._filter_records([{}]))
+
+    def test_filter_records_staff_email(self):
+        """Ensure STAFF_EMAIL has a value"""
+        self.record["STAFF_EMAIL"] = ""
+        self.assertFalse(self.synchronizer._filter_records([self.record]))
+
+    def test_filter_records(self):
+        self.assertTrue(self.synchronizer._filter_records([self.record]))
+
+    def test_load_records(self):
+        mock_request = Mock()
+        mock_request.get().json.return_value = self.record
+        mock_request.get().status_code = 200
+        with patch("users.tasks.requests", mock_request):
+            res = self.synchronizer._load_records()
+        self.assertEqual(res, self.record)
+
+    def test_load_records_exception(self):
+        mock_request = Mock()
+        mock_request.get().status_code = 403
+        with patch("users.tasks.requests", mock_request):
+            with self.assertRaises(VisionException):
+                self.synchronizer._load_records()
+
+    def test_convert_records(self):
+        self.assertEqual(self.synchronizer._convert_records('{}'), {})
+
+    def test_response(self):
+        mock_request = Mock()
+        mock_request.get().json.return_value = json.dumps([self.record])
+        mock_request.get().status_code = 200
+        with patch("users.tasks.requests", mock_request):
+            self.assertEqual(self.synchronizer.response, [self.record])
