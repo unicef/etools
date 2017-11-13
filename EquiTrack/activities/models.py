@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -15,14 +17,20 @@ class Activity(models.Model):
     class Meta:
         abstract = True
 
-    def clean(self):
-        if self.implementing_partner and self.partnership \
-                and self.partnership.agreement.partner != self.implementing_partner:
+    @staticmethod
+    def _validate_partnership(implementing_partner, partnership):
+        if implementing_partner and partnership and partnership.agreement.partner != implementing_partner:
             raise ValidationError(_('Partnership must be concluded with {partner}.').format(
-                partner=self.implementing_partner
+                partner=implementing_partner
             ))
 
-        if self.cp_output and self.partnership and self.cp_output.intervention_links.intervention != self.partnership:
+    @staticmethod
+    def _validate_cp_output(partnership, cp_output):
+        if cp_output and partnership and cp_output.intervention_links.intervention != partnership:
             raise ValidationError(_('CP Output should be within the {partnership}.').format(
-                partnership=self.partnership
+                partnership=partnership
             ))
+
+    def clean(self):
+        self._validate_partnership(self.implementing_partner, self.partnership)
+        self._validate_cp_output(self.partnership, self.cp_output)
