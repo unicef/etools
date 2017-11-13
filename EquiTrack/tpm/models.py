@@ -428,8 +428,9 @@ UNICEFUser = GroupWrapper(code='unicef_user',
 
 class TPMPermissionsQueryset(StatusBasePermissionQueryset):
     def filter(self, *args, **kwargs):
-        if 'user' in kwargs and 'instance' in kwargs and kwargs['instance']:
-            kwargs['user_type'] = self.model._get_user_type(kwargs.pop('user'), instance=kwargs['instance'])
+        instance = kwargs.get('instance', None)
+        if 'user' in kwargs and instance:
+            kwargs['user_type'] = self.model._get_user_type(kwargs.pop('user'), instance=instance)
             return self.filter(**kwargs)
 
         if 'user' in kwargs and 'instance__in' in kwargs:
@@ -471,9 +472,11 @@ class TPMPermission(StatusBasePermission):
                 return user_type
 
             try:
-                if user.tpm_tpmpartnerstaffmember not in instance.tpm_partner.staff_members.all():
-                    return None
+                member = user.tpm_tpmpartnerstaffmember
             except TPMPartnerStaffMember.DoesNotExist:
                 return None
+            else:
+                if member not in instance.tpm_partner.staff_members.all():
+                    return None
 
         return user_type
