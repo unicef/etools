@@ -36,6 +36,9 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
             'name': {
                 'label': _('Partner Name'),
             },
+            'phone_number': {
+                'label': _('Phone Number'),
+            },
         }
 
 
@@ -60,7 +63,7 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
 class EngagementActionPointSerializer(UserContextSerializerMixin,
                                       WritableNestedSerializerMixin,
                                       serializers.ModelSerializer):
-    person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True))
+    person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True, label=_('Person Responsible')))
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = EngagementActionPoint

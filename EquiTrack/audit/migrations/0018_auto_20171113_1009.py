@@ -323,7 +323,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='purchaseorder',
             name='auditor_firm',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='purchase_orders', to='audit.AuditorFirm', verbose_name='Auditor Firm'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='purchase_orders', to='audit.AuditorFirm', verbose_name='Auditor'),
         ),
         migrations.AlterField(
             model_name='purchaseorder',
@@ -409,5 +409,10 @@ class Migration(migrations.Migration):
             model_name='spotcheck',
             name='total_amount_tested',
             field=models.DecimalField(blank=True, decimal_places=2, max_digits=20, null=True, verbose_name='Total Amount Tested'),
+        ),
+        migrations.AlterField(
+            model_name='spotcheck',
+            name='internal_controls',
+            field=models.TextField(blank=True, verbose_name='Internal Controls'),
         ),
     ]

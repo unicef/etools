@@ -35,7 +35,7 @@ class BaseAttachmentsSerializer(serializers.ModelSerializer):
 
 
 class Base64AttachmentSerializer(BaseAttachmentsSerializer):
-    file = Base64FileField(required=False)
+    file = Base64FileField(required=False, label=_('File Attachment'))
     file_name = serializers.CharField(write_only=True, required=False)
 
     def validate(self, attrs):
