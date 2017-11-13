@@ -11,10 +11,11 @@ from EquiTrack.factories import (
     GroupFactory,
     SectionFactory,
     ProfileFactory,
+    UserFactory,
 )
 from EquiTrack.tests.mixins import SCHEMA_NAME, FastTenantTestCase
 from users import tasks
-from users.models import Section, UserProfile
+from users.models import Section, User, UserProfile
 
 
 class TestUserMapper(FastTenantTestCase):
@@ -199,3 +200,100 @@ class TestUserMapper(FastTenantTestCase):
         self.assertTrue(res)
         self.assertEqual(profile.country, country)
         self.assertTrue(profile.countries_available.count())
+
+    def test_create_or_update_user_missing_fields(self):
+        """If missing field, then don't create user record'"""
+        email = "tester@example.com"
+        res = self.mapper.create_or_update_user({"internetaddress": email})
+        self.assertIsNone(res)
+        self.assertFalse(User.objects.filter(email=email).exists())
+
+    def test_create_or_update_user_created(self):
+        email = "tester@example.com"
+        res = self.mapper.create_or_update_user({
+            "internetaddress": email,
+            "givenName": "Tester",
+            "mail": email,
+            "sn": "Last"
+        })
+        self.assertIsNone(res)
+        self.assertTrue(User.objects.filter(email=email).exists())
+        self.assertTrue(
+            UserProfile.objects.filter(user__email=email).exists()
+        )
+        user = User.objects.get(email=email)
+        self.assertIn(self.group, user.groups.all())
+
+    def test_create_or_update_user_exists(self):
+        email = "tester@example.com"
+        user = UserFactory(
+            email=email,
+            username=email,
+            first_name="Tester",
+            last_name="Last",
+        )
+        res = self.mapper.create_or_update_user({
+            "internetaddress": email,
+            "givenName": "Tester",
+            "mail": email,
+            "sn": "Last"
+        })
+        self.assertIsNone(res)
+        user = User.objects.get(email=email)
+        self.assertIn(self.group, user.groups.all())
+
+    def test_create_or_update_user_profile_updated(self):
+        """If profile field changed, then update profile record"""
+        email = "tester@example.com"
+        phone = "0987654321"
+        res = self.mapper.create_or_update_user({
+            "internetaddress": email,
+            "givenName": "Tester",
+            "mail": email,
+            "sn": "Last",
+            "telephoneNumber": phone
+        })
+        self.assertIsNone(res)
+        self.assertTrue(User.objects.filter(email=email).exists())
+        self.assertTrue(
+            UserProfile.objects.filter(user__email=email).exists()
+        )
+        profile = UserProfile.objects.get(user__email=email)
+        self.assertEqual(profile.phone_number, phone)
+
+    def test_set_supervisor_vacant(self):
+        """If manager id is Vacant, return False"""
+        profile = ProfileFactory()
+        self.assertIsNone(profile.supervisor)
+        self.assertFalse(self.mapper._set_supervisor(profile, "Vacant"))
+        self.assertIsNone(profile.supervisor)
+
+    def test_set_supervisor_none(self):
+        """If manager id is None, return False"""
+        profile = ProfileFactory()
+        self.assertIsNone(profile.supervisor)
+        self.assertFalse(self.mapper._set_supervisor(profile, None))
+        self.assertIsNone(profile.supervisor)
+
+    def test_set_supervisor_matches(self):
+        """If manager matches, return False"""
+        manager_id = "321"
+        supervisor = ProfileFactory(staff_id=manager_id)
+        profile = ProfileFactory()
+        profile.supervisor = supervisor.user
+        self.assertFalse(self.mapper._set_supervisor(profile, manager_id))
+
+    def test_set_supervisor_does_not_exist(self):
+        profile = ProfileFactory()
+        self.assertIsNone(profile.supervisor)
+        self.assertFalse(self.mapper._set_supervisor(profile, "404"))
+        self.assertIsNone(profile.supervisor)
+
+    def test_set_supervisor(self):
+        manager_id = "321"
+        supervisor = ProfileFactory(staff_id=manager_id)
+        profile = ProfileFactory()
+        self.mapper.section_user = {manager_id: supervisor}
+        self.assertIsNone(profile.supervisor)
+        self.assertTrue(self.mapper._set_supervisor(profile, manager_id))
+        self.assertEqual(profile.supervisor, supervisor.user)

@@ -120,9 +120,9 @@ class UserMapper(object):
 
     @transaction.atomic
     def create_or_update_user(self, ad_user):
-        logger.debug(ad_user['sn'], ad_user['givenName'])
+        logger.debug(ad_user.get('sn', None), ad_user.get('givenName', None))
         for field in self.REQUIRED_USER_FIELDS:
-            if not ad_user[field]:
+            if not ad_user.get(field, False):
                 logger.info("User doesn't have the required fields {}".format(ad_user))
                 return
 
