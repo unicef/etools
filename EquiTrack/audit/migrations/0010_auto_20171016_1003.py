@@ -21,7 +21,7 @@ def unwrap_risks_extra(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('audit', '0010_auto_20171002_1347'),
+        ('audit', '0009_purchaseorder_item_number'),
     ]
 
     operations = [
