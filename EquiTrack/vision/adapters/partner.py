@@ -1,9 +1,12 @@
 import json
+import logging
 
-from vision.vision_data_synchronizer import VisionDataSynchronizer
-from vision.utils import wcf_json_date_as_datetime, comp_decimals
-from funds.models import Grant, Donor
+from funds.models import Donor, Grant
 from partners.models import PartnerOrganization
+from vision.utils import comp_decimals, wcf_json_date_as_datetime
+from vision.vision_data_synchronizer import VisionDataSynchronizer
+
+logger = logging.getLogger(__name__)
 
 type_mapping = {
     "BILATERAL / MULTILATERAL": u'Bilateral / Multilateral',
@@ -103,7 +106,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     apiobj_field = True if api_obj[self.MAPPING[field]] else False
 
                 if getattr(local_obj, field) != apiobj_field:
-                    print "field changed", field
+                    logger.debug("field changed", field)
                     return True
             return False
 
@@ -158,14 +161,14 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org = PartnerOrganization(vendor_number=partner["VENDOR_CODE"])
                     new = True
 
-                # TODO: qucick and dirty fix for cso_type mapping... this entire syncronizer needs updating
+                # TODO: quick and dirty fix for cso_type mapping... this entire synchronizer needs updating
                 partner['CSO_TYPE_NAME'] = cso_type_mapping.get(partner['CSO_TYPE_NAME'], None)
                 try:
                     type_mapping[partner["PARTNER_TYPE_DESC"]]
                 except KeyError as exp:
-                    print "Partner {} skipped, because PartnerType ={}".format(
+                    logger.info("Partner {} skipped, because PartnerType ={}".format(
                         partner['VENDOR_NAME'], exp
-                    )
+                    ))
                     # if partner organization exists in etools db (these are nameless)
                     if partner_org.id:
                         partner_org.name = ""  # leaving the name blank on purpose (invalid record)
@@ -205,10 +208,10 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org.total_ct_cp = _totals_cp[partner["VENDOR_CODE"]]
 
                     saving = True
-                    print "sums changed", partner_org
+                    logger.debug("sums changed", partner_org)
 
                 if saving:
-                    print "Updating Partner", partner_org
+                    print("Updating Partner", partner_org)
                     partner_org.save()
                 del _totals_cy[partner["VENDOR_CODE"]]
                 del _totals_cp[partner["VENDOR_CODE"]]
@@ -216,11 +219,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 processed += 1
 
             except Exception as exp:
-                print "Exception message: {} " \
-                      "Exception type: {} " \
-                      "Exception args: {} ".format(
-                          exp.message, type(exp).__name__, exp.args
-                      )
+                logger.exception()
             return processed
 
         processed = 0

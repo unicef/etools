@@ -4,6 +4,8 @@ Model factories used for generating models dynamically for tests
 from datetime import datetime, timedelta, date
 import json
 
+import mock
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
@@ -47,6 +49,22 @@ class CountryFactory(factory.django.DjangoModelFactory):
     domain_url = 'tenant.test.com'
 
 
+def build_in_memory_country(name):
+    '''Given a name (e.g. 'test1'), creates a Country object via FactoryBoy. The object is not saved to the database.
+    It exists only in memory. We must be careful not to save this because creating a new Country in the database
+    complicates schemas.
+    '''
+
+    country = CountryFactory.build(name='Country {}'.format(name.title()), schema_name=name,
+                                   domain_url='{}.example.com'.format(name),
+                                   vision_sync_enabled=True,
+                                   vision_last_synced=None)
+    # We mock save() so we can see if it was called or not, also to prevent database changes.
+    country.save = mock.Mock()  # Mock save() to prevent inadvertent database changes.
+
+    return country
+
+
 class GroupFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Group
@@ -77,7 +95,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
 
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = user_models.User
+        model = get_user_model()
 
     username = factory.Sequence(lambda n: "user_%d" % n)
     email = factory.Sequence(lambda n: "user{}@notanemail.com".format(n))
@@ -92,9 +110,9 @@ class UserFactory(factory.django.DjangoModelFactory):
         """Override the default _generate() to disable the post-save signal."""
 
         # Note: If the signal was defined with a dispatch_uid, include that in both calls.
-        post_save.disconnect(user_models.UserProfile.create_user_profile, user_models.User)
+        post_save.disconnect(user_models.UserProfile.create_user_profile, get_user_model())
         user = super(UserFactory, cls)._generate(create, attrs)
-        post_save.connect(user_models.UserProfile.create_user_profile, user_models.User)
+        post_save.connect(user_models.UserProfile.create_user_profile, get_user_model())
         return user
 
     @factory.post_generation
@@ -536,10 +554,10 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     actual_amt = fuzzy.FuzzyDecimal(1, 300)
     outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
 
-    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1)-timedelta(days=10),
+    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1) - timedelta(days=10),
                                  date(date.today().year, 1, 1))
     end_date = fuzzy.FuzzyDate(date(date.today().year + 1, 1, 1),
-                               date(date.today().year + 1, 1, 1)+timedelta(days=10))
+                               date(date.today().year + 1, 1, 1) + timedelta(days=10))
 
     class Meta:
         model = funds_models.FundsReservationHeader

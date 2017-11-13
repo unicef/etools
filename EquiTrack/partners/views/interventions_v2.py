@@ -178,7 +178,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
                     result_links__ll_results__applied_indicators__cluster_indicator_title__icontains=query_params
                     .get("cluster")))
             if "status" in query_params.keys():
-                queries.append(Q(status=query_params.get("status")))
+                queries.append(Q(status__in=query_params.get("status").split(',')))
             if "unicef_focal_points" in query_params.keys():
                 queries.append(Q(unicef_focal_points__in=[query_params.get("unicef_focal_points")]))
             if "start" in query_params.keys():

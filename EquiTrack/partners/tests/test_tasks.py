@@ -1,25 +1,20 @@
 # Python imports
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 from decimal import Decimal
 
-# Django imports
 from django.conf import settings
 from django.utils import timezone
 
-# 3rd party imports
 import mock
 
-# Project imports
-from EquiTrack.factories import CountryFactory, AgreementFactory, InterventionFactory, FundsReservationHeaderFactory
-from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
-from users.models import User
-from partners.models import Agreement, Intervention
 import partners.tasks
+from EquiTrack.factories import (
+    AgreementFactory, CountryFactory, FundsReservationHeaderFactory, InterventionFactory, UserFactory,)
+from EquiTrack.tests.mixins import FastTenantTestCase
+from partners.models import Agreement, Intervention
+from users.models import User
 
 
 def _build_country(name):
@@ -27,8 +22,8 @@ def _build_country(name):
     It exists only in memory. We must be careful not to save this because creating a new Country in the database
     complicates schemas.
     '''
-    country = CountryFactory.build(name='Country ' + name.title(), schema_name=name,
-                                   domain_url='{}.example.com'.format(name))
+    country = CountryFactory.build(name=u'Country '.format(name.title()), schema_name=name,
+                                   domain_url=u'{}.example.com'.format(name))
     # Mock save() to prevent inadvertent database changes.
     country.save = mock.Mock()
 

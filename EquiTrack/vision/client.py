@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import argparse
 import json
 import os
-import argparse
 from urlparse import urljoin
 
 import requests
@@ -92,19 +92,15 @@ def main():
     args = parser.parse_args()
 
     try:
-        # parser = SafeConfigParser()
-        # parser.read('settings.ini')
-        # username = parser.get('auth', 'user')
-        # password = parser.get('auth', 'pass')
         client = VisionAPIClient(
             username=args.username,
             password=args.password,
         )
 
-        print client.get_business_areas()
+        print(client.get_business_areas())
 
     except Exception as exp:
-        print str(exp)
+        print(str(exp))
 
 
 if __name__ == '__main__':
