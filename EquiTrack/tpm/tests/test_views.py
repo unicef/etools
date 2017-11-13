@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from datetime import timedelta, datetime
 
 from django.core.management import call_command
@@ -5,10 +7,9 @@ from django.core.management import call_command
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
-from .base import TPMTestCaseMixin
-from .factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
-
-from ..models import TPMActionPoint
+from tpm.models import TPMActionPoint
+from tpm.tests.base import TPMTestCaseMixin
+from tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
 
 
 class TestExportMixin(object):

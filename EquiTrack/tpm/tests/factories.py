@@ -1,19 +1,23 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 
-import factory
-import factory.fuzzy
 from django.contrib.auth.models import Group
-from factory import fuzzy
 from django.db import connection
 from django.utils import timezone, six
 
-from EquiTrack.factories import InterventionFactory, ResultFactory, LocationFactory, \
-    SectionFactory as SimpleSectionFactory, OfficeFactory as SimpleOfficeFactory
+import factory
+import factory.fuzzy
+from factory import fuzzy
+
 from attachments.tests.factories import AttachmentFactory
+from EquiTrack.factories import (
+    InterventionFactory, LocationFactory, OfficeFactory as SimpleOfficeFactory, ResultFactory,
+    SectionFactory as SimpleSectionFactory,)
+from firms.factories import BaseFirmFactory, BaseStaffMemberFactory, UserFactory as SimpleUserFactory
 from partners.models import InterventionResultLink, InterventionSectorLocationLink
 from reports.models import Sector
-from tpm.models import TPMPartner, TPMPartnerStaffMember, TPMVisit, TPMActivity, TPMVisitReportRejectComment
-from firms.factories import BaseStaffMemberFactory, BaseFirmFactory, UserFactory as SimpleUserFactory
+from tpm.models import TPMActivity, TPMPartner, TPMPartnerStaffMember, TPMVisit, TPMVisitReportRejectComment
 
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)

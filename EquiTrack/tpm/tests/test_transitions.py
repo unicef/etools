@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.core.management import call_command
 from django.utils import six
 from django.utils.translation import ugettext as _
@@ -5,11 +7,9 @@ from django.utils.translation import ugettext as _
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
+from tpm.models import TPMVisit
 from tpm.tests.base import TPMTestCaseMixin
-
-from ..models import TPMVisit
-
-from .factories import TPMVisitFactory, UserFactory
+from tpm.tests.factories import TPMVisitFactory, UserFactory
 
 
 class TPMTransitionTestCase(TPMTestCaseMixin, APITenantTestCase):
