@@ -15,11 +15,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='auditorfirm',
             name='deleted_flag',
-            field=models.BooleanField(default=False, verbose_name='Marked for deletion'),
+            field=models.BooleanField(default=False, verbose_name='Marked For Deletion in VISION'),
         ),
         migrations.AddField(
             model_name='auditorfirm',
             name='vision_synced',
-            field=models.BooleanField(default=False),
+            field=models.BooleanField(default=False, verbose_name='Synced from VISION'),
+        ),
+        migrations.AlterField(
+            model_name='auditorfirm',
+            name='blocked',
+            field=models.BooleanField(default=False, verbose_name='Blocked in VISION'),
         ),
     ]
