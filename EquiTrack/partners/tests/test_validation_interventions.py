@@ -77,9 +77,9 @@ class TestTransitionToClosed(FastTenantTestCase):
         }
 
     def assertFundamentals(self, data):
+        assert data.keys() == self.expected.keys()
         for k, v in data.items():
-            if k in self.expected.keys():
-                self.assertEqual(v, self.expected[k])
+            self.assertEqual(v, self.expected[k])
 
     def test_end_after_today(self):
         """End date cannot be after today's date'"""
