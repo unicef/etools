@@ -32,7 +32,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         if partnership is serializers.empty:
             partnership = self._get_partnership()
 
-        self.meta.model._validate_partnership(implementing_partner, partnership)
+        self.Meta.model._validate_partnership(implementing_partner, partnership)
 
         return attrs
 
@@ -49,7 +49,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         if cp_output is serializers.empty:
             cp_output = self._get_cp_output()
 
-        self.meta.model._validate_cp_output(partnership, cp_output)
+        self.Meta.model._validate_cp_output(partnership, cp_output)
 
         return attrs
 
