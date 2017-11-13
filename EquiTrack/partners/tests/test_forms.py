@@ -204,7 +204,7 @@ class TestAgreementForm(FastTenantTestCase):
         form = forms.AgreementForm(self.data)
         self.assertFalse(form.is_valid())
         self.assertIn(
-            "Start date must be greater than latest of signed by partner/unicef date",
+            "Start date must be greater than latest of signed by partner/UNICEF date",
             form.errors["start"]
         )
 
@@ -218,7 +218,7 @@ class TestAgreementForm(FastTenantTestCase):
         form = forms.AgreementForm(self.data)
         self.assertFalse(form.is_valid())
         self.assertIn(
-            "Start date must be greater than latest of signed by partner/unicef date",
+            "Start date must be greater than latest of signed by partner/UNICEF date",
             form.errors["start"]
         )
 
@@ -274,7 +274,7 @@ class TestAgreementForm(FastTenantTestCase):
         form = forms.AgreementForm(self.data, instance=agreement)
         self.assertFalse(form.is_valid())
         self.assertIn(
-            "Agreement type can not be changed once signed by unicef and partner",
+            "Agreement type can not be changed once signed by UNICEF and partner",
             form.errors["__all__"]
         )
 

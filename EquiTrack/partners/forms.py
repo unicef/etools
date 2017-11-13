@@ -123,7 +123,7 @@ class AgreementForm(UserGroupForm):
 
     ERROR_MESSAGES = {
         'end_date': 'End date must be greater than start date',
-        'start_date_val': 'Start date must be greater than latest of signed by partner/unicef date',
+        'start_date_val': 'Start date must be greater than latest of signed by partner/UNICEF date',
     }
 
     user_field = u'signed_by'
@@ -197,7 +197,7 @@ class AgreementForm(UserGroupForm):
         if self.instance.id and self.instance.agreement_type != agreement_type \
                 and signed_by_partner_date and signed_by_unicef_date:
             raise ValidationError(
-                _(u'Agreement type can not be changed once signed by unicef and partner')
+                _(u'Agreement type can not be changed once signed by UNICEF and partner')
             )
 
         # TODO: prevent more than one agreement being created for the current period
