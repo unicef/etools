@@ -67,8 +67,8 @@ class UserMapper(object):
         return self.countries[business_area_code] or self.countries['UAT']
 
     def _get_section(self, section_name, section_code):
-        if not self.sections[section_name]:
-            self.sections[section_name] = Section.objects.get_or_create(name=section_name, code=section_code)
+        if not self.sections.get(section_name, False):
+            self.sections[section_name], _ = Section.objects.get_or_create(name=section_name, code=section_code)
         return self.sections[section_name]
 
     def _set_simple_attr(self, obj, attr, cleaned_value):
