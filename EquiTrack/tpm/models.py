@@ -74,10 +74,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), null=True)
 
-    status = FSMField(verbose_name=_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
+    status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
-    reject_comment = models.TextField(verbose_name=_('Request for more information'), blank=True)
-    approval_comment = models.TextField(verbose_name=_('Approval comments'), blank=True)
+    reject_comment = models.TextField(verbose_name=_('Request For More Information'), blank=True)
+    approval_comment = models.TextField(verbose_name=_('Approval Comments'), blank=True)
 
     report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Visit Report'),
                                               code='visit_report', blank=True)
@@ -316,11 +316,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
 @python_2_unicode_compatible
 class TPMVisitReportRejectComment(models.Model):
-    rejected_at = models.DateTimeField(auto_now_add=True)
+    rejected_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Rejected At'))
 
-    reject_reason = models.TextField()
+    reject_reason = models.TextField(verbose_name=_('Reason of Rejection'))
 
-    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='report_reject_comments')
+    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('Visit'), related_name='report_reject_comments')
 
     def __str__(self):
         return 'Reject Comment #{0} for {1}'.format(self.id, self.tpm_visit)
@@ -332,9 +332,9 @@ class TPMVisitReportRejectComment(models.Model):
 
 @python_2_unicode_compatible
 class TPMActivity(Activity):
-    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
+    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('Visit'), related_name='tpm_activities')
 
-    section = models.ForeignKey('users.Section', related_name='tpm_activities')
+    section = models.ForeignKey('users.Section', related_name='tpm_activities', verbose_name=_('Section'))
 
     additional_information = models.TextField(verbose_name=_('Additional Information'), blank=True)
 
@@ -343,7 +343,7 @@ class TPMActivity(Activity):
     report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Activity Report'),
                                               code='activity_report', blank=True)
 
-    is_pv = models.BooleanField(default=False, verbose_name=_('Programmatic Visit'))
+    is_pv = models.BooleanField(default=False, verbose_name=_('HACT Programmatic Visit'))
 
     def __str__(self):
         return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
@@ -382,14 +382,14 @@ class TPMActionPoint(TimeStampedModel, models.Model):
         ('cancelled', 'Cancelled'),
     )
 
-    tpm_visit = models.ForeignKey(TPMVisit, related_name='action_points')
+    tpm_visit = models.ForeignKey(TPMVisit, related_name='action_points', verbose_name=_('Visit'))
 
-    author = models.ForeignKey(User, related_name='created_tpm_action_points')
-    person_responsible = models.ForeignKey(User, related_name='tpm_action_points')
+    author = models.ForeignKey(User, related_name='created_tpm_action_points', verbose_name=_('Assigned By'))
+    person_responsible = models.ForeignKey(User, related_name='tpm_action_points', verbose_name=_('Person Responsible'))
 
-    due_date = models.DateField()
-    description = models.TextField()
-    comments = models.TextField(blank=True)
+    due_date = models.DateField(verbose_name=_('Due Date'))
+    description = models.TextField(verbose_name=_('Description'))
+    comments = models.TextField(blank=True, verbose_name=_('Comments'))
 
     status = models.CharField(choices=STATUSES, max_length=9, verbose_name='Status', default=STATUSES.open)
 

@@ -81,7 +81,7 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         unique=True,
         max_length=30
     )
-    auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('Auditor Firm'), related_name='purchase_orders')
+    auditor_firm = models.ForeignKey(AuditorFirm, verbose_name=_('Auditor'), related_name='purchase_orders')
     contract_start_date = models.DateField(verbose_name=_('PO Date'), null=True, blank=True)
     contract_end_date = models.DateField(verbose_name=_('Contract Expiry Date'), null=True, blank=True)
 
@@ -424,7 +424,7 @@ class SpotCheck(Engagement):
         decimal_places=2, max_digits=20,
     )
 
-    internal_controls = models.TextField(verbose_name=_('Internal controls'), blank=True)
+    internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
 
     class Meta:
         verbose_name = _('Spot Check')
