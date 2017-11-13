@@ -36,7 +36,7 @@ def transition_to_closed(i):
         'earliest_start_date': None,
         'latest_end_date': None
     }
-    for fr in i.frs.all():
+    for fr in i.frs.filter():
         r['total_frs_amt'] += fr.total_amt
         r['total_outstanding_amt'] += fr.outstanding_amt
         r['total_intervention_amt'] += fr.intervention_amt
