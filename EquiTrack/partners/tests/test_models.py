@@ -335,7 +335,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     def test_hact_min_requirements_ct_equals_0(self):
         self.partner_organization.total_ct_cy = 0
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 0,
@@ -345,7 +344,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     def test_hact_min_requirements_ct_under_50k(self):
         self.partner_organization.total_ct_cy = 50000.00
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 1,
@@ -355,7 +353,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     def test_hact_min_requirements_ct_between_50k_and_100k(self):
         self.partner_organization.total_ct_cy = 50001.00
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 1,
@@ -366,7 +363,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_hact_min_requirements_ct_between_100k_and_350k_moderate(self):
         self.partner_organization.total_ct_cy = 100001.00
         self.partner_organization.rating = "Moderate"
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 1,
@@ -377,7 +373,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_hact_min_requirements_ct_between_100k_and_350k_high(self):
         self.partner_organization.total_ct_cy = 100001.00
         self.partner_organization.rating = "High"
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 2,
@@ -388,7 +383,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_hact_min_requirements_ct_over_350k_moderate(self):
         self.partner_organization.total_ct_cy = 350001.00
         self.partner_organization.rating = "Moderate"
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 2,
@@ -399,7 +393,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_hact_min_requirements_ct_over_350k_high(self):
         self.partner_organization.total_ct_cy = 350001.00
         self.partner_organization.rating = "High"
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 4,
