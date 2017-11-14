@@ -19,11 +19,13 @@ from t2f.tests.factories import (
 class TestStrUnicode(FastTenantTestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
     def test_travel(self):
-        instance = TravelFactory()
-        # This model's __str__() method contains only formatted integers, so it's not possible to challenge it
-        # with non-ASCII text. As long as str() and unicode() succeed, that's all the testing we can do.
-        str(instance)
-        unicode(instance)
+        instance = TravelFactory(reference_number=b'two')
+        self.assertEqual(str(instance), b'two')
+        self.assertEqual(unicode(instance), u'two')
+
+        instance = TravelFactory(reference_number=u'tv\xe5')
+        self.assertEqual(str(instance), b'tv\xc3\xa5')
+        self.assertEqual(unicode(instance), u'tv\xe5')
 
     def test_itinerary_item(self):
         travel = TravelFactory()
