@@ -28,7 +28,6 @@ EXCLUDED_PACKAGES = (
     'audit',
     'partners',
     'users',
-    'vision',
     'workplan',
     )
 
