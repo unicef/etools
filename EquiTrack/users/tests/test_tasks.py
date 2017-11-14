@@ -20,7 +20,6 @@ from EquiTrack.factories import (
 from EquiTrack.tests.mixins import SCHEMA_NAME, FastTenantTestCase
 from users import tasks
 from users.models import Section, User, UserProfile
-from vision.models import VisionSyncLog
 from vision.vision_data_synchronizer import VisionException
 
 
