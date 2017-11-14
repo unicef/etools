@@ -80,7 +80,7 @@ class UserFactory(factory.django.DjangoModelFactory):
         model = user_models.User
 
     username = factory.Sequence(lambda n: "user_%d" % n)
-    email = factory.Sequence(lambda n: "user{}@notanemail.com".format(n))
+    email = factory.Sequence(lambda n: "user{}@example.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
     # We pass in 'user' to link the generated Profile to our just-generated User
