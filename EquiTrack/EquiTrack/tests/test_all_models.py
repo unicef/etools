@@ -27,9 +27,7 @@ EXCLUDED_PACKAGES = (
     # Python 3-compatible. As they're fixed one by one, they'll be removed from this list.
     'audit',
     'partners',
-    't2f',
     'users',
-    'vision',
     'workplan',
     )
 

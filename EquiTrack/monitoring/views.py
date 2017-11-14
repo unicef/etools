@@ -22,7 +22,6 @@ class CheckView(View):
         results = {}
         for check_id, check_function in CHECKS.items():
             results[check_id] = run_test(check_function)
-
         if any(not r.success for r in results.values()):
             response = 'Problems with the following services:\n{}'.format(
                 '\n'.join(

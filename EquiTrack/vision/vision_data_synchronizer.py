@@ -1,9 +1,8 @@
 import sys
-
-from django.db import connection
-from django.conf import settings
-
 from abc import ABCMeta, abstractmethod
+
+from django.conf import settings
+from django.db import connection
 
 import requests
 from celery.utils.log import get_task_logger
