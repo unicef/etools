@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
 from django import forms
+from django.contrib.auth.models import Group
 from django.db import connection
 from django.db.models import Q
-from django.contrib.auth.models import Group
 from django.forms import Textarea
 
 

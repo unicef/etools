@@ -1,5 +1,4 @@
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
 import copy
 import logging
@@ -9,14 +8,14 @@ from django.db.models import ObjectDoesNotExist
 from django.db.models.fields.files import FieldFile
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
-from django_fsm import (
-    can_proceed, has_transition_perm,
-    get_all_FIELD_transitions
-)
+
+from django_fsm import can_proceed, get_all_FIELD_transitions, has_transition_perm
 from rest_framework.exceptions import ValidationError
 
 from EquiTrack.parsers import parse_multipart_data
 from utils.common.utils import get_all_field_names
+
+logger = logging.getLogger(__name__)
 
 
 def check_editable_fields(obj, fields):
@@ -358,8 +357,6 @@ class CompleteValidation(object):
             raise TypeError('if old is transmitted to complete validation it needs to be a model instance')
 
         if isinstance(new, dict):
-            # logging.debug('instance is dict')
-            # logging.debug(old)
             if not old and not instance_class:
                 try:
                     instance_class = apps.get_model(getattr(self, 'VALIDATION_CLASS'))
@@ -367,14 +364,12 @@ class CompleteValidation(object):
                     raise TypeError('Object transmitted for validation cannot be dict if instance_class is not defined')
             new_id = new.get('id', None) or new.get('pk', None)
             if new_id:
-                # logging.debug('newid')
                 # let it raise the error if it does not exist
                 old_instance = old if old and old.id == new_id else instance_class.objects.get(id=new_id)
                 new_instance = instance_class.objects.get(id=new_id)
                 update_object(new_instance, new)
 
             else:
-                # logging.debug('no id')
                 old_instance = old
                 # TODO: instance_class(**new) can't be called like that if models have m2m fields
                 # Workaround for now is not to call the validator from the serializer on new instances
@@ -461,7 +456,6 @@ class CompleteValidation(object):
         self.permissions = self.get_permissions(self.new)
 
         funct_name = "state_{}_valid".format(self.new_status)
-        # logging.debug('in state_valid finding function: {}'.format(funct_name))
         function = getattr(self, funct_name, None)
         if function:
             result = function(self.new, user=self.user)
@@ -469,7 +463,6 @@ class CompleteValidation(object):
         # cleanup
         delattr(self.new, 'old_instance')
         self.permissions = None
-        # logging.debug('result is: {}'.format(result))
         return result
 
     def _get_fsm_defined_transitions(self, source, target):
@@ -480,10 +473,8 @@ class CompleteValidation(object):
 
     @transition_error_string
     def auto_transition_validation(self, potential_transition):
-        # logging.debug('in auto transition validation {}'.format(potential_transition)
 
         result = self.check_transition_conditions(potential_transition)
-        # logging.debug("check_transition_conditions returned: {}".format(result))
         return result
 
     def _first_available_auto_transition(self):
@@ -496,23 +487,16 @@ class CompleteValidation(object):
                 if i in list_of_status_choices]
 
         for potential_transition_to in pttl:
-            # test to see if it's a viable transition:
-            # template = "test to see if transition is possible : {} -> {}"
-            # logging.debug(template.format(self.new.status, potential_transition_to))
-            # try to find a possible transition... if no possible transition (transition was not defined on the model
-            # it will always validate
             possible_fsm_transition = self._get_fsm_defined_transitions(self.new.status, potential_transition_to)
             if not possible_fsm_transition:
                 template = "transition: {} -> {} is possible since there was no transition defined on the model"
-                logging.debug(template.format(self.new.status, potential_transition_to))
+                logger.debug(template.format(self.new.status, potential_transition_to))
             if self.auto_transition_validation(possible_fsm_transition)[0]:
                 # get the side effects function if any
                 SIDE_EFFECTS_DICT = getattr(self.new.__class__, 'TRANSITION_SIDE_EFFECTS', {})
                 transition_side_effects = SIDE_EFFECTS_DICT.get(potential_transition_to, [])
-                # logging.debug("transition is possible  {} -> {}".format(self.new.status, potential_transition_to))
 
                 return True, potential_transition_to, transition_side_effects
-            # logging.debug("transition is not possible : {} -> {}".format(self.new.status, potential_transition_to))
         return None, None, None
 
     def _make_auto_transition(self):
@@ -520,28 +504,22 @@ class CompleteValidation(object):
         if not valid_available_transition:
             return False
         else:
-            # logging.debug("valid potential transition happening {}->{}".format(self.new.status, new_status))
             originals = self.new.status, self.new_status
             self.new.status = new_status
             self.new_status = new_status
 
-            # logging.debug("making sure new state is valid: {}".format(self.new.status))
             state_valid = self.state_valid()
-            # logging.debug("new state  {} is valid: {}".format(self.new.status, state_valid[0]))
             if not state_valid[0]:
                 # set stuff back
-                # logging.debug("state invalid because {}".format(state_valid[1]))
                 self.new.status, self.new_status = originals
                 return False
 
             # if all good run all the autoupdates on that status
             for function in auto_update_functions:
-                # logging.debug("auto updating functions for transition")
                 function(self.new, old_instance=self.old, user=self.user)
             return True
 
     def make_auto_transitions(self):
-        # logging.debug("*************** STARTING AUTO TRANSITIONS *****************")
         any_transition_made = False
 
         # disable rigid_check in auto-transitions as they do not apply
@@ -550,9 +528,6 @@ class CompleteValidation(object):
 
         while self._make_auto_transition():
             any_transition_made = True
-
-        # template = "*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}"
-        # logging.debug(template.format(any_transition_made))
 
         # reset rigid check:
         self.disable_rigid_check = originial_rigid_check_setting

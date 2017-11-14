@@ -1,8 +1,9 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
-from django.core.urlresolvers import resolve, reverse, NoReverseMatch
+from django.core.urlresolvers import NoReverseMatch, resolve, reverse
 from django.db import connection
-from rest_framework.test import APIClient, force_authenticate, APIRequestFactory
+
+from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 from tenant_schemas.test.cases import TenantTestCase
 from tenant_schemas.utils import get_tenant_model
 

@@ -2,9 +2,10 @@ from __future__ import absolute_import
 
 import json
 import os
-import requests
 
 from django.conf import settings
+
+import requests
 from tenant_schemas_celery.app import CeleryApp
 
 # set the default Django settings module for the 'celery' program.

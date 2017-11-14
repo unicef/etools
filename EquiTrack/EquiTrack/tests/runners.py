@@ -1,5 +1,5 @@
-from django.test.runner import DiscoverRunner
 from django.db import connection
+from django.test.runner import DiscoverRunner
 
 
 class TestRunner(DiscoverRunner):
