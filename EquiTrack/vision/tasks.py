@@ -12,7 +12,7 @@ from users.models import Country
 from vision.adapters.funding import FundCommitmentSynchronizer, FundReservationsSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
-from vision.adapters.publics_adapter import CostAssignmentSynch, CurrencySynchronizer, TravelAgenciesSynchronizer
+from vision.adapters.publics_adapter import CostAssignmentSynch
 from vision.adapters.purchase_order import POSynchronizer
 from vision.models import VisionSyncLog
 from vision.vision_data_synchronizer import VisionException
@@ -24,8 +24,8 @@ SYNC_HANDLERS = [
     ProgrammeSynchronizer,
     RAMSynchronizer,
     PartnerSynchronizer,
-    CurrencySynchronizer,
-    TravelAgenciesSynchronizer,
+    # CurrencySynchronizer,
+    # TravelAgenciesSynchronizer,
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
 ]
@@ -96,9 +96,9 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
         country_filter_dict['name'] = country_name
     countries = Country.objects.filter(**country_filter_dict)
 
-    for handler in global_synchronizers:
-        sync_handler.delay('Global', handler)
-
+    if not country_name or country_name == 'Global':
+        for handler in global_synchronizers:
+            sync_handler.delay('Global', handler)
     for country in countries:
         connection.set_tenant(country)
         for handler in tenant_synchronizers:
