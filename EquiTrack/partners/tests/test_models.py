@@ -304,14 +304,16 @@ class TestPartnerOrganizationModel(TenantTestCase):
         PartnerOrganization.micro_assessment_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "No")
 
-    def test_audit_needed_under_500k(self):
-        self.partner_organization.total_ct_cp = 500000.00
+    def test_audit_trigger_negative(self):
+        '''Ensure an audit is not required when cash transferred is <= the trigger level'''
+        self.partner_organization.total_ct_cp = PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
         self.partner_organization.save()
         PartnerOrganization.audit_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 0)
 
-    def test_audit_needed_over_500k(self):
-        self.partner_organization.total_ct_cp = 500001.00
+    def test_audit_trigger_positive(self):
+        '''Ensure an audit is required when cash transferred is > the trigger level'''
+        self.partner_organization.total_ct_cp = PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1
         self.partner_organization.save()
         PartnerOrganization.audit_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)

@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 import datetime
+import decimal
 import json
 
 from django.conf import settings
@@ -208,6 +209,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
 
     """
+    # When cash transferred to a country programme exceeds CT_CP_AUDIT_TRIGGER_LEVEL, an audit is triggered.
+    CT_CP_AUDIT_TRIGGER_LEVEL = decimal.Decimal('500000.00')
+
     AGENCY_CHOICES = Choices(
         ('DPKO', 'DPKO'),
         ('ECA', 'ECA'),
@@ -448,7 +452,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def audit_needed(cls, partner, assesment=None):
         audits = 0
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        if partner.total_ct_cp > 500000.00:
+        if partner.total_ct_cp > cls.CT_CP_AUDIT_TRIGGER_LEVEL:
             audits = 1
         hact['audits_mr'] = audits
         partner.hact_values = hact
