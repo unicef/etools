@@ -55,12 +55,15 @@ def get_agreement_path(instance, filename):
     )
 
 
+# 'assessment' is misspelled in this function name, but as of Nov 2017, two migrations reference it so it can't be
+# renamed until after migrations are squashed.
 def get_assesment_path(instance, filename):
     return '/'.join(
         [connection.schema_name,
          'file_attachments',
          'partner_organizations',
          str(instance.partner.id),
+         # 'assessment' is misspelled here, but we won't change it because we don't want to break existing paths.
          'assesments',
          str(instance.id),
          filename]
@@ -204,7 +207,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     Represents a partner organization
 
     related models:
-        Assesment: "assesments"
+        Assessment: "assessments"
         PartnerStaffMember: "staff_members"
 
 
@@ -457,11 +460,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.save()
 
     @classmethod
-    def audit_done(cls, partner, assesment=None):
+    def audit_done(cls, partner, assessment=None):
         audits = 0
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         audits = partner.assessments.filter(type='Scheduled Audit report').count()
-        if assesment:
+        if assessment:
             audits += 1
         hact['audits_done'] = audits
         partner.hact_values = hact
@@ -667,7 +670,7 @@ class Assessment(models.Model):
     Relates to :model:`auth.User`
     """
 
-    ASSESMENT_TYPES = (
+    ASSESSMENT_TYPES = (
         ('Micro Assessment', 'Micro Assessment'),
         ('Simplified Checklist', 'Simplified Checklist'),
         ('Scheduled Audit report', 'Scheduled Audit report'),
@@ -681,7 +684,7 @@ class Assessment(models.Model):
     )
     type = models.CharField(
         max_length=50,
-        choices=ASSESMENT_TYPES,
+        choices=ASSESSMENT_TYPES,
     )
     names_of_other_agencies = models.CharField(
         max_length=255,
@@ -721,7 +724,7 @@ class Assessment(models.Model):
         choices=RISK_RATINGS,
         default=HIGH,
     )
-    # Assesment Report
+    # Assessment Report
     report = models.FileField(
         blank=True, null=True,
         max_length=1024,
