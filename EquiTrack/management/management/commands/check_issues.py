@@ -1,4 +1,5 @@
 from django.core.management import BaseCommand
+
 from management.issues.checks import run_all_checks
 
 

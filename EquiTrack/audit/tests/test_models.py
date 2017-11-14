@@ -1,9 +1,8 @@
 from django.core import mail
 
+from audit.models import Auditor, AuditorStaffMember
+from audit.tests.factories import AuditPartnerFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
-
-from .factories import AuditPartnerFactory
-from ..models import AuditorStaffMember, Auditor
 from firms.factories import UserFactory
 
 

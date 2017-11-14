@@ -1,8 +1,9 @@
 from django.db import transaction
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from reports.models import Result, AppliedIndicator, IndicatorBlueprint, LowerResult
+from reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, Result
 
 
 class OutputListSerializer(serializers.ModelSerializer):
