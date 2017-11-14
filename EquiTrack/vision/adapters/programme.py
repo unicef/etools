@@ -1,10 +1,10 @@
-import json
 import datetime
-
+import json
 import logging
+
 from django.db import transaction
 
-from reports.models import ResultType, Result, Indicator, CountryProgramme
+from reports.models import CountryProgramme, Indicator, Result, ResultType
 from vision.utils import wcf_json_date_as_date
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 
@@ -48,7 +48,7 @@ class ResultStructureSynchronizer(object):
 
         for local_cp in local_cps.values():
             if self._update_changes(local_cp, remote_cps[local_cp.wbs]):
-                print('Updated {}'.format(local_cp))
+                logger.debug('Updated {}'.format(local_cp))
                 total_updated += 1
                 local_cp.save()
             del remote_cps[local_cp.wbs]
@@ -76,7 +76,7 @@ class ResultStructureSynchronizer(object):
 
         for local_outcome in local_outcomes.values():
             if self._update_changes(local_outcome, remote_outcomes[local_outcome.wbs]):
-                print('Updated {}'.format(local_outcome))
+                logger.debug('Updated {}'.format(local_outcome))
                 local_outcome.save()
                 total_updated += 1
             del remote_outcomes[local_outcome.wbs]
@@ -104,7 +104,7 @@ class ResultStructureSynchronizer(object):
 
         for loc_output in loc_outputs.values():
             if self._update_changes(loc_output, rem_outputs[loc_output.wbs]):
-                print('Updated {}'.format(loc_output))
+                logger.debug('Updated {}'.format(loc_output))
                 loc_output.save()
                 total_updated += 1
             del rem_outputs[loc_output.wbs]
@@ -133,7 +133,7 @@ class ResultStructureSynchronizer(object):
 
         for loc_activity in loc_activities.values():
             if self._update_changes(loc_activity, rem_activities[loc_activity.wbs]):
-                print('Updated {}'.format(loc_activity))
+                logger.debug('Updated {}'.format(loc_activity))
                 loc_activity.save()
                 total_updated += 1
             del rem_activities[loc_activity.wbs]
@@ -172,7 +172,7 @@ class ResultStructureSynchronizer(object):
         return {
             'details': '\n'.join([cps, outcomes, outputs, activities]),
             'total_records': sum([i[0] for i in [total_cps, total_outcomes, total_outputs, total_activities]]),
-            'processed': sum([i[1]+i[2] for i in [total_cps, total_outcomes, total_outputs, total_activities]])
+            'processed': sum([i[1] + i[2] for i in [total_cps, total_outcomes, total_outputs, total_activities]])
         }
 
 
@@ -305,7 +305,6 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         return self._clean_records(records)
 
     def _save_records(self, records):
-        # print records[0]
         # TODO maybe ? save to file in azure somewhere at this point.. have a separate task to read from file and update
 
         synchronizer = ResultStructureSynchronizer(records)
@@ -420,12 +419,6 @@ class RAMSynchronizer(VisionDataSynchronizer):
                 records_to_create.append(r[1])
 
         created = Indicator.objects.bulk_create([Indicator(**r) for r in records_to_create])
-
-        # print('Total Remote', len(wbss))
-        # print('Created, ', len(created))
-        # print('Updated, ', updated)
-        # print('Created Skipped, ', skipped_creation)
-        # print('Updated Skipped, ', skipped_update)
 
         indicators_activated = Indicator.objects.filter(code__in=records.keys()).filter(active=False).update(
             active=True)
