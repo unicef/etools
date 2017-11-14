@@ -42,7 +42,7 @@ class TestEmailNotification(FastTenantTestCase):
         valid_notification = NotificationFactory()
         valid_notification.send_notification()
 
-        self.assertListEqual(valid_notification.recipients, valid_notification.sent_recipients)
+        self.assertItemsEqual(valid_notification.recipients, valid_notification.sent_recipients)
         self.assertEqual(Email.objects.count(), old_email_count + 1)
 
 

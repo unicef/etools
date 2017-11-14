@@ -237,7 +237,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTe
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('results', response.data)
         self.assertIsInstance(response.data['results'], list)
-        self.assertListEqual(
+        self.assertItemsEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, engagements)
         )
