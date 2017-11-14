@@ -276,7 +276,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
             self.assertIn('POST', response.data['actions'])
             self.assertItemsEqual(
                 writable_fields or [],
-                response.data['actions']['POST'].keys(),
+                response.data['actions']['POST'].keys()
             )
         else:
             self.assertNotIn('POST', response.data['actions'])
@@ -294,7 +294,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
             self.assertIn('PUT', response.data['actions'])
             self.assertItemsEqual(
                 writable_fields or [],
-                response.data['actions']['PUT'].keys(),
+                response.data['actions']['PUT'].keys()
             )
         else:
             self.assertNotIn('PUT', response.data['actions'])
