@@ -376,10 +376,10 @@ class TPMActivity(Activity):
 @python_2_unicode_compatible
 class TPMActionPoint(TimeStampedModel, models.Model):
     STATUSES = Choices(
-        ('open', 'Open'),
-        ('progress', 'In-Progress'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
+        ('open', _('Open')),
+        ('progress', _('In-Progress')),
+        ('completed', _('Completed')),
+        ('cancelled', _('Cancelled')),
     )
 
     tpm_visit = models.ForeignKey(TPMVisit, related_name='action_points', verbose_name=_('Visit'))
@@ -450,7 +450,7 @@ class TPMPermission(StatusBasePermission):
     STATUSES = StatusBasePermission.STATUSES + TPMVisit.STATUSES
 
     USER_TYPES = Choices(
-        ('unicef_focal_point', 'UNICEF Focal Point'),
+        ('unicef_focal_point', _('UNICEF Focal Point')),
         PME.as_choice(),
         ThirdPartyMonitor.as_choice(),
         UNICEFUser.as_choice(),

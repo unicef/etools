@@ -19,10 +19,6 @@ def update_email_templates(apps, schema_editor):
     EmailTemplate.objects.get_or_create(name='tpm/visit/action_point_assigned')
 
 
-def do_nothing(apps, schema_editor):
-    pass
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -30,5 +26,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(update_email_templates, do_nothing)
+        migrations.RunPython(update_email_templates, migrations.RunPython.noop)
     ]

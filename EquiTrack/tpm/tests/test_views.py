@@ -43,9 +43,9 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            sorted(map(lambda x: x['id'], response.data['results'])),
-            sorted(map(lambda x: x.id, expected_visits))
+        self.assertItemsEqual(
+            map(lambda x: x['id'], response.data['results']),
+            map(lambda x: x.id, expected_visits)
         )
 
     def test_unicef_list_view(self):
@@ -258,9 +258,9 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            sorted(map(lambda x: x['id'], response.data['results'])),
-            sorted(map(lambda x: x.id, expected_firms))
+        self.assertItemsEqual(
+            map(lambda x: x['id'], response.data['results']),
+            map(lambda x: x.id, expected_firms)
         )
 
     def _test_list_options(self, user, can_create=True, writable_fields=None):
@@ -274,9 +274,9 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
 
         if can_create:
             self.assertIn('POST', response.data['actions'])
-            self.assertListEqual(
-                sorted(writable_fields or []),
-                sorted(response.data['actions']['POST'].keys())
+            self.assertItemsEqual(
+                writable_fields or [],
+                response.data['actions']['POST'].keys(),
             )
         else:
             self.assertNotIn('POST', response.data['actions'])
@@ -292,9 +292,9 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase
 
         if can_update:
             self.assertIn('PUT', response.data['actions'])
-            self.assertListEqual(
-                sorted(writable_fields or []),
-                sorted(response.data['actions']['PUT'].keys())
+            self.assertItemsEqual(
+                writable_fields or [],
+                response.data['actions']['PUT'].keys(),
             )
         else:
             self.assertNotIn('PUT', response.data['actions'])
