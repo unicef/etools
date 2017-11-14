@@ -7,7 +7,7 @@ from audit.transitions.conditions import BaseTransitionCheck, BaseRequiredFields
 
 class TPMVisitAssignRequiredFieldsCheck(BaseRequiredFieldsCheck):
     fields = [
-        'tpm_partner', 'unicef_focal_points',
+        'tpm_partner', 'unicef_focal_points', 'tpm_partner_focal_points'
     ]
 
 

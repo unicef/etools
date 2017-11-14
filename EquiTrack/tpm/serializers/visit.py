@@ -237,11 +237,10 @@ class TPMVisitSerializer(TPMVisitLightSerializer):
         extra_kwargs = {
             'tpm_partner': {'required': True},
             'unicef_focal_points': {'required': True},
+            'tpm_partner_focal_points': {'required': True},
         }
 
 
 class TPMVisitDraftSerializer(TPMVisitSerializer):
     class Meta(TPMVisitSerializer.Meta):
-        extra_kwargs = copy(TPMVisitSerializer.Meta.extra_kwargs)
-        extra_kwargs['tpm_partner']['required'] = False
-        extra_kwargs['unicef_focal_points']['required'] = False
+        extra_kwargs = {}
