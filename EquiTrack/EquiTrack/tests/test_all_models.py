@@ -29,7 +29,6 @@ EXCLUDED_PACKAGES = (
     'partners',
     't2f',
     'users',
-    'vision',
     'workplan',
     )
 
