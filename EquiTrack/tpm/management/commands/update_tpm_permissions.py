@@ -209,8 +209,8 @@ class Command(BaseCommand):
         ])
 
         # unicef_approved - readonly
+        self.add_permissions(self.unicef_approved, self.everybody, 'view', self.everything)
         self.add_permissions(self.unicef_approved, [self.pme, self.focal_point], 'edit', self.follow_up_page)
-        self.add_permissions(self.unicef_approved, self.unicef_user, 'view', self.everything)
         self.revoke_permissions(self.unicef_approved, self.third_party_monitor, 'view', [
             'tpmvisit.action_points',
         ])
