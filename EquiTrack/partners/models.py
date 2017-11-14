@@ -449,11 +449,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.save()
 
     @classmethod
-    def audit_needed(cls, partner, assesment=None):
-        audits = 0
+    def audit_needed(cls, partner):
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        if partner.total_ct_cp > cls.CT_CP_AUDIT_TRIGGER_LEVEL:
-            audits = 1
+        audits = 1 if (partner.total_ct_cp > cls.CT_CP_AUDIT_TRIGGER_LEVEL) else 0
         hact['audits_mr'] = audits
         partner.hact_values = hact
         partner.save()
@@ -761,10 +759,10 @@ class Assessment(models.Model):
             if self.pk:
                 prev_assessment = Assessment.objects.get(id=self.id)
                 if prev_assessment.type != self.type:
-                    PartnerOrganization.audit_needed(self.partner, self)
+                    PartnerOrganization.audit_needed(self.partner)
                     PartnerOrganization.audit_done(self.partner, self)
             else:
-                PartnerOrganization.audit_needed(self.partner, self)
+                PartnerOrganization.audit_needed(self.partner)
                 PartnerOrganization.audit_done(self.partner, self)
 
         super(Assessment, self).save(**kwargs)
