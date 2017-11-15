@@ -640,6 +640,7 @@ class FinancialFinding(models.Model):
     ip_comments = models.TextField(verbose_name=_('IP Comments'), blank=True)
 
 
+@python_2_unicode_compatible
 class SpecialAudit(Engagement):
     @transition(
         'status',
