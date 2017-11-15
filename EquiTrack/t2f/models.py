@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models, connection
 from django.template.loader import render_to_string
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy
 from django_fsm import FSMField, transition
@@ -112,6 +113,7 @@ def mark_as_certified_or_completed_threshold_decorator(func):
     return wrapper
 
 
+@python_2_unicode_compatible
 class Travel(models.Model):
     PLANNED = 'planned'
     SUBMITTED = 'submitted'
@@ -179,7 +181,7 @@ class Travel(models.Model):
     approved_cost_traveler = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
     approved_cost_travel_agencies = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.reference_number
 
     @property
@@ -453,6 +455,7 @@ class TravelActivity(models.Model):
         return self.travels.filter(traveler=self.primary_traveler).first().status
 
 
+@python_2_unicode_compatible
 class ItineraryItem(models.Model):
     travel = models.ForeignKey('Travel', related_name='itinerary')
     origin = models.CharField(max_length=255)
@@ -470,7 +473,7 @@ class ItineraryItem(models.Model):
         # https://groups.google.com/d/msg/django-users/NQO8OjCHhnA/r9qKklm5y0EJ
         order_with_respect_to = 'travel'
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} {} - {}'.format(self.travel.reference_number, self.origin, self.destination)
 
 
@@ -656,6 +659,7 @@ class ActionPoint(models.Model):
             log.error('Was not able to send the email. Exception: %s', exc.message)
 
 
+@python_2_unicode_compatible
 class Invoice(models.Model):
     PENDING = 'pending'
     PROCESSING = 'processing'
@@ -701,7 +705,7 @@ class Invoice(models.Model):
     def message(self):
         return '\n'.join(self.messages)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.reference_number
 
 

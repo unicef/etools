@@ -4,6 +4,7 @@ Model factories used for generating models dynamically for tests
 from datetime import datetime, timedelta, date
 import json
 
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
@@ -77,7 +78,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
 
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = user_models.User
+        model = get_user_model()
 
     username = factory.Sequence(lambda n: "user_%d" % n)
     email = factory.Sequence(lambda n: "user{}@example.com".format(n))
@@ -92,9 +93,9 @@ class UserFactory(factory.django.DjangoModelFactory):
         """Override the default _generate() to disable the post-save signal."""
 
         # Note: If the signal was defined with a dispatch_uid, include that in both calls.
-        post_save.disconnect(user_models.UserProfile.create_user_profile, user_models.User)
+        post_save.disconnect(user_models.UserProfile.create_user_profile, get_user_model())
         user = super(UserFactory, cls)._generate(create, attrs)
-        post_save.connect(user_models.UserProfile.create_user_profile, user_models.User)
+        post_save.connect(user_models.UserProfile.create_user_profile, get_user_model())
         return user
 
     @factory.post_generation
@@ -437,10 +438,10 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     actual_amt = fuzzy.FuzzyDecimal(1, 300)
     outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
 
-    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1)-timedelta(days=10),
+    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1) - timedelta(days=10),
                                  date(date.today().year, 1, 1))
     end_date = fuzzy.FuzzyDate(date(date.today().year + 1, 1, 1),
-                               date(date.today().year + 1, 1, 1)+timedelta(days=10))
+                               date(date.today().year + 1, 1, 1) + timedelta(days=10))
 
     class Meta:
         model = funds_models.FundsReservationHeader
