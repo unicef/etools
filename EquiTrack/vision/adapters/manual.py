@@ -8,7 +8,7 @@ from collections import OrderedDict
 from django.db import connection
 
 from vision.utils import wcf_json_date_as_datetime
-from vision.vision_data_synchronizer import VisionDataLoader, VisionException, VisionDataSynchronizer
+from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer, VisionException
 
 logger = logging.getLogger(__name__)
 
@@ -108,15 +108,12 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                          if field_name not in kwargs.keys()]
                     )
                     defaults.update(self.DEFAULTS.get(model, {}))
-                    obj, created = model.objects.update_or_create(
+                    model.objects.update_or_create(
                         defaults=defaults, **kwargs
                     )
             except Exception as exp:
-                    print ("Exception message: {} ")
-                    print ("Exception type: {} ")
-                    print ("Exception args: {} ".format(
-                            exp.message, type(exp).__name__, exp.args
-                        ))
+                logger.warning("Exception message: {}".format(exp.message))
+                logger.warning("Exception type: {}".format(type(exp)))
 
         for record in filtered_records:
             _process_record(record)
