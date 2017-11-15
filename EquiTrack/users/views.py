@@ -211,11 +211,11 @@ class GroupViewSet(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        permissions = request.data['permissions']
         serializer.instance = serializer.save()
         data = serializer.data
 
         try:
+            permissions = request.data['permissions']
             for perm in permissions:
                 serializer.instance.permissions.add(perm)
             serializer.save()
@@ -290,12 +290,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        groups = request.data['groups']
-
         serializer.instance = serializer.save()
         data = serializer.data
 
         try:
+            groups = request.data['groups']
             for grp in groups:
                 serializer.instance.groups.add(grp)
 

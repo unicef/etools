@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import json
 
 from django.core.urlresolvers import reverse
+from django.contrib.auth.models import Permission
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 from unittest import skip
@@ -10,7 +11,7 @@ from unittest import skip
 from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, SectionFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
 from publics.tests.factories import BusinessAreaFactory
-from users.models import UserProfile
+from users.models import Group, User, UserProfile
 
 
 class TestUserAuthAPIView(APITenantTestCase):
@@ -367,18 +368,19 @@ class TestProfileEdit(FastTenantTestCase):
     def setUp(self):
         super(TestProfileEdit, self).setUp()
         self.client = TenantClient(self.tenant)
+        self.url = reverse("user_profile")
 
     def test_get_non_staff(self):
         user = UserFactory()
         self.client.force_login(user)
-        response = self.client.get("/users/profile_view/")
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, "users/profile.html")
 
     def test_get_staff(self):
         user = UserFactory(is_staff=True)
         self.client.force_login(user)
-        response = self.client.get("/users/profile_view/")
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, "users/profile.html")
 
@@ -389,7 +391,7 @@ class TestProfileEdit(FastTenantTestCase):
         office = OfficeFactory()
         section = SectionFactory()
         response = self.client.post(
-            "/users/profile_view/",
+            self.url,
             data={
                 "guid": "123",
                 "office": office.pk,
@@ -407,10 +409,110 @@ class TestProfileEdit(FastTenantTestCase):
         self.assertEqual(profile.phone_number, "123-546-7890")
 
 
-# class TestGroupViewSet(APITenantTestCase):
-#     def setUp(self):
-#         super(TestGroupViewSet, self).setUp()
-#         self.url = "/groups/"
+class TestGroupViewSet(APITenantTestCase):
+    def setUp(self):
+        super(TestGroupViewSet, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.url = "/api/groups/"
 
-#     def test_post(self):
-#         pass
+    def test_get(self):
+        group = Group.objects.first()
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]["id"], str(group.pk))
+
+    def test_post(self):
+        """Ensure group object is created"""
+        name = "New Group"
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={"name": name}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Group.objects.filter(name=name).exists())
+
+    def test_post_permission(self):
+        """Ensure group object is created and associated with
+        permissions provided
+        """
+        name = "New Group"
+        permission = Permission.objects.first()
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={
+                "name": name,
+                "permissions": [permission.pk]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Group.objects.filter(name=name).exists())
+        group = Group.objects.get(name=name)
+        self.assertIn(permission, group.permissions.all())
+
+
+class TestUserViewSet(APITenantTestCase):
+    def setUp(self):
+        super(TestUserViewSet, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.url = "/api/users/"
+
+    def test_post(self):
+        """Ensure user object is created"""
+        username = "new@example.com"
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={
+                "username": username,
+                "profile": {
+                    "guid": "123",
+                    "country": None,
+                    "office": None,
+                    "section": None,
+                    "job_title": "New Job",
+                    "phone_number": "123-546-7890",
+                    "country_override": None,
+                    "installation_id": None,
+                }
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(User.objects.filter(username=username).exists())
+
+    def test_post_with_groups(self):
+        """Ensure user object is created, and associated with groups"""
+        group = GroupFactory()
+        username = "new@example.com"
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={
+                "username": username,
+                "profile": {
+                    "guid": "123",
+                    "country": None,
+                    "office": None,
+                    "section": None,
+                    "job_title": "New Job",
+                    "phone_number": "123-546-7890",
+                    "country_override": None,
+                    "installation_id": None,
+                },
+                "groups": [group.pk]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(User.objects.filter(username=username).exists())
+        user_created = User.objects.get(username=username)
+        self.assertIn(group, user_created.groups.all())
