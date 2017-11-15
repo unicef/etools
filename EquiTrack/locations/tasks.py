@@ -8,7 +8,7 @@ from carto.sql import SQLClient
 
 from EquiTrack.celery import app
 
-from .models import Location
+from locations.models import Location
 
 logger = logging.getLogger(__name__)
 
