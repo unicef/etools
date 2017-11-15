@@ -58,7 +58,7 @@ class TestUserProfileModel(TenantTestCase):
         p = models.UserProfile(user=self.user)
         self.assertEqual(p.first_name(), "First")
 
-    def test_lat_name(self):
+    def test_last_name(self):
         p = models.UserProfile(user=self.user)
         self.assertEqual(p.last_name(), "Last")
 
@@ -111,13 +111,18 @@ class TestUserModel(TenantTestCase):
 
 class TestCreatePartnerUser(TenantTestCase):
     def test_created_false(self):
+        """If 'created' param passed in is False then do nothing"""
         user = models.User(email="new@example.com")
-        models.create_partner_user(None, user, False)
+        models.create_partner_user(None, user, created=False)
         self.assertFalse(
             models.User.objects.filter(email="new@example.com").exists()
         )
 
     def test_not_created(self):
+        """If user exists already, and so not created, then nothing happens
+
+        Ensuring no exception occurs
+        """
         user = UserFactory(email="new@example.com", username="new@example.com")
         models.create_partner_user(None, user, True)
         self.assertTrue(
@@ -151,5 +156,9 @@ class TestDeletePartnerRelationship(TenantTestCase):
         self.assertFalse(user.is_active)
 
     def test_delete_exception(self):
+        """Exceptions are silently ignored, no changes saved"""
         user = UserFactory()
+        self.assertTrue(user.is_active)
         self.assertIsNone(models.delete_partner_relationship(None, user))
+        user_updated = models.User.objects.get(pk=user.pk)
+        self.assertTrue(user_updated.is_active)
