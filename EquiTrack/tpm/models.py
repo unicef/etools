@@ -84,13 +84,13 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     visit_information = models.TextField(verbose_name=_('Visit Information'), blank=True)
 
-    date_of_assigned = models.DateField(blank=True, null=True)
-    date_of_cancelled = models.DateField(blank=True, null=True)
-    date_of_tpm_accepted = models.DateField(blank=True, null=True)
-    date_of_tpm_rejected = models.DateField(blank=True, null=True)
-    date_of_tpm_reported = models.DateField(blank=True, null=True)
-    date_of_tpm_report_rejected = models.DateField(blank=True, null=True)
-    date_of_unicef_approved = models.DateField(blank=True, null=True)
+    date_of_assigned = models.DateField(blank=True, null=True, verbose_name=_('Date of Assigned'))
+    date_of_cancelled = models.DateField(blank=True, null=True, verbose_name=_('Date of Cancelled'))
+    date_of_tpm_accepted = models.DateField(blank=True, null=True, verbose_name=_('Date of TPM Accepted'))
+    date_of_tpm_rejected = models.DateField(blank=True, null=True, verbose_name=_('Date of TPM Rejected'))
+    date_of_tpm_reported = models.DateField(blank=True, null=True, verbose_name=_('Date of TPM Reported'))
+    date_of_tpm_report_rejected = models.DateField(blank=True, null=True, verbose_name=_('Date of Sent Back to TPM'))
+    date_of_unicef_approved = models.DateField(blank=True, null=True, verbose_name=_('Date of UNICEF Approved'))
 
     offices = models.ManyToManyField('users.Office', related_name='tpm_visits', blank=True,
                                      verbose_name=_('Office(s) of UNICEF Focal Point(s)'))

@@ -162,4 +162,39 @@ class Migration(migrations.Migration):
             name='tpm_visit',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='report_reject_comments', to='tpm.TPMVisit', verbose_name='Visit'),
         ),
+        migrations.AlterField(
+            model_name='tpmvisit',
+            name='date_of_assigned',
+            field=models.DateField(blank=True, null=True, verbose_name='Date of Assigned'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisit',
+            name='date_of_cancelled',
+            field=models.DateField(blank=True, null=True, verbose_name='Date of Cancelled'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisit',
+            name='date_of_tpm_accepted',
+            field=models.DateField(blank=True, null=True, verbose_name='Date of TPM Accepted'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisit',
+            name='date_of_tpm_rejected',
+            field=models.DateField(blank=True, null=True, verbose_name='Date of TPM Rejected'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisit',
+            name='date_of_tpm_report_rejected',
+            field=models.DateField(blank=True, null=True, verbose_name='Date of Sent Back to TPM'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisit',
+            name='date_of_tpm_reported',
+            field=models.DateField(blank=True, null=True, verbose_name='Date of TPM Reported'),
+        ),
+        migrations.AlterField(
+            model_name='tpmvisit',
+            name='date_of_unicef_approved',
+            field=models.DateField(blank=True, null=True, verbose_name='Date of UNICEF Approved'),
+        ),
     ]
