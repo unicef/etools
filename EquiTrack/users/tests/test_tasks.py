@@ -233,7 +233,7 @@ class TestUserMapper(FastTenantTestCase):
         self.assertIn(self.group, user.groups.all())
 
     def test_create_or_update_user_exists(self):
-        """Ensure gracefull handling if user already exists"""
+        """Ensure graceful handling if user already exists"""
         email = "tester@example.com"
         user = UserFactory(
             email=email,
