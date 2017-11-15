@@ -31,26 +31,26 @@ class TestUsersDetailAPIView(APITenantTestCase):
         user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[self.unicef_staff.pk]),
+            reverse("users_v3:user-detail", args=[self.unicef_staff.pk]),
             user=user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user_id"], str(self.unicef_staff.pk))
+        self.assertEqual(response.data["username"], self.unicef_staff.username)
 
     def test_get(self):
         user = UserFactory()
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[user.pk]),
+            reverse("users_v3:user-detail", args=[user.pk]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user_id"], str(user.pk))
+        self.assertEqual(response.data["username"], user.username)
 
     def test_get_not_found(self):
         response = self.forced_auth_req(
             "get",
-            reverse("user-detail", args=[404]),
+            reverse("users_v3:user-detail", args=[404]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
