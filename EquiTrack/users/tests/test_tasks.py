@@ -4,11 +4,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import json
+from unittest import skip
 
-from django.conf import settings
 from mock import patch, Mock
 from tenant_schemas.utils import schema_context
-from unittest import skip
+
+from django.conf import settings
 
 from EquiTrack.factories import (
     CountryFactory,
@@ -103,7 +104,7 @@ class TestUserMapper(FastTenantTestCase):
         code = "Code"
         self.assertEqual(self.mapper.sections, {})
         res = self.mapper._get_section(name, code)
-        self.assertTrue(isinstance(res, Section))
+        self.assertIsInstance(res, Section)
         self.assertEqual(self.mapper.sections.keys(), [name])
         with schema_context(SCHEMA_NAME):
             self.assertTrue(
@@ -164,6 +165,7 @@ class TestUserMapper(FastTenantTestCase):
         self.assertTrue(profile.countries_available.count())
 
     def test_set_attribute_char(self):
+        """Ensure set attribute on char field works as expected"""
         section = Section(name="Initial")
         res = self.mapper._set_attribute(section, "name", "Change")
         self.assertTrue(res)
@@ -214,6 +216,7 @@ class TestUserMapper(FastTenantTestCase):
         self.assertFalse(User.objects.filter(email=email).exists())
 
     def test_create_or_update_user_created(self):
+        """Ensure user is created and added to default group"""
         email = "tester@example.com"
         res = self.mapper.create_or_update_user({
             "internetaddress": email,
@@ -230,6 +233,7 @@ class TestUserMapper(FastTenantTestCase):
         self.assertIn(self.group, user.groups.all())
 
     def test_create_or_update_user_exists(self):
+        """Ensure gracefull handling if user already exists"""
         email = "tester@example.com"
         user = UserFactory(
             email=email,
@@ -309,6 +313,7 @@ class TestUserMapper(FastTenantTestCase):
         self.assertEqual(self.mapper.section_users, {})
 
     def test_map_users_response_empty(self):
+        """If no STAFF_ID, then continue, and ignore record"""
         profile = ProfileFactory()
         profile.section_code = "SEC"
         profile.save()
@@ -331,6 +336,9 @@ class TestUserMapper(FastTenantTestCase):
         self.assertEqual(self.mapper.section_users, {})
 
     def test_map_users_no_user(self):
+        """If not able to find a matching user on STAFF_ID value,
+        continue and ignore the record
+        """
         profile = ProfileFactory()
         profile.section_code = "SEC"
         profile.save()
@@ -353,6 +361,7 @@ class TestUserMapper(FastTenantTestCase):
         self.assertEqual(self.mapper.section_users, {})
 
     def test_map_users(self):
+        """If user is found, ensure section_users is updated"""
         profile = ProfileFactory()
         profile.section_code = "SEC"
         profile.staff_id = profile.user.pk
