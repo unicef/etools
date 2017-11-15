@@ -1,12 +1,66 @@
 from __future__ import unicode_literals
 
 import json
+
+from django.core.urlresolvers import reverse
+from rest_framework import status
+from tenant_schemas.test.client import TenantClient
 from unittest import skip
 
 from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, SectionFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
 from publics.tests.factories import BusinessAreaFactory
-from rest_framework import status
+from users.models import UserProfile
+
+
+class TestUserAuthAPIView(APITenantTestCase):
+    def test_get(self):
+        self.user = UserFactory()
+        response = self.forced_auth_req(
+            "get",
+            "/users/api/profile/",
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.user.pk)
+
+
+class TestChangeUserCountry(APITenantTestCase):
+    def setUp(self):
+        super(TestChangeUserCountry, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.url = reverse("country-change")
+
+    def test_post(self):
+        self.unicef_staff.profile.countries_available.add(
+            self.unicef_staff.profile.country
+        )
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={"country": self.unicef_staff.profile.country.pk}
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_post_invalid_country(self):
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={"country": 404}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_post_country_forbidden(self):
+        country = CountryFactory()
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={"country": country.pk}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class TestSectionViews(APITenantTestCase):
@@ -67,6 +121,15 @@ class TestUserViews(APITenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+
+    def test_users_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/users/api/',
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
     def test_api_users_list_values_bad(self):
         response = self.forced_auth_req(
@@ -251,3 +314,103 @@ class TestUserViewsV3(APITenantTestCase):
                                         data={'verbosity': 'minimal'}, user=self.unicef_superuser)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 2)
+
+
+class TestCountryView(APITenantTestCase):
+    def test_get(self):
+        user = UserFactory(is_staff=True)
+        response = self.forced_auth_req(
+            "get",
+            reverse("users_v2:country-detail"),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]["name"], user.profile.country.name)
+
+
+class TestUsersDetailAPIView(APITenantTestCase):
+    def setUp(self):
+        super(TestUsersDetailAPIView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+
+    def test_get_not_staff(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse("user-detail", args=[self.unicef_staff.pk]),
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["user_id"], str(self.unicef_staff.pk))
+
+    def test_get(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse("user-detail", args=[user.pk]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["user_id"], str(user.pk))
+
+    def test_get_not_found(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse("user-detail", args=[404]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {})
+
+
+class TestProfileEdit(FastTenantTestCase):
+    def setUp(self):
+        super(TestProfileEdit, self).setUp()
+        self.client = TenantClient(self.tenant)
+
+    def test_get_non_staff(self):
+        user = UserFactory()
+        self.client.force_login(user)
+        response = self.client.get("/users/profile_view/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTemplateUsed(response, "users/profile.html")
+
+    def test_get_staff(self):
+        user = UserFactory(is_staff=True)
+        self.client.force_login(user)
+        response = self.client.get("/users/profile_view/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTemplateUsed(response, "users/profile.html")
+
+    @skip("Issue with office/section not being available")
+    def test_post(self):
+        user = UserFactory(is_staff=True)
+        self.client.force_login(user)
+        office = OfficeFactory()
+        section = SectionFactory()
+        response = self.client.post(
+            "/users/profile_view/",
+            data={
+                "guid": "123",
+                "office": office.pk,
+                "section": section.pk,
+                "job_title": "New Job",
+                "phone_number": "123-546-7890",
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTemplateUsed(response, "users/profile.html")
+        profile = UserProfile.objects.get(user=user)
+        self.assertEqual(profile.office.pk, office.pk)
+        self.assertEqual(profile.section, section)
+        self.assertEqual(profile.job_title, "New Job")
+        self.assertEqual(profile.phone_number, "123-546-7890")
+
+
+# class TestGroupViewSet(APITenantTestCase):
+#     def setUp(self):
+#         super(TestGroupViewSet, self).setUp()
+#         self.url = "/groups/"
+
+#     def test_post(self):
+#         pass
