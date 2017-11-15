@@ -301,22 +301,22 @@ POST_OFFICE = {
 # celery: http://docs.celeryproject.org/en/3.1/configuration.html
 CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
-BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(BROKER_VISIBILITY_VAR)}
+CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(BROKER_VISIBILITY_VAR)}
 CELERY_RESULT_BACKEND = 'django_celery_results.backends.database:DatabaseBackend'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 # Sensible settings for celery
-CELERY_TASK_ALWAYS_EAGER = CELERY_ALWAYS_EAGER = False
-CELERY_TASK_ACKS_LATE = CELERY_ACKS_LATE = True
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_ACKS_LATE = True
 CELERY_TASK_PUBLISH_RETRY = True
-CELERY_WORKER_DISABLE_RATE_LIMITS = CELERY_DISABLE_RATE_LIMITS = False
+CELERY_WORKER_DISABLE_RATE_LIMITS = False
 
 # By default we will ignore result
 # If you want to see results and try out tasks interactively, change it to False
 # Or change this setting on tasks level
-CELERY_IGNORE_RESULT = True
+CELERY_TASK_IGNORE_RESULT = True
 CELERY_SEND_TASK_ERROR_EMAILS = False
-CELERY_TASK_RESULT_EXPIRES = 600
-CELERYD_PREFETCH_MULTIPLIER = 1
+CELERY_RESULT_EXPIRES = 600
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
 CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
