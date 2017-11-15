@@ -85,11 +85,16 @@ class TravelExports(APITenantTestCase):
         travel_1 = TravelFactory(reference_number='2016/1000',
                                  traveler=user_joe_smith,
                                  office=office,
-                                 section=section_health)
+                                 section=section_health,
+                                 start_date=datetime.strptime('08-Nov-2017', '%d-%b-%Y'),
+                                 end_date=datetime.strptime('14-Nov-2017', '%d-%b-%Y')
+                                 )
         travel_2 = TravelFactory(reference_number='2016/1211',
                                  traveler=user_alice_carter,
                                  office=office,
-                                 section=section_education)
+                                 section=section_education,
+                                 start_date=datetime.strptime('08-Nov-2017', '%d-%b-%Y'),
+                                 end_date=datetime.strptime('14-Nov-2017', '%d-%b-%Y'))
 
         # Do some cleanup
         TravelActivity.objects.all().delete()
@@ -155,7 +160,8 @@ class TravelExports(APITenantTestCase):
                           'partnership',
                           'results',
                           'locations',
-                          'when',
+                          'start_date',
+                          'end_date',
                           'is_secondary_traveler',
                           'primary_traveler_name'])
 
@@ -170,7 +176,8 @@ class TravelExports(APITenantTestCase):
                           'Partnership A1',
                           'Result A11',
                           'Location 345, Location ABC',
-                          '03-Dec-2016',
+                          '08-Nov-2017',
+                          '14-Nov-2017',
                           '',
                           ''])
 
@@ -185,7 +192,8 @@ class TravelExports(APITenantTestCase):
                           'Partnership A2',
                           'Result A21',
                           'Location 111',
-                          '04-Dec-2016',
+                          '08-Nov-2017',
+                          '14-Nov-2017',
                           'YES',
                           'Lenox Lewis'])
 
@@ -200,7 +208,8 @@ class TravelExports(APITenantTestCase):
                           'Partnership B3',
                           '',
                           'Location ABC',
-                          '03-Dec-2016',
+                          '08-Nov-2017',
+                          '14-Nov-2017',
                           '',
                           ''])
 
@@ -215,7 +224,8 @@ class TravelExports(APITenantTestCase):
                           'Partnership C1',
                           '',
                           'Location 111, Location 345',
-                          '06-Dec-2016',
+                          '08-Nov-2017',
+                          '14-Nov-2017',
                           '',
                           ''])
 
