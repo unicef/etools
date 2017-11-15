@@ -65,6 +65,7 @@ class UsersView(ListAPIView):
     """
     model = UserProfile
     serializer_class = SimpleProfileSerializer
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         user = self.request.user
@@ -131,18 +132,19 @@ class UsersDetailAPIView(RetrieveAPIView):
     """
     queryset = UserProfile.objects.all()
     serializer_class = SimpleProfileSerializer
+    permission_classes = (IsAuthenticated, )
 
     def retrieve(self, request, pk=None):
         """
         Returns a UserProfile object for this PK
         """
-        data = None
         try:
             queryset = self.queryset.get(user__id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
         except UserProfile.DoesNotExist:
             data = {}
+        else:
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
         return Response(
             data,
             status=status.HTTP_200_OK
