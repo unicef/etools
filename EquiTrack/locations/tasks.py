@@ -5,12 +5,12 @@ from django.db import IntegrityError
 from carto.auth import APIKeyAuthClient
 from carto.exceptions import CartoException
 from carto.sql import SQLClient
+from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
+from locations.models import CartoDBTable, Location
 
-from locations.models import Location
-
-logger = logging.getLogger(__name__)
+logger = get_task_logger(__name__)
 
 
 def create_location(pcode, carto_table, parent, parent_instance,
@@ -86,7 +86,9 @@ def create_location(pcode, carto_table, parent, parent_instance,
 
 
 @app.task
-def update_sites_from_cartodb(carto_table):
+def update_sites_from_cartodb(carto_table_pk):
+
+    carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
 
     auth_client = APIKeyAuthClient(api_key=carto_table.api_key,
                                    base_url="https://{}.carto.com/".format(carto_table.domain))
