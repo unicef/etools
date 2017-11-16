@@ -78,7 +78,7 @@ class TestProfileAdmin(FastTenantTestCase):
     def test_save_model_supervisor(self):
         """If supervisor provided, then set supervisor"""
         mock_form = Mock()
-        mock_form.data={"supervisor": self.superuser.pk}
+        mock_form.data = {"supervisor": self.superuser.pk}
         obj = ProfileFactory()
         self.assertIsNone(obj.supervisor)
         self.admin.save_model(
@@ -92,7 +92,7 @@ class TestProfileAdmin(FastTenantTestCase):
     def test_save_model_oic(self):
         """If OIC provided, then set OIC"""
         mock_form = Mock()
-        mock_form.data={"oic": self.superuser.pk}
+        mock_form.data = {"oic": self.superuser.pk}
         obj = ProfileFactory()
         self.assertIsNone(obj.oic)
         self.admin.save_model(
