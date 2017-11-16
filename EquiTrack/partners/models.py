@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 import datetime
+import decimal
 import json
 
 from django.conf import settings
@@ -1897,9 +1898,11 @@ class InterventionBudget(TimeStampedModel):
         super(InterventionBudget, self).save(**kwargs)
 
     def __str__(self):
+        # self.total is None if object hasn't been saved yet
+        total = self.total if self.total else decimal.Decimal('0.00')
         return '{}: {:.2f}'.format(
             self.intervention,
-            self.total
+            total
         )
 
 
