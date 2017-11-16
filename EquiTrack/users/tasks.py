@@ -12,8 +12,8 @@ import requests
 
 from EquiTrack.celery import app
 from users.models import Country, Section, User, UserProfile
+from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
-from vision.vision_data_synchronizer import VisionException
 
 logger = logging.getLogger(__name__)
 
