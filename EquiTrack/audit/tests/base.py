@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import os
 import tempfile
 from datetime import timedelta
@@ -55,13 +57,13 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
         self.engagement.date_of_comments_by_unicef = self.engagement.date_of_draft_report_to_unicef + timedelta(days=1)
         self.engagement.save()
 
-    def _add_attachment(self, code):
+    def _add_attachment(self, code, name='audit'):
         with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=".trash",
                                          dir=settings.MEDIA_ROOT) as temporary_file:
             try:
                 temporary_file.write(b'\x04\x02')
                 temporary_file.seek(0)
-                file_type, created = FileType.objects.get_or_create(name='audit', code='audit')
+                file_type, created = FileType.objects.get_or_create(name=name, label='audit', code='audit')
 
                 attachment = Attachment(
                     content_object=self.engagement,
@@ -81,7 +83,7 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
 
     def _init_filled_engagement(self):
         self._fill_date_fields()
-        self._add_attachment('audit_report')
+        self._add_attachment('audit_report', name='report')
 
     def _init_submitted_engagement(self):
         self._init_filled_engagement()
