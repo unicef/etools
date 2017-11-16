@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.core.management import BaseCommand
 from django.db import connection
 from django.utils import six
@@ -35,10 +37,12 @@ class Command(BaseCommand):
         'riskcategory.*',
         'profile.*',
         'user.*',
+        'specificprocedure.*',
     ]
 
     engagement_overview_block = [
         'engagement.agreement',
+        'engagement.po_item',
         'engagement.related_agreement',
         'engagement.partner_contacted_at',
         'engagement.engagement_type',
@@ -46,6 +50,8 @@ class Command(BaseCommand):
         'engagement.end_date',
         'engagement.total_value',
         'engagement.active_pd',
+        'engagement.joint_audit',
+        'engagement.shared_ip_with',
     ]
 
     partner_block = [
@@ -132,6 +138,10 @@ class Command(BaseCommand):
             'engagement.related_agreement',
             'purchaseorder.contract_end_date',
         ])
+        self.add_permissions(self.new_engagement, self.focal_point, 'edit', [
+            'engagement.specific_procedures',
+            'specificprocedure.description',
+        ])
 
         # created: auditor can edit, everybody else can view, focal point can cancel
         self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
@@ -152,6 +162,13 @@ class Command(BaseCommand):
             'engagementstaffmember.*',
             'profile.*',
             'user.*',
+            'specificprocedure.*',
+        ])
+
+        self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
+            'specialaudit.specific_procedures',
+            'specificprocedure.finding',
+            'specialaudit.other_recommendations',
         ])
 
         self.add_permissions(self.partner_contacted, self.all_unicef_users, 'view', self.everything)

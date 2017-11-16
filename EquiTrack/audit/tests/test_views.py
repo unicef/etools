@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import random
 
 from rest_framework import status
@@ -264,6 +266,7 @@ class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenant
             'partner_contacted_at': self.engagement.partner_contacted_at,
             'total_value': self.engagement.total_value,
             'agreement': self.engagement.agreement_id,
+            'po_item': self.engagement.agreement.items.first().id,
             'partner': self.engagement.partner_id,
             'engagement_type': self.engagement.engagement_type,
             'authorized_officers': self.engagement.authorized_officers.values_list('id', flat=True),
@@ -350,9 +353,9 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenant
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            sorted(map(lambda pd: pd['id'], response.data['active_pd'])),
-            sorted(map(lambda i: i.id, partner.agreements.first().interventions.all()))
+        self.assertItemsEqual(
+            map(lambda pd: pd['id'], response.data['active_pd']),
+            map(lambda i: i.id, partner.agreements.first().interventions.all())
         )
 
     def test_government_partner_changed(self):
@@ -375,9 +378,9 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            sorted(map(lambda x: x['id'], response.data['results'])),
-            sorted(map(lambda x: x.id, expected_firms))
+        self.assertItemsEqual(
+            map(lambda x: x['id'], response.data['results']),
+            map(lambda x: x.id, expected_firms)
         )
 
     def test_unicef_list_view(self):
@@ -515,7 +518,7 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, APITena
         self._test_pdf_view(None, status.HTTP_403_FORBIDDEN)
 
     def test_common_user(self):
-        self._test_pdf_view(self.usual_user, status.HTTP_403_FORBIDDEN)
+        self._test_pdf_view(self.usual_user, status.HTTP_404_NOT_FOUND)
 
     def test_unicef_user(self):
         self._test_pdf_view(self.unicef_user)

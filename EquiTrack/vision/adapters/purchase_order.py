@@ -1,9 +1,10 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from collections import OrderedDict
 
-from audit.models import AuditorFirm, PurchaseOrder
+from audit.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
 from funds.models import Donor, Grant
-
-from .manual import ManualVisionSynchronizer
+from vision.adapters.manual import ManualVisionSynchronizer
 
 
 class POSynchronizer(ManualVisionSynchronizer):
@@ -20,11 +21,14 @@ class POSynchronizer(ManualVisionSynchronizer):
     )
 
     MAPPING = {
-        'order': {
+        'purchase_order': {
             "order_number": "PO_NUMBER",
-            "item_number": "PO_ITEM",
             "contract_start_date": "PO_DATE",
             "auditor_firm": "VENDOR_CODE",
+        },
+        'order_item': {
+            "number": "PO_ITEM",
+            "purchase_order": "PO_NUMBER",
         },
         'auditor_firm': {
             "vendor_number": "VENDOR_CODE",
@@ -44,7 +48,8 @@ class POSynchronizer(ManualVisionSynchronizer):
         'donor': Donor,
         'grant': Grant,
         'auditor_firm': AuditorFirm,
-        'order': PurchaseOrder,
+        'purchase_order': PurchaseOrder,
+        'order_item': PurchaseOrderItem,
     })
     DATE_FIELDS = ['EXPIRY_DATE', 'PO_DATE', ]
 
