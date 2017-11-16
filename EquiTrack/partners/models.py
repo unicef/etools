@@ -1441,7 +1441,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def reference_number(self):
-        if self.document_type != self.SSFA:
+        if self.document_type != Intervention.SSFA:
             number = '{agreement}/{type}{year}{id}'.format(
                 agreement=self.agreement.base_number,
                 type=self.document_type,
