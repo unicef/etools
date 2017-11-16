@@ -4,24 +4,29 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
+from EquiTrack.serializers import SnapshotModelSerializer
+from funds.models import FundsCommitmentItem, FundsReservationHeader
 from funds.serializers import FRsSerializer
+from locations.serializers import LocationSerializer, LocationLightSerializer
 from partners.permissions import InterventionPermissions
-from reports.serializers.v1 import SectorSerializer
-from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
-from locations.models import Location
-
 from partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
+    # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
     InterventionResultLink,
+    InterventionReportingPeriod,
 )
 from reports.models import LowerResult
-from locations.serializers import LocationLightSerializer
-from funds.models import FundsCommitmentItem, FundsReservationHeader
+from reports.serializers.v1 import SectorSerializer
+from reports.serializers.v2 import (
+    IndicatorSerializer,
+    LowerResultCUSerializer,
+    LowerResultSerializer,
+)
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):
@@ -89,7 +94,10 @@ class InterventionListSerializer(serializers.ModelSerializer):
     total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    sectors = serializers.SerializerMethodField()
+    section_names = serializers.SerializerMethodField()
+    locations = serializers.SerializerMethodField()
+    location_names = serializers.SerializerMethodField()
+    cluster_names = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
@@ -113,16 +121,26 @@ class InterventionListSerializer(serializers.ModelSerializer):
     def get_cp_outputs(self, obj):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
-    def get_sectors(self, obj):
-        return [l.sector.name for l in obj.sector_locations.all()]
+    def get_section_names(self, obj):
+        return [l.name for l in obj.sections.all()]
+
+    def get_locations(self, obj):
+        return [l.id for l in obj.intervention_locations]
+
+    def get_location_names(self, obj):
+        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
+
+    def get_cluster_names(self, obj):
+        return [c for c in obj.intervention_clusters]
 
     class Meta:
         model = Intervention
         fields = (
             'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end', 'frs_total_frs_amt',
             'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
-            'sectors', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt', 'frs_total_outstanding_amt',
-            'offices', 'actual_amount', 'offices_names', 'total_unicef_budget', 'total_budget', 'metadata',
+            'sections', 'section_names', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt',
+            'frs_total_outstanding_amt', 'offices', 'actual_amount', 'offices_names', 'total_unicef_budget',
+            'total_budget', 'metadata', 'locations', 'location_names', 'cluster_names'
         )
 
 
@@ -136,6 +154,7 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         )
 
 
+# TODO intervention sector locations cleanup
 class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
     locations = LocationLightSerializer(many=True)
     sector = SectorSerializer()
@@ -147,6 +166,7 @@ class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
         )
 
 
+# TODO intervention sector locations cleanup
 class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionSectorLocationLink
@@ -167,13 +187,34 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
     # cp_output = ResultLightSerializer()
+    # ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
+    cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    ram_indicator_names = serializers.SerializerMethodField(read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)
+
+    def get_ram_indicator_names(self, obj):
+        return [i.name for i in obj.ram_indicators.all()]
 
     class Meta:
         model = InterventionResultLink
         fields = (
-            'id', 'intervention', 'cp_output', 'ram_indicators', 'll_results'
+            'id', 'intervention',
+            'cp_output', 'cp_output_name',
+            'ram_indicators', 'ram_indicator_names',
+            'll_results'
         )
+
+
+class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
+    cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    ram_indicator_names = serializers.SerializerMethodField(read_only=True)
+
+    def get_ram_indicator_names(self, obj):
+        return [i.name for i in obj.ram_indicators.all()]
+
+    class Meta:
+        model = InterventionResultLink
+        fields = "__all__"
 
 
 class InterventionResultCUSerializer(serializers.ModelSerializer):
@@ -224,6 +265,91 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
         return super(InterventionResultCUSerializer, self).update(instance, validated_data)
 
 
+class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReportingPeriod
+        fields = ('id', 'intervention', 'start_date', 'end_date', 'due_date')
+
+    def validate_intervention(self, value):
+        """
+        Changing the intervention is not allowed. Users should delete this
+        reporting period and create a new one associated with the desired
+        intervention.
+        """
+        if self.instance and value != self.instance.intervention:
+            raise ValidationError(
+                'Cannot change the intervention that this reporting period is associated with.')
+        return value
+
+    def check_date_order(self, start_date, end_date, due_date):
+        """
+        Validate that start_date <= end_date <= due_date.
+        """
+        if start_date > end_date:
+            raise ValidationError('end_date must be on or after start_date')
+        if end_date > due_date:
+            raise ValidationError('due_date must be on or after end_date')
+
+    def check_for_overlapping_periods(self, intervention_pk, start_date, end_date):
+        """
+        Validate that new instance doesn't overlap existing periods for this intervention.
+        """
+        periods = InterventionReportingPeriod.objects.filter(intervention=intervention_pk)
+        if self.instance:
+            # exclude ourself
+            periods = periods.exclude(pk=self.instance.pk)
+        # How to identify overlapping periods: https://stackoverflow.com/a/325939/347942
+        if periods.filter(start_date__lt=end_date).filter(end_date__gt=start_date).exists():
+            raise ValidationError('This period overlaps an existing reporting period.')
+
+    def validate(self, data):
+        """
+        Validate that start_date <= end_date <= due_date.
+        Validate that new instance doesn't overlap existing periods.
+        """
+        # If we're creating, we'll have all these values in ``data``. If we're
+        # patching, we might not, so get missing values from the existing DB instance
+        start_date = data.get('start_date') or self.instance.start_date
+        end_date = data.get('end_date') or self.instance.end_date
+        due_date = data.get('due_date') or self.instance.due_date
+        intervention_pk = data.get('intervention') or self.instance.intervention.pk
+
+        self.check_date_order(start_date, end_date, due_date)
+        self.check_for_overlapping_periods(intervention_pk, start_date, end_date)
+        return data
+
+
+class InterventionResultSerializer(serializers.ModelSerializer):
+    humanitarian_tag = serializers.SerializerMethodField()
+    hidden = serializers.SerializerMethodField()
+    ram = serializers.SerializerMethodField()
+    ram_indicators = IndicatorSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = InterventionResultLink
+        fields = "__all__"
+
+    def get_humanitarian_tag(self, obj):
+        return "Yes" if obj.cp_output.humanitarian_tag else "No"
+
+    def get_hidden(self, obj):
+        return "Yes" if obj.cp_output.hidden else "No"
+
+    def get_ram(self, obj):
+        return "Yes" if obj.cp_output.ram else "No"
+
+
+class InterventionIndicatorSerializer(serializers.ModelSerializer):
+    ram_indicators = IndicatorSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = InterventionResultLink
+        fields = (
+            "intervention",
+            "ram_indicators",
+        )
+
+
 class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
     fc_type = serializers.CharField(source='fund_commitment.fc_type')
 
@@ -239,7 +365,7 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
+class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
 
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
@@ -248,7 +374,6 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
-    sector_locations = InterventionSectorLocationCUSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
     frs = serializers.PrimaryKeyRelatedField(many=True,
                                              queryset=FundsReservationHeader.objects.prefetch_related('intervention')
@@ -295,18 +420,29 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
-    sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     submitted_to_prc = serializers.ReadOnlyField()
     frs_details = FRsSerializer(source='frs', read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
+    locations = serializers.SerializerMethodField()
+    location_names = serializers.SerializerMethodField()
+    cluster_names = serializers.SerializerMethodField()
 
     def get_permissions(self, obj):
         user = self.context['request'].user
         ps = Intervention.permission_structure()
         permissions = InterventionPermissions(user=user, instance=self.instance, permission_structure=ps)
         return permissions.get_permissions()
+
+    def get_locations(self, obj):
+        return [l.id for l in obj.intervention_locations]
+
+    def get_location_names(self, obj):
+        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
+
+    def get_cluster_names(self, obj):
+        return [c for c in obj.intervention_clusters]
 
     class Meta:
         model = Intervention
@@ -315,131 +451,11 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "signed_pd_document_file", "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "submitted_to_prc", "signed_pd_document", "signed_by_unicef_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
-            "offices", "planned_visits", "population_focus", "sector_locations", "signed_by_partner_date",
-            "created", "modified", "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd',
-            "amendments", "planned_visits", "attachments", 'permissions', 'partner_id',
+            "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
+            "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
+            "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
+            "locations", "location_names", "cluster_names"
         )
-
-
-class InterventionExportSerializer(serializers.ModelSerializer):
-
-    # TODO CP Outputs, RAM Indicators, Fund Commitment(s), Supply Plan, Distribution Plan, URL
-
-    partner_name = serializers.CharField(source='agreement.partner.name')
-    partner_type = serializers.CharField(source='agreement.partner.partner_type')
-    agreement_name = serializers.CharField(source='agreement.agreement_number')
-    country_programme = serializers.CharField(source='agreement.country_programme.name')
-    offices = serializers.SerializerMethodField()
-    sectors = serializers.SerializerMethodField()
-    locations = serializers.SerializerMethodField()
-    fr_numbers = serializers.SerializerMethodField()
-    planned_budget_local = serializers.DecimalField(
-        source='total_unicef_cash_local',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2)
-    unicef_budget = serializers.DecimalField(
-        source='total_unicef_budget',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2)
-    cso_contribution = serializers.DecimalField(
-        source='total_partner_contribution',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2)
-    partner_contribution_local = serializers.DecimalField(
-        source='total_partner_contribution_local',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2)
-    # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
-    unicef_signatory = serializers.SerializerMethodField()
-    partner_focal_points = serializers.SerializerMethodField()
-    unicef_focal_points = serializers.SerializerMethodField()
-    partner_authorized_officer_signatory = serializers.SerializerMethodField()
-    cp_outputs = serializers.SerializerMethodField()
-    ram_indicators = serializers.SerializerMethodField()
-    planned_visits = serializers.SerializerMethodField()
-    spot_checks = serializers.SerializerMethodField()
-    audit = serializers.SerializerMethodField()
-    url = serializers.SerializerMethodField()
-    days_from_submission_to_signed = serializers.SerializerMethodField()
-    days_from_review_to_signed = serializers.SerializerMethodField()
-    migration_error_msg = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Intervention
-        fields = (
-            "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
-            "title", "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
-            "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
-            "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
-            "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
-            "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
-            "migration_error_msg",
-            "signed_by_partner_date", "url", "days_from_submission_to_signed", "days_from_review_to_signed"
-        )
-
-    def get_unicef_signatory(self, obj):
-        return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
-
-    def get_offices(self, obj):
-        return ', '.join([o.name for o in obj.offices.all()])
-
-    def get_sectors(self, obj):
-        return ', '.join([l.sector.name for l in obj.sector_locations.all()])
-
-    def get_locations(self, obj):
-        ll = Location.objects.filter(intervention_sector_locations__intervention=obj.id).order_by('name')
-        return ', '.join([l.name for l in ll.all()])
-
-    def get_partner_authorized_officer_signatory(self, obj):
-        if obj.partner_authorized_officer_signatory:
-            return obj.partner_authorized_officer_signatory.get_full_name()
-        else:
-            return ''
-
-    def get_partner_focal_points(self, obj):
-        return ', '.join([pf.get_full_name() for pf in obj.partner_focal_points.all()])
-
-    def get_unicef_focal_points(self, obj):
-        return ', '.join([pf.get_full_name() for pf in obj.unicef_focal_points.all()])
-
-    def get_cp_outputs(self, obj):
-        return ', '.join([rs.cp_output.name for rs in obj.result_links.all()])
-
-    def get_ram_indicators(self, obj):
-        ram_indicators = []
-        for rs in obj.result_links.all():
-            if rs.ram_indicators:
-                for ram in rs.ram_indicators.all():
-                    ram_indicators.append("[{}] {}, ".format(rs.cp_output.name, ram.name))
-        return ' '.join([ram for ram in ram_indicators])
-
-    def get_planned_visits(self, obj):
-        return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_spot_checks(self, obj):
-        return ', '.join(['{} ({})'.format(pv.spot_checks, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_audit(self, obj):
-        return ', '.join(['{} ({})'.format(pv.audit, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_url(self, obj):
-        return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
-
-    def get_days_from_submission_to_signed(self, obj):
-        return obj.days_from_submission_to_signed
-
-    def get_days_from_review_to_signed(self, obj):
-        return obj.days_from_review_to_signed
-
-    def get_fr_numbers(self, obj):
-        return ', '.join([x.fr_number for x in obj.frs.all()]) if obj.frs.all().count() > 0 else ""
-
-    def get_migration_error_msg(self, obj):
-        return ', '.join([a for a in obj.metadata['error_msg']]) if 'error_msg' in obj.metadata.keys() else ''
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
@@ -451,7 +467,7 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    sectors = serializers.SerializerMethodField()
+    section_names = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
@@ -475,38 +491,30 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     def get_cp_outputs(self, obj):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
-    def get_sectors(self, obj):
-        return [l.sector.name for l in obj.sector_locations.all()]
+    def get_section_names(self, obj):
+        return [l.name for l in obj.sections.all()]
 
     class Meta:
         model = Intervention
         fields = (
             'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'unicef_cash', 'cso_contribution',
-            'total_unicef_budget',
-            'total_budget', 'sectors', 'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
+            'total_unicef_budget', 'total_budget', 'sections', 'section_names',
+            'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
             'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount'
-        )
-
-
-class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer):
-    sector = SectorSerializer()
-
-    class Meta:
-        model = InterventionSectorLocationLink
-        fields = (
-            'id', 'sector', 'locations'
         )
 
 
 class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
-    sector_locations = InterventionLocationSectorMapNestedSerializer(many=True, read_only=True, required=False)
+    locations = serializers.SerializerMethodField()
+
+    def get_locations(self, obj):
+        return [LocationSerializer().to_representation(l) for l in obj.intervention_locations]
 
     class Meta:
         model = Intervention
         fields = (
             "id", "partner_id", "partner_name", "agreement", "document_type", "number", "title", "status",
-            "start", "end",
-            "offices", "sector_locations",
+            "start", "end", "offices", "sections", "locations"
         )

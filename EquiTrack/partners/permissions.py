@@ -6,6 +6,20 @@ from EquiTrack.utils import HashableDict
 from EquiTrack.validation_mixins import check_rigid_related
 from utils.common.utils import get_all_field_names
 
+# READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
+# Initially, this is only being used for PRP-related endpoints.
+READ_ONLY_API_GROUP_NAME = 'Read-Only API'
+
+
+def _is_user_in_groups(user, group_names):
+    '''Utility function; returns True if user is in ANY of the groups in the group_names list, False if the user
+    is in none of them. Note that group_names should be a tuple or list, not a single string.
+    '''
+    if isinstance(group_names, basestring):
+        # Anticipate common programming oversight.
+        raise ValueError('group_names parameter must be a tuple or list, not a string')
+    return user.groups.filter(name__in=group_names).exists()
+
 
 class PMPPermissions(object):
     actions_default_permissions = {
@@ -132,14 +146,38 @@ class AgreementPermissions(PMPPermissions):
         }
 
 
-class PartneshipManagerPermission(permissions.BasePermission):
+class PartnershipManagerPermission(permissions.BasePermission):
+    '''Applies general and object-based permissions.
+
+    - For list views --
+      - user must be staff or in 'Partnership Manager' group
+
+    - For create views --
+      - user must be in 'Partnership Manager' group
+
+    - For retrieve views --
+      - user must be (staff or in 'Partnership Manager' group) OR
+                     (staff or listed as a partner staff member on the object)
+
+    - For update/delete views --
+      - user must be (in 'Partnership Manager' group) OR
+                     (listed as a partner staff member on the object)
+    '''
     message = 'Accessing this item is not allowed.'
 
-    def _has_access_permissions(self, user, object):
-        if user.is_staff or \
-                user.profile.partner_staff_member in \
-                object.partner.staff_members.values_list('id', flat=True):
-            return True
+    def _has_access_permissions(self, user, obj):
+        '''True if --
+              - user is staff OR
+              - user is 'Partnership Manager' group member OR
+              - user is listed as a partner staff member on the object, assuming the object has a partner attribute
+        '''
+        has_access = user.is_staff or _is_user_in_groups(user, ['Partnership Manager'])
+
+        has_access = has_access or \
+            (hasattr(obj, 'partner') and
+             user.profile.partner_staff_member in obj.partner.staff_members.values_list('id', flat=True))
+
+        return has_access
 
     def has_permission(self, request, view):
         """
@@ -147,9 +185,9 @@ class PartneshipManagerPermission(permissions.BasePermission):
         """
         if request.method in permissions.SAFE_METHODS:
             # Check permissions for read-only request
-            return request.user.is_staff
+            return request.user.is_staff or _is_user_in_groups(request.user, ['Partnership Manager'])
         else:
-            return request.user.groups.filter(name='Partnership Manager').exists()
+            return _is_user_in_groups(request.user, ['Partnership Manager'])
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -158,10 +196,10 @@ class PartneshipManagerPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                request.user.groups.filter(name='Partnership Manager').exists()
+                _is_user_in_groups(request.user, ['Partnership Manager'])
 
 
-class PartneshipManagerRepPermission(permissions.BasePermission):
+class PartnershipManagerRepPermission(permissions.BasePermission):
     message = 'Accessing this item is not allowed.'
 
     def _has_access_permissions(self, user, object):
@@ -177,5 +215,27 @@ class PartneshipManagerRepPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                request.user.groups.filter(name__in=['Partnership Manager', 'Senior Management Team',
-                                                     'Representative Office']).exists()
+                _is_user_in_groups(request.user, ['Partnership Manager', 'Senior Management Team',
+                                                  'Representative Office'])
+
+
+class ListCreateAPIMixedPermission(permissions.BasePermission):
+    '''Permission class for ListCreate views that want to allow read-only access to some groups and read-write
+    to others.
+
+    GET users must be either (a) staff or (b) in the Limited API group.
+
+    POST users must be staff.
+    '''
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            if request.user.is_authenticated():
+                if request.user.is_staff or _is_user_in_groups(request.user, [READ_ONLY_API_GROUP_NAME]):
+                    return True
+            return False
+        elif request.method == 'POST':
+            # user must have have admin access
+            return request.user.is_authenticated() and request.user.is_staff
+        else:
+            # This class shouldn't see methods other than GET and POST, but regardless the answer is 'no you may not'.
+            return False

@@ -1,13 +1,17 @@
+from __future__ import unicode_literals
 from datetime import date
 
-from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
+from django.utils.translation import ugettext as _
 
+from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
+
+from locations.models import Location
 
 
 class Quarter(models.Model):
@@ -131,7 +135,7 @@ class ResultType(models.Model):
 
 
 @python_2_unicode_compatible
-class Sector(models.Model):
+class Sector(TimeStampedModel):
     """
     Represents a sector
     """
@@ -187,33 +191,103 @@ class Result(MPTTModel):
     Relates to :model:`reports.Sector`
     Relates to :model:`reports.ResultType`
     """
-    country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
-    result_type = models.ForeignKey(ResultType)
-    sector = models.ForeignKey(Sector, null=True, blank=True)
-    name = models.TextField()
-    code = models.CharField(max_length=50, null=True, blank=True)
-    from_date = models.DateField(null=True, blank=True)
-    to_date = models.DateField(null=True, blank=True)
+    country_programme = models.ForeignKey(
+        CountryProgramme,
+        verbose_name=_("Country Programme"),
+        null=True,
+        blank=True,
+    )
+    result_type = models.ForeignKey(ResultType, verbose_name=_("Result Type"))
+    sector = models.ForeignKey(
+        Sector,
+        verbose_name=_("Section"),
+        null=True,
+        blank=True,
+    )
+    name = models.TextField(verbose_name=_("Name"))
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    from_date = models.DateField(
+        verbose_name=_("From Date"),
+        null=True,
+        blank=True,
+    )
+    to_date = models.DateField(
+        verbose_name=_("To Date"),
+        null=True,
+        blank=True,
+    )
     parent = TreeForeignKey(
         'self',
-        null=True, blank=True,
+        verbose_name=_("Parent"),
+        null=True,
+        blank=True,
         related_name='children',
         db_index=True
     )
 
     # activity level attributes
-    humanitarian_tag = models.BooleanField(default=False)
-    wbs = models.CharField(max_length=50, null=True, blank=True)
-    vision_id = models.CharField(max_length=10, null=True, blank=True)
-    gic_code = models.CharField(max_length=8, null=True, blank=True)
-    gic_name = models.CharField(max_length=255, null=True, blank=True)
-    sic_code = models.CharField(max_length=8, null=True, blank=True)
-    sic_name = models.CharField(max_length=255, null=True, blank=True)
-    activity_focus_code = models.CharField(max_length=8, null=True, blank=True)
-    activity_focus_name = models.CharField(max_length=255, null=True, blank=True)
+    humanitarian_tag = models.BooleanField(
+        verbose_name=_("Humanitarian Tag"),
+        default=False,
+    )
+    wbs = models.CharField(
+        verbose_name=_("WBS"),
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    vision_id = models.CharField(
+        verbose_name=_("VISION ID"),
+        max_length=10,
+        null=True,
+        blank=True,
+    )
+    gic_code = models.CharField(
+        verbose_name=_("GIC Code"),
+        max_length=8,
+        null=True,
+        blank=True,
+    )
+    gic_name = models.CharField(
+        verbose_name=_("GIC Name"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    sic_code = models.CharField(
+        verbose_name=_("SIC Code"),
+        max_length=8,
+        null=True,
+        blank=True,
+    )
+    sic_name = models.CharField(
+        verbose_name=_("SIC Name"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    activity_focus_code = models.CharField(
+        verbose_name=_("Activity Focus Code"),
+        max_length=8,
+        null=True,
+        blank=True,
+    )
+    activity_focus_name = models.CharField(
+        verbose_name=_("Activity Focus Code"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
 
-    hidden = models.BooleanField(default=False)
-    ram = models.BooleanField(default=False)
+    hidden = models.BooleanField(verbose_name=_("Hidden"), default=False)
+    ram = models.BooleanField(verbose_name=_("RAM"), default=False)
+    created = AutoCreatedField(_('created'))
+    modified = AutoLastModifiedField(_('modified'))
 
     objects = ResultManager()
     outputs = OutputManager()
@@ -278,12 +352,15 @@ class LowerResult(TimeStampedModel):
     # Lower result is always an output
 
     # link to intermediary model to intervention and cp ouptut
-    result_link = models.ForeignKey('partners.InterventionResultLink', related_name='ll_results', null=True)
+    result_link = models.ForeignKey(
+        'partners.InterventionResultLink',
+        related_name='ll_results',
+    )
 
-    name = models.CharField(max_length=500)
+    name = models.CharField(verbose_name=_("Name"), max_length=500)
 
     # automatically assigned unless assigned manually in the UI (Lower level WBS - like code)
-    code = models.CharField(max_length=50)
+    code = models.CharField(verbose_name=_("Code"), max_length=50)
 
     def __str__(self):
         return u'{}: {}'.format(
@@ -297,9 +374,14 @@ class LowerResult(TimeStampedModel):
 
     def save(self, **kwargs):
         if not self.code:
+            try:
+                latest_ll_id = self.result_link.ll_results.latest('id').id
+            except LowerResult.DoesNotExist:
+                latest_ll_id = 0
+
             self.code = '{}-{}'.format(
                 self.result_link.intervention.id,
-                self.result_link.ll_results.count() + 1
+                latest_ll_id + 1
             )
         return super(LowerResult, self).save(**kwargs)
 
@@ -319,29 +401,99 @@ class Unit(models.Model):
 
 
 @python_2_unicode_compatible
-class IndicatorBlueprint(models.Model):
-    NUMBER = u'number'
-    PERCENTAGE = u'percentage'
-    YESNO = u'yesno'
+class IndicatorBlueprint(TimeStampedModel):
+    """
+    IndicatorBlueprint module is a pattern for indicator
+    (here we setup basic parameter).
+    """
+    NUMBER = 'number'
+    PERCENTAGE = 'percentage'
+    LIKERT = 'likert'
+    YESNO = 'yesno'
     UNIT_CHOICES = (
         (NUMBER, NUMBER),
         (PERCENTAGE, PERCENTAGE),
-        (YESNO, YESNO)
+        # (LIKERT, LIKERT),
+        # (YESNO, YESNO),
     )
-    name = models.CharField(max_length=1024)
-    unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default=NUMBER)
-    description = models.CharField(max_length=3072, null=True, blank=True)
-    code = models.CharField(max_length=50, null=True, blank=True, unique=True)
-    subdomain = models.CharField(max_length=255, null=True, blank=True)
-    disaggregatable = models.BooleanField(default=False)
 
-    # TODO: add:
-    # siblings (similar inidcators to this indicator)
-    # other_representation (exact copies with different names for some random reason)
-    # children (indicators that aggregate up to this or contribute to this indicator through a formula)
-    # aggregation_types (potential aggregation types: geographic, time-periods ?)
-    # calculation_formula (how the children totals add up to this indicator's total value)
-    # aggregation_formulas (how the total value is aggregated from the reports if possible)
+    SUM = 'sum'
+    MAX = 'max'
+    AVG = 'avg'
+    RATIO = 'ratio'
+
+    QUANTITY_CALC_CHOICES = (
+        (SUM, SUM),
+        (MAX, MAX),
+        (AVG, AVG)
+    )
+
+    RATIO_CALC_CHOICES = (
+        (PERCENTAGE, PERCENTAGE),
+        (RATIO, RATIO)
+    )
+
+    CALC_CHOICES = QUANTITY_CALC_CHOICES + RATIO_CALC_CHOICES
+
+    QUANTITY_DISPLAY_TYPE_CHOICES = (
+        (NUMBER, NUMBER),
+    )
+
+    RATIO_DISPLAY_TYPE_CHOICES = (
+        (PERCENTAGE, PERCENTAGE),
+        (RATIO, RATIO)
+    )
+
+    DISPLAY_TYPE_CHOICES = QUANTITY_DISPLAY_TYPE_CHOICES + RATIO_DISPLAY_TYPE_CHOICES
+
+    title = models.CharField(verbose_name=_("Title"), max_length=1024)
+    unit = models.CharField(
+        verbose_name=_("Unit"),
+        max_length=10,
+        choices=UNIT_CHOICES,
+        default=NUMBER,
+    )
+    description = models.CharField(
+        verbose_name=_("Description"),
+        max_length=3072,
+        null=True,
+        blank=True,
+    )
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        null=True,
+        blank=True,
+        unique=True,
+    )
+    subdomain = models.CharField(
+        verbose_name=_("Subdomain"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    disaggregatable = models.BooleanField(
+        verbose_name=_("Disaggregatable"),
+        default=False,
+    )
+    calculation_formula_across_periods = models.CharField(
+        verbose_name=_("Calculation Formula across Periods"),
+        max_length=10,
+        choices=CALC_CHOICES,
+        default=SUM,
+    )
+    calculation_formula_across_locations = models.CharField(
+        verbose_name=_("Calculation Formula across Locations"),
+        max_length=10,
+        choices=CALC_CHOICES,
+        default=SUM,
+    )
+    display_type = models.CharField(
+        verbose_name=_("Display Type"),
+        max_length=10,
+        choices=DISPLAY_TYPE_CHOICES,
+        default=NUMBER,
+    )
 
     def save(self, *args, **kwargs):
         # Prevent from saving empty strings as code because of the unique together constraint
@@ -349,40 +501,154 @@ class IndicatorBlueprint(models.Model):
             self.code = None
         super(IndicatorBlueprint, self).save(*args, **kwargs)
 
+    class Meta:
+        ordering = ['-id']
+
+    def __str__(self):
+        return self.title
+
+
+@python_2_unicode_compatible
+class Disaggregation(TimeStampedModel):
+    """
+    Disaggregation model. For example: <Gender, Age>
+
+    As an example, the Disaggregation could be <Age>, and it would have multiple "categories"
+    such as: <1, 1-5, 5-18, 18-64, 65+. Each of those categories would be a DisaggregationValue.
+    """
+    name = models.CharField(max_length=255, unique=True)
+    active = models.BooleanField(default=False)
+
     def __str__(self):
         return self.name
 
 
-class AppliedIndicator(models.Model):
+@python_2_unicode_compatible
+class DisaggregationValue(TimeStampedModel):
+    """
+    Disaggregation Value model. For example: Gender <Male, Female, Other>
 
-    indicator = models.ForeignKey(IndicatorBlueprint)
+    related models:
+        Disaggregation (ForeignKey): "disaggregation"
+    """
+    disaggregation = models.ForeignKey(Disaggregation, related_name="disaggregation_values")
+    value = models.CharField(max_length=15)
+    active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "Disaggregation Value {} -> {}".format(self.disaggregation, self.value)
+
+
+class AppliedIndicator(TimeStampedModel):
+    """
+       Applied Indicator: a contextualized Indicator (an indicator with a target,
+           targeted in specific locations, connected to a PD, etc)
+
+       related models:
+           reports.Disaggregation (ManyToMany): "disaggregation"
+           locations.Location (ManyToMany): "locations"
+
+       """
+
+    indicator = models.ForeignKey(
+        IndicatorBlueprint,
+        verbose_name=_("Indicator"),
+        null=True,
+        blank=True,
+    )
+
+    section = models.ForeignKey(
+        Sector,
+        verbose_name=_("Section"),
+        null=True,
+        blank=True,
+    )
+
+    cluster_indicator_id = models.PositiveIntegerField(
+        verbose_name=_("Cluster Indicator ID"),
+        blank=True,
+        null=True,
+    )
+    response_plan_name = models.CharField(
+        verbose_name=_("Response plan name"),
+        max_length=1024,
+        blank=True,
+        null=True,
+    )
+    cluster_name = models.CharField(
+        verbose_name=_("Cluster Name"),
+        max_length=512,
+        blank=True,
+        null=True,
+    )
+    cluster_indicator_title = models.CharField(
+        verbose_name=_("Cluster Indicator Title"),
+        max_length=1024,
+        blank=True,
+        null=True,
+    )
 
     # the result this indicator is contributing to.
-    lower_result = models.ForeignKey(LowerResult, related_name='applied_indicators')
+    lower_result = models.ForeignKey(
+        LowerResult,
+        verbose_name=_("PD Result"),
+        related_name='applied_indicators',
+    )
 
     # unique code for this indicator within the current context
     # eg: (1.1) result code 1 - indicator code 1
-    context_code = models.CharField(max_length=50, null=True, blank=True,
-                                    verbose_name="Code in current context")
-    target = models.CharField(max_length=255, null=True, blank=True)
-    baseline = models.CharField(max_length=255, null=True, blank=True)
-    assumptions = models.TextField(null=True, blank=True)
-    means_of_verification = models.CharField(max_length=255, null=True, blank=True)
+    context_code = models.CharField(
+        verbose_name=_("Code in current context"),
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    target = models.PositiveIntegerField(verbose_name=_("Target"), default=0)
+    baseline = models.PositiveIntegerField(
+        verbose_name=_("Baseline"),
+        null=True,
+        blank=True,
+    )
+    assumptions = models.TextField(
+        verbose_name=_("Assumptions"),
+        null=True,
+        blank=True,
+    )
+    means_of_verification = models.CharField(
+        verbose_name=_("Means of Verification"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
 
-    # current total, transactional and dynamically calculated
-    total = models.IntegerField(null=True, blank=True, default=0,
-                                verbose_name="Current Total")
+    # current total, transactional and dynamically calculated based on IndicatorReports
+    total = models.IntegerField(
+        verbose_name=_("Current Total"),
+        null=True,
+        blank=True,
+        default=0,
+    )
 
-    # variable disaggregations that may be present in the work plan
+    # variable disaggregation's that may be present in the work plan
     # this can only be present if the indicatorBlueprint has dissagregatable = true
-    disaggregation_logic = JSONField(null=True)
+    disaggregation = models.ManyToManyField(
+        Disaggregation,
+        verbose_name=_("Disaggregation Logic"),
+        related_name='applied_indicators',
+        blank=True,
+    )
+    locations = models.ManyToManyField(
+        Location,
+        verbose_name=_("Location"),
+        related_name='applied_indicators',
+    )
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
 
 
 @python_2_unicode_compatible
-class Indicator(models.Model):
+class Indicator(TimeStampedModel):
     """
     Represents an indicator
 
@@ -393,26 +659,79 @@ class Indicator(models.Model):
 
     sector = models.ForeignKey(
         Sector,
+        verbose_name=_("Section"),
         blank=True, null=True
     )
 
-    result = models.ForeignKey(Result, null=True, blank=True)
-    name = models.CharField(max_length=1024)
-    code = models.CharField(max_length=50, null=True, blank=True)
-    unit = models.ForeignKey(Unit, null=True, blank=True)
+    result = models.ForeignKey(
+        Result,
+        verbose_name=_("Result"),
+        null=True,
+        blank=True,
+    )
+    name = models.CharField(verbose_name=_("Name"), max_length=1024)
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name=_("Unit"),
+        null=True,
+        blank=True,
+    )
 
-    total = models.IntegerField(verbose_name='UNICEF Target', null=True, blank=True)
-    sector_total = models.IntegerField(verbose_name='Sector Target', null=True, blank=True)
-    current = models.IntegerField(null=True, blank=True, default=0)
-    sector_current = models.IntegerField(null=True, blank=True)
-    assumptions = models.TextField(null=True, blank=True)
+    total = models.IntegerField(
+        verbose_name=_('UNICEF Target'),
+        null=True,
+        blank=True,
+    )
+    sector_total = models.IntegerField(
+        verbose_name=_('Sector Target'),
+        null=True,
+        blank=True,
+    )
+    current = models.IntegerField(
+        verbose_name=_("Current"),
+        null=True,
+        blank=True,
+        default=0,
+    )
+    sector_current = models.IntegerField(
+        verbose_name=_("Sector Current"),
+        null=True,
+        blank=True,
+    )
+    assumptions = models.TextField(
+        verbose_name=_("Assumptions"),
+        null=True,
+        blank=True,
+    )
 
     # RAM Info
-    target = models.CharField(max_length=255, null=True, blank=True)
-    baseline = models.CharField(max_length=255, null=True, blank=True)
-    ram_indicator = models.BooleanField(default=False)
-    active = models.BooleanField(default=True)
-    view_on_dashboard = models.BooleanField(default=False)
+    target = models.CharField(
+        verbose_name=_("Target"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    baseline = models.CharField(
+        verbose_name=_("Baseline"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    ram_indicator = models.BooleanField(
+        verbose_name=_("RAM Indicator"),
+        default=False,
+    )
+    active = models.BooleanField(verbose_name=_("Active"), default=True)
+    view_on_dashboard = models.BooleanField(
+        verbose_name=_("View on Dashboard"),
+        default=False,
+    )
 
     class Meta:
         ordering = ['-active', 'name']  # active indicators will show up first in the list

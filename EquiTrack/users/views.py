@@ -11,11 +11,21 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from audit.models import Auditor
+from reports.models import Sector
+from reports.serializers.v1 import SectorSerializer
 from users.forms import ProfileForm
-from users.models import Country, Office, Section, UserProfile
-from users.serializers import (
-    CountrySerializer, GroupSerializer, MinimalUserSerializer, OfficeSerializer, ProfileRetrieveUpdateSerializer,
-    SectionSerializer, SimpleProfileSerializer, SimpleUserSerializer, UserCreationSerializer, UserSerializer,)
+from users.models import UserProfile, Country, Office
+from .serializers import (
+    UserSerializer,
+    GroupSerializer,
+    OfficeSerializer,
+    MinimalUserSerializer,
+    UserCreationSerializer,
+    SimpleProfileSerializer,
+    SimpleUserSerializer,
+    ProfileRetrieveUpdateSerializer,
+    CountrySerializer
+)
 
 
 class UserAuthAPIView(RetrieveAPIView):
@@ -99,6 +109,17 @@ class CountryView(ListAPIView):
         return self.model.objects.filter(
             name=user.profile.country.name,
         )
+
+
+class CountriesViewSet(ListAPIView):
+    """
+    Gets the list of countries
+    """
+    model = Country
+    serializer_class = CountrySerializer
+
+    def get_queryset(self):
+        return Country.objects.prefetch_related('local_currency').all()
 
 
 class MyProfileAPIView(RetrieveUpdateAPIView):
@@ -331,16 +352,15 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
 
 class SectionViewSet(mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
-                     mixins.CreateModelMixin,
                      viewsets.GenericViewSet):
     """
     Returns a list of all Sections
     """
-    serializer_class = SectionSerializer
+    serializer_class = SectorSerializer
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        queryset = Section.objects.all()
+        queryset = Sector.objects.all()
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
             try:

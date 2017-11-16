@@ -238,8 +238,8 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTe
         self.assertIn('results', response.data)
         self.assertIsInstance(response.data['results'], list)
         self.assertListEqual(
-            map(lambda x: x['id'], response.data['results']),
-            map(lambda x: x.id, engagements)
+            sorted(map(lambda x: x['id'], response.data['results'])),
+            sorted(map(lambda x: x.id, engagements))
         )
 
     def test_focal_point_list(self):

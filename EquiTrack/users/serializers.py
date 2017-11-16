@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from t2f.serializers.user_data import T2FUserDataSerializer
-from users.models import Country, Group, Office, Section, UserProfile
+from users.models import Country, Group, Office, UserProfile
 
 
 class SimpleCountrySerializer(serializers.ModelSerializer):
@@ -73,18 +73,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         exclude = ('password', 'groups', 'user_permissions')
-
-
-class SectionSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Section
-        fields = (
-            'id',
-            'name'
-        )
 
 
 class UserProfileCreationSerializer(serializers.ModelSerializer):
@@ -229,13 +217,18 @@ class UserCreationSerializer(serializers.ModelSerializer):
 
 class CountrySerializer(SimpleUserSerializer):
     local_currency_id = serializers.IntegerField(source='local_currency.id', read_only=True)
+    local_currency_code = serializers.CharField(source='local_currency.code', read_only=True)
 
     class Meta:
         model = Country
         fields = (
+            'id',
             'name',
             'latitude',
             'longitude',
             'initial_zoom',
-            'local_currency_id'
+            'local_currency_id',
+            'local_currency_code',
+            'business_area_code',
+            'country_short_code',
         )

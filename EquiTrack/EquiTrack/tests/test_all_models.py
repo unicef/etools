@@ -13,7 +13,6 @@ from django.apps import apps
 # If a 3rd party app model fails in TestStrMethods, feel free to add the package to this list. We aren't interested in
 # testing 3rd party packages. If an eTools model fails in TestStrMethods, it needs to be fixed.
 EXCLUDED_PACKAGES = (
-    'actstream',
     'allauth',
     'corsheaders',
     'django',

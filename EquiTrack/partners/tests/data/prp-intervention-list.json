@@ -1,0 +1,128 @@
+[
+  {
+    "expected_results": [
+      {
+        "indicators": [
+          {
+            "blueprint_id": 0,
+            "means_of_verification": null,
+            "target": 0,
+            "title": "The Blueprint",
+            "disaggregation": [
+              {
+                "id": 4,
+                "name": "A Disaggregation",
+                "disaggregation_values": []
+              }
+            ],
+            "locations": [
+              {
+                "id": 1,
+                "admin_level": 0,
+                "pcode": "a-p-code",
+                "name": "A Location",
+                "location_type": "A Gateway"
+              }
+            ],
+            "cluster_indicator_id": null,
+            "id": 8,
+            "baseline": null
+          }
+        ],
+        "cp_output": {
+          "id": 207,
+          "title": "A Result"
+        },
+        "id": 16,
+        "title": "Lower Result 1"
+      }
+    ],
+    "sections": [],
+    "agreement": "PCA20172036",
+    "unicef_focal_points": [],
+    "end_date": "2017-12-13",
+    "agreement_auth_officers": [],
+    "business_area_code": "ZZZ",
+    "title": "Active Intervention",
+    "funds_received": 0,
+    "unicef_budget": "0.00",
+    "unicef_budget_currency": null,
+    "number": "/PCA2017394/PD2017642",
+    "start_date": "2017-09-13",
+    "focal_points": [],
+    "offices": [],
+    "partner_org": {
+      "id": 1976,
+      "unicef_vendor_number": null,
+      "name": "Partner 2",
+      "short_name": ""
+    },
+    "reporting_periods": [],
+    "status": "active",
+    "funds_received_currency": null,
+    "cso_budget_currency": null,
+    "id": 642,
+    "cso_budget": "0.00",
+    "update_date": "2017-10-12T08:10:43.708677Z"
+  },
+  {
+    "expected_results": [],
+    "unicef_focal_points": [],
+    "end_date": null,
+    "sections": [],
+    "agreement": "PCA20172036",
+    "agreement_auth_officers": [],
+    "business_area_code": "ZZZ",
+    "title": "Intervention 2",
+    "funds_received": 0,
+    "unicef_budget": "0.00",
+    "unicef_budget_currency": null,
+    "number": "/PCA2017393/PD2017641",
+    "start_date": null,
+    "focal_points": [],
+    "offices": [],
+    "partner_org": {
+      "id": 1975,
+      "unicef_vendor_number": null,
+      "name": "Partner 1",
+      "short_name": ""
+    },
+    "reporting_periods": [],
+    "status": "draft",
+    "funds_received_currency": null,
+    "cso_budget_currency": null,
+    "id": 641,
+    "cso_budget": "0.00",
+    "update_date": "2017-10-12T08:10:43.708677Z"
+  },
+  {
+    "expected_results": [],
+    "unicef_focal_points": [],
+    "end_date": null,
+    "sections": [],
+    "agreement": "PCA20172036",
+    "agreement_auth_officers": [],
+    "business_area_code": "ZZZ",
+    "title": "Intervention 1",
+    "funds_received": 0,
+    "unicef_budget": "100.00",
+    "unicef_budget_currency": null,
+    "number": "/PCA2017393/2017640",
+    "start_date": null,
+    "focal_points": [],
+    "offices": [],
+    "partner_org": {
+      "id": 1975,
+      "unicef_vendor_number": null,
+      "name": "Partner 1",
+      "short_name": ""
+    },
+    "reporting_periods": [],
+    "status": "draft",
+    "funds_received_currency": null,
+    "cso_budget_currency": null,
+    "id": 640,
+    "cso_budget": "200.00",
+    "update_date": "2017-10-12T08:10:43.708677Z"
+  }
+]

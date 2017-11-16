@@ -15,7 +15,6 @@ from django_fsm import (
 )
 from rest_framework.exceptions import ValidationError
 
-from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.parsers import parse_multipart_data
 from utils.common.utils import get_all_field_names
 
@@ -196,7 +195,7 @@ class ValidatorViewMixin(object):
                 e.detail = {rel_prop_name: e.detail}
                 raise e
 
-    def my_create(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
+    def my_create(self, request, related_f, nested_related_names=None, **kwargs):
         my_relations = {}
         partial = kwargs.pop('partial', False)
         data = self._parse_data(request)
@@ -210,9 +209,6 @@ class ValidatorViewMixin(object):
 
         main_object = main_serializer.save()
 
-        if snapshot:
-            create_snapshot_activity_stream(request.user, main_object, created=True)
-
         def _get_model_for_field(field):
             return main_object.__class__._meta.get_field(field).related_model
 
@@ -224,7 +220,7 @@ class ValidatorViewMixin(object):
 
         return main_serializer
 
-    def my_update(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
+    def my_update(self, request, related_f, nested_related_names=None, **kwargs):
         partial = kwargs.pop('partial', False)
         data = self._parse_data(request)
 
@@ -237,9 +233,6 @@ class ValidatorViewMixin(object):
         main_serializer = self.get_serializer(instance, data=data, partial=partial)
         main_serializer.context['skip_global_validator'] = True
         main_serializer.is_valid(raise_exception=True)
-
-        if snapshot:
-            create_snapshot_activity_stream(request.user, main_serializer.instance, delta_dict=data)
 
         main_object = main_serializer.save()
 

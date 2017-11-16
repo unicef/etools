@@ -1,9 +1,10 @@
 """
 Project wide mixins for models and classes
 """
-
 import logging
 
+import jwt
+from django.contrib.auth import get_user_model
 from django.db import connection
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -13,9 +14,12 @@ from django.template.response import SimpleTemplateResponse
 from django.utils.http import urlsafe_base64_encode
 from django.http.response import HttpResponseRedirect
 
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_jwt.utils import jwt_payload_handler
+
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
@@ -135,6 +139,17 @@ class EToolsTenantMiddleware(TenantMiddleware):
             request.urlconf = settings.PUBLIC_SCHEMA_URLCONF
 
 
+class DRFBasicAuthMixin(BasicAuthentication):
+    def authenticate(self, request):
+        super_return = super(DRFBasicAuthMixin, self).authenticate(request)
+        if not super_return:
+            return None
+
+        user, token = super_return
+        set_country(user, request)
+        return user, token
+
+
 class EtoolsTokenAuthentication(TokenAuthentication):
 
     def authenticate(self, request):
@@ -162,6 +177,20 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
             user, jwt_value = super(EToolsTenantJWTAuthentication, self).authenticate(request)
         except TypeError:
             raise PermissionDenied(detail='No valid authentication provided')
+        except AuthenticationFailed:
+            # Try again
+            if getattr(settings, 'JWT_ALLOW_NON_EXISTENT_USERS', False):
+                try:
+                    # try and see if the token is valid
+                    payload = jwt_decode_handler(jwt_value)
+                except (jwt.ExpiredSignature, jwt.DecodeError):
+                    raise PermissionDenied(detail='Authentication Failed')
+                else:
+                    # signature is valid user does not exist... setting default authenticated user
+                    user = get_user_model().objects.get(username=settings.DEFAULT_UNICEF_USER)
+                    setattr(user, 'jwt_payload', payload)
+            else:
+                raise PermissionDenied(detail='Authentication Failed')
 
         if not user.profile.country:
             raise PermissionDenied(detail='No country found for user')
@@ -171,7 +200,6 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
             user.profile.save()
 
         set_country(user, request)
-
         return user, jwt_value
 
 
@@ -210,3 +238,44 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     def login(self, request, user):
         # if we need to add any other login validation, here would be the place.
         return super(CustomAccountAdapter, self).login(request, user)
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return
+
+
+class ExportModelMixin(object):
+    def set_labels(self, serializer_fields, model):
+        labels = {}
+        model_labels = {}
+        for f in model._meta.fields:
+            model_labels[f.name] = f.verbose_name
+        for f in serializer_fields:
+            if model_labels.get(f, False):
+                labels[f] = model_labels.get(f)
+            elif serializer_fields.get(f) and serializer_fields[f].label:
+                labels[f] = serializer_fields[f].label
+            else:
+                labels[f] = f.replace("_", " ").title()
+        return labels
+
+    def get_renderer_context(self):
+        context = super(ExportModelMixin, self).get_renderer_context()
+        if hasattr(self, "get_serializer_class"):
+            serializer_class = self.get_serializer_class()
+            serializer = serializer_class()
+            serializer_fields = serializer.get_fields()
+            model = getattr(serializer.Meta, "model")
+            context["labels"] = self.set_labels(
+                serializer_fields,
+                model
+            )
+        return context
+
+
+def custom_jwt_payload_handler(user):
+    payload = jwt_payload_handler(user)
+    payload['groups'] = list(user.groups.values_list('name', flat=True))
+    return payload
