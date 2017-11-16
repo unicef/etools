@@ -43,6 +43,27 @@ class CountrySerializer(serializers.ModelSerializer):
         )
 
 
+class MinimalCountryDetailSerializer(serializers.ModelSerializer):
+    local_currency = serializers.CharField(source='local_currency.name')
+    local_currency_id = serializers.IntegerField(source='local_currency.id', read_only=True)
+    local_currency_code = serializers.CharField(source='local_currency.code', read_only=True)
+
+    class Meta:
+        model = Country
+        fields = (
+            'id',
+            'name',
+            'latitude',
+            'longitude',
+            'initial_zoom',
+            'local_currency',
+            'local_currency_id',
+            'local_currency_code',
+            'business_area_code',
+            'country_short_code',
+        )
+
+
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
     supervisor = serializers.CharField(read_only=True)
