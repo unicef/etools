@@ -1,7 +1,4 @@
 from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 from django.db import models
 from django.contrib import admin
@@ -9,8 +6,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.forms import SelectMultiple
 
 from import_export.admin import ExportMixin
+from generic_links.admin import GenericLinkStackedInline
 
-from EquiTrack.admin import SnapshotModelAdmin, ActivityInline
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
 
 from partners.exports import PartnerExport
@@ -25,7 +23,6 @@ from partners.models import (
     Intervention,
     AgreementAmendment,
     InterventionAmendment,
-    # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
     InterventionResultLink,
     InterventionBudget,
@@ -35,10 +32,8 @@ from partners.models import (
 from partners.mixins import HiddenPartnerMixin
 from partners.forms import (
     PartnersAdminForm,
-    AgreementForm,
     PartnerStaffMemberForm,
-    # TODO intervention sector locations cleanup
-    SectorLocationForm,
+    SectorLocationForm
 )
 
 
@@ -70,6 +65,10 @@ class InterventionAmendmentsAdmin(admin.ModelAdmin):
             return self.max_num
 
         return 0
+
+
+class LinksInlineAdmin(GenericLinkStackedInline):
+    extra = 1
 
 
 class InterventionBudgetAdmin(admin.ModelAdmin):
@@ -154,7 +153,6 @@ class InterventionResultsLinkAdmin(admin.ModelAdmin):
     }
 
 
-# TODO intervention sector locations cleanup
 class InterventionSectorLocationAdmin(admin.ModelAdmin):
     form = SectorLocationForm
     model = InterventionSectorLocationLink
@@ -175,8 +173,7 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     )
 
 
-class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotModelAdmin):
-    model = Intervention
+class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, admin.ModelAdmin):
 
     date_hierarchy = 'start'
     list_display = (
@@ -187,7 +184,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         'signed_by_unicef_date',
         'start',
         'end',
-        'section_names',
+        'sector_names',
         'title',
         'total_unicef_cash',
         'total_budget',
@@ -206,7 +203,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         'total_budget',
     )
     filter_horizontal = (
-        'sections',
         'unicef_focal_points',
         'partner_focal_points'
     )
@@ -221,7 +217,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
                     'status',
                     'country_programme',
                     'submission_date',
-                    'sections',
                     'metadata',
                 )
         }),
@@ -248,7 +243,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         # ResultsLinkInline,
         # SectorLocationInline,
         InterventionAttachmentsInline,
-        ActivityInline,
     )
 
     def created_date(self, obj):
@@ -256,10 +250,11 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
 
     created_date.admin_order_field = '-created'
 
-    def section_names(self, obj):
-        return ' '.join([section.name for section in obj.sections.all()])
+    def save_model(self, request, obj, form, change):
+        created = False if change else True
+        create_snapshot_activity_stream(request.user, obj, created=created)
 
-    section_names.short_description = "Sections"
+        super(InterventionAdmin, self).save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
         return request.user.is_superuser
@@ -282,7 +277,7 @@ class AssessmentAdmin(admin.ModelAdmin):
     verbose_name_plural = u'Assessments'
 
 
-class PartnerStaffMemberAdmin(SnapshotModelAdmin):
+class PartnerStaffMemberAdmin(admin.ModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
 
@@ -305,9 +300,12 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
         u'last_name',
         u'email'
     )
-    inlines = [
-        ActivityInline,
-    ]
+
+    def save_model(self, request, obj, form, change):
+        created = False if change else True
+        create_snapshot_activity_stream(request.user, obj, created=created)
+
+        super(PartnerStaffMemberAdmin, self).save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
         return request.user.is_superuser
@@ -448,8 +446,8 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
         return 0
 
 
-class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, SnapshotModelAdmin):
-    form = AgreementForm
+class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
+
     list_filter = (
         u'partner',
         u'agreement_type',
@@ -483,15 +481,18 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, Sn
     filter_horizontal = (
         u'authorized_officers',
     )
-    inlines = [
-        ActivityInline,
-    ]
+
+    def save_model(self, request, obj, form, change):
+        created = False if change else True
+        create_snapshot_activity_stream(request.user, obj, created=created)
+
+        super(AgreementAdmin, self).save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
         return request.user.is_superuser
 
 
-class FundingCommitmentAdmin(SnapshotModelAdmin):
+class FundingCommitmentAdmin(admin.ModelAdmin):
     search_fields = (
         u'fr_number',
         u'grant__name',
@@ -514,15 +515,18 @@ class FundingCommitmentAdmin(SnapshotModelAdmin):
         u'start',
         u'end',
     )
-    inlines = [
-        ActivityInline,
-    ]
 
     def has_add_permission(self, request):
         return False
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def save_model(self, request, obj, form, change):
+        created = False if change else True
+        create_snapshot_activity_stream(request.user, obj, created=created)
+
+        super(FundingCommitmentAdmin, self).save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
         return request.user.is_superuser
@@ -548,7 +552,6 @@ admin.site.register(InterventionAmendment, InterventionAmendmentsAdmin)
 admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
-# TODO intervention sector locations cleanup
 admin.site.register(InterventionSectorLocationLink, InterventionSectorLocationAdmin)
 
 

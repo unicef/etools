@@ -1,10 +1,13 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.contrib import admin
 
 from ordered_model.admin import OrderedModelAdmin
 
 from audit.models import (
     Audit, AuditorFirm, AuditorStaffMember, AuditPermission, Engagement, FinancialFinding, Finding, MicroAssessment,
-    PurchaseOrder, Risk, RiskBluePrint, RiskCategory, SpotCheck,)
+    PurchaseOrder, PurchaseOrderItem, Risk, RiskBluePrint, RiskCategory, SpecialAuditRecommendation, SpecificProcedure,
+    SpotCheck,)
 
 
 @admin.register(AuditPermission)
@@ -32,6 +35,11 @@ class AuditorFirmAdmin(admin.ModelAdmin):
     ]
 
 
+class PurchaseOrderItemAdmin(admin.TabularInline):
+    model = PurchaseOrderItem
+    extra = 0
+
+
 @admin.register(PurchaseOrder)
 class PurchaseOrderAdmin(admin.ModelAdmin):
     list_display = [
@@ -42,6 +50,7 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
         'auditor_firm', 'contract_start_date', 'contract_end_date',
     ]
     search_fields = ['order_number', 'auditor_firm__name', ]
+    inlines = [PurchaseOrderItemAdmin]
 
 
 @admin.register(Engagement)
@@ -115,3 +124,13 @@ class FinancialFindingAdmin(admin.ModelAdmin):
         'title', 'audit', 'description', 'amount', 'local_amount',
     ]
     search_fields = ['title', ]
+
+
+@admin.register(SpecificProcedure)
+class SpecificProcedureAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(SpecialAuditRecommendation)
+class SpecialAuditRecommendationAdmin(admin.ModelAdmin):
+    pass

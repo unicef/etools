@@ -11,10 +11,6 @@ def create_email_template(apps, schema_editor):
     EmailTemplate.objects.get_or_create(name='organisations/staff_member/set_password')
 
 
-def do_nothing(apps, schema_editor):
-    pass
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -24,6 +20,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(
             create_email_template,
-            do_nothing,
+            migrations.RunPython.noop,
         ),
     ]

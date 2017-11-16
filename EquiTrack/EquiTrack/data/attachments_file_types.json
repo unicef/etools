@@ -3,7 +3,8 @@
         "pk": 1,
         "fields": {
             "order": 0,
-            "name": "Programme Document",
+            "label": "Programme Document",
+            "name": "programme_document",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -12,7 +13,8 @@
         "pk": 2,
         "fields": {
             "order": 1,
-            "name": "Supply Manual List",
+            "label": "Supply Manual List",
+            "name": "supply_manual_list",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -21,7 +23,8 @@
         "pk": 3,
         "fields": {
             "order": 2,
-            "name": "UNICEF Trip Report/Action Point Report",
+            "label": "UNICEF Trip Report/Action Point Report",
+            "name": "unicef_trip_report_action_point_report",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -30,7 +33,8 @@
         "pk": 4,
         "fields": {
             "order": 3,
-            "name": "Partner Report",
+            "label": "Partner Report",
+            "name": "partner_report",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -39,7 +43,8 @@
         "pk": 5,
         "fields": {
             "order": 4,
-            "name": "Previous Trip Reports",
+            "label": "Previous Trip Reports",
+            "name": "previous_trip_reports",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -48,7 +53,8 @@
         "pk": 6,
         "fields": {
             "order": 5,
-            "name": "Training materials",
+            "label": "Training materials",
+            "name": "training_materials",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -57,7 +63,8 @@
         "pk": 7,
         "fields": {
             "order": 6,
-            "name": "ToRs",
+            "label": "ToRs",
+            "name": "tors",
             "code": "tpm"
         },
         "model": "attachments.filetype"
@@ -66,7 +73,8 @@
         "pk": 8,
         "fields": {
             "order": 4,
-            "name": "ICE form",
+            "label": "ICE form",
+            "name": "ice_form",
             "code": "audit_engagement"
         },
         "model": "attachments.filetype"
@@ -75,7 +83,8 @@
         "pk": 9,
         "fields": {
             "order": 3,
-            "name": "FACE form",
+            "label": "FACE form",
+            "name": "face_form",
             "code": "audit_engagement"
         },
         "model": "attachments.filetype"
@@ -84,7 +93,8 @@
         "pk": 10,
         "fields": {
             "order": 5,
-            "name": "Other",
+            "label": "Other",
+            "name": "other",
             "code": "audit_engagement"
         },
         "model": "attachments.filetype"
@@ -93,7 +103,8 @@
         "pk": 11,
         "fields": {
             "order": 0,
-            "name": "Report",
+            "label": "Report",
+            "name": "report",
             "code": "audit_report"
         },
         "model": "attachments.filetype"
@@ -102,7 +113,8 @@
         "pk": 14,
         "fields": {
             "order": 1,
-            "name": "Other",
+            "label": "Other",
+            "name": "other",
             "code": "audit_report"
         },
         "model": "attachments.filetype"
@@ -111,7 +123,8 @@
         "pk": 15,
         "fields": {
             "order": 0,
-            "name": "PCA",
+            "label": "PCA",
+            "name": "pca",
             "code": "audit_engagement"
         },
         "model": "attachments.filetype"
@@ -120,7 +133,8 @@
         "pk": 16,
         "fields": {
             "order": 1,
-            "name": "PD",
+            "label": "PD",
+            "name": "pd",
             "code": "audit_engagement"
         },
         "model": "attachments.filetype"
@@ -129,7 +143,8 @@
         "pk": 17,
         "fields": {
             "order": 2,
-            "name": "Workplan",
+            "label": "Workplan",
+            "name": "workplan",
             "code": "audit_engagement"
         },
         "model": "attachments.filetype"
