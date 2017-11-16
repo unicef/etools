@@ -1,0 +1,115 @@
+{% extends "audit/engagement_pdf.html" %}
+
+{% block extra_content %}
+  <div class="content-section">
+    <div class="content-section__header content-section__header--orange">
+      <div class="content-section__header__title">Overall Risk Assessment</div>
+    </div>
+    <table class="content-section__wrapper">
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Risk assessment</div>
+          <div class="input-container__value">
+            {{ engagement.overall_risk_assessment.blueprints.0.risk.value_display|default:"-" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container" colspan="3">
+          <div class="input-container__label">Brief justification for Rating (main internal control gaps)</div>
+          <div class="input-container__value">
+            {{ engagement.overall_risk_assessment.blueprints.0.risk.extra.comments|default:"-" }}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Tested Subject Areas</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td>Subject area</td>
+          <td>Risk assessment</td>
+          <td colspan="2">Brief Justification for Rating (main internal control gaps)</td>
+        </tr>
+        {% for children in engagement.test_subject_areas.children %}
+          <tr>
+            <td>{{ children.blueprints.0.header }}</td>
+            <td>{{ children.blueprints.0.risk.value_display|default:"-" }}</td>
+            <td colspan="2">{{ children.blueprints.0.risk.extra.comments|default:"-" }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Detailed Internal Control Findings and Recommendations</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td>Description of Finding</td>
+          <td>Recommendation and IP Management Response</td>
+        </tr>
+        {% for finding in engagement.findings %}
+          <tr>
+            <td>{{ finding.finding }}</td>
+            <td>{{ finding.recommendation }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <pdf:nextpage></pdf:nextpage>
+  <div class="content-section">
+    <div class="content-section__header content-section__header--orange">
+      <div class="content-section__header__title">OVERAL RISK RATING
+        - {{ engagement.questionnaire.risk_rating|title }}</div>
+    </div>
+  </div>
+  <br/>
+  {% for children in engagement.questionnaire.children %}
+    <div class="content-section">
+      <div class="content-section__header">
+        <div class="content-section__header__title">{{ children.header }} ({{ children.risk_rating|title }})</div>
+      </div>
+      <div class="content-section__wrapper">
+        <table class="content-section__table">
+          <tr class="content-section__table__header">
+            <td colspan="2">Question</td>
+            <td>Risk assessment</td>
+            <td colspan="2">Comments</td>
+          </tr>
+          {% for blueprint in children.blueprints %}
+            <tr>
+              <td colspan="2"><span>{{ blueprint.header|safe }}</span></td>
+              <td>{{ blueprint.risk.value_display|default:"-" }}</td>
+              <td colspan="2">{{ blueprint.risk.extra.comments|default:"-" }}</td>
+            </tr>
+          {% endfor %}
+          {% for subchildren in children.children %}
+            <tr>
+              <td colspan="5" class="risk-subheader"><span>{{ subchildren.header|safe }}</span></td>
+            </tr>
+            {% for blueprint in subchildren.blueprints %}
+              <tr>
+                <td colspan="2"><span>{{ blueprint.header|safe }}</span></td>
+                <td>{{ blueprint.risk.value_display|default:"-" }}</td>
+                <td colspan="2">{{ blueprint.risk.extra.comments|default:"-" }}</td>
+              </tr>
+            {% endfor %}
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  {% endfor %}
+{% endblock %}
