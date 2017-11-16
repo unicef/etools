@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -11,7 +13,7 @@ class TestAttachmentsModels(FastTenantTestCase):
 
     def test_valid_file(self):
         valid_file_attachment = AttachmentFactory(
-            file=SimpleUploadedFile('simple_file.txt', 'these are the file contents!'),
+            file=SimpleUploadedFile('simple_file.txt', b'these are the file contents!'),
             content_object=self.simple_object
         )
         valid_file_attachment.clean()
