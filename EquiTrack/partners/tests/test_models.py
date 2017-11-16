@@ -787,9 +787,9 @@ class TestInterventionModel(TenantTestCase):
             submission_date=datetime.date(datetime.date.today().year, 1, 1),
         )
 
-    def test_unicode(self):
+    def test_str(self):
         number = self.intervention.number
-        self.assertEqual(unicode(self.intervention), number)
+        self.assertEqual(str(self.intervention), number)
 
     def test_permission_structure(self):
         permissions = models.Intervention.permission_structure()
@@ -1411,15 +1411,15 @@ class TestGetFilePaths(TenantTestCase):
 
 
 class TestWorkspaceFileType(TenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         w = models.WorkspaceFileType(name="Test")
-        self.assertEqual(unicode(w), u"Test")
+        self.assertEqual(str(w), "Test")
 
 
 class TestPartnerOrganization(TenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         p = models.PartnerOrganization(name="Test Partner Org")
-        self.assertEqual(unicode(p), "Test Partner Org")
+        self.assertEqual(str(p), "Test Partner Org")
 
     def test_save_exception(self):
         p = models.PartnerOrganization(name="Test", hact_values="wrong")
@@ -1447,14 +1447,14 @@ class TestPartnerOrganization(TenantTestCase):
 
 
 class TestPartnerStaffMember(TenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         partner = models.PartnerOrganization(name="Partner")
         staff = models.PartnerStaffMember(
             first_name="First",
             last_name="Last",
             partner=partner
         )
-        self.assertEqual(unicode(staff), "First Last (Partner)")
+        self.assertEqual(str(staff), "First Last (Partner)")
 
     def test_save_update_deactivate(self):
         partner = PartnerFactory()
@@ -1483,16 +1483,16 @@ class TestPartnerStaffMember(TenantTestCase):
 
 
 class TestAssessment(TenantTestCase):
-    def test_unicode_not_completed(self):
+    def test_str_not_completed(self):
         partner = models.PartnerOrganization(name="Partner")
         a = models.Assessment(
             partner=partner,
             type="Type",
             rating="Rating",
         )
-        self.assertEqual(unicode(a), "Type: Partner Rating NOT COMPLETED")
+        self.assertEqual(str(a), "Type: Partner Rating NOT COMPLETED")
 
-    def test_unicode_completed(self):
+    def test_str_completed(self):
         partner = models.PartnerOrganization(name="Partner")
         a = models.Assessment(
             partner=partner,
@@ -1500,7 +1500,7 @@ class TestAssessment(TenantTestCase):
             rating="Rating",
             completed_date=datetime.date(2001, 1, 1)
         )
-        self.assertEqual(unicode(a), "Type: Partner Rating 01-01-2001")
+        self.assertEqual(str(a), "Type: Partner Rating 01-01-2001")
 
     def test_save_update_micro_assessment(self):
         partner = PartnerFactory(
@@ -1538,15 +1538,15 @@ class TestAssessment(TenantTestCase):
 
 
 class TestAgreement(TenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         partner = models.PartnerOrganization(name="Partner")
         agreement = models.Agreement(
             partner=partner,
             agreement_type=models.Agreement.DRAFT,
         )
-        self.assertEqual(unicode(agreement), "draft for Partner ( - )")
+        self.assertEqual(str(agreement), "draft for Partner ( - )")
 
-    def test_unicode_dates(self):
+    def test_str_dates(self):
         partner = models.PartnerOrganization(name="Partner")
         agreement = models.Agreement(
             partner=partner,
@@ -1555,7 +1555,7 @@ class TestAgreement(TenantTestCase):
             end=datetime.date(2002, 1, 1),
         )
         self.assertEqual(
-            unicode(agreement),
+            str(agreement),
             "draft for Partner (01-01-2001 - 01-01-2002)"
         )
 
@@ -1609,26 +1609,26 @@ class TestAgreement(TenantTestCase):
 
 
 class TestAgreementAmendment(TenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         agreement = AgreementFactory()
         amendment = AgreementAmendmentFactory(
             agreement=agreement
         )
         self.assertEqual(
-            unicode(amendment),
+            str(amendment),
             "{} {}".format(agreement.reference_number, amendment.number)
         )
 
 
 class TestInterventionAmendment(TenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         ia = models.InterventionAmendment(
             amendment_number="123",
             signed_date=None
         )
-        self.assertEqual(unicode(ia), "123:- None")
+        self.assertEqual(str(ia), "123:- None")
         ia.signed_date = datetime.date(2001, 1, 1)
-        self.assertEqual(unicode(ia), "123:- 2001-01-01")
+        self.assertEqual(str(ia), "123:- 2001-01-01")
 
     def test_compute_reference_number_no_amendments(self):
         intervention = InterventionFactory()
@@ -1646,7 +1646,7 @@ class TestInterventionAmendment(TenantTestCase):
 
 
 class TestInterventionResultLink(TenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         intervention = InterventionFactory()
         result = ResultFactory(
             name="Name",
@@ -1659,7 +1659,7 @@ class TestInterventionResultLink(TenantTestCase):
         intervention_str = str(intervention)
         result_str = str(result)
         self.assertEqual(
-            unicode(link),
+            str(link),
             "{} {}".format(intervention_str, result_str)
         )
 
@@ -1678,15 +1678,15 @@ class TestInterventionBudget(TenantTestCase):
 
 
 class TestFileType(TenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         f = models.FileType(name="FileType")
-        self.assertEqual(unicode(f), "FileType")
+        self.assertEqual(str(f), "FileType")
 
 
 class TestInterventionAttachment(TenantTestCase):
-    def test_unicode(self):
+    def test_str(self):
         a = models.InterventionAttachment(attachment="test.pdf")
-        self.assertEqual(unicode(a), "test.pdf")
+        self.assertEqual(str(a), "test.pdf")
 
 
 class TestInterventionReportingPeriod(TenantTestCase):
