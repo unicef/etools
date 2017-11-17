@@ -80,11 +80,10 @@ class PMPStaticDropdownsListAPIView(APIView):
         """
 
         local_workspace = self.request.user.profile.country
-        cso_types = choices_to_json_ready(
-            list(
-                PartnerOrganization.objects.values_list(
-                    'cso_type',
-                    flat=True).order_by('cso_type').distinct('cso_type')))
+        cso_types = PartnerOrganization.objects.values_list('cso_type', flat=True)
+        cso_types = cso_types.exclude(cso_type__isnull=True).exclude(cso_type__exact='')
+        cso_types = cso_types.order_by('cso_type').distinct('cso_type')
+        cso_types = choices_to_json_ready(list(cso_types))
         partner_types = choices_to_json_ready(PartnerType.CHOICES)
         agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
         assessment_types = choices_to_json_ready(Assessment.ASSESSMENT_TYPES)
