@@ -94,9 +94,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
         location_types = GatewayType.objects.values('id', 'name', 'admin_level').order_by('id')
-
-        currencies = map(lambda x: {"label": x[0], "value": x[1]},
-                         Currency.objects.values_list('code', 'id').order_by('code').distinct())
+        currencies = choices_to_json_ready(Currency.objects.values_list('id', 'code').order_by('code').distinct())
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
