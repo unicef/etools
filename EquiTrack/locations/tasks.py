@@ -88,7 +88,11 @@ def create_location(pcode, carto_table, parent, parent_instance,
 @app.task
 def update_sites_from_cartodb(carto_table_pk):
 
-    carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
+    try:
+        carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
+    except CartoDBTable.DoesNotExist:
+        logger.exception('Cannot retrieve CartoDBTable with pk: {}'.format(carto_table_pk))
+        return
 
     auth_client = APIKeyAuthClient(api_key=carto_table.api_key,
                                    base_url="https://{}.carto.com/".format(carto_table.domain))
@@ -111,7 +115,7 @@ def update_sites_from_cartodb(carto_table_pk):
 
         sites = sql_client.send(qry)
     except CartoException as exc:
-        logging.exception("CartoDB exception occured {}".format(exc))
+        logger.exception("CartoDB exception occured {}".format(exc))
     else:
 
         for row in sites['rows']:
