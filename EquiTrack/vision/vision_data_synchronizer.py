@@ -7,14 +7,10 @@ from django.db import connection
 import requests
 from celery.utils.log import get_task_logger
 
+from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
 
 logger = get_task_logger('vision.synchronize')
-
-
-class VisionException(Exception):
-    def __init__(self, message=''):
-        super(VisionException, self).__init__(message)
 
 
 class VisionDataLoader(object):
@@ -51,7 +47,7 @@ class VisionDataLoader(object):
         return json_response
 
 
-class VisionDataSynchronizer:
+class VisionDataSynchronizer(object):
 
     __metaclass__ = ABCMeta
 

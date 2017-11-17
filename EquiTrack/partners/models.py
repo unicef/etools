@@ -1446,21 +1446,20 @@ class Intervention(TimeStampedModel):
 
     @property
     def reference_number(self):
-        number = '{agreement}/{type}{year}{id}'.format(
-            agreement=self.agreement.base_number,
-            code=connection.tenant.country_short_code or '',
-            type=self.document_type,
-            year=self.year,
-            id=self.id
-        )
-        return '{}'.format(number)
+        if self.document_type != Intervention.SSFA:
+            number = '{agreement}/{type}{year}{id}'.format(
+                agreement=self.agreement.base_number,
+                type=self.document_type,
+                year=self.year,
+                id=self.id
+            )
+            return number
+        return self.agreement.base_number
 
     def update_reference_number(self, amendment_number=None):
-
         if amendment_number:
             self.number = '{}-{}'.format(self.number.split('-')[0], amendment_number)
             return
-
         self.number = self.reference_number
 
     def update_ssfa_properties(self):
@@ -1470,6 +1469,12 @@ class Intervention(TimeStampedModel):
                 save_agreement = True
                 self.agreement.start = self.start
                 self.agreement.end = self.end
+
+            # if it's an SSFA amendment we update the agreement with amendment number
+            # TODO write test for this scenario
+            if self.agreement.agreement_number != self.number:
+                save_agreement = True
+                self.agreement.agreement_number = self.number
 
             if self.status in [self.SIGNED, self.ACTIVE] and self.agreement.status != Agreement.SIGNED:
                 save_agreement = True
