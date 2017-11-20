@@ -44,7 +44,7 @@ class CountrySerializer(serializers.ModelSerializer):
 
 
 class MinimalCountryDetailSerializer(serializers.ModelSerializer):
-    local_currency = serializers.CharField(source='local_currency.name')
+    local_currency = serializers.CharField(source='local_currency.name', read_only=True)
     local_currency_id = serializers.IntegerField(source='local_currency.id', read_only=True)
     local_currency_code = serializers.CharField(source='local_currency.code', read_only=True)
 
