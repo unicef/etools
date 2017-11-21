@@ -7,7 +7,8 @@ from carto.exceptions import CartoException
 from carto.sql import SQLClient
 
 from EquiTrack.celery import app
-from .models import Location
+
+from locations.models import Location
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,6 @@ def update_sites_from_cartodb(carto_table):
     auth_client = APIKeyAuthClient(api_key=carto_table.api_key,
                                    base_url="https://{}.carto.com/".format(carto_table.domain))
     sql_client = SQLClient(auth_client)
-
     sites_created = sites_updated = sites_not_added = 0
     try:
         # query for cartodb
@@ -155,5 +155,4 @@ def update_sites_from_cartodb(carto_table):
                 sites_updated)
 
     return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
-                carto_table.table_name, sites_created, sites_updated, sites_not_added
-            )
+        carto_table.table_name, sites_created, sites_updated, sites_not_added)
