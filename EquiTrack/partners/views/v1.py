@@ -7,17 +7,14 @@ from django.http import HttpResponse
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 
-
-
-from rest_framework.decorators import detail_route, list_route
-from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status, viewsets, mixins
 from partners.models import (
     Agreement,
     FileType,
 )
-from partners.serializers.v1 import FileTypeSerializer
+from partners.serializers.v1 import FileTypeSerializer, AgreementNestedSerializer
 from EquiTrack.utils import get_data_from_insight, load_internal_pdf_template
 
 
@@ -42,7 +39,6 @@ class PCAPDFView(RetrieveAPIView):
                     return HttpResponse('PDF generation service returned an invalid response.')
         except:
             return HttpResponse('PDF generation encountered an unexpected error.')
-
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
