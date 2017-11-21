@@ -8,6 +8,16 @@ from t2f.serializers.user_data import T2FUserDataSerializer
 from users.models import Country, UserProfile
 
 
+AP_ALLOWED_COUNTRIES = [
+    'UAT',
+    'Lebanon',
+    'Syria',
+    'Indonesia',
+    'Sudan',
+    'Syria Cross Border',
+]
+
+
 # used for user list view
 class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
@@ -59,10 +69,19 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     is_staff = serializers.CharField(source='user.is_staff', read_only=True)
     is_active = serializers.CharField(source='user.is_active', read_only=True)
     country = CountrySerializer(read_only=True)
+    show_ap = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
         exclude = ('id',)
+
+    def get_show_ap(self, obj):
+        """If user is within one of the allowed countries then
+        show_ap is True, otherwise False
+        """
+        if obj.country.name in AP_ALLOWED_COUNTRIES:
+            return True
+        return False
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):

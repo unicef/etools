@@ -7,6 +7,7 @@ from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, Sec
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory
 from rest_framework import status
+from users.serializers_v3 import AP_ALLOWED_COUNTRIES
 
 
 class TestSectionViews(APITenantTestCase):
@@ -245,6 +246,30 @@ class TestUserViewsV3(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], self.unicef_staff.get_full_name())
+
+    def test_api_users_retrieve_myprofile_show_ap_false(self):
+        self.assertNotIn(self.unicef_staff.profile.country.name, AP_ALLOWED_COUNTRIES)
+        response = self.forced_auth_req(
+            'get',
+            '/api/v3/users/profile/',
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["show_ap"], False)
+
+    def test_api_users_retrieve_myprofile_show_ap(self):
+        self.unicef_staff.profile.country.name = AP_ALLOWED_COUNTRIES[0]
+        self.unicef_staff.profile.country.save()
+        self.assertIn(self.unicef_staff.profile.country.name, AP_ALLOWED_COUNTRIES)
+        response = self.forced_auth_req(
+            'get',
+            '/api/v3/users/profile/',
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["show_ap"], True)
 
     def test_minimal_verbosity(self):
         response = self.forced_auth_req('get', '/api/v3/users/',
