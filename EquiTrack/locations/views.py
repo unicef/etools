@@ -11,7 +11,7 @@ from locations.serializers import (
     CartoDBTableSerializer, GatewayTypeSerializer, LocationLightSerializer, LocationSerializer,)
 
 
-class CartoDBTablesView(ListAPIView):
+class CartoDBTablesView(PublicTenantMixin, ListAPIView):
     """
     Gets a list of CartoDB tables for the mapping system
     """
@@ -20,7 +20,7 @@ class CartoDBTablesView(ListAPIView):
     permission_classes = (permissions.IsAdminUser,)
 
 
-class LocationTypesViewSet(mixins.RetrieveModelMixin,
+class LocationTypesViewSet(PublicTenantMixin,mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
@@ -32,7 +32,8 @@ class LocationTypesViewSet(mixins.RetrieveModelMixin,
     permission_classes = (permissions.IsAdminUser,)
 
 
-class LocationsViewSet(mixins.RetrieveModelMixin,
+class LocationsViewSet(PublicTenantMixin,
+                       mixins.RetrieveModelMixin,
                        mixins.ListModelMixin,
                        mixins.CreateModelMixin,
                        mixins.UpdateModelMixin,
@@ -56,7 +57,7 @@ class LocationsViewSet(mixins.RetrieveModelMixin,
             return super(LocationsViewSet, self).get_object()
 
     def get_queryset(self):
-        queryset = Location.objects.all()
+        queryset = super(LocationsViewSet, self).get_queryset()
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
             try:
