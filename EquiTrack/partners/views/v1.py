@@ -1,13 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 import datetime
-import json
 
 from collections import namedtuple
 from django.conf import settings
 from django.db import transaction
-from django.core import serializers
 from django.http import HttpResponse
-from django.forms import model_to_dict
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
@@ -76,17 +73,28 @@ class PCAPDFView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        pdf_response = load_internal_pdf_template("agreements", self.get_context_data(**kwargs))
+        try:
+            ctx_data = self.get_context_data(**kwargs)
 
-        return HttpResponse(pdf_response, content_type='application/pdf')
+            if ctx_data.error is not None:
+                return HttpResponse(ctx_data.error)
+            else:
+                pdf_response = load_internal_pdf_template("agreements", ctx_data)
+                return HttpResponse(pdf_response)
 
+                if pdf_response.status_code == status.HTTP_200_OK:
+                    return HttpResponse(pdf_response, content_type='application/pdf')
+                else:
+                    return HttpResponse('PDF generation service returned an invalid response.')
+        except:
+            return HttpResponse('PDF generation encountered an unexpected error.')
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
         lang = self.request.GET.get('lang', None)
         error = None
 
-        if not lang in self.languages:
+        if lang not in self.languages:
             return {"error": "Language does not exist for given query parameter lang={}".format(lang)}
 
         try:

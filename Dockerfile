@@ -46,6 +46,8 @@ RUN pip install -f /pip -r /pip/app_requirements.txt
 ENV PYTHONUNBUFFERED 1
 ADD EquiTrack /code/
 
+ENV PDF_API_URL etoolsinfra_proxy:80
+
 WORKDIR /code/
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production

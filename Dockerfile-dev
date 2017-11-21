@@ -49,7 +49,6 @@ ADD ./EquiTrack/requirements/*.txt /pip/
 ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
 RUN pip install -f /pip -r /pip/app_requirements.txt
 
-# ENV PDF_API_URL http://localhost:8082
 ENV PDF_API_URL etoolsinfra_proxy:80
 
 ENV PYTHONUNBUFFERED 1

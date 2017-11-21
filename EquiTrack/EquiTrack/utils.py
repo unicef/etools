@@ -81,6 +81,7 @@ def load_internal_pdf_template(endpoint='', data={}):
         api_url,
         json=data,
         headers={'Content-Type': 'application/json'},
+        # this adds the "Authorization: Basic ...." header
         auth=(settings.PDF_API_USER, settings.PDF_API_PASSWORD),
         verify=False
     )
