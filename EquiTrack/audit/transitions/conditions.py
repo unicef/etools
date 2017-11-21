@@ -1,5 +1,6 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.db import models
 from django.utils.decorators import classonlymethod
 from django.utils.translation import ugettext as _
 
@@ -94,8 +95,18 @@ class EngagementHasReportAttachmentsCheck(BaseTransitionCheck):
     def get_errors(self, instance, *args, **kwargs):
         errors = super(EngagementHasReportAttachmentsCheck, self).get_errors(*args, **kwargs)
 
-        if instance.report_attachments.count() <= 0:
-            errors['report_attachments'] = _('You should attach at least one file.')
+        if not instance.report_attachments.filter(file_type__name='report').exists():
+            errors['report_attachments'] = _('You should attach report.')
+        return errors
+
+
+class SpecialAuditSubmitRelatedModelsCheck(BaseTransitionCheck):
+    def get_errors(self, instance, *args, **kwargs):
+        errors = super(SpecialAuditSubmitRelatedModelsCheck, self).get_errors(instance, *args, **kwargs)
+
+        if instance.specific_procedures.filter(models.Q(finding__isnull=True) | models.Q(finding='')).exists():
+            errors['specific_procedures'] = _('You should provide results of performing specific procedures.')
+
         return errors
 
 
