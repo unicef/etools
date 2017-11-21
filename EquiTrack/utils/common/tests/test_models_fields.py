@@ -1,8 +1,10 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import TestCase
 
-from .models import Parent, CodedGenericChild
+from utils.common.tests.models import CodedGenericChild, Parent
 
 
 class CodedGenericTestCase(TestCase):

@@ -189,7 +189,6 @@ SHARED_APPS = (
 TENANT_APPS = (
     'django_fsm',
     'logentry_admin',
-    'reversion',
     'funds',
     'locations',
     'reports',
@@ -205,7 +204,7 @@ TENANT_APPS = (
     'firms',
     'management',
 )
-INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
+INSTALLED_APPS = ('tenant_schemas',) + SHARED_APPS + TENANT_APPS
 
 # DJANGO: SECURITY
 ALLOWED_HOSTS = [
@@ -325,6 +324,9 @@ CELERYD_PREFETCH_MULTIPLIER = 1
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
 CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+CELERY_ROUTES = {
+    'vision.tasks.sync_handler': {'queue': 'vision_queue'}
+}
 
 # djangorestframework: http://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {

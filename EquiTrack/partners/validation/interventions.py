@@ -7,6 +7,7 @@ from django.utils.translation import ugettext as _
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, check_rigid_related, \
     BasicValidationError, check_rigid_fields, check_required_fields
+
 from partners.permissions import InterventionPermissions
 
 logger = logging.getLogger('partners.interventions.validation')
@@ -63,13 +64,22 @@ def transition_to_closed(i):
 
     # If total_actual_amt >100,000 then attachments has to include
     # at least 1 record with type: "Final Partnership Review"
-    if i.total_frs['total_actual_amt'] > 100000:
+    if i.total_frs['total_actual_amt'] >= 100000:
         if i.attachments.filter(type__name='Final Partnership Review').count() < 1:
             raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
                                      'was attached')])
 
     # TODO: figure out Action Point Validation once the spec is completed
 
+    return True
+
+
+def transtion_to_signed(i):
+    from partners.models import Agreement
+    if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
+        raise TransitionError([_('The PCA related to this record is Suspended or Terminated. '
+                                 'This Programme Document will not change status until the related PCA '
+                                 'is in Signed status')])
     return True
 
 
@@ -212,6 +222,8 @@ class InterventionValid(CompleteValidation):
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if intervention.total_unicef_budget == 0:
+            raise StateValidError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
 
     def state_suspended_valid(self, intervention, user=None):
@@ -226,6 +238,8 @@ class InterventionValid(CompleteValidation):
         today = date.today()
         if not (intervention.start <= today):
             raise StateValidError([_('Today is not after the start date')])
+        if intervention.total_unicef_budget == 0:
+            raise StateValidError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
 
     def state_ended_valid(self, intervention, user=None):

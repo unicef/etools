@@ -1,4 +1,7 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import weakref
+
 from django.contrib.auth.models import Group
 from django.utils.six import python_2_unicode_compatible, string_types
 

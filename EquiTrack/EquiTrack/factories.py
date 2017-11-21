@@ -4,6 +4,7 @@ Model factories used for generating models dynamically for tests
 from datetime import datetime, timedelta, date
 import json
 
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
@@ -17,6 +18,7 @@ from partners import models as partner_models
 from publics import models as publics_models
 from funds import models as funds_models
 from notification import models as notification_models
+from t2f import models as t2f_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
@@ -75,7 +77,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
 
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = user_models.User
+        model = get_user_model()
 
     username = factory.Sequence(lambda n: "user_%d" % n)
     email = factory.Sequence(lambda n: "user{}@notanemail.com".format(n))
@@ -90,9 +92,9 @@ class UserFactory(factory.django.DjangoModelFactory):
         """Override the default _generate() to disable the post-save signal."""
 
         # Note: If the signal was defined with a dispatch_uid, include that in both calls.
-        post_save.disconnect(user_models.UserProfile.create_user_profile, user_models.User)
+        post_save.disconnect(user_models.UserProfile.create_user_profile, get_user_model())
         user = super(UserFactory, cls)._generate(create, attrs)
-        post_save.connect(user_models.UserProfile.create_user_profile, user_models.User)
+        post_save.connect(user_models.UserProfile.create_user_profile, get_user_model())
         return user
 
     @factory.post_generation
@@ -173,17 +175,6 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
-class PartnershipFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = partner_models.PCA
-
-    partner = factory.SubFactory(PartnerFactory)
-    agreement = factory.SubFactory(AgreementFactory)
-    partnership_type = u'PD'
-    title = u'To save the galaxy from the Empire'
-    initiation_date = datetime.today()
-
-
 class InterventionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.Intervention
@@ -204,6 +195,13 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     partner_contribution_local = 20.00
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
+
+
+class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionPlannedVisits
+
+    intervention = factory.SubFactory(InterventionFactory)
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
@@ -236,14 +234,6 @@ class LowerResultFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Lower Result {}'.format(n))
     code = factory.Sequence(lambda n: 'Lower Result Code {}'.format(n))
-
-
-class GoalFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Goal
-
-    name = factory.Sequence(lambda n: 'Goal {}'.format(n))
-    sector = factory.SubFactory(SectorFactory)
 
 
 class UnitFactory(factory.django.DjangoModelFactory):
@@ -447,10 +437,10 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     actual_amt = fuzzy.FuzzyDecimal(1, 300)
     outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
 
-    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1)-timedelta(days=10),
+    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1) - timedelta(days=10),
                                  date(date.today().year, 1, 1))
     end_date = fuzzy.FuzzyDate(date(date.today().year + 1, 1, 1),
-                               date(date.today().year + 1, 1, 1)+timedelta(days=10))
+                               date(date.today().year + 1, 1, 1) + timedelta(days=10))
 
     class Meta:
         model = funds_models.FundsReservationHeader
@@ -613,3 +603,41 @@ class DSARateFactory(factory.django.DjangoModelFactory):
     dsa_amount_60plus_local = 1
     room_rate = 10
     finalization_date = date.today()
+
+
+class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
+    def fuzz(self):
+        return factory.fuzzy._random.choice(
+            [t[0] for t in t2f_models.Travel.CHOICES]
+        )
+
+
+class TravelFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = t2f_models.Travel
+
+    status = FuzzyTravelStatus()
+
+
+class FuzzyTravelType(factory.fuzzy.BaseFuzzyAttribute):
+    def fuzz(self):
+        return factory.fuzzy._random.choice(
+            [t[0] for t in t2f_models.TravelType.CHOICES]
+        )
+
+
+class TravelActivityFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = t2f_models.TravelActivity
+
+    travel_type = FuzzyTravelType()
+    primary_traveler = factory.SubFactory(UserFactory)
+
+    @factory.post_generation
+    def travels(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for travel in extracted:
+                self.travels.add(travel)

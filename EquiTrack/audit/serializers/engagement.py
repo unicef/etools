@@ -1,26 +1,30 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 
-from audit.models import Engagement, Finding, SpotCheck, MicroAssessment, Audit, \
-    FinancialFinding, DetailedFindingInfo, EngagementActionPoint
-from utils.common.serializers.fields import SeparatedReadWriteField
-from partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer, \
-    PartnerStaffMemberNestedSerializer
-from partners.serializers.interventions_v2 import InterventionListSerializer
-from partners.models import PartnerType
 from attachments.models import FileType
 from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
+from audit.models import (
+    Audit, DetailedFindingInfo, Engagement, EngagementActionPoint, FinancialFinding, Finding, MicroAssessment,
+    SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck,)
+from audit.serializers.auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer, PurchaseOrderItemSerializer
+from audit.serializers.mixins import (
+    AuditPermissionsBasedRootSerializerMixin, AuditPermissionsBasedSerializerMixin, EngagementDatesValidation,
+    RiskCategoriesUpdateMixin,)
+from audit.serializers.risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
+from partners.models import PartnerType
+from partners.serializers.interventions_v2 import InterventionListSerializer
+from partners.serializers.partner_organization_v2 import (
+    PartnerOrganizationListSerializer, PartnerStaffMemberNestedSerializer,)
 from users.serializers import MinimalUserSerializer
+from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.common.serializers.mixins import UserContextSerializerMixin
 from utils.writable_serializers.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
-
-from .auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer
-from .mixins import RiskCategoriesUpdateMixin, EngagementDatesValidation, AuditPermissionsBasedRootSerializerMixin
-from .risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -31,6 +35,9 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
         extra_kwargs = {
             'name': {
                 'label': _('Partner Name'),
+            },
+            'phone_number': {
+                'label': _('Phone Number'),
             },
         }
 
@@ -56,7 +63,7 @@ class ReportBase64AttachmentSerializer(WritableNestedSerializerMixin, Base64Atta
 class EngagementActionPointSerializer(UserContextSerializerMixin,
                                       WritableNestedSerializerMixin,
                                       serializers.ModelSerializer):
-    person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True))
+    person_responsible = SeparatedReadWriteField(MinimalUserSerializer(read_only=True, label=_('Person Responsible')))
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = EngagementActionPoint
@@ -108,7 +115,10 @@ class EngagementExportSerializer(serializers.ModelSerializer):
 
 class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serializers.ModelSerializer):
     agreement = SeparatedReadWriteField(
-        read_field=PurchaseOrderSerializer(read_only=True),
+        read_field=PurchaseOrderSerializer(read_only=True, label=_('Purchase Order')),
+    )
+    po_item = SeparatedReadWriteField(
+        read_field=PurchaseOrderItemSerializer(read_only=True, label=_('PO Item')),
     )
     related_agreement = PurchaseOrderSerializer(write_only=True, required=False)
     partner = SeparatedReadWriteField(
@@ -120,13 +130,39 @@ class EngagementLightSerializer(AuditPermissionsBasedRootSerializerMixin, serial
         source='displayed_status',
         read_only=True
     )
-    status_date = serializers.ReadOnlyField(source='displayed_status_date')
+    status_date = serializers.ReadOnlyField(source='displayed_status_date', label=_('Date of Status'))
     unique_id = serializers.ReadOnlyField(label=_('Unique ID'))
 
     class Meta(AuditPermissionsBasedRootSerializerMixin.Meta):
         model = Engagement
         fields = [
-            'id', 'unique_id', 'agreement', 'related_agreement', 'partner', 'engagement_type', 'status', 'status_date',
+            'id', 'unique_id', 'agreement', 'po_item',
+            'related_agreement', 'partner', 'engagement_type',
+            'status', 'status_date',
+
+        ]
+
+    def validate(self, attrs):
+        attrs = super(EngagementLightSerializer, self).validate(attrs)
+
+        po_item = attrs.get('po_item')
+        agreement = attrs.get('agreement')
+        if po_item and agreement and po_item.purchase_order != agreement:
+            msg = self.fields['po_item'].error_messages['does_not_exist']
+            raise serializers.ValidationError({
+                'po_item': [msg.format(pk_value=po_item.pk)]
+            })
+
+        return attrs
+
+
+class SpecificProcedureSerializer(AuditPermissionsBasedSerializerMixin,
+                                  WritableNestedSerializerMixin,
+                                  serializers.ModelSerializer):
+    class Meta(AuditPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
+        model = SpecificProcedure
+        fields = [
+            'id', 'description', 'finding',
         ]
 
 
@@ -137,12 +173,14 @@ class EngagementSerializer(EngagementDatesValidation,
         read_field=AuditorStaffMemberSerializer(many=True, required=False, label=_('Audit Staff Team Members')),
     )
     active_pd = SeparatedReadWriteField(
-        read_field=InterventionListSerializer(many=True, required=False, label=_('Programme Document(s)')),
+        read_field=InterventionListSerializer(many=True, required=False, label=_('Programme Document(s) or SSFA(s)')),
         required=False
     )
     authorized_officers = SeparatedReadWriteField(
-        read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+        read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True, label=_('Authorized Officers'))
     )
+
+    specific_procedures = SpecificProcedureSerializer(many=True, label=_('Specific Procedure To Be Performed'))
 
     engagement_attachments = EngagementBase64AttachmentSerializer(
         many=True, required=False, label=_('Related Documents')
@@ -159,15 +197,18 @@ class EngagementSerializer(EngagementDatesValidation,
             'total_value', 'staff_members', 'active_pd',
             'authorized_officers', 'action_points',
 
+            'joint_audit', 'shared_ip_with',
+
             'start_date', 'end_date',
             'partner_contacted_at', 'date_of_field_visit',
             'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
-            'cancel_comment',
+            'cancel_comment', 'specific_procedures',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
+                'po_item',
                 'start_date', 'end_date', 'total_value',
 
                 'partner_contacted_at',
@@ -191,7 +232,7 @@ class EngagementSerializer(EngagementDatesValidation,
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
 
         if self.instance and partner != self.instance.partner and 'active_pd' not in validated_data:
-            if partner.partner_type != PartnerType.GOVERNMENT:
+            if partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL]:
                 raise serializers.ValidationError({
                     'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ]
                 })
@@ -214,8 +255,8 @@ class EngagementSerializer(EngagementDatesValidation,
 
         if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0 and status == 'new':
             raise serializers.ValidationError({
-                    'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
-                })
+                'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
+            })
         return validated_data
 
 
@@ -246,9 +287,12 @@ class SpotCheckSerializer(EngagementSerializer):
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information',
         ]
+        fields.remove('joint_audit')
+        fields.remove('shared_ip_with')
+        fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
-            'engagement_type': {'read_only': True, 'label': _('Engagement Type')}
+            'engagement_type': {'read_only': True}
         })
         extra_kwargs.update({
             field: {'required': True} for field in [
@@ -263,10 +307,6 @@ class DetailedFindingInfoSerializer(WritableNestedSerializerMixin, serializers.M
         fields = (
             'id', 'finding', 'recommendation',
         )
-        extra_kwargs = {
-            'finding': {'label': _('Description of Finding')},
-            'recommendation': {'label': _('Recommendation and IP Management Response')},
-        }
 
 
 class MicroAssessmentSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
@@ -287,9 +327,10 @@ class MicroAssessmentSerializer(RiskCategoriesUpdateMixin, EngagementSerializer)
         fields = EngagementSerializer.Meta.fields + [
             'findings', 'questionnaire', 'test_subject_areas', 'overall_risk_assessment',
         ]
+        fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
-            'engagement_type': {'read_only': True, 'label': _('Engagement Type')},
+            'engagement_type': {'read_only': True},
             'start_date': {'required': False},
             'end_date': {'required': False},
             'total_value': {'required': False},
@@ -304,9 +345,6 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
             'local_amount', 'amount',
             'description', 'recommendation', 'ip_comments'
         ]
-        extra_kwargs = {
-            'ip_comments': {'label': _('IP Comments')},
-        }
 
 
 class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
@@ -331,13 +369,45 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information',
         ]
+        fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
-            'engagement_type': {'read_only': True, 'label': _('Engagement Type')},
-            'audited_expenditure': {'label': _('Audited Expenditure $')},
-            'financial_findings': {'label': _('Financial Findings $')},
-            'percent_of_audited_expenditure': {'label': _('% Of Audited Expenditure')},
+            'engagement_type': {'read_only': True},
+            'recommendation': {'required': True},
+            'audit_observation': {'required': True},
+            'ip_response': {'required': True},
+            'percent_of_audited_expenditure': {
+                'error_messages': {
+                    'min_value': _('Value can\'t be less than {min_value}.'),
+                    'max_value': _('Value can\'t be greater than {max_value}.'),
+                    'max_whole_digits': _('No more than {max_whole_digits} digits allowed.'),
+                }
+            },
         })
 
     def get_number_of_financial_findings(self, obj):
         return obj.financial_finding_set.count()
+
+
+class SpecialAuditRecommendationSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = SpecialAuditRecommendation
+        fields = [
+            'id', 'description',
+        ]
+
+
+class SpecialAuditSerializer(EngagementSerializer):
+    other_recommendations = SpecialAuditRecommendationSerializer(many=True)
+
+    class Meta(EngagementSerializer.Meta):
+        model = SpecialAudit
+        fields = EngagementSerializer.Meta.fields + [
+            'other_recommendations',
+        ]
+        extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
+        extra_kwargs.update({
+            'start_date': {'required': False},
+            'end_date': {'required': False},
+            'total_value': {'required': False},
+        })

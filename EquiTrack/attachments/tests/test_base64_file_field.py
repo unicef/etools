@@ -1,9 +1,12 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import base64
 
 from rest_framework import serializers
 
 from EquiTrack.tests.mixins import FastTenantTestCase
-from ..serializers_fields import Base64FileField
+
+from attachments.serializers_fields import Base64FileField
 
 
 class TestBase64FileField(FastTenantTestCase):

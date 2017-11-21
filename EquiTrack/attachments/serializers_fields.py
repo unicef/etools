@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import base64
 import mimetypes
 import uuid
@@ -30,7 +32,7 @@ class ModelChoiceField(serializers.PrimaryKeyRelatedField):
 
 class FileTypeModelChoiceField(ModelChoiceField):
     def get_choice(self, obj):
-        return obj.id, obj.name
+        return obj.id, obj.label
 
 
 class Base64FileField(serializers.FileField):
@@ -41,7 +43,7 @@ class Base64FileField(serializers.FileField):
         try:
             mime, encoded_data = data.replace('data:', '', 1).split(';base64,')
             extension = mimetypes.guess_extension(mime)
-            content_file = ContentFile(base64.b64decode(encoded_data), name=str(uuid.uuid4())+extension)
+            content_file = ContentFile(base64.b64decode(encoded_data), name=str(uuid.uuid4()) + extension)
 
         except (ValueError, TypeError):
             raise serializers.ValidationError(_('Incorrect base64 format.'))

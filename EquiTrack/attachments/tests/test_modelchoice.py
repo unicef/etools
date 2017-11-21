@@ -1,13 +1,15 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.metadata import SimpleMetadata
 
+from attachments.metadata import ModelChoiceFieldMixin
+from attachments.models import FileType
+from attachments.serializers_fields import FileTypeModelChoiceField
+from attachments.tests.factories import FileTypeFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
-from ..serializers_fields import FileTypeModelChoiceField
-from ..metadata import ModelChoiceFieldMixin
-from ..models import FileType
-from .factories import FileTypeFactory
 
 
 class TestSerializer(serializers.Serializer):

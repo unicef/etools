@@ -7,20 +7,25 @@ from django.utils import timezone
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.factories import PartnershipFactory, AgreementFactory, InterventionFactory, InterventionBudgetFactory
+from EquiTrack.factories import (
+    AgreementFactory,
+    AgreementAmendmentFactory,
+    InterventionFactory,
+    InterventionBudgetFactory,
+    InterventionPlannedVisitsFactory,
+    TravelFactory,
+    TravelActivityFactory,
+    UserFactory,
+)
 
 from funds.models import Donor, Grant
-
 from reports.models import (
     CountryProgramme,
     ResultType,
 )
 from partners.models import (
-    PCA,
     Agreement,
-    AmendmentLog,
     FundingCommitment,
-    AgreementAmendmentLog,
     PartnerOrganization,
     Assessment,
     Result,
@@ -28,7 +33,9 @@ from partners.models import (
     GovernmentInterventionResult,
     Intervention,
     InterventionBudget,
+    PartnerType,
 )
+from t2f.models import Travel, TravelType
 
 
 def get_date_from_prior_year():
@@ -58,11 +65,7 @@ class TestAgreementNumberGeneration(TenantTestCase):
         self.assertEqual(agreement1.reference_number, expected_reference_number)
 
         # create amendment
-        AgreementAmendmentLog.objects.create(
-            agreement=agreement1,
-            amended_at=self.date,
-            status=PCA.ACTIVE
-        )
+        AgreementAmendmentFactory(agreement=agreement1)
         # reference number should be unchanged.
         self.assertEqual(agreement1.reference_number, expected_reference_number)
 
@@ -144,42 +147,6 @@ class TestAgreementNumberGeneration(TenantTestCase):
         self.assertEqual(agreement.base_number, expected_reference_number)
         self.assertEqual(agreement.agreement_number, expected_reference_number + '-42')
         self.assertEqual(agreement.reference_number, expected_reference_number)
-
-    @skip("Fix this")
-    def test_pd_numbering(self):
-
-        pd_ref = 'LEBA/PCA{year}01/{{}}{year}{{}}'.format(year=self.date.year)
-
-        # create one programme document
-        intervention1 = PartnershipFactory()
-        self.assertEqual(intervention1.reference_number, pd_ref.format('PD', '01'))
-
-        # create another under the same partner and agreement
-        intervention2 = PartnershipFactory(
-            partner=intervention1.partner,
-            agreement=intervention1.agreement
-        )
-        self.assertEqual(intervention2.reference_number, pd_ref.format('PD', '02'))
-
-        # create amendment
-        AmendmentLog.objects.create(
-            partnership=intervention2,
-            amended_at=self.date,
-            status=PCA.ACTIVE
-        )
-        self.assertEqual(intervention2.reference_number, pd_ref.format('PD', '02-01'))
-
-        intervention3 = PartnershipFactory(
-            partner=intervention1.partner,
-            agreement=intervention1.agreement,
-        )
-        self.assertEqual(intervention3.reference_number, pd_ref.format('PD', '03'))
-
-        # agreement numbering remains the same even if previous agreement is deleted
-        intervention3.signed_by_unicef_date = self.date
-        intervention3.save()
-        intervention1.delete()
-        self.assertEqual(intervention3.reference_number, pd_ref.format('PD', '03'))
 
 
 class TestHACTCalculations(TenantTestCase):
@@ -451,7 +418,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     @skip('Deprecated Functionality')
     def test_planned_cash_transfers_gov(self):
-        self.partner_organization.partner_type = "Government"
+        self.partner_organization.partner_type = PartnerType.GOVERNMENT
         self.partner_organization.save()
         CountryProgramme.objects.create(
             name="CP 1",
@@ -484,7 +451,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(hact['planned_cash_transfer'], 150000)
 
     def test_planned_cash_transfers_non_gov(self):
-        self.partner_organization.partner_type = "UN Agency"
+        self.partner_organization.partner_type = PartnerType.UN_AGENCY
         self.partner_organization.save()
         agreement = Agreement.objects.create(
             agreement_type=Agreement.PCA,
@@ -502,63 +469,184 @@ class TestPartnerOrganizationModel(TenantTestCase):
             else self.partner_organization.hact_values
         self.assertEqual(hact['planned_cash_transfer'], 100001)
 
-    @skip('Deprecated functionality -planned visits towards government')
     def test_planned_visits_gov(self):
-        self.partner_organization.partner_type = "Government"
+        self.partner_organization.partner_type = PartnerType.GOVERNMENT
         self.partner_organization.save()
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="/A0/",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
+        intervention = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=Intervention.ACTIVE
         )
-        gi = GovernmentIntervention.objects.create(
-            partner=self.partner_organization,
+        year = datetime.date.today().year
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
+            year=year,
+            programmatic=3
         )
-        rt = ResultType.objects.get(id=1)
-        r = Result.objects.create(
-            result_type=rt,
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
+            year=year - 1,
+            programmatic=2
         )
-        GovernmentInterventionResult.objects.create(
-            intervention=gi,
-            result=r,
-            year=datetime.date.today().year,
-            planned_visits=3,
-        )
-        GovernmentInterventionResult.objects.create(
-            intervention=gi,
-            result=r,
-            year=datetime.date.today().year,
-            planned_visits=2,
-        )
-        self.assertEqual(self.partner_organization.hact_values['planned_visits'], 5)
+        self.assertEqual(self.partner_organization.hact_values['planned_visits'], 0)
 
-    @skip("Fix when HACT available")
     def test_planned_visits_non_gov(self):
-        self.partner_organization.partner_type = "UN Agency"
-        self.partner_organization.status = PCA.ACTIVE
+        self.partner_organization.partner_type = PartnerType.UN_AGENCY
         self.partner_organization.save()
-        agreement = Agreement.objects.create(
-            agreement_type=Agreement.PCA,
+        intervention = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=Intervention.ACTIVE
+        )
+        year = datetime.date.today().year
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
+            year=year,
+            programmatic=3
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention,
+            year=year - 1,
+            programmatic=2
+        )
+        self.assertEqual(self.partner_organization.hact_values['planned_visits'], 3)
+
+    def test_planned_visits_non_gov_no_pv_intervention(self):
+        self.partner_organization.partner_type = PartnerType.UN_AGENCY
+        self.partner_organization.save()
+        intervention1 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=Intervention.ACTIVE
+        )
+        intervention2 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=Intervention.ACTIVE
+        )
+        year = datetime.date.today().year
+        InterventionPlannedVisitsFactory(
+            intervention=intervention1,
+            year=year,
+            programmatic=3
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention2,
+            year=year - 1,
+            programmatic=2
+        )
+        PartnerOrganization.planned_visits(
+            self.partner_organization
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values['planned_visits'],
+            3
+        )
+
+    def test_planned_visits_non_gov_with_pv_intervention(self):
+        self.partner_organization.partner_type = PartnerType.UN_AGENCY
+        self.partner_organization.save()
+        intervention1 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=Intervention.ACTIVE
+        )
+        intervention2 = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=Intervention.ACTIVE
+        )
+        year = datetime.date.today().year
+        pv = InterventionPlannedVisitsFactory(
+            intervention=intervention1,
+            year=year,
+            programmatic=3
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=intervention2,
+            year=year - 1,
+            programmatic=2
+        )
+        PartnerOrganization.planned_visits(
+            self.partner_organization,
+            pv
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values['planned_visits'],
+            3
+        )
+
+    def test_programmatic_visits_update_one(self):
+        self.assertEqual(
+            self.partner_organization.hact_values["programmatic_visits"],
+            0
+        )
+        PartnerOrganization.programmatic_visits(
+            self.partner_organization,
+            update_one=True
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values["programmatic_visits"],
+            1
+        )
+
+    def test_programmatic_visits_update_travel_activity(self):
+        self.assertEqual(
+            self.partner_organization.hact_values["programmatic_visits"],
+            0
+        )
+        traveller = UserFactory()
+        travel = TravelFactory(
+            traveler=traveller,
+            status=Travel.COMPLETED,
+            completed_at=datetime.datetime.now()
+        )
+        TravelActivityFactory(
+            travels=[travel],
+            primary_traveler=traveller,
+            travel_type=TravelType.PROGRAMME_MONITORING,
             partner=self.partner_organization,
         )
-        Intervention.objects.create(
-            title="Int 1",
-            status=PCA.ACTIVE,
-            agreement=agreement,
-            submission_date=datetime.date(datetime.date.today().year, 1, 1),
-            end=datetime.date(datetime.date.today().year + 1, 1, 1),
-            planned_visits=3,
+        PartnerOrganization.programmatic_visits(
+            self.partner_organization,
         )
-        Intervention.objects.create(
-            title="Int 1",
-            status=PCA.ACTIVE,
-            agreement=agreement,
-            submission_date=datetime.date(datetime.date.today().year, 1, 1),
-            end=datetime.date(datetime.date.today().year + 1, 1, 1),
-            planned_visits=2,
+        self.assertEqual(
+            self.partner_organization.hact_values["programmatic_visits"],
+            1
         )
-        self.assertEqual(self.partner_organization.hact_values['planned_visits'], 5)
+
+    def test_spot_checks_update_one(self):
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            0
+        )
+        PartnerOrganization.spot_checks(
+            self.partner_organization,
+            update_one=True,
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            1
+        )
+
+    def test_spot_checks_update_travel_activity(self):
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            0
+        )
+        traveller = UserFactory()
+        travel = TravelFactory(
+            traveler=traveller,
+            status=Travel.COMPLETED,
+            completed_at=datetime.datetime.now()
+        )
+        TravelActivityFactory(
+            travels=[travel],
+            primary_traveler=traveller,
+            travel_type=TravelType.SPOT_CHECK,
+            partner=self.partner_organization,
+        )
+        PartnerOrganization.spot_checks(
+            self.partner_organization,
+        )
+        self.assertEqual(
+            self.partner_organization.hact_values["spot_checks"],
+            1
+        )
 
 
 class TestAgreementModel(TenantTestCase):

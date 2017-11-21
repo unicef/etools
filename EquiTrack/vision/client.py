@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-import json
-import os
 import argparse
+import json
+import logging
+import os
 from urlparse import urljoin
 
 import requests
 from requests.auth import HTTPDigestAuth
+
+logger = logging.getLogger(__name__)
 
 
 class VisionAPIClient(object):
@@ -92,19 +95,15 @@ def main():
     args = parser.parse_args()
 
     try:
-        # parser = SafeConfigParser()
-        # parser.read('settings.ini')
-        # username = parser.get('auth', 'user')
-        # password = parser.get('auth', 'pass')
         client = VisionAPIClient(
             username=args.username,
             password=args.password,
         )
 
-        print client.get_business_areas()
+        logger.info(client.get_business_areas())
 
     except Exception as exp:
-        print str(exp)
+        logger.exception(str(exp))
 
 
 if __name__ == '__main__':

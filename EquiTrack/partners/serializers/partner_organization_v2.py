@@ -7,7 +7,6 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from partners.serializers.v1 import PartnerOrganizationSerializer
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
 
 from partners.models import (
@@ -270,6 +269,13 @@ class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
+        extra_kwargs = {
+            "partner_type": {
+                "error_messages": {
+                    "null": u'Vendor record must belong to PRG2 account group (start from 2500 series)'
+                }
+            }
+        }
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
@@ -296,12 +302,3 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_min_requirements",
             "hact_values",
         )
-
-
-class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
-
-    partner = PartnerOrganizationSerializer(read_only=True)
-
-    class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"

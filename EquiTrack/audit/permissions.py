@@ -1,8 +1,11 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import operator
 
 from django.db import models
 from django.utils import six
 from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import permissions
 
 from audit.models import AuditPermission, UNICEFAuditFocalPoint

@@ -88,11 +88,6 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
         Add a new Intervention
         :return: JSON
         """
-        # TODO: rename these
-        # supplies = request.data.pop("supplies", [])
-        # distributions = request.data.pop("distributions", [])
-
-        # TODO: add supplies, distributions
         related_fields = [
             'planned_budget',
             'planned_visits',
@@ -150,7 +145,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
             if "sector" in query_params.keys():
                 queries.append(Q(sector_locations__sector__id=query_params.get("sector")))
             if "status" in query_params.keys():
-                queries.append(Q(status=query_params.get("status")))
+                queries.append(Q(status__in=query_params.get("status").split(',')))
             if "unicef_focal_points" in query_params.keys():
                 queries.append(Q(unicef_focal_points__in=[query_params.get("unicef_focal_points")]))
             if "start" in query_params.keys():
@@ -200,7 +195,8 @@ class InterventionListDashView(ValidatorViewMixin, ListCreateAPIView):
         if self.request.user.groups.filter(name='Partnership Manager').exists():
             return Intervention.objects.detail_qs().all()
 
-        return Intervention.objects.detail_qs().filter(unicef_focal_points__in=[self.request.user])
+        return Intervention.objects.detail_qs().filter(unicef_focal_points__in=[self.request.user],
+                                                       status__in=[Intervention.ACTIVE])
 
 
 class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):

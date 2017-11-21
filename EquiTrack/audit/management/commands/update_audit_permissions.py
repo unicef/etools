@@ -1,9 +1,12 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.core.management import BaseCommand
 from django.db import connection
 from django.utils import six
-from tenant_schemas import get_tenant_model
 
-from audit.models import AuditPermission, UNICEFAuditFocalPoint, UNICEFUser, Auditor
+from tenant_schemas.utils import get_tenant_model
+
+from audit.models import Auditor, AuditPermission, UNICEFAuditFocalPoint, UNICEFUser
 
 
 class Command(BaseCommand):
@@ -34,10 +37,12 @@ class Command(BaseCommand):
         'riskcategory.*',
         'profile.*',
         'user.*',
+        'specificprocedure.*',
     ]
 
     engagement_overview_block = [
         'engagement.agreement',
+        'engagement.po_item',
         'engagement.related_agreement',
         'engagement.partner_contacted_at',
         'engagement.engagement_type',
@@ -45,6 +50,8 @@ class Command(BaseCommand):
         'engagement.end_date',
         'engagement.total_value',
         'engagement.active_pd',
+        'engagement.joint_audit',
+        'engagement.shared_ip_with',
     ]
 
     partner_block = [
@@ -131,6 +138,10 @@ class Command(BaseCommand):
             'engagement.related_agreement',
             'purchaseorder.contract_end_date',
         ])
+        self.add_permissions(self.new_engagement, self.focal_point, 'edit', [
+            'engagement.specific_procedures',
+            'specificprocedure.description',
+        ])
 
         # created: auditor can edit, everybody else can view, focal point can cancel
         self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
@@ -151,6 +162,13 @@ class Command(BaseCommand):
             'engagementstaffmember.*',
             'profile.*',
             'user.*',
+            'specificprocedure.*',
+        ])
+
+        self.add_permissions(self.partner_contacted, self.auditor, 'edit', [
+            'specialaudit.specific_procedures',
+            'specificprocedure.finding',
+            'specialaudit.other_recommendations',
         ])
 
         self.add_permissions(self.partner_contacted, self.all_unicef_users, 'view', self.everything)
@@ -197,12 +215,12 @@ class Command(BaseCommand):
         for tenant in all_tenants:
             connection.set_tenant(tenant)
             if verbosity >= 3:
-                print('Using {} tenant'.format(tenant.name))
+                self.stdout.write('Using {} tenant'.format(tenant.name))
 
             old_permissions = AuditPermission.objects.all()
             for user in self.everybody:
                 if verbosity >= 3:
-                    print('Updating permissions for {}. {} -> {}'.format(
+                    self.stdout.write('Updating permissions for {}. {} -> {}'.format(
                         user,
                         len(filter(lambda p: p.user_type == self.user_roles[user], old_permissions)),
                         len(filter(lambda p: p.user_type == self.user_roles[user], self.permissions)),
@@ -212,7 +230,7 @@ class Command(BaseCommand):
             AuditPermission.objects.bulk_create(self.permissions)
 
         if verbosity >= 1:
-            print(
+            self.stdout.write(
                 'Audit permissions was successfully updated for {}'.format(
                     ', '.join(map(lambda t: t.name, all_tenants)))
             )

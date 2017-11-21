@@ -4,17 +4,17 @@ Project wide base classes and utility functions for apps
 import csv
 from functools import wraps
 import json
-import requests
 import uuid
 
 from django.conf import settings
 from django.core.cache import cache
-from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
 from django.db import connection
 from django.utils.cache import patch_cache_control
 from rest_framework import status
 from rest_framework.response import Response
+
+import requests
 
 
 def get_environment():
@@ -23,24 +23,6 @@ def get_environment():
 
 def get_current_site():
     return Site.objects.get_current()
-
-
-def get_changeform_link(model, link_name='View', action='change'):
-    """
-    Returns a html button to view the passed in model in the django admin
-    """
-    from .mixins import AdminURLMixin
-
-    if model.id:
-        url_name = AdminURLMixin.admin_url_name.format(
-            app_label=model._meta.app_label,
-            model_name=model._meta.model_name,
-            action=action
-        )
-        changeform_url = reverse(url_name, args=(model.id,))
-        return u'<a class="btn btn-primary default" ' \
-               u'href="{}" target="_blank">{}</a>'.format(changeform_url, link_name)
-    return u''
 
 
 def set_country(user, request):

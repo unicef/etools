@@ -1,15 +1,17 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import random
 
-import factory
 from django.contrib.auth.models import Group
+
+import factory
 from factory import fuzzy
 
-from EquiTrack.factories import InterventionFactory, AgreementFactory, PartnerFactory
-
-from audit.models import AuditorFirm, PurchaseOrder, Engagement, RiskCategory, \
-    RiskBluePrint, Risk, AuditorStaffMember, MicroAssessment, \
-    Audit, SpotCheck, Auditor
-from firms.factories import BaseStaffMemberFactory, BaseFirmFactory
+from audit.models import (
+    Audit, Auditor, AuditorFirm, AuditorStaffMember, Engagement, MicroAssessment, PurchaseOrder, PurchaseOrderItem,
+    Risk, RiskBluePrint, RiskCategory, SpecialAudit, SpotCheck,)
+from EquiTrack.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
@@ -44,12 +46,19 @@ class AuditPartnerFactory(BaseFirmFactory):
     staff_members = factory.RelatedFactory(AuditorStaffMemberFactory, 'auditor_firm')
 
 
+class PurchaseOrderItemFactory(factory.DjangoModelFactory):
+    number = fuzzy.FuzzyInteger(10, 1000, 10)
+
+    class Meta:
+        model = PurchaseOrderItem
+
+
 class PurchaseOrderFactory(factory.DjangoModelFactory):
     class Meta:
         model = PurchaseOrder
 
     auditor_firm = factory.SubFactory(AuditPartnerFactory)
-    order_number = fuzzy.FuzzyText(length=30)
+    items = factory.RelatedFactory(PurchaseOrderItemFactory, 'purchase_order')
 
 
 class EngagementFactory(factory.DjangoModelFactory):
@@ -78,6 +87,11 @@ class MicroAssessmentFactory(EngagementFactory):
 class AuditFactory(EngagementFactory):
     class Meta:
         model = Audit
+
+
+class SpecialAuditFactory(EngagementFactory):
+    class Meta:
+        model = SpecialAudit
 
 
 class SpotCheckFactory(EngagementFactory):

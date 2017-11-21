@@ -1,13 +1,16 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import random
 
 from factory import fuzzy
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
-from audit.transitions.conditions import EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck, \
-    AuditSubmitReportRequiredFieldsCheck
+from audit.models import SpecificProcedure
 from audit.tests.base import EngagementTransitionsTestCaseMixin
-from audit.tests.factories import MicroAssessmentFactory, AuditFactory, SpotCheckFactory
+from audit.tests.factories import AuditFactory, MicroAssessmentFactory, SpecialAuditFactory, SpotCheckFactory
+from audit.transitions.conditions import (
+    AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck,)
+from EquiTrack.tests.mixins import APITenantTestCase
 
 
 class EngagementCheckTransitionsTestCaseMixin(object):
@@ -20,7 +23,7 @@ class EngagementCheckTransitionsTestCaseMixin(object):
 
         self.assertEqual(response.status_code, expected_response)
         if errors:
-            self.assertListEqual(sorted(response.data.keys()), sorted(errors or []))
+            self.assertItemsEqual(response.data.keys(), errors or [])
 
     def _test_submit(self, user, expected_response, errors=None, data=None):
         return self._test_transition(user, 'submit', expected_response, errors=errors, data=data)
@@ -39,8 +42,8 @@ class MATransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     def _init_filled_engagement(self):
         super(MATransitionsTestCaseMixin, self)._init_filled_engagement()
         self._fill_category('ma_questionnaire')
-        self._fill_category('ma_subject_areas', extra='{"comments": "some info"}')
-        self._fill_category('ma_global_assessment', extra='{"comments": "some info"}')
+        self._fill_category('ma_subject_areas', extra={"comments": "some info"})
+        self._fill_category('ma_global_assessment', extra={"comments": "some info"})
 
 
 class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
@@ -61,6 +64,14 @@ class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         super(AuditTransitionsTestCaseMixin, self)._init_filled_engagement()
         self._fill_audit_specified_fields()
         self._fill_category('audit_key_weakness')
+
+
+class SpecialAuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
+    engagement_factory = SpecialAuditFactory
+    endpoint = 'special-audits'
+
+    def _fill_specific_procedure(self):
+        SpecificProcedure(audit=self.engagement, description=fuzzy.FuzzyText(length=20).fuzz()).save()
 
 
 class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
@@ -99,8 +110,8 @@ class TestMATransitionsTestCase(EngagementCheckTransitionsTestCaseMixin, MATrans
     def test_attachments_required(self):
         self._fill_date_fields()
         self._fill_category('ma_questionnaire')
-        self._fill_category('ma_subject_areas', extra='{"comments": "some info"}')
-        self._fill_category('ma_global_assessment', extra='{"comments": "some info"}')
+        self._fill_category('ma_subject_areas', extra={"comments": "some info"})
+        self._fill_category('ma_global_assessment', extra={"comments": "some info"})
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['report_attachments'])
 
     def test_submit_filled_report(self):
@@ -128,6 +139,25 @@ class TestAuditTransitionsTestCase(
 
     def test_submit_filled_report(self):
         self._init_filled_engagement()
+        self._test_submit(self.auditor, status.HTTP_200_OK)
+
+
+class TestSATransitionsTestCase(
+    EngagementCheckTransitionsTestCaseMixin, SpecialAuditTransitionsTestCaseMixin, APITenantTestCase
+):
+    def test_submit_without_finding_object(self):
+        self._fill_specific_procedure()
+        self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['specific_procedures'])
+
+    def test_submit_without_report(self):
+        self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['report_attachments'])
+
+    def test_success_submit(self):
+        self._init_filled_engagement()
+        self._fill_specific_procedure()
+        for sp in self.engagement.specific_procedures.all():
+            sp.finding = 'Test'
+            sp.save()
         self._test_submit(self.auditor, status.HTTP_200_OK)
 
 
@@ -188,7 +218,7 @@ class EngagementCheckTransitionsMetadataTestCaseMixin(object):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(sorted(response.data['actions']['allowed_FSM_transitions']), sorted(actions))
+        self.assertItemsEqual(response.data['actions']['allowed_FSM_transitions'], actions)
 
 
 class TestSCTransitionsMetadataTestCase(

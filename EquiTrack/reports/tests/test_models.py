@@ -1,22 +1,11 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
 from unittest import skipIf, TestCase
 
 from EquiTrack.factories import (
-    CountryProgrammeFactory,
-    GoalFactory,
-    IndicatorFactory,
-    IndicatorBlueprintFactory,
-    LowerResultFactory,
-    ResultFactory,
-    ResultTypeFactory,
-    SectorFactory,
-    UnitFactory,
-    )
+    CountryProgrammeFactory, IndicatorBlueprintFactory, IndicatorFactory, LowerResultFactory, ResultFactory,
+    ResultTypeFactory, SectorFactory, UnitFactory,)
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
@@ -74,15 +63,6 @@ class TestStrUnicode(TestCase):
         instance = LowerResultFactory.build(name=u'\xccsland', code=u'xyz')
         self.assertEqual(str(instance), b'xyz: \xc3\x8csland')
         self.assertEqual(unicode(instance), u'xyz: \xccsland')
-
-    def test_goal(self):
-        instance = GoalFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
-        self.assertEqual(unicode(instance), u'xyz')
-
-        instance = GoalFactory.build(name=u'\xccsland')
-        self.assertEqual(str(instance), b'\xc3\x8csland')
-        self.assertEqual(unicode(instance), u'\xccsland')
 
     def test_unit(self):
         instance = UnitFactory.build(type=b'xyz')

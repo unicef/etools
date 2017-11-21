@@ -1,6 +1,8 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from rest_framework.filters import BaseFilterBackend
 
-from .models import Engagement
+from audit.models import Engagement
 
 
 class DisplayStatusFilter(BaseFilterBackend):

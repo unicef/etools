@@ -1,6 +1,9 @@
+from __future__ import unicode_literals
+
 from django.http import HttpResponse
 from django.views.generic import View
-from .service_checks import CHECKS, ServiceStatus
+
+from monitoring.service_checks import CHECKS, ServiceStatus
 
 
 class CheckView(View):
@@ -19,12 +22,11 @@ class CheckView(View):
         results = {}
         for check_id, check_function in CHECKS.items():
             results[check_id] = run_test(check_function)
-
         if any(not r.success for r in results.values()):
             response = 'Problems with the following services:\n{}'.format(
                 '\n'.join(
-                   '{}: {}'.format(service_id, result.message)
-                   for service_id, result in results.items() if not result.success
+                    '{}: {}'.format(service_id, result.message)
+                    for service_id, result in results.items() if not result.success
                 )
             )
             return HttpResponse(response, status=500, content_type='text/plain')

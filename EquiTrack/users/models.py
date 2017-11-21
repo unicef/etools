@@ -1,14 +1,13 @@
-from decimal import Decimal
 import logging
 import sys
+from decimal import Decimal
 
 from django.conf import settings
-from django.db import models, transaction, connection
-from django.contrib.auth.models import User
-from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, User
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import connection, models, transaction
 from django.db.models.signals import post_save, pre_delete
-from django.core.validators import MinValueValidator, MaxValueValidator
-
 from djangosaml2.signals import pre_user_save
 from tenant_schemas.models import TenantMixin
 
@@ -183,7 +182,7 @@ class UserProfile(models.Model):
     Relates to :model:`users.Office`
     """
 
-    user = models.OneToOneField(User, related_name='profile')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile')
     # TODO: after migration remove the ability to add blank=True
     guid = models.CharField(max_length=40, unique=True, null=True)
 
@@ -208,8 +207,10 @@ class UserProfile(models.Model):
     post_number = models.CharField(max_length=32, null=True, blank=True)
     post_title = models.CharField(max_length=64, null=True, blank=True)
     vendor_number = models.CharField(max_length=32, null=True, blank=True, unique=True)
-    supervisor = models.ForeignKey(User, related_name='supervisee', on_delete=models.SET_NULL, blank=True, null=True)
-    oic = models.ForeignKey(User, blank=True, on_delete=models.SET_NULL, null=True)  # related oic_set
+    supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='supervisee', on_delete=models.SET_NULL,
+                                   blank=True, null=True)
+    oic = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+                            null=True, blank=True)  # related oic_set
 
     # TODO: refactor when sections are properly set
     section_code = models.CharField(max_length=32, null=True, blank=True)
@@ -256,7 +257,7 @@ class UserProfile(models.Model):
                 g = Group.objects.get(name='UNICEF User')
                 g.user_set.add(sender)
             except Group.DoesNotExist:
-                logger.error('Can not find main group UNICEF User')
+                logger.error(u'Can not find main group UNICEF User')
 
             sender.is_staff = True
             sender.save()
@@ -270,7 +271,7 @@ class UserProfile(models.Model):
             try:
                 new_country = Country.objects.get(business_area_code=adfs_country[0])
             except Country.DoesNotExist:
-                logger.error("Login - Business Area: {} not found for user {}".format(adfs_country[0], sender.email))
+                logger.error(u"Login - Business Area: {} not found for user {}".format(adfs_country[0], sender.email))
                 return False
 
         if new_country and new_country != sender.profile.country:
@@ -311,17 +312,17 @@ def create_partner_user(sender, instance, created, **kwargs):
     if created:
 
         try:
-            user, user_created = User.objects.get_or_create(
+            user, user_created = get_user_model().objects.get_or_create(
                 # the built in username field is 30 chars, we can't set this to the email address which is likely longer
                 username=instance.email[:30],
                 email=instance.email
             )
             if not user_created:
-                logger.info('User already exists for a partner staff member: {}'.format(instance.email))
+                logger.info(u'User already exists for a partner staff member: {}'.format(instance.email))
                 # TODO: check for user not being already associated with another partnership (can be done on the form)
         except Exception as exp:
             # we dont need do anything special except log the error, we have enough information to create the user later
-            logger.exception('Exception occurred whilst creating partner user: {}'.format(exp.message))
+            logger.exception(u'Exception occurred whilst creating partner user: {}'.format(exp.message))
         else:
             # TODO: here we have a decision.. either we update the user with the info just received from
             # TODO: or we update the instance with the user we already have. this might have implications on login.
@@ -330,7 +331,7 @@ def create_partner_user(sender, instance, created, **kwargs):
                     country = Country.objects.get(schema_name=connection.schema_name)
                     user.profile.country = country
                 except Country.DoesNotExist:
-                    logger.error("Couldn't get the current country schema for user: {}".format(user.username))
+                    logger.error(u"Couldn't get the current country schema for user: {}".format(user.username))
 
                 user.email = instance.email
                 user.first_name = instance.first_name
@@ -351,7 +352,7 @@ def delete_partner_relationship(sender, instance, **kwargs):
             profile.user.is_active = False
             profile.user.save()
     except Exception as exp:
-        logger.exception('Exception occurred whilst de-linking partner user: {}'.format(exp.message))
+        logger.exception(u'Exception occurred whilst de-linking partner user: {}'.format(exp.message))
 
 
 pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')
