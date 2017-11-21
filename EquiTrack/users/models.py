@@ -255,9 +255,10 @@ class UserProfile(models.Model):
         if not sender.is_staff:
             try:
                 g = Group.objects.get(name='UNICEF User')
-                g.user_set.add(sender)
             except Group.DoesNotExist:
                 logger.error(u'Can not find main group UNICEF User')
+            else:
+                g.user_set.add(sender)
 
             sender.is_staff = True
             sender.save()

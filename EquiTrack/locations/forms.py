@@ -7,7 +7,7 @@ from carto.auth import APIKeyAuthClient
 from carto.exceptions import CartoException
 from carto.sql import SQLClient
 
-from .models import CartoDBTable
+from locations.models import CartoDBTable
 
 logger = logging.getLogger(__name__)
 
