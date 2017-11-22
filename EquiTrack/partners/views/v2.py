@@ -3,7 +3,7 @@ import operator
 
 from django.contrib.auth import models
 from django.db.models.functions import Concat
-from django.db.models import F, Value
+from django.db.models import Value
 from model_utils import Choices
 
 from rest_framework import status
@@ -127,9 +127,10 @@ class PMPDropdownsListApiView(APIView):
         """
         signed_by_unicef = list(models.User.objects.filter(
             groups__name__in=['Senior Management Team'],
-            profile__country=request.tenant).annotate(
-                full_name=Concat('first_name', Value(' '), 'last_name'), user_id=F('id')
-        ).values('user_id', 'full_name', 'username', 'email'))
+            profile__country=request.tenant
+        ).annotate(
+            name=Concat('first_name', Value(' '), 'last_name')
+        ).values('id', 'name', 'username', 'email'))
 
         country_programmes = list(CountryProgramme.objects.all_active_and_future.values('id', 'wbs', 'name',
                                                                                         'from_date', 'to_date'))
