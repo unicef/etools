@@ -137,10 +137,11 @@ class PartnerStaffFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PartnerStaffMember
 
+    partner = factory.SubFactory('EquiTrack.factories.PartnerFactory')
     title = 'Jedi Master'
     first_name = 'Mace'
     last_name = 'Windu'
-    email = factory.Sequence(lambda n: "mace{}@theforce.org".format(n))
+    email = factory.Sequence(lambda n: "mace{}@example.com".format(n))
 
 
 class PartnerFactory(factory.django.DjangoModelFactory):

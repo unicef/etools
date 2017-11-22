@@ -206,7 +206,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         return response
 
 
-class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListCreateAPIView):
+class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):
     """
     Returns a list of all Partner staff members
     """
@@ -224,15 +224,12 @@ class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListCreateAPIView):
         """
         Use restriceted field set for listing
         """
-        if self.request.method == "GET":
-            query_params = self.request.query_params
-            if "format" in query_params.keys():
-                if query_params.get("format") == 'csv':
-                    return PartnerStaffMemberExportSerializer
-                if query_params.get("format") == 'csv_flat':
-                    return PartnerStaffMemberExportFlatSerializer
-        if self.request.method == "POST":
-            return PartnerStaffMemberCreateUpdateSerializer
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return PartnerStaffMemberExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return PartnerStaffMemberExportFlatSerializer
         return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
 
 

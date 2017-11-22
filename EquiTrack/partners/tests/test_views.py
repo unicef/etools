@@ -1305,7 +1305,6 @@ class TestAgreementAPIView(APITenantTestCase):
 
 
 class TestPartnerStaffMemberAPIView(APITenantTestCase):
-
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
@@ -1314,156 +1313,22 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         self.partner_staff_user.groups.add(GroupFactory())
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
         self.partner_staff_user.profile.save()
+        self.url = reverse(
+            "partners_api:partner-staff-members-list",
+            args=[self.partner.pk]
+        )
 
-    @skip("different endpoint")
-    def test_partner_retrieve_embedded_staffmembers(self):
+    def test_get(self):
         response = self.forced_auth_req(
             'get',
-            '/api/partners/{}/'.format(self.partner.id),
+            self.url,
             user=self.unicef_staff
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("Partner", response.data["name"])
-        self.assertEqual("Mace", response.data["staff_members"][0]["first_name"])
-
-    @skip("Skip staffmembers for now")
-    def test_partner_staffmember_create_non_active(self):
-        data = {
-            "email": "a@aaa.com",
-            "partner": self.partner.id,
-            "first_name": "John",
-            "last_name": "Doe",
-            "title": "foobar"
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/staff-members/',
-            user=self.partner_staff_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["non_field_errors"],
-                         ["New Staff Member needs to be active at the moment of creation"])
-
-    @skip("Skip staffmembers for now")
-    def test_partner_staffmember_create_already_partner(self):
-        partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        partner_staff = PartnerStaffFactory(partner=partner)
-        partner_staff_user = UserFactory(is_staff=True)
-        partner_staff_user.profile.partner_staff_member = partner_staff.id
-        partner_staff_user.profile.save()
-        data = {
-            "email": partner_staff_user.email,
-            "partner": self.partner.id,
-            "first_name": "John",
-            "last_name": "Doe",
-            "title": "foobar",
-            "active": True
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/staff-members/',
-            user=partner_staff_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(
-            "The email for the partner contact is used by another partner contact. Email has to be unique to proceed",
-            response.data["non_field_errors"][0])
-
-    @skip("Skip staffmembers for now")
-    def test_partner_staffmember_create(self):
-        data = {
-            "email": "a@aaa.com",
-            "partner": self.partner.id,
-            "first_name": "John",
-            "last_name": "Doe",
-            "title": "foobar",
-            "active": True,
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/staff-members/',
-            user=self.partner_staff_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    @skip("Skip staffmembers for now")
-    def test_partner_staffmember_retrieve(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/staff-members/{}/'.format(self.partner_staff.id),
-            user=self.partner_staff_user
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["first_name"], "Mace")
-
-    @skip("Skip staffmembers for now")
-    def test_partner_staffmember_update(self):
-        data = {
-            "email": self.partner_staff.email,
-            "partner": self.partner.id,
-            "first_name": "John",
-            "last_name": "Doe",
-            "title": "foobar updated",
-            "active": True,
-        }
-        response = self.forced_auth_req(
-            'put',
-            '/api/v2/staff-members/{}/'.format(self.partner_staff.id),
-            user=self.partner_staff_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["title"], "foobar updated")
-
-    @skip("Skip staffmembers for now")
-    def test_partner_staffmember_update_email(self):
-        data = {
-            "email": "a@a.com",
-            "partner": self.partner.id,
-            "first_name": "John",
-            "last_name": "Doe",
-            "title": "foobar updated",
-            "active": True,
-        }
-        response = self.forced_auth_req(
-            'put',
-            '/api/v2/staff-members/{}/'.format(self.partner_staff.id),
-            user=self.partner_staff_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("User emails cannot be changed, please remove the user and add another one",
-                      response.data["non_field_errors"][0])
-
-    @skip("Skip staffmembers for now")
-    def test_partner_staffmember_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            '/api/v2/staff-members/{}/'.format(self.partner_staff.id),
-            user=self.partner_staff_user
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    @skip("Skip staffmembers for now")
-    def test_partner_staffmember_retrieve_properties(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/staff-members/{}/properties/'.format(self.partner_staff.id),
-            user=self.partner_staff_user
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.rendered_content)
+        self.assertIn(data[0]["first_name"], self.partner_staff.first_name)
+        self.assertIn(data[0]["last_name"], self.partner_staff.last_name)
 
 
 class TestInterventionViews(APITenantTestCase):
