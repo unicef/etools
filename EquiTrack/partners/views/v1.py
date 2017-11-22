@@ -25,21 +25,18 @@ class PCAPDFView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        try:
-            ctx_data = self.get_context_data(**kwargs)
+        ctx_data = self.get_context_data(**kwargs)
 
-            if ctx_data['error'] is not None:
-                return HttpResponse(ctx_data['error'])
+        if ctx_data['error'] is not None:
+            return HttpResponse(ctx_data['error'])
+        else:
+            pdf_response = load_internal_pdf_template("agreements", ctx_data)
+
+            # return HttpResponse(pdf_response, content_type='application/pdf')
+            if pdf_response.status_code == status.HTTP_200_OK:
+                return HttpResponse(pdf_response, content_type='application/pdf')
             else:
-                pdf_response = load_internal_pdf_template("agreements", ctx_data)
-
-                # return HttpResponse(pdf_response, content_type='application/pdf')
-                if pdf_response.status_code == status.HTTP_200_OK:
-                    return HttpResponse(pdf_response, content_type='application/pdf')
-                else:
-                    return HttpResponse('PDF generation service returned an invalid response.')
-        except:
-            return HttpResponse('PDF generation encountered an unexpected error.')
+                return HttpResponse('PDF generation service returned an invalid response.')
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
