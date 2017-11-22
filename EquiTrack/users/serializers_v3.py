@@ -8,6 +8,8 @@ from t2f.serializers.user_data import T2FUserDataSerializer
 from users.models import Country, UserProfile
 
 
+# temporary list of Countries that will use the Auditor Portal Module.
+# Logic be removed once feature gating is in place
 AP_ALLOWED_COUNTRIES = [
     'UAT',
     'Lebanon',
