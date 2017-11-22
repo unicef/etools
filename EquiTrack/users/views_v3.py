@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from users.models import Country, UserProfile
 from users.serializers_v3 import (
-    MinimalCountryDetailSerializer,
+    CountryDetailSerializer,
     MinimalUserDetailSerializer,
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
@@ -103,7 +103,7 @@ class CountryView(ListAPIView):
     Country is determined by the currently logged in user.
     """
     model = Country
-    serializer_class = MinimalCountryDetailSerializer
+    serializer_class = CountryDetailSerializer
 
     def get_queryset(self):
         user = self.request.user

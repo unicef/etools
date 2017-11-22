@@ -262,7 +262,7 @@ class TestUserViewsV3(APITenantTestCase):
         self.assertEqual(len(response_json), 2)
 
     def test_retrieve_user_countries(self):
-        response = self.forced_auth_req('get', reverse('v3-user-country-details'), user=self.unicef_user)
+        response = self.forced_auth_req('get', reverse('user-country-details'), user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
