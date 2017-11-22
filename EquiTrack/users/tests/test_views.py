@@ -482,7 +482,6 @@ class TestUserViewSet(APITenantTestCase):
                     "job_title": "New Job",
                     "phone_number": "123-546-7890",
                     "country_override": None,
-                    "installation_id": None,
                 }
             }
         )
@@ -507,7 +506,6 @@ class TestUserViewSet(APITenantTestCase):
                     "job_title": "New Job",
                     "phone_number": "123-546-7890",
                     "country_override": None,
-                    "installation_id": None,
                 },
                 "groups": [group.pk]
             }
