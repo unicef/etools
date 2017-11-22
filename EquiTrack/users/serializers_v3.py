@@ -77,6 +77,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         model = UserProfile
         exclude = ('id',)
 
+    # TODO remove once feature gating is in place. 
     def get_show_ap(self, obj):
         """If user is within one of the allowed countries then
         show_ap is True, otherwise False
