@@ -3,10 +3,10 @@ from django.contrib.gis import admin
 from leaflet.admin import LeafletGeoAdmin
 from mptt.admin import MPTTModelAdmin
 
-from . import models
-from .forms import CartoDBTableForm
-from .tasks import update_sites_from_cartodb
 from EquiTrack.forms import AutoSizeTextForm
+from locations.forms import CartoDBTableForm
+from locations.models import CartoDBTable, GatewayType, Location
+from locations.tasks import update_sites_from_cartodb
 
 
 class LocationAdmin(LeafletGeoAdmin, MPTTModelAdmin):
@@ -55,6 +55,6 @@ class CartoDBTableAdmin(admin.ModelAdmin):
             update_sites_from_cartodb.delay(table)
 
 
-admin.site.register(models.Location, LocationAdmin)
-admin.site.register(models.GatewayType)
-admin.site.register(models.CartoDBTable, CartoDBTableAdmin)
+admin.site.register(Location, LocationAdmin)
+admin.site.register(GatewayType)
+admin.site.register(CartoDBTable, CartoDBTableAdmin)
