@@ -198,9 +198,6 @@ class UserProfile(models.Model):
     job_title = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
 
-    # TODO: remove this
-    installation_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='Device ID')
-
     staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True)
     org_unit_code = models.CharField(max_length=32, null=True, blank=True)
     org_unit_name = models.CharField(max_length=64, null=True, blank=True)

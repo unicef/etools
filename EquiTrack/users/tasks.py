@@ -9,13 +9,14 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q
 
 import requests
+from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
 from users.models import Country, Section, User, UserProfile
 from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
 
-logger = logging.getLogger(__name__)
+logger = get_task_logger(__name__)
 
 
 class UserMapper(object):
