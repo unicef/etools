@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 import datetime
+import decimal
 import json
 
 from django.conf import settings
@@ -140,6 +141,7 @@ def _get_currency_name_or_default(budget):
 # TODO: move this to a workspace app for common configuration options
 
 
+@python_2_unicode_compatible
 class WorkspaceFileType(models.Model):
     """
     Represents a file type
@@ -147,7 +149,7 @@ class WorkspaceFileType(models.Model):
 
     name = models.CharField(max_length=64, unique=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -176,6 +178,7 @@ def hact_default():
     }
 
 
+@python_2_unicode_compatible
 class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     """
     Represents a partner organization
@@ -411,7 +414,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         ordering = ['name']
         unique_together = ('name', 'vendor_number')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def latest_assessment(self, type):
@@ -634,6 +637,7 @@ class PartnerStaffMemberManager(models.Manager):
         return super(PartnerStaffMemberManager, self).get_queryset().select_related('partner')
 
 
+@python_2_unicode_compatible
 class PartnerStaffMember(TimeStampedModel):
     """
     Represents a staff member at the partner organization.
@@ -683,7 +687,7 @@ class PartnerStaffMember(TimeStampedModel):
         full_name = '%s %s' % (self.first_name, self.last_name)
         return full_name.strip()
 
-    def __unicode__(self):
+    def __str__(self):
         return'{} {} ({})'.format(
             self.first_name,
             self.last_name,
@@ -712,6 +716,7 @@ class PartnerStaffMember(TimeStampedModel):
         return super(PartnerStaffMember, self).save(**kwargs)
 
 
+@python_2_unicode_compatible
 class Assessment(TimeStampedModel):
     """
     Represents an assessment for a partner organization.
@@ -813,7 +818,7 @@ class Assessment(TimeStampedModel):
 
     tracker = FieldTracker()
 
-    def __unicode__(self):
+    def __str__(self):
         return'{type}: {partner} {rating} {date}'.format(
             type=self.type,
             partner=self.partner.name,
@@ -859,6 +864,7 @@ def activity_to_active_side_effects(i, old_instance=None, user=None):
     pass
 
 
+@python_2_unicode_compatible
 class Agreement(TimeStampedModel):
     """
     Represents an agreement with the partner organization.
@@ -987,7 +993,7 @@ class Agreement(TimeStampedModel):
     class Meta:
         ordering = ['-created']
 
-    def __unicode__(self):
+    def __str__(self):
         return'{} for {} ({} - {})'.format(
             self.agreement_type,
             self.partner.name,
@@ -1125,6 +1131,7 @@ class AgreementAmendmentManager(models.Manager):
         return super(AgreementAmendmentManager, self).get_queryset().select_related('agreement__partner')
 
 
+@python_2_unicode_compatible
 class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement
@@ -1166,7 +1173,7 @@ class AgreementAmendment(TimeStampedModel):
     view_objects = AgreementAmendmentManager()
     objects = models.Manager()
 
-    def __unicode__(self):
+    def __str__(self):
         return "{} {}".format(
             self.agreement.reference_number,
             self.number
@@ -1234,6 +1241,7 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+@python_2_unicode_compatible
 class Intervention(TimeStampedModel):
     """
     Represents a partner intervention.
@@ -1446,7 +1454,7 @@ class Intervention(TimeStampedModel):
     class Meta:
         ordering = ['-created']
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}'.format(
             self.number
         )
@@ -1731,6 +1739,7 @@ class Intervention(TimeStampedModel):
         super(Intervention, self).save()
 
 
+@python_2_unicode_compatible
 class InterventionAmendment(TimeStampedModel):
     """
     Represents an amendment for the partner intervention.
@@ -1803,7 +1812,7 @@ class InterventionAmendment(TimeStampedModel):
 
         return super(InterventionAmendment, self).save(**kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}:- {}'.format(
             self.amendment_number,
             self.signed_date
@@ -1831,6 +1840,7 @@ class InterventionPlannedVisits(TimeStampedModel):
         unique_together = ('intervention', 'year')
 
 
+@python_2_unicode_compatible
 class InterventionResultLink(TimeStampedModel):
     intervention = models.ForeignKey(Intervention, related_name='result_links')
     cp_output = models.ForeignKey(Result, related_name='intervention_links')
@@ -1838,7 +1848,7 @@ class InterventionResultLink(TimeStampedModel):
 
     tracker = FieldTracker()
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} {}'.format(
             self.intervention, self.cp_output
         )
@@ -1888,12 +1898,15 @@ class InterventionBudget(TimeStampedModel):
         super(InterventionBudget, self).save(**kwargs)
 
     def __str__(self):
+        # self.total is None if object hasn't been saved yet
+        total = self.total if self.total else decimal.Decimal('0.00')
         return '{}: {:.2f}'.format(
             self.intervention,
-            self.total
+            total
         )
 
 
+@python_2_unicode_compatible
 class FileType(models.Model):
     """
     Represents a file type
@@ -1919,10 +1932,11 @@ class FileType(models.Model):
 
     tracker = FieldTracker()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class InterventionAttachment(TimeStampedModel):
     """
     Represents a file for the partner intervention
@@ -1943,7 +1957,7 @@ class InterventionAttachment(TimeStampedModel):
     class Meta:
         ordering = ['-created']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.attachment.name
 
 
@@ -1986,6 +2000,7 @@ class GovernmentInterventionManager(models.Manager):
 
 
 # TODO: check this for sanity
+@python_2_unicode_compatible
 class GovernmentIntervention(models.Model):
     """
     Represents a government intervention.
@@ -2013,7 +2028,7 @@ class GovernmentIntervention(models.Model):
 
     tracker = FieldTracker()
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Number: {}'.format(self.number) if self.number else \
             '{}: {}'.format(self.pk, self.reference_number)
 
@@ -2049,6 +2064,7 @@ def activity_default():
     return {}
 
 
+@python_2_unicode_compatible
 class GovernmentInterventionResult(models.Model):
     """
     Represents an result from government intervention.
@@ -2103,7 +2119,7 @@ class GovernmentInterventionResult(models.Model):
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}, {}'.format(self.intervention.number, self.result)
 
 

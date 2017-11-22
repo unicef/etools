@@ -80,25 +80,21 @@ class PMPStaticDropdownsListAPIView(APIView):
         """
 
         local_workspace = self.request.user.profile.country
-        cso_types = choices_to_json_ready(
-            list(
-                PartnerOrganization.objects.values_list(
-                    'cso_type',
-                    flat=True).order_by('cso_type').distinct('cso_type')))
+        cso_types = PartnerOrganization.objects.values_list('cso_type', flat=True)
+        cso_types = cso_types.exclude(cso_type__isnull=True).exclude(cso_type__exact='')
+        cso_types = cso_types.order_by('cso_type').distinct('cso_type')
+        cso_types = choices_to_json_ready(list(cso_types))
         partner_types = choices_to_json_ready(PartnerType.CHOICES)
         agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
         assessment_types = choices_to_json_ready(Assessment.ASSESSMENT_TYPES)
-        agreement_types = choices_to_json_ready(
-            [typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
+        agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(AgreementAmendment.AMENDMENT_TYPES)
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
         location_types = GatewayType.objects.values('id', 'name', 'admin_level').order_by('id')
-
-        currencies = map(lambda x: {"label": x[0], "value": x[1]},
-                         Currency.objects.values_list('code', 'id').order_by('code').distinct())
+        currencies = choices_to_json_ready(Currency.objects.values_list('id', 'code').order_by('code').distinct())
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
