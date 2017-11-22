@@ -6,6 +6,7 @@ from rest_framework import mixins, permissions, viewsets
 from rest_framework.generics import ListAPIView
 
 from EquiTrack.utils import etag_cached
+from EquiTrack.views import PublicTenantMixin
 from locations.models import CartoDBTable, GatewayType, Location
 from locations.serializers import (
     CartoDBTableSerializer, GatewayTypeSerializer, LocationLightSerializer, LocationSerializer,)
@@ -20,7 +21,8 @@ class CartoDBTablesView(PublicTenantMixin, ListAPIView):
     permission_classes = (permissions.IsAdminUser,)
 
 
-class LocationTypesViewSet(PublicTenantMixin,mixins.RetrieveModelMixin,
+class LocationTypesViewSet(PublicTenantMixin,
+                           mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
