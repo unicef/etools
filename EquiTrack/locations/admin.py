@@ -50,9 +50,8 @@ class CartoDBTableAdmin(admin.ModelAdmin):
     actions = ('import_sites',)
 
     def import_sites(self, request, queryset):
-
         for table in queryset:
-            update_sites_from_cartodb.delay(table)
+            update_sites_from_cartodb.delay(table.pk)
 
 
 admin.site.register(Location, LocationAdmin)
