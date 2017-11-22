@@ -230,7 +230,16 @@ class TestPMPDropdownsListApiView(APITenantTestCase):
         self.url = reverse("partners_api:dropdown-pmp-list")
         self.client = TenantClient(self.tenant)
 
+        self.expected_keys = sorted((
+            u'signed_by_unicef_users',
+            u'cp_outputs',
+            u'country_programmes',
+            u'file_types',
+            u'donors'
+        ))
+
     def test_get(self):
         self.client.force_login(self.unicef_staff)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data.keys()), self.expected_keys)

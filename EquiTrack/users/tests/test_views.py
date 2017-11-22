@@ -201,6 +201,7 @@ class TestUserViews(APITenantTestCase):
 
 class TestUserViewsV3(APITenantTestCase):
     def setUp(self):
+        self.unicef_user = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
         self.partnership_manager_user = UserFactory(is_staff=True)
@@ -209,7 +210,6 @@ class TestUserViewsV3(APITenantTestCase):
 
     def test_api_users_list(self):
         response = self.forced_auth_req('get', '/api/v3/users/', user=self.unicef_staff)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
@@ -260,3 +260,10 @@ class TestUserViewsV3(APITenantTestCase):
                                         data={'verbosity': 'minimal'}, user=self.unicef_superuser)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 2)
+
+    def test_retrieve_user_countries(self):
+        response = self.forced_auth_req('get', reverse('user-country-details'), user=self.unicef_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+        self.assertEqual(self.unicef_user.profile.country.name, response.data[0]['name'])
