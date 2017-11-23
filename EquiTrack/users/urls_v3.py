@@ -9,5 +9,5 @@ urlpatterns = (
     url(r'^changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post'])),
     url(r'^country/$', CountryView.as_view(http_method_names=['get']), name="user-country-details"),
     url(r'^(?P<pk>[0-9]+)/$', UsersDetailAPIView.as_view(http_method_names=['get'])),
-    url(r'^', UsersListApiView.as_view()),  # TODO: staff required , partners should not be able to hit this
+    url(r'^$', UsersListApiView.as_view()),  # TODO: staff required , partners should not be able to hit this
 )
