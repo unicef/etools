@@ -213,8 +213,9 @@ class TestUserViewsV3(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
-    def test_api_users_list_no_permission(self):
+    def test_api_users_list_user_forbidden(self):
         response = self.forced_auth_req('get', reverse('users_v3:users-list'), user=self.unicef_user)
+        # non-staff users should not be able to see this endpoint
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_users_api_list_values(self):
