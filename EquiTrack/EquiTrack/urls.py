@@ -90,7 +90,7 @@ urlpatterns = [
 
 
     # ***************  API version 3  ******************
-    url(r'^api/v3/users/', include('users.urls_v3')),
+    url(r'^api/v3/users/', include('users.urls_v3', namespace='users_v3')),
 
 
     url(r'^api/docs/', schema_view),

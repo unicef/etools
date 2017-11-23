@@ -209,12 +209,12 @@ class TestUserViewsV3(APITenantTestCase):
         self.partnership_manager_user.groups.add(self.group)
 
     def test_api_users_list(self):
-        response = self.forced_auth_req('get', reverse('users-list'), user=self.unicef_staff)
+        response = self.forced_auth_req('get', reverse('users_v3:users-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
     def test_api_users_list_no_permission(self):
-        response = self.forced_auth_req('get', reverse('users-list'), user=self.unicef_user)
+        response = self.forced_auth_req('get', reverse('users_v3:users-list'), user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_users_api_list_values(self):
@@ -267,7 +267,7 @@ class TestUserViewsV3(APITenantTestCase):
         self.assertEqual(len(response_json), 2)
 
     def test_retrieve_user_countries(self):
-        response = self.forced_auth_req('get', reverse('user-country-details'), user=self.unicef_user)
+        response = self.forced_auth_req('get', reverse('users_v3:user-country-details'), user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
