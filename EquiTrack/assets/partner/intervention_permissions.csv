@@ -76,4 +76,5 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.10.1,frs,UNICEF User,,Signed,Required,FALSE
 3.10.1,frs,UNICEF User,,Suspended,Required,FALSE
 3.13.1,reporting_periods,Partnership Manager,,Draft,Edit,TRUE
+3.13.1,reporting_periods,Partnership Manager,,Draft,View,TRUE
 3.13.1,reporting_periods,UNICEF User,,Draft,Required,FALSE
