@@ -106,12 +106,12 @@ urlpatterns = [
     url(r'^api/audit/', include('audit.urls', namespace='audit')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
-    url(r'^api/v2/users/', include('users.urls_v2')),
+    url(r'^api/v2/users/', include('users.urls_v2', namespace='users_v2')),
     url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
 
 
     # ***************  API version 3  ******************
-    url(r'^api/v3/users/', include('users.urls_v3')),
+    url(r'^api/v3/users/', include('users.urls_v3', namespace='users_v3')),
 
 
     url(r'^api/docs/', schema_view),
