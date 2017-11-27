@@ -43,7 +43,6 @@ from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from workplan.views import (
     WorkplanViewSet,
     WorkplanProjectViewSet,
-    LabelViewSet,
 )
 
 
@@ -78,7 +77,6 @@ api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes'
 
 api.register(r'workplans', WorkplanViewSet, base_name='workplans')
 api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_projects')
-api.register(r'labels', LabelViewSet, base_name='labels')
 
 urlpatterns = [
     # Used for admin and dashboard pages in django

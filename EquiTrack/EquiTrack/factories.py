@@ -274,13 +274,6 @@ class WorkplanFactory(factory.django.DjangoModelFactory):
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
-class LabelFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = workplan_models.Label
-
-    name = factory.Sequence(lambda n: 'Label {}'.format(n))
-
-
 class WorkplanProjectFactory(factory.DjangoModelFactory):
     class Meta:
         model = WorkplanProject

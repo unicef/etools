@@ -27,11 +27,3 @@ class WorkplanProject(models.Model):
 
     workplan = models.ForeignKey('Workplan', related_name='workplan_projects')
     # TODO: add all results that belong to this workplan project
-
-
-class Label(models.Model):
-    """
-    Represents a label
-    """
-
-    name = models.CharField(max_length=32, unique=True)
