@@ -130,7 +130,7 @@ def parse_multipart_data(data):
                     parcurs.append(k[i + 1])
                     exec_str = 'r' + pth + '.append(data[form_data_path(parcurs)])'
 
-            exec exec_str in globals(), locals()
+                exec exec_str in globals(), locals()
             i += 1
 
     return r
