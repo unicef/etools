@@ -2,26 +2,10 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 
-from model_utils.models import TimeStampedModel
-
 from locations.models import Location
 from partners.models import PartnerOrganization
 from reports.models import Result
 from users.models import Section
-
-
-class Comment(TimeStampedModel):
-    """
-    Represents a comment
-
-    Relates to :model:`auth.User`
-    Relates to :model:`workplan.Workplan`
-    """
-
-    author = models.ForeignKey(User, related_name='comments')
-    tagged_users = models.ManyToManyField(User, blank=True, related_name='+')
-    text = models.TextField()
-    workplan = models.ForeignKey('Workplan', related_name='comments')
 
 
 class Workplan(models.Model):

@@ -6,21 +6,13 @@ from locations.models import Location
 from partners.models import PartnerOrganization
 from users.models import Section
 from workplan.models import (
-    Comment, CoverPage, CoverPageBudget, Label, Milestone, ResultWorkplanProperty, Workplan, WorkplanProject,)
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
-        fields = ('id', 'author', 'tagged_users', 'text', 'modified', 'workplan')
+    CoverPage, CoverPageBudget, Label, Milestone, ResultWorkplanProperty, Workplan, WorkplanProject,)
 
 
 class WorkplanSerializer(serializers.ModelSerializer):
-    comments = CommentSerializer(many=True)
-
     class Meta:
         model = Workplan
-        fields = ('id', 'status', 'country_programme', 'workplan_projects', 'comments')
+        fields = ('id', 'status', 'country_programme', 'workplan_projects')
 
 
 class LabelSerializer(serializers.ModelSerializer):
