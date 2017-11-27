@@ -36,20 +36,6 @@ class WorkplanProject(models.Model):
     # TODO: add all results that belong to this workplan project
 
 
-class Quarter(models.Model):
-    # TODO: refactor this to use the country Quarters
-    """
-    Represents a quarter for the work plan
-
-    Relates to :model:`workplan.Workplan`
-    """
-
-    workplan = models.ForeignKey('Workplan', related_name='quarters')
-    name = models.CharField(max_length=64)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-
-
 class Label(models.Model):
     """
     Represents a label
