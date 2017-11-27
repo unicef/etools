@@ -20,7 +20,6 @@ from publics import models as publics_models
 from funds import models as funds_models
 from notification import models as notification_models
 from t2f import models as t2f_models
-from workplan import models as workplan_models
 
 
 class OfficeFactory(factory.django.DjangoModelFactory):
@@ -264,13 +263,6 @@ class GovernmentInterventionFactory(factory.DjangoModelFactory):
     partner = factory.SubFactory(PartnerFactory)
     country_programme = factory.SubFactory(CountryProgrammeFactory)
     number = 'RefNumber'
-
-
-class WorkplanFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = workplan_models.Workplan
-
-    country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
 class DonorFactory(factory.DjangoModelFactory):
