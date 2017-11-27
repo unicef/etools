@@ -1,8 +1,7 @@
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAdminUser
-from rest_framework.response import Response
 
-from workplan.models import Label, ResultWorkplanProperty, Workplan, WorkplanProject
+from workplan.models import Label, Workplan, WorkplanProject
 from workplan.serializers import (
     LabelSerializer, WorkplanProjectSerializer, WorkplanSerializer,)
 
@@ -21,15 +20,6 @@ class LabelViewSet(mixins.RetrieveModelMixin,
     queryset = Label.objects.all()
     serializer_class = LabelSerializer
     permission_classes = (IsAdminUser,)
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Override destroy to avoid deleting labels that are in use.
-        """
-        instance = self.get_object()
-        if ResultWorkplanProperty.has_label(instance.id):
-            return Response("Cannot delete label that is in use.", status=status.HTTP_400_BAD_REQUEST)
-        return super(LabelViewSet, self).destroy(request, *args, **kwargs)
 
 
 class WorkplanProjectViewSet(viewsets.ModelViewSet):
