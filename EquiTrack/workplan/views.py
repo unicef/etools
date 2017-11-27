@@ -2,18 +2,9 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
-from workplan.models import Label, Milestone, ResultWorkplanProperty, Workplan, WorkplanProject
+from workplan.models import Label, ResultWorkplanProperty, Workplan, WorkplanProject
 from workplan.serializers import (
-    LabelSerializer, MilestoneSerializer, WorkplanProjectSerializer, WorkplanSerializer,)
-
-
-class MilestoneViewSet(viewsets.ModelViewSet):
-    """
-    CRUD api for Milestones
-    """
-    queryset = Milestone.objects.all()
-    serializer_class = MilestoneSerializer
-    permission_classes = (IsAdminUser,)
+    LabelSerializer, WorkplanProjectSerializer, WorkplanSerializer,)
 
 
 class WorkplanViewSet(viewsets.ModelViewSet):

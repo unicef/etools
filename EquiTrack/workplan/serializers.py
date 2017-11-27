@@ -6,7 +6,7 @@ from locations.models import Location
 from partners.models import PartnerOrganization
 from users.models import Section
 from workplan.models import (
-    CoverPage, CoverPageBudget, Label, Milestone, ResultWorkplanProperty, Workplan, WorkplanProject,)
+    CoverPage, CoverPageBudget, Label, ResultWorkplanProperty, Workplan, WorkplanProject,)
 
 
 class WorkplanSerializer(serializers.ModelSerializer):
@@ -21,13 +21,6 @@ class LabelSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MilestoneSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Milestone
-        fields = ("id", "description", "assumptions",)
-
-
 class ResultWorkplanPropertySerializer(serializers.ModelSerializer):
 
     sections = serializers.PrimaryKeyRelatedField(
@@ -35,7 +28,6 @@ class ResultWorkplanPropertySerializer(serializers.ModelSerializer):
         read_only=False,
         queryset=Section.objects.all()
     )
-    milestones = MilestoneSerializer(many=True)
     geotag = serializers.PrimaryKeyRelatedField(
         many=True,
         read_only=False,

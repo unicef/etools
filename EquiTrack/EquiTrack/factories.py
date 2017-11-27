@@ -274,14 +274,6 @@ class WorkplanFactory(factory.django.DjangoModelFactory):
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
-class CommentFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = workplan_models.Comment
-
-    text = factory.Sequence(lambda n: 'Comment body {}'.format(n))
-    workplan = factory.SubFactory(WorkplanFactory)
-
-
 class LabelFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = workplan_models.Label
@@ -353,15 +345,6 @@ class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
         if extracted:
             for label in extracted:
                 self.labels.add(label)
-
-
-class MilestoneFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = workplan_models.Milestone
-
-    result_wp_property = factory.SubFactory(ResultWorkplanPropertyFactory)
-    description = factory.Sequence(lambda n: 'Description {}'.format(n))
-    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
 
 
 class CoverPageBudgetFactory(factory.DjangoModelFactory):
