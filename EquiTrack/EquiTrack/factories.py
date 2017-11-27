@@ -21,7 +21,6 @@ from funds import models as funds_models
 from notification import models as notification_models
 from t2f import models as t2f_models
 from workplan import models as workplan_models
-from workplan.models import WorkplanProject
 
 
 class OfficeFactory(factory.django.DjangoModelFactory):
@@ -272,13 +271,6 @@ class WorkplanFactory(factory.django.DjangoModelFactory):
         model = workplan_models.Workplan
 
     country_programme = factory.SubFactory(CountryProgrammeFactory)
-
-
-class WorkplanProjectFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = WorkplanProject
-
-    workplan = factory.SubFactory(WorkplanFactory)
 
 
 class DonorFactory(factory.DjangoModelFactory):

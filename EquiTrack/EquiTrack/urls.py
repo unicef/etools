@@ -42,7 +42,6 @@ from t2f.urls import urlpatterns as t2f_patterns
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
 from workplan.views import (
     WorkplanViewSet,
-    WorkplanProjectViewSet,
 )
 
 
@@ -76,7 +75,6 @@ api.register(r'locations-light', LocationsLightViewSet, base_name='locations-lig
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
 api.register(r'workplans', WorkplanViewSet, base_name='workplans')
-api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_projects')
 
 urlpatterns = [
     # Used for admin and dashboard pages in django
