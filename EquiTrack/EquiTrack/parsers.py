@@ -1,5 +1,7 @@
-
 def int_or_str(c):
+    """Return parameter as type interger, if possible
+    otherwise as type string
+    """
     try:
         return int(c)
     except ValueError:
@@ -7,10 +9,19 @@ def int_or_str(c):
 
 
 def list_or_dict(a):
+    """If value provided is an integer then return a list
+    otherwise return a dictionary
+    """
     return '[]' if isinstance(a, int) else '{}'
 
 
-def l_o_k(myd):
+def create_lists_from_keys(myd):
+    """Convert string list into a list
+
+    eg: '[1 2 3]' => ['', 1, 2, 3]
+
+    Leave leading space in list
+    """
     r = []
     myl = list(myd.keys())
     myl.sort()
@@ -23,6 +34,10 @@ def l_o_k(myd):
 
 
 def form_path_from_list(p_l, list=False, end=False):
+    """Form key from list provided
+
+    If last element and is type int, then append dictionary
+    """
     r = ''
     p_l = [x for x in p_l if x != u'_obj']
     for i in range(0, len(p_l)):
@@ -38,23 +53,28 @@ def form_path_from_list(p_l, list=False, end=False):
 
 
 def set_current_path_in_dict(r, path, next_value, end=False):
-    # the last element in the path will need attention
-    l_e = path[-1]
+    """Set path in dictionary
 
-    if isinstance(l_e, int):
+    If last element is type integer then append dictionory
+    otherwise set the element to provided next value
+    """
+    # the last element in the path will need attention
+    last_element = path[-1]
+
+    if isinstance(last_element, int):
         # we have to append to previous path
         pth = form_path_from_list(path, list=True)
         exec_str = 'r' + pth
-        exec exec_str in globals(), locals()
     else:
         pth = form_path_from_list(path)
         exec_str = 'r' + pth + ' = ' + next_value
-        exec exec_str in globals(), locals()
+
+    exec exec_str in globals(), locals()
     return r
 
 
 def path_in_dict_exists(r, pth):
-
+    """Check if path exists in dictionary"""
     try:
         exec_str = 'r' + pth
         exec exec_str in globals(), locals()
@@ -63,7 +83,11 @@ def path_in_dict_exists(r, pth):
     return True
 
 
-def form_myd_path(path):
+def form_data_path(path):
+    """Create a key from list provided
+
+    eg: ['one', 'two'] => '[one][two]'
+    """
     mys = ''
     for i in range(0, len(path)):
         if i == 0:
@@ -73,42 +97,40 @@ def form_myd_path(path):
     return mys
 
 
-def parse_multipart_data(myd):
+def set_in_path(r, path, next_value):
+    # 'strip the _obj elements before set'
+    pth = form_path_from_list(path)
+
+    if not path_in_dict_exists(r, pth):
+        r = set_current_path_in_dict(r, path, list_or_dict(next_value))
+
+    return r
+
+
+def parse_multipart_data(data):
     r = {}
-    lok = l_o_k(myd)
+    list_of_keys = create_lists_from_keys(data)
 
-    def set_in_path(r, path, next_value, original_list):
-        # 'strip the _obj elements before set'
-        pth = form_path_from_list(path)
-
-        if path_in_dict_exists(r, pth):
-            # move to the next bit
-            pass
-        else:
-            r = set_current_path_in_dict(r, path, list_or_dict(next_value))
-
-        return r
-
-    for k in lok:
+    for k in list_of_keys:
         i = 0
         parcurs = []
         if i >= len(k)-1:
-            r[k[i]] = myd[k[i]]
+            r[k[i]] = data[k[i]]
         while i < len(k)-1:
             parcurs.append(k[i])
             e = k[i]
-            r = set_in_path(r, parcurs, k[i+1], k)
+            r = set_in_path(r, parcurs, k[i+1])
             if i == len(k) - 2:
                 if not isinstance(k[i+1], int):
                     parcurs.append(k[i + 1])
                     pth = form_path_from_list(parcurs)
-                    exec_str = 'r' + pth + ' = ' + 'myd[form_myd_path(parcurs)]'
-                    exec exec_str in globals(), locals()
+                    exec_str = 'r' + pth + ' = ' + 'data[form_data_path(parcurs)]'
                 else:
                     pth = form_path_from_list(parcurs)
                     parcurs.append(k[i + 1])
-                    exec_str = 'r' + pth + '.append(myd[form_myd_path(parcurs)])'
-                    exec exec_str in globals(), locals()
+                    exec_str = 'r' + pth + '.append(data[form_data_path(parcurs)])'
+
+            exec exec_str in globals(), locals()
             i += 1
 
     return r

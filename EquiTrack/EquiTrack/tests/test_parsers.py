@@ -27,9 +27,9 @@ class TestListOrDict(TestCase):
         self.assertEqual(parsers.list_or_dict("1"), '{}')
 
 
-class TestLOK(TestCase):
+class TestCreateListsFromKeys(TestCase):
     def test_empty_dict(self):
-        self.assertEqual(parsers.l_o_k({}), [])
+        self.assertEqual(parsers.create_lists_from_keys({}), [])
 
     def test_keys(self):
         data = {
@@ -40,7 +40,7 @@ class TestLOK(TestCase):
             "[1 str]": "List Int Str"
         }
         self.assertEqual(
-            parsers.l_o_k(data),
+            parsers.create_lists_from_keys(data),
             [[1], ["", 1, "str"], ["", 1], ["", "str"], ["str"]]
         )
 
@@ -108,19 +108,31 @@ class TestPathInDictExists(TestCase):
         self.assertTrue(res)
 
 
-class TestFormMYDPath(TestCase):
+class TestFormDataPath(TestCase):
     def test_empty(self):
         """If empty path list provided, then return an empty string"""
-        self.assertEqual(parsers.form_myd_path([]), "")
+        self.assertEqual(parsers.form_data_path([]), "")
 
     def test_single_element(self):
         """If only one element in list then return str of that element"""
-        self.assertEqual(parsers.form_myd_path([1]), "1")
+        self.assertEqual(parsers.form_data_path([1]), "1")
 
     def test_multi_element(self):
         """If multiple elements in list then return dict str of path"""
-        res = parsers.form_myd_path(["d", "k", "2"])
+        res = parsers.form_data_path(["d", "k", "2"])
         self.assertEqual(res, "d[k][2]")
+
+
+class TestSetInPath(TestCase):
+    def test_not_in_path(self):
+        data = {"one": "old"}
+        res = parsers.set_in_path(data, ["two"], "change")
+        self.assertEqual(res, data)
+
+    def test_in_path(self):
+        data = {"one": "old"}
+        res = parsers.set_in_path(data, ["one", "_obj"], "change")
+        self.assertEqual(res, {"one": "old"})
 
 
 class TestParseMultipartData(TestCase):
