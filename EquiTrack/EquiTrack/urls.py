@@ -44,7 +44,6 @@ from workplan.views import (
     WorkplanViewSet,
     WorkplanProjectViewSet,
     LabelViewSet,
-    MilestoneViewSet
 )
 
 
@@ -78,7 +77,6 @@ api.register(r'locations-light', LocationsLightViewSet, base_name='locations-lig
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
 api.register(r'workplans', WorkplanViewSet, base_name='workplans')
-api.register(r'workplans/milestones', MilestoneViewSet, base_name='milestones')
 api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_projects')
 api.register(r'labels', LabelViewSet, base_name='labels')
 
