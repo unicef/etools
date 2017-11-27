@@ -7,9 +7,9 @@ from users.views import (
 urlpatterns = (
     # api
     url(r'^api/profile/$', UserAuthAPIView.as_view()),
-    url(r'^api/changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post'])),
-    url(r'^api/', UsersView.as_view()),  # TODO: staff required , partners should not be able to hit this
-    url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view(http_method_names=['get'])),
+    url(r'^api/changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post']), name="country-change"),
+    url(r'^api/$', UsersView.as_view()),  # TODO: staff required , partners should not be able to hit this
+    url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
     url(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
 
     # user profile

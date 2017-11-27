@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
 
 import csv
-import logging
 from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
+from celery.utils.log import get_task_logger
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
 
@@ -22,7 +22,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 
-log = logging.getLogger(__name__)
+logger = get_task_logger(__name__)
 
 
 @app.task
@@ -37,10 +37,10 @@ def import_travel_agents(xml_structure):
 
         try:
             travel_agent = TravelAgent.objects.get(code=vendor_code)
-            log.debug('Travel agent found with code %s', vendor_code)
+            logger.debug('Travel agent found with code %s', vendor_code)
         except ObjectDoesNotExist:
             travel_agent = TravelAgent(code=vendor_code)
-            log.debug('Travel agent created with code %s', vendor_code)
+            logger.debug('Travel agent created with code %s', vendor_code)
 
         travel_agent.name = name
         travel_agent.city = city
@@ -57,13 +57,13 @@ def import_travel_agents(xml_structure):
             try:
                 country = Country.objects.get(vision_code=country_code)
             except ObjectDoesNotExist:
-                log.error('Country not found with vision code %s', country_code)
+                logger.error('Country not found with vision code %s', country_code)
                 continue
 
             travel_agent.country = country
 
         travel_agent.save()
-        log.info('Travel agent %s saved.', travel_agent.name)
+        logger.info('Travel agent %s saved.', travel_agent.name)
 
         TravelExpenseType.objects.get_or_create(vendor_number=vendor_code, is_travel_agent=True,
                                                 defaults={'title': name})
@@ -86,24 +86,24 @@ def import_exchange_rates(xml_structure):
             currency = Currency.objects.get(code=currency_code)
         except ObjectDoesNotExist:
             currency = Currency(code=currency_code)
-            log.debug('Currency %s created.', currency_name)
+            logger.debug('Currency %s created.', currency_name)
 
         currency.name = currency_name
         currency.decimal_places = decimal_places
         currency.save()
-        log.info('Currency %s was updated.', currency_name)
+        logger.info('Currency %s was updated.', currency_name)
 
         try:
             exchange_rate = ExchangeRate.objects.get(currency=currency)
         except ObjectDoesNotExist:
             exchange_rate = ExchangeRate(currency=currency)
-            log.debug('Exchange rate created for currency %s', currency_code)
+            logger.debug('Exchange rate created for currency %s', currency_code)
 
         exchange_rate.x_rate = x_rate
         exchange_rate.valid_from = valid_from
         exchange_rate.valid_to = valid_to
         exchange_rate.save()
-        log.info('Exchange rate %s was updated.', currency_name)
+        logger.info('Exchange rate %s was updated.', currency_name)
 
 
 def _fetch_business_areas(wbs_set):
