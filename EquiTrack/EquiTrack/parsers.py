@@ -1,5 +1,5 @@
 def int_or_str(c):
-    """Return parameter as type interger, if possible
+    """Return parameter as type integer, if possible
     otherwise as type string
     """
     try:
