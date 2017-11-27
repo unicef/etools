@@ -21,7 +21,7 @@ from funds import models as funds_models
 from notification import models as notification_models
 from t2f import models as t2f_models
 from workplan import models as workplan_models
-from workplan.models import WorkplanProject, CoverPage
+from workplan.models import WorkplanProject
 
 
 class OfficeFactory(factory.django.DjangoModelFactory):
@@ -347,21 +347,11 @@ class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
                 self.labels.add(label)
 
 
-class CoverPageFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = CoverPage
-
-    national_priority = fuzzy.FuzzyText(length=50)
-    responsible_government_entity = fuzzy.FuzzyText(length=255)
-    planning_assumptions = fuzzy.FuzzyText(length=255)
-
-
 class WorkplanProjectFactory(factory.DjangoModelFactory):
     class Meta:
         model = WorkplanProject
 
     workplan = factory.SubFactory(WorkplanFactory)
-    cover_page = factory.RelatedFactory(CoverPageFactory, 'workplan_project')
 
 
 class DonorFactory(factory.DjangoModelFactory):

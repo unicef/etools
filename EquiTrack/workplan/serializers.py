@@ -6,7 +6,7 @@ from locations.models import Location
 from partners.models import PartnerOrganization
 from users.models import Section
 from workplan.models import (
-    CoverPage, Label, ResultWorkplanProperty, Workplan, WorkplanProject,)
+    Label, ResultWorkplanProperty, Workplan, WorkplanProject,)
 
 
 class WorkplanSerializer(serializers.ModelSerializer):
@@ -49,16 +49,7 @@ class ResultWorkplanPropertySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CoverPageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CoverPage
-        fields = ('id', 'workplan_project', 'national_priority', 'responsible_government_entity',
-                  'planning_assumptions', 'budgets', 'logo')
-
-
 class WorkplanProjectSerializer(serializers.ModelSerializer):
-    cover_page = CoverPageSerializer()
-
     class Meta:
         model = WorkplanProject
         fields = '__all__'

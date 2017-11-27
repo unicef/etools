@@ -106,33 +106,3 @@ class ResultWorkplanProperty(models.Model):
             bool: True if used, False if not
         """
         return cls.objects.filter(labels__id=label_id).exists()
-
-
-class CoverPage(models.Model):
-    """
-    Represents a cover page for the work plan project
-
-    Relates to :model:`workplan.WorkplanProject`
-    """
-
-    workplan_project = models.OneToOneField('WorkplanProject', related_name='cover_page')
-
-    national_priority = models.CharField(max_length=255)
-    responsible_government_entity = models.CharField(max_length=255)
-    planning_assumptions = models.TextField()
-    logo = models.ImageField(width_field='logo_width', height_field='logo_height', null=True, blank=True)
-
-
-class CoverPageBudget(models.Model):
-    """
-    Represents a budget for the cover page
-
-    Relates to :model:`workplan.CoverPage`
-    """
-    cover_page = models.ForeignKey('CoverPage', related_name='budgets')
-
-    from_date = models.DateField()
-    to_date = models.DateField()
-    total_amount = models.CharField(max_length=64)
-    funded_amount = models.CharField(max_length=64)
-    unfunded_amount = models.CharField(max_length=64)
