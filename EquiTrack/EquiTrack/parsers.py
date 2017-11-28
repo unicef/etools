@@ -8,14 +8,7 @@ def int_or_str(c):
         return c
 
 
-def list_or_dict(a):
-    """If value provided is an integer then return a list
-    otherwise return a dictionary
-    """
-    return '[]' if isinstance(a, int) else '{}'
-
-
-def create_lists_from_keys(myd):
+def create_lists_from_keys(data):
     """Convert string list into a list
 
     eg: '[1 2 3]' => ['', 1, 2, 3]
@@ -23,9 +16,9 @@ def create_lists_from_keys(myd):
     Leave leading space in list
     """
     r = []
-    myl = list(myd.keys())
-    myl.sort()
-    for k in myl:
+    keys = data.keys()
+    keys.sort()
+    for k in keys:
         split_c = k.replace('[', ' ').replace(']', '').split(' ')
         split_c = map(int_or_str, split_c)
         r.append(split_c)
@@ -33,78 +26,40 @@ def create_lists_from_keys(myd):
     return r
 
 
-def form_path_from_list(p_l, list=False, end=False):
-    """Form key from list provided
-
-    If last element and is type int, then append dictionary
-    """
-    r = ''
-    p_l = [x for x in p_l if x != u'_obj']
-    for i in range(0, len(p_l)):
-        k = p_l[i]
-        if isinstance(k, int):
-            if list and i == len(p_l)-1:
-                r += '.append({})'
-            else:
-                r += '[' + str(k) + ']'
-        else:
-            r += '["' + str(k) + '"]'
-    return r
-
-
-def set_current_path_in_dict(r, path, next_value, end=False):
-    """Set path in dictionary
-
-    If last element is type integer then append dictionory
-    otherwise set the element to provided next value
-    """
-    # the last element in the path will need attention
-    last_element = path[-1]
-
-    if isinstance(last_element, int):
-        # we have to append to previous path
-        pth = form_path_from_list(path, list=True)
-        exec_str = 'r' + pth
-    else:
-        pth = form_path_from_list(path)
-        exec_str = 'r' + pth + ' = ' + next_value
-
-    exec exec_str in globals(), locals()
-    return r
-
-
-def path_in_dict_exists(r, pth):
-    """Check if path exists in dictionary"""
-    try:
-        exec_str = 'r' + pth
-        exec exec_str in globals(), locals()
-    except Exception as e:
-        return False
-    return True
-
-
-def form_data_path(path):
+def create_key(path):
     """Create a key from list provided
 
     eg: ['one', 'two'] => '[one][two]'
     """
-    mys = ''
+    result = ''
     for i in range(0, len(path)):
         if i == 0:
-            mys += str(path[i])
+            result += str(path[i])
         else:
-            mys += '[' + str(path[i]) + ']'
-    return mys
+            result += '[' + str(path[i]) + ']'
+    return result
 
 
-def set_in_path(r, path, next_value):
-    # 'strip the _obj elements before set'
-    pth = form_path_from_list(path)
+def build_dict(data, keys, val):
+    """Use recursion to drill down through the keys
 
-    if not path_in_dict_exists(r, pth):
-        r = set_current_path_in_dict(r, path, list_or_dict(next_value))
+    Building up the data variable based on the keys
+    Assign the val parameter to the last element in keys
 
-    return r
+    If element in keys is an integer then we create a list
+    otherwise we use a dictionary type
+    """
+    if len(keys) > 1 and not isinstance(keys[0], int):
+        init_type = [] if isinstance(keys[1], int) else {}
+        data[keys[0]] = data.get(keys[0], init_type)
+
+    res = build_dict(data[keys[0]], keys[1:], val) if len(keys) > 1 else val
+    if isinstance(data, list):
+        if res not in data:
+            data.append(res)
+    else:
+        data[keys[0]] = res
+    return data
 
 
 def parse_multipart_data(data):
@@ -112,25 +67,10 @@ def parse_multipart_data(data):
     list_of_keys = create_lists_from_keys(data)
 
     for k in list_of_keys:
-        i = 0
-        parcurs = []
-        if i >= len(k)-1:
-            r[k[i]] = data[k[i]]
-        while i < len(k)-1:
-            parcurs.append(k[i])
-            e = k[i]
-            r = set_in_path(r, parcurs, k[i+1])
-            if i == len(k) - 2:
-                if not isinstance(k[i+1], int):
-                    parcurs.append(k[i + 1])
-                    pth = form_path_from_list(parcurs)
-                    exec_str = 'r' + pth + ' = ' + 'data[form_data_path(parcurs)]'
-                else:
-                    pth = form_path_from_list(parcurs)
-                    parcurs.append(k[i + 1])
-                    exec_str = 'r' + pth + '.append(data[form_data_path(parcurs)])'
-
-                exec exec_str in globals(), locals()
-            i += 1
-
+        if len(k) == 1:
+            r[k[0]] = data[k[0]]
+        else:
+            val = data[create_key(k)]
+            keys = [x for x in k if x != "_obj"]
+            r = build_dict(r, keys, val)
     return r
