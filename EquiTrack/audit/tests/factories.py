@@ -31,7 +31,6 @@ from EquiTrack.factories import (
     AgreementFactory,
     InterventionFactory,
     PartnerFactory,
-    UserFactory,
 )
 from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
 
@@ -168,8 +167,6 @@ class EngagementActionPointFactory(factory.DjangoModelFactory):
 
     description = fuzzy.FuzzyText(length=100)
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
-    # author = factory.SubFactory(UserFactory)
-    # person_responsible = factory.SubFactory(UserFactory)
 
 
 class AuditPermissionFactory(factory.django.DjangoModelFactory):
