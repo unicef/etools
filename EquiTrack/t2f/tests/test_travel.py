@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
-
-from t2f.models import Travel, Expense
+from t2f.models import Expense, Travel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
 
 
