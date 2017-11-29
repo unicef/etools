@@ -1,13 +1,12 @@
 from __future__ import unicode_literals
 
-from rest_framework import viewsets, mixins
+from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAdminUser
 
 from t2f.filters import invoices
-from t2f.views import T2FPagePagination
-
 from t2f.models import Invoice
 from t2f.serializers.invoices import InvoiceSerializer
+from t2f.views import T2FPagePagination
 
 
 class InvoiceViewSet(mixins.ListModelMixin,
