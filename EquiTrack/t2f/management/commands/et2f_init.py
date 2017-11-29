@@ -9,28 +9,26 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
-from tenant_schemas.postgresql_backend.base import FakeTenant
-
-from publics.models import Currency, AirlineCompany, DSARegion, TravelExpenseType, WBS, Grant, Fund, BusinessRegion, \
-    BusinessArea, Country
-from partners.models import PartnerOrganization
-from users.models import Country as UserCountry, Office, Section
 
 from _private import populate_permission_matrix
+
+from partners.models import PartnerOrganization
+from publics.models import (
+    AirlineCompany, BusinessArea, BusinessRegion, Country, Currency, DSARegion, Fund, Grant, TravelExpenseType, WBS,)
+from users.models import Country as UserCountry, Office
 
 
 # DEVELOPMENT CODE -
 class Command(BaseCommand):
     """
     Usage:
-    manage.py et2f_init [--with_users, --with_partners, --assign_sections, --with_offices] <username> <password>
+    manage.py et2f_init [--with_users, --with_partners, --with_offices] <username> <password>
 
     Username and password required to create a user for testing and look up the proper schema.
 
     -u | --with_users : Import sample users
     -o | --with_offices : Import sample offices
     -p | --with_partners : Import sample partners
-    -s | --assign_sections : Assign all sections to the current schema !Use only on local dev machine!
     """
 
     def add_arguments(self, parser):
@@ -39,7 +37,6 @@ class Command(BaseCommand):
         parser.add_argument('-u', '--with_users', action='store_true', default=False)
         parser.add_argument('-o', '--with_offices', action='store_true', default=False)
         parser.add_argument('-p', '--with_partners', action='store_true', default=False)
-        parser.add_argument('-s', '--assign_sections', action='store_true', default=False)
 
     @atomic
     def handle(self, *args, **options):
@@ -59,9 +56,6 @@ class Command(BaseCommand):
 
         if options.get('with_partners'):
             self._load_partners()
-
-        if options.get('with_partners'):
-            self._assign_sections()
 
         self._load_business_areas()
         self._load_currencies()
@@ -277,13 +271,6 @@ class Command(BaseCommand):
 
         self.stdout.write('User was successfully created.')
         return user
-
-    def _assign_sections(self):
-        tenant = connection.tenant
-        connection.set_tenant(FakeTenant('public'))
-        for s in Section.objects.all():
-            s.sections.add(tenant)
-        connection.set_tenant(tenant)
 
     def _load_currencies(self):
         data = ['DZD', 'NAD', 'GHS', 'BZD', 'EGP', 'BGN', 'PAB', 'YUM', 'BOB', 'DKK', 'BWP', 'LBP', 'TZS', 'VND', 'AOA',
@@ -587,7 +574,6 @@ class Command(BaseCommand):
                 self.stdout.write('Country created: {}'.format(name))
             else:
                 self.stdout.write('Country found: {}'.format(name))
-
 
     def _load_users(self):
         User = get_user_model()

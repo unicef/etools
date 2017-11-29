@@ -3,14 +3,12 @@ from __future__ import unicode_literals
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-
 from rest_framework_csv import renderers
 
 from t2f.filters import travel_list
-from t2f.serializers.export import TravelActivityExportSerializer, FinanceExportSerializer, \
-    TravelAdminExportSerializer, InvoiceExportSerializer
-
-from t2f.models import Travel, ItineraryItem, InvoiceItem, TravelActivity
+from t2f.models import InvoiceItem, ItineraryItem, Travel, TravelActivity
+from t2f.serializers.export import (
+    FinanceExportSerializer, InvoiceExportSerializer, TravelActivityExportSerializer, TravelAdminExportSerializer,)
 from t2f.views import T2FPagePagination
 
 
@@ -40,7 +38,7 @@ class TravelActivityExport(ExportBaseView):
 
     def get(self, request):
         queryset = TravelActivity.objects.prefetch_related('travels', 'travels__traveler', 'travels__office',
-                                                           'travels__section', 'locations')
+                                                           'travels__sector', 'locations')
         queryset = queryset.select_related('partner', 'partnership', 'result', 'primary_traveler')
         queryset = queryset.order_by('id')
         dto_list = []
@@ -60,7 +58,7 @@ class FinanceExport(ExportBaseView):
 
     def get(self, request):
         queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.select_related('traveler', 'office', 'section', 'supervisor')
+        queryset = queryset.select_related('traveler', 'office', 'sector', 'supervisor')
         serializer = self.get_serializer(queryset, many=True)
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -74,7 +72,7 @@ class TravelAdminExport(ExportBaseView):
     def get(self, request):
         travel_queryset = self.filter_queryset(self.get_queryset())
         queryset = ItineraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number', 'id')
-        queryset = queryset.select_related('travel', 'travel__office', 'travel__section', 'travel__traveler',
+        queryset = queryset.select_related('travel', 'travel__office', 'travel__sector', 'travel__traveler',
                                            'dsa_region')
         serializer = self.get_serializer(queryset, many=True)
 
