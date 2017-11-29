@@ -1,13 +1,24 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime
 import random
 
+from django.core.management import call_command
 from rest_framework import status
+from mock import patch, Mock
 
+from audit.models import Engagement
 from audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from audit.tests.factories import (
-    AuditFactory, AuditPartnerFactory, MicroAssessmentFactory, PartnerWithAgreementsFactory, RiskBluePrintFactory,
-    RiskCategoryFactory,)
+    AuditFactory,
+    AuditPartnerFactory,
+    EngagementFactory,
+    MicroAssessmentFactory,
+    PartnerWithAgreementsFactory,
+    PurchaseOrderFactory,
+    RiskBluePrintFactory,
+    RiskCategoryFactory,
+)
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerType
 
@@ -228,10 +239,11 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTe
         super(TestEngagementsListViewSet, self).setUp()
         self.second_engagement = self.engagement_factory()
 
-    def _test_list(self, user, engagements):
+    def _test_list(self, user, engagements, params=""):
         response = self.forced_auth_req(
             'get',
             '/api/audit/engagements/',
+            data={"status": params},
             user=user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -253,6 +265,74 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTe
 
     def test_unknown_user_list(self):
         self._test_list(self.usual_user, [])
+
+    def test_status_filter_final(self):
+        status = Engagement.STATUSES.final
+        self.third_engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            status=status
+        )
+        self.assertEqual(self.third_engagement.status, status)
+        self._test_list(self.auditor, [self.third_engagement], params=status)
+
+    def test_status_filter_partner_contacted(self):
+        status = Engagement.DISPLAY_STATUSES.partner_contacted
+        self.third_engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            status=Engagement.STATUSES.partner_contacted
+        )
+        self._test_list(
+            self.auditor,
+            [self.engagement, self.third_engagement],
+            params=status
+        )
+
+    def test_status_filter_field_visit(self):
+        status = Engagement.DISPLAY_STATUSES.field_visit
+        self.third_engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_field_visit=datetime.date(2001, 1, 1),
+        )
+        self.assertIsNone(self.third_engagement.date_of_draft_report_to_ip)
+        self.assertIsNotNone(self.third_engagement.date_of_field_visit)
+        self._test_list(self.auditor, [self.third_engagement], params=status)
+
+    def test_status_filter_draft_issued_to_partner(self):
+        status = Engagement.DISPLAY_STATUSES.draft_issued_to_partner
+        self.third_engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_draft_report_to_ip=datetime.date(2001, 1, 1),
+        )
+        self._test_list(self.auditor, [self.third_engagement], params=status)
+
+    def test_status_filter_comments_recieved_by_partner(self):
+        status = Engagement.DISPLAY_STATUSES.comments_received_by_partner
+        self.third_engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_comments_by_ip=datetime.date(2001, 1, 1),
+        )
+        self._test_list(self.auditor, [self.third_engagement], params=status)
+
+    def test_status_filter_draft_issued_to_unicef(self):
+        status = Engagement.DISPLAY_STATUSES.draft_issued_to_unicef
+        self.third_engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_draft_report_to_unicef=datetime.date(2001, 1, 1),
+        )
+        self._test_list(self.auditor, [self.third_engagement], params=status)
+
+    def test_status_filter_comments_received_by_unicef(self):
+        status = Engagement.DISPLAY_STATUSES.comments_received_by_unicef
+        self.third_engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_comments_by_unicef=datetime.date(2001, 1, 1),
+        )
+        self._test_list(self.auditor, [self.third_engagement], params=status)
 
 
 class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
@@ -528,3 +608,45 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, APITena
 
     def test_focal_point(self):
         self._test_pdf_view(self.unicef_focal_point)
+
+
+class TestPurchaseOrderView(AuditTestCaseMixin, APITenantTestCase):
+    def setUp(self):
+        super(TestPurchaseOrderView, self).setUp()
+        call_command('update_audit_permissions', verbosity=0)
+
+    def test_get_not_found(self):
+        """If instance does not exist, code will attempt to sync,
+        and if still does not exist then return 404
+        """
+        mock_sync = Mock()
+        with patch("audit.views.POSynchronizer", mock_sync):
+            response = self.forced_auth_req(
+                "get",
+                "/api/audit/purchase-orders/sync/404/",
+                user=self.unicef_user,
+            )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get(self):
+        po = PurchaseOrderFactory(order_number="123")
+        response = self.forced_auth_req(
+            "get",
+            "/api/audit/purchase-orders/sync/{}/".format(po.order_number),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], po.pk)
+
+
+class TestEngagementPartnerView(AuditTestCaseMixin, APITenantTestCase):
+    def test_get(self):
+        engagement = EngagementFactory()
+        response = self.forced_auth_req(
+            "get",
+            "/api/audit/engagements/partners/",
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], engagement.pk)
