@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import base64
 import mimetypes
 import uuid
@@ -30,7 +32,7 @@ class ModelChoiceField(serializers.PrimaryKeyRelatedField):
 
 class FileTypeModelChoiceField(ModelChoiceField):
     def get_choice(self, obj):
-        return obj.id, obj.name
+        return obj.id, obj.label
 
 
 class Base64FileField(serializers.FileField):
