@@ -1,19 +1,19 @@
 from __future__ import unicode_literals
+
 import csv
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
 from StringIO import StringIO
 
 from django.core import mail
 from django.core.urlresolvers import reverse
-
 from freezegun import freeze_time
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from t2f.models import ActionPoint
-from t2f.tests.factories import TravelFactory, ActionPointFactory
+from t2f.tests.factories import ActionPointFactory, TravelFactory
 
 
 class ActionPoints(URLAssertionMixin, APITenantTestCase):
@@ -36,7 +36,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
             ('details', '1/', {'action_point_pk': 1}),
             ('dashboard', 'dashboard/', {}),
             ('export', 'export/', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 't2f:action_points:', '/api/t2f/action_points/')
         self.assertIntParamRegexes(names_and_paths, 't2f:action_points:')
 
