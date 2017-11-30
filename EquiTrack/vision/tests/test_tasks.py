@@ -11,7 +11,7 @@ import mock
 import vision.tasks
 from EquiTrack.factories import CountryFactory
 from vision.adapters.programme import ProgrammeSynchronizer
-from vision.vision_data_synchronizer import VisionException
+from vision.exceptions import VisionException
 
 
 def _build_country(name):

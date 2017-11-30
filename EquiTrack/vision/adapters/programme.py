@@ -267,7 +267,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         last_year = datetime.datetime(today.year - 1, 1, 1).date()
 
         def in_time_range(record):
-            if record['OUTCOME_END_DATE'] >= last_year:
+            if not record['OUTCOME_END_DATE'] or record['OUTCOME_END_DATE'] >= last_year:
                 return True
             return False
 
@@ -285,14 +285,16 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                 cps[r['COUNTRY_PROGRAMME_WBS']] = dict([(i[1], r[i[0]]) for i in self.CP_MAP])
 
             if not outcomes.get(r['OUTCOME_WBS'], None):
-                outcomes[r['OUTCOME_WBS']] = dict([(i[1], r[i[0]]) for i in self.OUTCOME_MAP])
+                if all([r[i[0]] for i in self.OUTCOME_MAP]):
+                    outcomes[r['OUTCOME_WBS']] = dict([(i[1], r[i[0]]) for i in self.OUTCOME_MAP])
 
             if not outputs.get(r['OUTPUT_WBS'], None):
-                outputs[r['OUTPUT_WBS']] = dict([(i[1], r[i[0]]) for i in self.OUTPUT_MAP])
+                if all([r[i[0]] for i in self.OUTPUT_MAP]):
+                    outputs[r['OUTPUT_WBS']] = dict([(i[1], r[i[0]]) for i in self.OUTPUT_MAP])
 
             if not activities.get(r['ACTIVITY_WBS'], None):
-                activities[r['ACTIVITY_WBS']] = dict([(i[1], r[i[0]]) for i in self.ACTIVITY_MAP])
-
+                if all([r[i[0]] for i in self.ACTIVITY_MAP]):
+                    activities[r['ACTIVITY_WBS']] = dict([(i[1], r[i[0]]) for i in self.ACTIVITY_MAP])
         return {'cps': cps, 'outcomes': outcomes, 'outputs': outputs, 'activities': activities}
 
     def _convert_records(self, records):
