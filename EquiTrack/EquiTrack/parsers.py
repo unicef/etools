@@ -1,4 +1,7 @@
-def int_or_str(c):
+import re
+
+
+def _int_or_str(c):
     """Return parameter as type integer, if possible
     otherwise as type string
     """
@@ -8,69 +11,97 @@ def int_or_str(c):
         return c
 
 
-def create_lists_from_keys(data):
-    """Convert string list into a list
+def _natural_keys(text):
+    return [_int_or_str(c) for c in re.split('(\d+)', text)]
 
-    eg: '[1 2 3]' => ['', 1, 2, 3]
 
-    Leave leading space in list
+def _create_lists_from_dict_keys(data):
+    """Convert dictionary keys into lists
+    returning a list of these keys in list format
+
+    eg: {
+      '[1 2 3]': 'val1',
+      '[d _obj str]': 'val2'
+    } => [
+      ['', 1, 2, 3],
+      ['', 'd', '_obj', 'str']
+    ]
+
+    Add leading empty string to list
     """
-    r = []
-    keys = data.keys()
-    keys.sort()
+    list_of_keys_in_list_format = []
+    keys = list(data.keys())
+    keys.sort(key=_natural_keys)
     for k in keys:
-        split_c = k.replace('[', ' ').replace(']', '').split(' ')
-        split_c = map(int_or_str, split_c)
-        r.append(split_c)
+        key_in_list_format = k.replace('[', ' ').replace(']', '').split(' ')
+        key_in_list_format = map(_int_or_str, key_in_list_format)
+        list_of_keys_in_list_format.append(key_in_list_format)
+    return list_of_keys_in_list_format
 
-    return r
 
+def _create_key(key_in_list_format):
+    """Create a key from the list provided
 
-def create_key(path):
-    """Create a key from list provided
+    Expect first element to be an empty string
 
-    eg: ['one', 'two'] => '[one][two]'
+    eg: ['', 'one', 'two'] => '[one][two]'
     """
-    result = ''
-    for i in range(0, len(path)):
-        if i == 0:
-            result += str(path[i])
-        else:
-            result += '[' + str(path[i]) + ']'
-    return result
+    key = ''
+    for i in range(1, len(key_in_list_format)):
+        key += u'[{}]'.format(key_in_list_format[i])
+    return key
 
 
-def build_dict(data, keys, val):
-    """Use recursion to drill down through the keys
+def build_parsed_data(data, key_in_list_format, val):
+    """Use recursion to drill down through the keys (in list format)
 
-    Building up the data variable based on the keys
-    Assign the val parameter to the last element in keys
-
-    If element in keys is an integer then we create a list
-    otherwise we use a dictionary type
+    Each element in the key list, should become a key in the parsed data,
+    and assign the value to the last key.
+    Unless the element is an integer, in which case we create a list
+    and append the value to the list
     """
-    if len(keys) > 1 and not isinstance(keys[0], int):
-        init_type = [] if isinstance(keys[1], int) else {}
-        data[keys[0]] = data.get(keys[0], init_type)
+    if len(key_in_list_format) > 1:
+        first_key = key_in_list_format[0]
+        if not isinstance(first_key, int):
+            init_type = [] if isinstance(key_in_list_format[1], int) else {}
+            data[first_key] = data.get(first_key, init_type)
 
-    res = build_dict(data[keys[0]], keys[1:], val) if len(keys) > 1 else val
+        val = build_parsed_data(data[first_key], key_in_list_format[1:], val)
+
     if isinstance(data, list):
-        if res not in data:
-            data.append(res)
+        if val not in data:
+            data.append(val)
     else:
-        data[keys[0]] = res
+        data[key_in_list_format[0]] = val
+
     return data
 
 
 def parse_multipart_data(data):
-    r = {}
-    list_of_keys = create_lists_from_keys(data)
+    """Convert data in a relatively 'flat' structure into an 'expanded'
+    structure
 
-    for k in list_of_keys:
-        if len(k) == 1:
-            r[k[0]] = data[k[0]]
+    eg: data arrives in a format similar to {
+      '[d _obj str]': 'val2',
+      '[d][obj][str]': 'val2'
+    }
+    and we return {'d': {'str': 'val2'}}
+    something we can easily work with
+    """
+    parsed_data = {}
+    for key_in_list_format in _create_lists_from_dict_keys(data):
+        if key_in_list_format[0] == "":
+            val = data[_create_key(key_in_list_format)]
+            # remove _obj from key
+            # as we don't want this in the final parsed data
+            key_in_list_format_scrubbed = [
+                x for x in key_in_list_format if x != "_obj"
+            ]
+            parsed_data = build_parsed_data(
+                parsed_data,
+                key_in_list_format_scrubbed,
+                val
+            )
         else:
-            val = data[create_key(k)]
-            keys = [x for x in k if x != "_obj"]
-            r = build_dict(r, keys, val)
-    return r
+            parsed_data[key_in_list_format[0]] = data[key_in_list_format[0]]
+    return parsed_data
