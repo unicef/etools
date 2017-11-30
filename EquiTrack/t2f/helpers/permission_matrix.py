@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
 import os
-import yaml
 from collections import defaultdict
 
+import yaml
 from django.conf import settings
 from django.core.cache import cache
 
