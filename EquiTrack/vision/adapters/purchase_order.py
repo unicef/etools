@@ -45,11 +45,11 @@ class POSynchronizer(ManualVisionSynchronizer):
         }
     }
     MODEL_MAPPING = OrderedDict({
-        'donor': Donor,
-        'grant': Grant,
-        'auditor_firm': AuditorFirm,
-        'purchase_order': PurchaseOrder,
-        'order_item': PurchaseOrderItem,
+        ('donor', Donor),
+        ('grant', Grant),
+        ('auditor_firm', AuditorFirm),
+        ('purchase_order', PurchaseOrder),
+        ('order_item', PurchaseOrderItem),
     })
     DATE_FIELDS = ['EXPIRY_DATE', 'PO_DATE', ]
 
