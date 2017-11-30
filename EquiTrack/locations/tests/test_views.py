@@ -1,10 +1,10 @@
-from django.db import connection
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
+from django.db import connection
 
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory, LocationFactory
+from EquiTrack.factories import LocationFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from locations.models import Location
 

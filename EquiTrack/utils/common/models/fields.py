@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.contrib.contenttypes.fields import GenericRelation, ReverseGenericManyToOneDescriptor
 from django.utils.functional import cached_property
 

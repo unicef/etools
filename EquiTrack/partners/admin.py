@@ -35,7 +35,6 @@ from partners.models import (
 from partners.mixins import HiddenPartnerMixin
 from partners.forms import (
     PartnersAdminForm,
-    AgreementForm,
     PartnerStaffMemberForm,
     # TODO intervention sector locations cleanup
     SectorLocationForm,
@@ -448,8 +447,8 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
         return 0
 
 
-class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, SnapshotModelAdmin):
-    form = AgreementForm
+class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
+
     list_filter = (
         u'partner',
         u'agreement_type',

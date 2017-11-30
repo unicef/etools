@@ -1,22 +1,21 @@
 from __future__ import unicode_literals
 
-from datetime import datetime
 import json
+from datetime import datetime
 from StringIO import StringIO
 from unittest import skip
 
 from django.core.urlresolvers import reverse
-
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, PartnerFactory
+from EquiTrack.factories import InterventionFactory, LocationFactory, PartnerFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import PartnerType
 from publics.models import DSARegion
-from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
-from t2f.models import TravelAttachment, Travel, ModeOfTravel, TravelType
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory, ItineraryItemFactory
+from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
+from t2f.models import ModeOfTravel, Travel, TravelAttachment, TravelType
+from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, ExpenseTypeFactory, ItineraryItemFactory
 
 from .factories import TravelFactory
 
@@ -37,7 +36,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
             ('attachment_details', 'attachments/1/', {'travel_pk': 1, 'attachment_pk': 1}),
             ('clone_for_driver', 'add_driver/', {'travel_pk': 1}),
             ('clone_for_secondary_traveler', 'duplicate_travel/', {'travel_pk': 1}),
-            )
+        )
         self.assertReversal(names_and_paths, 't2f:travels:details:', '/api/t2f/travels/1/')
         self.assertIntParamRegexes(names_and_paths, 't2f:travels:details:')
 
@@ -620,29 +619,40 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         dsa_1 = DSARegion.objects.first()
         dsa_2 = DSARegionFactory()
 
-        data = {'itinerary': [{'airlines': [],
-                               'origin': 'b',
-                               'destination': 'c',
-                               'dsa_region': dsa_1.id,
-                               'departure_date': '2017-01-20T23:00:01.892Z',
-                               'arrival_date': '2017-01-27T23:00:01.905Z',
-                               'mode_of_travel': 'car'},
-                              {
-                               'origin': 'a',
-                               'destination': 'b',
-                               'dsa_region': dsa_2.id,
-                               'departure_date': '2017-01-18T23:00:01.224Z',
-                               'arrival_date': '2017-01-19T23:00:01.237Z',
-                               'mode_of_travel': 'car'}],
-                'activities': [{'is_primary_traveler': True,
-                                'locations': []}],
-                'cost_assignments': [],
-                'expenses': [],
-                'action_points': [],
-                'ta_required': True,
-                'international_travel': False,
-                'traveler': self.traveler.id,
-                'mode_of_travel': []}
+        data = {
+            'itinerary': [
+                {
+                    'airlines': [],
+                    'origin': 'b',
+                    'destination': 'c',
+                    'dsa_region': dsa_1.id,
+                    'departure_date': '2017-01-20T23:00:01.892Z',
+                    'arrival_date': '2017-01-27T23:00:01.905Z',
+                    'mode_of_travel': 'car'
+                },
+                {
+                    'origin': 'a',
+                    'destination': 'b',
+                    'dsa_region': dsa_2.id,
+                    'departure_date': '2017-01-18T23:00:01.224Z',
+                    'arrival_date': '2017-01-19T23:00:01.237Z',
+                    'mode_of_travel': 'car'
+                }
+            ],
+            'activities': [
+                {
+                    'is_primary_traveler': True,
+                    'locations': []
+                }
+            ],
+            'cost_assignments': [],
+            'expenses': [],
+            'action_points': [],
+            'ta_required': True,
+            'international_travel': False,
+            'traveler': self.traveler.id,
+            'mode_of_travel': []
+        }
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)

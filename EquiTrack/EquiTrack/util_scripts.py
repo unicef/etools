@@ -615,3 +615,17 @@ def remediation_intervention_unicef_budget():
                                      'old_status': old_status,
                                      'error_msg': ["UNICEF Cash $ or UNICEF Supplies $ should not be 0"]}
             intervention.save()
+
+
+def intervention_ssfa_agreement_number():
+    interventions = Intervention.objects.filter(status__in=['active', 'signed', 'ended', 'suspended'],
+                                                document_type=Intervention.SSFA)
+    for intervention in interventions:
+        if intervention.amendments.count() > 0:
+            print("amendment", intervention.amendments.count())
+            intervention.save(amendment_number=intervention.amendments.count())
+        else:
+            intervention.number = intervention.agreement.agreement_number
+            intervention.save()
+        print("intervention id: ", intervention.id, "intervention number:", intervention.number, "agreement number:",
+              intervention.agreement.agreement_number, "status:", intervention.status)

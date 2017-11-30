@@ -1,15 +1,13 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-
 from rest_framework import generics, status
 from rest_framework.response import Response
 
 from partners.models import Intervention
 from publics.models import TravelAgent
 from t2f.helpers.permission_matrix import get_permission_matrix
-
-from t2f.models import TravelType, ModeOfTravel, ActionPoint
+from t2f.models import ActionPoint, ModeOfTravel, TravelType
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.views import get_filtered_users
 from users.models import UserProfile

@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import string
 import uuid
 
@@ -10,7 +12,7 @@ def generate_username():
     digits = []
     while uid:
         digits.append(ABC[uid % base])
-        uid /= base
+        uid //= base
 
     digits.reverse()
     uid = ''.join(digits)

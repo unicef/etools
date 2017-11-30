@@ -9,6 +9,9 @@ from tenant_schemas.utils import get_tenant_model
 
 from users.models import WorkspaceCounter
 
+TENANT_DOMAIN = 'tenant.test.com'
+SCHEMA_NAME = 'test'
+
 
 def _delimit_namespace(namespace):
     '''Add delimiter (':') to namespace if necessary'''
@@ -102,13 +105,12 @@ class FastTenantTestCase(TenantTestCase):
     @classmethod
     def setUpClass(cls):
         cls.sync_shared()
-        tenant_domain = 'tenant.test.com'
 
         TenantModel = get_tenant_model()
         try:
-            cls.tenant = TenantModel.objects.get(domain_url=tenant_domain, schema_name='test')
-        except TenantModel.DoesNotExist:
-            cls.tenant = TenantModel(domain_url=tenant_domain, schema_name='test')
+            cls.tenant = TenantModel.objects.get(domain_url=TENANT_DOMAIN, schema_name=SCHEMA_NAME)
+        except:
+            cls.tenant = TenantModel(domain_url=TENANT_DOMAIN, schema_name=SCHEMA_NAME)
             cls.tenant.save(verbosity=0)
 
         cls.tenant.business_area_code = 'ZZZ'
