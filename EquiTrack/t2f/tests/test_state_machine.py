@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
-from decimal import Decimal
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from django.core import mail
 from django.core.urlresolvers import reverse
@@ -11,9 +11,10 @@ from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
-from t2f.models import Travel, Invoice, ModeOfTravel
+from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
+from t2f.models import Invoice, ModeOfTravel, Travel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
+
 from .factories import TravelFactory
 
 

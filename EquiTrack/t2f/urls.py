@@ -1,14 +1,14 @@
-from django.conf.urls import url, include
+from django.conf.urls import include, url
 
 from t2f.html_views import TravelEditView
-from t2f.views.dashboard import TravelDashboardViewSet, ActionPointDashboardViewSet
-from t2f.views.exports import TravelActivityExport, FinanceExport, TravelAdminExport, InvoiceExport
-from t2f.views.generics import SettingsView, StaticDataView, PermissionMatrixView, VendorNumberListView
+from t2f.views.dashboard import ActionPointDashboardViewSet, TravelDashboardViewSet
+from t2f.views.exports import FinanceExport, InvoiceExport, TravelActivityExport, TravelAdminExport
+from t2f.views.generics import PermissionMatrixView, SettingsView, StaticDataView, VendorNumberListView
 from t2f.views.invoices import InvoiceViewSet
-from t2f.views.travel import TravelListViewSet, TravelDetailsViewSet, TravelAttachmentViewSet, ActionPointViewSet, \
-    TravelActivityViewSet, TravelActivityPerInterventionViewSet
+from t2f.views.travel import (
+    ActionPointViewSet, TravelActivityPerInterventionViewSet, TravelActivityViewSet, TravelAttachmentViewSet,
+    TravelDetailsViewSet, TravelListViewSet,)
 from t2f.views.vision import VisionInvoiceExport, VisionInvoiceUpdate
-
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
@@ -66,7 +66,7 @@ travel_list_patterns = ((
     url(r'^activities/(?P<partner_organization_pk>[0-9]+)/', TravelActivityViewSet.as_view({'get': 'list'}),
         name='activities'),
     url(r'^dashboard', travel_dashboard_list, name='dashboard'),
- ), 'list')
+), 'list')
 
 
 travel_patterns = ((

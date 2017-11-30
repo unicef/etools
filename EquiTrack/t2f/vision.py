@@ -1,10 +1,9 @@
 from __future__ import unicode_literals
 
-from functools import wraps
 import logging
 from collections import defaultdict
-
 from decimal import Decimal
+from functools import wraps
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
