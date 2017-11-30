@@ -4,6 +4,7 @@ Model factories used for generating models dynamically for tests
 import json
 from datetime import date, datetime, timedelta
 
+from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import GEOSGeometry
