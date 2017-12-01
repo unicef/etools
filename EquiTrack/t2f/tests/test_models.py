@@ -12,7 +12,7 @@ from t2f.tests.factories import (
     InvoiceFactory,
     ItineraryItemFactory,
     TravelFactory,
-    )
+)
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
