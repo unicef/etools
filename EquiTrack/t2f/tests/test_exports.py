@@ -1,22 +1,22 @@
 from __future__ import unicode_literals
 
-from datetime import datetime
-from decimal import Decimal
-from cStringIO import StringIO
 import csv
 import logging
-from pytz import UTC
+from cStringIO import StringIO
+from datetime import datetime
+from decimal import Decimal
 
 from django.core.urlresolvers import reverse
+from pytz import UTC
 
-from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, ResultFactory, LocationFactory, \
-    InterventionFactory
+from EquiTrack.factories import (
+    InterventionFactory, LocationFactory, OfficeFactory, ResultFactory, SectorFactory, UserFactory,)
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import CurrencyFactory, WBSFactory, GrantFactory, FundFactory, DSARegionFactory, \
-    AirlineCompanyFactory, DSARateFactory
-from t2f.models import Invoice, ModeOfTravel, TravelType, TravelActivity
-from t2f.tests.factories import InvoiceFactory, InvoiceItemFactory, ItineraryItemFactory, ExpenseFactory, \
-    TravelActivityFactory
+from publics.tests.factories import (
+    AirlineCompanyFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, FundFactory, GrantFactory, WBSFactory,)
+from t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType
+from t2f.tests.factories import (
+    ExpenseFactory, InvoiceFactory, InvoiceItemFactory, ItineraryItemFactory, TravelActivityFactory,)
 
 from .factories import TravelFactory
 
@@ -44,8 +44,8 @@ class TravelExports(APITenantTestCase):
 
     def test_activity_export(self):
         office = OfficeFactory(name='Budapest')
-        section_health = SectionFactory(name='Health')
-        section_education = SectionFactory(name='Education')
+        section_health = SectorFactory(name='Health')
+        section_education = SectorFactory(name='Education')
 
         location_ABC = LocationFactory(name='Location ABC')
         location_345 = LocationFactory(name='Location 345')
@@ -85,14 +85,14 @@ class TravelExports(APITenantTestCase):
         travel_1 = TravelFactory(reference_number='2016/1000',
                                  traveler=user_joe_smith,
                                  office=office,
-                                 section=section_health,
+                                 sector=section_health,
                                  start_date=datetime.strptime('08-Nov-2017', '%d-%b-%Y'),
                                  end_date=datetime.strptime('14-Nov-2017', '%d-%b-%Y')
                                  )
         travel_2 = TravelFactory(reference_number='2016/1211',
                                  traveler=user_alice_carter,
                                  office=office,
-                                 section=section_education,
+                                 sector=section_education,
                                  start_date=datetime.strptime('08-Nov-2017', '%d-%b-%Y'),
                                  end_date=datetime.strptime('14-Nov-2017', '%d-%b-%Y'))
 
@@ -277,7 +277,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/1',
                           'John Doe',
                           'An Office',
-                          travel.section.name,
+                          travel.sector.name,
                           'planned',
                           'Jakab Gipsz',
                           '20-Nov-2016',
@@ -294,7 +294,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/2',
                           'John Doe',
                           'An Office',
-                          travel_2.section.name,
+                          travel_2.sector.name,
                           'planned',
                           'Jakab Gipsz',
                           '20-Nov-2016',
@@ -402,7 +402,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/1',
                           'John Doe',
                           'An Office',
-                          travel_1.section.name,
+                          travel_1.sector.name,
                           'planned',
                           'Origin1',
                           'Origin2',
@@ -417,7 +417,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/1',
                           'John Doe',
                           'An Office',
-                          travel_1.section.name,
+                          travel_1.sector.name,
                           'planned',
                           'Origin2',
                           'Origin3',
@@ -432,7 +432,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/1',
                           'John Doe',
                           'An Office',
-                          travel_1.section.name,
+                          travel_1.sector.name,
                           'planned',
                           'Origin3',
                           'Origin1',
@@ -447,7 +447,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/2',
                           'Max Mustermann',
                           'An Office',
-                          travel_2.section.name,
+                          travel_2.sector.name,
                           'planned',
                           'Origin2',
                           'Origin1',
@@ -462,7 +462,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/2',
                           'Max Mustermann',
                           'An Office',
-                          travel_2.section.name,
+                          travel_2.sector.name,
                           'planned',
                           'Origin3',
                           'Origin1',
