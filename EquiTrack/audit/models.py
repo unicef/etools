@@ -764,7 +764,7 @@ class AuditPermission(StatusBasePermission):
 
     def __str__(self):
         return '{} can {} {} on {} engagement'.format(self.user_type, self.permission, self.target,
-                                                      self.engagement_status)
+                                                      self.instance_status)
 
     @classmethod
     def _get_user_type(cls, user, engagement=None):
