@@ -1,16 +1,16 @@
 from __future__ import unicode_literals
 
+import logging
 from datetime import timedelta
 from decimal import Decimal
 from functools import wraps
-import logging
 
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.postgres.fields.array import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.mail.message import EmailMultiAlternatives
-from django.contrib.auth.models import User
-from django.conf import settings
-from django.db import models, connection
+from django.db import connection, models
 from django.template.loader import render_to_string
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now as timezone_now
@@ -20,7 +20,7 @@ from django_fsm import FSMField, transition
 from publics.models import TravelExpenseType
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from t2f.helpers.invoice_maker import InvoiceMaker
-from t2f.serializers.mailing import TravelMailSerializer, ActionPointMailSerializer
+from t2f.serializers.mailing import ActionPointMailSerializer, TravelMailSerializer
 from users.models import WorkspaceCounter
 
 log = logging.getLogger(__name__)
@@ -143,25 +143,26 @@ class Travel(models.Model):
     )
 
     created = models.DateTimeField(auto_now_add=True, db_index=True)
-    completed_at = models.DateTimeField(null=True)
-    canceled_at = models.DateTimeField(null=True)
-    submitted_at = models.DateTimeField(null=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    canceled_at = models.DateTimeField(null=True, blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
     # Required to calculate with proper dsa values
-    first_submission_date = models.DateTimeField(null=True)
-    rejected_at = models.DateTimeField(null=True)
-    approved_at = models.DateTimeField(null=True)
+    first_submission_date = models.DateTimeField(null=True, blank=True)
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
 
-    rejection_note = models.TextField(null=True)
-    cancellation_note = models.TextField(null=True)
-    certification_note = models.TextField(null=True)
-    report_note = models.TextField(null=True)
-    misc_expenses = models.TextField(null=True)
+    rejection_note = models.TextField(null=True, blank=True)
+    cancellation_note = models.TextField(null=True, blank=True)
+    certification_note = models.TextField(null=True, blank=True)
+    report_note = models.TextField(null=True, blank=True)
+    misc_expenses = models.TextField(null=True, blank=True)
 
     status = FSMField(default=PLANNED, choices=CHOICES, protected=True)
     traveler = models.ForeignKey(User, null=True, blank=True, related_name='travels')
     supervisor = models.ForeignKey(User, null=True, blank=True, related_name='+')
     office = models.ForeignKey('users.Office', null=True, blank=True, related_name='+')
     section = models.ForeignKey('users.Section', null=True, blank=True, related_name='+')
+    sector = models.ForeignKey('reports.Sector', null=True, blank=True, related_name='+')
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     purpose = models.CharField(max_length=500, null=True, blank=True)
@@ -170,16 +171,17 @@ class Travel(models.Model):
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, default=make_travel_reference_number, unique=True)
     hidden = models.BooleanField(default=False)
-    mode_of_travel = ArrayField(models.CharField(max_length=5, choices=ModeOfTravel.CHOICES), null=True)
+    mode_of_travel = ArrayField(models.CharField(max_length=5, choices=ModeOfTravel.CHOICES), null=True, blank=True)
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
-    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
+    currency = models.ForeignKey('publics.Currency', related_name='+', null=True, blank=True)
     is_driver = models.BooleanField(default=False)
 
     # When the travel is sent for payment, the expenses should be saved for later use
-    preserved_expenses_local = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
-    preserved_expenses_usd = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
-    approved_cost_traveler = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
-    approved_cost_travel_agencies = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
+    preserved_expenses_local = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True, default=None)
+    preserved_expenses_usd = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True, default=None)
+    approved_cost_traveler = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True, default=None)
+    approved_cost_travel_agencies = models.DecimalField(max_digits=20, decimal_places=4,
+                                                        null=True, blank=True, default=None)
 
     def __str__(self):
         return self.reference_number
@@ -407,7 +409,7 @@ class Travel(models.Model):
                 PartnerOrganization.spot_checks(act.partner, update_one=True)
 
         except Exception as e:
-            logging.info('Exception while trying to update hact values {}'.format(e))
+            logging.info(u'Exception while trying to update hact values {}'.format(e))
 
     @transition(status, target=PLANNED)
     def reset_status(self):
@@ -431,7 +433,7 @@ class Travel(models.Model):
         try:
             msg.send(fail_silently=False)
         except ValidationError as exc:
-            log.error('Was not able to send the email. Exception: %s', exc.message)
+            log.error(u'Was not able to send the email. Exception: %s', exc.message)
 
     def generate_invoices(self):
         maker = InvoiceMaker(self)
@@ -440,15 +442,15 @@ class Travel(models.Model):
 
 class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities')
-    travel_type = models.CharField(max_length=64, choices=TravelType.CHOICES, null=True)
-    partner = models.ForeignKey('partners.PartnerOrganization', null=True, related_name='+')
+    travel_type = models.CharField(max_length=64, choices=TravelType.CHOICES, null=True, blank=True)
+    partner = models.ForeignKey('partners.PartnerOrganization', null=True, blank=True, related_name='+')
     # Partnership has to be filtered based on partner
     # TODO: assert self.partnership.agreement.partner == self.partner
-    partnership = models.ForeignKey('partners.Intervention', null=True, related_name='travel_activities')
-    result = models.ForeignKey('reports.Result', null=True, related_name='+')
+    partnership = models.ForeignKey('partners.Intervention', null=True, blank=True, related_name='travel_activities')
+    result = models.ForeignKey('reports.Result', null=True, blank=True, related_name='+')
     locations = models.ManyToManyField('locations.Location', related_name='+')
     primary_traveler = models.ForeignKey(User)
-    date = models.DateTimeField(null=True)
+    date = models.DateTimeField(null=True, blank=True)
 
     @property
     def travel_status(self):
@@ -462,9 +464,9 @@ class ItineraryItem(models.Model):
     destination = models.CharField(max_length=255)
     departure_date = models.DateTimeField()
     arrival_date = models.DateTimeField()
-    dsa_region = models.ForeignKey('publics.DSARegion', related_name='+', null=True)
+    dsa_region = models.ForeignKey('publics.DSARegion', related_name='+', null=True, blank=True)
     overnight_travel = models.BooleanField(default=False)
-    mode_of_travel = models.CharField(max_length=5, choices=ModeOfTravel.CHOICES, null=True)
+    mode_of_travel = models.CharField(max_length=5, choices=ModeOfTravel.CHOICES, null=True, blank=True)
     airlines = models.ManyToManyField('publics.AirlineCompany', related_name='+')
 
     class Meta:
@@ -479,9 +481,9 @@ class ItineraryItem(models.Model):
 
 class Expense(models.Model):
     travel = models.ForeignKey('Travel', related_name='expenses')
-    type = models.ForeignKey('publics.TravelExpenseType', related_name='+', null=True)
-    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+    type = models.ForeignKey('publics.TravelExpenseType', related_name='+', null=True, blank=True)
+    currency = models.ForeignKey('publics.Currency', related_name='+', null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
 
     @property
     def usd_amount(self):
@@ -527,10 +529,10 @@ class CostAssignment(models.Model):
     travel = models.ForeignKey('Travel', related_name='cost_assignments')
     share = models.PositiveIntegerField()
     delegate = models.BooleanField(default=False)
-    business_area = models.ForeignKey('publics.BusinessArea', related_name='+', null=True)
-    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, on_delete=models.DO_NOTHING)
-    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, on_delete=models.DO_NOTHING)
-    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, on_delete=models.DO_NOTHING)
+    business_area = models.ForeignKey('publics.BusinessArea', related_name='+', null=True, blank=True)
+    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING)
+    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING)
+    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING)
 
 
 class Clearances(models.Model):
@@ -611,7 +613,7 @@ class ActionPoint(models.Model):
     description = models.CharField(max_length=254)
     due_date = models.DateTimeField()
     person_responsible = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
-    status = models.CharField(choices=STATUS, max_length=254, null=True, verbose_name='Status')
+    status = models.CharField(choices=STATUS, max_length=254, null=True, blank=True, verbose_name='Status')
     completed_at = models.DateTimeField(blank=True, null=True)
     actions_taken = models.TextField(blank=True, null=True)
     follow_up = models.BooleanField(default=False)
@@ -656,7 +658,7 @@ class ActionPoint(models.Model):
         try:
             msg.send(fail_silently=False)
         except ValidationError as exc:
-            log.error('Was not able to send the email. Exception: %s', exc.message)
+            log.error(u'Was not able to send the email. Exception: %s', exc.message)
 
 
 @python_2_unicode_compatible
@@ -711,9 +713,9 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey('Invoice', related_name='items')
-    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, on_delete=models.DO_NOTHING)
-    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, on_delete=models.DO_NOTHING)
-    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, on_delete=models.DO_NOTHING)
+    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING)
+    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING)
+    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, blank=True, on_delete=models.DO_NOTHING)
     amount = models.DecimalField(max_digits=20, decimal_places=10)
 
     @property

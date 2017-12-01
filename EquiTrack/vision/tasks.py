@@ -24,8 +24,6 @@ SYNC_HANDLERS = [
     ProgrammeSynchronizer,
     RAMSynchronizer,
     PartnerSynchronizer,
-    # CurrencySynchronizer,
-    # TravelAgenciesSynchronizer,
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
 ]
