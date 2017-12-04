@@ -125,7 +125,8 @@ def sections_to_sectors(apps, schema_editor):
         'Burkina Faso': {
             'Nutrition': 'Health & Nutrition',
             'SPPM&E': 'SPPME',
-            'Health': 'Health & Nutrition'
+            'Health': 'Health & Nutrition',
+            'Communications and Advocacy': 'Communication and Advocacy'
         },
         'Nigeria': {
             "Regional Director's Office": 'Deputy Reps Office',
