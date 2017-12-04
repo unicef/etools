@@ -87,6 +87,7 @@ def sections_to_sectors(apps, schema_editor):
             'C4D': 'Communication for Development',
             'Emergency': 'Field Operations',
             'Basic Education': 'Education',
+            'PRIME': 'M&E',
 
         },
         'Sudan': {
