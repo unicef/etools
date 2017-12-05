@@ -706,9 +706,16 @@ class EngagementActionPoint(models.Model):
     engagement = models.ForeignKey(Engagement, related_name='action_points', verbose_name=_('Engagement'))
     description = models.CharField(verbose_name=_('Description'), max_length=100, choices=DESCRIPTION_CHOICES)
     due_date = models.DateField(verbose_name=_('Due Date'))
-    author = models.ForeignKey(User, related_name='created_engagement_action_points', verbose_name=_('Author'))
-    person_responsible = models.ForeignKey(User, related_name='engagement_action_points',
-                                           verbose_name=_('Person Responsible'))
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='created_engagement_action_points',
+        verbose_name=_('Author')
+    )
+    person_responsible = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='engagement_action_points',
+        verbose_name=_('Person Responsible')
+    )
     comments = models.TextField(verbose_name=_('Comments'))
 
     def __str__(self):
