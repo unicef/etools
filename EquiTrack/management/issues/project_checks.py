@@ -1,6 +1,6 @@
 import logging
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 
 from management.issues.checks import BaseIssueCheck, ModelCheckData
@@ -111,7 +111,7 @@ class InterventionsAreValidCheck(BaseIssueCheck):
 
     @staticmethod
     def _get_master_user():
-        return User.objects.get(username='etools_task_admin')
+        return get_user_model().objects.get(username='etools_task_admin')
 
     def get_objects_to_check(self):
         master_user = self._get_master_user()
