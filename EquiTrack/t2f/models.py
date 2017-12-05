@@ -6,7 +6,7 @@ from decimal import Decimal
 from functools import wraps
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model as User
 from django.contrib.postgres.fields.array import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.mail.message import EmailMultiAlternatives

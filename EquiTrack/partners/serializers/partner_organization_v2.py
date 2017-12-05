@@ -4,7 +4,7 @@ import json
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model as User
 from rest_framework import serializers
 
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer

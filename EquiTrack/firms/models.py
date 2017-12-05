@@ -84,7 +84,7 @@ class BaseFirm(TimeStampedModel, models.Model):
 
 @python_2_unicode_compatible
 class BaseStaffMember(models.Model):
-    user = models.OneToOneField('auth.User', verbose_name=_('User'), related_name='%(app_label)s_%(class)s')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, verbose_name=_('User'), related_name='%(app_label)s_%(class)s')
 
     class Meta:
         abstract = True

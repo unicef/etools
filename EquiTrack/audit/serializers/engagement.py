@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model as User
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers

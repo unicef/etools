@@ -1,6 +1,6 @@
 import logging
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model as User
 from django.db.models import Q
 
 from management.issues.checks import BaseIssueCheck, ModelCheckData

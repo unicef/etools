@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model as User
 from django.db.models.signals import post_save
 
 import factory

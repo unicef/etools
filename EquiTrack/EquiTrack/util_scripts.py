@@ -8,7 +8,8 @@ import re
 
 from django.db import connection
 from django.db.models import Count
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model as User
 
 from users.models import Country, UserProfile
 from reports.models import ResultType, Result, CountryProgramme, Indicator

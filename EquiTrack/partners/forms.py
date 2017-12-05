@@ -7,7 +7,7 @@ from django import forms
 from django.db.models import Q
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model as User
 
 from dal import autocomplete
 
