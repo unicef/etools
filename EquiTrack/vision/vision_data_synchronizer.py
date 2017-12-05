@@ -3,7 +3,6 @@ from abc import ABCMeta, abstractmethod
 
 from django.conf import settings
 from django.db import connection
-from django.utils import six
 
 import requests
 from celery.utils.log import get_task_logger
@@ -132,7 +131,7 @@ class VisionDataSynchronizer(object):
             log.successful = True
         except Exception as e:
             log.exception_message = e.message
-            six.reraise(VisionException(message=e.message), None, sys.exc_info()[2])
+            raise VisionException(message=e.message).with_traceback(sys.exc_info()[2])
 
         finally:
             log.save()
