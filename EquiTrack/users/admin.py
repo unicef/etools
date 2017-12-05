@@ -219,11 +219,19 @@ class CountryAdmin(admin.ModelAdmin):
     )
 
 
+class SectionAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'name',
+        'code',
+    )
+
+
 # Re-register UserAdmin
 admin.site.unregister(get_user_model())
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Office)
-admin.site.register(Section)
+admin.site.register(Section, SectionAdmin)
 admin.site.register(WorkspaceCounter)
