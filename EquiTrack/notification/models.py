@@ -4,7 +4,7 @@ import json
 import logging
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField, JSONField
@@ -73,6 +73,8 @@ class Notification(models.Model):
             pass
 
     def send_mail(self):
+        User = get_user_model()
+
         if isinstance(self.sender, User):
             sender = self.sender.email
         else:
