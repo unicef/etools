@@ -46,10 +46,7 @@ def _create_key(key_in_list_format):
 
     eg: ['', 'one', 'two'] => '[one][two]'
     """
-    key = ''
-    for i in range(1, len(key_in_list_format)):
-        key += u'[{}]'.format(key_in_list_format[i])
-    return key
+    return ''.join([u'[{}]'.format(item) for item in key_in_list_format[1:]])
 
 
 def build_parsed_data(data, key_in_list_format, val):
