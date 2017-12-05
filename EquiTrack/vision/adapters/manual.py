@@ -7,8 +7,9 @@ from collections import OrderedDict
 
 from django.db import connection
 
+from vision.exceptions import VisionException
 from vision.utils import wcf_json_date_as_datetime
-from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer, VisionException
+from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer
 
 logger = logging.getLogger(__name__)
 

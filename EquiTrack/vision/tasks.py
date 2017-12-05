@@ -16,8 +16,8 @@ from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.publics_adapter import CostAssignmentSynch
 from vision.adapters.purchase_order import POSynchronizer
 from vision.adapters.tpm_adapter import TPMPartnerSynchronizer
+from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
-from vision.vision_data_synchronizer import VisionException
 
 PUBLIC_SYNC_HANDLERS = []
 
@@ -26,8 +26,6 @@ SYNC_HANDLERS = [
     ProgrammeSynchronizer,
     RAMSynchronizer,
     PartnerSynchronizer,
-    # CurrencySynchronizer,
-    # TravelAgenciesSynchronizer,
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
 ]

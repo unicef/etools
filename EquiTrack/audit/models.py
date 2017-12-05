@@ -92,12 +92,22 @@ class PurchaseOrder(TimeStampedModel, models.Model):
         return (self.order_number, )
 
 
+class PurchaseOrderItemManager(models.Manager):
+    def get_by_natural_key(self, purchase_order, number):
+        return self.get(purchase_order=purchase_order, number=number)
+
+
 class PurchaseOrderItem(models.Model):
     purchase_order = models.ForeignKey(PurchaseOrder, related_name='items', verbose_name=_('Purchase Order'))
     number = models.IntegerField(verbose_name=_('PO Item Number'))
 
+    objects = PurchaseOrderItemManager()
+
     class Meta:
         unique_together = ('purchase_order', 'number')
+
+    def natural_key(self):
+        return (self.purchase_order, self.number)
 
 
 def _has_action_permission(action):
@@ -754,7 +764,7 @@ class AuditPermission(StatusBasePermission):
 
     def __str__(self):
         return '{} can {} {} on {} engagement'.format(self.user_type, self.permission, self.target,
-                                                      self.engagement_status)
+                                                      self.instance_status)
 
     @classmethod
     def _get_user_type(cls, user, engagement=None):

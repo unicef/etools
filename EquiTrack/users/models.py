@@ -69,6 +69,9 @@ class Country(TenantMixin):
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        ordering = ['name']
+
 
 class WorkspaceCounter(models.Model):
     TRAVEL_REFERENCE = 'travel_reference_number_counter'
@@ -198,9 +201,6 @@ class UserProfile(models.Model):
     job_title = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
 
-    # TODO: remove this
-    installation_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='Device ID')
-
     staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True)
     org_unit_code = models.CharField(max_length=32, null=True, blank=True)
     org_unit_name = models.CharField(max_length=64, null=True, blank=True)
@@ -255,9 +255,10 @@ class UserProfile(models.Model):
         if not sender.is_staff:
             try:
                 g = Group.objects.get(name='UNICEF User')
-                g.user_set.add(sender)
             except Group.DoesNotExist:
                 logger.error(u'Can not find main group UNICEF User')
+            else:
+                g.user_set.add(sender)
 
             sender.is_staff = True
             sender.save()

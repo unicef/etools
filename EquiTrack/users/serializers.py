@@ -197,7 +197,6 @@ class UserCreationSerializer(serializers.ModelSerializer):
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']
             user.profile.country_override = user_profile['country_override']
-            user.profile.installation_id = user_profile['installation_id']
             for country in countries:
                 user.profile.countries_available.add(country)
 

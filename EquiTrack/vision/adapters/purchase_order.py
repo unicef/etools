@@ -44,13 +44,13 @@ class POSynchronizer(ManualVisionSynchronizer):
             "name": "DONOR_NAME",
         }
     }
-    MODEL_MAPPING = OrderedDict({
-        'donor': Donor,
-        'grant': Grant,
-        'auditor_firm': AuditorFirm,
-        'purchase_order': PurchaseOrder,
-        'order_item': PurchaseOrderItem,
-    })
+    MODEL_MAPPING = OrderedDict((
+        ('donor', Donor),
+        ('grant', Grant),
+        ('auditor_firm', AuditorFirm),
+        ('purchase_order', PurchaseOrder),
+        ('order_item', PurchaseOrderItem),
+    ))
     DEFAULTS = {
         AuditorFirm: {
             'vision_synced': True

@@ -10,7 +10,7 @@ def show_country_select(context, profile):
 
     if not profile:
         return ''
-    countries = profile.countries_available.all()  # Country.objects.all()
+    countries = profile.countries_available.all().order_by('name')  # Country.objects.all()
 
     if 'opts' in context and context['opts'].app_label in settings.TENANT_APPS:
         countries = countries.exclude(schema_name='public')
