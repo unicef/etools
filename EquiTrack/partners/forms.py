@@ -16,7 +16,6 @@ from EquiTrack.forms import (
 )
 
 from partners.models import (
-    Agreement,
     # TODO intervention sector locations cleanup
     InterventionSectorLocationLink,
     PartnerOrganization,

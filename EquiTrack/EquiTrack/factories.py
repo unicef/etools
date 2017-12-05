@@ -8,7 +8,6 @@ from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import GEOSGeometry
-from django.db.models.signals import post_save
 
 import factory
 from factory import fuzzy
