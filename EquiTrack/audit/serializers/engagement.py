@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
-from django.contrib.auth import get_user_model as User
+from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -75,7 +75,7 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
         if not self.instance and attrs.get('description') == _('Escalate to Investigation') \
                 and 'person_responsible' not in attrs:
             email = settings.EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS
-            attrs['person_responsible'] = User.objects.filter(email=email).first()
+            attrs['person_responsible'] = get_user_model().objects.filter(email=email).first()
 
         return attrs
 

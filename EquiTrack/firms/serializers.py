@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.contrib.auth import get_user_model as User
+from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -28,11 +28,11 @@ class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSeri
 class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     profile = UserProfileSerializer(required=False)
     email = serializers.EmailField(
-        label=_('E-mail Address'), validators=[UniqueValidator(queryset=User.objects.all())]
+        label=_('E-mail Address'), validators=[UniqueValidator(queryset=get_user_model().objects.all())]
     )
 
     class Meta(WritableNestedSerializerMixin.Meta):
-        model = User
+        model = get_user_model()
         fields = ['first_name', 'last_name', 'email', 'is_active', 'profile']
         extra_kwargs = {
             'first_name': {'required': True, 'allow_blank': False, 'label': _('First Name')},

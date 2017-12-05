@@ -6,7 +6,7 @@ import logging
 
 from django.db import connection
 from django.conf import settings
-from django.contrib.auth import get_user_model as User
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.template.response import SimpleTemplateResponse
@@ -60,19 +60,19 @@ class CountryUsersAdminMixin(object):
 
         if filters:
             # preserve existing filters if any
-            queryset = kwargs.get("queryset", User.objects)
+            queryset = kwargs.get("queryset", get_user_model().objects)
             kwargs["queryset"] = queryset.filter(**filters)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
 
-        if db_field.rel.to is User:
+        if db_field.rel.to is get_user_model():
             self.filter_users(kwargs)
 
         return super(CountryUsersAdminMixin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
 
-        if db_field.rel.to is User:
+        if db_field.rel.to is get_user_model():
             self.filter_users(kwargs)
 
         return super(CountryUsersAdminMixin, self).formfield_for_manytomany(db_field, request, **kwargs)
@@ -178,6 +178,8 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def pre_social_login(self, request, sociallogin):
+        User = get_user_model()
+
         # TODO: make sure that the partnership is still in good standing or valid or whatever
         if sociallogin.user.pk:
             set_country(sociallogin.user, request)

@@ -7,7 +7,7 @@ from django import forms
 from django.db.models import Q
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from django.contrib.auth import get_user_model as User
+from django.contrib.auth import get_user_model
 
 from dal import autocomplete
 
@@ -86,6 +86,8 @@ class PartnerStaffMemberForm(forms.ModelForm):
         active = cleaned_data.get('active')
         validate_email(email)
         existing_user = None
+        User = get_user_model()
+
         if not self.instance.id:
             # user should be active first time it's created
             if not active:

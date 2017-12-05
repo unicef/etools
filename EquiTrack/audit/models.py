@@ -3,7 +3,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
-from django.contrib.auth import get_user_model as User
+from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -303,7 +303,7 @@ class Engagement(TimeStampedModel, models.Model):
         )
 
     def _notify_focal_points(self, template_name, context=None, **kwargs):
-        for focal_point in User.objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
+        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
             ctx = {
                 'focal_point': focal_point,
             }

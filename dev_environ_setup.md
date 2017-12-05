@@ -121,7 +121,7 @@ $ python manage.py shell
 Python 2.7.10 (default, Oct 23 2015, 19:19:21)
 
 >>> from users.models import UserProfile, Country, Office, Section
->>> from django.contrib.auth import get_user_model as User
+>>> from django.contrib.auth import get_user_model() as User
 >>> user = User.objects.get(id=1)
 >>> userp = UserProfile.objects.get(user=user)
 >>> country=Country.objects.get(name='UAT')
