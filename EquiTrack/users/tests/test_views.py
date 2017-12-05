@@ -7,7 +7,6 @@ from django.contrib.auth.models import Permission
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 from unittest import skip
-from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, SectionFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
