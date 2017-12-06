@@ -1,37 +1,40 @@
 """
 Model factories used for generating models dynamically for tests
 """
-from datetime import datetime, timedelta, date
 import json
+from datetime import date, datetime, timedelta
 
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save
-from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
+from django.contrib.gis.geos import GEOSGeometry
+from django.db.models.signals import post_save
+
 import factory
 from factory import fuzzy
 
 from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
-from users import models as user_models
-from reports import models as report_models
+from funds import models as funds_models
 from locations import models as location_models
+from notification import models as notification_models
 from partners import models as partner_models
 from publics import models as publics_models
-from funds import models as funds_models
-from notification import models as notification_models
+from reports import models as report_models
+from reports.models import Sector
 from t2f import models as t2f_models
+from users import models as user_models
+from users.models import Office, Section
 
 
 class OfficeFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = user_models.Office
+        model = Office
 
     name = 'An Office'
 
 
 class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = user_models.Section
+        model = Section
 
     name = factory.Sequence(lambda n: "section_%d" % n)
 
@@ -212,7 +215,7 @@ class ResultTypeFactory(factory.django.DjangoModelFactory):
 
 class SectorFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = report_models.Sector
+        model = Sector
 
     name = factory.Sequence(lambda n: 'Sector {}'.format(n))
 

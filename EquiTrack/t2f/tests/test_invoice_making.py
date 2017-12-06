@@ -1,24 +1,24 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+
+from django.core.urlresolvers import reverse
 from pytz import UTC
+
+from EquiTrack.factories import UserFactory
+from EquiTrack.tests.mixins import APITenantTestCase
+from publics.models import TravelExpenseType
+from publics.tests.factories import DSARateFactory, DSARegionFactory
+from t2f.helpers.invoice_maker import InvoiceMaker
+from t2f.models import CostAssignment, Expense, Invoice, InvoiceItem, Travel
+from t2f.tests.factories import (
+    CurrencyFactory, ExpenseTypeFactory, FundFactory, GrantFactory, ItineraryItemFactory, WBSFactory,)
+from t2f.vision import InvoiceUpdater
 
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
-
-from django.core.urlresolvers import reverse
-
-from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
-from publics.models import TravelExpenseType
-from publics.tests.factories import DSARegionFactory, DSARateFactory
-from t2f.helpers.invoice_maker import InvoiceMaker
-from t2f.models import Travel, Expense, CostAssignment, InvoiceItem, Invoice
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory, \
-    ItineraryItemFactory
-from t2f.vision import InvoiceUpdater
 
 
 class InvoiceMaking(APITenantTestCase):
