@@ -9,12 +9,10 @@ from django.core.exceptions import ValidationError
 
 from audit.models import (
     Auditor,
-    AuditorStaffMember,
     Engagement,
-    PurchaseOrder,
-    PurchaseOrderItem,
     RiskCategory,
 )
+from audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from audit.tests.factories import (
     AuditFactory,
     AuditPartnerFactory,

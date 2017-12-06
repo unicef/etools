@@ -32,9 +32,6 @@ class ChangeUserCountryView(APIView):
     """
     Allows a user to switch country context if they have access to more than one
     """
-    # TODO: We need allow any staff user that has access to more then one country
-    permission_classes = (permissions.IsAdminUser,)
-
     ERROR_MESSAGES = {
         'country_does_not_exist': 'The Country that you are attempting to switch to does not exist',
         'access_to_country_denied': 'You do not have access to the country you are trying to switch to'

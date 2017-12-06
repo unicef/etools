@@ -11,22 +11,19 @@ from factory import fuzzy
 from audit.models import (
     Audit,
     Auditor,
-    AuditorFirm,
     AuditPermission,
-    AuditorStaffMember,
     DetailedFindingInfo,
     Engagement,
     EngagementActionPoint,
     Finding,
     MicroAssessment,
-    PurchaseOrder,
-    PurchaseOrderItem,
     Risk,
     RiskBluePrint,
     RiskCategory,
     SpecialAudit,
     SpotCheck,
 )
+from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from EquiTrack.factories import (
     AgreementFactory,
     InterventionFactory,

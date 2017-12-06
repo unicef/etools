@@ -9,8 +9,9 @@ from rest_framework import serializers
 
 from attachments.models import Attachment
 from audit.models import (
-    Audit, AuditorFirm, AuditorStaffMember, Engagement, EngagementActionPoint, MicroAssessment, PurchaseOrder,
-    SpotCheck, Finding, SpecificProcedure, SpecialAuditRecommendation)
+    Audit, Engagement, EngagementActionPoint, MicroAssessment, SpotCheck, Finding, SpecificProcedure,
+    SpecialAuditRecommendation)
+from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from audit.serializers.engagement import DetailedFindingInfoSerializer
 from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from partners.models import PartnerOrganization
