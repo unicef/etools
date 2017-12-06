@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 from django.db import connection
 from django.shortcuts import get_object_or_404
 from django.views.generic import FormView, RedirectView
-from rest_framework import mixins, permissions, status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
