@@ -1,8 +1,11 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.db import connection
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
-from django.views.generic import FormView, RedirectView
+from django.utils.decorators import method_decorator
+from django.views.generic import FormView, RedirectView, View
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
@@ -28,31 +31,66 @@ class UserAuthAPIView(RetrieveAPIView):
         return user
 
 
-class ChangeUserCountryView(APIView):
-    """
-    Allows a user to switch country context if they have access to more than one
-    """
+class ChangeUserCountryView(View):
     ERROR_MESSAGES = {
         'country_does_not_exist': 'The Country that you are attempting to switch to does not exist',
         'access_to_country_denied': 'You do not have access to the country you are trying to switch to'
     }
 
+    next_param = 'next'
+
+    def get_country_id(self):
+        return self.request.GET.get('country', None)
+
+    def get_country(self):
+        country_id = self.get_country_id()
+
+        try:
+            country = Country.objects.get(id=country_id)
+        except Country.DoesNotExist:
+            raise ValidationError(self.ERROR_MESSAGES['country_does_not_exist'])
+
+        return country
+
+    def change_country(self):
+        user = self.request.user
+        country = self.get_country()
+
+        if country not in user.profile.countries_available.all():
+            raise ValidationError(self.ERROR_MESSAGES['access_to_country_denied'])
+
+        user.profile.country_override = country
+        user.profile.save()
+
+    def get_redirect_url(self):
+        return self.request.GET.get(self.next_param, '/')
+
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        try:
+            self.change_country()
+        except ValidationError as err:
+            return HttpResponseForbidden(err)
+
+        return HttpResponseRedirect(self.get_redirect_url())
+
+
+class ChangeUserCountryAPIView(APIView, ChangeUserCountryView):
+    """
+    Allows a user to switch country context if they have access to more than one
+    """
+    permission_classes = (IsAuthenticated, )
+
+    def get_country_id(self):
+        return self.request.data.get('country')
+
     def post(self, request, format=None):
         try:
-            country = Country.objects.get(id=request.data.get('country'))
-        except Country.DoesNotExist:
-            return Response(self.ERROR_MESSAGES['country_does_not_exist'],
-                            status=status.HTTP_400_BAD_REQUEST)
+            self.change_country()
+        except ValidationError as err:
+            return Response(err, status=status.HTTP_403_FORBIDDEN)
 
-        if country not in request.user.profile.countries_available.all():
-            return Response(self.ERROR_MESSAGES['access_to_country_denied'],
-                            status=status.HTTP_403_FORBIDDEN)
-
-        else:
-            request.user.profile.country = country
-            request.user.profile.country_override = country
-            request.user.profile.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UsersView(ListAPIView):
