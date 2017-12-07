@@ -447,7 +447,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
         return 0
 
 
-class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
+class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, SnapshotModelAdmin):
 
     list_filter = (
         u'partner',
