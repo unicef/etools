@@ -1,9 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
+from django.utils import six
 from django.utils.decorators import method_decorator
 from django.views.generic import FormView, RedirectView, View
 from rest_framework import mixins, status, viewsets
@@ -48,7 +50,7 @@ class ChangeUserCountryView(View):
         try:
             country = Country.objects.get(id=country_id)
         except Country.DoesNotExist:
-            raise ValidationError(self.ERROR_MESSAGES['country_does_not_exist'])
+            raise DjangoValidationError(self.ERROR_MESSAGES['country_does_not_exist'], code='country_does_not_exist')
 
         return country
 
@@ -57,7 +59,8 @@ class ChangeUserCountryView(View):
         country = self.get_country()
 
         if country not in user.profile.countries_available.all():
-            raise ValidationError(self.ERROR_MESSAGES['access_to_country_denied'])
+            raise DjangoValidationError(self.ERROR_MESSAGES['access_to_country_denied'],
+                                        code='access_to_country_denied')
 
         user.profile.country_override = country
         user.profile.save()
@@ -69,8 +72,8 @@ class ChangeUserCountryView(View):
     def get(self, request, *args, **kwargs):
         try:
             self.change_country()
-        except ValidationError as err:
-            return HttpResponseForbidden(err)
+        except DjangoValidationError as err:
+            return HttpResponseForbidden(six.text_type(err))
 
         return HttpResponseRedirect(self.get_redirect_url())
 
@@ -87,8 +90,13 @@ class ChangeUserCountryAPIView(APIView, ChangeUserCountryView):
     def post(self, request, format=None):
         try:
             self.change_country()
-        except ValidationError as err:
-            return Response(err, status=status.HTTP_403_FORBIDDEN)
+
+        except DjangoValidationError as err:
+            if err.code == 'access_to_country_denied':
+                status_code = status.HTTP_403_FORBIDDEN
+            else:
+                status_code = status.HTTP_400_BAD_REQUEST
+            return Response(six.text_type(err), status=status_code)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
