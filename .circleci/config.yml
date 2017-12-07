@@ -22,7 +22,7 @@ jobs:
           command: |
             virtualenv env1
             . env1/bin/activate
-            pip install -r requirements.txt
+            pip install -e .
             # for tests to run
             pip install django-extensions
       - save_cache:
