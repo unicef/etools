@@ -79,8 +79,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     reject_comment = models.TextField(verbose_name=_('Request For More Information'), blank=True)
     approval_comment = models.TextField(verbose_name=_('Approval Comments'), blank=True)
 
-    report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Visit Report'),
-                                              code='visit_report', blank=True)
+    report_attachments = GenericRelation(Attachment, verbose_name=_('Visit Report'), blank=True)
 
     visit_information = models.TextField(verbose_name=_('Visit Information'), blank=True)
 
