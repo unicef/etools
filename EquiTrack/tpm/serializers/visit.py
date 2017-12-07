@@ -196,7 +196,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
 
 
 class TPMVisitSerializer(TPMVisitLightSerializer):
-    tpm_activities = TPMActivitySerializer(many=True, required=False, label=_('Activities Information'))
+    tpm_activities = TPMActivitySerializer(many=True, required=False, label=_('Site Visit Schedule'))
 
     report_attachments = TPMReportAttachmentsSerializer(many=True, required=False, label=_('Overall Visit Reports'))
 
