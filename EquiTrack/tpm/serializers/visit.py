@@ -152,7 +152,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
     def get_implementing_partners(self, obj):
         return PartnerOrganizationLightSerializer(
             set(map(
-                lambda a: a.implementing_partner,
+                lambda a: a.partner,
                 obj.tpm_activities.all()
             )),
             many=True

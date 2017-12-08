@@ -221,15 +221,15 @@ class TPMVisitViewSet(
     }
     filter_backends = (ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter, DjangoFilterBackend, )
     search_fields = (
-        'tpm_partner__name', 'tpm_activities__implementing_partner__name',
+        'tpm_partner__name', 'tpm_activities__partner__name',
         'tpm_activities__locations__name', 'tpm_activities__locations__p_code',
     )
     ordering_fields = (
         'tpm_partner__name', 'status'
     )
     filter_fields = (
-        'tpm_partner', 'tpm_activities__section', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
-        'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status',
+        'tpm_partner', 'tpm_activities__section', 'tpm_activities__partner', 'tpm_activities__locations',
+        'tpm_activities__cp_output', 'tpm_activities__intervention', 'tpm_activities__date', 'status',
         'unicef_focal_points', 'tpm_partner_focal_points',
     )
 
@@ -270,8 +270,8 @@ class TPMVisitViewSet(
     @list_route(methods=['get'], url_path='export', renderer_classes=(TPMVisitCSVRenderer,))
     def visits_export(self, request, *args, **kwargs):
         tpm_visits = TPMVisit.objects.all().prefetch_related(
-            'tpm_activities', 'tpm_activities__section', 'tpm_activities__implementing_partner',
-            'tpm_activities__partnership', 'tpm_activities__locations', 'unicef_focal_points',
+            'tpm_activities', 'tpm_activities__section', 'tpm_activities__partner',
+            'tpm_activities__intervention', 'tpm_activities__locations', 'unicef_focal_points',
             'tpm_partner_focal_points'
         ).order_by('id')
         serializer = TPMVisitExportSerializer(tpm_visits, many=True)
