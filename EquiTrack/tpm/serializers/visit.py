@@ -84,10 +84,10 @@ class TPMActionPointSerializer(TPMPermissionsBasedSerializerMixin,
 
 class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             ActivitySerializer):
-    implementing_partner = SeparatedReadWriteField(
+    partner = SeparatedReadWriteField(
         read_field=PartnerOrganizationLightSerializer(read_only=True, label=_('Implementing Partner')),
     )
-    partnership = SeparatedReadWriteField(
+    intervention = SeparatedReadWriteField(
         read_field=InterventionCreateUpdateSerializer(read_only=True, label=_('PD/SSFA')),
     )
 
@@ -113,15 +113,15 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
-            'id', 'implementing_partner', 'partnership', 'cp_output', 'section',
+            'id', 'partner', 'intervention', 'cp_output', 'section',
             'date', 'locations', 'attachments', 'report_attachments', 'additional_information',
             'pv_applicable',
         ]
         extra_kwargs = {
             'id': {'label': _('Activity ID')},
             'date': {'required': True},
-            'implementing_partner': {'required': True},
-            'partnership': {'required': True},
+            'partner': {'required': True},
+            'intervention': {'required': True},
         }
 
 
