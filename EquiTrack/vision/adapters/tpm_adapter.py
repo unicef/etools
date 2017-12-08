@@ -3,7 +3,7 @@ from collections import OrderedDict
 from copy import deepcopy
 
 from .manual import ManualVisionSynchronizer
-from tpm.models import TPMPartner
+from tpm.tpmpartners.models import TPMPartner
 from publics.models import Country
 
 

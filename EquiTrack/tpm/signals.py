@@ -3,7 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
-from tpm.models import ThirdPartyMonitor, TPMActionPoint, TPMPartnerStaffMember
+from tpm.models import ThirdPartyMonitor, TPMActionPoint
+from tpm.tpmpartners.models import TPMPartnerStaffMember
 
 
 @receiver(post_save, sender=TPMPartnerStaffMember)

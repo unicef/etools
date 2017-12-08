@@ -22,7 +22,8 @@ from tpm.export.serializers import (
     TPMVisitExportSerializer,)
 from tpm.filters import ReferenceNumberOrderingFilter
 from tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from tpm.models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPermission, TPMPartnerStaffMember, TPMActivity
+from tpm.models import TPMVisit, ThirdPartyMonitor, TPMPermission, TPMActivity
+from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from tpm.permissions import IsPMEorReadonlyPermission
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from tpm.serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer

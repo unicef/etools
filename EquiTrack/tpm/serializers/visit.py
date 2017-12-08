@@ -11,7 +11,8 @@ from activities.serializers import ActivitySerializer
 from partners.models import InterventionResultLink, PartnerOrganization
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from tpm.models import (
-    TPMActionPoint, TPMActivity, TPMPartnerStaffMember, TPMPermission, TPMVisit, TPMVisitReportRejectComment,)
+    TPMActionPoint, TPMActivity, TPMPermission, TPMVisit, TPMVisitReportRejectComment,)
+from tpm.tpmpartners.models import TPMPartnerStaffMember
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, TPMReportSerializer
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
 from utils.permissions.serializers import (

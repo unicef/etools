@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.contrib import admin
 
+import tpm.tpmpartners.models
 from publics.admin import AdminListMixin
 from tpm import models
 
@@ -30,11 +31,11 @@ class TPMPermissionAdmin(admin.ModelAdmin):
 
 
 class TPMPartnerStaffMemberInlineAdmin(admin.StackedInline):
-    model = models.TPMPartnerStaffMember
+    model = tpm.tpmpartners.models.TPMPartnerStaffMember
     extra = 1
 
 
-@admin.register(models.TPMPartner)
+@admin.register(tpm.tpmpartners.models.TPMPartner)
 class TPMPartnerAdmin(admin.ModelAdmin):
     list_display = [
         'vendor_number', 'name', 'email', 'phone_number', 'blocked', 'hidden',
@@ -47,7 +48,7 @@ class TPMPartnerAdmin(admin.ModelAdmin):
     ]
 
 
-@admin.register(models.TPMPartnerStaffMember)
+@admin.register(tpm.tpmpartners.models.TPMPartnerStaffMember)
 class TPMPartnerStaffMemberAdmin(admin.ModelAdmin):
     list_display = [
         'email', 'first_name', 'last_name', 'phone', 'active', 'tpm_partner',

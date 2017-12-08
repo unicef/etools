@@ -16,8 +16,8 @@ from post_office import mail
 from activities.models import Activity
 from attachments.models import Attachment
 from EquiTrack.utils import get_environment
-from firms.models import BaseFirm, BaseStaffMember
 from publics.models import SoftDeleteMixin
+from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer
 from tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck, TPMVisitReportValidations, ValidateTPMVisitActivities,)
@@ -27,20 +27,6 @@ from utils.groups.wrappers import GroupWrapper
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from utils.permissions.utils import has_action_permission
-
-
-class TPMPartner(BaseFirm):
-    attachments = GenericRelation(Attachment, verbose_name=_('attachments'), blank=True)
-
-
-@python_2_unicode_compatible
-class TPMPartnerStaffMember(BaseStaffMember):
-    tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), related_name='staff_members')
-
-    receive_tpm_notifications = models.BooleanField(verbose_name=_('Receive Notifications on TPM Tasks'), default=False)
-
-    def __str__(self):
-        return self.get_full_name()
 
 
 def _has_action_permission(action):

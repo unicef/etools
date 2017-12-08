@@ -181,6 +181,7 @@ SHARED_APPS = (
     'notification',
     'django_filters',
     'environment',
+    'tpm.tpmpartners',
     'utils.common',
     'utils.mail',
     'utils.writable_serializers',
