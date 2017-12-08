@@ -3,7 +3,7 @@ import json
 
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -28,6 +28,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
         data = super(PartnerStaffMemberCreateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
+        User = get_user_model()
         existing_user = None
 
         # user should be active first time it's created
@@ -90,6 +91,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         data = super(PartnerStaffMemberCreateUpdateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
+        User = get_user_model()
 
         try:
             existing_user = User.objects.get(email=email)

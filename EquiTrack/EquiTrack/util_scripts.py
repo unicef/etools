@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from django.contrib.auth.models import Group, User
 from django.db import connection
 from django.db.models import Count
+from django.contrib.auth import get_user_model
 
 from partners.models import (
     Agreement, Assessment, FundingCommitment, Intervention, InterventionPlannedVisits, PartnerOrganization,
@@ -486,6 +487,7 @@ def create_test_user(email, password):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         raise Exception("Not a valid email")
 
+    User = get_user_model()
     u = User(username=email, email=email)
     u.first_name = email.split("@")[0]
     u.last_name = email.split("@")[0]
@@ -517,6 +519,8 @@ def run(function):
 def remediation_intervention_migration():
     from django.db import transaction
     from partners.validation.interventions import InterventionValid
+
+    User = get_user_model()
     master_user = User.objects.get(username='etools_task_admin')
     active_interventions = Intervention.objects.filter(status='active')
     for intervention in active_interventions:
@@ -571,6 +575,8 @@ def wow():
 
 def intervention_update_task():
     from partners.validation.interventions import InterventionValid
+
+    User = get_user_model()
     master_user = User.objects.get(username='etools_task_admin')
     all_interventions = Intervention.objects.filter(status__in=['draft', 'signed', 'active', 'ended'])
     for intervention in all_interventions.all():
