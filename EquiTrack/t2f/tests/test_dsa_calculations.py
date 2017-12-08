@@ -8,8 +8,100 @@ from pytz import UTC
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CountryFactory, DSARateFactory, DSARegionFactory
-from t2f.helpers.cost_summary_calculator import DSACalculator
+from t2f.helpers.cost_summary_calculator import DSACalculator, DSAdto
 from t2f.tests.factories import DeductionFactory, ItineraryItemFactory, TravelFactory
+
+
+class TestDASdto(APITenantTestCase):
+    def setUp(self):
+        super(TestDASdto, self).setUp()
+        netherlands = CountryFactory(
+            name='Netherlands',
+            long_name='Netherlands'
+        )
+        self.amsterdam = DSARegionFactory(
+            country=netherlands,
+            area_name='Amsterdam',
+            area_code='ds1'
+        )
+        self.travel = TravelFactory()
+        self.itinerary_item = ItineraryItemFactory(
+            travel=self.travel,
+            dsa_region=self.amsterdam,
+        )
+        self.dsa = DSAdto(date.today(), self.itinerary_item)
+        self.dsa.dsa_amount = Decimal(100.0)
+
+    def test_init(self):
+        today = date.today()
+        dsa = DSAdto(today, self.itinerary_item)
+        self.assertEqual(dsa.date, today)
+        self.assertEqual(dsa.itinerary_item, self.itinerary_item)
+        self.assertEqual(dsa.region, self.amsterdam)
+        self.assertEqual(dsa.dsa_amount, 0)
+        self.assertEqual(dsa.deduction_multiplier, 0)
+        self.assertFalse(dsa.last_day)
+
+    def test_corrected_dsa_amount(self):
+        """If NOT last day, then no change to dsa_amount"""
+        self.assertFalse(self.dsa.last_day)
+        self.assertEqual(self.dsa.corrected_dsa_amount, self.dsa.dsa_amount)
+
+    def test_corrected_dsa_amount_last_day(self):
+        """If last day, then dsa amount is corrected"""
+        self.dsa.last_day = True
+        self.assertEqual(self.dsa.corrected_dsa_amount, 40.00)
+
+    def test_internal_deduction(self):
+        """If NOT last day, then internal deduction is zero"""
+        self.assertFalse(self.dsa.last_day)
+        self.assertEqual(self.dsa._internal_deduction, 0)
+
+    def test_internal_deduction_last_day(self):
+        """If last day, then internal deduction is calculated"""
+        self.dsa.last_day = True
+        self.assertEqual(self.dsa._internal_deduction, 60.00)
+
+    def test_deduction(self):
+        """If NOT last day, then use deduction multiplier only"""
+        self.assertFalse(self.dsa.last_day)
+        self.dsa.deduction_multiplier = 2
+        self.assertEqual(self.dsa.deduction, 200.0)
+
+    def test_deduction_last_day_use_deduction(self):
+        """If last day, use the lesser of multiplier and last day deduction"""
+        self.dsa.last_day = True
+        self.dsa.deduction_multiplier = 0.5
+        self.assertEqual(self.dsa.deduction, 40.0)
+
+    def test_deduction_last_day_use_multiplier(self):
+        """If last day, use the lesser of multiplier and last day deduction"""
+        self.dsa.last_day = True
+        self.dsa.deduction_multiplier = Decimal(0.3)
+        self.assertEqual("{:.2f}".format(self.dsa.deduction), "30.00")
+
+    def test_final_amount(self):
+        """If NOT last day, then just deduction should be substracted"""
+        self.assertFalse(self.dsa.last_day)
+        self.dsa.deduction_multiplier = Decimal(0.2)
+        self.assertEqual("{:.2f}".format(self.dsa.final_amount), "80.00")
+
+    def test_final_amount_last_day(self):
+        """If last day, then both deduction and internal deduction
+        should be subtracted
+        """
+        self.dsa.last_day = True
+        self.dsa.deduction_multiplier = Decimal(0.2)
+        self.assertEqual("{:.2f}".format(self.dsa.final_amount), "20.00")
+
+    def test_str(self):
+        self.assertFalse(self.dsa.last_day)
+        self.dsa.deduction_multiplier = Decimal(0.2)
+        res = "Date: {} | Region: {} | DSA amount: 100.00 | Deduction: 20.00 => Final: 80.00".format(
+            date.today(),
+            self.amsterdam,
+        )
+        self.assertEqual(str(self.dsa), res)
 
 
 class TestDSACalculations(APITenantTestCase):

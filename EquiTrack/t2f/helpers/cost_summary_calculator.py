@@ -112,11 +112,13 @@ class DSAdto(object):
         self.region = itinerary_item.dsa_region
 
     def __repr__(self):
-        return 'Date: {} | Region: {} | DSA amount: {} | Deduction: {} => Final: {}'.format(self.date,
-                                                                                            self.region,
-                                                                                            self.dsa_amount,
-                                                                                            self.deduction,
-                                                                                            self.final_amount)
+        return 'Date: {} | Region: {} | DSA amount: {:.2f} | Deduction: {:.2f} => Final: {:.2f}'.format(
+            self.date,
+            self.region,
+            self.dsa_amount,
+            self.deduction,
+            self.final_amount
+        )
 
     @property
     def corrected_dsa_amount(self):
