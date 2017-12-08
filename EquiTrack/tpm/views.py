@@ -156,7 +156,7 @@ class ImplementingPartnerView(generics.ListAPIView):
         queryset = super(ImplementingPartnerView, self).get_queryset()
 
         if self.visits is not None:
-            queryset = queryset.filter(activity__tpm_visit__in=self.visits).distinct()
+            queryset = queryset.filter(activity__in=self.visits.values_list('tpm_activities__id', flat=True)).distinct()
 
         return queryset
 
@@ -194,7 +194,7 @@ class VisitsCPOutputView(generics.ListAPIView):
         queryset = super(VisitsCPOutputView, self).get_queryset()
 
         if self.visits is not None:
-            queryset = queryset.filter(activity__tpm_visit__in=self.visits).distinct()
+            queryset = queryset.filter(activity__in=self.visits.values_list('tpm_activities__id', flat=True)).distinct()
 
         return queryset
 
