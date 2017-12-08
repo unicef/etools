@@ -1,5 +1,5 @@
-from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
+from django.conf import settings
 from django.db import models
 
 from model_utils.models import TimeStampedModel
@@ -18,8 +18,8 @@ class Comment(TimeStampedModel):
     Relates to :model:`workplan.Workplan`
     """
 
-    author = models.ForeignKey(User, related_name='comments')
-    tagged_users = models.ManyToManyField(User, blank=True, related_name='+')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='comments')
+    tagged_users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='+')
     text = models.TextField()
     workplan = models.ForeignKey('Workplan', related_name='comments')
 
@@ -107,7 +107,7 @@ class ResultWorkplanProperty(models.Model):
     sections = models.ManyToManyField(Section, related_name="sections+")
     geotag = models.ManyToManyField(Location, related_name="geotag+")
     partners = models.ManyToManyField(PartnerOrganization, related_name="partners+")
-    responsible_persons = models.ManyToManyField(User, related_name="responsible_persons+")
+    responsible_persons = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="responsible_persons+")
     labels = models.ManyToManyField(Label)
 
     def save(self, *args, **kwargs):
