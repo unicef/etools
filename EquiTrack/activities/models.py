@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from model_utils.managers import InheritanceManager
+
 
 class Activity(models.Model):
     partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Implementing Partner'), null=True)
@@ -12,6 +14,8 @@ class Activity(models.Model):
                                   null=True, blank=True)
     locations = models.ManyToManyField('locations.Location', verbose_name=_('Locations'), related_name='+')
     date = models.DateField(verbose_name=_('Date'), blank=True, null=True)
+
+    objects = InheritanceManager()
 
     @staticmethod
     def _validate_intervention(partner, intervention):

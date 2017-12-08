@@ -75,22 +75,22 @@ class TPMActivityExportSerializer(serializers.Serializer):
 
 
 class TPMLocationExportSerializer(serializers.Serializer):
-    ref = serializers.CharField(source='tpmactivity.tpm_visit.reference_number')
-    visit = serializers.CharField(source='tpmactivity.tpm_visit')
+    ref = serializers.CharField(source='activity.tpmactivity.tpm_visit.reference_number')
+    visit = serializers.CharField(source='activity.tpmactivity.tpm_visit')
     activity = serializers.SerializerMethodField()
-    section = serializers.CharField(source='tpmactivity.section')
-    cp_output = serializers.CharField(source='tpmactivity.cp_output')
-    partner = serializers.CharField(source='tpmactivity.partner')
-    intervention = serializers.CharField(source='tpmactivity.intervention')
+    section = serializers.CharField(source='activity.tpmactivity.section')
+    cp_output = serializers.CharField(source='activity.tpmactivity.cp_output')
+    partner = serializers.CharField(source='activity.tpmactivity.partner')
+    intervention = serializers.CharField(source='activity.tpmactivity.intervention')
     location = serializers.CharField()
-    date = serializers.DateField(source='tpmactivity.date', format='%d/%m/%Y')
-    unicef_focal_points = UsersExportField(source='tpmactivity.tpm_visit.unicef_focal_points')
-    offices = CommaSeparatedExportField(source='tpmactivity.tpm_visit.offices')
-    tpm_focal_points = UsersExportField(source='tpmactivity.tpm_visit.tpm_partner_focal_points')
-    link = serializers.CharField(source='tpmactivity.tpm_visit.get_object_url')
+    date = serializers.DateField(source='activity.tpmactivity.date', format='%d/%m/%Y')
+    unicef_focal_points = UsersExportField(source='activity.tpmactivity.tpm_visit.unicef_focal_points')
+    offices = CommaSeparatedExportField(source='activity.tpmactivity.tpm_visit.offices')
+    tpm_focal_points = UsersExportField(source='activity.tpmactivity.tpm_visit.tpm_partner_focal_points')
+    link = serializers.CharField(source='activity.tpmactivity.tpm_visit.get_object_url')
 
     def get_activity(self, obj):
-        return 'Activity #{}.{}'.format(obj.tpmactivity.tpm_visit.id, obj.tpmactivity.id)
+        return 'Activity #{}.{}'.format(obj.activity.tpmactivity.tpm_visit.id, obj.activity.tpmactivity.id)
 
 
 class TPMVisitExportSerializer(serializers.Serializer):

@@ -294,10 +294,10 @@ class TPMVisitViewSet(
     @list_route(methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
     def locations_export(self, request, *args, **kwargs):
         tpm_locations = TPMActivity.locations.through.objects.filter(
-            tpmactivity__tpm_visit__in=self.get_queryset(),
+            activity__in=self.get_queryset().values_list('tpm_activities__id', flat=True),
         ).prefetch_related(
-            'tpmactivity', 'location', 'tpmactivity__tpm_visit', 'tpmactivity__section', 'tpmactivity__cp_output'
-        ).order_by('tpmactivity__tpm_visit', 'tpmactivity', 'id')
+            'activity', 'location', 'activity__tpmactivity__tpm_visit', 'activity__tpmactivity__section', 'activity__cp_output'
+        ).order_by('activity__tpmactivity__tpm_visit', 'activity', 'id')
         serializer = TPMLocationExportSerializer(tpm_locations, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now().date())
