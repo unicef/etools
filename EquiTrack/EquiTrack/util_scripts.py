@@ -6,7 +6,7 @@ import re
 import time
 from datetime import datetime, timedelta
 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.db import connection
 from django.db.models import Count
 from django.contrib.auth import get_user_model
