@@ -296,7 +296,8 @@ class TPMVisitViewSet(
         tpm_locations = TPMActivity.locations.through.objects.filter(
             activity__in=self.get_queryset().values_list('tpm_activities__id', flat=True),
         ).prefetch_related(
-            'activity', 'location', 'activity__tpmactivity__tpm_visit', 'activity__tpmactivity__section', 'activity__cp_output'
+            'activity', 'location', 'activity__tpmactivity__tpm_visit', 'activity__tpmactivity__section',
+            'activity__cp_output'
         ).order_by('activity__tpmactivity__tpm_visit', 'activity', 'id')
         serializer = TPMLocationExportSerializer(tpm_locations, many=True)
         return Response(serializer.data, headers={
