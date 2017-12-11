@@ -50,6 +50,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,end,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.3.5,sections,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.4.1,result_links,Partnership Manager,user_adds_amendment+prp_mode_off,*,Edit,TRUE
+3.4.2,result_links,UNICEF User,prp_mode_off,*,View,TRUE
 3.5,planned_budget,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.5,planned_budget,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.6,planned_visits,Partnership Manager,user_adds_amendment,*,Edit,TRUE
@@ -76,6 +77,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.10.1,frs,UNICEF User,,Signed,Required,FALSE
 3.10.1,frs,UNICEF User,,Suspended,Required,FALSE
 3.13.1,reporting_periods,Partnership Manager,prp_mode_off,Draft,Edit,TRUE
+3.13.1,reporting_periods,Partnership Manager,user_adds_amendment+prp_mode_off,*,Edit,TRUE
+3.13.1,reporting_periods,UNICEF User,prp_mode_off,*,View,TRUE
 3.13.1,reporting_periods,UNICEF User,prp_mode_off,Active,Required,TRUE
 3.13.1,reporting_periods,UNICEF User,prp_mode_off,Signed,Required,TRUE
 3.13.1,reporting_periods,UNICEF User,prp_mode_off,Suspended,Required,TRUE
