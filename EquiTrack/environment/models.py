@@ -36,7 +36,7 @@ class TenantFlag(models.Model):
 
     def is_active(self, request):
         "Is this flag on for this tenant, or for any other reason?"
-        if request.tenant in self.countries.all():
+        if getattr(request, 'tenant', None) in self.countries.all():
             return True
         return self.flag.is_active(request)
 
@@ -49,4 +49,7 @@ def tenant_flag_is_active(request, flag_name):
     tenant before doing other checks.
     """
     flag = Flag.get(flag_name)
-    return flag.tenantflag.is_active(request)
+    if hasattr(flag, 'tenantflag'):
+        return flag.tenantflag.is_active(request)
+    else:
+        return flag.is_active(request)
