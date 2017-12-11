@@ -61,8 +61,8 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
         self._test_list_view(self.tpm_user, [])
 
         visit = TPMVisitFactory(status='assigned',
-                                tpm_partner=self.tpm_user.tpm_tpmpartnerstaffmember.tpm_partner,
-                                tpm_partner_focal_points=[self.tpm_user.tpm_tpmpartnerstaffmember])
+                                tpm_partner=self.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+                                tpm_partner_focal_points=[self.tpm_user.tpmpartners_tpmpartnerstaffmember])
 
         self._test_list_view(self.tpm_user, [visit])
 

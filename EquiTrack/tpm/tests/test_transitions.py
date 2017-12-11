@@ -39,7 +39,7 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
 
         cls.pme_user = UserFactory(pme=True)
         cls.tpm_user = UserFactory(tpm=True)
-        cls.tpm_staff = cls.tpm_user.tpm_tpmpartnerstaffmember
+        cls.tpm_staff = cls.tpm_user.tpmpartners_tpmpartnerstaffmember
         cls.tpm_partner = cls.tpm_staff.tpm_partner
 
     def test_assign_without_activities(self):
@@ -343,8 +343,8 @@ class TPMPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
 
     def create_object(self, transition, **kwargs):
         opts = {
-            'tpm_partner': self.user.tpm_tpmpartnerstaffmember.tpm_partner,
-            'tpm_partner_focal_points': [self.user.tpm_tpmpartnerstaffmember],
+            'tpm_partner': self.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
+            'tpm_partner_focal_points': [self.user.tpmpartners_tpmpartnerstaffmember],
         }
 
         opts.update(kwargs)

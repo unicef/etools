@@ -242,7 +242,7 @@ class TPMVisitViewSet(
             return queryset.none()
         if user_type == ThirdPartyMonitor:
             queryset = queryset.filter(
-                tpm_partner=self.request.user.tpm_tpmpartnerstaffmember.tpm_partner,
+                tpm_partner=self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
             ).exclude(status=TPMVisit.STATUSES.draft)
         return queryset
 

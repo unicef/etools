@@ -457,7 +457,7 @@ class TPMPermission(StatusBasePermission):
                 return user_type
 
             try:
-                member = user.tpm_tpmpartnerstaffmember
+                member = user.tpmpartners_tpmpartnerstaffmember
             except TPMPartnerStaffMember.DoesNotExist:
                 return None
             else:
