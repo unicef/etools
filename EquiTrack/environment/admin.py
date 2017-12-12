@@ -4,10 +4,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from django.contrib import admin
-from waffle.admin import FlagAdmin
-from waffle.models import Flag
+from waffle.admin import FlagAdmin, SwitchAdmin
+from waffle.models import Flag, Switch
 
-from environment.models import IssueCheckConfig, TenantFlag
+from environment.models import IssueCheckConfig, TenantFlag, TenantSwitch
 
 
 @admin.register(IssueCheckConfig)
@@ -26,6 +26,18 @@ class TenantFlagAdmin(FlagAdmin):
     inlines = FlagAdmin.inlines + [TenantFlagInline, ]
 
 
-# unregister the Flag admin defined by waffle and use our own
+# add the TenantSwitch as an Inline on the Switch Admin
+class TenantSwitchInline(admin.StackedInline):
+    model = TenantSwitch
+    filter_horizontal = ('countries', )
+
+
+class TenantSwitchAdmin(SwitchAdmin):
+    inlines = SwitchAdmin.inlines + [TenantSwitchInline, ]
+
+
+# unregister the waffle admin instances and use our own
 admin.site.unregister(Flag)
 admin.site.register(Flag, TenantFlagAdmin)
+admin.site.unregister(Switch)
+admin.site.register(Switch, TenantSwitchAdmin)
