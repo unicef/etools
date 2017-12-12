@@ -4,6 +4,7 @@ import datetime
 import decimal
 import json
 
+import waffle
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
@@ -24,6 +25,7 @@ from dateutil.relativedelta import relativedelta
 
 from EquiTrack.utils import import_permissions
 from EquiTrack.mixins import AdminURLMixin
+from environment.helpers import tenant_switch_is_active
 from funds.models import Grant
 from reports.models import (
     Indicator,
@@ -1436,6 +1438,9 @@ class Intervention(TimeStampedModel):
         blank=True,
         related_name='office_interventions+',
     )
+    # TODO: remove this after PRP flag is on for all countries
+    flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True)
+
     population_focus = models.CharField(
         verbose_name=_("Population Focus"),
         max_length=130,
@@ -1560,12 +1565,15 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def intervention_locations(self):
-        # return intervention locations as a set of Location objects
-        locations = set()
-        for lower_result in self.all_lower_results:
-            for applied_indicator in lower_result.applied_indicators.all():
-                for location in applied_indicator.locations.all():
-                    locations.add(location)
+        if not tenant_switch_is_active("prp_mode_off"):
+            locations = set(self.flat_locations.all())
+        else:
+            # return intervention locations as a set of Location objects
+            locations = set()
+            for lower_result in self.all_lower_results:
+                for applied_indicator in lower_result.applied_indicators.all():
+                    for location in applied_indicator.locations.all():
+                        locations.add(location)
 
         return locations
 
