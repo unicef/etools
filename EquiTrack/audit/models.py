@@ -3,7 +3,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -303,7 +303,7 @@ class Engagement(TimeStampedModel, models.Model):
         )
 
     def _notify_focal_points(self, template_name, context=None, **kwargs):
-        for focal_point in User.objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
+        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
             ctx = {
                 'focal_point': focal_point,
             }
@@ -706,9 +706,16 @@ class EngagementActionPoint(models.Model):
     engagement = models.ForeignKey(Engagement, related_name='action_points', verbose_name=_('Engagement'))
     description = models.CharField(verbose_name=_('Description'), max_length=100, choices=DESCRIPTION_CHOICES)
     due_date = models.DateField(verbose_name=_('Due Date'))
-    author = models.ForeignKey(User, related_name='created_engagement_action_points', verbose_name=_('Author'))
-    person_responsible = models.ForeignKey(User, related_name='engagement_action_points',
-                                           verbose_name=_('Person Responsible'))
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='created_engagement_action_points',
+        verbose_name=_('Author')
+    )
+    person_responsible = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='engagement_action_points',
+        verbose_name=_('Person Responsible')
+    )
     comments = models.TextField(verbose_name=_('Comments'))
 
     def __str__(self):

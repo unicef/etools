@@ -167,7 +167,7 @@ class AuditPDFSerializer(EngagementPDFSerializer):
         model = Audit
         fields = EngagementPDFSerializer.Meta.fields + [
             'audited_expenditure', 'financial_findings', 'financial_finding_set', 'percent_of_audited_expenditure',
-            'audit_opinion',  'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness',
+            'audit_opinion', 'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness',
 
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
