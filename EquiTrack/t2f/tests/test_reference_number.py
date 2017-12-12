@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
 import json
-from freezegun import freeze_time
 
 from django.core.urlresolvers import reverse
+from freezegun import freeze_time
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase

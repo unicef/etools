@@ -139,7 +139,7 @@ class DSACalculator(object):
         def deduction(self):
             multiplier = self.deduction_multiplier
             if self.last_day:
-                multiplier = min(multiplier, Decimal(1)-DSACalculator.LAST_DAY_DEDUCTION)
+                multiplier = min(multiplier, Decimal(1) - DSACalculator.LAST_DAY_DEDUCTION)
             return self.dsa_amount * multiplier
 
         @property
