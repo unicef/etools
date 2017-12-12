@@ -87,8 +87,8 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     class Meta:
         model = TPMActivity
 
-    partnership = factory.SubFactory(FullInterventionFactory)
-    implementing_partner = factory.SelfAttribute('partnership.agreement.partner')
+    intervention = factory.SubFactory(FullInterventionFactory)
+    partner = factory.SelfAttribute('intervention.agreement.partner')
     date = fuzzy.FuzzyDate(_FUZZY_START_DATE, _FUZZY_END_DATE)
     section = factory.SubFactory(SectionFactory)
 
@@ -98,7 +98,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     @factory.post_generation
     def cp_output(self, create, extracted, **kwargs):
         if create:
-            self.cp_output = self.partnership.result_links.first().cp_output
+            self.cp_output = self.intervention.result_links.first().cp_output
 
         if extracted:
             self.cp_output = extracted
@@ -106,7 +106,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     @factory.post_generation
     def locations(self, create, extracted, **kwargs):
         if create:
-            self.locations.add(*self.partnership.sector_locations.first().locations.all())
+            self.locations.add(*self.intervention.sector_locations.first().locations.all())
 
         if extracted:
             self.locations.add(*extracted)

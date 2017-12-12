@@ -6,7 +6,7 @@ from rest_framework_csv.renderers import CSVRenderer
 
 
 class TPMActivityCSVRenderer(CSVRenderer):
-    header = ['ref', 'visit', 'activity', 'section', 'cp_output', 'implementing_partner', 'partnership',
+    header = ['ref', 'visit', 'activity', 'section', 'cp_output', 'partner', 'intervention',
               'locations', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'link']
     labels = {
         'ref': _('Visit Ref. #'),
@@ -14,8 +14,8 @@ class TPMActivityCSVRenderer(CSVRenderer):
         'activity': _('Activity'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
-        'implementing_partner': _('Partner'),
-        'partnership': _('Partnership'),
+        'partner': _('Partner'),
+        'intervention': _('Partnership'),
         'locations': _('Locations'),
         'date': _('Date'),
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
@@ -26,7 +26,7 @@ class TPMActivityCSVRenderer(CSVRenderer):
 
 
 class TPMLocationCSVRenderer(CSVRenderer):
-    header = ['ref', 'visit', 'activity', 'section', 'cp_output', 'implementing_partner', 'partnership',
+    header = ['ref', 'visit', 'activity', 'section', 'cp_output', 'partner', 'intervention',
               'location', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'link']
     labels = {
         'ref': _('Visit Ref. #'),
@@ -34,8 +34,8 @@ class TPMLocationCSVRenderer(CSVRenderer):
         'activity': _('Activity'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
-        'implementing_partner': _('Partner'),
-        'partnership': _('Partnership'),
+        'partner': _('Partner'),
+        'intervention': _('Partnership'),
         'location': _('Location'),
         'date': _('Date'),
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
@@ -48,7 +48,7 @@ class TPMLocationCSVRenderer(CSVRenderer):
 class TPMVisitCSVRenderer(CSVRenderer):
     header = [
         'ref', 'visit', 'status', 'activities',
-        'sections', 'partners', 'partnerships', 'locations',
+        'sections', 'partners', 'interventions', 'locations',
         'start_date', 'end_date', 'unicef_focal_points',
         'tpm_partner_focal_points', 'report_link', 'attachments', 'link',
     ]
@@ -59,7 +59,7 @@ class TPMVisitCSVRenderer(CSVRenderer):
         'activities': _('Activities'),
         'sections': _('Sections'),
         'partners': _('Partners'),
-        'partnerships': _('Partnerships'),
+        'interventions': _('Partnerships'),
         'locations': _('Locations'),
         'start_date': _('Start Date'),
         'end_date': _('End Date'),

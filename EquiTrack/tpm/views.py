@@ -156,7 +156,7 @@ class ImplementingPartnerView(generics.ListAPIView):
         queryset = super(ImplementingPartnerView, self).get_queryset()
 
         if self.visits is not None:
-            queryset = queryset.filter(tpmactivity__tpm_visit__in=self.visits).distinct()
+            queryset = queryset.filter(activity__in=self.visits.values_list('tpm_activities__id', flat=True)).distinct()
 
         return queryset
 
@@ -194,7 +194,7 @@ class VisitsCPOutputView(generics.ListAPIView):
         queryset = super(VisitsCPOutputView, self).get_queryset()
 
         if self.visits is not None:
-            queryset = queryset.filter(tpmactivity__tpm_visit__in=self.visits).distinct()
+            queryset = queryset.filter(activity__in=self.visits.values_list('tpm_activities__id', flat=True)).distinct()
 
         return queryset
 
@@ -221,15 +221,15 @@ class TPMVisitViewSet(
     }
     filter_backends = (ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter, DjangoFilterBackend, )
     search_fields = (
-        'tpm_partner__name', 'tpm_activities__implementing_partner__name',
+        'tpm_partner__name', 'tpm_activities__partner__name',
         'tpm_activities__locations__name', 'tpm_activities__locations__p_code',
     )
     ordering_fields = (
         'tpm_partner__name', 'status'
     )
     filter_fields = (
-        'tpm_partner', 'tpm_activities__section', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
-        'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status',
+        'tpm_partner', 'tpm_activities__section', 'tpm_activities__partner', 'tpm_activities__locations',
+        'tpm_activities__cp_output', 'tpm_activities__intervention', 'tpm_activities__date', 'status',
         'unicef_focal_points', 'tpm_partner_focal_points',
     )
 
@@ -270,8 +270,8 @@ class TPMVisitViewSet(
     @list_route(methods=['get'], url_path='export', renderer_classes=(TPMVisitCSVRenderer,))
     def visits_export(self, request, *args, **kwargs):
         tpm_visits = TPMVisit.objects.all().prefetch_related(
-            'tpm_activities', 'tpm_activities__section', 'tpm_activities__implementing_partner',
-            'tpm_activities__partnership', 'tpm_activities__locations', 'unicef_focal_points',
+            'tpm_activities', 'tpm_activities__section', 'tpm_activities__partner',
+            'tpm_activities__intervention', 'tpm_activities__locations', 'unicef_focal_points',
             'tpm_partner_focal_points'
         ).order_by('id')
         serializer = TPMVisitExportSerializer(tpm_visits, many=True)
@@ -294,10 +294,11 @@ class TPMVisitViewSet(
     @list_route(methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
     def locations_export(self, request, *args, **kwargs):
         tpm_locations = TPMActivity.locations.through.objects.filter(
-            tpmactivity__tpm_visit__in=self.get_queryset(),
+            activity__in=self.get_queryset().values_list('tpm_activities__id', flat=True),
         ).prefetch_related(
-            'tpmactivity', 'location', 'tpmactivity__tpm_visit', 'tpmactivity__section', 'tpmactivity__cp_output'
-        ).order_by('tpmactivity__tpm_visit', 'tpmactivity', 'id')
+            'activity', 'location', 'activity__tpmactivity__tpm_visit', 'activity__tpmactivity__section',
+            'activity__cp_output'
+        ).order_by('activity__tpmactivity__tpm_visit', 'activity', 'id')
         serializer = TPMLocationExportSerializer(tpm_locations, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now().date())

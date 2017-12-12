@@ -130,7 +130,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     def __str__(self):
         return 'Visit ({}, {})'.format(
-            self.tpm_partner, ', '.join(self.tpm_activities.values_list('partnership__title', flat=True))
+            self.tpm_partner, ', '.join(self.tpm_activities.values_list('intervention__title', flat=True))
         )
 
     def has_action_permission(self, user=None, action=None):
@@ -143,8 +143,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             'visit': self,
             'url': site_url(),
             'environment': get_environment(),
-            'implementing_partners': set(map(lambda a: a.implementing_partner.name, self.tpm_activities.all())),
-            'partnerships': set(map(lambda a: a.partnership.title, self.tpm_activities.all())),
+            'implementing_partners': set(map(lambda a: a.partner.name, self.tpm_activities.all())),
+            'partnerships': set(map(lambda a: a.intervention.title, self.tpm_activities.all())),
         }
         base_context.update(context)
         context = base_context
@@ -181,8 +181,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def _get_ip_focal_points_as_email_recipients(self):
         return list(
             self.tpm_activities.filter(
-                partnership__partner_focal_points__email__isnull=False
-            ).values_list('partnership__partner_focal_points__email', flat=True)
+                intervention__partner_focal_points__email__isnull=False
+            ).values_list('intervention__partner_focal_points__email', flat=True)
         )
 
     @transition(
@@ -396,14 +396,14 @@ class TPMActionPoint(TimeStampedModel, models.Model):
         return 'Action Point #{} on {}'.format(self.id, self.tpm_activity)
 
     def notify_person_responsible(self, template_name):
-        activities_data = self.tpm_visit.tpm_activities.values('partnership__title', 'implementing_partner__name')
+        activities_data = self.tpm_visit.tpm_activities.values('intervention__title', 'partner__name')
         context = {
             'url': site_url(),
             'environment': get_environment(),
             'visit': self.tpm_visit,
             'action_point': self,
-            'implementing_partners': set(map(lambda a: a['implementing_partner__name'], activities_data)),
-            'partnerships': set(map(lambda a: a['partnership__title'], activities_data)),
+            'implementing_partners': set(map(lambda a: a['partner__name'], activities_data)),
+            'partnerships': set(map(lambda a: a['intervention__title'], activities_data)),
         }
 
         mail.send(

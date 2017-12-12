@@ -23,6 +23,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('tpm', '0003_auto_20170310_1402'),
+        ('post_office', '0004_auto_20160607_0901'),
     ]
 
     operations = [

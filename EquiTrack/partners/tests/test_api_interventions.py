@@ -56,7 +56,7 @@ class TestInterventionsAPI(APITenantTestCase):
                   "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "actor_actions", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
-                  "offices", "population_focus", "country_programme_id", "engagement", "tpmactivity"],
+                  "offices", "population_focus", "country_programme_id", "engagement", "activity"],
         'signed': [],
         'active': ['']
     }
