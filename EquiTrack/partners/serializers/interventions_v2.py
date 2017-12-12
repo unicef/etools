@@ -454,7 +454,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
-            "locations", "location_names", "cluster_names"
+            "locations", "location_names", "cluster_names", "flat_locations"
         )
 
 

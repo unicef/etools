@@ -1,9 +1,12 @@
+import waffle
 from django.apps import apps
+from django.db import connection
 from rest_framework import permissions
 from django.utils.lru_cache import lru_cache
 
 from EquiTrack.utils import HashableDict
 from EquiTrack.validation_mixins import check_rigid_related
+from environment.helpers import tenant_switch_is_active
 from utils.common.utils import get_all_field_names
 
 # READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
@@ -109,8 +112,7 @@ class InterventionPermissions(PMPPermissions):
             return not check_rigid_related(instance, 'amendments')
 
         def prp_mode_off(instance):
-            # TODO: add switch check after the tenant switches are added.
-            return True
+            return tenant_switch_is_active("prp_mode_off")
 
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),
