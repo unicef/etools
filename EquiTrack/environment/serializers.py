@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
-from environment.models import TenantFlag
+from environment.models import TenantFlag, TenantSwitch
 
 
 class TenantFlagSerializer(serializers.ModelSerializer):
@@ -13,4 +13,12 @@ class TenantFlagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TenantFlag
+        fields = ('name', 'countries', )
+
+
+class TenantSwitchSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='switch.name')
+
+    class Meta:
+        model = TenantSwitch
         fields = ('name', 'countries', )
