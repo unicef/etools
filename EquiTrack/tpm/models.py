@@ -9,7 +9,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
-from model_utils import Choices
+from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from post_office import mail
 
@@ -86,6 +86,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     tpm_partner_focal_points = models.ManyToManyField(
         TPMPartnerStaffMember, verbose_name=_('TPM Focal Points'), related_name='tpm_visits', blank=True
     )
+
+    tpm_partner_tracker = FieldTracker(fields=['tpm_partner', ])
 
     @property
     def date_created(self):
