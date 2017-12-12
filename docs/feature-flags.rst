@@ -2,8 +2,8 @@ Feature Flags
 =============
 
 The term 'Feature Flags' refers to the ability to turn off features of the web application based on
-attributes of the user accessing the web application. It is also sometimes called 'feature flipping'
-or 'A/B testing'.
+attributes of the user accessing the web application. It is also sometimes called 'feature flipping',
+'feature gating', or 'A/B testing'.
 
 Background
 ----------
@@ -16,9 +16,14 @@ details.
 Feature Flags in eTools
 -----------------------
 
-In addition to the functionality provided by django-waffle, we add the ability to turn flags on
-based on the user's ``country`` value. (This is sometimes also called "Tenant" or "Workspace").
+In addition to the functionality provided by django-waffle, we add the ability to turn flags or
+switches on based on the user's ``country`` value. (This is sometimes also called "Tenant" or
+"Workspace").
 
+Note: the main difference between a *switch* and a *flag* is that a switch is not dependent on a
+request object. It uses the tenant value set in the DB connection, while a flag uses the tenant
+value from the request. Flags are also more versatile because they can be activated by a variety of
+conditions, while switches are either ON or OFF based on the tenant.
 
 Superuser workflow
 ------------------
@@ -43,15 +48,20 @@ application.
 API
 ---
 
-The API for feature flags is read-only, and is available at ``/api/v2/environment/flags/`` . An
-authenticated GET request to that URL will return a JSON object with a single ``active_flags`` key
-whose value will be a list of the Flag names that are active for that request. It is up to the
-caller to do something useful with the result.
+The API for feature flags and switches is read-only, and is available at
+``/api/v2/environment/flags/`` . An authenticated GET request to that URL will return a JSON object
+with a single ``active_flags`` key whose value will be a list of the Flag names and Switch names
+that are active for that request. It is up to the caller to do something useful with the result.
 
 Example result::
 
     {"active_flags":["can_view_t2f","can_access_whizbang_feature"]}
 
+
+Note that this single API returns all active Flags and Switches. It never returns duplicate values,
+so if a flag and a switch have the same name, the caller will not be able to differentiate between
+them. If you make the choice to use the same name for a Flag and for a Switch, be sure to set the
+'countries' list identically, otherwise you will have confusing results.
 
 A/B Testing
 -----------
