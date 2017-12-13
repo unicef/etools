@@ -9,7 +9,6 @@ from django.utils.translation import ugettext as _
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
-from paintstore.fields import ColorPickerField
 
 from locations.models import Location
 
@@ -158,7 +157,7 @@ class Sector(TimeStampedModel):
     dashboard = models.BooleanField(
         default=False
     )
-    color = ColorPickerField(null=True, blank=True)
+    color = models.CharField(max_length=7, null=True, blank=True)
 
     class Meta:
         ordering = ['name']
