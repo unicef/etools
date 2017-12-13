@@ -817,6 +817,7 @@ class TestDSACalculator(APITenantTestCase):
     def test_check_last_day_multiple_itinerary(self):
         """If multiple dto, then expect that dto last day attribute to be True
         and first dto last day to attribute to be False
+        Also the itinerary on last dto updated
         """
         itinerary_1 = ItineraryItemFactory(
             travel=self.travel,
@@ -832,15 +833,271 @@ class TestDSACalculator(APITenantTestCase):
         )
         dsa = DSACalculator(self.travel)
         dsa_dto_list = dsa.get_by_day_grouping()
+
+        # confirm all dtos have itinerary_1
         for dto in dsa_dto_list:
             self.assertEqual(dto.itinerary_item, itinerary_1)
+
         self.assertEqual(dsa.check_last_day(dsa_dto_list), dsa_dto_list)
+
+        # confirm that all but last dto have itinerary_1
         for dto in dsa_dto_list[:-1]:
             self.assertEqual(dto.itinerary_item, itinerary_1)
+
+        # confirm last dto has itinerary_2
         self.assertEqual(dsa_dto_list[-1].itinerary_item, itinerary_2)
+
+        # confirm that all but last dto has last_day set to False
         for dto in dsa_dto_list[:-1]:
             self.assertFalse(dto.last_day)
+        # confirm that last dto has last_day set to True
         self.assertTrue(dsa_dto_list[-1].last_day)
+
+    def tets_aggregate_detail_dsa_empty(self):
+        """If empty list provided, expect empty list returned"""
+        dsa = DSACalculator(self.travel)
+        self.assertEqual(dsa.aggregate_detailed_dsa([]), [])
+
+    def test_aggregate_detailed_dsa(self):
+        """Check that detailed dsa data set
+
+        Total amount and paid to traveller are amounts for a single day
+        """
+        itinerary = ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        dsa = DSACalculator(self.travel)
+        dsa_dto_list = dsa.get_by_day_grouping()
+        dsa.check_last_day(dsa_dto_list)
+        self.assertTrue(dsa_dto_list[-1].last_day)
+        self.assertEqual(len(dsa_dto_list), 4)
+        detailed_dsa = dsa.aggregate_detailed_dsa(dsa_dto_list)
+        self.assertEqual(len(detailed_dsa), 1)
+        data = detailed_dsa[0]
+        self.assertEqual(data, {
+            "start_date": date(2017, 1, 1),
+            "end_date": date(2017, 1, 4),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 3,
+            "daily_rate": self.amsterdam.dsa_amount_usd,
+            "paid_to_traveler": dsa_dto_list[-1].final_amount,
+            "total_amount": dsa_dto_list[-1].corrected_dsa_amount,
+            "deduction": Decimal(0),
+        })
+
+    def test_aggregate_detailed_dsa_no_last_day(self):
+        """Check that detailed dsa data set, if no last day set,
+        then zero for amounts
+        """
+        itinerary = ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        dsa = DSACalculator(self.travel)
+        dsa_dto_list = dsa.get_by_day_grouping()
+        self.assertEqual(len(dsa_dto_list), 4)
+        detailed_dsa = dsa.aggregate_detailed_dsa(dsa_dto_list)
+        self.assertEqual(len(detailed_dsa), 1)
+        data = detailed_dsa[0]
+        self.assertEqual(data, {
+            "start_date": date(2017, 1, 1),
+            "end_date": date(2017, 1, 4),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 3,
+            "daily_rate": self.amsterdam.dsa_amount_usd,
+            "paid_to_traveler": Decimal(0),
+            "total_amount": Decimal(0),
+            "deduction": Decimal(0),
+        })
+
+    def test_aggregate_detailed_dsa_60plus(self):
+        """Check that detailed dsa data set, if greater than 60 days
+        then daily rate changes and amount calculated is based on 60plus
+
+        Total amount and paid to traveller are amounts for a single day
+        """
+        itinerary = ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 5, 4, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        dsa = DSACalculator(self.travel)
+        dsa_dto_list = dsa.get_by_day_grouping()
+        dsa.check_last_day(dsa_dto_list)
+        self.assertTrue(dsa_dto_list[-1].last_day)
+        self.assertEqual(len(dsa_dto_list), 124)
+        detailed_dsa = dsa.aggregate_detailed_dsa(dsa_dto_list)
+        self.assertEqual(len(detailed_dsa), 2)
+        self.assertEqual(detailed_dsa[0], {
+            "start_date": date(2017, 1, 1),
+            "end_date": date(2017, 3, 1),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 59,
+            "daily_rate": self.amsterdam.dsa_amount_usd,
+            "paid_to_traveler": Decimal(0),
+            "total_amount": Decimal(0),
+            "deduction": Decimal(0),
+        })
+        self.assertEqual(detailed_dsa[1], {
+            "start_date": date(2017, 3, 2),
+            "end_date": date(2017, 5, 4),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 63,
+            "daily_rate": self.amsterdam.dsa_amount_60plus_usd,
+            "paid_to_traveler": dsa_dto_list[-1].final_amount,
+            "total_amount": dsa_dto_list[-1].corrected_dsa_amount,
+            "deduction": Decimal(0),
+        })
+
+    def test_calculate_dsa_not_ta_required(self):
+        """If TA is not required, then should be zero"""
+        self.travel.ta_required = False
+        self.assertFalse(self.travel.ta_required)
+        dsa = DSACalculator(self.travel)
+        dsa.calculate_dsa()
+        self.assertEqual(dsa.total_dsa, Decimal(0))
+        self.assertEqual(dsa.total_deductions, Decimal(0))
+        self.assertEqual(dsa.paid_to_traveler, Decimal(0))
+        self.assertEqual(dsa.detailed_dsa, [])
+
+    def test_calculate_dsa_no_region(self):
+        """If region for one of the itineraries is None, then should be zero"""
+        self.assertTrue(self.travel.ta_required)
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=None,
+        )
+        dsa = DSACalculator(self.travel)
+        dsa.calculate_dsa()
+        self.assertEqual(dsa.total_dsa, Decimal(0))
+        self.assertEqual(dsa.total_deductions, Decimal(0))
+        self.assertEqual(dsa.paid_to_traveler, Decimal(0))
+        self.assertEqual(dsa.detailed_dsa, [])
+
+    def test_calculate_dsa_single_itinerary(self):
+        """If single itinerary then should be zero and empty detailed dsa"""
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        dsa = DSACalculator(self.travel)
+        dsa.calculate_dsa()
+        self.assertEqual(dsa.total_dsa, Decimal(0))
+        self.assertEqual(dsa.total_deductions, Decimal(0))
+        self.assertEqual(dsa.paid_to_traveler, Decimal(0))
+        self.assertEqual(dsa.detailed_dsa, [])
+
+    def test_calculate_dsa(self):
+        """If itinerary less than 60 days totals should be multiples of days"""
+        itinerary = ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        dsa = DSACalculator(self.travel)
+        dsa.calculate_dsa()
+        daily_amt = self.amsterdam.dsa_amount_usd
+        last_day_amount = daily_amt * (1 - dsa.LAST_DAY_DEDUCTION)
+        self.assertEqual(dsa.total_dsa, daily_amt * 3 + last_day_amount)
+        self.assertEqual(dsa.total_deductions, Decimal(0))
+        self.assertEqual(dsa.paid_to_traveler, daily_amt * 3 + last_day_amount)
+        self.assertEqual(dsa.detailed_dsa, [{
+            "start_date": date(2017, 1, 1),
+            "end_date": date(2017, 1, 4),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 3,
+            "daily_rate": daily_amt,
+            "paid_to_traveler": dsa.paid_to_traveler,
+            "total_amount": dsa.total_dsa,
+            "deduction": Decimal(0),
+        }])
+
+    def test_calculate_dsa_60plus(self):
+        """If itinerary greater than 60 days totals should be
+        multiples of days and change after 60 days"""
+        itinerary = ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 5, 4, 4, 0, tzinfo=UTC),
+            dsa_region=self.amsterdam,
+        )
+        dsa = DSACalculator(self.travel)
+        dsa.calculate_dsa()
+        daily_amt = self.amsterdam.dsa_amount_usd
+        daily_60plus_amt = self.amsterdam.dsa_amount_60plus_usd
+        last_day_amount = daily_60plus_amt * (1 - dsa.LAST_DAY_DEDUCTION)
+        first_portion = daily_amt * 60
+        second_portion = daily_60plus_amt * 63 + last_day_amount
+        self.assertEqual(dsa.total_dsa, first_portion + second_portion)
+        self.assertEqual(dsa.total_deductions, Decimal(0))
+        self.assertEqual(dsa.paid_to_traveler, first_portion + second_portion)
+        self.assertEqual(dsa.detailed_dsa, [{
+            "start_date": date(2017, 1, 1),
+            "end_date": date(2017, 3, 1),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 59,
+            "daily_rate": daily_amt,
+            "paid_to_traveler": first_portion,
+            "total_amount": first_portion,
+            "deduction": Decimal(0),
+        }, {
+            "start_date": date(2017, 3, 2),
+            "end_date": date(2017, 5, 4),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 63,
+            "daily_rate": daily_60plus_amt,
+            "paid_to_traveler": second_portion,
+            "total_amount": second_portion,
+            "deduction": Decimal(0),
+        }])
 
     # @skip("Till better documented")
     def test_case_1(self):
