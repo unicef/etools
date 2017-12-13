@@ -4,7 +4,6 @@ import datetime
 import decimal
 import json
 
-import waffle
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
@@ -1495,7 +1494,6 @@ class Intervention(TimeStampedModel):
     def sector_names(self):
         return ', '.join(Sector.objects.filter(intervention_locations__intervention=self).
                          values_list('name', flat=True))
-
 
     @property
     def combined_sections(self):

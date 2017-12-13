@@ -533,8 +533,6 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     def get_sections(self, obj):
         return [s.id for s in obj.flagged_sections]
 
-
-
     class Meta:
         model = Intervention
         fields = (
