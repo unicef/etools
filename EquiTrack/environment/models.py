@@ -3,9 +3,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from django.db import models
+from django.db import connection, models
 from django.utils.encoding import python_2_unicode_compatible
-from waffle.models import Flag
+from waffle.models import Flag, Switch
 
 from users.models import Country
 
@@ -36,17 +36,25 @@ class TenantFlag(models.Model):
 
     def is_active(self, request):
         "Is this flag on for this tenant, or for any other reason?"
-        if request.tenant in self.countries.all():
+        if getattr(request, 'tenant', None) in self.countries.all():
             return True
         return self.flag.is_active(request)
 
 
-def tenant_flag_is_active(request, flag_name):
+@python_2_unicode_compatible
+class TenantSwitch(models.Model):
     """
-    Return True if this flag (flag_name) is active for the request provided.
+    Associate one or more countries with a Switch.
+    """
+    countries = models.ManyToManyField(Country, blank=True, help_text=(
+        'Activate this switch for these countries.'))
+    switch = models.OneToOneField(Switch)
 
-    This is a copy of waffle.flag_is_active, except that we first check the
-    tenant before doing other checks.
-    """
-    flag = Flag.get(flag_name)
-    return flag.tenantflag.is_active(request)
+    def __str__(self):
+        return self.switch.name
+
+    def is_active(self):
+        "Is this switch on for this tenant?"
+        if connection.tenant in self.countries.all():
+            return self.switch.active
+        return False

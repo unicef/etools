@@ -7,7 +7,6 @@ from django.utils.functional import cached_property
 
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
-from paintstore.fields import ColorPickerField
 
 
 class Quarter(models.Model):
@@ -154,7 +153,7 @@ class Sector(models.Model):
     dashboard = models.BooleanField(
         default=False
     )
-    color = ColorPickerField(null=True, blank=True)
+    color = models.CharField(max_length=7, null=True, blank=True)
 
     class Meta:
         ordering = ['name']

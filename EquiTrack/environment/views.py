@@ -6,28 +6,34 @@ from __future__ import unicode_literals
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 
-from environment.models import TenantFlag, tenant_flag_is_active
-from environment.serializers import TenantFlagSerializer
+from environment.helpers import tenant_flag_is_active, tenant_switch_is_active
+from environment.models import TenantFlag, TenantSwitch
+from environment.serializers import TenantFlagSerializer, TenantSwitchSerializer
 
 # API Views
 
 
 class ActiveFlagAPIView(ListAPIView):
     """
-    Read-only API to get a list of active flags for this request under the key
+    Read-only API to get a list of all active flags or switches for this request under the key
     `active_flags`
     """
-    serializer_class = TenantFlagSerializer
-    queryset = TenantFlag.objects
 
     def list(self, request, *args, **kwargs):
         """
         Override list() to check each flag against this request and return just a
         list of active flags.
         """
-        serializer = self.get_serializer(self.get_queryset(), many=True)
-        active_flags = [
-            flag['name'] for flag in serializer.data
+        flag_serializer = TenantFlagSerializer(TenantFlag.objects, many=True)
+        switch_serializer = TenantSwitchSerializer(TenantSwitch.objects, many=True)
+
+        # use set comprehensions so we never get dupes in this list
+        active_flags = {
+            flag['name'] for flag in flag_serializer.data
             if tenant_flag_is_active(request, flag['name'])
-        ]
-        return Response({'active_flags': active_flags})
+        }
+        active_flags.update([
+            switch['name'] for switch in switch_serializer.data
+            if tenant_switch_is_active(switch['name'])
+        ])
+        return Response({'active_flags': list(active_flags)})
