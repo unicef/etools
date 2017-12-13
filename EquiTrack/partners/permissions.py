@@ -112,7 +112,7 @@ class InterventionPermissions(PMPPermissions):
             return not check_rigid_related(instance, 'amendments')
 
         def prp_mode_off(instance):
-            return tenant_switch_is_active("prp_mode_off")
+            return not tenant_switch_is_active("prp_mode_off")
 
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),

@@ -1496,6 +1496,7 @@ class Intervention(TimeStampedModel):
         return ', '.join(Sector.objects.filter(intervention_locations__intervention=self).
                          values_list('name', flat=True))
 
+
     @property
     def combined_sections(self):
         # sections defined on the indicators + sections selected at the pd level
@@ -1565,7 +1566,7 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def intervention_locations(self):
-        if not tenant_switch_is_active("prp_mode_off"):
+        if tenant_switch_is_active("prp_mode_off"):
             locations = set(self.flat_locations.all())
         else:
             # return intervention locations as a set of Location objects
@@ -1576,6 +1577,20 @@ class Intervention(TimeStampedModel):
                         locations.add(location)
 
         return locations
+
+    @cached_property
+    def flagged_sections(self):
+        if tenant_switch_is_active("prp_mode_off"):
+            sections = set(self.sections.all())
+        else:
+            # return intervention locations as a set of Location objects
+            sections = set()
+            for lower_result in self.all_lower_results:
+                for applied_indicator in lower_result.applied_indicators.all():
+                    if applied_indicator.section:
+                        sections.add(applied_indicator.section)
+
+        return sections
 
     @cached_property
     def intervention_clusters(self):
