@@ -8,16 +8,34 @@ from django.utils import timezone
 
 import mock
 
+import vision.vision_data_synchronizer
 from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer
 from EquiTrack.tests.mixins import FastTenantTestCase
 from users.models import Country
 
 FAUX_VISION_URL = 'https://api.example.com/foo.svc/'
+FAUX_VISION_USER = 'jane_user'
+FAUX_VISION_PASSWORD = 'password123'
+
 
 class TestVisionDataLoader(FastTenantTestCase):
     '''Exercise VisionDataLoader class'''
     # Note - I don't understand why, but @override_settings(VISION_URL=FAUX_VISION_URL) doesn't work when I apply
     # it on TestVisionDataLoader instead of each individual test case.
+
+    def _assertGetFundamentals(self, url, mock_requests, mock_get_response):
+        '''Assert common things about the call to loader.get()'''
+        # Ensure requests.get() was called as expected
+        self.assertEqual(mock_requests.get.call_count, 1)
+        self.assertEqual(mock_requests.get.call_args[0], (url, ))
+        self.assertEqual(mock_requests.get.call_args[1], {'headers': {'Content-Type': 'application/json'},
+                                                          'auth': (FAUX_VISION_USER, FAUX_VISION_PASSWORD),
+                                                          'verify': False})
+        # Ensure response.json() was called as expected
+        self.assertEqual(mock_get_response.json.call_count, 1)
+        self.assertEqual(mock_get_response.json.call_args[0], tuple())
+        self.assertEqual(mock_get_response.json.call_args[1], {})
+
     @override_settings(VISION_URL=FAUX_VISION_URL)
     def test_instantiation_no_country(self):
         '''Ensure I can create a loader without specifying a country'''
@@ -41,3 +59,39 @@ class TestVisionDataLoader(FastTenantTestCase):
             with override_settings(VISION_URL=faux_vision_url):
                 loader = VisionDataLoader(endpoint='GetSomeStuff_JSON')
                 self.assertEqual(loader.url, 'https://api.example.com/foo.svc/GetSomeStuff_JSON')
+
+    @override_settings(VISION_URL=FAUX_VISION_URL)
+    @override_settings(VISION_USER=FAUX_VISION_USER)
+    @override_settings(VISION_PASSWORD=FAUX_VISION_PASSWORD)
+    @mock.patch('vision.vision_data_synchronizer.requests', spec=['get'])
+    def test_get_success_with_response(self, mock_requests):
+        '''Test loader.get() when the response is 200 OK and data is returned'''
+        mock_get_response = mock.Mock(spec=['status_code', 'json'])
+        mock_get_response.status_code = 200
+        mock_get_response.json = mock.Mock(return_value=[42])
+        mock_requests.get = mock.Mock(return_value=mock_get_response)
+
+        loader = VisionDataLoader(endpoint='GetSomeStuff_JSON')
+        response = loader.get()
+
+        self._assertGetFundamentals(loader.url, mock_requests, mock_get_response)
+
+        self.assertEqual(response, [42])
+
+    @override_settings(VISION_URL=FAUX_VISION_URL)
+    @override_settings(VISION_USER=FAUX_VISION_USER)
+    @override_settings(VISION_PASSWORD=FAUX_VISION_PASSWORD)
+    @mock.patch('vision.vision_data_synchronizer.requests', spec=['get'])
+    def test_get_success_no_response(self, mock_requests):
+        '''Test loader.get() when the response is 200 OK but no data is returned'''
+        mock_get_response = mock.Mock(spec=['status_code', 'json'])
+        mock_get_response.status_code = 200
+        mock_get_response.json = mock.Mock(return_value='No Data Available')
+        mock_requests.get = mock.Mock(return_value=mock_get_response)
+
+        loader = VisionDataLoader(endpoint='GetSomeStuff_JSON')
+        response = loader.get()
+
+        self._assertGetFundamentals(loader.url, mock_requests, mock_get_response)
+
+        self.assertEqual(response, [])
