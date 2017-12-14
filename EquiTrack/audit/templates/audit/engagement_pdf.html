@@ -128,7 +128,7 @@
               </td>
               <td class="input-container">
                 <div class="input-container__label">PO Item Number</div>
-                <div class="input-container__value">{{ engagement.po_item|default_if_none:"-" }}</div>
+                <div class="input-container__value">{{ engagement.po_item.number|default_if_none:"-" }}</div>
               </td>
             </tr>
             <tr>
@@ -379,7 +379,7 @@
                   <tr>
                     <td>{{ attachment.created }}</td>
                     <td>{{ attachment.file_type }}</td>
-                    <td colspan="5"><a href="{{ attachment.url }}" target="_blank">{{ attachment.url }}</a></td>
+                    <td colspan="5"><a href="{{ attachment.url }}" target="_blank">{{ attachment.filename }}</a></td>
                   </tr>
                 {% endfor %}
               {% else %}
@@ -408,7 +408,7 @@
                   <tr>
                     <td>{{ attachment.created }}</td>
                     <td>{{ attachment.file_type }}</td>
-                    <td colspan="5"><a href="{{ attachment.url }}" target="_blank">{{ attachment.url }}</a></td>
+                    <td colspan="5"><a href="{{ attachment.url }}" target="_blank">{{ attachment.filename }}</a></td>
                   </tr>
                 {% endfor %}
               {% else %}
