@@ -22,7 +22,7 @@ class TestVisionDataLoader(FastTenantTestCase):
     def test_instantiation_no_country(self):
         '''Ensure I can create a loader without specifying a country'''
         loader = VisionDataLoader(endpoint='GetSomeStuff_JSON')
-        self.assertEqual(loader.url, FAUX_VISION_URL + '/GetSomeStuff_JSON')
+        self.assertEqual(loader.url, FAUX_VISION_URL + 'GetSomeStuff_JSON')
 
     @override_settings(VISION_URL=FAUX_VISION_URL)
     def test_instantiation_with_country(self):
@@ -32,21 +32,12 @@ class TestVisionDataLoader(FastTenantTestCase):
         test_country.save()
 
         loader = VisionDataLoader(country=test_country, endpoint='GetSomeStuff_JSON')
-        self.assertEqual(loader.url, FAUX_VISION_URL + '/GetSomeStuff_JSON/ABC')
+        self.assertEqual(loader.url, FAUX_VISION_URL + 'GetSomeStuff_JSON/ABC')
 
-
-
-# class VisionDataLoader(object):
-#     URL = settings.VISION_URL
-#     EMPTY_RESPONSE_VISION_MESSAGE = u'No Data Available'
-
-#     def __init__(self, country=None, endpoint=None):
-#         if endpoint is None:
-#             raise VisionException(message='You must set the ENDPOINT name')
-
-#         self.url = '{}/{}'.format(
-#             self.URL,
-#             endpoint
-#         )
-#         if country:
-#             self.url += '/{}'.format(country.business_area_code)
+    def test_instantiation_url_construction(self):
+        '''Ensure loader URL is constructed correctly regardless of whether or not base URL ends with a slash'''
+        for faux_vision_url in ('https://api.example.com/foo.svc/',
+                                'https://api.example.com/foo.svc'):
+            with override_settings(VISION_URL=faux_vision_url):
+                loader = VisionDataLoader(endpoint='GetSomeStuff_JSON')
+                self.assertEqual(loader.url, 'https://api.example.com/foo.svc/GetSomeStuff_JSON')

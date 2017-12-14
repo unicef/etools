@@ -24,10 +24,9 @@ class VisionDataLoader(object):
         if endpoint is None:
             raise VisionException(message='You must set the ENDPOINT name')
 
-        self.url = '{}/{}'.format(
-            self.URL,
-            endpoint
-        )
+        separator = '' if self.URL.endswith('/') else '/'
+
+        self.url = '{}{}{}'.format(self.URL, separator, endpoint)
         if country:
             self.url += '/{}'.format(country.business_area_code)
 
