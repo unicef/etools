@@ -6,6 +6,7 @@ from unittest import skip, TestCase
 
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse, resolve
+from django.db import connection
 from django.utils import timezone
 
 from rest_framework import status
@@ -30,6 +31,7 @@ from EquiTrack.factories import (
     SectorFactory,
     UserFactory,
 )
+from environment.tests.factories import TenantSwitchFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
     Intervention,
@@ -1479,10 +1481,29 @@ class TestInterventionListMapView(APITenantTestCase):
         data, first = self.assertResponseFundamentals(response)
         self.assertEqual(first["id"], intervention.pk)
 
-    def test_get_param_section(self):
+    def test_get_param_section_wo_flag(self):
+        sector = SectorFactory()
+        intervention = InterventionFactory()
+        rl = InterventionResultLinkFactory(intervention=intervention)
+        llo = LowerResultFactory(result_link=rl)
+        AppliedIndicatorFactory(lower_result=llo, section=sector)
+
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"section": sector.pk},
+        )
+        data, first = self.assertResponseFundamentals(response)
+        self.assertEqual(first["id"], intervention.pk)
+
+    def test_get_param_section_with_flag(self):
+        # set prp mode off flag
+        TenantSwitchFactory(switch__name='prp_mode_off', countries=[connection.tenant])
         sector = SectorFactory()
         intervention = InterventionFactory()
         intervention.sections.add(sector)
+
         response = self.forced_auth_req(
             'get',
             self.url,
