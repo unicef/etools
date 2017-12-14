@@ -17,6 +17,7 @@ from publics.tests.factories import (
 )
 from t2f.helpers.cost_summary_calculator import (
     CostSummaryCalculator,
+    DSACalculator,
     ExpenseDTO,
 )
 from t2f.tests.factories import ExpenseFactory, ItineraryItemFactory, TravelFactory
@@ -212,3 +213,178 @@ class CostSummaryTest(APITenantTestCase):
         calculator = CostSummaryCalculator(self.travel)
         # Should not raise TypeError
         calculator.get_cost_summary()
+
+    def test_cost_calculation_60plus(self):
+        """Check calculations for itinerary over 60 days
+        takes into account 60 plus adjustment
+        """
+        itinerary = ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=self.budapest
+        )
+
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 5, 4, 4, 0, tzinfo=UTC),
+            dsa_region=self.budapest
+        )
+
+        daily_amt = self.budapest.dsa_amount_local
+        daily_60_amt = self.budapest.dsa_amount_60plus_local
+        last_day_amount = daily_60_amt * (1 - DSACalculator.LAST_DAY_DEDUCTION)
+        first_portion = daily_amt * 60
+        second_portion = daily_60_amt * 63 + last_day_amount
+
+        calculator = CostSummaryCalculator(self.travel)
+        cost_summary = calculator.get_cost_summary()
+        self.assertEqual(cost_summary["dsa"], [{
+            "start_date": date(2017, 1, 1),
+            "end_date": date(2017, 3, 1),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 59,
+            "daily_rate": daily_amt,
+            "paid_to_traveler": first_portion,
+            "total_amount": first_portion,
+            "deduction": Decimal("0.0000"),
+        }, {
+            "start_date": date(2017, 3, 2),
+            "end_date": date(2017, 5, 4),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 63,
+            "daily_rate": daily_60_amt,
+            "paid_to_traveler": second_portion,
+            "total_amount": second_portion,
+            "deduction": Decimal(0),
+        }])
+        self.assertEqual(cost_summary["expenses_total"], [])
+        self.assertEqual(cost_summary["preserved_expenses"], None)
+        self.assertEqual(
+            cost_summary["dsa_total"],
+            first_portion + second_portion
+        )
+        self.assertEqual(
+            cost_summary["paid_to_traveler"],
+            first_portion + second_portion
+        )
+        self.assertEqual(
+            cost_summary["traveler_dsa"],
+            first_portion + second_portion
+        )
+
+    def test_cost_calculation_parking_money(self):
+        """If expense mapping has empty key, allocate to parking money"""
+        itinerary = ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=self.budapest
+        )
+
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            dsa_region=self.budapest
+        )
+        parking_money_type = ExpenseTypeFactory(
+            title='Parking money',
+            vendor_number="",
+        )
+        ExpenseFactory(
+            travel=self.travel,
+            type=parking_money_type,
+            currency=self.currency_usd,
+            amount=100
+        )
+
+        daily_amt = self.budapest.dsa_amount_local
+        last_day_amount = daily_amt * (1 - DSACalculator.LAST_DAY_DEDUCTION)
+        total = daily_amt * 3 + last_day_amount
+
+        calculator = CostSummaryCalculator(self.travel)
+        cost_summary = calculator.get_cost_summary()
+        self.assertEqual(cost_summary["dsa"], [{
+            "start_date": date(2017, 1, 1),
+            "end_date": date(2017, 1, 4),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 3,
+            "daily_rate": daily_amt,
+            "paid_to_traveler": total,
+            "total_amount": total,
+            "deduction": Decimal("0.0000"),
+        }])
+        self.assertEqual(cost_summary["expenses_total"], [
+            {"currency": self.currency_usd, "amount": Decimal("100.0")}
+        ])
+        self.assertEqual(cost_summary["preserved_expenses"], None)
+        self.assertEqual(cost_summary["dsa_total"], total)
+        self.assertEqual(cost_summary["paid_to_traveler"], total)
+        self.assertEqual(cost_summary["traveler_dsa"], total)
+
+    def test_cost_calculation_expense_delta(self):
+        """If preserved expense set, ensure correct delta updated"""
+        self.travel.preserved_expenses_local = Decimal("150")
+        self.travel.preserved_expenses_usd = Decimal("275")
+        itinerary = ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=self.budapest
+        )
+
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+            dsa_region=self.budapest
+        )
+        expense_huf = ExpenseFactory(
+            travel=self.travel,
+            type=self.user_et_1,
+            currency=self.currency_huf,
+            amount=100
+        )
+        expense_usd = ExpenseFactory(
+            travel=self.travel,
+            type=self.user_et_2,
+            currency=self.currency_usd,
+            amount=200
+        )
+
+        daily_amt = self.budapest.dsa_amount_local
+        last_day_amount = daily_amt * (1 - DSACalculator.LAST_DAY_DEDUCTION)
+        total = daily_amt * 3 + last_day_amount
+        expense_total = expense_huf.amount + expense_usd.amount
+
+        calculator = CostSummaryCalculator(self.travel)
+        cost_summary = calculator.get_cost_summary()
+        self.assertEqual(cost_summary["dsa"], [{
+            "start_date": date(2017, 1, 1),
+            "end_date": date(2017, 1, 4),
+            "dsa_region": itinerary.dsa_region.pk,
+            "dsa_region_name": itinerary.dsa_region.label,
+            "night_count": 3,
+            "daily_rate": daily_amt,
+            "paid_to_traveler": total,
+            "total_amount": total,
+            "deduction": Decimal("0.0000"),
+        }])
+        self.assertItemsEqual(cost_summary["expenses_total"], [
+            {"currency": self.currency_huf, "amount": expense_huf.amount},
+            {"currency": self.currency_usd, "amount": expense_usd.amount},
+        ])
+        self.assertEqual(cost_summary["preserved_expenses"], Decimal("150"))
+        self.assertEqual(cost_summary["expenses_delta_local"], Decimal("50"))
+        self.assertEqual(cost_summary["expenses_delta_usd"], Decimal("275"))
+        self.assertEqual(cost_summary["dsa_total"], total)
+        self.assertEqual(
+            cost_summary["paid_to_traveler"],
+            total + expense_total
+        )
+        self.assertEqual(cost_summary["traveler_dsa"], total)
