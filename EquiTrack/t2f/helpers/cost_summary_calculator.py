@@ -256,29 +256,21 @@ class DSACalculator(object):
 
     def check_one_day_long_trip(self, dsa_dto_list):
         # If it's a day long trip and only one less than 8 hour travel was made, no dsa applied
-        if not dsa_dto_list:
-            return dsa_dto_list
-
-        if len(dsa_dto_list) > 1:
-            return dsa_dto_list
-
-        same_day_travels = list(self.travel.itinerary.all())
-        for i, sdt in enumerate(same_day_travels[:-1], start=1):
-            # If it was less than 8 hours long, skip it
-            arrival = sdt.arrival_date
-            departure = same_day_travels[i].departure_date
-            if (departure - arrival) >= timedelta(hours=8):
-                break
-        else:
-            # No longer than 8 hours travel found, no dsa should be applied
-            return []
+        if len(dsa_dto_list) == 1:
+            same_day_travels = list(self.travel.itinerary.all())
+            for i, sdt in enumerate(same_day_travels[:-1], start=1):
+                # If it was less than 8 hours long, skip it
+                arrival = sdt.arrival_date
+                departure = same_day_travels[i].departure_date
+                if (departure - arrival) >= timedelta(hours=8):
+                    break
+            else:
+                # No longer than 8 hours travel found, no dsa should be applied
+                return []
 
         return dsa_dto_list
 
     def calculate_daily_dsa_rate(self, dsa_dto_list):
-        if not dsa_dto_list:
-            return dsa_dto_list
-
         day_counter = 1
 
         for dto in dsa_dto_list:
@@ -302,6 +294,7 @@ class DSACalculator(object):
                                                    departure_date__month=dto.date.month,
                                                    departure_date__day=dto.date.day)
 
+        over_60 = day_counter > 60
         same_day_travels = list(same_day_travels)
         same_day_travels.append(dto.itinerary_item)
         for i, sdt in enumerate(same_day_travels[:-1], start=1):
@@ -311,7 +304,6 @@ class DSACalculator(object):
             if (departure - arrival) < timedelta(hours=8):
                 continue
 
-            over_60 = day_counter > 60
             same_day_dsa = self.get_dsa_amount(sdt.dsa_region, over_60)
             dto.dsa_amount += same_day_dsa * self.SAME_DAY_TRAVEL_MULTIPLIER
 
