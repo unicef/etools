@@ -32,7 +32,6 @@ class PCAPDFView(RetrieveAPIView):
         else:
             pdf_response = load_internal_pdf_template("agreements", ctx_data)
 
-            # return HttpResponse(pdf_response, content_type='application/pdf')
             if pdf_response.status_code == status.HTTP_200_OK:
                 return HttpResponse(pdf_response, content_type='application/pdf')
             else:
