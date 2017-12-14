@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime
 import random
 
 from django.contrib.auth.models import Group
@@ -8,9 +9,29 @@ import factory
 from factory import fuzzy
 
 from audit.models import (
-    Audit, Auditor, AuditorFirm, AuditorStaffMember, Engagement, MicroAssessment, PurchaseOrder, PurchaseOrderItem,
-    Risk, RiskBluePrint, RiskCategory, SpecialAudit, SpotCheck,)
-from EquiTrack.factories import AgreementFactory, InterventionFactory, PartnerFactory
+    Audit,
+    Auditor,
+    AuditorFirm,
+    AuditPermission,
+    AuditorStaffMember,
+    DetailedFindingInfo,
+    Engagement,
+    EngagementActionPoint,
+    Finding,
+    MicroAssessment,
+    PurchaseOrder,
+    PurchaseOrderItem,
+    Risk,
+    RiskBluePrint,
+    RiskCategory,
+    SpecialAudit,
+    SpotCheck,
+)
+from EquiTrack.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
 
 
@@ -122,3 +143,38 @@ class RiskCategoryFactory(factory.DjangoModelFactory):
     header = factory.Sequence(lambda n: 'category_%d' % n)
     category_type = fuzzy.FuzzyChoice(choices=dict(RiskCategory.TYPES).keys())
     code = fuzzy.FuzzyText(length=20)
+
+
+class FindingFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Finding
+
+    spot_check = factory.SubFactory(SpotCheckFactory)
+
+
+class DetailedFindingInfoFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = DetailedFindingInfo
+
+    micro_assesment = factory.SubFactory(MicroAssessmentFactory)
+    finding = fuzzy.FuzzyText(length=100)
+    recommendation = fuzzy.FuzzyText(length=100)
+
+
+class EngagementActionPointFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = EngagementActionPoint
+
+    description = fuzzy.FuzzyText(length=100)
+    due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
+
+
+class AuditPermissionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = AuditPermission
+
+    user_type = fuzzy.FuzzyChoice(AuditPermission.USER_TYPES)
+    permission = fuzzy.FuzzyChoice(AuditPermission.PERMISSIONS)
+    permission_type = fuzzy.FuzzyChoice(AuditPermission.TYPES)
+    target = fuzzy.FuzzyText(length=100)
+    instance_status = fuzzy.FuzzyChoice(AuditPermission.STATUSES)

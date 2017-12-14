@@ -69,6 +69,9 @@ class Country(TenantMixin):
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        ordering = ['name']
+
 
 class WorkspaceCounter(models.Model):
     TRAVEL_REFERENCE = 'travel_reference_number_counter'
@@ -197,9 +200,6 @@ class UserProfile(models.Model):
     office = models.ForeignKey(Office, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
-
-    # TODO: remove this
-    installation_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='Device ID')
 
     staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True)
     org_unit_code = models.CharField(max_length=32, null=True, blank=True)

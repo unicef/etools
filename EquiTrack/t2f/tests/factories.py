@@ -2,19 +2,17 @@ from __future__ import unicode_literals
 
 from datetime import timedelta
 
-from django.utils import timezone
-
 import factory
+from django.utils import timezone
 from factory import fuzzy
 
-
-from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, ResultFactory, LocationFactory,\
-    InterventionFactory
-from publics.tests.factories import DSARegionFactory, AirlineCompanyFactory, WBSFactory, GrantFactory, FundFactory, \
-    CurrencyFactory, ExpenseTypeFactory
-from t2f.models import Travel, TravelActivity, ItineraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
-    TravelType, Invoice, InvoiceItem
+from EquiTrack.factories import (
+    InterventionFactory, LocationFactory, OfficeFactory, ResultFactory, UserFactory, SectorFactory)
+from publics.tests.factories import (
+    AirlineCompanyFactory, CurrencyFactory, DSARegionFactory, ExpenseTypeFactory, FundFactory, GrantFactory, WBSFactory)
+from t2f.models import (
+    ActionPoint, Clearances, CostAssignment, Deduction, Expense, Invoice, InvoiceItem, ItineraryItem,
+    make_action_point_number, make_travel_reference_number, ModeOfTravel, Travel, TravelActivity, TravelType,)
 
 _FUZZY_START_DATE = timezone.now() - timedelta(days=5)
 _FUZZY_END_DATE = timezone.now() + timedelta(days=5)
@@ -111,7 +109,7 @@ class TravelFactory(factory.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
-    section = factory.SubFactory(SectionFactory)
+    sector = factory.SubFactory(SectorFactory)
     start_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
     end_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
