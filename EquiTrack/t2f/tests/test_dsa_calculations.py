@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-# from unittest import skip
 
 from pytz import UTC
 
@@ -1099,7 +1098,6 @@ class TestDSACalculator(APITenantTestCase):
             "deduction": Decimal(0),
         }])
 
-    # @skip("Till better documented")
     def test_case_1(self):
         ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
@@ -1133,7 +1131,6 @@ class TestDSACalculator(APITenantTestCase):
                            'start_date': date(2017, 1, 1),
                            'total_amount': Decimal('80')}])
 
-    # @skip("Till better documented")
     def test_case_2(self):
         ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
@@ -1187,7 +1184,6 @@ class TestDSACalculator(APITenantTestCase):
                            'start_date': date(2017, 1, 1),
                            'total_amount': Decimal('1160')}])
 
-    # @skip("Till better documented")
     def test_case_3(self):
         ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
@@ -1230,7 +1226,6 @@ class TestDSACalculator(APITenantTestCase):
                            'start_date': date(2017, 1, 1),
                            'total_amount': Decimal('480')}])
 
-    # @skip("Till better documented")
     def test_case_4(self):
         ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
@@ -1313,7 +1308,6 @@ class TestDSACalculator(APITenantTestCase):
                            'start_date': date(2017, 3, 5),
                            'total_amount': Decimal('288')}])
 
-    # @skip("Till better documented")
     def test_case_5(self):
         ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2016, 12, 31, 22, 0, tzinfo=UTC),
@@ -1353,7 +1347,6 @@ class TestDSACalculator(APITenantTestCase):
                            'start_date': date(2017, 1, 1),
                            'total_amount': Decimal('480')}])
 
-    # @skip("Till better documented")
     def test_case_6(self):
         ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
@@ -1387,7 +1380,6 @@ class TestDSACalculator(APITenantTestCase):
                            'start_date': date(2017, 1, 1),
                            'total_amount': Decimal('480')}])
 
-    # @skip("Till better documented")
     def test_case_7(self):
         ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
@@ -1413,7 +1405,6 @@ class TestDSACalculator(APITenantTestCase):
 
         self.assertEqual(calculator.detailed_dsa, [])
 
-    # @skip("Till better documented")
     def test_ta_not_required(self):
         self.travel.ta_required = False
         self.travel.save()
