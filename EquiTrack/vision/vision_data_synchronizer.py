@@ -14,10 +14,13 @@ logger = get_task_logger('vision.synchronize')
 
 
 class VisionDataLoader(object):
-    URL = settings.VISION_URL
+    URL = ''
     EMPTY_RESPONSE_VISION_MESSAGE = u'No Data Available'
 
     def __init__(self, country=None, endpoint=None):
+        if not self.URL:
+            self.URL = settings.VISION_URL
+
         if endpoint is None:
             raise VisionException(message='You must set the ENDPOINT name')
 
