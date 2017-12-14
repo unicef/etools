@@ -1,4 +1,7 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import inspect
 import sys
@@ -22,7 +25,6 @@ EXCLUDED_PACKAGES = (
     # These are the eTools packages that aren't yet using @python_2_unicode_compatible and therefore aren't yet
     # Python 3-compatible. As they're fixed one by one, they'll be removed from this list
     'users',
-    'workplan',
 )
 
 

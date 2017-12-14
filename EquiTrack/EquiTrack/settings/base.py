@@ -103,6 +103,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
+    'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
 )
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 
@@ -156,7 +157,6 @@ SHARED_APPS = (
     'djcelery',
     'djcelery_email',
     'leaflet',
-    'paintstore',
     'corsheaders',
     'djangosaml2',
     'allauth',
@@ -181,6 +181,7 @@ SHARED_APPS = (
     'utils.mail',
     'utils.writable_serializers',
     'utils.permissions',
+    'waffle',
 )
 TENANT_APPS = (
     'django_fsm',

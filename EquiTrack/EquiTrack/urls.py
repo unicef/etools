@@ -21,7 +21,6 @@ from publics.views import StaticDataView
 from reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, SectorViewSet, UnitViewSet
 from t2f.urls import urlpatterns as t2f_patterns
 from users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet
-from workplan.views import CommentViewSet, LabelViewSet, MilestoneViewSet, WorkplanProjectViewSet, WorkplanViewSet
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
@@ -52,12 +51,6 @@ api.register(r'locations', LocationsViewSet, base_name='locations')
 api.register(r'locations-light', LocationsLightViewSet, base_name='locations-light')
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
-api.register(r'comments', CommentViewSet, base_name='comments')
-api.register(r'workplans', WorkplanViewSet, base_name='workplans')
-api.register(r'workplans/milestones', MilestoneViewSet, base_name='milestones')
-api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_projects')
-api.register(r'labels', LabelViewSet, base_name='labels')
-
 urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
@@ -87,6 +80,7 @@ urlpatterns = [
         r'^api/v2/activity/',
         include('snapshot.urls', namespace='snapshot_api')
     ),
+    url(r'^api/v2/environment/', include('environment.urls_v2', namespace='environment')),
 
 
     # ***************  API version 3  ******************

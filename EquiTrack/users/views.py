@@ -1,8 +1,11 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
 from django.shortcuts import get_object_or_404
 from django.views.generic import FormView, RedirectView
+
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
@@ -26,6 +29,8 @@ from .serializers import (
     ProfileRetrieveUpdateSerializer,
     CountrySerializer
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UserAuthAPIView(RetrieveAPIView):
@@ -107,6 +112,9 @@ class CountryView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        if not user.profile.country:
+            logger.warning('{} has not an assigned country'.format(user))
+            return self.model.objects.none()
         return self.model.objects.filter(
             name=user.profile.country.name,
         )
