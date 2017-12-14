@@ -1,7 +1,10 @@
 from __future__ import unicode_literals
 
+import logging
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+
 from rest_framework import permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
@@ -10,6 +13,8 @@ from rest_framework.response import Response
 from users.models import Country, UserProfile
 from users.serializers_v3 import (
     CountrySerializer, MinimalUserDetailSerializer, MinimalUserSerializer, ProfileRetrieveUpdateSerializer,)
+
+logger = logging.getLogger(__name__)
 
 
 class MyProfileAPIView(RetrieveUpdateAPIView):
@@ -103,6 +108,10 @@ class CountryView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        if not user.profile.country:
+            logger.warning('{} has not an assigned country'.format(user))
+            return self.model.objects.none()
+
         return self.model.objects.filter(
             name=user.profile.country.name,
         )

@@ -6,7 +6,6 @@ from decimal import Decimal
 from functools import wraps
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.postgres.fields.array import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.mail.message import EmailMultiAlternatives
@@ -158,8 +157,8 @@ class Travel(models.Model):
     misc_expenses = models.TextField(null=True, blank=True)
 
     status = FSMField(default=PLANNED, choices=CHOICES, protected=True)
-    traveler = models.ForeignKey(User, null=True, blank=True, related_name='travels')
-    supervisor = models.ForeignKey(User, null=True, blank=True, related_name='+')
+    traveler = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='travels')
+    supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='+')
     office = models.ForeignKey('users.Office', null=True, blank=True, related_name='+')
     section = models.ForeignKey('users.Section', null=True, blank=True, related_name='+')
     sector = models.ForeignKey('reports.Sector', null=True, blank=True, related_name='+')
@@ -449,7 +448,7 @@ class TravelActivity(models.Model):
     partnership = models.ForeignKey('partners.Intervention', null=True, blank=True, related_name='travel_activities')
     result = models.ForeignKey('reports.Result', null=True, blank=True, related_name='+')
     locations = models.ManyToManyField('locations.Location', related_name='+')
-    primary_traveler = models.ForeignKey(User)
+    primary_traveler = models.ForeignKey(settings.AUTH_USER_MODEL)
     date = models.DateTimeField(null=True, blank=True)
 
     @property
