@@ -68,6 +68,8 @@ class VisionDataSynchronizer(object):
         if self.ENDPOINT is None:
             raise VisionException(message='You must set the ENDPOINT name')
 
+        logger.info('Synchronizer is {}'.format(self.__class__.__name__))
+
         self.country = country
 
         connection.set_tenant(country)

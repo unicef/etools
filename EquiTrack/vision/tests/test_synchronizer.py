@@ -167,15 +167,19 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
         test_country.business_area_code = 'ABC'
         test_country.save()
 
-        synchronizer = _MySynchronizer(country=test_country)
+        _MySynchronizer(country=test_country)
 
         # Ensure tenant is set
         self.assertEqual(mock_connection.set_tenant.call_count, 1)
         self.assertEqual(mock_connection.set_tenant.call_args[0], (test_country, ))
         self.assertEqual(mock_connection.set_tenant.call_args[1], {})
 
-        # Ensure msg is logged
+        # Ensure msgs are logged
+        self.assertEqual(mock_logger_info.call_count, 2)
+        expected_msg = 'Synchronizer is _MySynchronizer'
+        self.assertEqual(mock_logger_info.call_args_list[0][0], (expected_msg, ))
+        self.assertEqual(mock_logger_info.call_args_list[0][1], {})
+
         expected_msg = 'Country is ' + test_country.name
-        self.assertEqual(mock_logger_info.call_count, 1)
-        self.assertEqual(mock_logger_info.call_args[0], (expected_msg, ))
-        self.assertEqual(mock_logger_info.call_args[1], {})
+        self.assertEqual(mock_logger_info.call_args_list[1][0], (expected_msg, ))
+        self.assertEqual(mock_logger_info.call_args_list[1][1], {})
