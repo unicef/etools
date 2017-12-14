@@ -1,17 +1,14 @@
 # Python imports
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import datetime
-
-from django.test import override_settings, TestCase
-from django.utils import timezone
+from django.test import override_settings
 
 import mock
 
-import vision.vision_data_synchronizer
-from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer
 from EquiTrack.tests.mixins import FastTenantTestCase
 from users.models import Country
+from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer
+from vision.exceptions import VisionException
 
 FAUX_VISION_URL = 'https://api.example.com/foo.svc/'
 FAUX_VISION_USER = 'jane_user'
@@ -95,3 +92,30 @@ class TestVisionDataLoader(FastTenantTestCase):
         self._assertGetFundamentals(loader.url, mock_requests, mock_get_response)
 
         self.assertEqual(response, [])
+
+    @override_settings(VISION_URL=FAUX_VISION_URL)
+    @override_settings(VISION_USER=FAUX_VISION_USER)
+    @override_settings(VISION_PASSWORD=FAUX_VISION_PASSWORD)
+    @mock.patch('vision.vision_data_synchronizer.requests', spec=['get'])
+    def test_get_failure(self, mock_requests):
+        '''Test loader.get() when the response is something other than 200'''
+        # Note that in contrast to the other mock_get_response variables declared in this test case, this one
+        # doesn't have 'json' in the spec. I don't expect the loaderto access response.json during this test, so if
+        # it does this configuration ensures the test will fail.
+        mock_get_response = mock.Mock(spec=['status_code'])
+        mock_get_response.status_code = 401
+        mock_requests.get = mock.Mock(return_value=mock_get_response)
+
+        loader = VisionDataLoader(endpoint='GetSomeStuff_JSON')
+        with self.assertRaises(VisionException) as context_manager:
+            loader.get()
+
+        # Assert that the status code is repeated in the message of the raised exception.
+        self.assertIn('401', str(context_manager.exception))
+
+        # Ensure get was called as normal.
+        self.assertEqual(mock_requests.get.call_count, 1)
+        self.assertEqual(mock_requests.get.call_args[0], (loader.url, ))
+        self.assertEqual(mock_requests.get.call_args[1], {'headers': {'Content-Type': 'application/json'},
+                                                          'auth': (FAUX_VISION_USER, FAUX_VISION_PASSWORD),
+                                                          'verify': False})
