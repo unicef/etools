@@ -161,7 +161,6 @@ SHARED_APPS = (
     'djcelery',
     'djcelery_email',
     'leaflet',
-    'paintstore',
     'corsheaders',
     'djangosaml2',
     'allauth',
