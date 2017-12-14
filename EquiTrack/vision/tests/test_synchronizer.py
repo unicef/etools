@@ -15,10 +15,23 @@ FAUX_VISION_USER = 'jane_user'
 FAUX_VISION_PASSWORD = 'password123'
 
 
+class _MySynchronizer(VisionDataSynchronizer):
+    '''Bare bones synchronizer class. Exists because VisionDataSynchronizer is abstract; this is concrete but
+    does as little as possible.
+    '''
+    ENDPOINT = 'GetSomeStuff_JSON'
+
+    def _convert_records(self, records):
+        pass
+
+    def _save_records(self, records):
+        pass
+
+
 class TestVisionDataLoader(FastTenantTestCase):
     '''Exercise VisionDataLoader class'''
     # Note - I don't understand why, but @override_settings(VISION_URL=FAUX_VISION_URL) doesn't work when I apply
-    # it on TestVisionDataLoader instead of each individual test case.
+    # it at the TestCase class level instead of each individual test case.
 
     def _assertGetFundamentals(self, url, mock_requests, mock_get_response):
         '''Assert common things about the call to loader.get()'''
@@ -119,3 +132,43 @@ class TestVisionDataLoader(FastTenantTestCase):
         self.assertEqual(mock_requests.get.call_args[1], {'headers': {'Content-Type': 'application/json'},
                                                           'auth': (FAUX_VISION_USER, FAUX_VISION_PASSWORD),
                                                           'verify': False})
+
+
+class TestVisionDataSynchronizer(FastTenantTestCase):
+    '''Exercise VisionDataSynchronizer class'''
+    # Note - I don't understand why, but @override_settings(VISION_URL=FAUX_VISION_URL) doesn't work when I apply
+    # it at the TestCase class level instead of each individual test case.
+
+    def test_instantiation_no_country(self):
+        '''Ensure I can't create a synchronizer without specifying a country'''
+        with self.assertRaises(VisionException) as context_manager:
+            _MySynchronizer()
+
+        self.assertEqual('Country is required', str(context_manager.exception))
+
+    def test_instantiation_no_endpoint(self):
+        '''Ensure I can't create a synchronizer without specifying an endpoint'''
+        class _MyBadSynchronizer(_MySynchronizer):
+            '''Synchronizer class that doesn't set self.ENDPOINT'''
+            ENDPOINT = None
+
+        test_country = Country.objects.all()[0]
+
+        with self.assertRaises(VisionException) as context_manager:
+            _MyBadSynchronizer(country=test_country)
+
+        self.assertEqual('You must set the ENDPOINT name', str(context_manager.exception))
+
+    # @override_settings(VISION_URL=FAUX_VISION_URL)
+    # def test_instantiation_tenant_url(self):
+    #     '''Exercise URL construction for non-global call'''
+    #     test_country = Country.objects.all()[0]
+    #     test_country.business_area_code = 'ABC'
+    #     test_country.save()
+
+    #     synchronizer = _MySynchronizer(country=test_country)
+
+    #     # This is false by default; ensure that assumption is correct before proceeding with the rest of the test.
+    #     self.assertFalse(synchronizer.GLOBAL_CALL)
+
+    #     self.assertEqual(synchronizer.url, 'https://api.example.com/foo.svc/GetSomeStuff_JSON')
