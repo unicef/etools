@@ -159,16 +159,23 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
 
         self.assertEqual('You must set the ENDPOINT name', str(context_manager.exception))
 
-    # @override_settings(VISION_URL=FAUX_VISION_URL)
-    # def test_instantiation_tenant_url(self):
-    #     '''Exercise URL construction for non-global call'''
-    #     test_country = Country.objects.all()[0]
-    #     test_country.business_area_code = 'ABC'
-    #     test_country.save()
+    @mock.patch('vision.vision_data_synchronizer.connection', spec=['set_tenant'])
+    @mock.patch('vision.vision_data_synchronizer.logger.info')
+    def test_instantiation_positive(self, mock_logger_info, mock_connection):
+        '''Exercise successfully creating a synchronizer'''
+        test_country = Country.objects.all()[0]
+        test_country.business_area_code = 'ABC'
+        test_country.save()
 
-    #     synchronizer = _MySynchronizer(country=test_country)
+        synchronizer = _MySynchronizer(country=test_country)
 
-    #     # This is false by default; ensure that assumption is correct before proceeding with the rest of the test.
-    #     self.assertFalse(synchronizer.GLOBAL_CALL)
+        # Ensure tenant is set
+        self.assertEqual(mock_connection.set_tenant.call_count, 1)
+        self.assertEqual(mock_connection.set_tenant.call_args[0], (test_country, ))
+        self.assertEqual(mock_connection.set_tenant.call_args[1], {})
 
-    #     self.assertEqual(synchronizer.url, 'https://api.example.com/foo.svc/GetSomeStuff_JSON')
+        # Ensure msg is logged
+        expected_msg = 'Country is ' + test_country.name
+        self.assertEqual(mock_logger_info.call_count, 1)
+        self.assertEqual(mock_logger_info.call_args[0], (expected_msg, ))
+        self.assertEqual(mock_logger_info.call_args[1], {})
