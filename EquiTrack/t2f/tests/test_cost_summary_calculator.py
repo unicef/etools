@@ -9,9 +9,38 @@ from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
-    CountryFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory,)
-from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
+    CountryFactory,
+    CurrencyFactory,
+    DSARateFactory,
+    DSARegionFactory,
+    ExpenseTypeFactory,
+)
+from t2f.helpers.cost_summary_calculator import (
+    CostSummaryCalculator,
+    ExpenseDTO,
+)
 from t2f.tests.factories import ExpenseFactory, ItineraryItemFactory, TravelFactory
+
+
+class TestExpenseDTO(APITenantTestCase):
+    def test_init(self):
+        currency_usd = CurrencyFactory(code='USD')
+        travel = TravelFactory(currency=currency_usd)
+        expense_type = ExpenseTypeFactory(
+            title='Train cost',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
+        expense = ExpenseFactory(
+            travel=travel,
+            type=expense_type,
+            currency=currency_usd,
+            amount=100
+        )
+        dto = ExpenseDTO("vendor_number", expense)
+        self.assertEqual(dto.vendor_number, "vendor_number")
+        self.assertEqual(dto.label, expense_type.title)
+        self.assertEqual(dto.currency, currency_usd)
+        self.assertEqual(dto.amount, 100)
 
 
 class CostSummaryTest(APITenantTestCase):
@@ -66,6 +95,53 @@ class CostSummaryTest(APITenantTestCase):
         self.travel.itinerary.all().delete()
         self.travel.expenses.all().delete()
         self.travel.deductions.all().delete()
+
+    def test_init(self):
+        calc = CostSummaryCalculator(self.travel)
+        self.assertEqual(calc.travel, self.travel)
+
+    def test_get_expenses_empty(self):
+        """If no expenses then empty dictionary returned"""
+        calc = CostSummaryCalculator(self.travel)
+        self.assertEqual(calc.get_expenses(), {})
+
+    def test_get_expenses_amount_none(self):
+        """Ignore expenses where amount is None"""
+        ExpenseFactory(
+            travel=self.travel,
+            type=self.user_et_1,
+            currency=self.currency_usd,
+            amount=None
+        )
+        calc = CostSummaryCalculator(self.travel)
+        self.assertEqual(calc.get_expenses(), {})
+
+    def test_get_expenses(self):
+        """Check that dictionary with expense type vendor number as key is
+        returned
+        """
+        expense_1 = ExpenseFactory(
+            travel=self.travel,
+            type=self.user_et_1,
+            currency=self.currency_usd,
+            amount=100
+        )
+        expense_2 = ExpenseFactory(
+            travel=self.travel,
+            type=self.user_et_1,
+            currency=self.currency_usd,
+            amount=150
+        )
+        expense_3 = ExpenseFactory(
+            travel=self.travel,
+            currency=self.currency_usd,
+            amount=200
+        )
+        calc = CostSummaryCalculator(self.travel)
+        self.assertEqual(calc.get_expenses(), {
+            self.user_et_1.vendor_number: [expense_1, expense_2],
+            expense_3.type.vendor_number: [expense_3],
+        })
 
     def test_calculations(self):
         ItineraryItemFactory(travel=self.travel,

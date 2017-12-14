@@ -6,14 +6,15 @@ from decimal import Decimal
 from itertools import chain
 
 
-class CostSummaryCalculator(object):
-    class ExpenseDTO(object):
-        def __init__(self, vendor_number, expense):
-            self.vendor_number = vendor_number
-            self.label = expense.type.title
-            self.currency = expense.currency
-            self.amount = expense.amount
+class ExpenseDTO(object):
+    def __init__(self, vendor_number, expense):
+        self.vendor_number = vendor_number
+        self.label = expense.type.title
+        self.currency = expense.currency
+        self.amount = expense.amount
 
+
+class CostSummaryCalculator(object):
     def __init__(self, travel):
         self.travel = travel
 
@@ -34,19 +35,19 @@ class CostSummaryCalculator(object):
         # Order the expenses
         expenses = []
         for expense in expense_mapping.pop('user', []):
-            expenses.append(self.ExpenseDTO('user', expense))
+            expenses.append(ExpenseDTO('user', expense))
 
         parking_money = expense_mapping.pop('', [])
 
         # Create data transfer object for each expense
         travel_agent_expenses = []
         for key, values in expense_mapping.items():
-            travel_agent_expenses.extend(self.ExpenseDTO(key, e) for e in values)
+            travel_agent_expenses.extend(ExpenseDTO(key, e) for e in values)
         travel_agent_expenses = sorted(travel_agent_expenses, key=lambda o: o.vendor_number)
         expenses.extend(travel_agent_expenses)
 
         for parking_money_expense in parking_money:
-            expenses.append(self.ExpenseDTO('', parking_money_expense))
+            expenses.append(ExpenseDTO('', parking_money_expense))
 
         if self.travel.preserved_expenses_local is not None:
             expenses_delta_local = self.travel.preserved_expenses_local - total_expense_local
