@@ -14,6 +14,8 @@ logger = get_task_logger('vision.synchronize')
 
 
 class VisionDataLoader(object):
+    # Caveat - this loader probably doesn't construct a correct URL when the synchronizer's GLOBAL_CALL = True).
+    # See https://github.com/unicef/etools/issues/1098
     URL = ''
     EMPTY_RESPONSE_VISION_MESSAGE = u'No Data Available'
 
@@ -54,7 +56,6 @@ class VisionDataSynchronizer(object):
     __metaclass__ = ABCMeta
 
     ENDPOINT = None
-    URL = settings.VISION_URL
     NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS = {}
     GLOBAL_CALL = False
@@ -68,14 +69,7 @@ class VisionDataSynchronizer(object):
             raise VisionException(message='You must set the ENDPOINT name')
 
         self.country = country
-        self.url = '{}/{}'.format(
-            self.URL,
-            self.ENDPOINT
-        )
-        if not self.GLOBAL_CALL:
-            self.url += '/{}'.format(country.business_area_code)
 
-        logger.info("Vision sync url:%s" % self.url)
         connection.set_tenant(country)
         logger.info('Country is {}'.format(country.name))
 
