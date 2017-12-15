@@ -12,12 +12,14 @@ from vision.models import VisionSyncLog
 
 logger = get_task_logger('vision.synchronize')
 
+# VISION_NO_DATA_MESSAGE is what the remote vision system returns when it has no data
+VISION_NO_DATA_MESSAGE = 'No Data Available'
+
 
 class VisionDataLoader(object):
     # Caveat - this loader probably doesn't construct a correct URL when the synchronizer's GLOBAL_CALL = True).
     # See https://github.com/unicef/etools/issues/1098
     URL = ''
-    EMPTY_RESPONSE_VISION_MESSAGE = u'No Data Available'
 
     def __init__(self, country=None, endpoint=None):
         if not self.URL:
@@ -45,7 +47,7 @@ class VisionDataLoader(object):
                 message=('Load data failed! Http code: {}'.format(response.status_code))
             )
         json_response = response.json()
-        if json_response == self.EMPTY_RESPONSE_VISION_MESSAGE:
+        if json_response == VISION_NO_DATA_MESSAGE:
             return []
 
         return json_response
@@ -56,7 +58,6 @@ class VisionDataSynchronizer(object):
     __metaclass__ = ABCMeta
 
     ENDPOINT = None
-    NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS = {}
     GLOBAL_CALL = False
     LOADER_CLASS = VisionDataLoader

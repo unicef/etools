@@ -10,7 +10,7 @@ from EquiTrack.tests.mixins import FastTenantTestCase
 from users.models import Country
 from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
-from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer
+from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer, VISION_NO_DATA_MESSAGE
 
 FAUX_VISION_URL = 'https://api.example.com/foo.svc/'
 FAUX_VISION_USER = 'jane_user'
@@ -98,7 +98,7 @@ class TestVisionDataLoader(FastTenantTestCase):
         '''Test loader.get() when the response is 200 OK but no data is returned'''
         mock_get_response = mock.Mock(spec=['status_code', 'json'])
         mock_get_response.status_code = 200
-        mock_get_response.json = mock.Mock(return_value='No Data Available')
+        mock_get_response.json = mock.Mock(return_value=VISION_NO_DATA_MESSAGE)
         mock_requests.get = mock.Mock(return_value=mock_get_response)
 
         loader = VisionDataLoader(endpoint='GetSomeStuff_JSON')
