@@ -6,11 +6,13 @@ from __future__ import unicode_literals
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import (
     AgreementFactory,
-    FundsReservationHeaderFactory,
     InterventionFactory,
     PartnerFactory,
     PartnerStaffFactory,
     UserFactory,
+)
+from funds.tests.factories import (
+    FundsReservationHeaderFactory,
 )
 from django.forms import model_to_dict
 from snapshot import utils

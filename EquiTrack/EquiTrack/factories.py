@@ -14,7 +14,6 @@ from factory import fuzzy
 from snapshot import models as snapshot_models
 
 from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
-from funds import models as funds_models
 from locations import models as location_models
 from notification import models as notification_models
 from partners import models as partner_models
@@ -369,66 +368,6 @@ class GovernmentInterventionFactory(factory.DjangoModelFactory):
     number = 'RefNumber'
 
 
-class DonorFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=45)
-
-    class Meta:
-        model = funds_models.Donor
-
-
-class GrantFactory(factory.DjangoModelFactory):
-    donor = factory.SubFactory(DonorFactory)
-    name = fuzzy.FuzzyText(length=32)
-
-    class Meta:
-        model = funds_models.Grant
-
-
-class FundsCommitmentItemFactory(factory.DjangoModelFactory):
-    fund_commitment = factory.SubFactory('EquiTrack.factories.FundsCommitmentHeaderFactory')
-    line_item = fuzzy.FuzzyText(length=5)
-
-    class Meta:
-        model = funds_models.FundsCommitmentItem
-
-
-class FundsReservationHeaderFactory(factory.DjangoModelFactory):
-    intervention = factory.SubFactory(InterventionFactory)
-    vendor_code = fuzzy.FuzzyText(length=20)
-    fr_number = fuzzy.FuzzyText(length=20)
-    document_date = date(date.today().year, 1, 1)
-    fr_type = fuzzy.FuzzyText(length=20)
-    currency = fuzzy.FuzzyText(length=20)
-    document_text = fuzzy.FuzzyText(length=20)
-
-    # this is the field required for validation
-    intervention_amt = fuzzy.FuzzyDecimal(1, 300)
-    # overall_amount
-    total_amt = fuzzy.FuzzyDecimal(1, 300)
-    actual_amt = fuzzy.FuzzyDecimal(1, 300)
-    outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
-
-    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1) - timedelta(days=10),
-                                 date(date.today().year, 1, 1))
-    end_date = fuzzy.FuzzyDate(date(date.today().year + 1, 1, 1),
-                               date(date.today().year + 1, 1, 1) + timedelta(days=10))
-
-    class Meta:
-        model = funds_models.FundsReservationHeader
-
-
-class FundsReservationItemFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = funds_models.FundsReservationItem
-
-    fund_reservation = factory.SubFactory(FundsReservationHeaderFactory)
-    line_item = fuzzy.FuzzyText(length=5)
-
-
-class FundsCommitmentHeaderFactory(factory.DjangoModelFactory):
-
-    class Meta:
-        model = funds_models.FundsCommitmentHeader
 
 
 # Credit goes to http://stackoverflow.com/a/41154232/2363915
@@ -654,7 +593,7 @@ class FundingCommitmentFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.FundingCommitment
 
-    grant = factory.SubFactory(GrantFactory)
+    grant = factory.SubFactory("funds.tests.factories.GrantFactory")
     fr_number = fuzzy.FuzzyText(length=50)
     wbs = fuzzy.FuzzyText(length=50)
     fc_type = fuzzy.FuzzyText(length=50)

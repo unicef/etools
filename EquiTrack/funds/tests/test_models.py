@@ -6,16 +6,16 @@ from __future__ import unicode_literals
 import sys
 from unittest import skipIf
 
-from EquiTrack.factories import (
+from EquiTrack.tests.mixins import FastTenantTestCase
+from funds.models import FundsReservationItem, FundsCommitmentItem
+from funds.tests.factories import (
     DonorFactory,
-    FundsCommitmentHeaderFactory,
     FundsCommitmentItemFactory,
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
+    FundsCommitmentHeaderFactory,
     GrantFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase
-from funds.models import FundsReservationItem, FundsCommitmentItem
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")

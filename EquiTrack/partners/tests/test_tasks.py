@@ -11,8 +11,11 @@ import mock
 
 import partners.tasks
 from EquiTrack.factories import (
-    AgreementFactory, CountryFactory, FundsReservationHeaderFactory, InterventionFactory, UserFactory,)
+    AgreementFactory, CountryFactory, InterventionFactory, UserFactory,)
 from EquiTrack.tests.mixins import FastTenantTestCase
+from funds.tests.factories import (
+    FundsReservationHeaderFactory,
+)
 from partners.models import Agreement, Intervention
 from users.models import User
 

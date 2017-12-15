@@ -10,11 +10,13 @@ from EquiTrack.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
     FundingCommitmentFactory,
-    GrantFactory,
     InterventionFactory,
     PartnerFactory,
     PartnerStaffFactory,
     UserFactory,
+)
+from funds.tests.factories import (
+    GrantFactory,
 )
 from partners.admin import (
     AgreementAdmin,

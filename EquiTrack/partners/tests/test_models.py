@@ -16,11 +16,8 @@ from EquiTrack.factories import (
     AssessmentFactory,
     CountryProgrammeFactory,
     CurrencyFactory,
-    DonorFactory,
     FileTypeFactory,
-    FundsReservationHeaderFactory,
     GovernmentInterventionFactory,
-    GrantFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionBudgetFactory,
@@ -40,6 +37,11 @@ from EquiTrack.factories import (
     UserFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from funds.tests.factories import (
+    DonorFactory,
+    FundsReservationHeaderFactory,
+    GrantFactory,
+)
 from reports.models import ResultType
 from partners import models
 from partners.tests.factories import (

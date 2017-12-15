@@ -9,16 +9,16 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import (
+from EquiTrack.factories import UserFactory
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from funds.tests.factories import (
     DonorFactory,
-    FundsCommitmentHeaderFactory,
     FundsCommitmentItemFactory,
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
+    FundsCommitmentHeaderFactory,
     GrantFactory,
-    UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 
 
 class UrlsTestCase(URLAssertionMixin, TestCase):

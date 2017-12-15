@@ -10,7 +10,6 @@ from mock import patch, Mock
 from EquiTrack.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
-    FundsReservationHeaderFactory,
     GroupFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
@@ -22,6 +21,9 @@ from EquiTrack.validation_mixins import (
     BasicValidationError,
     StateValidError,
     TransitionError,
+)
+from funds.tests.factories import (
+    FundsReservationHeaderFactory,
 )
 from partners.models import (
     Agreement,

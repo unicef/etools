@@ -22,7 +22,6 @@ from EquiTrack.factories import (
     AgreementFactory,
     AgreementAmendmentFactory,
     CountryProgrammeFactory,
-    FundsReservationHeaderFactory,
     GovernmentInterventionFactory,
     GroupFactory,
     InterventionFactory,
@@ -36,8 +35,10 @@ from EquiTrack.factories import (
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from reports.models import ResultType
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
+from funds.tests.factories import (
+    FundsReservationHeaderFactory,
+)
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -58,6 +59,7 @@ from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 from partners.views import v2
 import partners.views.partner_organization_v2
+from reports.models import ResultType
 from snapshot.models import Activity
 
 
