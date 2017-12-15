@@ -136,8 +136,8 @@ class TestVisionDataLoader(FastTenantTestCase):
                                                           'verify': False})
 
 
-class TestVisionDataSynchronizer(FastTenantTestCase):
-    '''Exercise VisionDataSynchronizer class'''
+class TestVisionDataSynchronizerInit(FastTenantTestCase):
+    '''Exercise initialization of VisionDataSynchronizer class'''
     def test_instantiation_no_country(self):
         '''Ensure I can't create a synchronizer without specifying a country'''
         with self.assertRaises(VisionException) as context_manager:
@@ -183,6 +183,9 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
         self.assertEqual(mock_logger_info.call_args_list[1][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[1][1], {})
 
+
+class TestVisionDataSynchronizerSync(FastTenantTestCase):
+    '''Exercise the sync() method of VisionDataSynchronizer class'''
     @mock.patch('vision.vision_data_synchronizer.logger.info')
     def test_sync_positive(self, mock_logger_info):
         '''Test calling sync() for the mainstream case of success. Tests the following --
