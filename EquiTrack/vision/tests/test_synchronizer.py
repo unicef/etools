@@ -1,14 +1,17 @@
 # Python imports
 from __future__ import absolute_import, division, print_function, unicode_literals
+import datetime
 
 from django.test import override_settings
+from django.utils.timezone import now as django_now
 
 import mock
 
 from EquiTrack.tests.mixins import FastTenantTestCase
 from users.models import Country
-from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer
 from vision.exceptions import VisionException
+from vision.models import VisionSyncLog
+from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer
 
 FAUX_VISION_URL = 'https://api.example.com/foo.svc/'
 FAUX_VISION_USER = 'jane_user'
@@ -183,3 +186,91 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
         expected_msg = 'Country is ' + test_country.name
         self.assertEqual(mock_logger_info.call_args_list[1][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[1][1], {})
+
+    @mock.patch('vision.vision_data_synchronizer.logger.info')
+    def test_sync_positive(self, mock_logger_info):
+        '''Test calling sync() for the mainstream case of success. Tests the following --
+            - A VisionSyncLog instance is created and has the expected values
+            - # of records returned by vision can differ from the # returned by synchronizer._convert_records()
+            - synchronizer._save_records() can return an int (instead of a dict)
+            - The int returned by synchronizer._save_records() is recorded properly in the VisionSyncLog record
+            - logger.info() is called as expected
+            - All calls to synchronizer methods have expected args
+        '''
+        self.assertEqual(VisionSyncLog.objects.all().count(), 0)
+
+        test_country = Country.objects.all()[0]
+
+        synchronizer = _MySynchronizer(country=test_country)
+
+        # These are the dummy records that vision will "return" via mock_loader.get()
+        vision_records = [42, 43, 44]
+        # These are the dummy records that synchronizer._convert_records() will return. It's intentionally a different
+        # length than vision_records to test that these two sets of records are treated differently.
+        converted_records = [42, 44]
+
+        mock_loader = mock.Mock()
+        mock_loader.get.return_value = vision_records
+        MockLoaderClass = mock.Mock(return_value=mock_loader)
+
+        synchronizer.LOADER_CLASS = MockLoaderClass
+
+        mock_convert_records = mock.Mock(return_value=converted_records)
+        synchronizer._convert_records = mock_convert_records
+
+        # synchronizer._save_records() should logically return the # of records saved but we're going to make it
+        # do something different to ensure that its return value is respected.
+        mock_save_records = mock.Mock(return_value=99)
+        synchronizer._save_records = mock_save_records
+
+        # Setup is done, now call sync().
+        synchronizer.sync()
+
+        self.assertEqual(MockLoaderClass.call_count, 1)
+        self.assertEqual(MockLoaderClass.call_args[0], tuple())
+        self.assertEqual(MockLoaderClass.call_args[1], {'country': test_country,
+                                                        'endpoint': 'GetSomeStuff_JSON'})
+
+        self.assertEqual(mock_loader.get.call_count, 1)
+        self.assertEqual(mock_loader.get.call_args[0], tuple())
+        self.assertEqual(mock_loader.get.call_args[1], {})
+
+        self.assertEqual(mock_convert_records.call_count, 1)
+        self.assertEqual(mock_convert_records.call_args[0], (vision_records, ))
+        self.assertEqual(mock_convert_records.call_args[1], {})
+
+        self.assertEqual(mock_save_records.call_count, 1)
+        self.assertEqual(mock_save_records.call_args[0], (converted_records, ))
+        self.assertEqual(mock_save_records.call_args[1], {})
+
+        # logger.info() is called 3 times, but the first two times are part of the instantiation of VisionDataLoader
+        # and I don't care about testing them here. I only care about the last call to logger.info()
+        expected_msg = 'Processing {} records'.format(len(converted_records))
+        self.assertEqual(mock_logger_info.call_count, 3)
+        self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
+        self.assertEqual(mock_logger_info.call_args_list[2][1], {})
+
+        sync_logs = VisionSyncLog.objects.all()
+
+        self.assertEqual(len(sync_logs), 1)
+
+        sync_log = sync_logs[0]
+
+        self.assertEqual(sync_log.country.pk, test_country.pk)
+        self.assertEqual(sync_log.handler_name, '_MySynchronizer')
+        self.assertEqual(sync_log.total_records, len(converted_records))
+        self.assertEqual(sync_log.total_processed, 99)
+        self.assertEqual(sync_log.successful, True)
+        # details & exception message can be blank or None
+        self.assertIn(sync_log.details, ('', None))
+        self.assertIn(sync_log.exception_message, ('', None))
+        # date_processed is a datetime; there's no way to know the exact microsecond it should contain. As long as
+        # it's within 5 seconds of now, that's enough.
+        delta = django_now() - sync_log.date_processed
+        self.assertLess(delta.seconds, 5)
+
+
+# test LOADER_EXTRA_KWARGS passed to loader class
+# test _save_records() returning a dict instead of an int
+# test raising an exception
+# Make sync logging smarter -- log the # of records received and the # converted
