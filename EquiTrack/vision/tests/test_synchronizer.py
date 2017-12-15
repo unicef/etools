@@ -379,9 +379,52 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
                                                         'FROBNICATE': True,
                                                         'POTRZEBIE': 2.2})
 
+    def test_sync_exception_handling(self):
+        '''Test sync() exception handling behavior.'''
+        test_country = Country.objects.all()[0]
 
+        synchronizer = _MySynchronizer(country=test_country)
 
+        # Force a failure in the attempt to get vision records
+        def loader_get_side_effect(*args, **kwargs):
+            raise ValueError('Wrong!')
 
-# test LOADER_EXTRA_KWARGS passed to loader class
-# test raising an exception
+        mock_loader = mock.Mock()
+        mock_loader.get.side_effect = loader_get_side_effect
+        MockLoaderClass = mock.Mock(return_value=mock_loader)
+
+        synchronizer.LOADER_CLASS = MockLoaderClass
+
+        # These should not be called. I mock them so I can verify that.
+        mock_convert_records = mock.Mock()
+        synchronizer._convert_records = mock_convert_records
+        mock_save_records = mock.Mock()
+        synchronizer._save_records = mock_save_records
+
+        # Setup is done, now call sync().
+        with self.assertRaises(VisionException):
+            synchronizer.sync()
+
+        self.assertEqual(mock_convert_records.call_count, 0)
+        self.assertEqual(mock_save_records.call_count, 0)
+
+        sync_logs = VisionSyncLog.objects.all()
+
+        self.assertEqual(len(sync_logs), 1)
+
+        sync_log = sync_logs[0]
+
+        self.assertEqual(sync_log.country.pk, test_country.pk)
+        self.assertEqual(sync_log.handler_name, '_MySynchronizer')
+        self.assertEqual(sync_log.total_records, 0)
+        self.assertEqual(sync_log.total_processed, 0)
+        self.assertEqual(sync_log.successful, False)
+        # details can be blank or None
+        self.assertIn(sync_log.details, ('', None))
+        self.assertEqual(sync_log.exception_message, 'Wrong!')
+        # date_processed is a datetime; there's no way to know the exact microsecond it should contain. As long as
+        # it's within 5 seconds of now, that's enough.
+        delta = django_now() - sync_log.date_processed
+        self.assertLess(delta.seconds, 5)
+
 # Make sync logging smarter -- log the # of records received and the # converted
