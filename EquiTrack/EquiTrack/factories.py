@@ -10,7 +10,6 @@ from django.contrib.auth import get_user_model
 
 import factory
 from factory import fuzzy
-from snapshot import models as snapshot_models
 
 from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
 from notification import models as notification_models
@@ -536,24 +535,6 @@ class TravelActivityFactory(factory.django.DjangoModelFactory):
         if extracted:
             for travel in extracted:
                 self.travels.add(travel)
-
-
-class FuzzyActivityAction(factory.fuzzy.BaseFuzzyAttribute):
-    def fuzz(self):
-        return factory.fuzzy._random.choice(
-            [a[0] for a in snapshot_models.Activity.ACTION_CHOICES]
-        )
-
-
-class ActivityFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = snapshot_models.Activity
-
-    target = factory.SubFactory(InterventionFactory)
-    action = FuzzyActivityAction()
-    by_user = factory.SubFactory(UserFactory)
-    data = {"random": "data"}
-    change = ""
 
 
 class FundingCommitmentFactory(factory.django.DjangoModelFactory):
