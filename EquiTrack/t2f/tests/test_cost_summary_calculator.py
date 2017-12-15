@@ -214,6 +214,30 @@ class CostSummaryTest(APITenantTestCase):
         # Should not raise TypeError
         calculator.get_cost_summary()
 
+    # TODO: confirm that this is correct
+    # should a single itinerary result in a zero dsa total?
+    def test_test_cost_calculation_single(self):
+        """Check calculations for a single itinerary"""
+        ItineraryItemFactory(
+            travel=self.travel,
+            arrival_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+            departure_date=datetime(2017, 1, 2, 4, 0, tzinfo=UTC),
+            dsa_region=self.budapest
+        )
+        # daily_amt = self.budapest.dsa_amount_local
+        # last_day_amount = daily_amt * (1 - DSACalculator.LAST_DAY_DEDUCTION)
+        # total_amt = daily_amt + last_day_amount
+
+        calculator = CostSummaryCalculator(self.travel)
+        cost_summary = calculator.get_cost_summary()
+
+        self.assertEqual(cost_summary["dsa"], [])
+        self.assertEqual(cost_summary["expenses_total"], [])
+        self.assertEqual(cost_summary["preserved_expenses"], None)
+        self.assertEqual(cost_summary["dsa_total"], Decimal("0"))
+        self.assertEqual(cost_summary["paid_to_traveler"], Decimal("0"))
+        self.assertEqual(cost_summary["traveler_dsa"], Decimal("0"))
+
     def test_cost_calculation_60plus(self):
         """Check calculations for itinerary over 60 days
         takes into account 60 plus adjustment
