@@ -186,6 +186,39 @@ class TestVisionDataSynchronizerInit(FastTenantTestCase):
 
 class TestVisionDataSynchronizerSync(FastTenantTestCase):
     '''Exercise the sync() method of VisionDataSynchronizer class'''
+    def _assertVisionSyncLogFundamentals(self, total_records, total_processed, details='', exception_message='',
+                                         successful=True):
+        '''Assert common properties of the VisionSyncLog record that should have been created during a test. Populate
+        the method parameters with what you expect to see in the VisionSyncLog record.
+        '''
+        sync_logs = VisionSyncLog.objects.all()
+
+        self.assertEqual(len(sync_logs), 1)
+
+        sync_log = sync_logs[0]
+
+        self.assertEqual(sync_log.country.pk, self.test_country.pk)
+        self.assertEqual(sync_log.handler_name, '_MySynchronizer')
+        self.assertEqual(sync_log.total_records, total_records)
+        self.assertEqual(sync_log.total_processed, total_processed)
+        self.assertEqual(sync_log.successful, successful)
+        if details:
+            self.assertEqual(sync_log.details, details)
+        else:
+            self.assertIn(sync_log.details, ('', None))
+        if exception_message:
+            self.assertEqual(sync_log.exception_message, exception_message)
+        else:
+            self.assertIn(sync_log.exception_message, ('', None))
+        # date_processed is a datetime; there's no way to know the exact microsecond it should contain. As long as
+        # it's within a few seconds of now, that's good enough.
+        delta = django_now() - sync_log.date_processed
+        self.assertLess(delta.seconds, 5)
+
+    def setUp(self):
+        self.assertEqual(VisionSyncLog.objects.all().count(), 0)
+        self.test_country = Country.objects.all()[0]
+
     @mock.patch('vision.vision_data_synchronizer.logger.info')
     def test_sync_positive(self, mock_logger_info):
         '''Test calling sync() for the mainstream case of success. Tests the following --
@@ -196,11 +229,7 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
             - logger.info() is called as expected
             - All calls to synchronizer methods have expected args
         '''
-        self.assertEqual(VisionSyncLog.objects.all().count(), 0)
-
-        test_country = Country.objects.all()[0]
-
-        synchronizer = _MySynchronizer(country=test_country)
+        synchronizer = _MySynchronizer(country=self.test_country)
 
         # These are the dummy records that vision will "return" via mock_loader.get()
         vision_records = [42, 43, 44]
@@ -228,7 +257,7 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
 
         self.assertEqual(MockLoaderClass.call_count, 1)
         self.assertEqual(MockLoaderClass.call_args[0], tuple())
-        self.assertEqual(MockLoaderClass.call_args[1], {'country': test_country,
+        self.assertEqual(MockLoaderClass.call_args[1], {'country': self.test_country,
                                                         'endpoint': 'GetSomeStuff_JSON'})
 
         self.assertEqual(mock_loader.get.call_count, 1)
@@ -256,34 +285,13 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
         self.assertEqual(mock_logger_info.call_args_list[4][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[4][1], {})
 
-        sync_logs = VisionSyncLog.objects.all()
-
-        self.assertEqual(len(sync_logs), 1)
-
-        sync_log = sync_logs[0]
-
-        self.assertEqual(sync_log.country.pk, test_country.pk)
-        self.assertEqual(sync_log.handler_name, '_MySynchronizer')
-        self.assertEqual(sync_log.total_records, len(converted_records))
-        self.assertEqual(sync_log.total_processed, 99)
-        self.assertEqual(sync_log.successful, True)
-        # details & exception message can be blank or None
-        self.assertIn(sync_log.details, ('', None))
-        self.assertIn(sync_log.exception_message, ('', None))
-        # date_processed is a datetime; there's no way to know the exact microsecond it should contain. As long as
-        # it's within 5 seconds of now, that's enough.
-        delta = django_now() - sync_log.date_processed
-        self.assertLess(delta.seconds, 5)
+        self._assertVisionSyncLogFundamentals(len(converted_records), 99)
 
     def test_sync_save_records_returns_dict(self):
         '''Test calling sync() when _save_records() returns a dict. Tests that sync() provides default values
         as necessary and that values in the dict returned by _save_records() are logged.
         '''
-        self.assertEqual(VisionSyncLog.objects.all().count(), 0)
-
-        test_country = Country.objects.all()[0]
-
-        synchronizer = _MySynchronizer(country=test_country)
+        synchronizer = _MySynchronizer(country=self.test_country)
 
         # These are the dummy records that vision will "return" via mock_loader.get()
         records = [42, 43, 44]
@@ -313,47 +321,15 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
         # Setup is done, now call sync().
         synchronizer.sync()
 
-        sync_logs = VisionSyncLog.objects.all()
-        self.assertEqual(len(sync_logs), 1)
-        sync_log = sync_logs[0]
-
-        self.assertEqual(sync_log.country.pk, test_country.pk)
-        self.assertEqual(sync_log.handler_name, '_MySynchronizer')
-        self.assertEqual(sync_log.total_records, len(records))
-        self.assertEqual(sync_log.total_processed, 0)
-        self.assertEqual(sync_log.successful, True)
-        # details & exception message can be blank or None
-        self.assertIn(sync_log.details, ('', None))
-        self.assertIn(sync_log.exception_message, ('', None))
-        # date_processed is a datetime; there's no way to know the exact microsecond it should contain. As long as
-        # it's within 5 seconds of now, that's enough.
-        delta = django_now() - sync_log.date_processed
-        self.assertLess(delta.seconds, 5)
+        self._assertVisionSyncLogFundamentals(len(records), 0)
 
         # Get rid of this log record to simplify the remainder of the test.
-        sync_log.delete()
+        VisionSyncLog.objects.all()[0].delete()
 
         # Call sync again.
         synchronizer.sync()
 
-        sync_logs = VisionSyncLog.objects.all()
-
-        self.assertEqual(len(sync_logs), 1)
-
-        sync_log = sync_logs[0]
-
-        self.assertEqual(sync_log.country.pk, test_country.pk)
-        self.assertEqual(sync_log.handler_name, '_MySynchronizer')
-        self.assertEqual(sync_log.total_records, 200)
-        self.assertEqual(sync_log.total_processed, 100)
-        self.assertEqual(sync_log.successful, True)
-        self.assertEqual(sync_log.details, 'Hello world!')
-        # exception message can be blank or None
-        self.assertIn(sync_log.exception_message, ('', None))
-        # date_processed is a datetime; there's no way to know the exact microsecond it should contain. As long as
-        # it's within 5 seconds of now, that's enough.
-        delta = django_now() - sync_log.date_processed
-        self.assertLess(delta.seconds, 5)
+        self._assertVisionSyncLogFundamentals(200, 100, details='Hello world!')
 
     def test_sync_passes_loader_kwargs(self):
         '''Test that LOADER_EXTRA_KWARGS on the synchronizer are passed to the loader.'''
@@ -369,9 +345,7 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
             def _save_records(self, records):
                 return 0
 
-        test_country = Country.objects.all()[0]
-
-        synchronizer = _MyFancySynchronizer(country=test_country)
+        synchronizer = _MyFancySynchronizer(country=self.test_country)
 
         mock_loader = mock.Mock()
         mock_loader.get.return_value = [42, 43, 44]
@@ -384,7 +358,7 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
 
         self.assertEqual(MockLoaderClass.call_count, 1)
         self.assertEqual(MockLoaderClass.call_args[0], tuple())
-        self.assertEqual(MockLoaderClass.call_args[1], {'country': test_country,
+        self.assertEqual(MockLoaderClass.call_args[1], {'country': self.test_country,
                                                         'endpoint': 'GetSomeStuff_JSON',
                                                         'FROBNICATE': True,
                                                         'POTRZEBIE': 2.2})
@@ -392,9 +366,7 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
     @mock.patch('vision.vision_data_synchronizer.logger.info')
     def test_sync_exception_handling(self, mock_logger_info):
         '''Test sync() exception handling behavior.'''
-        test_country = Country.objects.all()[0]
-
-        synchronizer = _MySynchronizer(country=test_country)
+        synchronizer = _MySynchronizer(country=self.test_country)
 
         # Force a failure in the attempt to get vision records
         def loader_get_side_effect(*args, **kwargs):
@@ -407,7 +379,7 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
 
         synchronizer.LOADER_CLASS = MockLoaderClass
 
-        # These should not be called. I mock them so I can verify that.
+        # _convert_records() and _save_records() should not be called. I mock them so I can verify that.
         mock_convert_records = mock.Mock()
         synchronizer._convert_records = mock_convert_records
         mock_save_records = mock.Mock()
@@ -430,21 +402,4 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
         self.assertEqual(mock_logger_info.call_args_list[3][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[3][1], {})
 
-        sync_logs = VisionSyncLog.objects.all()
-
-        self.assertEqual(len(sync_logs), 1)
-
-        sync_log = sync_logs[0]
-
-        self.assertEqual(sync_log.country.pk, test_country.pk)
-        self.assertEqual(sync_log.handler_name, '_MySynchronizer')
-        self.assertEqual(sync_log.total_records, 0)
-        self.assertEqual(sync_log.total_processed, 0)
-        self.assertEqual(sync_log.successful, False)
-        # details can be blank or None
-        self.assertIn(sync_log.details, ('', None))
-        self.assertEqual(sync_log.exception_message, 'Wrong!')
-        # date_processed is a datetime; there's no way to know the exact microsecond it should contain. As long as
-        # it's within 5 seconds of now, that's enough.
-        delta = django_now() - sync_log.date_processed
-        self.assertLess(delta.seconds, 5)
+        self._assertVisionSyncLogFundamentals(0, 0, exception_message='Wrong!', successful=False)
