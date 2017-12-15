@@ -138,9 +138,6 @@ class TestVisionDataLoader(FastTenantTestCase):
 
 class TestVisionDataSynchronizer(FastTenantTestCase):
     '''Exercise VisionDataSynchronizer class'''
-    # Note - I don't understand why, but @override_settings(VISION_URL=FAUX_VISION_URL) doesn't work when I apply
-    # it at the TestCase class level instead of each individual test case.
-
     def test_instantiation_no_country(self):
         '''Ensure I can't create a synchronizer without specifying a country'''
         with self.assertRaises(VisionException) as context_manager:
@@ -268,8 +265,7 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
         delta = django_now() - sync_log.date_processed
         self.assertLess(delta.seconds, 5)
 
-    @mock.patch('vision.vision_data_synchronizer.logger.info')
-    def test_sync_save_records_returns_dict(self, mock_logger_info):
+    def test_sync_save_records_returns_dict(self):
         '''Test calling sync() when _save_records() returns a dict. Tests that sync() provides default values
         as necessary and that values in the dict returned by _save_records() are logged.
         '''
@@ -348,6 +344,42 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
         # it's within 5 seconds of now, that's enough.
         delta = django_now() - sync_log.date_processed
         self.assertLess(delta.seconds, 5)
+
+    def test_sync_passes_loader_kwargs(self):
+        '''Test that LOADER_EXTRA_KWARGS on the synchronizer are passed to the loader.'''
+        class _MyFancySynchronizer(_MySynchronizer):
+            '''Synchronizer class that uses LOADER_EXTRA_KWARGS'''
+            LOADER_EXTRA_KWARGS = ['FROBNICATE', 'POTRZEBIE']
+            FROBNICATE = True
+            POTRZEBIE = 2.2
+
+            def _convert_records(self, records):
+                return []
+
+            def _save_records(self, records):
+                return 0
+
+        test_country = Country.objects.all()[0]
+
+        synchronizer = _MyFancySynchronizer(country=test_country)
+
+        mock_loader = mock.Mock()
+        mock_loader.get.return_value = [42, 43, 44]
+        MockLoaderClass = mock.Mock(return_value=mock_loader)
+
+        synchronizer.LOADER_CLASS = MockLoaderClass
+
+        # Setup is done, now call sync().
+        synchronizer.sync()
+
+        self.assertEqual(MockLoaderClass.call_count, 1)
+        self.assertEqual(MockLoaderClass.call_args[0], tuple())
+        self.assertEqual(MockLoaderClass.call_args[1], {'country': test_country,
+                                                        'endpoint': 'GetSomeStuff_JSON',
+                                                        'FROBNICATE': True,
+                                                        'POTRZEBIE': 2.2})
+
+
 
 
 # test LOADER_EXTRA_KWARGS passed to loader class
