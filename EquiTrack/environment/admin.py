@@ -44,4 +44,4 @@ class TenantSwitchAdmin(BaseAdmin):
 admin.site.unregister(Flag)
 admin.site.register(Flag, TenantFlagAdmin)
 admin.site.unregister(Switch)
-admin.site.register(Switch, TenantSwitchAdmin)
+admin.site.register(TenantSwitch, TenantSwitchAdmin)
