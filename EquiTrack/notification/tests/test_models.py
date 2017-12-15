@@ -3,8 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 from unittest import skipIf
 
-from EquiTrack.factories import AgreementFactory, NotificationFactory, PartnerFactory
+from EquiTrack.factories import AgreementFactory, PartnerFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
+from notification.tests.factories import NotificationFactory
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
