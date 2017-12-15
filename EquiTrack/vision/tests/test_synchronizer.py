@@ -386,7 +386,8 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
                                                         'FROBNICATE': True,
                                                         'POTRZEBIE': 2.2})
 
-    def test_sync_exception_handling(self):
+    @mock.patch('vision.vision_data_synchronizer.logger.info')
+    def test_sync_exception_handling(self, mock_logger_info):
         '''Test sync() exception handling behavior.'''
         test_country = Country.objects.all()[0]
 
@@ -397,6 +398,7 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
             raise ValueError('Wrong!')
 
         mock_loader = mock.Mock()
+        mock_loader.url = 'http://example.com'
         mock_loader.get.side_effect = loader_get_side_effect
         MockLoaderClass = mock.Mock(return_value=mock_loader)
 
@@ -414,6 +416,16 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
 
         self.assertEqual(mock_convert_records.call_count, 0)
         self.assertEqual(mock_save_records.call_count, 0)
+
+        # The first two calls to logger.info()  are part of the instantiation of VisionDataLoader so I don't need to
+        # test them here.
+        self.assertEqual(mock_logger_info.call_count, 4)
+        expected_msg = 'About to get data from http://example.com'
+        self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
+        self.assertEqual(mock_logger_info.call_args_list[2][1], {})
+        expected_msg = 'sync caught ValueError with message "Wrong!"'
+        self.assertEqual(mock_logger_info.call_args_list[3][0], (expected_msg, ))
+        self.assertEqual(mock_logger_info.call_args_list[3][1], {})
 
         sync_logs = VisionSyncLog.objects.all()
 
