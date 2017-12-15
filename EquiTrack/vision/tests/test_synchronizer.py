@@ -206,6 +206,7 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
         converted_records = [42, 44]
 
         mock_loader = mock.Mock()
+        mock_loader.url = 'http://example.com'
         mock_loader.get.return_value = vision_records
         MockLoaderClass = mock.Mock(return_value=mock_loader)
 
@@ -239,12 +240,18 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
         self.assertEqual(mock_save_records.call_args[0], (converted_records, ))
         self.assertEqual(mock_save_records.call_args[1], {})
 
-        # logger.info() is called 3 times, but the first two times are part of the instantiation of VisionDataLoader
-        # and I don't care about testing them here. I only care about the last call to logger.info()
-        expected_msg = 'Processing {} records'.format(len(converted_records))
-        self.assertEqual(mock_logger_info.call_count, 3)
+        # The first two calls to logger.info()  are part of the instantiation of VisionDataLoader so I don't need to
+        # test them here.
+        self.assertEqual(mock_logger_info.call_count, 5)
+        expected_msg = 'About to get data from http://example.com'
         self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[2][1], {})
+        expected_msg = '{} records returned from get'.format(len(vision_records))
+        self.assertEqual(mock_logger_info.call_args_list[3][0], (expected_msg, ))
+        self.assertEqual(mock_logger_info.call_args_list[3][1], {})
+        expected_msg = '{} records returned from conversion'.format(len(converted_records))
+        self.assertEqual(mock_logger_info.call_args_list[4][0], (expected_msg, ))
+        self.assertEqual(mock_logger_info.call_args_list[4][1], {})
 
         sync_logs = VisionSyncLog.objects.all()
 

@@ -111,11 +111,13 @@ class VisionDataSynchronizer(object):
                 for kwarg_name in self.LOADER_EXTRA_KWARGS
             })
             data_getter = self.LOADER_CLASS(**loader_kwargs)
+            logger.info('About to get data from {}'.format(data_getter.url))
             original_records = data_getter.get()
+            logger.info('{} records returned from get'.format(len(original_records)))
 
             converted_records = self._convert_records(original_records)
             log.total_records = len(converted_records)
-            logger.info('Processing {} records'.format(len(converted_records)))
+            logger.info('{} records returned from conversion'.format(len(converted_records)))
 
             totals = self._save_records(converted_records)
 
