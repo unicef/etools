@@ -37,18 +37,12 @@ class TenantFlagFactory(factory.django.DjangoModelFactory):
                 self.countries.add(country)
 
 
-class SwitchFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = Switch
-    name = fuzzy.FuzzyText()
-    active = True
-
 
 class TenantSwitchFactory(factory.django.DjangoModelFactory):
+    name = fuzzy.FuzzyText()
+    active = True
     class Meta:
         model = models.TenantSwitch
-
-    switch = factory.SubFactory(SwitchFactory)
 
     @factory.post_generation
     def countries(self, create, extracted, **kwargs):

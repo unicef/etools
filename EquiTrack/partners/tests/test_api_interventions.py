@@ -30,7 +30,9 @@ from EquiTrack.factories import (
     ResultFactory,
     SectorFactory,
     UserFactory,
-)
+    CountryFactory)
+from environment.helpers import tenant_switch_is_active
+from environment.models import TenantSwitch
 from environment.tests.factories import TenantSwitchFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
@@ -405,7 +407,7 @@ class TestInterventionsAPI(APITenantTestCase):
                               [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
-        EXPECTED_QUERIES = 10
+        EXPECTED_QUERIES = 11
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -434,6 +436,39 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 4)
 
+    def test_list_interventions_w_flag(self):
+        ts = TenantSwitchFactory(name="prp_mode_off", countries=[connection.tenant])
+        self.assertTrue(tenant_switch_is_active(ts.name))
+
+        EXPECTED_QUERIES = 11
+        with self.assertNumQueries(EXPECTED_QUERIES):
+            status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 3)
+
+        section1 = SectorFactory()
+        section2 = SectorFactory()
+
+        # add another intervention to make sure that the queries are constant
+        data = {
+            "document_type": Intervention.PD,
+            "title": "My test intervention",
+            "start": (timezone.now().date()).isoformat(),
+            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
+            "agreement": self.agreement.id,
+            "sections": [section1.id, section2.id],
+        }
+
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+
+        with self.assertNumQueries(EXPECTED_QUERIES):
+            status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 4)
+        ts.delete()
 
 class TestAPIInterventionResultLinkListView(APITenantTestCase):
     '''Exercise the list view for InterventionResultLinkListCreateView'''
@@ -1482,6 +1517,11 @@ class TestInterventionListMapView(APITenantTestCase):
         self.assertEqual(first["id"], intervention.pk)
 
     def test_get_param_section_wo_flag(self):
+        # make sure there is no prp_mode_off flag.. this serves to flush the cache
+        ts = TenantSwitch.get('prp_mode_off')
+        # since the cache is extremely unreliable as tests progress this is something to go around that
+        if ts.id:
+            ts.delete()
         sector = SectorFactory()
         intervention = InterventionFactory()
         rl = InterventionResultLinkFactory(intervention=intervention)
@@ -1499,7 +1539,7 @@ class TestInterventionListMapView(APITenantTestCase):
 
     def test_get_param_section_with_flag(self):
         # set prp mode off flag
-        TenantSwitchFactory(switch__name='prp_mode_off', countries=[connection.tenant])
+        TenantSwitchFactory(name='prp_mode_off', countries=[connection.tenant])
         sector = SectorFactory()
         intervention = InterventionFactory()
         intervention.sections.add(sector)
