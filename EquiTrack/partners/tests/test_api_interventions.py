@@ -29,8 +29,7 @@ from EquiTrack.factories import (
     PartnerFactory,
     ResultFactory,
     SectorFactory,
-    UserFactory,
-    CountryFactory)
+    UserFactory)
 from environment.helpers import tenant_switch_is_active
 from environment.models import TenantSwitch
 from environment.tests.factories import TenantSwitchFactory
@@ -469,6 +468,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 4)
         ts.delete()
+
 
 class TestAPIInterventionResultLinkListView(APITenantTestCase):
     '''Exercise the list view for InterventionResultLinkListCreateView'''

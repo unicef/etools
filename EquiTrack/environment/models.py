@@ -10,9 +10,8 @@ except ImportError:
 
 from django.db import connection, models
 from django.utils.encoding import python_2_unicode_compatible
-from waffle.models import Flag, Switch, BaseModel
+from waffle.models import Flag, BaseModel
 from waffle import managers
-# from environment.helpers import clear_switch_cache
 from users.models import Country
 
 
@@ -27,7 +26,7 @@ class IssueCheckConfig(models.Model):
     def __str__(self):
         return '{}: {}'.format(self.check_id, self.is_active)
 
-# TODO:
+
 @python_2_unicode_compatible
 class TenantFlag(models.Model):
     """
@@ -46,11 +45,13 @@ class TenantFlag(models.Model):
             return True
         return self.flag.is_active(request)
 
+
 class TenantSwitchManager(managers.BaseManager):
     KEY_SETTING = 'ALL_SWITCHES_CACHE_KEY'
 
     def get_queryset(self):
         return super(TenantSwitchManager, self).get_queryset().prefetch_related('countries')
+
 
 @python_2_unicode_compatible
 class TenantSwitch(BaseModel):

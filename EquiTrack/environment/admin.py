@@ -39,6 +39,7 @@ class TenantSwitchAdmin(BaseAdmin):
     list_filter = ('active',)
     ordering = ('-id',)
 
+
 # unregister the waffle admin instances and use our own
 admin.site.unregister(Flag)
 admin.site.register(Flag, TenantFlagAdmin)

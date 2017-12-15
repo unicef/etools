@@ -91,11 +91,10 @@ class TenantSwitchTest(TestCase):
         connection.tenant = CountryFactory()
 
     def setUp(self):
-        #assert the tenant switch is active but has no countries and returns false
+        # assert the tenant switch is active but has no countries and returns false
         self.assertTrue(self.tenant_switch.active)
         self.assertEqual(0, self.tenant_switch.countries.count())
         self.assertFalse(self.tenant_switch.is_active())
-
 
     def test_str_method(self):
         self.assertEqual(str(self.tenant_switch), self.tenant_switch.name)
