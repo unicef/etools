@@ -1,6 +1,5 @@
 # Python imports
 from __future__ import absolute_import, division, print_function, unicode_literals
-import datetime
 
 from django.test import override_settings
 from django.utils.timezone import now as django_now
@@ -269,8 +268,88 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
         delta = django_now() - sync_log.date_processed
         self.assertLess(delta.seconds, 5)
 
+    @mock.patch('vision.vision_data_synchronizer.logger.info')
+    def test_sync_save_records_returns_dict(self, mock_logger_info):
+        '''Test calling sync() when _save_records() returns a dict. Tests that sync() provides default values
+        as necessary and that values in the dict returned by _save_records() are logged.
+        '''
+        self.assertEqual(VisionSyncLog.objects.all().count(), 0)
+
+        test_country = Country.objects.all()[0]
+
+        synchronizer = _MySynchronizer(country=test_country)
+
+        # These are the dummy records that vision will "return" via mock_loader.get()
+        records = [42, 43, 44]
+
+        mock_loader = mock.Mock()
+        mock_loader.get.return_value = records
+        MockLoaderClass = mock.Mock(return_value=mock_loader)
+
+        synchronizer.LOADER_CLASS = MockLoaderClass
+
+        mock_convert_records = mock.Mock(return_value=records)
+        synchronizer._convert_records = mock_convert_records
+
+        # I'm going to call sync() twice and test a different value from _save_records() each time.
+        # The first dict is empty to prove that sync() behaves properly even when expected values are missing.
+        # The second dict contains all expected values, plus an unexpected key/value pair. The extra ensures
+        # sync() isn't tripped up by that.
+        save_return_values = [{},
+                              {'processed': 100,
+                               'details': 'Hello world!',
+                               'total_records': 200,
+                               'foo': 'bar'}
+                              ]
+        mock_save_records = mock.Mock(side_effect=save_return_values)
+        synchronizer._save_records = mock_save_records
+
+        # Setup is done, now call sync().
+        synchronizer.sync()
+
+        sync_logs = VisionSyncLog.objects.all()
+        self.assertEqual(len(sync_logs), 1)
+        sync_log = sync_logs[0]
+
+        self.assertEqual(sync_log.country.pk, test_country.pk)
+        self.assertEqual(sync_log.handler_name, '_MySynchronizer')
+        self.assertEqual(sync_log.total_records, len(records))
+        self.assertEqual(sync_log.total_processed, 0)
+        self.assertEqual(sync_log.successful, True)
+        # details & exception message can be blank or None
+        self.assertIn(sync_log.details, ('', None))
+        self.assertIn(sync_log.exception_message, ('', None))
+        # date_processed is a datetime; there's no way to know the exact microsecond it should contain. As long as
+        # it's within 5 seconds of now, that's enough.
+        delta = django_now() - sync_log.date_processed
+        self.assertLess(delta.seconds, 5)
+
+        # Get rid of this log record to simplify the remainder of the test.
+        sync_log.delete()
+
+        # Call sync again.
+        synchronizer.sync()
+
+        sync_logs = VisionSyncLog.objects.all()
+
+        self.assertEqual(len(sync_logs), 1)
+
+        sync_log = sync_logs[0]
+
+        self.assertEqual(sync_log.country.pk, test_country.pk)
+        self.assertEqual(sync_log.handler_name, '_MySynchronizer')
+        self.assertEqual(sync_log.total_records, 200)
+        self.assertEqual(sync_log.total_processed, 100)
+        self.assertEqual(sync_log.successful, True)
+        self.assertEqual(sync_log.details, 'Hello world!')
+        # exception message can be blank or None
+        self.assertIn(sync_log.exception_message, ('', None))
+        # date_processed is a datetime; there's no way to know the exact microsecond it should contain. As long as
+        # it's within 5 seconds of now, that's enough.
+        delta = django_now() - sync_log.date_processed
+        self.assertLess(delta.seconds, 5)
+
 
 # test LOADER_EXTRA_KWARGS passed to loader class
-# test _save_records() returning a dict instead of an int
 # test raising an exception
 # Make sync logging smarter -- log the # of records received and the # converted
