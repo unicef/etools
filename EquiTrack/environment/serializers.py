@@ -17,8 +17,6 @@ class TenantFlagSerializer(serializers.ModelSerializer):
 
 
 class TenantSwitchSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='switch.name')
-
     class Meta:
         model = TenantSwitch
         fields = ('name', 'countries', )

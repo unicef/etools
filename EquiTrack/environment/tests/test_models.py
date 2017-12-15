@@ -91,11 +91,13 @@ class TenantSwitchTest(TestCase):
         connection.tenant = CountryFactory()
 
     def setUp(self):
-        # always assert that the base switch is True
-        self.assertTrue(self.tenant_switch.switch.is_active())
+        # assert the tenant switch is active but has no countries and returns false
+        self.assertTrue(self.tenant_switch.active)
+        self.assertEqual(0, self.tenant_switch.countries.count())
+        self.assertFalse(self.tenant_switch.is_active())
 
     def test_str_method(self):
-        self.assertEqual(str(self.tenant_switch), self.tenant_switch.switch.name)
+        self.assertEqual(str(self.tenant_switch), self.tenant_switch.name)
 
     def test_blank_countries(self):
         "Return the False if TenantSwitch has no countries."
@@ -115,13 +117,15 @@ class TenantSwitchTest(TestCase):
     # test the tenant_switch_is_active helper function
 
     def test_is_active_function_switch_off(self):
-        switch_active = tenant_switch_is_active(self.tenant_switch.switch.name)
+        switch_active = tenant_switch_is_active(self.tenant_switch.name)
         # tenant not in countries, so this should return False
         self.assertFalse(switch_active)
 
     def test_is_active_function_switch_on(self):
         self.tenant_switch.countries.add(connection.tenant)
-        switch_active = tenant_switch_is_active(self.tenant_switch.switch.name)
+        # remove from cache after adding a country
+        self.tenant_switch.flush()
+        switch_active = tenant_switch_is_active(self.tenant_switch.name)
         # tenant in countries, so this should return True
         self.assertTrue(switch_active)
 

@@ -95,6 +95,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
     section_names = serializers.SerializerMethodField()
+    flagged_sections = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
     location_names = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
@@ -122,7 +123,10 @@ class InterventionListSerializer(serializers.ModelSerializer):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.sections.all()]
+        return [l.name for l in obj.flagged_sections]
+
+    def get_flagged_sections(self, obj):
+        return [l.id for l in obj.flagged_sections]
 
     def get_locations(self, obj):
         return [l.id for l in obj.intervention_locations]
@@ -140,7 +144,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
             'sections', 'section_names', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt',
             'frs_total_outstanding_amt', 'offices', 'actual_amount', 'offices_names', 'total_unicef_budget',
-            'total_budget', 'metadata', 'locations', 'location_names', 'cluster_names'
+            'total_budget', 'metadata', 'locations', 'location_names', 'cluster_names', 'flagged_sections'
         )
 
 
@@ -425,6 +429,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     submitted_to_prc = serializers.ReadOnlyField()
     frs_details = FRsSerializer(source='frs', read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
+    flagged_sections = serializers.SerializerMethodField(read_only=True)
+    section_names = serializers.SerializerMethodField(read_only=True)
     locations = serializers.SerializerMethodField()
     location_names = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
@@ -441,6 +447,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     def get_location_names(self, obj):
         return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
 
+    def get_section_names(self, obj):
+        return [l.name for l in obj.flagged_sections]
+
+    def get_flagged_sections(self, obj):
+        return [l.id for l in obj.flagged_sections]
+
     def get_cluster_names(self, obj):
         return [c for c in obj.intervention_clusters]
 
@@ -454,7 +466,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
-            "locations", "location_names", "cluster_names"
+            "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names"
         )
 
 
@@ -468,6 +480,7 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
     section_names = serializers.SerializerMethodField()
+    flagged_sections = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
@@ -492,7 +505,10 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.sections.all()]
+        return [l.name for l in obj.flagged_sections]
+
+    def get_flagged_sections(self, obj):
+        return [l.id for l in obj.flagged_sections]
 
     class Meta:
         model = Intervention
@@ -500,7 +516,8 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
             'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'unicef_cash', 'cso_contribution',
             'total_unicef_budget', 'total_budget', 'sections', 'section_names',
             'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
-            'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount'
+            'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount',
+            'flagged_sections'
         )
 
 
@@ -508,9 +525,13 @@ class InterventionListMapSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id')
     locations = serializers.SerializerMethodField()
+    sections = serializers.SerializerMethodField()
 
     def get_locations(self, obj):
         return [LocationSerializer().to_representation(l) for l in obj.intervention_locations]
+
+    def get_sections(self, obj):
+        return [s.id for s in obj.flagged_sections]
 
     class Meta:
         model = Intervention

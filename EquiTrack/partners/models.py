@@ -24,6 +24,7 @@ from dateutil.relativedelta import relativedelta
 
 from EquiTrack.utils import import_permissions
 from EquiTrack.mixins import AdminURLMixin
+from environment.helpers import tenant_switch_is_active
 from funds.models import Grant
 from reports.models import (
     Indicator,
@@ -1230,6 +1231,7 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__indicator',
             'result_links__ll_results__applied_indicators__disaggregation',
             'result_links__ll_results__applied_indicators__locations',
+            'flat_locations',
         )
 
 
@@ -1436,6 +1438,9 @@ class Intervention(TimeStampedModel):
         blank=True,
         related_name='office_interventions+',
     )
+    # TODO: remove this after PRP flag is on for all countries
+    flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True)
+
     population_focus = models.CharField(
         verbose_name=_("Population Focus"),
         max_length=130,
@@ -1560,14 +1565,31 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def intervention_locations(self):
-        # return intervention locations as a set of Location objects
-        locations = set()
-        for lower_result in self.all_lower_results:
-            for applied_indicator in lower_result.applied_indicators.all():
-                for location in applied_indicator.locations.all():
-                    locations.add(location)
+        if tenant_switch_is_active("prp_mode_off"):
+            locations = set(self.flat_locations.all())
+        else:
+            # return intervention locations as a set of Location objects
+            locations = set()
+            for lower_result in self.all_lower_results:
+                for applied_indicator in lower_result.applied_indicators.all():
+                    for location in applied_indicator.locations.all():
+                        locations.add(location)
 
         return locations
+
+    @cached_property
+    def flagged_sections(self):
+        if tenant_switch_is_active("prp_mode_off"):
+            sections = set(self.sections.all())
+        else:
+            # return intervention locations as a set of Location objects
+            sections = set()
+            for lower_result in self.all_lower_results:
+                for applied_indicator in lower_result.applied_indicators.all():
+                    if applied_indicator.section:
+                        sections.add(applied_indicator.section)
+
+        return sections
 
     @cached_property
     def intervention_clusters(self):
