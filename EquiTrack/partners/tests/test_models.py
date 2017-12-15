@@ -26,7 +26,6 @@ from EquiTrack.factories import (
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
     InterventionSectorLocationLinkFactory,
-    LocationFactory,
     LowerResultFactory,
     PartnerFactory,
     PartnerStaffFactory,
@@ -42,6 +41,7 @@ from funds.tests.factories import (
     FundsReservationHeaderFactory,
     GrantFactory,
 )
+from locations.tests.factories import LocationFactory
 from reports.models import ResultType
 from partners import models
 from partners.tests.factories import (

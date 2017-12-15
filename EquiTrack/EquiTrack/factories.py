@@ -7,14 +7,12 @@ from datetime import date, datetime, timedelta
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
 from django.contrib.auth import get_user_model
-from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
 from snapshot import models as snapshot_models
 
 from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
-from locations import models as location_models
 from notification import models as notification_models
 from partners import models as partner_models
 from publics import models as publics_models
@@ -103,35 +101,6 @@ class UserFactory(factory.django.DjangoModelFactory):
     def groups(self, create, extracted, **kwargs):
         group, created = Group.objects.get_or_create(name='UNICEF User')
         self.groups.add(group)
-
-
-class GatewayTypeFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = location_models.GatewayType
-
-    name = factory.Sequence(lambda n: 'GatewayType {}'.format(n))
-    admin_level = factory.Sequence(lambda n: n)
-
-
-class LocationFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = location_models.Location
-
-    name = factory.Sequence(lambda n: 'Location {}'.format(n))
-    gateway = factory.SubFactory(GatewayTypeFactory)
-    point = GEOSGeometry("POINT(20 20)")
-    p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
-
-
-class CartoDBTableFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = location_models.CartoDBTable
-
-    domain = factory.Sequence(lambda n: 'Domain {}'.format(n))
-    api_key = factory.Sequence(lambda n: 'API Key {}'.format(n))
-    table_name = factory.Sequence(lambda n: 'table_name_{}'.format(n))
-    location_type = factory.SubFactory(GatewayTypeFactory)
-    domain = factory.Sequence(lambda n: 'Domain {}'.format(n))
 
 
 class PartnerStaffFactory(factory.django.DjangoModelFactory):
@@ -366,8 +335,6 @@ class GovernmentInterventionFactory(factory.DjangoModelFactory):
     partner = factory.SubFactory(PartnerFactory)
     country_programme = factory.SubFactory(CountryProgrammeFactory)
     number = 'RefNumber'
-
-
 
 
 # Credit goes to http://stackoverflow.com/a/41154232/2363915

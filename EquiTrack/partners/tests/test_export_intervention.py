@@ -18,12 +18,12 @@ from EquiTrack.factories import (
     InterventionPlannedVisitsFactory,
     InterventionResultLinkFactory,
     InterventionSectorLocationLinkFactory,
-    LocationFactory,
     PartnerFactory,
     PartnerStaffFactory,
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
+from locations.tests.factories import LocationFactory
 
 
 class BaseInterventionModelExportTestCase(APITenantTestCase):

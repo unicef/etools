@@ -6,8 +6,9 @@ import mock
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import LocationFactory, UserFactory
+from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from locations.tests.factories import LocationFactory
 from publics.tests.factories import CurrencyFactory, DSARegionFactory, WBSFactory
 from t2f import UserTypes
 from t2f.helpers.permission_matrix import get_user_role_list, PermissionMatrix

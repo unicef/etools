@@ -12,10 +12,11 @@ from tenant_schemas.test.client import TenantClient
 
 from EquiTrack.factories import (
     CurrencyFactory,
-    GatewayTypeFactory,
     PartnerFactory,
     UserFactory,
-    )
+)
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from locations.tests.factories import GatewayTypeFactory
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -24,8 +25,7 @@ from partners.models import (
     InterventionAmendment,
     PartnerOrganization,
     PartnerType,
-    )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+)
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):

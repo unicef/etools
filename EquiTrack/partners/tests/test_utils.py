@@ -1,9 +1,8 @@
 import datetime
 from EquiTrack.factories import UserFactory, GroupFactory, PartnerFactory, AgreementFactory, InterventionFactory, \
-    ResultFactory, LocationFactory, GatewayTypeFactory
-from funds.tests.factories import (
-    FundsReservationHeaderFactory,
-)
+    ResultFactory
+from funds.tests.factories import FundsReservationHeaderFactory
+from locations.tests.factories import GatewayTypeFactory, LocationFactory
 from partners.models import Intervention, InterventionBudget, InterventionResultLink
 from reports.models import ResultType, LowerResult, IndicatorBlueprint, AppliedIndicator
 

@@ -23,13 +23,13 @@ from EquiTrack.factories import (
     InterventionPlannedVisitsFactory,
     InterventionResultLinkFactory,
     InterventionSectorLocationLinkFactory,
-    LocationFactory,
     LowerResultFactory,
     PartnerFactory,
     ResultFactory,
     SectorFactory,
     UserFactory,
 )
+from locations.tests.factories import LocationFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
     Intervention,

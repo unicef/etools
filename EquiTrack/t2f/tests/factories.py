@@ -7,7 +7,8 @@ from django.utils import timezone
 from factory import fuzzy
 
 from EquiTrack.factories import (
-    InterventionFactory, LocationFactory, OfficeFactory, ResultFactory, UserFactory, SectorFactory)
+    InterventionFactory, OfficeFactory, ResultFactory, UserFactory, SectorFactory)
+from locations.tests.factories import LocationFactory
 from publics.tests.factories import (
     AirlineCompanyFactory, CurrencyFactory, DSARegionFactory, ExpenseTypeFactory, FundFactory, GrantFactory, WBSFactory)
 from t2f.models import (

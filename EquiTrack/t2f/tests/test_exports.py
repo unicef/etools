@@ -10,8 +10,9 @@ from django.core.urlresolvers import reverse
 from pytz import UTC
 
 from EquiTrack.factories import (
-    InterventionFactory, LocationFactory, OfficeFactory, ResultFactory, SectorFactory, UserFactory,)
+    InterventionFactory, OfficeFactory, ResultFactory, SectorFactory, UserFactory,)
 from EquiTrack.tests.mixins import APITenantTestCase
+from locations.tests.factories import LocationFactory
 from publics.tests.factories import (
     AirlineCompanyFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, FundFactory, GrantFactory, WBSFactory,)
 from t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType
