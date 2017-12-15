@@ -445,5 +445,3 @@ class TestVisionDataSynchronizer(FastTenantTestCase):
         # it's within 5 seconds of now, that's enough.
         delta = django_now() - sync_log.date_processed
         self.assertLess(delta.seconds, 5)
-
-# Make sync logging smarter -- log the # of records received and the # converted

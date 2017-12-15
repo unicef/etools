@@ -127,12 +127,11 @@ class VisionDataSynchronizer(object):
                 log.total_records = totals.get('total_records', log.total_records)
             else:
                 log.total_processed = totals
-
-            log.successful = True
         except Exception as e:
             logger.info('sync caught {} with message "{}"'.format(type(e).__name__, e.message))
             log.exception_message = e.message
             raise VisionException(message=e.message), None, sys.exc_info()[2]
-
+        else:
+            log.successful = True
         finally:
             log.save()
