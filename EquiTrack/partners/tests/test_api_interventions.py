@@ -14,6 +14,9 @@ from rest_framework.test import APIRequestFactory
 
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from locations.tests.factories import LocationFactory
+from environment.helpers import tenant_switch_is_active
+from environment.models import TenantSwitch
+from environment.tests.factories import TenantSwitchFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
     Intervention,
@@ -37,17 +40,6 @@ from reports.tests.factories import (
     LowerResultFactory,
     ResultFactory,
     SectorFactory,
-    UserFactory,
-)
-from environment.helpers import tenant_switch_is_active
-from environment.models import TenantSwitch
-from environment.tests.factories import TenantSwitchFactory
-from partners.tests.test_utils import setup_intervention_test_data
-from partners.models import (
-    Intervention,
-    InterventionAmendment,
-    InterventionResultLink,
->>>>>>> prp-refactoring
 )
 from snapshot.models import Activity
 from users.tests.factories import UserFactory
