@@ -8,14 +8,12 @@ import datetime
 import factory
 from factory import fuzzy
 
-from EquiTrack.factories import (
-    SectorFactory,
-    UserFactory,
-)
+from EquiTrack.factories import UserFactory
 from partners import models
 from reports.tests.factories import (
     CountryProgrammeFactory,
     ResultFactory,
+    SectorFactory,
 )
 
 

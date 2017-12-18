@@ -6,12 +6,12 @@ import factory
 from django.utils import timezone
 from factory import fuzzy
 
-from EquiTrack.factories import OfficeFactory, UserFactory, SectorFactory
+from EquiTrack.factories import OfficeFactory, UserFactory
 from locations.tests.factories import LocationFactory
 from partners.tests.factories import InterventionFactory
 from publics.tests.factories import (
     AirlineCompanyFactory, CurrencyFactory, DSARegionFactory, ExpenseTypeFactory, FundFactory, GrantFactory, WBSFactory)
-from reports.tests.factories import ResultFactory
+from reports.tests.factories import ResultFactory, SectorFactory
 from t2f.models import (
     ActionPoint, Clearances, CostAssignment, Deduction, Expense, Invoice, InvoiceItem, ItineraryItem,
     make_action_point_number, make_travel_reference_number, ModeOfTravel, Travel, TravelActivity, TravelType,)

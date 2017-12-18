@@ -12,7 +12,6 @@ from factory import fuzzy
 
 from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
 from publics import models as publics_models
-from reports.models import Sector
 from t2f import models as t2f_models
 from users import models as user_models
 from users.models import Office, Section
@@ -96,13 +95,6 @@ class UserFactory(factory.django.DjangoModelFactory):
     def groups(self, create, extracted, **kwargs):
         group, created = Group.objects.get_or_create(name='UNICEF User')
         self.groups.add(group)
-
-
-class SectorFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = Sector
-
-    name = factory.Sequence(lambda n: 'Sector {}'.format(n))
 
 
 class TravelExpenseTypeFactory(factory.django.DjangoModelFactory):

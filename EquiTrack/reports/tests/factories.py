@@ -88,3 +88,10 @@ class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
     lower_result = factory.SubFactory(LowerResultFactory)
     context_code = fuzzy.FuzzyText(length=5)
     target = fuzzy.FuzzyInteger(0, 100)
+
+
+class SectorFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Sector
+
+    name = factory.Sequence(lambda n: 'Sector {}'.format(n))

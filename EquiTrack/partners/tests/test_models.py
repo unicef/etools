@@ -11,7 +11,6 @@ from mock import patch, Mock
 
 from EquiTrack.factories import (
     CurrencyFactory,
-    SectorFactory,
     TravelFactory,
     TravelActivityFactory,
     UserFactory,
@@ -49,6 +48,7 @@ from reports.tests.factories import (
     CountryProgrammeFactory,
     LowerResultFactory,
     ResultFactory,
+    SectorFactory,
 )
 from t2f.models import Travel, TravelType
 

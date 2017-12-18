@@ -21,7 +21,6 @@ from rest_framework.test import APIRequestFactory
 from EquiTrack.factories import (
     GroupFactory,
     OfficeFactory,
-    SectorFactory,
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
@@ -61,6 +60,7 @@ from reports.models import ResultType
 from reports.tests.factories import (
     CountryProgrammeFactory,
     ResultFactory,
+    SectorFactory,
 )
 from snapshot.models import Activity
 
