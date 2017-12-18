@@ -2,7 +2,7 @@
     {
         "model": "auth.user",
         "fields": {
-            "username": "integrity1@un.org",
+            "username": "integrity1@unicef.org",
             "first_name": "Integrity",
             "last_name": "Staff User",
             "email": "integrity1@unicef.org"
