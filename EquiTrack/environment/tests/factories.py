@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 import factory
 from factory import fuzzy
-from waffle.models import Flag, Switch
+from waffle.models import Flag
 
 from environment import models
 
@@ -37,18 +37,12 @@ class TenantFlagFactory(factory.django.DjangoModelFactory):
                 self.countries.add(country)
 
 
-class SwitchFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = Switch
+class TenantSwitchFactory(factory.django.DjangoModelFactory):
     name = fuzzy.FuzzyText()
     active = True
 
-
-class TenantSwitchFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.TenantSwitch
-
-    switch = factory.SubFactory(SwitchFactory)
 
     @factory.post_generation
     def countries(self, create, extracted, **kwargs):

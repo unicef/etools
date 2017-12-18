@@ -53,8 +53,8 @@ class TestActiveFlagAPIView(APITenantTestCase):
         rsp = self.forced_auth_req('get', self.url)
         self.assertEqual(rsp.status_code, status.HTTP_200_OK)
         active_flags = json.loads(rsp.content)['active_flags']
-        self.assertIn(tenant_switch.switch.name, active_flags)
-        self.assertNotIn(nontenant_switch.switch.name, active_flags)
+        self.assertIn(tenant_switch.name, active_flags)
+        self.assertNotIn(nontenant_switch.name, active_flags)
 
     def test_returns_both_flags_and_switches(self):
         country = CountryFactory()
@@ -66,14 +66,14 @@ class TestActiveFlagAPIView(APITenantTestCase):
         self.assertEqual(rsp.status_code, status.HTTP_200_OK)
         active_flags = json.loads(rsp.content)['active_flags']
         self.assertIn(everyone_flag.flag.name, active_flags)
-        self.assertIn(tenant_switch.switch.name, active_flags)
-        self.assertNotIn(nontenant_switch.switch.name, active_flags)
+        self.assertIn(tenant_switch.name, active_flags)
+        self.assertNotIn(nontenant_switch.name, active_flags)
 
     def test_flag_and_switch_have_same_name(self):
         country = CountryFactory()
         connection.tenant = country
         same_name = 'identical'
-        TenantSwitchFactory(countries=[country], switch__name=same_name)
+        TenantSwitchFactory(countries=[country], name=same_name)
         TenantFlagFactory(flag=FlagFactory(everyone=True, name=same_name))
         rsp = self.forced_auth_req('get', self.url)
         self.assertEqual(rsp.status_code, status.HTTP_200_OK)
