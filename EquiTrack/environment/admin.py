@@ -4,7 +4,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from django.contrib import admin
-from waffle.admin import FlagAdmin, SwitchAdmin
+from waffle.admin import FlagAdmin, BaseAdmin
+from waffle.admin import enable_switches, disable_switches, delete_individually
 from waffle.models import Flag, Switch
 
 from environment.models import IssueCheckConfig, TenantFlag, TenantSwitch
@@ -32,12 +33,15 @@ class TenantSwitchInline(admin.StackedInline):
     filter_horizontal = ('countries', )
 
 
-class TenantSwitchAdmin(SwitchAdmin):
-    inlines = SwitchAdmin.inlines + [TenantSwitchInline, ]
+class TenantSwitchAdmin(BaseAdmin):
+    actions = [enable_switches, disable_switches, delete_individually]
+    list_display = ('name', 'active', 'note', 'created', 'modified')
+    list_filter = ('active',)
+    ordering = ('-id',)
 
 
 # unregister the waffle admin instances and use our own
 admin.site.unregister(Flag)
 admin.site.register(Flag, TenantFlagAdmin)
 admin.site.unregister(Switch)
-admin.site.register(Switch, TenantSwitchAdmin)
+admin.site.register(TenantSwitch, TenantSwitchAdmin)

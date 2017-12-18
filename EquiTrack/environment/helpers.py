@@ -3,7 +3,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from waffle.models import Flag, Switch
+from waffle.models import Flag
+from environment.models import TenantSwitch
 
 
 def tenant_flag_is_active(request, flag_name):
@@ -28,7 +29,7 @@ def tenant_switch_is_active(switch_name):
     This is a copy of waffle.switch_is_active, except that we ONLY check the
     tenant, and return False in all other cases.
     """
-    switch = Switch.get(switch_name)
-    if hasattr(switch, 'tenantswitch'):
-        return switch.tenantswitch.is_active()
-    return False
+    switch = TenantSwitch.get(switch_name)
+    if switch.id is None:
+        return False
+    return switch.is_active()
