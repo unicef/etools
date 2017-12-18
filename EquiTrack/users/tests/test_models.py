@@ -1,11 +1,8 @@
 from __future__ import unicode_literals
 
-from EquiTrack.factories import (
-    ProfileFactory,
-    UserFactory,
-)
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from users import models
+from users.tests.factories import ProfileFactory, UserFactory
 
 
 class TestWorkspaceCounter(TenantTestCase):

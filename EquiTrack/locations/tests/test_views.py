@@ -4,10 +4,10 @@ from django.db import connection
 
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from locations.models import Location
 from locations.tests.factories import LocationFactory
+from users.tests.factories import UserFactory
 
 
 class TestLocationViews(APITenantTestCase):

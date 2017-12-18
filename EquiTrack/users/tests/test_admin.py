@@ -7,7 +7,6 @@ from django.contrib.admin.sites import AdminSite
 from mock import Mock
 from unittest import skip
 
-from EquiTrack.factories import ProfileFactory, UserFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from users.admin import (
     CountryAdmin,
@@ -16,6 +15,7 @@ from users.admin import (
     UserAdminPlus,
 )
 from users.models import Country, User, UserProfile
+from users.tests.factories import ProfileFactory, UserFactory
 
 
 class MockRequest:

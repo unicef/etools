@@ -9,10 +9,7 @@ from django.utils import timezone
 
 from mock import patch, Mock
 
-from EquiTrack.factories import (
-    CurrencyFactory,
-    UserFactory,
-)
+from EquiTrack.factories import CurrencyFactory
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from funds.tests.factories import (
     DonorFactory,
@@ -50,6 +47,7 @@ from reports.tests.factories import (
 )
 from t2f.models import Travel, TravelType
 from t2f.tests.factories import TravelActivityFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 def get_date_from_prior_year():

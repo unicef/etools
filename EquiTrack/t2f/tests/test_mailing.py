@@ -3,12 +3,12 @@ from __future__ import unicode_literals
 from django.core import mail
 from django.test.utils import override_settings
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory
 from t2f.models import Invoice
 from t2f.serializers.mailing import TravelMailSerializer
 from t2f.tests.factories import ItineraryItemFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 class MailingTest(APITenantTestCase):

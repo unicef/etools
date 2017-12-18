@@ -8,7 +8,7 @@ from mock import patch, Mock
 from rest_framework import status
 from unittest import TestCase
 
-from EquiTrack.factories import GroupFactory, UserFactory
+from EquiTrack.factories import GroupFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import PartnerOrganization, PartnerType
 from partners.views.partner_organization_v2 import PartnerOrganizationAddView
@@ -17,6 +17,7 @@ from partners.tests.factories import (
     PartnerFactory,
 )
 from t2f.tests.factories import TravelActivityFactory
+from users.tests.factories import UserFactory
 
 INSIGHT_PATH = "partners.views.partner_organization_v2.get_data_from_insight"
 

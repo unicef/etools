@@ -4,13 +4,13 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
     AirlineCompanyFactory, BusinessAreaFactory, CountryFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory,
     FundFactory, GrantFactory, TravelAgentFactory, WBSFactory,)
 from t2f.tests.factories import CurrencyFactory
+from users.tests.factories import UserFactory
 
 
 class StaticDataEndpoints(APITenantTestCase):

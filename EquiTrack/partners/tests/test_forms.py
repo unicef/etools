@@ -3,17 +3,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from EquiTrack.factories import (
-    ProfileFactory,
-    UserFactory,
-)
 from EquiTrack.tests.mixins import FastTenantTestCase
 from partners import forms
 from partners.models import PartnerType
-from partners.tests.factories import (
-    PartnerFactory,
-    PartnerStaffFactory,
-)
+from partners.tests.factories import PartnerFactory, PartnerStaffFactory
+from users.tests.factories import ProfileFactory, UserFactory
 
 
 class TestPartnersAdminForm(FastTenantTestCase):

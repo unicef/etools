@@ -5,7 +5,6 @@ from datetime import datetime
 from django.core.urlresolvers import reverse
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from publics.models import TravelExpenseType
 from publics.tests.factories import DSARateFactory, DSARegionFactory
@@ -15,6 +14,7 @@ from t2f.tests.factories import (
     CurrencyFactory, ExpenseTypeFactory, FundFactory, GrantFactory, ItineraryItemFactory, WBSFactory,
 )
 from t2f.vision import InvoiceUpdater
+from users.tests.factories import UserFactory
 
 try:
     import xml.etree.cElementTree as ET

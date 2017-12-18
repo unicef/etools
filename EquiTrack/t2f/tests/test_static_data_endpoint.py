@@ -4,8 +4,8 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from users.tests.factories import UserFactory
 
 
 class StaticDataEndpointTest(APITenantTestCase):

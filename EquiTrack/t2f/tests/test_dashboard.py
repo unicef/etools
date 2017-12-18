@@ -4,12 +4,12 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerOrganization
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, TravelActivityFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 class TravelActivityList(APITenantTestCase):

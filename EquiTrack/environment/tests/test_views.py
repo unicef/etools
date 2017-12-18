@@ -11,8 +11,8 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from environment.tests.factories import TenantFlagFactory, FlagFactory, TenantSwitchFactory
-from EquiTrack.factories import UserFactory, CountryFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from users.tests.factories import CountryFactory, UserFactory
 
 
 class TestActiveFlagAPIView(APITenantTestCase):

@@ -5,11 +5,11 @@ from decimal import Decimal
 
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CountryFactory, DSARateFactory, DSARegionFactory
 from t2f.helpers.cost_summary_calculator import DSACalculator
 from t2f.tests.factories import DeductionFactory, ItineraryItemFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 class TestDSACalculations(APITenantTestCase):

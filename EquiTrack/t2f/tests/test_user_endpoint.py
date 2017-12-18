@@ -4,10 +4,9 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-
-from .factories import TravelFactory
+from t2f.tests.factories import TravelFactory
+from users.tests.factories import UserFactory
 
 
 class UserT2FData(APITenantTestCase):

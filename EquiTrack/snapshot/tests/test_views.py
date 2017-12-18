@@ -9,10 +9,10 @@ import json
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase as TenantTestCase
 from snapshot.models import Activity
 from snapshot.tests.factories import ActivityFactory
+from users.tests.factories import UserFactory
 
 
 class TestActivityListView(TenantTestCase):

@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from users.tests.factories import UserFactory
 
 
 class TestCountryView(APITenantTestCase):

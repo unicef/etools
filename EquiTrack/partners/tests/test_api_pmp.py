@@ -10,10 +10,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.factories import (
-    CurrencyFactory,
-    UserFactory,
-)
+from EquiTrack.factories import CurrencyFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from locations.tests.factories import GatewayTypeFactory
 from partners.models import (
@@ -26,6 +23,7 @@ from partners.models import (
     PartnerType,
 )
 from partners.tests.factories import PartnerFactory
+from users.tests.factories import UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):

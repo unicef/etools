@@ -5,8 +5,8 @@ from django.core.urlresolvers import reverse
 from mock import patch
 from rest_framework import status
 
-from EquiTrack.factories import CountryFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from users.tests.factories import CountryFactory, UserFactory
 
 
 class InvalidateCacheTest(APITenantTestCase):

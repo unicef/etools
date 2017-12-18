@@ -5,9 +5,9 @@ import json
 from django.core.urlresolvers import reverse
 from factory.fuzzy import FuzzyText
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import TravelAgentFactory
+from users.tests.factories import UserFactory
 
 
 class VendorNumbers(APITenantTestCase):

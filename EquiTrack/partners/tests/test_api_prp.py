@@ -8,7 +8,6 @@ from django.core.urlresolvers import reverse, resolve
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMixIn
 from locations.tests.factories import GatewayTypeFactory, LocationFactory
 from partners.models import InterventionResultLink
@@ -17,6 +16,7 @@ from partners.tests.factories import InterventionFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
 from reports.tests.factories import ResultFactory
+from users.tests.factories import UserFactory
 
 
 class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):

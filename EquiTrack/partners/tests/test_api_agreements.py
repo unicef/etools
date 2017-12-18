@@ -5,7 +5,7 @@ import datetime
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory, GroupFactory
+from EquiTrack.factories import GroupFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import (
     PartnerType,
@@ -20,6 +20,7 @@ from partners.tests.factories import (
 )
 from reports.tests.factories import CountryProgrammeFactory
 from snapshot.models import Activity
+from users.tests.factories import UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):

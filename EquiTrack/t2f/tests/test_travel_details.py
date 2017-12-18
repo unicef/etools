@@ -9,7 +9,6 @@ from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from locations.tests.factories import LocationFactory
 from partners.models import PartnerType
@@ -24,6 +23,7 @@ from t2f.tests.factories import (
     ItineraryItemFactory,
     TravelFactory,
 )
+from users.tests.factories import UserFactory
 
 
 class TravelDetails(URLAssertionMixin, APITenantTestCase):

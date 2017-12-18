@@ -6,7 +6,6 @@ import factory
 from django.utils import timezone
 from factory import fuzzy
 
-from EquiTrack.factories import OfficeFactory, UserFactory
 from locations.tests.factories import LocationFactory
 from partners.tests.factories import InterventionFactory
 from publics.tests.factories import (
@@ -18,6 +17,7 @@ from t2f.models import (
     make_action_point_number,
     make_travel_reference_number,
 )
+from users.tests.factories import OfficeFactory, UserFactory
 
 _FUZZY_START_DATE = timezone.now() - timedelta(days=5)
 _FUZZY_END_DATE = timezone.now() + timedelta(days=5)

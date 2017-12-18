@@ -8,13 +8,13 @@ import datetime
 import factory
 from factory import fuzzy
 
-from EquiTrack.factories import UserFactory
 from partners import models
 from reports.tests.factories import (
     CountryProgrammeFactory,
     ResultFactory,
     SectorFactory,
 )
+from users.tests.factories import UserFactory
 
 
 class WorkspaceFileTypeFactory(factory.django.DjangoModelFactory):

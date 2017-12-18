@@ -8,8 +8,8 @@ from django.utils import timezone
 
 import mock
 
+from users.tests.factories import CountryFactory
 import vision.tasks
-from EquiTrack.factories import CountryFactory
 from vision.adapters.programme import ProgrammeSynchronizer
 from vision.exceptions import VisionException
 

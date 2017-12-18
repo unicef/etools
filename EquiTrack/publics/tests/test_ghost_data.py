@@ -4,10 +4,10 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import EPOCH_ZERO, TravelExpenseType
 from publics.tests.factories import AirlineCompanyFactory, ExpenseTypeFactory
+from users.tests.factories import UserFactory
 
 
 class GhostData(APITenantTestCase):

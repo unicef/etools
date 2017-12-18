@@ -10,10 +10,10 @@ from django.utils.timezone import now
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARate
 from publics.tests.factories import BusinessAreaFactory, CountryFactory, DSARateFactory, DSARegionFactory
+from users.tests.factories import UserFactory
 
 
 class DSARateTest(APITenantTestCase):

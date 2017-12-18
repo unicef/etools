@@ -5,10 +5,10 @@ from django.conf import settings
 from mock import patch
 from post_office.models import Email, EmailTemplate
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from notification.models import Notification
 from notification.tests.factories import NotificationFactory
+from users.tests.factories import UserFactory
 
 
 class TestEmailNotification(FastTenantTestCase):

@@ -5,7 +5,6 @@ from decimal import Decimal
 
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
@@ -13,6 +12,7 @@ from publics.tests.factories import (
 )
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from t2f.tests.factories import ExpenseFactory, ItineraryItemFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 class CostSummaryTest(APITenantTestCase):

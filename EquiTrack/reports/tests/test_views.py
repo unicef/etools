@@ -8,7 +8,6 @@ from partners.tests.test_utils import setup_intervention_test_data
 from tablib.core import Dataset
 
 from reports.models import ResultType, CountryProgramme, Disaggregation, DisaggregationValue
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.tests.factories import InterventionResultLinkFactory
 from reports.serializers.v2 import DisaggregationSerializer
@@ -21,6 +20,7 @@ from reports.tests.factories import (
     LowerResultFactory,
     ResultFactory,
 )
+from users.tests.factories import UserFactory
 
 
 class TestReportViews(APITenantTestCase):

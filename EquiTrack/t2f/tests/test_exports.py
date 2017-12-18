@@ -9,12 +9,12 @@ from decimal import Decimal
 from django.core.urlresolvers import reverse
 from pytz import UTC
 
-from EquiTrack.factories import OfficeFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from locations.tests.factories import LocationFactory
 from partners.tests.factories import InterventionFactory
 from publics.tests.factories import (
-    AirlineCompanyFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, FundFactory, GrantFactory, WBSFactory,)
+    AirlineCompanyFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, FundFactory, GrantFactory, WBSFactory,
+)
 from reports.tests.factories import ResultFactory, SectorFactory
 from t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType
 from t2f.tests.factories import (
@@ -25,6 +25,7 @@ from t2f.tests.factories import (
     TravelActivityFactory,
     TravelFactory,
 )
+from users.tests.factories import OfficeFactory, UserFactory
 
 log = logging.getLogger('__name__')
 

@@ -5,8 +5,8 @@ import json
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from users.tests.factories import UserFactory
 
 
 class SettingsView(APITenantTestCase):

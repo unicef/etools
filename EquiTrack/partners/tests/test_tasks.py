@@ -9,15 +9,13 @@ from django.utils import timezone
 
 import mock
 
-from EquiTrack.factories import CountryFactory, UserFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
-from funds.tests.factories import (
-    FundsReservationHeaderFactory,
-)
+from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import Agreement, Intervention
 import partners.tasks
 from partners.tests.factories import AgreementFactory, InterventionFactory
 from users.models import User
+from users.tests.factories import CountryFactory, UserFactory
 
 
 def _build_country(name):

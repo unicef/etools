@@ -1,6 +1,5 @@
 import datetime
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.validation_mixins import BasicValidationError, TransitionError
 from partners.models import Agreement
@@ -12,6 +11,7 @@ from partners.tests.factories import (
 )
 from partners.validation import agreements
 from reports.tests.factories import CountryProgrammeFactory
+from users.tests.factories import UserFactory
 
 
 class TestAgreementTransitionToSignedValid(TenantTestCase):

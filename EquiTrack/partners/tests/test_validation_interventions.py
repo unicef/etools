@@ -7,7 +7,7 @@ import datetime
 
 from mock import patch, Mock
 
-from EquiTrack.factories import GroupFactory, UserFactory
+from EquiTrack.factories import GroupFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from EquiTrack.validation_mixins import (
     BasicValidationError,
@@ -41,6 +41,7 @@ from partners.validation.interventions import (
     transition_to_closed,
     transition_to_signed,
 )
+from users.tests.factories import UserFactory
 
 
 class TestPartnershipManagerOnly(FastTenantTestCase):

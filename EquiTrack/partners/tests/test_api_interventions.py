@@ -12,7 +12,6 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from EquiTrack.factories import UserFactory
 from locations.tests.factories import LocationFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from partners.models import (
@@ -39,6 +38,7 @@ from reports.tests.factories import (
     SectorFactory,
 )
 from snapshot.models import Activity
+from users.tests.factories import UserFactory
 from utils.common.utils import get_all_field_names
 
 

@@ -18,11 +18,7 @@ from model_utils import Choices
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from EquiTrack.factories import (
-    GroupFactory,
-    OfficeFactory,
-    UserFactory,
-)
+from EquiTrack.factories import GroupFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
 from funds.tests.factories import FundsReservationHeaderFactory
@@ -63,6 +59,10 @@ from reports.tests.factories import (
     SectorFactory,
 )
 from snapshot.models import Activity
+from users.tests.factories import (
+    OfficeFactory,
+    UserFactory,
+)
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):

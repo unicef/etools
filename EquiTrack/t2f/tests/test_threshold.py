@@ -6,11 +6,11 @@ import mock
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import AirlineCompanyFactory, DSARegionFactory
 from t2f.models import ModeOfTravel, Travel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
+from users.tests.factories import UserFactory
 
 
 class ThresholdTest(APITenantTestCase):

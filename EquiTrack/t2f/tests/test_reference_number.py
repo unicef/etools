@@ -5,8 +5,8 @@ import json
 from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from users.tests.factories import UserFactory
 
 
 class TestReferenceNumber(APITenantTestCase):

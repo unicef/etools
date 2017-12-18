@@ -10,10 +10,10 @@ from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from t2f.models import ActionPoint
 from t2f.tests.factories import ActionPointFactory, TravelFactory
+from users.tests.factories import UserFactory
 
 
 class ActionPoints(URLAssertionMixin, APITenantTestCase):

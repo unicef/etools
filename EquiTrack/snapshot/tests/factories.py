@@ -1,8 +1,8 @@
 import factory
 
-from EquiTrack.factories import UserFactory
 from partners.tests.factories import InterventionFactory
 from snapshot import models
+from users.tests.factories import UserFactory
 
 
 class FuzzyActivityAction(factory.fuzzy.BaseFuzzyAttribute):

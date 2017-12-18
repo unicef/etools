@@ -8,7 +8,6 @@ from django.db import connection
 from freezegun import freeze_time
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from locations.tests.factories import LocationFactory
 from publics.models import DSARegion
@@ -20,6 +19,7 @@ from t2f.tests.factories import (
     TravelActivityFactory,
     TravelFactory,
 )
+from users.tests.factories import UserFactory
 
 log = logging.getLogger('__name__')
 
