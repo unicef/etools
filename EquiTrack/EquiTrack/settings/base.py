@@ -194,6 +194,7 @@ TENANT_APPS = (
     'locations',
     'reports',
     'partners',
+    'hact',
     'trips',
     'supplies',
     't2f',

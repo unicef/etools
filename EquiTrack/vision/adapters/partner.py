@@ -187,7 +187,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org.vision_synced = True
                     saving = True
 
-                if partner_org.total_ct_cp is None or partner_org.total_ct_cy is None or \
+                if 1 < datetime.today().month <= 9 \
+                        and partner_org.total_ct_cp is None or partner_org.total_ct_cy is None or \
                         not comp_decimals(partner_org.total_ct_cp, _totals_cp[partner["VENDOR_CODE"]]) or \
                         not comp_decimals(partner_org.total_ct_cy, _totals_cy[partner["VENDOR_CODE"]]):
 

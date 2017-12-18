@@ -294,6 +294,7 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "short_name",
+            "type_of_assessment",
             "partner_type",
             "cso_type",
             "rating",
@@ -303,4 +304,6 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "total_ct_cy",
             "hact_min_requirements",
             "hact_values",
+            "expiring_assessment_flag",
+            "approaching_threshold_flag",
         )

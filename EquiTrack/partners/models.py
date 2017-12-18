@@ -187,14 +187,46 @@ class PartnerType(object):
 
 def hact_default():
     return {
-        "audits_mr": 0,
-        "audits_done": 0,
-        "spot_checks": 0,
-        "planned_visits": 0,
-        "follow_up_flags": 0,
-        "programmatic_visits": 0,
-        "planned_cash_transfer": 0,
-        "micro_assessment_needed": "Missing"
+        'audits': {
+            'minumum_requirements': 0,
+            'completed': 0,
+            'outstanding_findings': 0,
+        },
+        'spot_checks': {
+            'planned': {
+                'q1': 0,
+                'q2': 0,
+                'q3': 0,
+                'q4': 0,
+                'total': 0,
+            },
+            'completed': {
+                'q1': 0,
+                'q2': 0,
+                'q3': 0,
+                'q4': 0,
+                'total': 0,
+            },
+            'minumum_requirements': 0,
+            'follow_up_required': 0,
+        },
+        'programmatic_visits': {
+            'planned': {
+                'q1': 0,
+                'q2': 0,
+                'q3': 0,
+                'q4': 0,
+                'total': 0,
+            },
+            'completed': {
+                'q1': 0,
+                'q2': 0,
+                'q3': 0,
+                'q4': 0,
+                'total': 0,
+            },
+            'minumum_requirements': 0
+        },
     }
 
 
@@ -234,6 +266,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('WFP', 'WFP'),
         ('WHO', 'WHO')
     )
+
+    EXPIRING_ASSESSMENT_LIMIT_DAYS = 1460
+    CASH_TRANSFER_THRESHOLD_LEV1 = 50000.00
+    CASH_TRANSFER_THRESHOLD_LEV2 = 100000.00
+    CASH_TRANSFER_THRESHOLD_LEV3 = 350000.00
+
     partner_type = models.CharField(
         max_length=50,
         choices=PartnerType.CHOICES
@@ -371,6 +409,16 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     tracker = FieldTracker()
 
+    @cached_property
+    def expiring_assessment_flag(self):
+        if self.last_assessment_date:
+            last_assessment_age = (datetime.date.today() - self.last_assessment_date).days
+            return last_assessment_age > PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_DAYS
+
+    @cached_property
+    def approaching_threshold_flag(self):
+        return self.rating == u'Not Required' and self.total_ct_cy > PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV1
+
     class Meta:
         ordering = ['name']
         unique_together = ('name', 'vendor_number')
@@ -450,7 +498,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
-        hact['audits_mr'] = audits
+        hact['audits']['minumum_requirements'] = audits
         partner.hact_values = hact
         partner.save()
 
@@ -461,68 +509,75 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         audits = partner.assessments.filter(type='Scheduled Audit report').count()
         if assesment:
             audits += 1
-        hact['audits_done'] = audits
+        hact['audits']['completed'] = audits
         partner.hact_values = hact
         partner.save()
 
     @property
     def hact_min_requirements(self):
-        programme_visits = spot_checks = 0
+        programme_visits = spot_checks = '-'
         cash_transferred = self.total_ct_cy
+
         if cash_transferred == 0:
             programme_visits = 0
-        elif 0 < cash_transferred <= 50000.00:
+            spot_checks = 0
+        elif 0 < cash_transferred <= PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV1:
             programme_visits = 1
-        elif 50000.00 < cash_transferred <= 100000.00:
-            programme_visits = 1
+        elif PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV1 < cash_transferred <= PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV2:
             spot_checks = 1
-        elif 100000.00 < cash_transferred <= 350000.00:
-            if self.rating in ['Low', 'Moderate']:
-                programme_visits = 1
-                spot_checks = 1
-            else:
+            programme_visits = 1
+        elif PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV2 < cash_transferred <= PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV3:
+            if self.rating in [_('High'), _('high'), _('Significant'), _('Non-Assessed'), _('Not Required'),
+                               _('No Risk Rating Indicated')]:
                 programme_visits = 2
                 spot_checks = 2
-        else:
-            if self.rating in ['Low', 'Moderate']:
-                programme_visits = 2
+            elif self.rating in [_('Low'), _('Moderate'), _('Medium')]:
+                programme_visits = 1
                 spot_checks = 1
-            else:
+        else:
+            if self.rating in [_('High'), _('high'), _('Significant'), _('Non-Assessed'),
+                               _('No Risk Rating Indicated')]:
                 programme_visits = 4
                 spot_checks = 3
+            elif self.rating in [_('Low'), _('Medium')]:
+                programme_visits = 2
+                spot_checks = 2
+
+        # TODO add condition when is implemented 1.1.10a
+        # spot_checks = 1 if self.liquidation > PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV1 else 0
 
         return {
             'programme_visits': programme_visits,
             'spot_checks': spot_checks,
         }
 
-    @classmethod
-    def planned_cash_transfers(cls, partner, budget_record=None):
-        """
-        Planned cash transfers for the current year
-        """
-        total = 0
-        if partner.partner_type != 'Government':
-            q = InterventionBudget.objects.filter(
-                intervention__agreement__partner=partner,
-                intervention__status__in=[
-                    Intervention.ACTIVE,
-                    Intervention.ENDED,
-                    Intervention.CLOSED
-                ])
-            if budget_record:
-                q = q.exclude(id=budget_record.id).values_list('unicef_cash', flat=True)
-
-                total = sum(q)
-                total += budget_record.unicef_cash
-            else:
-                q = q.values_list('unicef_cash', flat=True)
-                total = sum(q)
-
-        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        hact["planned_cash_transfer"] = float(total)
-        partner.hact_values = hact
-        partner.save()
+    # @classmethod
+    # def planned_cash_transfers(cls, partner, budget_record=None):
+    #     """
+    #     Planned cash transfers for the current year
+    #     """
+    #     total = 0
+    #     if partner.partner_type != 'Government':
+    #         q = InterventionBudget.objects.filter(
+    #             intervention__agreement__partner=partner,
+    #             intervention__status__in=[
+    #                 Intervention.ACTIVE,
+    #                 Intervention.ENDED,
+    #                 Intervention.CLOSED
+    #             ])
+    #         if budget_record:
+    #             q = q.exclude(id=budget_record.id).values_list('unicef_cash', flat=True)
+    #
+    #             total = sum(q)
+    #             total += budget_record.unicef_cash
+    #         else:
+    #             q = q.values_list('unicef_cash', flat=True)
+    #             total = sum(q)
+    #
+    #     hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+    #     hact["planned_cash_transfer"] = float(total)
+    #     partner.hact_values = hact
+    #     partner.save()
 
     @classmethod
     def planned_visits(cls, partner, pv_intervention=None):
@@ -542,7 +597,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 models.Sum('programmatic'))['programmatic__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        hact["planned_visits"] = pv
+        hact['programmatic_visits']['planned']['total'] = pv
         partner.hact_values = hact
         partner.save()
 
@@ -563,7 +618,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 partner=partner,
             ).count() or 0
 
-        partner.hact_values['programmatic_visits'] = pv
+        partner.hact_values['programmatic_visits']['completed']['total'] = pv
         partner.save()
 
     @classmethod
@@ -583,13 +638,13 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 partner=partner,
             ).count() or 0
 
-        partner.hact_values['spot_checks'] = sc
+        partner.hact_values['spot_checks']['completed']['total'] = sc
         partner.save()
 
-    @classmethod
-    def follow_up_flags(cls, partner, update_one=False):
-        partner.hact_values['follow_up_flags'] = 0
-        partner.save()
+    # @classmethod
+    # def follow_up_flags(cls, partner, update_one=False):
+    #     partner.hact_values['follow_up_flags'] = 0
+    #     partner.save()
 
 
 class PartnerStaffMemberManager(models.Manager):
