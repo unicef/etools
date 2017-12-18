@@ -7,10 +7,15 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from EquiTrack.factories import (
-    AgreementFactory,
     CountryProgrammeFactory,
     CurrencyFactory,
     IndicatorFactory,
+    UserFactory,
+)
+from EquiTrack.tests.mixins import APITenantTestCase
+from locations.tests.factories import LocationFactory
+from partners.tests.factories import (
+    AgreementFactory,
     InterventionFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
@@ -20,10 +25,7 @@ from EquiTrack.factories import (
     InterventionSectorLocationLinkFactory,
     PartnerFactory,
     PartnerStaffFactory,
-    UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase
-from locations.tests.factories import LocationFactory
 
 
 class BaseInterventionModelExportTestCase(APITenantTestCase):

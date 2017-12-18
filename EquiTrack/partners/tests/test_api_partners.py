@@ -9,15 +9,17 @@ from rest_framework import status
 from unittest import TestCase
 
 from EquiTrack.factories import (
-    AgreementFactory,
     GroupFactory,
-    PartnerFactory,
     TravelActivityFactory,
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import PartnerOrganization, PartnerType
 from partners.views.partner_organization_v2 import PartnerOrganizationAddView
+from partners.tests.factories import (
+    AgreementFactory,
+    PartnerFactory,
+)
 
 INSIGHT_PATH = "partners.views.partner_organization_v2.get_data_from_insight"
 

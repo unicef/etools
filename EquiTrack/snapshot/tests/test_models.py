@@ -3,11 +3,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from EquiTrack.factories import InterventionFactory, UserFactory
+from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from partners.models import WorkspaceFileType
+from partners.tests.factories import InterventionFactory
 from snapshot.models import Activity
 from snapshot.tests.factories import ActivityFactory
-from partners.models import WorkspaceFileType
 
 
 class TestActivity(TenantTestCase):

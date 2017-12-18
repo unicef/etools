@@ -8,10 +8,11 @@ from django.utils import timezone
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
-from EquiTrack.factories import UserFactory, InterventionFactory
+from EquiTrack.factories import UserFactory
 from funds.tests.factories import (
     FundsReservationHeaderFactory,
 )
+from partners.tests.factories import InterventionFactory
 
 
 class TestFRHeaderView(APITenantTestCase):

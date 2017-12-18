@@ -9,14 +9,14 @@ from django.utils import timezone
 
 import mock
 
-import partners.tasks
-from EquiTrack.factories import (
-    AgreementFactory, CountryFactory, InterventionFactory, UserFactory,)
+from EquiTrack.factories import CountryFactory, UserFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from funds.tests.factories import (
     FundsReservationHeaderFactory,
 )
 from partners.models import Agreement, Intervention
+import partners.tasks
+from partners.tests.factories import AgreementFactory, InterventionFactory
 from users.models import User
 
 

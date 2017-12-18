@@ -3,14 +3,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from EquiTrack.factories import (
+from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from partners.templatetags import intervention_tags as tags
+from partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
     PartnerFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-
-from partners.templatetags import intervention_tags as tags
 
 
 class TestGetInterventions(TenantTestCase):

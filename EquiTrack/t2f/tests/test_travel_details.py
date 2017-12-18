@@ -9,10 +9,11 @@ from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 from pytz import UTC
 
-from EquiTrack.factories import InterventionFactory, PartnerFactory, UserFactory
+from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from locations.tests.factories import LocationFactory
 from partners.models import PartnerType
+from partners.tests.factories import InterventionFactory, PartnerFactory
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
 from t2f.models import ModeOfTravel, Travel, TravelAttachment, TravelType

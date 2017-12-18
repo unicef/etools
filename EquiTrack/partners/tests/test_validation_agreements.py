@@ -1,16 +1,18 @@
 import datetime
 
 from EquiTrack.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
     CountryProgrammeFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
     UserFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.validation_mixins import BasicValidationError, TransitionError
 from partners.models import Agreement
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from partners.validation import agreements
 
 

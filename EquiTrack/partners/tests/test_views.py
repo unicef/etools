@@ -19,26 +19,16 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
 from EquiTrack.factories import (
-    AgreementFactory,
-    AgreementAmendmentFactory,
     CountryProgrammeFactory,
-    GovernmentInterventionFactory,
     GroupFactory,
-    InterventionFactory,
-    InterventionReportingPeriodFactory,
-    InterventionResultLinkFactory,
     OfficeFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
     ResultFactory,
     SectorFactory,
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
-from funds.tests.factories import (
-    FundsReservationHeaderFactory,
-)
+from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -57,6 +47,16 @@ from partners.models import (
 )
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    GovernmentInterventionFactory,
+    InterventionFactory,
+    InterventionReportingPeriodFactory,
+    InterventionResultLinkFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from partners.views import v2
 import partners.views.partner_organization_v2
 from reports.models import ResultType

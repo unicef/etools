@@ -9,10 +9,10 @@ from decimal import Decimal
 from django.core.urlresolvers import reverse
 from pytz import UTC
 
-from EquiTrack.factories import (
-    InterventionFactory, OfficeFactory, ResultFactory, SectorFactory, UserFactory,)
+from EquiTrack.factories import OfficeFactory, ResultFactory, SectorFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from locations.tests.factories import LocationFactory
+from partners.tests.factories import InterventionFactory
 from publics.tests.factories import (
     AirlineCompanyFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, FundFactory, GrantFactory, WBSFactory,)
 from t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType

@@ -10,25 +10,10 @@ from django.utils import timezone
 from mock import patch, Mock
 
 from EquiTrack.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
     AppliedIndicatorFactory,
-    AssessmentFactory,
     CountryProgrammeFactory,
     CurrencyFactory,
-    FileTypeFactory,
-    GovernmentInterventionFactory,
-    InterventionAmendmentFactory,
-    InterventionAttachmentFactory,
-    InterventionBudgetFactory,
-    InterventionFactory,
-    InterventionPlannedVisitsFactory,
-    InterventionReportingPeriodFactory,
-    InterventionResultLinkFactory,
-    InterventionSectorLocationLinkFactory,
     LowerResultFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
     ResultFactory,
     SectorFactory,
     TravelFactory,
@@ -45,9 +30,24 @@ from locations.tests.factories import LocationFactory
 from reports.models import ResultType
 from partners import models
 from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    AssessmentFactory,
+    FileTypeFactory,
+    GovernmentInterventionFactory,
     GovernmentInterventionResultFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionBudgetFactory,
+    InterventionFactory,
+    InterventionPlannedVisitsFactory,
+    InterventionReportingPeriodFactory,
+    InterventionResultLinkFactory,
+    InterventionSectorLocationLinkFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
     WorkspaceFileTypeFactory,
-    )
+)
 from t2f.models import Travel, TravelType
 
 

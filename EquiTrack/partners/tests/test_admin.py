@@ -6,18 +6,8 @@ from __future__ import unicode_literals
 from django.contrib.admin.sites import AdminSite
 
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.factories import (
-    AgreementFactory,
-    CountryProgrammeFactory,
-    FundingCommitmentFactory,
-    InterventionFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-    UserFactory,
-)
-from funds.tests.factories import (
-    GrantFactory,
-)
+from EquiTrack.factories import CountryProgrammeFactory, UserFactory
+from funds.tests.factories import GrantFactory
 from partners.admin import (
     AgreementAdmin,
     FundingCommitmentAdmin,
@@ -29,6 +19,13 @@ from partners.models import (
     FundingCommitment,
     Intervention,
     PartnerStaffMember,
+)
+from partners.tests.factories import (
+    AgreementFactory,
+    FundingCommitmentFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
 )
 from snapshot.models import Activity
 

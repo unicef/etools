@@ -3,18 +3,17 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from django.forms import model_to_dict
+
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.factories import (
+from EquiTrack.factories import UserFactory
+from funds.tests.factories import FundsReservationHeaderFactory
+from partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
     PartnerFactory,
     PartnerStaffFactory,
-    UserFactory,
 )
-from funds.tests.factories import (
-    FundsReservationHeaderFactory,
-)
-from django.forms import model_to_dict
 from snapshot import utils
 
 

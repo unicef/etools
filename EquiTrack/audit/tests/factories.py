@@ -27,12 +27,12 @@ from audit.models import (
     SpecialAudit,
     SpotCheck,
 )
-from EquiTrack.factories import (
+from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
+from partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
     PartnerFactory,
 )
-from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):

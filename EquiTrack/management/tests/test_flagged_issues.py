@@ -1,6 +1,6 @@
-from EquiTrack.factories import PartnerFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from management.models import FlaggedIssue
+from partners.tests.factories import PartnerFactory
 
 
 class FlaggedIssueTest(FastTenantTestCase):

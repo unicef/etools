@@ -1,6 +1,5 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings
-from EquiTrack.factories import PartnerFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from environment.models import IssueCheckConfig
 from management.issues.checks import BaseIssueCheck, get_available_issue_checks, get_issue_check_by_id, \
@@ -8,6 +7,7 @@ from management.issues.checks import BaseIssueCheck, get_available_issue_checks,
 from management.issues.exceptions import IssueFoundException, IssueCheckNotFoundException
 from management.models import FlaggedIssue, ISSUE_STATUS_NEW, ISSUE_STATUS_RESOLVED, ISSUE_STATUS_REACTIVATED
 from partners.models import PartnerOrganization
+from partners.tests.factories import PartnerFactory
 
 
 class PartnersMustHaveShortNameTestCheck(BaseIssueCheck):

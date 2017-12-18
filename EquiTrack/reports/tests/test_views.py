@@ -11,7 +11,6 @@ from reports.models import ResultType, CountryProgramme, Disaggregation, Disaggr
 from EquiTrack.factories import (
     AppliedIndicatorFactory,
     IndicatorBlueprintFactory,
-    InterventionResultLinkFactory,
     LowerResultFactory,
     UserFactory,
     ResultFactory,
@@ -20,6 +19,7 @@ from EquiTrack.factories import (
     DisaggregationValueFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from partners.tests.factories import InterventionResultLinkFactory
 from reports.serializers.v2 import DisaggregationSerializer
 
 

@@ -2,8 +2,8 @@ import json
 
 import factory
 
-from EquiTrack.factories import AgreementFactory
 from notification import models as notification_models
+from partners.tests.factories import AgreementFactory
 
 
 # Credit goes to http://stackoverflow.com/a/41154232/2363915

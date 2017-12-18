@@ -7,29 +7,26 @@ import datetime
 
 from mock import patch, Mock
 
-from EquiTrack.factories import (
-    AgreementFactory,
-    InterventionAmendmentFactory,
-    GroupFactory,
-    InterventionAttachmentFactory,
-    InterventionFactory,
-    PartnerStaffFactory,
-    UserFactory,
-)
+from EquiTrack.factories import GroupFactory, UserFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from EquiTrack.validation_mixins import (
     BasicValidationError,
     StateValidError,
     TransitionError,
 )
-from funds.tests.factories import (
-    FundsReservationHeaderFactory,
-)
+from funds.tests.factories import FundsReservationHeaderFactory
 from partners.models import (
     Agreement,
     FileType,
     Intervention,
     InterventionAmendment,
+)
+from partners.tests.factories import (
+    AgreementFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    PartnerStaffFactory,
 )
 from partners.validation.interventions import (
     amendments_valid,

@@ -7,14 +7,16 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from EquiTrack.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
     CountryProgrammeFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 
 
 class BaseAgreementModelExportTestCase(APITenantTestCase):

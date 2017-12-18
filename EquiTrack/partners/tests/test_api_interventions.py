@@ -13,18 +13,10 @@ from rest_framework.test import APIRequestFactory
 
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from EquiTrack.factories import (
-    AgreementFactory,
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
     IndicatorFactory,
-    InterventionAmendmentFactory,
-    InterventionAttachmentFactory,
-    InterventionFactory,
-    InterventionPlannedVisitsFactory,
-    InterventionResultLinkFactory,
-    InterventionSectorLocationLinkFactory,
     LowerResultFactory,
-    PartnerFactory,
     ResultFactory,
     SectorFactory,
     UserFactory,
@@ -35,6 +27,16 @@ from partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionResultLink,
+)
+from partners.tests.factories import (
+    AgreementFactory,
+    InterventionAmendmentFactory,
+    InterventionAttachmentFactory,
+    InterventionFactory,
+    InterventionPlannedVisitsFactory,
+    InterventionResultLinkFactory,
+    InterventionSectorLocationLinkFactory,
+    PartnerFactory,
 )
 from snapshot.models import Activity
 from utils.common.utils import get_all_field_names

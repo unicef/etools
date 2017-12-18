@@ -4,7 +4,7 @@ import factory
 from factory import fuzzy
 
 from funds import models
-from EquiTrack.factories import InterventionFactory
+from partners.tests.factories import InterventionFactory
 
 
 class DonorFactory(factory.DjangoModelFactory):

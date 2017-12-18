@@ -8,9 +8,10 @@ import json
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from EquiTrack.factories import InterventionFactory, UserFactory
+from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import Intervention
+from partners.tests.factories import InterventionFactory
 
 
 class TestInterventionPartnershipDashView(APITenantTestCase):

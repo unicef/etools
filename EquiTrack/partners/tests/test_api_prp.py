@@ -9,7 +9,6 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
 from EquiTrack.factories import (
-    InterventionFactory,
     ResultFactory,
     UserFactory,
 )
@@ -17,6 +16,7 @@ from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMi
 from locations.tests.factories import GatewayTypeFactory, LocationFactory
 from partners.models import InterventionResultLink
 from partners.permissions import READ_ONLY_API_GROUP_NAME
+from partners.tests.factories import InterventionFactory
 from partners.tests.test_utils import setup_intervention_test_data
 from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
 

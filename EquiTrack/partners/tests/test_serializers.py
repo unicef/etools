@@ -14,17 +14,19 @@ from rest_framework import serializers
 
 # Project imports
 from EquiTrack.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
     CountryProgrammeFactory,
-    InterventionFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
     UserFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
+from partners.tests.factories import (
+    AgreementAmendmentFactory,
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 

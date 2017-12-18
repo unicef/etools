@@ -6,17 +6,21 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from EquiTrack.factories import (
-    PartnerFactory,
     UserFactory,
-    AgreementFactory,
-    InterventionFactory,
-    CountryProgrammeFactory, GroupFactory)
+    CountryProgrammeFactory,
+    GroupFactory,
+)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import (
     PartnerType,
     Agreement,
     Intervention,
     AgreementAmendment
+)
+from partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
 )
 from snapshot.models import Activity
 
