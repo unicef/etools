@@ -3,9 +3,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 from unittest import skipIf, TestCase
 
-from EquiTrack.factories import (
-    CountryProgrammeFactory, IndicatorBlueprintFactory, IndicatorFactory, LowerResultFactory, ResultFactory,
-    ResultTypeFactory, SectorFactory, UnitFactory,)
+from EquiTrack.factories import SectorFactory
+from reports.tests.factories import (
+    CountryProgrammeFactory,
+    IndicatorBlueprintFactory,
+    IndicatorFactory,
+    LowerResultFactory,
+    ResultFactory,
+    ResultTypeFactory,
+    UnitFactory,
+)
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")

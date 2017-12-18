@@ -1,8 +1,11 @@
 from __future__ import unicode_literals
 
-from EquiTrack.factories import DisaggregationFactory, DisaggregationValueFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from reports.serializers.v2 import DisaggregationSerializer
+from reports.tests.factories import (
+    DisaggregationFactory,
+    DisaggregationValueFactory,
+)
 
 
 class DisaggregationTest(FastTenantTestCase):

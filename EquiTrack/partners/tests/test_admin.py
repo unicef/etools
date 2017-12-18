@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from django.contrib.admin.sites import AdminSite
 
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.factories import CountryProgrammeFactory, UserFactory
+from EquiTrack.factories import UserFactory
 from funds.tests.factories import GrantFactory
 from partners.admin import (
     AgreementAdmin,
@@ -27,6 +27,7 @@ from partners.tests.factories import (
     PartnerFactory,
     PartnerStaffFactory,
 )
+from reports.tests.factories import CountryProgrammeFactory
 from snapshot.models import Activity
 
 

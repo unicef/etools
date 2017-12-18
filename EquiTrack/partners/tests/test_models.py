@@ -10,11 +10,7 @@ from django.utils import timezone
 from mock import patch, Mock
 
 from EquiTrack.factories import (
-    AppliedIndicatorFactory,
-    CountryProgrammeFactory,
     CurrencyFactory,
-    LowerResultFactory,
-    ResultFactory,
     SectorFactory,
     TravelFactory,
     TravelActivityFactory,
@@ -47,6 +43,12 @@ from partners.tests.factories import (
     PartnerFactory,
     PartnerStaffFactory,
     WorkspaceFileTypeFactory,
+)
+from reports.tests.factories import (
+    AppliedIndicatorFactory,
+    CountryProgrammeFactory,
+    LowerResultFactory,
+    ResultFactory,
 )
 from t2f.models import Travel, TravelType
 

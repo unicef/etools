@@ -8,11 +8,12 @@ from django.db import connection
 from freezegun import freeze_time
 from rest_framework import status
 
-from EquiTrack.factories import ResultFactory, UserFactory
+from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from locations.tests.factories import LocationFactory
 from publics.models import DSARegion
 from publics.tests.factories import WBSFactory
+from reports.tests.factories import ResultFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
 from t2f.tests.factories import CurrencyFactory, TravelActivityFactory
 

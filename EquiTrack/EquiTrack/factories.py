@@ -12,7 +12,6 @@ from factory import fuzzy
 
 from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
 from publics import models as publics_models
-from reports import models as report_models
 from reports.models import Sector
 from t2f import models as t2f_models
 from users import models as user_models
@@ -99,83 +98,11 @@ class UserFactory(factory.django.DjangoModelFactory):
         self.groups.add(group)
 
 
-class CountryProgrammeFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = report_models.CountryProgramme
-
-    name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: '0000/A0/{:02d}'.format(n))
-    from_date = date(date.today().year, 1, 1)
-    to_date = date(date.today().year, 12, 31)
-
-
-class ResultTypeFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.ResultType
-
-    name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
-
-
 class SectorFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Sector
 
     name = factory.Sequence(lambda n: 'Sector {}'.format(n))
-
-
-class ResultFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Result
-
-    result_type = factory.SubFactory(ResultTypeFactory)
-    name = factory.Sequence(lambda n: 'Result {}'.format(n))
-    from_date = date(date.today().year, 1, 1)
-    to_date = date(date.today().year, 12, 31)
-
-
-class DisaggregationFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Disaggregation
-        django_get_or_create = ('name', )  # so Factory doesn't try to create nonunique instances
-
-    name = factory.Sequence(lambda n: 'Disaggregation {}'.format(n))
-
-
-class DisaggregationValueFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.DisaggregationValue
-
-    disaggregation = factory.SubFactory(DisaggregationFactory)
-    value = factory.Sequence(lambda n: 'Value {}'.format(n))
-
-
-class LowerResultFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.LowerResult
-
-    name = factory.Sequence(lambda n: 'Lower Result {}'.format(n))
-    code = factory.Sequence(lambda n: 'Lower Result Code {}'.format(n))
-
-
-class UnitFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Unit
-
-    type = factory.Sequence(lambda n: 'Unit {}'.format(n))
-
-
-class IndicatorBlueprintFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.IndicatorBlueprint
-
-    title = factory.Sequence(lambda n: 'Indicator Blueprint {}'.format(n))
-
-
-class IndicatorFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Indicator
-
-    name = factory.Sequence(lambda n: 'Indicator {}'.format(n))
 
 
 class TravelExpenseTypeFactory(factory.django.DjangoModelFactory):
@@ -325,14 +252,3 @@ class TravelActivityFactory(factory.django.DjangoModelFactory):
         if extracted:
             for travel in extracted:
                 self.travels.add(travel)
-
-
-class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
-
-    class Meta:
-        model = report_models.AppliedIndicator
-
-    indicator = factory.SubFactory(IndicatorBlueprintFactory)
-    lower_result = factory.SubFactory(LowerResultFactory)
-    context_code = fuzzy.FuzzyText(length=5)
-    target = fuzzy.FuzzyInteger(0, 100)

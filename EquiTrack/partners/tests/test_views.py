@@ -19,10 +19,8 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
 from EquiTrack.factories import (
-    CountryProgrammeFactory,
     GroupFactory,
     OfficeFactory,
-    ResultFactory,
     SectorFactory,
     UserFactory,
 )
@@ -60,6 +58,10 @@ from partners.tests.factories import (
 from partners.views import v2
 import partners.views.partner_organization_v2
 from reports.models import ResultType
+from reports.tests.factories import (
+    CountryProgrammeFactory,
+    ResultFactory,
+)
 from snapshot.models import Activity
 
 

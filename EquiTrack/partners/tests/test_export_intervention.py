@@ -6,12 +6,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import (
-    CountryProgrammeFactory,
-    CurrencyFactory,
-    IndicatorFactory,
-    UserFactory,
-)
+from EquiTrack.factories import CurrencyFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from locations.tests.factories import LocationFactory
 from partners.tests.factories import (
@@ -25,6 +20,10 @@ from partners.tests.factories import (
     InterventionSectorLocationLinkFactory,
     PartnerFactory,
     PartnerStaffFactory,
+)
+from reports.tests.factories import (
+    CountryProgrammeFactory,
+    IndicatorFactory,
 )
 
 

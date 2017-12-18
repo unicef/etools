@@ -6,10 +6,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import (
-    CountryProgrammeFactory,
-    UserFactory,
-)
+from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -17,6 +14,7 @@ from partners.tests.factories import (
     PartnerFactory,
     PartnerStaffFactory,
 )
+from reports.tests.factories import CountryProgrammeFactory
 
 
 class BaseAgreementModelExportTestCase(APITenantTestCase):
