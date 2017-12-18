@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 import datetime
+import decimal
 import json
 
 from django.conf import settings
@@ -54,12 +55,15 @@ def get_agreement_path(instance, filename):
     )
 
 
+# 'assessment' is misspelled in this function name, but as of Nov 2017, two migrations reference it so it can't be
+# renamed until after migrations are squashed.
 def get_assesment_path(instance, filename):
     return '/'.join(
         [connection.schema_name,
          'file_attachments',
          'partner_organizations',
          str(instance.partner.id),
+         # 'assessment' is misspelled here, but we won't change it because we don't want to break existing paths.
          'assesments',
          str(instance.id),
          filename]
@@ -235,11 +239,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     Represents a partner organization
 
     related models:
-        Assesment: "assesments"
+        Assessment: "assessments"
         PartnerStaffMember: "staff_members"
 
 
     """
+    # When cash transferred to a country programme exceeds CT_CP_AUDIT_TRIGGER_LEVEL, an audit is triggered.
+    CT_CP_AUDIT_TRIGGER_LEVEL = decimal.Decimal('500000.00')
+
     AGENCY_CHOICES = Choices(
         ('DPKO', 'DPKO'),
         ('ECA', 'ECA'),
@@ -493,21 +500,22 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.save()
 
     @classmethod
-    def audit_needed(cls, partner, assesment=None):
+    def audit_needed(cls, partner):
+        '''Sets hact_values['audits_mr'] to 1 if total_ct_cp is above CT_CP_AUDIT_TRIGGER_LEVEL'''
         audits = 0
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        if partner.total_ct_cp > 500000.00:
+        if partner.total_ct_cp > cls.CT_CP_AUDIT_TRIGGER_LEVEL:
             audits = 1
         hact['audits']['minumum_requirements'] = audits
         partner.hact_values = hact
         partner.save()
 
     @classmethod
-    def audit_done(cls, partner, assesment=None):
+    def audit_done(cls, partner, assessment=None):
         audits = 0
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         audits = partner.assessments.filter(type='Scheduled Audit report').count()
-        if assesment:
+        if assessment:
             audits += 1
         hact['audits']['completed'] = audits
         partner.hact_values = hact
@@ -720,7 +728,7 @@ class Assessment(models.Model):
     Relates to :model:`auth.User`
     """
 
-    ASSESMENT_TYPES = (
+    ASSESSMENT_TYPES = (
         ('Micro Assessment', 'Micro Assessment'),
         ('Simplified Checklist', 'Simplified Checklist'),
         ('Scheduled Audit report', 'Scheduled Audit report'),
@@ -734,7 +742,7 @@ class Assessment(models.Model):
     )
     type = models.CharField(
         max_length=50,
-        choices=ASSESMENT_TYPES,
+        choices=ASSESSMENT_TYPES,
     )
     names_of_other_agencies = models.CharField(
         max_length=255,
@@ -774,7 +782,7 @@ class Assessment(models.Model):
         choices=RISK_RATINGS,
         default=HIGH,
     )
-    # Assesment Report
+    # Assessment Report
     report = models.FileField(
         blank=True, null=True,
         max_length=1024,
@@ -812,10 +820,10 @@ class Assessment(models.Model):
             if self.pk:
                 prev_assessment = Assessment.objects.get(id=self.id)
                 if prev_assessment.type != self.type:
-                    PartnerOrganization.audit_needed(self.partner, self)
+                    PartnerOrganization.audit_needed(self.partner)
                     PartnerOrganization.audit_done(self.partner, self)
             else:
-                PartnerOrganization.audit_needed(self.partner, self)
+                PartnerOrganization.audit_needed(self.partner)
                 PartnerOrganization.audit_done(self.partner, self)
 
         super(Assessment, self).save(**kwargs)
