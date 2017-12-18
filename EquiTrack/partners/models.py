@@ -454,11 +454,13 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @classmethod
     def audit_needed(cls, partner):
         '''Sets hact_values['audits_mr'] to 1 if total_ct_cp is above CT_CP_AUDIT_TRIGGER_LEVEL'''
+        audits = 0
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > cls.CT_CP_AUDIT_TRIGGER_LEVEL:
-            hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-            hact['audits_mr'] = 1
-            partner.hact_values = hact
-            partner.save()
+            audits = 1
+        hact['audits_mr'] = audits
+        partner.hact_values = hact
+        partner.save()
 
     @classmethod
     def audit_done(cls, partner, assessment=None):

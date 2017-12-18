@@ -195,7 +195,8 @@ def update_partners(country_name=None):
         for partner in partners:
             try:
                 PartnerOrganization.micro_assessment_needed(partner)
-                PartnerOrganization.audit_needed(partner)
+                if partner.total_ct_cp > partner.CT_CP_AUDIT_TRIGGER_LEVEL:
+                    PartnerOrganization.audit_needed(partner)
             except Exception:
                 logger.exception(u'Exception {} {}'.format(partner.name, partner.hact_values))
 
