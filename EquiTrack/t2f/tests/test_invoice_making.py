@@ -12,7 +12,8 @@ from publics.tests.factories import DSARateFactory, DSARegionFactory
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.models import CostAssignment, Expense, Invoice, InvoiceItem, Travel
 from t2f.tests.factories import (
-    CurrencyFactory, ExpenseTypeFactory, FundFactory, GrantFactory, ItineraryItemFactory, WBSFactory,)
+    CurrencyFactory, ExpenseTypeFactory, FundFactory, GrantFactory, ItineraryItemFactory, WBSFactory,
+)
 from t2f.vision import InvoiceUpdater
 
 try:

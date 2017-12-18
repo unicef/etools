@@ -13,9 +13,11 @@ from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel
-from t2f.tests.factories import CurrencyFactory, ItineraryItemFactory
-
-from .factories import TravelFactory
+from t2f.tests.factories import (
+    CurrencyFactory,
+    ItineraryItemFactory,
+    TravelFactory,
+)
 
 log = logging.getLogger('__name__')
 

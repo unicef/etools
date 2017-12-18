@@ -11,8 +11,6 @@ from mock import patch, Mock
 
 from EquiTrack.factories import (
     CurrencyFactory,
-    TravelFactory,
-    TravelActivityFactory,
     UserFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
@@ -51,6 +49,7 @@ from reports.tests.factories import (
     SectorFactory,
 )
 from t2f.models import Travel, TravelType
+from t2f.tests.factories import TravelActivityFactory, TravelFactory
 
 
 def get_date_from_prior_year():

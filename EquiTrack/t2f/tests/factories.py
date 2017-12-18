@@ -10,30 +10,50 @@ from EquiTrack.factories import OfficeFactory, UserFactory
 from locations.tests.factories import LocationFactory
 from partners.tests.factories import InterventionFactory
 from publics.tests.factories import (
-    AirlineCompanyFactory, CurrencyFactory, DSARegionFactory, ExpenseTypeFactory, FundFactory, GrantFactory, WBSFactory)
+    AirlineCompanyFactory, CurrencyFactory, DSARegionFactory, ExpenseTypeFactory, FundFactory, GrantFactory, WBSFactory
+)
 from reports.tests.factories import ResultFactory, SectorFactory
+from t2f import models
 from t2f.models import (
-    ActionPoint, Clearances, CostAssignment, Deduction, Expense, Invoice, InvoiceItem, ItineraryItem,
-    make_action_point_number, make_travel_reference_number, ModeOfTravel, Travel, TravelActivity, TravelType,)
+    make_action_point_number,
+    make_travel_reference_number,
+)
 
 _FUZZY_START_DATE = timezone.now() - timedelta(days=5)
 _FUZZY_END_DATE = timezone.now() + timedelta(days=5)
 
 
+class FuzzyTravelType(factory.fuzzy.BaseFuzzyAttribute):
+    def fuzz(self):
+        return factory.fuzzy._random.choice(
+            [t[0] for t in models.TravelType.CHOICES]
+        )
+
+
 class TravelActivityFactory(factory.django.DjangoModelFactory):
-    travel_type = TravelType.PROGRAMME_MONITORING
+    travel_type = models.TravelType.PROGRAMME_MONITORING
     partner = factory.SelfAttribute('partnership.agreement.partner')
     partnership = factory.SubFactory(InterventionFactory)
     result = factory.SubFactory(ResultFactory)
+    primary_traveler = factory.SubFactory(UserFactory)
     date = factory.LazyAttribute(lambda o: timezone.now())
 
     class Meta:
-        model = TravelActivity
+        model = models.TravelActivity
 
     @factory.post_generation
     def populate_locations(self, create, extracted, **kwargs):
         location = LocationFactory()
         self.locations.add(location)
+
+    @factory.post_generation
+    def travels(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for travel in extracted:
+                self.travels.add(travel)
 
 
 class ItineraryItemFactory(factory.DjangoModelFactory):
@@ -43,7 +63,7 @@ class ItineraryItemFactory(factory.DjangoModelFactory):
     arrival_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
     dsa_region = factory.SubFactory(DSARegionFactory)
     overnight_travel = False
-    mode_of_travel = ModeOfTravel.BOAT
+    mode_of_travel = models.ModeOfTravel.BOAT
 
     @factory.post_generation
     def populate_airlines(self, create, extracted, **kwargs):
@@ -51,7 +71,7 @@ class ItineraryItemFactory(factory.DjangoModelFactory):
         self.airlines.add(airline)
 
     class Meta:
-        model = ItineraryItem
+        model = models.ItineraryItem
 
 
 class ExpenseFactory(factory.DjangoModelFactory):
@@ -60,7 +80,7 @@ class ExpenseFactory(factory.DjangoModelFactory):
     type = factory.SubFactory(ExpenseTypeFactory)
 
     class Meta:
-        model = Expense
+        model = models.Expense
 
 
 class DeductionFactory(factory.DjangoModelFactory):
@@ -72,7 +92,7 @@ class DeductionFactory(factory.DjangoModelFactory):
     no_dsa = False
 
     class Meta:
-        model = Deduction
+        model = models.Deduction
 
 
 class CostAssignmentFactory(factory.DjangoModelFactory):
@@ -82,7 +102,7 @@ class CostAssignmentFactory(factory.DjangoModelFactory):
     fund = factory.SubFactory(FundFactory)
 
     class Meta:
-        model = CostAssignment
+        model = models.CostAssignment
 
 
 class ClearanceFactory(factory.DjangoModelFactory):
@@ -91,7 +111,7 @@ class ClearanceFactory(factory.DjangoModelFactory):
     security_course = True
 
     class Meta:
-        model = Clearances
+        model = models.Clearances
 
 
 class ActionPointFactory(factory.DjangoModelFactory):
@@ -104,7 +124,7 @@ class ActionPointFactory(factory.DjangoModelFactory):
     created_at = timezone.now()
 
     class Meta:
-        model = ActionPoint
+        model = models.ActionPoint
 
 
 class TravelFactory(factory.DjangoModelFactory):
@@ -134,7 +154,7 @@ class TravelFactory(factory.DjangoModelFactory):
         ta.travels.add(self)
 
     class Meta:
-        model = Travel
+        model = models.Travel
 
 
 class InvoiceFactory(factory.DjangoModelFactory):
@@ -143,11 +163,11 @@ class InvoiceFactory(factory.DjangoModelFactory):
     vendor_number = fuzzy.FuzzyText(length=12)
     currency = factory.SubFactory(CurrencyFactory)
     amount = fuzzy.FuzzyDecimal(0, 1000)
-    status = Invoice.PENDING
+    status = models.Invoice.PENDING
     messages = []
 
     class Meta:
-        model = Invoice
+        model = models.Invoice
 
 
 class InvoiceItemFactory(factory.DjangoModelFactory):
@@ -158,4 +178,11 @@ class InvoiceItemFactory(factory.DjangoModelFactory):
     amount = fuzzy.FuzzyDecimal(0, 250)
 
     class Meta:
-        model = InvoiceItem
+        model = models.InvoiceItem
+
+
+class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
+    def fuzz(self):
+        return factory.fuzzy._random.choice(
+            [t[0] for t in models.Travel.CHOICES]
+        )

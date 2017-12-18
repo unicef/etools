@@ -12,7 +12,6 @@ from factory import fuzzy
 
 from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
 from publics import models as publics_models
-from t2f import models as t2f_models
 from users import models as user_models
 from users.models import Office, Section
 
@@ -206,41 +205,3 @@ class DSARateFactory(factory.django.DjangoModelFactory):
     dsa_amount_60plus_local = 1
     room_rate = 10
     finalization_date = date.today()
-
-
-class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
-    def fuzz(self):
-        return factory.fuzzy._random.choice(
-            [t[0] for t in t2f_models.Travel.CHOICES]
-        )
-
-
-class TravelFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = t2f_models.Travel
-
-    status = FuzzyTravelStatus()
-
-
-class FuzzyTravelType(factory.fuzzy.BaseFuzzyAttribute):
-    def fuzz(self):
-        return factory.fuzzy._random.choice(
-            [t[0] for t in t2f_models.TravelType.CHOICES]
-        )
-
-
-class TravelActivityFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = t2f_models.TravelActivity
-
-    travel_type = FuzzyTravelType()
-    primary_traveler = factory.SubFactory(UserFactory)
-
-    @factory.post_generation
-    def travels(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted:
-            for travel in extracted:
-                self.travels.add(travel)

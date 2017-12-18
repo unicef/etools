@@ -18,9 +18,13 @@ from publics.tests.factories import (
 from reports.tests.factories import ResultFactory, SectorFactory
 from t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType
 from t2f.tests.factories import (
-    ExpenseFactory, InvoiceFactory, InvoiceItemFactory, ItineraryItemFactory, TravelActivityFactory,)
-
-from .factories import TravelFactory
+    ExpenseFactory,
+    InvoiceFactory,
+    InvoiceItemFactory,
+    ItineraryItemFactory,
+    TravelActivityFactory,
+    TravelFactory,
+)
 
 log = logging.getLogger('__name__')
 

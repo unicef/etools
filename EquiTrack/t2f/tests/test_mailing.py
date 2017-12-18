@@ -8,9 +8,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory
 from t2f.models import Invoice
 from t2f.serializers.mailing import TravelMailSerializer
-from t2f.tests.factories import ItineraryItemFactory
-
-from .factories import TravelFactory
+from t2f.tests.factories import ItineraryItemFactory, TravelFactory
 
 
 class MailingTest(APITenantTestCase):

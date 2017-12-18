@@ -15,9 +15,11 @@ from publics.models import DSARegion
 from publics.tests.factories import WBSFactory
 from reports.tests.factories import ResultFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
-from t2f.tests.factories import CurrencyFactory, TravelActivityFactory
-
-from .factories import TravelFactory
+from t2f.tests.factories import (
+    CurrencyFactory,
+    TravelActivityFactory,
+    TravelFactory,
+)
 
 log = logging.getLogger('__name__')
 

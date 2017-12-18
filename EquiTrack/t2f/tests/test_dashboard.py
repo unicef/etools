@@ -9,8 +9,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerOrganization
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
-
-from .factories import CurrencyFactory, ExpenseTypeFactory, TravelActivityFactory, TravelFactory
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, TravelActivityFactory, TravelFactory
 
 
 class TravelActivityList(APITenantTestCase):

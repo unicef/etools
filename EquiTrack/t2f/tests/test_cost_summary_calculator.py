@@ -9,7 +9,8 @@ from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
-    CountryFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory,)
+    CountryFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory,
+)
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from t2f.tests.factories import ExpenseFactory, ItineraryItemFactory, TravelFactory
 

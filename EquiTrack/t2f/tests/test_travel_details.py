@@ -17,9 +17,13 @@ from partners.tests.factories import InterventionFactory, PartnerFactory
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
 from t2f.models import ModeOfTravel, Travel, TravelAttachment, TravelType
-from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, ExpenseTypeFactory, ItineraryItemFactory
-
-from .factories import TravelFactory
+from t2f.tests.factories import (
+    AirlineCompanyFactory,
+    CurrencyFactory,
+    ExpenseTypeFactory,
+    ItineraryItemFactory,
+    TravelFactory,
+)
 
 
 class TravelDetails(URLAssertionMixin, APITenantTestCase):

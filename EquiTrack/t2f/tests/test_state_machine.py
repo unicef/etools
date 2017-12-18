@@ -13,9 +13,11 @@ from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
 from t2f.models import Invoice, ModeOfTravel, Travel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
-
-from .factories import TravelFactory
+from t2f.tests.factories import (
+    CurrencyFactory,
+    ExpenseTypeFactory,
+    TravelFactory,
+)
 
 
 class StateMachineTest(APITenantTestCase):
