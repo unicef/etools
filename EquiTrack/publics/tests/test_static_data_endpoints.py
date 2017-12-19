@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import json
 
 from django.core.urlresolvers import reverse
+import factory
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
@@ -49,10 +50,7 @@ class StaticDataEndpoints(APITenantTestCase):
     def test_endpoint(self):
         # This line is duplicated on purpose. Currency will have always 1+N number of queries
         # because of the exchange rate
-        PublicsCurrencyFactory()
-        PublicsCurrencyFactory()
-        PublicsCurrencyFactory()
-        PublicsCurrencyFactory()
+        factory.build_batch(PublicsCurrencyFactory, 4)
 
         # Create one of each model to check if all serializers are working fine
         PublicsAirlineCompanyFactory()
@@ -124,9 +122,7 @@ class StaticDataEndpoints(APITenantTestCase):
                                                 travel_agent_1_et.id})
 
     def test_currencies_view(self):
-        PublicsCurrencyFactory()
-        PublicsCurrencyFactory()
-        PublicsCurrencyFactory()
+        factory.build_batch(PublicsCurrencyFactory, 3)
 
         with self.assertNumQueries(4):
             response = self.forced_auth_req('get', reverse('public:currencies'),
@@ -169,9 +165,7 @@ class StaticDataEndpoints(APITenantTestCase):
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_business_areas_view(self):
-        PublicsBusinessAreaFactory()
-        PublicsBusinessAreaFactory()
-        PublicsBusinessAreaFactory()
+        factory.build_batch(PublicsBusinessAreaFactory, 3)
 
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('public:business_areas'),
@@ -185,9 +179,7 @@ class StaticDataEndpoints(APITenantTestCase):
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_expense_types_view(self):
-        PublicsTravelExpenseTypeFactory()
-        PublicsTravelExpenseTypeFactory()
-        PublicsTravelExpenseTypeFactory()
+        factory.build_batch(PublicsTravelExpenseTypeFactory, 3)
 
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('public:expense_types'),
@@ -201,9 +193,7 @@ class StaticDataEndpoints(APITenantTestCase):
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_airlines_view(self):
-        PublicsAirlineCompanyFactory()
-        PublicsAirlineCompanyFactory()
-        PublicsAirlineCompanyFactory()
+        factory.build_batch(PublicsAirlineCompanyFactory, 3)
 
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('public:airlines'),
