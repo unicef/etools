@@ -1,8 +1,17 @@
+from functools import update_wrapper
+
+from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
+from django.core.urlresolvers import reverse
+from django.http.response import HttpResponseRedirect
 
 from users.models import Country, Office, Section, UserProfile, WorkspaceCounter
+from vision.adapters.funding import FundCommitmentSynchronizer, FundReservationsSynchronizer
+from vision.adapters.partner import PartnerSynchronizer
+from vision.adapters.programme import RAMSynchronizer, ProgrammeSynchronizer
+from vision.tasks import sync_handler
 
 
 class ProfileInline(admin.StackedInline):
@@ -199,6 +208,7 @@ class UserAdminPlus(UserAdmin):
 
 
 class CountryAdmin(admin.ModelAdmin):
+    change_form_template = 'admin/users/country/change_form.html'
 
     def has_add_permission(self, request):
         return False
@@ -217,6 +227,44 @@ class CountryAdmin(admin.ModelAdmin):
         'offices',
         'sections',
     )
+
+    def get_urls(self):
+        urls = super(CountryAdmin, self).get_urls()
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        custom_urls = [
+            url(r'^(?P<pk>\d+)/sync_fc/$', wrap(self.sync_fund_commitment), name='users_country_fund_commitment'),
+            url(r'^(?P<pk>\d+)/sync_fr/$', wrap(self.sync_fund_reservation), name='users_country_fund_reservation'),
+            url(r'^(?P<pk>\d+)/sync_partners/$', wrap(self.sync_partners), name='users_country_partners'),
+            url(r'^(?P<pk>\d+)/sync_programme/$', wrap(self.sync_programme), name='users_country_programme'),
+            url(r'^(?P<pk>\d+)/sync_ram/$', wrap(self.sync_ram), name='users_country_ram'),
+        ]
+        return custom_urls + urls
+
+    def sync_fund_commitment(self, request, pk):
+        return self.execute_sync(pk, FundCommitmentSynchronizer)
+
+    def sync_fund_reservation(self, request, pk):
+        return self.execute_sync(pk, FundReservationsSynchronizer)
+
+    def sync_partners(self, request, pk):
+        return self.execute_sync(pk, PartnerSynchronizer)
+
+    def sync_programme(self, request, pk):
+        return self.execute_sync(pk, ProgrammeSynchronizer)
+
+    def sync_ram(self, request, pk):
+        return self.execute_sync(pk, RAMSynchronizer)
+
+    @staticmethod
+    def execute_sync(country_pk, synchronizer):
+        country = Country.objects.get(pk=country_pk)
+        sync_handler(country.name, synchronizer)
+        return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 
 class SectionAdmin(admin.ModelAdmin):
