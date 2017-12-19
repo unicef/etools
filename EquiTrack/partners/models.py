@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import datetime
 import decimal
 import json
-from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -246,7 +245,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     """
     # When cash transferred to a country programme exceeds CT_CP_AUDIT_TRIGGER_LEVEL, an audit is triggered.
-    CT_CP_AUDIT_TRIGGER_LEVEL = decimal.Decimal('500000.00')
+    EXPIRING_ASSESSMENT_LIMIT_DAYS = 1460
+    CT_CP_AUDIT_TRIGGER_LEVEL = decimal.Decimal('50000.00')
+
+    CT_MR_AUDIT_TRIGGER_LEVEL = decimal.Decimal('25000.00')
+    CT_MR_AUDIT_TRIGGER_LEVEL2 = decimal.Decimal('100000.00')
+    CT_MR_AUDIT_TRIGGER_LEVEL3 = decimal.Decimal('500000.00')
 
     AGENCY_CHOICES = Choices(
         ('DPKO', 'DPKO'),
@@ -275,10 +279,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('WHO', 'WHO')
     )
 
-    EXPIRING_ASSESSMENT_LIMIT_DAYS = 1460
-    CASH_TRANSFER_THRESHOLD_LEV1 = Decimal(50000.00)
-    CASH_TRANSFER_THRESHOLD_LEV2 = Decimal(100000.00)
-    CASH_TRANSFER_THRESHOLD_LEV3 = Decimal(350000.00)
 
     partner_type = models.CharField(
         max_length=50,
@@ -404,15 +404,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         help_text='Total Cash Transferred per Current Year'
     )
 
-    # TODO: add shared partner on hact_values: boolean, yes if shared with any of: [UNDP, UNFPA]
-    #     {"audits_done": 0,
-    #     "planned_visits": 0,
-    #     "spot_checks": 0,
-    #     "programmatic_visits": 0,
-    #     "follow_up_flags": 0,
-    #     "planned_cash_transfer": 0,
-    #     "micro_assessment_needed": "Missing",
-    #     "audits_mr": 0}
     hact_values = JSONField(blank=True, null=True, default=hact_default)
 
     tracker = FieldTracker()
@@ -422,10 +413,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         if self.last_assessment_date:
             last_assessment_age = (datetime.date.today() - self.last_assessment_date).days
             return last_assessment_age > PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_DAYS
+        return False
+
 
     @cached_property
     def approaching_threshold_flag(self):
-        return self.rating == u'Not Required' and self.total_ct_cy > PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV1
+        return self.rating == u'Non-Assessed' and self.total_ct_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
 
     class Meta:
         ordering = ['name']
@@ -462,130 +455,37 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             status__in=[Agreement.DRAFT, Agreement.TERMINATED]
         ).order_by('signed_by_unicef_date').last()
 
-    @classmethod
-    def micro_assessment_needed(cls, partner, assessment=None):
-        """
-        Returns Yes if:
-        1. type of assessment field is 'high risk assumed';
-        2. planned amount is >$100K and type of assessment is 'simplified checklist' or risk rating is 'not required';
-        3. risk rating is 'low, medium, significant, high', type of assessment is 'ma' or 'negative audit results'
-            and date is older than 54 months.
-        return 'missing' if ma is not attached in the Assessment and Audit record in the Partner screen.
-        Displays No in all other instances .
-        :return:
-        """
-        micro_assessment = partner.assessments.filter(type='Micro Assessment').order_by('completed_date').last()
-        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-
-        if assessment:
-            if micro_assessment:
-                if assessment.completed_date and micro_assessment.completed_date and \
-                        assessment.completed_date > micro_assessment.completed_date:
-                    micro_assessment = assessment
-            else:
-                micro_assessment = assessment
-        if partner.type_of_assessment == 'High Risk Assumed':
-            hact['micro_assessment_needed'] = 'Yes'
-        elif 'planned_cash_transfer' in hact and hact['planned_cash_transfer'] > 100000.00 \
-                and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
-            hact['micro_assessment_needed'] = 'Yes'
-        elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
-                and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
-                and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
-            hact['micro_assessment_needed'] = 'Yes'
-        elif micro_assessment is None:
-            hact['micro_assessment_needed'] = 'Missing'
-        else:
-            hact['micro_assessment_needed'] = 'No'
-        partner.hact_values = hact
-        partner.save()
-
-    @classmethod
-    def audit_needed(cls, partner):
-        '''Sets hact_values['audits_mr'] to 1 if total_ct_cp is above CT_CP_AUDIT_TRIGGER_LEVEL'''
-        audits = 0
-        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        if partner.total_ct_cp > cls.CT_CP_AUDIT_TRIGGER_LEVEL:
-            audits = 1
-        hact['audits']['minumum_requirements'] = audits
-        partner.hact_values = hact
-        partner.save()
-
-    @classmethod
-    def audit_done(cls, partner, assessment=None):
-        audits = 0
-        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        audits = partner.assessments.filter(type='Scheduled Audit report').count()
-        if assessment:
-            audits += 1
-        hact['audits']['completed'] = audits
-        partner.hact_values = hact
-        partner.save()
-
     @property
     def hact_min_requirements(self):
         programme_visits = spot_checks = '-'
         cash_transferred = self.total_ct_cy
 
-        if cash_transferred == 0:
+        if cash_transferred <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
-            spot_checks = 0
-        elif 0 < cash_transferred <= PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV1:
+        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < cash_transferred <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
             programme_visits = 1
-        elif PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV1 < cash_transferred <= PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV2:
-            spot_checks = 1
-            programme_visits = 1
-        elif PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV2 < cash_transferred <= PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV3:
-            if self.rating in ['High', 'high', 'Significant', 'Non-Assessed', 'Not Required',
-                               'No Risk Rating Indicated']:
+        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < cash_transferred <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
+            if self.rating in ['High', 'Significant']:
+                programme_visits = 3
+            elif self.rating in ['Moderate', 'Medium']:
                 programme_visits = 2
-                spot_checks = 2
-            elif self.rating in ['Low', 'Moderate', 'Medium']:
+            elif self.rating in ['Low']:
                 programme_visits = 1
-                spot_checks = 1
         else:
-            if self.rating in ['High', 'high', 'Significant', 'Non-Assessed', 'No Risk Rating Indicated']:
+            if self.rating in ['High', 'Significant']:
                 programme_visits = 4
-                spot_checks = 3
-            elif self.rating in [_('Low'), _('Medium')]:
+            elif self.rating in ['Moderate', 'Medium']:
+                programme_visits = 3
+            elif self.rating in ['Low']:
                 programme_visits = 2
-                spot_checks = 2
 
         # TODO add condition when is implemented 1.1.10a
-        # spot_checks = 1 if self.liquidation > PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV1 else 0
+        spot_checks = 1 if cash_transferred > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
         return {
             'programme_visits': programme_visits,
             'spot_checks': spot_checks,
         }
-
-    # @classmethod
-    # def planned_cash_transfers(cls, partner, budget_record=None):
-    #     """
-    #     Planned cash transfers for the current year
-    #     """
-    #     total = 0
-    #     if partner.partner_type != 'Government':
-    #         q = InterventionBudget.objects.filter(
-    #             intervention__agreement__partner=partner,
-    #             intervention__status__in=[
-    #                 Intervention.ACTIVE,
-    #                 Intervention.ENDED,
-    #                 Intervention.CLOSED
-    #             ])
-    #         if budget_record:
-    #             q = q.exclude(id=budget_record.id).values_list('unicef_cash', flat=True)
-    #
-    #             total = sum(q)
-    #             total += budget_record.unicef_cash
-    #         else:
-    #             q = q.values_list('unicef_cash', flat=True)
-    #             total = sum(q)
-    #
-    #     hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-    #     hact["planned_cash_transfer"] = float(total)
-    #     partner.hact_values = hact
-    #     partner.save()
 
     @classmethod
     def planned_visits(cls, partner, pv_intervention=None):
@@ -648,11 +548,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
         partner.hact_values['spot_checks']['completed']['total'] = sc
         partner.save()
-
-    # @classmethod
-    # def follow_up_flags(cls, partner, update_one=False):
-    #     partner.hact_values['follow_up_flags'] = 0
-    #     partner.save()
 
 
 class PartnerStaffMemberManager(models.Manager):
@@ -804,30 +699,6 @@ class Assessment(models.Model):
             date=self.completed_date.strftime("%d-%m-%Y") if
             self.completed_date else'NOT COMPLETED'
         )
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        # set partner last micro assessment
-        if self.type == 'Micro Assessment' and self.completed_date:
-            if self.pk:
-                prev_assessment = Assessment.objects.get(id=self.id)
-                if prev_assessment.completed_date and prev_assessment.completed_date != self.completed_date:
-                    PartnerOrganization.micro_assessment_needed(self.partner, self)
-            else:
-                PartnerOrganization.micro_assessment_needed(self.partner, self)
-
-        elif self.type == 'Scheduled Audit report' and self.completed_date:
-            if self.pk:
-                prev_assessment = Assessment.objects.get(id=self.id)
-                if prev_assessment.type != self.type:
-                    PartnerOrganization.audit_needed(self.partner)
-                    PartnerOrganization.audit_done(self.partner, self)
-            else:
-                PartnerOrganization.audit_needed(self.partner)
-                PartnerOrganization.audit_done(self.partner, self)
-
-        super(Assessment, self).save(**kwargs)
-
 
 class AgreementManager(models.Manager):
 
@@ -1714,14 +1585,7 @@ class InterventionBudget(TimeStampedModel):
         """
         Calculate total budget on save
         """
-        self.total = \
-            self.total_unicef_contribution() \
-            + self.partner_contribution
-
-        if self.intervention.status in [Intervention.ACTIVE, Intervention.SIGNED,
-                                        Intervention.CLOSED, Intervention.ENDED]:
-            PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner, self)
-
+        self.total = self.total_unicef_contribution() + self.partner_contribution
         super(InterventionBudget, self).save(**kwargs)
 
     def __str__(self):
@@ -1906,12 +1770,9 @@ class GovernmentInterventionResult(models.Model):
     def save(self, **kwargs):
         if self.pk:
             prev_result = GovernmentInterventionResult.objects.get(id=self.id)
-            if prev_result.planned_amount != self.planned_amount:
-                PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
             if prev_result.planned_visits != self.planned_visits:
                 PartnerOrganization.planned_visits(self.intervention.partner, self)
         else:
-            PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
             PartnerOrganization.planned_visits(self.intervention.partner, self)
 
         super(GovernmentInterventionResult, self).save(**kwargs)

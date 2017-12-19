@@ -576,8 +576,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
         self.assertEqual(['programme_visits', 'spot_checks'], response.data["hact_min_requirements"].keys())
-        self.assertEqual(['audits_done', 'planned_visits', 'spot_checks', 'programmatic_visits', 'follow_up_flags',
-                          'planned_cash_transfer', 'micro_assessment_needed', 'audits_mr'],
+        self.assertEqual(['audits', 'planned_visits', 'spot_checks', 'programmatic_visits'],
                          response.data["hact_values"].keys())
         self.assertEqual(response.data['interventions'], [])
 

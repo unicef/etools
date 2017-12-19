@@ -28,17 +28,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetPartnerDetailsInfo_json'
     REQUIRED_KEYS = (
         "PARTNER_TYPE_DESC",
-        # "CSO_TYPE",  # "CSO_TYPE_NAME",
         "VENDOR_NAME",
         "VENDOR_CODE",
-        # "RISK_RATING",  # "RISK_RATING_NAME",
-        # "TYPE_OF_ASSESSMENT",
-        # "DATE_OF_ASSESSMENT",  # different format "LAST_ASSESSMENT_DATE",
-        # "STREET",  # "STREET_ADDRESS",
-        # "CITY",  # "VENDOR_CITY",
-        "COUNTRY",  # "VENDOR_CTRY_NAME",
-        # "PHONE_NUMBER",
-        # "EMAIL",
+        "COUNTRY",
         "TOTAL_CASH_TRANSFERRED_CP",
         "TOTAL_CASH_TRANSFERRED_CY",
     )

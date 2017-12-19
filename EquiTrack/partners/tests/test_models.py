@@ -201,13 +201,6 @@ class TestHACTCalculations(TenantTestCase):
             expenditure_amount=40000.00
         )
 
-    def test_planned_cash_transfers(self):
-
-        PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner)
-        hact = self.intervention.agreement.partner.hact_values
-        hact = json.loads(hact) if isinstance(hact, str) else hact
-        self.assertEqual(hact['planned_cash_transfer'], 60000)
-
 
 class TestPartnerOrganizationModel(TenantTestCase):
     fixtures = ['initial_data.json']
@@ -247,91 +240,17 @@ class TestPartnerOrganizationModel(TenantTestCase):
         pca = self.partner_organization.get_last_pca
         self.assertEqual(pca, self.pca_signed1)
 
-    def test_micro_assessment_needed_high_risk(self):
-        year = datetime.date.today().year
-        self.partner_organization.type_of_assessment = "High Risk Assumed"
-        self.partner_organization.save()
-        Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Micro Assessment",
-            completed_date=datetime.date(year, 1, 1)
-        )
-        PartnerOrganization.micro_assessment_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
-
-    def test_micro_assessment_needed_pct_over_100k(self):
-        year = datetime.date.today().year
-        self.partner_organization.type_of_assessment = "Simplified Checklist"
-        self.partner_organization.hact_values["planned_cash_transfer"] = 100001.00
-        self.partner_organization.save()
-        Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Micro Assessment",
-            completed_date=datetime.date(year, 1, 1)
-        )
-        PartnerOrganization.micro_assessment_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
-
-    def test_micro_assessment_needed_older_than_54m(self):
-        self.partner_organization.type_of_assessment = "Micro Assessment"
-        self.partner_organization.rating = "low"
-        self.partner_organization.hact_values["planned_cash_transfer"] = 10000.00
-        self.partner_organization.save()
-        Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Micro Assessment",
-            completed_date=datetime.date.today() - datetime.timedelta(days=1643)
-        )
-        PartnerOrganization.micro_assessment_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
-
-    def test_micro_assessment_needed_missing(self):
-        self.partner_organization.hact_values["planned_cash_transfer"] = 10000.00
-        self.partner_organization.save()
-        PartnerOrganization.micro_assessment_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Missing")
-
-    def test_micro_assessment_needed_no(self):
-        year = datetime.date.today().year
-        self.partner_organization.type_of_assessment = "Other"
-        self.partner_organization.hact_values["planned_cash_transfer"] = 100000.00
-        self.partner_organization.save()
-        Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Micro Assessment",
-            completed_date=datetime.date(year, 1, 1)
-        )
-        PartnerOrganization.micro_assessment_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "No")
-
     def test_audit_trigger_negative(self):
         '''Ensure an audit is not required when cash transferred is <= the trigger level'''
         self.partner_organization.total_ct_cp = PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
         self.partner_organization.save()
-        PartnerOrganization.audit_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_mr'], 0)
+        self.assertEqual(self.partner_organization.hact_values['audits']['minimum_requirements'], 0)
 
     def test_audit_trigger_positive(self):
         '''Ensure an audit is required when cash transferred is > the trigger level'''
         self.partner_organization.total_ct_cp = PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1
         self.partner_organization.save()
-        PartnerOrganization.audit_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
-
-    def test_audit_done(self):
-        Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Scheduled Audit report",
-            completed_date=datetime.date(datetime.date.today().year, 1, 1)
-        )
-        self.partner_organization.total_ct_cp = PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1
-        self.partner_organization.save()
-        PartnerOrganization.audit_done(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_done'], 1)
-
-    def test_audit_done_zero(self):
-        PartnerOrganization.audit_done(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_done'], 0)
+        self.assertEqual(self.partner_organization.hact_values['audits']['minimum_requirements'], 1)
 
     def test_hact_min_requirements_ct_equals_0(self):
         self.partner_organization.total_ct_cy = 0
@@ -399,59 +318,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
             "spot_checks": 3,
         }
         self.assertEqual(hact_min_req, data)
-
-    @skip('Deprecated Functionality')
-    def test_planned_cash_transfers_gov(self):
-        self.partner_organization.partner_type = PartnerType.GOVERNMENT
-        self.partner_organization.save()
-        CountryProgramme.objects.create(
-            name="CP 1",
-            wbs="0001/A0/01",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
-        gi = GovernmentIntervention.objects.create(
-            partner=self.partner_organization,
-        )
-        rt = ResultType.objects.get(id=1)
-        r = Result.objects.create(
-            result_type=rt,
-        )
-        GovernmentInterventionResult.objects.create(
-            intervention=gi,
-            result=r,
-            year=datetime.date.today().year,
-            planned_amount=100000,
-        )
-        GovernmentInterventionResult.objects.create(
-            intervention=gi,
-            result=r,
-            year=datetime.date.today().year,
-            planned_amount=50000,
-        )
-        hact = json.loads(self.partner_organization.hact_values) \
-            if isinstance(self.partner_organization.hact_values, str) \
-            else self.partner_organization.hact_values
-        self.assertEqual(hact['planned_cash_transfer'], 150000)
-
-    def test_planned_cash_transfers_non_gov(self):
-        self.partner_organization.partner_type = PartnerType.UN_AGENCY
-        self.partner_organization.save()
-        agreement = Agreement.objects.create(
-            agreement_type=Agreement.PCA,
-            partner=self.partner_organization,
-            country_programme=self.cp,
-        )
-
-        intervention = InterventionFactory(
-            status=u'active', agreement=agreement
-        )
-        InterventionBudgetFactory(intervention=intervention)
-
-        hact = json.loads(self.partner_organization.hact_values) \
-            if isinstance(self.partner_organization.hact_values, str) \
-            else self.partner_organization.hact_values
-        self.assertEqual(hact['planned_cash_transfer'], 100001)
 
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = PartnerType.GOVERNMENT
@@ -771,15 +637,3 @@ class TestInterventionModel(TenantTestCase):
         expected_reference_number = self.intervention.agreement.base_number + '/' + self.intervention.document_type
         expected_reference_number += str(self.intervention.signed_by_unicef_date.year) + str(self.intervention.id)
         self.assertEqual(self.intervention.reference_number, expected_reference_number)
-
-    @skip("Fix when HACT available")
-    def test_planned_cash_transfers(self):
-        InterventionBudget.objects.create(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.planned_cash_transfers), 15000)

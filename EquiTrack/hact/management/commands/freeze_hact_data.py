@@ -22,21 +22,21 @@ class Command(BaseCommand):
     mapping_labels = {
         'name': _('Implementing Partner'),
         'partner_type': _('Partner Type'),
-        'shared_partner': ('Shared'),
-        'shared_with': ('Shared IP'),
-        'total_ct_cp': ('TOTAL for current CP cycle'),
-        'hact_values.planned_cash_transfer': ('PLANNED for current year'),
-        'total_ct_cy': ('Current Year (1 Oct - 30 Sep)'),
-        'hact_values.micro_assessment_needed': ('Micro Assessment'),
-        'rating': ('Risk Rating'),
-        'hact_values.planned_visits': ('Programmatic Visits Planned'),
-        'hact_min_requirements.programme_visits': ('Programmatic Visits M.R'),
-        'hact_values.programmatic_visits.completed.total': ('Programmatic Visits Done'),
-        'hact_min_requirements.spot_checks': ('Spot Checks M.R'),
-        'hact_values.spot_checks.completed.total': ('Spot Checks Done'),
-        'hact_values.audits.completed': ('Audits M.R'),
-        'hact_values.audits.required': ('Audits Done'),
-        'hact_values.follow_up_flags': ('Flag for Follow up'),
+        'shared_partner': _('Shared'),
+        'shared_with': _('Shared IP'),
+        'total_ct_cp': _('TOTAL for current CP cycle'),
+        'hact_values.planned_cash_transfer': _('PLANNED for current year'),
+        'total_ct_cy': _('Current Year (1 Oct - 30 Sep)'),
+        'hact_values.micro_assessment_needed': _('Micro Assessment'),
+        'rating': _('Risk Rating'),
+        'hact_values.planned_visits': _('Programmatic Visits Planned'),
+        'hact_min_requirements.programme_visits': _('Programmatic Visits M.R'),
+        'hact_values.programmatic_visits.completed.total': _('Programmatic Visits Done'),
+        'hact_min_requirements.spot_checks': _('Spot Checks M.R'),
+        'hact_values.spot_checks.completed.total': _('Spot Checks Done'),
+        'hact_values.audits.completed': _('Audits M.R'),
+        'hact_values.audits.required': _('Audits Done'),
+        'hact_values.follow_up_flags': _('Flag for Follow up'),
     }
 
     @staticmethod
@@ -74,6 +74,12 @@ class Command(BaseCommand):
                 value = value.get(field)
 
             partner_values[label] = value
+
+        mrpv = value['hact_min_requirements']['programme_visits']
+        mrsp = value['hact_min_requirements']['spot_checks']
+
+        partner_values['hact_values']['programmatic_visits']['minumum_requirements'] = mrpv
+        partner_values['hact_values']['spot_checks']['minumum_requirements'] = mrsp
 
         hact_history.partner_values = json.dumps(partner_values, cls=HactEncoder)
         hact_history.save()
