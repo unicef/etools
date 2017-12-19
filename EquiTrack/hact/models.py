@@ -1,7 +1,9 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+import decimal
 import json
 from datetime import datetime
 
-import decimal
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 

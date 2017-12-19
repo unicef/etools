@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import datetime
 import json
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -268,9 +269,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     )
 
     EXPIRING_ASSESSMENT_LIMIT_DAYS = 1460
-    CASH_TRANSFER_THRESHOLD_LEV1 = 50000.00
-    CASH_TRANSFER_THRESHOLD_LEV2 = 100000.00
-    CASH_TRANSFER_THRESHOLD_LEV3 = 350000.00
+    CASH_TRANSFER_THRESHOLD_LEV1 = Decimal(50000.00)
+    CASH_TRANSFER_THRESHOLD_LEV2 = Decimal(100000.00)
+    CASH_TRANSFER_THRESHOLD_LEV3 = Decimal(350000.00)
 
     partner_type = models.CharField(
         max_length=50,
@@ -527,16 +528,15 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             spot_checks = 1
             programme_visits = 1
         elif PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV2 < cash_transferred <= PartnerOrganization.CASH_TRANSFER_THRESHOLD_LEV3:
-            if self.rating in [_('High'), _('high'), _('Significant'), _('Non-Assessed'), _('Not Required'),
-                               _('No Risk Rating Indicated')]:
+            if self.rating in ['High', 'high', 'Significant', 'Non-Assessed', 'Not Required',
+                               'No Risk Rating Indicated']:
                 programme_visits = 2
                 spot_checks = 2
-            elif self.rating in [_('Low'), _('Moderate'), _('Medium')]:
+            elif self.rating in ['Low', 'Moderate', 'Medium']:
                 programme_visits = 1
                 spot_checks = 1
         else:
-            if self.rating in [_('High'), _('high'), _('Significant'), _('Non-Assessed'),
-                               _('No Risk Rating Indicated')]:
+            if self.rating in ['High', 'high', 'Significant', 'Non-Assessed', 'No Risk Rating Indicated']:
                 programme_visits = 4
                 spot_checks = 3
             elif self.rating in [_('Low'), _('Medium')]:

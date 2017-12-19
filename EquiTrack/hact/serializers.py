@@ -1,7 +1,9 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import json
-from rest_framework import serializers
 
 from hact.models import HactHistory
+from rest_framework import serializers
 
 
 class HactHistorySerializer(serializers.ModelSerializer):

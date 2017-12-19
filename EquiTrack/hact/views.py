@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django_filters.rest_framework import DjangoFilterBackend
 from hact.models import HactHistory
 from hact.serializers import HactHistorySerializer
@@ -39,6 +41,7 @@ class HactHistoryAPIView(ListAPIView):
 class GlobalHactView(views.APIView):
     permission_classes = []
 
+    # temporary static json
     def get(self, request, *args, **kwargs):
         return Response(
             {

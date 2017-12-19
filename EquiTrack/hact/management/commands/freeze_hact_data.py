@@ -1,12 +1,15 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
+from datetime import datetime
+
+from django.core.management import BaseCommand
+from django.utils.translation import ugettext as _
+
+from hact.models import HactEncoder, HactHistory
 
 from EquiTrack.util_scripts import set_country
-from datetime import datetime
-from django.core.management import BaseCommand
-from hact.models import HactHistory, HactEncoder
-from partners.models import PartnerOrganization, hact_default
+from partners.models import hact_default, PartnerOrganization
 from users.models import Country
 
 
@@ -17,23 +20,23 @@ class Command(BaseCommand):
         parser.add_argument('--schema', dest='schema')
 
     mapping_labels = {
-        'name': 'Implementing Partner',
-        'partner_type': 'Partner Type',
-        'shared_partner': 'Shared',
-        'shared_with': 'Shared IP',
-        'total_ct_cp': 'TOTAL for current CP cycle',
-        'hact_values.planned_cash_transfer': 'PLANNED for current year',
-        'total_ct_cy': 'Current Year (1 Oct - 30 Sep)',
-        'hact_values.micro_assessment_needed': 'Micro Assessment',
-        'rating': 'Risk Rating',
-        'hact_values.planned_visits': 'Programmatic Visits Planned',
-        'hact_min_requirements.programme_visits': 'Programmatic Visits M.R',
-        'hact_values.programmatic_visits.completed.total': 'Programmatic Visits Done',
-        'hact_min_requirements.spot_checks': 'Spot Checks M.R',
-        'hact_values.spot_checks.completed.total': 'Spot Checks Done',
-        'hact_values.audits.completed': 'Audits M.R',
-        'hact_values.audits.required': 'Audits Done',
-        'hact_values.follow_up_flags': 'Flag for Follow up',
+        'name': _('Implementing Partner'),
+        'partner_type': _('Partner Type'),
+        'shared_partner': ('Shared'),
+        'shared_with': ('Shared IP'),
+        'total_ct_cp': ('TOTAL for current CP cycle'),
+        'hact_values.planned_cash_transfer': ('PLANNED for current year'),
+        'total_ct_cy': ('Current Year (1 Oct - 30 Sep)'),
+        'hact_values.micro_assessment_needed': ('Micro Assessment'),
+        'rating': ('Risk Rating'),
+        'hact_values.planned_visits': ('Programmatic Visits Planned'),
+        'hact_min_requirements.programme_visits': ('Programmatic Visits M.R'),
+        'hact_values.programmatic_visits.completed.total': ('Programmatic Visits Done'),
+        'hact_min_requirements.spot_checks': ('Spot Checks M.R'),
+        'hact_values.spot_checks.completed.total': ('Spot Checks Done'),
+        'hact_values.audits.completed': ('Audits M.R'),
+        'hact_values.audits.required': ('Audits Done'),
+        'hact_values.follow_up_flags': ('Flag for Follow up'),
     }
 
     @staticmethod
