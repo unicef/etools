@@ -10,7 +10,6 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.factories import CurrencyFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from locations.tests.factories import GatewayTypeFactory
 from partners.models import (
@@ -23,6 +22,7 @@ from partners.models import (
     PartnerType,
 )
 from partners.tests.factories import PartnerFactory
+from publics.tests.factories import PublicsCurrencyFactory
 from users.tests.factories import UserFactory
 
 
@@ -190,7 +190,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         # Add some currencies
         choices = []
         for code in ('AAA', 'BBB', 'CCC'):
-            currency = CurrencyFactory(code=code)
+            currency = PublicsCurrencyFactory(code=code)
             choices.append((currency.id, code))
 
         response = self.forced_auth_req('get', self.url)
@@ -211,7 +211,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         self.assertIsNone(d['local_currency'])
 
         # Associate a currency with the test user's country and ensure it's returned.
-        currency = CurrencyFactory()
+        currency = PublicsCurrencyFactory()
         self.user.profile.country.local_currency = currency
         self.user.profile.country.save()
 

@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from locations.tests.factories import LocationFactory
-from publics.tests.factories import CurrencyFactory, DSARegionFactory, WBSFactory
+from publics.tests.factories import PublicsDSARegionFactory, PublicsCurrencyFactory, PublicsWBSFactory
 from t2f import UserTypes
 from t2f.helpers.permission_matrix import get_user_role_list, PermissionMatrix
 from t2f.models import ModeOfTravel, Travel, TravelType
@@ -143,9 +143,9 @@ class TestPermissionMatrix(APITenantTestCase):
                           ('view', 'travel', 'ta_required'): True})
 
     def test_travel_creation(self):
-        dsa_region = DSARegionFactory()
-        currency = CurrencyFactory()
-        wbs = WBSFactory()
+        dsa_region = PublicsDSARegionFactory()
+        currency = PublicsCurrencyFactory()
+        wbs = PublicsWBSFactory()
         grant = wbs.grants.first()
         fund = grant.funds.first()
         location = LocationFactory()

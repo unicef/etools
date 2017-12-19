@@ -4,7 +4,7 @@ from django.core import mail
 from django.test.utils import override_settings
 
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import BusinessAreaFactory
+from publics.tests.factories import PublicsBusinessAreaFactory
 from t2f.models import Invoice
 from t2f.serializers.mailing import TravelMailSerializer
 from t2f.tests.factories import ItineraryItemFactory, TravelFactory
@@ -33,7 +33,7 @@ class MailingTest(APITenantTestCase):
         tenant_country = self.travel.traveler.profile.country
         tenant_country.business_area_code = '0'
         tenant_country.save()
-        BusinessAreaFactory(code=self.travel.traveler.profile.country.business_area_code)
+        PublicsBusinessAreaFactory(code=self.travel.traveler.profile.country.business_area_code)
 
         self.travel.submit_for_approval()
         self.travel.approve()

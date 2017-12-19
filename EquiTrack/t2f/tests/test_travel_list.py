@@ -11,14 +11,10 @@ from rest_framework import status
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from locations.tests.factories import LocationFactory
 from publics.models import DSARegion
-from publics.tests.factories import WBSFactory
+from publics.tests.factories import PublicsCurrencyFactory, PublicsWBSFactory
 from reports.tests.factories import ResultFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
-from t2f.tests.factories import (
-    CurrencyFactory,
-    TravelActivityFactory,
-    TravelFactory,
-)
+from t2f.tests.factories import TravelActivityFactory, TravelFactory
 from users.tests.factories import UserFactory
 
 log = logging.getLogger('__name__')
@@ -297,8 +293,8 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
 
     def test_travel_creation(self):
         dsaregion = DSARegion.objects.first()
-        currency = CurrencyFactory()
-        wbs = WBSFactory()
+        currency = PublicsCurrencyFactory()
+        wbs = PublicsWBSFactory()
         grant = wbs.grants.first()
         fund = grant.funds.first()
         location = LocationFactory()

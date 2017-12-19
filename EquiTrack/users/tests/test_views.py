@@ -10,7 +10,7 @@ from unittest import skip
 
 from EquiTrack.factories import GroupFactory
 from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
-from publics.tests.factories import BusinessAreaFactory
+from publics.tests.factories import PublicsBusinessAreaFactory
 from users.models import Group, User, UserProfile
 from users.serializers_v3 import AP_ALLOWED_COUNTRIES
 from users.tests.factories import (
@@ -233,8 +233,8 @@ class TestUserViews(APITenantTestCase):
         workspace_override = CountryFactory(schema_name='test2', business_area_code='0002')
         workspace_invalid_business_area = CountryFactory(schema_name='test3', business_area_code='0003')
 
-        business_area_0001 = BusinessAreaFactory(code='0001')
-        business_area_0002 = BusinessAreaFactory(code='0002')
+        business_area_0001 = PublicsBusinessAreaFactory(code='0001')
+        business_area_0002 = PublicsBusinessAreaFactory(code='0002')
 
         profile = self.unicef_staff.profile
 

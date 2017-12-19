@@ -6,9 +6,15 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerOrganization
-from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
+from publics.tests.factories import (
+    PublicsBusinessAreaFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, TravelActivityFactory, TravelFactory
+from t2f.tests.factories import TravelActivityFactory, TravelFactory
 from users.tests.factories import UserFactory
 
 
@@ -62,12 +68,12 @@ class TravelActivityList(APITenantTestCase):
         self.assertEqual(len(response_json), 2)
 
     def test_completed_counts(self):
-        currency = CurrencyFactory()
-        expense_type = ExpenseTypeFactory()
-        business_area = BusinessAreaFactory()
-        dsa_region = DSARegionFactory()
+        currency = PublicsCurrencyFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
+        business_area = PublicsBusinessAreaFactory()
+        dsa_region = PublicsDSARegionFactory()
 
-        wbs = WBSFactory(business_area=business_area)
+        wbs = PublicsWBSFactory(business_area=business_area)
         grant = wbs.grants.first()
         fund = grant.funds.first()
         traveler = UserFactory(is_staff=True)

@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import EPOCH_ZERO, TravelExpenseType
-from publics.tests.factories import AirlineCompanyFactory, ExpenseTypeFactory
+from publics.tests.factories import PublicsAirlineCompanyFactory, PublicsTravelExpenseTypeFactory
 from users.tests.factories import UserFactory
 
 
@@ -35,7 +35,7 @@ class GhostData(APITenantTestCase):
         self.assertEqual(airlines_url, '/api/airlines/missing/')
 
     def test_on_instance_delete(self):
-        expense_type = ExpenseTypeFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
 
         self.assertEqual(expense_type.deleted_at, EPOCH_ZERO)
 
@@ -43,9 +43,9 @@ class GhostData(APITenantTestCase):
         self.assertNotEqual(expense_type.deleted_at, EPOCH_ZERO)
 
     def test_queryset_delete(self):
-        ExpenseTypeFactory()
-        ExpenseTypeFactory()
-        ExpenseTypeFactory()
+        PublicsTravelExpenseTypeFactory()
+        PublicsTravelExpenseTypeFactory()
+        PublicsTravelExpenseTypeFactory()
 
         total_expense_type_count = TravelExpenseType.objects.all().count()
         self.assertEqual(total_expense_type_count, 3)
@@ -65,7 +65,7 @@ class GhostData(APITenantTestCase):
         self.assertEqual(deleted_at_populated_count, 3)
 
     def test_single_endpoint(self):
-        expense_type = ExpenseTypeFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
 
         response = self.forced_auth_req('get', reverse('public:expense_types'),
                                         user=self.unicef_staff)
@@ -94,7 +94,7 @@ class GhostData(APITenantTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_multiendpoint(self):
-        airline = AirlineCompanyFactory()
+        airline = PublicsAirlineCompanyFactory()
 
         response = self.forced_auth_req('get', reverse('public:static'),
                                         user=self.unicef_staff)

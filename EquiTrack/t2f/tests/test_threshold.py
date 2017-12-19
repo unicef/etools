@@ -7,9 +7,13 @@ from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import AirlineCompanyFactory, DSARegionFactory
+from publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
+)
 from t2f.models import ModeOfTravel, Travel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
 from users.tests.factories import UserFactory
 
 
@@ -26,10 +30,10 @@ class ThresholdTest(APITenantTestCase):
         workspace.save()
 
     def _prepare_test(self):
-        currency = CurrencyFactory()
-        expense_type = ExpenseTypeFactory()
-        dsaregion = DSARegionFactory()
-        airlines = AirlineCompanyFactory()
+        currency = PublicsCurrencyFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
+        dsaregion = PublicsDSARegionFactory()
+        airlines = PublicsAirlineCompanyFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [{'date': '2016-11-03',
@@ -198,10 +202,10 @@ class ThresholdTest(APITenantTestCase):
         self.assertEqual(travel.approved_cost_travel_agencies, 120)
 
         # Threshold reached. Send for approval
-        currency = CurrencyFactory()
+        currency = PublicsCurrencyFactory()
         # If vendor number is empty, considered as estimated travel cost
         # and should be included while calculating the threshold
-        expense_type = ExpenseTypeFactory(vendor_number='')
+        expense_type = PublicsTravelExpenseTypeFactory(vendor_number='')
 
         data = response_json
         data['expenses'].append({'amount': '41',

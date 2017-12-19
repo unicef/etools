@@ -7,12 +7,18 @@ from pytz import UTC
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
-from publics.tests.factories import DSARateFactory, DSARegionFactory
+from publics.tests.factories import (
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsFundFactory,
+    PublicsGrantFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
+)
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.models import CostAssignment, Expense, Invoice, InvoiceItem, Travel
-from t2f.tests.factories import (
-    CurrencyFactory, ExpenseTypeFactory, FundFactory, GrantFactory, ItineraryItemFactory, WBSFactory,
-)
+from t2f.tests.factories import ItineraryItemFactory
 from t2f.vision import InvoiceUpdater
 from users.tests.factories import UserFactory
 
@@ -36,42 +42,52 @@ class InvoiceMaking(APITenantTestCase):
         country.business_area_code = '0060'
         country.save()
 
-        dsa_region = DSARegionFactory()
-        DSARateFactory(region=dsa_region)
+        dsa_region = PublicsDSARegionFactory()
+        PublicsDSARateFactory(region=dsa_region)
 
         # Currencies
-        self.huf = CurrencyFactory(name='HUF',
-                                   code='huf')
-        self.usd = CurrencyFactory(name='USD',
-                                   code='usd')
+        self.huf = PublicsCurrencyFactory(name='HUF', code='huf')
+        self.usd = PublicsCurrencyFactory(name='USD', code='usd')
 
         # Add wbs/grant/fund
-        self.wbs_1 = WBSFactory(name='WBS #1')
-        self.wbs_2 = WBSFactory(name='WBS #2')
+        self.wbs_1 = PublicsWBSFactory(name='WBS #1')
+        self.wbs_2 = PublicsWBSFactory(name='WBS #2')
 
-        self.grant_1 = GrantFactory(name='Grant #1')
-        self.grant_2 = GrantFactory(name='Grant #2')
-        self.grant_3 = GrantFactory(name='Grant #3')
+        self.grant_1 = PublicsGrantFactory(name='Grant #1')
+        self.grant_2 = PublicsGrantFactory(name='Grant #2')
+        self.grant_3 = PublicsGrantFactory(name='Grant #3')
 
         self.wbs_1.grants.add(self.grant_1)
         self.wbs_2.grants.add(self.grant_2, self.grant_3)
 
-        self.fund_1 = FundFactory(name='Fund #1')
-        self.fund_2 = FundFactory(name='Fund #4')
+        self.fund_1 = PublicsFundFactory(name='Fund #1')
+        self.fund_2 = PublicsFundFactory(name='Fund #4')
 
         self.grant_1.funds.add(self.fund_1)
         self.grant_3.funds.add(self.fund_2)
 
         # Expense types
-        self.et_t_food = ExpenseTypeFactory(title='Food',
-                                            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
-        self.et_t_travel = ExpenseTypeFactory(title='Travel',
-                                              vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
-        self.et_t_other = ExpenseTypeFactory(title='Other',
-                                             vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
+        self.et_t_food = PublicsTravelExpenseTypeFactory(
+            title='Food',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
+        self.et_t_travel = PublicsTravelExpenseTypeFactory(
+            title='Travel',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
+        self.et_t_other = PublicsTravelExpenseTypeFactory(
+            title='Other',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
 
-        self.et_a_nico = ExpenseTypeFactory(title='Nico Travel', vendor_number='a_nico')
-        self.et_a_torben = ExpenseTypeFactory(title='Torben Travel', vendor_number='a_torben')
+        self.et_a_nico = PublicsTravelExpenseTypeFactory(
+            title='Nico Travel',
+            vendor_number='a_nico'
+        )
+        self.et_a_torben = PublicsTravelExpenseTypeFactory(
+            title='Torben Travel',
+            vendor_number='a_torben'
+        )
 
         # Make a travel
         self.travel = Travel.objects.create(traveler=self.traveler,

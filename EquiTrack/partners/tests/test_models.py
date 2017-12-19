@@ -9,7 +9,6 @@ from django.utils import timezone
 
 from mock import patch, Mock
 
-from EquiTrack.factories import CurrencyFactory
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from funds.tests.factories import (
     DonorFactory,
@@ -38,6 +37,7 @@ from partners.tests.factories import (
     PartnerStaffFactory,
     WorkspaceFileTypeFactory,
 )
+from publics.tests.factories import PublicsCurrencyFactory
 from reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
@@ -66,7 +66,7 @@ class TestGetCurrencyNameOrDefault(TenantTestCase):
         self.assertIsNone(models._get_currency_name_or_default(budget))
 
     def test_currency(self):
-        currency = CurrencyFactory(code="USD")
+        currency = PublicsCurrencyFactory(code="USD")
         budget = InterventionBudgetFactory(
             currency=currency
         )
@@ -910,7 +910,7 @@ class TestInterventionModel(TenantTestCase):
         self.assertEqual(self.intervention.sector_names, "")
 
     def test_default_budget_currency(self):
-        currency = CurrencyFactory(code="USD")
+        currency = PublicsCurrencyFactory(code="USD")
         intervention = InterventionFactory()
         InterventionBudgetFactory(
             currency=currency,

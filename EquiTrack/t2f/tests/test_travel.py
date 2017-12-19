@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
+from publics.tests.factories import PublicsCurrencyFactory, PublicsTravelExpenseTypeFactory
 from t2f.models import Expense, Travel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
 from users.tests.factories import UserFactory
 
 
@@ -23,13 +23,21 @@ class TravelMethods(APITenantTestCase):
 
     def test_cost_summary(self):
         # Currencies
-        huf = CurrencyFactory(name='HUF',
-                              code='huf')
+        huf = PublicsCurrencyFactory(name='HUF', code='huf')
 
         # Expense types
-        et_t_food = ExpenseTypeFactory(title='Food', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
-        et_t_travel = ExpenseTypeFactory(title='Travel', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
-        et_t_other = ExpenseTypeFactory(title='Other', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
+        et_t_food = PublicsTravelExpenseTypeFactory(
+            title='Food',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
+        et_t_travel = PublicsTravelExpenseTypeFactory(
+            title='Travel',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
+        et_t_other = PublicsTravelExpenseTypeFactory(
+            title='Other',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
 
         # Make a travel
         travel = Travel.objects.create(traveler=self.traveler,

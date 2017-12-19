@@ -14,15 +14,16 @@ from locations.tests.factories import LocationFactory
 from partners.models import PartnerType
 from partners.tests.factories import InterventionFactory, PartnerFactory
 from publics.models import DSARegion
-from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
-from t2f.models import ModeOfTravel, Travel, TravelAttachment, TravelType
-from t2f.tests.factories import (
-    AirlineCompanyFactory,
-    CurrencyFactory,
-    ExpenseTypeFactory,
-    ItineraryItemFactory,
-    TravelFactory,
+from publics.tests.factories import (
+    PublicsAirlineCompanyFactory,
+    PublicsBusinessAreaFactory,
+    PublicsCurrencyFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsDSARegionFactory,
+    PublicsWBSFactory,
 )
+from t2f.models import ModeOfTravel, Travel, TravelAttachment, TravelType
+from t2f.tests.factories import ItineraryItemFactory, TravelFactory
 from users.tests.factories import UserFactory
 
 
@@ -104,8 +105,8 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         self.assertEqual(response.status_code, 204)
 
     def test_patch_request(self):
-        currency = CurrencyFactory()
-        expense_type = ExpenseTypeFactory()
+        currency = PublicsCurrencyFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [{'date': '2016-11-03',
@@ -157,9 +158,9 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
     def test_airlines(self):
         dsaregion = DSARegion.objects.first()
-        airlines_1 = AirlineCompanyFactory()
-        airlines_2 = AirlineCompanyFactory()
-        airlines_3 = AirlineCompanyFactory()
+        airlines_1 = PublicsAirlineCompanyFactory()
+        airlines_2 = PublicsAirlineCompanyFactory()
+        airlines_3 = PublicsAirlineCompanyFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [],
@@ -190,9 +191,9 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         self.assertEqual(response_json['itinerary'][0]['airlines'], [airlines_1.id, airlines_3.id])
 
     def test_preserved_expenses(self):
-        currency = CurrencyFactory()
-        expense_type = ExpenseTypeFactory()
-        dsa_region = DSARegionFactory()
+        currency = PublicsCurrencyFactory()
+        expense_type = PublicsTravelExpenseTypeFactory()
+        dsa_region = PublicsDSARegionFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [{'date': '2016-11-03',
@@ -252,11 +253,11 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.00')
 
     def test_detailed_expenses(self):
-        currency = CurrencyFactory()
-        user_et = ExpenseTypeFactory(vendor_number='user')
-        travel_agent_1_et = ExpenseTypeFactory(vendor_number='ta1')
-        travel_agent_2_et = ExpenseTypeFactory(vendor_number='ta2')
-        parking_money_et = ExpenseTypeFactory(vendor_number='')
+        currency = PublicsCurrencyFactory()
+        user_et = PublicsTravelExpenseTypeFactory(vendor_number='user')
+        travel_agent_1_et = PublicsTravelExpenseTypeFactory(vendor_number='ta1')
+        travel_agent_2_et = PublicsTravelExpenseTypeFactory(vendor_number='ta2')
+        parking_money_et = PublicsTravelExpenseTypeFactory(vendor_number='')
 
         data = {'cost_assignments': [],
                 'traveler': self.traveler.id,
@@ -307,11 +308,11 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                            'vendor_number': ''}])
 
     def test_cost_assignments(self):
-        wbs = WBSFactory()
+        wbs = PublicsWBSFactory()
         grant = wbs.grants.first()
         fund = grant.funds.first()
-        business_area = BusinessAreaFactory()
-        dsa_region = DSARegionFactory()
+        business_area = PublicsBusinessAreaFactory()
+        dsa_region = PublicsDSARegionFactory()
 
         data = {'cost_assignments': [{'wbs': wbs.id,
                                       'fund': fund.id,
@@ -400,7 +401,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
     def test_itinerary_dates(self):
         dsaregion = DSARegion.objects.first()
-        airlines = AirlineCompanyFactory()
+        airlines = PublicsAirlineCompanyFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [],
@@ -447,7 +448,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
     def test_itinerary_origin_destination(self):
         dsaregion = DSARegion.objects.first()
-        airlines = AirlineCompanyFactory()
+        airlines = PublicsAirlineCompanyFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [],
@@ -478,7 +479,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
     def test_itinerary_dsa_regions(self):
         dsaregion = DSARegion.objects.first()
-        airlines = AirlineCompanyFactory()
+        airlines = PublicsAirlineCompanyFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [],
@@ -589,7 +590,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
     def test_reversed_itinerary_order(self):
         dsa_1 = DSARegion.objects.first()
-        dsa_2 = DSARegionFactory()
+        dsa_2 = PublicsDSARegionFactory()
 
         data = {'itinerary': [{'airlines': [],
                                'origin': 'a',
@@ -623,7 +624,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
     def test_incorrect_itinerary_order(self):
         dsa_1 = DSARegion.objects.first()
-        dsa_2 = DSARegionFactory()
+        dsa_2 = PublicsDSARegionFactory()
 
         data = {
             'itinerary': [
@@ -720,8 +721,8 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
     @freeze_time('2017-02-15')
     def test_action_point_500(self):
-        dsa = DSARegionFactory()
-        currency = CurrencyFactory()
+        dsa = PublicsDSARegionFactory()
+        currency = PublicsCurrencyFactory()
 
         data = {'deductions': [{'date': '2017-02-20',
                                 'breakfast': False,
@@ -892,7 +893,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
     def test_ghost_data_existence(self):
         dsa_region = DSARegion.objects.first()
-        airline = AirlineCompanyFactory()
+        airline = PublicsAirlineCompanyFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [],
@@ -922,7 +923,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
     def test_save_with_ghost_data(self):
         dsa_region = DSARegion.objects.first()
-        airline = AirlineCompanyFactory()
+        airline = PublicsAirlineCompanyFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [],

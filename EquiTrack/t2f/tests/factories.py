@@ -9,7 +9,13 @@ from factory import fuzzy
 from locations.tests.factories import LocationFactory
 from partners.tests.factories import InterventionFactory
 from publics.tests.factories import (
-    AirlineCompanyFactory, CurrencyFactory, DSARegionFactory, ExpenseTypeFactory, FundFactory, GrantFactory, WBSFactory
+    PublicsAirlineCompanyFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARegionFactory,
+    PublicsFundFactory,
+    PublicsGrantFactory,
+    PublicsTravelExpenseTypeFactory,
+    PublicsWBSFactory,
 )
 from reports.tests.factories import ResultFactory, SectorFactory
 from t2f import models
@@ -61,13 +67,13 @@ class ItineraryItemFactory(factory.DjangoModelFactory):
     destination = fuzzy.FuzzyText(length=32)
     departure_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
     arrival_date = fuzzy.FuzzyDateTime(start_dt=timezone.now(), end_dt=_FUZZY_END_DATE)
-    dsa_region = factory.SubFactory(DSARegionFactory)
+    dsa_region = factory.SubFactory(PublicsDSARegionFactory)
     overnight_travel = False
     mode_of_travel = models.ModeOfTravel.BOAT
 
     @factory.post_generation
     def populate_airlines(self, create, extracted, **kwargs):
-        airline = AirlineCompanyFactory()
+        airline = PublicsAirlineCompanyFactory()
         self.airlines.add(airline)
 
     class Meta:
@@ -75,9 +81,9 @@ class ItineraryItemFactory(factory.DjangoModelFactory):
 
 
 class ExpenseFactory(factory.DjangoModelFactory):
-    currency = factory.SubFactory(CurrencyFactory)
+    currency = factory.SubFactory(PublicsCurrencyFactory)
     amount = fuzzy.FuzzyDecimal(1, 10000)
-    type = factory.SubFactory(ExpenseTypeFactory)
+    type = factory.SubFactory(PublicsTravelExpenseTypeFactory)
 
     class Meta:
         model = models.Expense
@@ -96,10 +102,10 @@ class DeductionFactory(factory.DjangoModelFactory):
 
 
 class CostAssignmentFactory(factory.DjangoModelFactory):
-    wbs = factory.SubFactory(WBSFactory)
+    wbs = factory.SubFactory(PublicsWBSFactory)
     share = fuzzy.FuzzyInteger(1, 100)
-    grant = factory.SubFactory(GrantFactory)
-    fund = factory.SubFactory(FundFactory)
+    grant = factory.SubFactory(PublicsGrantFactory)
+    fund = factory.SubFactory(PublicsFundFactory)
 
     class Meta:
         model = models.CostAssignment
@@ -138,7 +144,7 @@ class TravelFactory(factory.DjangoModelFactory):
     international_travel = False
     ta_required = True
     reference_number = factory.Sequence(lambda n: make_travel_reference_number())
-    currency = factory.SubFactory(CurrencyFactory)
+    currency = factory.SubFactory(PublicsCurrencyFactory)
     mode_of_travel = []
 
     itinerary = factory.RelatedFactory(ItineraryItemFactory, 'travel')
@@ -161,7 +167,7 @@ class InvoiceFactory(factory.DjangoModelFactory):
     travel = factory.SubFactory(TravelFactory)
     business_area = fuzzy.FuzzyText(length=12)
     vendor_number = fuzzy.FuzzyText(length=12)
-    currency = factory.SubFactory(CurrencyFactory)
+    currency = factory.SubFactory(PublicsCurrencyFactory)
     amount = fuzzy.FuzzyDecimal(0, 1000)
     status = models.Invoice.PENDING
     messages = []
@@ -172,9 +178,9 @@ class InvoiceFactory(factory.DjangoModelFactory):
 
 class InvoiceItemFactory(factory.DjangoModelFactory):
     invoice = factory.SubFactory(InvoiceFactory)
-    wbs = factory.SubFactory(WBSFactory)
-    grant = factory.SubFactory(GrantFactory)
-    fund = factory.SubFactory(FundFactory)
+    wbs = factory.SubFactory(PublicsWBSFactory)
+    grant = factory.SubFactory(PublicsGrantFactory)
+    fund = factory.SubFactory(PublicsFundFactory)
     amount = fuzzy.FuzzyDecimal(0, 250)
 
     class Meta:

@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from EquiTrack.factories import CurrencyFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
+from publics.tests.factories import PublicsCurrencyFactory
 from users.models import Country
 
 
@@ -17,7 +17,7 @@ class TestAddCountry(FastTenantTestCase):
         # the raises exception that this is where the command
         # failed
         name = "test"
-        CurrencyFactory(code="USD")
+        PublicsCurrencyFactory(code="USD")
         with self.assertRaisesRegexp(CommandError, "Can't create tenant"):
             call_command("add_country", name)
 

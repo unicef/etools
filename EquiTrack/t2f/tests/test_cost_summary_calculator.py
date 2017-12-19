@@ -8,7 +8,11 @@ from pytz import UTC
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
-    CountryFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory,
+    PublicsCountryFactory,
+    PublicsCurrencyFactory,
+    PublicsDSARateFactory,
+    PublicsDSARegionFactory,
+    PublicsTravelExpenseTypeFactory,
 )
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from t2f.tests.factories import ExpenseFactory, ItineraryItemFactory, TravelFactory
@@ -20,47 +24,67 @@ class CostSummaryTest(APITenantTestCase):
         super(CostSummaryTest, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
 
-        self.currency_usd = CurrencyFactory(code='USD')
-        self.currency_huf = CurrencyFactory(name='Hungarian Forint', code='HUF')
+        self.currency_usd = PublicsCurrencyFactory(code='USD')
+        self.currency_huf = PublicsCurrencyFactory(name='Hungarian Forint', code='HUF')
 
-        self.user_et_1 = ExpenseTypeFactory(title='Train cost',
-                                            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
-        self.user_et_2 = ExpenseTypeFactory(title='Other expenses',
-                                            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
-        self.ta_et = ExpenseTypeFactory(title='Travel agent')
+        self.user_et_1 = PublicsTravelExpenseTypeFactory(
+            title='Train cost',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
+        self.user_et_2 = PublicsTravelExpenseTypeFactory(
+            title='Other expenses',
+            vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER
+        )
+        self.ta_et = PublicsTravelExpenseTypeFactory(title='Travel agent')
 
-        netherlands = CountryFactory(name='Netherlands', long_name='Netherlands')
-        hungary = CountryFactory(name='Hungary', long_name='Hungary')
-        denmark = CountryFactory(name='Denmark', long_name='Denmark')
-        germany = CountryFactory(name='Germany', long_name='Germany')
+        netherlands = PublicsCountryFactory(name='Netherlands', long_name='Netherlands')
+        hungary = PublicsCountryFactory(name='Hungary', long_name='Hungary')
+        denmark = PublicsCountryFactory(name='Denmark', long_name='Denmark')
+        germany = PublicsCountryFactory(name='Germany', long_name='Germany')
 
-        self.amsterdam = DSARegionFactory(country=netherlands,
-                                          area_name='Amsterdam',
-                                          area_code='ds1')
-        DSARateFactory(region=self.amsterdam,
-                       dsa_amount_usd=100,
-                       dsa_amount_60plus_usd=60)
+        self.amsterdam = PublicsDSARegionFactory(
+            country=netherlands,
+            area_name='Amsterdam',
+            area_code='ds1'
+        )
+        PublicsDSARateFactory(
+            region=self.amsterdam,
+            dsa_amount_usd=100,
+            dsa_amount_60plus_usd=60
+        )
 
-        self.budapest = DSARegionFactory(country=hungary,
-                                         area_name='Budapest',
-                                         area_code='ds2')
-        DSARateFactory(region=self.budapest,
-                       dsa_amount_usd=200,
-                       dsa_amount_60plus_usd=120)
+        self.budapest = PublicsDSARegionFactory(
+            country=hungary,
+            area_name='Budapest',
+            area_code='ds2'
+        )
+        PublicsDSARateFactory(
+            region=self.budapest,
+            dsa_amount_usd=200,
+            dsa_amount_60plus_usd=120
+        )
 
-        self.copenhagen = DSARegionFactory(country=denmark,
-                                           area_name='Copenhagen',
-                                           area_code='ds3')
-        DSARateFactory(region=self.copenhagen,
-                       dsa_amount_usd=300,
-                       dsa_amount_60plus_usd=180)
+        self.copenhagen = PublicsDSARegionFactory(
+            country=denmark,
+            area_name='Copenhagen',
+            area_code='ds3'
+        )
+        PublicsDSARateFactory(
+            region=self.copenhagen,
+            dsa_amount_usd=300,
+            dsa_amount_60plus_usd=180
+        )
 
-        self.dusseldorf = DSARegionFactory(country=germany,
-                                           area_name='Duesseldorf',
-                                           area_code='ds4')
-        DSARateFactory(region=self.dusseldorf,
-                       dsa_amount_usd=400,
-                       dsa_amount_60plus_usd=240)
+        self.dusseldorf = PublicsDSARegionFactory(
+            country=germany,
+            area_name='Duesseldorf',
+            area_code='ds4'
+        )
+        PublicsDSARateFactory(
+            region=self.dusseldorf,
+            dsa_amount_usd=400,
+            dsa_amount_60plus_usd=240
+        )
 
         # Delete default items created by factory
         self.travel = TravelFactory(currency=self.currency_huf)
