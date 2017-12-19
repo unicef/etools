@@ -9,6 +9,7 @@ from rest_framework import permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.response import Response
+from EquiTrack.permissions import IsSuperUserOrStaff
 
 from users.models import Country, UserProfile
 from users.serializers_v3 import (
@@ -76,14 +77,20 @@ class UsersListApiView(ListAPIView):
     """
     model = get_user_model()
     serializer_class = MinimalUserSerializer
+    permission_classes = (IsSuperUserOrStaff, )
 
     def get_queryset(self, pk=None):
         user = self.request.user
-        queryset = self.model.objects.filter(profile__country=user.profile.country,
-                                             is_staff=True).prefetch_related('profile',
-                                                                             'groups',
-                                                                             'user_permissions').order_by('first_name')
+        queryset = self.model.objects.filter(
+            profile__country=user.profile.country, is_staff=True
+        ).prefetch_related(
+            'profile',
+            'groups',
+            'user_permissions'
+        ).order_by('first_name')
+
         user_ids = self.request.query_params.get("values", None)
+
         if user_ids:
             try:
                 user_ids = [int(x) for x in user_ids.split(",")]
