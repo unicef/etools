@@ -56,6 +56,7 @@ from reports.models import ResultType
 from reports.tests.factories import (
     CountryProgrammeFactory,
     ResultFactory,
+    ResultTypeFactory,
     SectorFactory,
 )
 from snapshot.models import Activity
@@ -401,7 +402,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             signed_by_unicef_date=datetime.date.today())
 
         self.intervention = InterventionFactory(agreement=agreement)
-        self.output_res_type, _ = ResultType.objects.get_or_create(name='Output')
+        self.output_res_type = ResultTypeFactory(name=ResultType.OUTPUT)
 
         self.result = ResultFactory(
             result_type=self.output_res_type,)
@@ -747,8 +748,6 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
 
 class TestPartnershipViews(APITenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory()
@@ -761,8 +760,7 @@ class TestPartnershipViews(APITenantTestCase):
                                      partner_manager=self.partner_staff_member)
         self.intervention = InterventionFactory(agreement=agreement)
 
-        self.result_type = ResultType.objects.get(id=1)
-        self.result = ResultFactory(result_type=self.result_type,)
+        self.result = ResultFactory()
         self.partnership_budget = InterventionBudget.objects.create(
             intervention=self.intervention,
             unicef_cash=100,

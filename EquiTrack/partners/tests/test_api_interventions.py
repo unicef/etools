@@ -75,7 +75,6 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 
 
 class TestInterventionsAPI(APITenantTestCase):
-    fixtures = ['initial_data.json']
     EDITABLE_FIELDS = {
         'draft': ["status", "attachments", "prc_review_document", 'travel_activities',
                   "partner_authorized_officer_signatory", "partner_focal_points", "id",

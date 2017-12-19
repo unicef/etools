@@ -76,8 +76,6 @@ class TestGetCurrencyNameOrDefault(TenantTestCase):
 class TestAgreementNumberGeneration(TenantTestCase):
     '''Test that agreements have the expected base and reference numbers for all types of agreements'''
 
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         self.date = datetime.date.today()
         self.tenant.country_short_code = 'LEBA'
@@ -180,8 +178,6 @@ class TestAgreementNumberGeneration(TenantTestCase):
 
 
 class TestHACTCalculations(TenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         year = datetime.date.today().year
         self.intervention = InterventionFactory(
@@ -240,8 +236,6 @@ class TestHACTCalculations(TenantTestCase):
 
 
 class TestPartnerOrganizationModel(TenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         self.partner_organization = PartnerFactory(
             name="Partner Org 1",
@@ -744,8 +738,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
 
 class TestAgreementModel(TenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         self.partner_organization = models.PartnerOrganization.objects.create(
             name="Partner Org 1",
@@ -767,8 +759,6 @@ class TestAgreementModel(TenantTestCase):
 
 
 class TestInterventionModel(TenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         self.partner_organization = PartnerFactory(name="Partner Org 1")
         cp = CountryProgrammeFactory(

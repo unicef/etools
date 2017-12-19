@@ -20,8 +20,6 @@ from users.tests.factories import UserFactory
 
 
 class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         super(TestInterventionsAPI, self).setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)

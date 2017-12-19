@@ -39,8 +39,6 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 
 
 class TestAgreementsAPI(APITenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partnership_manager_user = UserFactory(is_staff=True)

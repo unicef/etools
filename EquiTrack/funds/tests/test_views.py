@@ -14,8 +14,6 @@ from users.tests.factories import UserFactory
 
 
 class TestFRHeaderView(APITenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.intervention = InterventionFactory()

@@ -19,15 +19,16 @@ from reports.tests.factories import (
     IndicatorBlueprintFactory,
     LowerResultFactory,
     ResultFactory,
+    ResultTypeFactory,
 )
 from users.tests.factories import UserFactory
 
 
 class TestReportViews(APITenantTestCase):
-    fixtures = ['initial_data.json']
-
     @classmethod
     def setUpTestData(cls):
+        for name, _ in ResultType.NAME_CHOICES:
+            ResultTypeFactory(name=name)
         cls.user = UserFactory(is_staff=True)  # UNICEF staff user
         cls.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
 
