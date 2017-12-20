@@ -13,18 +13,18 @@ from users.tests.factories import UserFactory
 
 
 class InvoiceEndpoints(APITenantTestCase):
-    def setUp(self):
-        super(InvoiceEndpoints, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.traveler = UserFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.traveler = UserFactory()
 
-        country = self.traveler.profile.country
+        country = cls.traveler.profile.country
         country.business_area_code = '0060'
         country.save()
 
-        self.travel = TravelFactory(traveler=self.traveler,
-                                    supervisor=self.unicef_staff)
-        maker = InvoiceMaker(self.travel)
+        cls.travel = TravelFactory(traveler=cls.traveler,
+                                   supervisor=cls.unicef_staff)
+        maker = InvoiceMaker(cls.travel)
         maker.do_invoicing()
 
     def test_urls(self):

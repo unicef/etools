@@ -37,10 +37,10 @@ log = logging.getLogger('__name__')
 
 
 class TravelExports(APITenantTestCase):
-    def setUp(self):
-        super(TravelExports, self).setUp()
-        self.traveler = UserFactory(first_name='John', last_name='Doe')
-        self.unicef_staff = UserFactory(first_name='Jakab', last_name='Gipsz', is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(first_name='John', last_name='Doe')
+        cls.unicef_staff = UserFactory(first_name='Jakab', last_name='Gipsz', is_staff=True)
 
     def test_urls(self):
         export_url = reverse('t2f:travels:list:activity_export')

@@ -38,10 +38,10 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
 
 
 class TestFundsReservationHeaderExportList(APITenantTestCase):
-    def setUp(self):
-        super(TestFundsReservationHeaderExportList, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.frs = FundsReservationHeaderFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.frs = FundsReservationHeaderFactory()
 
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(

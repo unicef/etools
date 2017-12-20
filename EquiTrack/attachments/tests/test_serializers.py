@@ -11,11 +11,12 @@ from EquiTrack.tests.mixins import FastTenantTestCase
 
 
 class TestAttachmentsModels(FastTenantTestCase):
-    def setUp(self):
-        self.file_type = FileTypeFactory()
-        self.file_name = 'simple_file.txt'
+    @classmethod
+    def setUpTestData(cls):
+        cls.file_type = FileTypeFactory()
+        cls.file_name = 'simple_file.txt'
         file_content = 'these are the file contents!'
-        self.base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(file_content))
+        cls.base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(file_content))
 
     def test_invalid(self):
         invalid_serializer = Base64AttachmentSerializer(data={

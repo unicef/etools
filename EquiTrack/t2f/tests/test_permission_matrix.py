@@ -17,10 +17,10 @@ from users.tests.factories import UserFactory
 
 
 class TestPermissionMatrix(APITenantTestCase):
-    def setUp(self):
-        super(TestPermissionMatrix, self).setUp()
-        self.traveler = UserFactory(is_staff=True)
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
         list_url = reverse('t2f:permission_matrix')

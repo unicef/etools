@@ -12,20 +12,20 @@ from users.tests.factories import UserFactory
 
 
 class MailingTest(APITenantTestCase):
-    def setUp(self):
-        super(MailingTest, self).setUp()
-        self.traveler = UserFactory(first_name='Jane',
-                                    last_name='Doe')
-        self.traveler.profile.vendor_number = 'usrvnd'
-        self.traveler.profile.save()
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(first_name='Jane',
+                                   last_name='Doe')
+        cls.traveler.profile.vendor_number = 'usrvnd'
+        cls.traveler.profile.save()
 
-        self.unicef_staff = UserFactory(is_staff=True,
-                                        first_name='John',
-                                        last_name='Doe')
-        self.travel = TravelFactory(traveler=self.traveler,
-                                    supervisor=self.unicef_staff)
-        ItineraryItemFactory(travel=self.travel)
-        ItineraryItemFactory(travel=self.travel)
+        cls.unicef_staff = UserFactory(is_staff=True,
+                                       first_name='John',
+                                       last_name='Doe')
+        cls.travel = TravelFactory(traveler=cls.traveler,
+                                   supervisor=cls.unicef_staff)
+        ItineraryItemFactory(travel=cls.travel)
+        ItineraryItemFactory(travel=cls.travel)
         mail.outbox = []
 
     @override_settings(DISABLE_INVOICING=False)

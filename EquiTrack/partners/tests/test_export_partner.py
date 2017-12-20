@@ -16,10 +16,10 @@ from users.tests.factories import UserFactory
 
 
 class PartnerModelExportTestCase(APITenantTestCase):
-    def setUp(self):
-        super(PartnerModelExportTestCase, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(
             partner_type='Government',
             vendor_number='Vendor No',
             short_name="Short Name",
@@ -37,7 +37,7 @@ class PartnerModelExportTestCase(APITenantTestCase):
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
         )
-        self.partnerstaff = PartnerStaffFactory(partner=self.partner)
+        cls.partnerstaff = PartnerStaffFactory(partner=cls.partner)
 
 
 class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
@@ -229,11 +229,11 @@ class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
 
 
 class TestPartnerOrganizationHactExport(APITenantTestCase):
-    def setUp(self):
-        super(TestPartnerOrganizationHactExport, self).setUp()
-        self.url = reverse("partners_api:partner-hact")
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(
+    @classmethod
+    def setUpTestData(cls):
+        cls.url = reverse("partners_api:partner-hact")
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(
             total_ct_cp=10.00
         )
 

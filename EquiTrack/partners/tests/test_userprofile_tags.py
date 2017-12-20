@@ -11,11 +11,11 @@ from users.tests.factories import CountryFactory, ProfileFactory
 
 
 class TestShowCountrySelect(FastTenantTestCase):
-    def setUp(self):
-        super(TestShowCountrySelect, self).setUp()
-        self.country = CountryFactory()
-        self.profile = ProfileFactory(country=self.country)
-        self.profile.countries_available.add(self.country)
+    @classmethod
+    def setUpTestData(cls):
+        cls.country = CountryFactory()
+        cls.profile = ProfileFactory(country=cls.country)
+        cls.profile.countries_available.add(cls.country)
 
     def test_no_profile(self):
         self.assertEqual(tags.show_country_select({}, None), "")

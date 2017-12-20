@@ -24,9 +24,9 @@ from users.tests.factories import UserFactory
 
 
 class StaticDataEndpoints(APITenantTestCase):
-    def setUp(self):
-        super(StaticDataEndpoints, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
         static_data_url = reverse('public:static')

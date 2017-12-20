@@ -21,14 +21,14 @@ log = logging.getLogger('__name__')
 
 
 class TravelList(URLAssertionMixin, APITenantTestCase):
-    def setUp(self):
-        super(TravelList, self).setUp()
-        self.traveler = UserFactory()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.travel = TravelFactory(reference_number=make_travel_reference_number(),
-                                    traveler=self.traveler,
-                                    supervisor=self.unicef_staff,
-                                    section=None)
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory()
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.travel = TravelFactory(reference_number=make_travel_reference_number(),
+                                   traveler=cls.traveler,
+                                   supervisor=cls.unicef_staff,
+                                   section=None)
 
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''

@@ -23,13 +23,13 @@ from users.tests.factories import UserFactory
 
 
 class StateMachineTest(APITenantTestCase):
-    def setUp(self):
-        super(StateMachineTest, self).setUp()
-        self.traveler = UserFactory(is_staff=True)
-        self.traveler.profile.vendor_number = 'usrvend'
-        self.traveler.profile.save()
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(is_staff=True)
+        cls.traveler.profile.vendor_number = 'usrvend'
+        cls.traveler.profile.save()
 
-        self.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_possible_transitions(self):
         travel = TravelFactory()

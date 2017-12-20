@@ -8,12 +8,12 @@ from users.tests.factories import UserFactory
 
 
 class TravelMethods(APITenantTestCase):
-    def setUp(self):
-        super(TravelMethods, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.traveler = UserFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.traveler = UserFactory()
 
-        profile = self.traveler.profile
+        profile = cls.traveler.profile
         profile.vendor_number = 'user0001'
         profile.save()
 

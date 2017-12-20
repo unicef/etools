@@ -11,9 +11,9 @@ from users.tests.factories import UserFactory
 
 
 class GhostData(APITenantTestCase):
-    def setUp(self):
-        super(GhostData, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
         static_data_url = reverse('public:missing_static')

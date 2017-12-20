@@ -235,9 +235,9 @@ class TestAuditRisksViewSet(BaseTestCategoryRisksViewSet, APITenantTestCase):
 class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
-    def setUp(self):
-        super(TestEngagementsListViewSet, self).setUp()
-        self.second_engagement = self.engagement_factory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.second_engagement = cls.engagement_factory()
 
     def _test_list(self, user, engagements, params=""):
         response = self.forced_auth_req(

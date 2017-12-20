@@ -44,9 +44,12 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 
 class TestPMPStaticDropdownsListApiView(APITenantTestCase):
     '''exercise PmpStaticDropdownsListApiView'''
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)
+        cls.url = reverse("partners_api:dropdown-static-list")
+
     def setUp(self):
-        self.user = UserFactory(is_staff=True)
-        self.url = reverse("partners_api:dropdown-static-list")
         self.expected_keys = sorted(('cso_types',
                                      'partner_types',
                                      'agency_choices',
@@ -222,12 +225,14 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
 
 
 class TestPMPDropdownsListApiView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = reverse("partners_api:dropdown-pmp-list")
+        cls.client = TenantClient(cls.tenant)
+
     def setUp(self):
         super(TestPMPDropdownsListApiView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.url = reverse("partners_api:dropdown-pmp-list")
-        self.client = TenantClient(self.tenant)
-
         self.expected_keys = sorted((
             u'signed_by_unicef_users',
             u'cp_outputs',

@@ -18,13 +18,13 @@ from users.tests.factories import UserFactory
 
 
 class ThresholdTest(APITenantTestCase):
-    def setUp(self):
-        super(ThresholdTest, self).setUp()
-        self.traveler = UserFactory(is_staff=True)
-        self.unicef_staff = UserFactory(is_staff=True)
-        # self.travel = TravelFactory(traveler=self.traveler,
-        #                             supervisor=self.unicef_staff)
-        workspace = self.unicef_staff.profile.country
+    @classmethod
+    def setUpTestData(cls):
+        cls.traveler = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True)
+        # cls.travel = TravelFactory(traveler=cls.traveler,
+        #                            supervisor=cls.unicef_staff)
+        workspace = cls.unicef_staff.profile.country
         workspace.threshold_tae_usd = 100
         workspace.threshold_tre_usd = 100
         workspace.save()

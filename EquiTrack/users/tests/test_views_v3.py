@@ -33,9 +33,9 @@ class TestCountryView(APITenantTestCase):
 
 
 class TestUsersDetailAPIView(APITenantTestCase):
-    def setUp(self):
-        super(TestUsersDetailAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_get_not_staff(self):
         user = UserFactory()

@@ -34,9 +34,12 @@ class TestUserAuthAPIView(APITenantTestCase):
 
 
 class TestChangeUserCountry(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+
     def setUp(self):
         super(TestChangeUserCountry, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
         self.url = reverse("country-change")
 
     def test_post(self):
@@ -72,8 +75,9 @@ class TestChangeUserCountry(APITenantTestCase):
 
 
 class TestSectionViews(APITenantTestCase):
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_api_section_list_values(self):
         s1 = SectionFactory()
@@ -89,8 +93,9 @@ class TestSectionViews(APITenantTestCase):
 
 
 class TestOfficeViews(APITenantTestCase):
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_api_office_list_values(self):
         o1 = OfficeFactory()
@@ -106,13 +111,13 @@ class TestOfficeViews(APITenantTestCase):
 
 
 class TestUserViews(APITenantTestCase):
-
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.unicef_superuser = UserFactory(is_superuser=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.group = GroupFactory()
-        self.partnership_manager_user.groups.add(self.group)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_superuser = UserFactory(is_superuser=True)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.group = GroupFactory()
+        cls.partnership_manager_user.groups.add(cls.group)
 
     def test_api_users_list(self):
         response = self.forced_auth_req('get', '/api/users/', user=self.unicef_staff)
@@ -271,6 +276,7 @@ class TestUserViews(APITenantTestCase):
 
 class TestUserViewsV3(APITenantTestCase):
     def setUp(self):
+        super(TestUserViewsV3, self).setUp()
         self.unicef_user = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
@@ -382,9 +388,9 @@ class TestCountryView(APITenantTestCase):
 
 
 class TestUsersDetailAPIView(APITenantTestCase):
-    def setUp(self):
-        super(TestUsersDetailAPIView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_get_not_staff(self):
         user = UserFactory()
@@ -417,9 +423,12 @@ class TestUsersDetailAPIView(APITenantTestCase):
 
 
 class TestProfileEdit(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.client = TenantClient(cls.tenant)
+
     def setUp(self):
         super(TestProfileEdit, self).setUp()
-        self.client = TenantClient(self.tenant)
         self.url = reverse("user_profile")
 
     def test_get_non_staff(self):
@@ -462,9 +471,12 @@ class TestProfileEdit(FastTenantTestCase):
 
 
 class TestGroupViewSet(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+
     def setUp(self):
         super(TestGroupViewSet, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
         self.url = "/api/groups/"
 
     def test_get(self):
@@ -512,9 +524,12 @@ class TestGroupViewSet(APITenantTestCase):
 
 
 class TestUserViewSet(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+
     def setUp(self):
         super(TestUserViewSet, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
         self.url = "/api/users/"
 
     def test_post(self):

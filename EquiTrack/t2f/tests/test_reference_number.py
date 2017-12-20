@@ -10,9 +10,9 @@ from users.tests.factories import UserFactory
 
 
 class TestReferenceNumber(APITenantTestCase):
-    def setUp(self):
-        super(TestReferenceNumber, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def _create_travel(self):
         data = {'traveler': self.unicef_staff.id}

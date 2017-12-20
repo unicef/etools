@@ -362,12 +362,12 @@ class UrlsTestCase(URLAssertionMixin, TestCase):
 
 
 class TestLowerResultExportList(APITenantTestCase):
-    def setUp(self):
-        super(TestLowerResultExportList, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.result_link = InterventionResultLinkFactory()
-        self.lower_result = LowerResultFactory(
-            result_link=self.result_link
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.result_link = InterventionResultLinkFactory()
+        cls.lower_result = LowerResultFactory(
+            result_link=cls.result_link
         )
 
     def test_invalid_format_export_api(self):
@@ -409,17 +409,17 @@ class TestLowerResultExportList(APITenantTestCase):
 
 
 class TestAppliedIndicatorExportList(APITenantTestCase):
-    def setUp(self):
-        super(TestAppliedIndicatorExportList, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.result_link = InterventionResultLinkFactory()
-        self.lower_result = LowerResultFactory(
-            result_link=self.result_link
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.result_link = InterventionResultLinkFactory()
+        cls.lower_result = LowerResultFactory(
+            result_link=cls.result_link
         )
-        self.indicator = IndicatorBlueprintFactory()
-        self.applied = AppliedIndicatorFactory(
-            indicator=self.indicator,
-            lower_result=self.lower_result
+        cls.indicator = IndicatorBlueprintFactory()
+        cls.applied = AppliedIndicatorFactory(
+            indicator=cls.indicator,
+            lower_result=cls.lower_result
         )
 
     def test_invalid_format_export_api(self):

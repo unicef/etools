@@ -28,31 +28,31 @@ log = logging.getLogger('__name__')
 
 
 class OverlappingTravelsTest(APITenantTestCase):
-    def setUp(self):
-        super(OverlappingTravelsTest, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         business_area = PublicsBusinessAreaFactory()
 
-        self.traveler = UserFactory(is_staff=True)
-        self.traveler.profile.vendor_number = 'usrvnd'
-        self.traveler.profile.save()
+        cls.traveler = UserFactory(is_staff=True)
+        cls.traveler.profile.vendor_number = 'usrvnd'
+        cls.traveler.profile.save()
 
-        workspace = self.traveler.profile.country
+        workspace = cls.traveler.profile.country
         workspace.business_area_code = business_area.code
         workspace.save()
 
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.travel = TravelFactory(reference_number=make_travel_reference_number(),
-                                    traveler=self.traveler,
-                                    supervisor=self.unicef_staff,
-                                    start_date=datetime(2017, 4, 4, 12, 00, tzinfo=UTC),
-                                    end_date=datetime(2017, 4, 14, 16, 00, tzinfo=UTC))
-        self.travel.expenses.all().delete()
-        ItineraryItemFactory(travel=self.travel)
-        ItineraryItemFactory(travel=self.travel)
-        self.travel.submit_for_approval()
-        self.travel.approve()
-        self.travel.send_for_payment()
-        self.travel.save()
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.travel = TravelFactory(reference_number=make_travel_reference_number(),
+                                   traveler=cls.traveler,
+                                   supervisor=cls.unicef_staff,
+                                   start_date=datetime(2017, 4, 4, 12, 00, tzinfo=UTC),
+                                   end_date=datetime(2017, 4, 14, 16, 00, tzinfo=UTC))
+        cls.travel.expenses.all().delete()
+        ItineraryItemFactory(travel=cls.travel)
+        ItineraryItemFactory(travel=cls.travel)
+        cls.travel.submit_for_approval()
+        cls.travel.approve()
+        cls.travel.send_for_payment()
+        cls.travel.save()
 
     def test_overlapping_trips(self):
         currency = PublicsCurrencyFactory()

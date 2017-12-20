@@ -14,9 +14,13 @@ from users.tests.factories import UserFactory
 
 
 class TestFRHeaderView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+
     def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = InterventionFactory()
+        super(TestFRHeaderView, self).setUp()
         self.fr_1 = FundsReservationHeaderFactory(intervention=None)
         self.fr_2 = FundsReservationHeaderFactory(intervention=None)
 

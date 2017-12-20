@@ -34,11 +34,11 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 
 
 class TestPartnerOrganizationHactAPIView(APITenantTestCase):
-    def setUp(self):
-        super(TestPartnerOrganizationHactAPIView, self).setUp()
-        self.url = reverse("partners_api:partner-hact")
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(
+    @classmethod
+    def setUpTestData(cls):
+        cls.url = reverse("partners_api:partner-hact")
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(
             total_ct_cp=10.00
         )
 
@@ -57,11 +57,14 @@ class TestPartnerOrganizationHactAPIView(APITenantTestCase):
 
 
 class TestPartnerOrganizationAddView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.url = reverse("partners_api:partner-add")
+        cls.user = UserFactory(is_staff=True)
+        cls.user.groups.add(GroupFactory())
+
     def setUp(self):
         super(TestPartnerOrganizationAddView, self).setUp()
-        self.url = reverse("partners_api:partner-add")
-        self.user = UserFactory(is_staff=True)
-        self.user.groups.add(GroupFactory())
         self.view = PartnerOrganizationAddView.as_view()
 
     def test_no_vendor_number(self):
@@ -146,19 +149,19 @@ class TestPartnerOrganizationAddView(APITenantTestCase):
 
 
 class TestPartnerOrganizationDeleteView(APITenantTestCase):
-    def setUp(self):
-        super(TestPartnerOrganizationDeleteView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partner = PartnerFactory(
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
             cso_type="International",
             hidden=False,
             vendor_number="DDD",
             short_name="Short name",
         )
-        self.url = reverse(
+        cls.url = reverse(
             'partners_api:partner-delete',
-            args=[self.partner.pk]
+            args=[cls.partner.pk]
         )
 
     def test_delete_with_signed_agreements(self):

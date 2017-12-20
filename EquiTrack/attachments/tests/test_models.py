@@ -8,8 +8,9 @@ from EquiTrack.tests.mixins import FastTenantTestCase
 
 
 class TestAttachmentsModels(FastTenantTestCase):
-    def setUp(self):
-        self.simple_object = FileTypeFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.simple_object = FileTypeFactory()
 
     def test_valid_file(self):
         valid_file_attachment = AttachmentFactory(

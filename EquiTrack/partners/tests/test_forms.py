@@ -45,12 +45,15 @@ class TestPartnersAdminForm(FastTenantTestCase):
 
 
 class TestPartnerStaffMemberForm(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory()
+
     def setUp(self):
         super(TestPartnerStaffMemberForm, self).setUp()
-        partner = PartnerFactory()
         self.data = {
             "email": "test@example.com",
-            "partner": partner.pk,
+            "partner": self.partner.pk,
             "first_name": "First",
             "last_name": "Last",
             "active": True,

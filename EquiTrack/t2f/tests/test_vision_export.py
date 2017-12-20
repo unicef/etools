@@ -29,12 +29,12 @@ except ImportError:
 
 
 class VisionXML(URLAssertionMixin, APITenantTestCase):
-    def setUp(self):
-        super(VisionXML, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.traveler = UserFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.traveler = UserFactory()
 
-        profile = self.traveler.profile
+        profile = cls.traveler.profile
         profile.vendor_number = 'user0001'
         profile.staff_id = 'staff001'
         profile.save()

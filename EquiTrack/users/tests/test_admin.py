@@ -23,12 +23,12 @@ class MockRequest:
 
 
 class TestProfileInline(FastTenantTestCase):
-    def setUp(self):
-        super(TestProfileInline, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         site = AdminSite()
-        self.admin = ProfileInline(UserProfile, site)
-        self.request = MockRequest()
-        self.user = UserFactory()
+        cls.admin = ProfileInline(UserProfile, site)
+        cls.request = MockRequest()
+        cls.user = UserFactory()
 
     def test_get_fields(self):
         """If not superuser then remove country_override"""
@@ -47,13 +47,13 @@ class TestProfileInline(FastTenantTestCase):
 
 
 class TestProfileAdmin(FastTenantTestCase):
-    def setUp(self):
-        super(TestProfileAdmin, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         site = AdminSite()
-        self.admin = ProfileAdmin(UserProfile, site)
-        self.request = MockRequest()
-        self.superuser = UserFactory(is_superuser=True)
-        self.user = UserFactory()
+        cls.admin = ProfileAdmin(UserProfile, site)
+        cls.request = MockRequest()
+        cls.superuser = UserFactory(is_superuser=True)
+        cls.user = UserFactory()
 
     def test_has_add_permission(self):
         self.assertFalse(self.admin.has_add_permission(self.request))
@@ -105,13 +105,13 @@ class TestProfileAdmin(FastTenantTestCase):
 
 
 class TestUserAdminPlus(FastTenantTestCase):
-    def setUp(self):
-        super(TestUserAdminPlus, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         site = AdminSite()
-        self.admin = UserAdminPlus(User, site)
-        self.request = MockRequest()
-        self.superuser = UserFactory(is_superuser=True)
-        self.user = UserFactory()
+        cls.admin = UserAdminPlus(User, site)
+        cls.request = MockRequest()
+        cls.superuser = UserFactory(is_superuser=True)
+        cls.user = UserFactory()
 
     def test_office(self):
         self.assertEqual(
@@ -140,11 +140,11 @@ class TestUserAdminPlus(FastTenantTestCase):
 
 
 class TestCountryAdmin(FastTenantTestCase):
-    def setUp(self):
-        super(TestCountryAdmin, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         site = AdminSite()
-        self.admin = CountryAdmin(Country, site)
-        self.request = MockRequest()
+        cls.admin = CountryAdmin(Country, site)
+        cls.request = MockRequest()
 
     def test_has_add_permission(self):
         self.assertFalse(self.admin.has_add_permission(self.request))

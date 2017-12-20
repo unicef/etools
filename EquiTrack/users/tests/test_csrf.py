@@ -8,8 +8,8 @@ class CSRFTest(TestCase):
     Simple smoke-test to ensure that CSRF protection is working. This only tests
     the admin login URL, so it is by no means an exhaustive test.
     """
-
     def setUp(self):
+        super(CSRFTest, self).setUp()
         # Ask the test client to enforce CSRF checks
         self.client = Client(enforce_csrf_checks=True)
         self.admin_login_url = reverse('admin:login')

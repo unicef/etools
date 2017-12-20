@@ -62,11 +62,14 @@ class TestTransitionOk(FastTenantTestCase):
 
 
 class TestTransitionToClosed(FastTenantTestCase):
-    def setUp(self):
-        super(TestTransitionToClosed, self).setUp()
-        self.intervention = InterventionFactory(
+    @classmethod
+    def setUpTestData(cls):
+        cls.intervention = InterventionFactory(
             end=datetime.date(2001, 1, 1),
         )
+
+    def setUp(self):
+        super(TestTransitionToClosed, self).setUp()
         self.expected = {
             'total_frs_amt': 0,
             'total_outstanding_amt': 0,
@@ -363,11 +366,11 @@ class TestStateDateRelatedAgreementValid(FastTenantTestCase):
 
 
 class TestSignedDateValid(FastTenantTestCase):
-    def setUp(self):
-        super(TestSignedDateValid, self).setUp()
-        self.unicef_user = UserFactory()
-        self.partner_user = PartnerStaffFactory()
-        self.future_date = datetime.date.today() + datetime.timedelta(days=2)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_user = UserFactory()
+        cls.partner_user = PartnerStaffFactory()
+        cls.future_date = datetime.date.today() + datetime.timedelta(days=2)
 
     def test_valid(self):
         """Valid if nothing signed"""
@@ -578,20 +581,20 @@ class TestSSFAgreementHasNoOtherIntervention(FastTenantTestCase):
 
 
 class TestInterventionValid(FastTenantTestCase):
-    def setUp(self):
-        super(TestInterventionValid, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = InterventionFactory()
-        self.intervention.old_instance = self.intervention
-        self.validator = InterventionValid(
-            self.intervention,
-            user=self.unicef_staff,
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory()
+        cls.intervention.old_instance = cls.intervention
+        cls.validator = InterventionValid(
+            cls.intervention,
+            user=cls.unicef_staff,
             disable_rigid_check=True,
         )
-        self.validator.permissions = self.validator.get_permissions(
-            self.intervention
+        cls.validator.permissions = cls.validator.get_permissions(
+            cls.intervention
         )
-        self.future_date = datetime.date.today() + datetime.timedelta(days=2)
+        cls.future_date = datetime.date.today() + datetime.timedelta(days=2)
 
     def test_check_rigid_fields_disabled_rigid_check(self):
         """If disabled rigid check return None"""

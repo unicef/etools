@@ -12,13 +12,13 @@ from users.tests.factories import UserFactory
 
 
 class WBSGrantFundEndpoint(APITenantTestCase):
-    def setUp(self):
-        super(WBSGrantFundEndpoint, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.business_area = PublicsBusinessAreaFactory()
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.business_area = PublicsBusinessAreaFactory()
 
-        workspace = self.unicef_staff.profile.country
-        workspace.business_area_code = self.business_area.code
+        workspace = cls.unicef_staff.profile.country
+        workspace.business_area_code = cls.business_area.code
         workspace.save()
 
     def test_urls(self):

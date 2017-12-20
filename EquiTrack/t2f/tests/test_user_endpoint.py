@@ -10,11 +10,11 @@ from users.tests.factories import UserFactory
 
 
 class UserT2FData(APITenantTestCase):
-    def setUp(self):
-        super(UserT2FData, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.travel = TravelFactory(traveler=self.unicef_staff,
-                                    supervisor=self.unicef_staff)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.travel = TravelFactory(traveler=cls.unicef_staff,
+                                   supervisor=cls.unicef_staff)
 
     def get_user_t2f_data(self):
         response = self.forced_auth_req('get', '/users/api/profile/',

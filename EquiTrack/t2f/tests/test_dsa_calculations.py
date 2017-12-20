@@ -13,99 +13,99 @@ from users.tests.factories import UserFactory
 
 
 class TestDSACalculations(APITenantTestCase):
-    def setUp(self):
-        super(TestDSACalculations, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
         netherlands = PublicsCountryFactory(name='Netherlands', long_name='Netherlands')
         hungary = PublicsCountryFactory(name='Hungary', long_name='Hungary')
         denmark = PublicsCountryFactory(name='Denmark', long_name='Denmark')
         germany = PublicsCountryFactory(name='Germany', long_name='Germany')
 
-        self.amsterdam = PublicsDSARegionFactory(
+        cls.amsterdam = PublicsDSARegionFactory(
             country=netherlands,
             area_name='Amsterdam',
             area_code='ds1'
         )
         PublicsDSARateFactory(
-            region=self.amsterdam,
+            region=cls.amsterdam,
             dsa_amount_usd=100,
             dsa_amount_60plus_usd=60,
             dsa_amount_local=100,
             dsa_amount_60plus_local=60
         )
 
-        self.budapest = PublicsDSARegionFactory(
+        cls.budapest = PublicsDSARegionFactory(
             country=hungary,
             area_name='Budapest',
             area_code='ds2'
         )
         PublicsDSARateFactory(
-            region=self.budapest,
+            region=cls.budapest,
             dsa_amount_usd=200,
             dsa_amount_60plus_usd=120,
             dsa_amount_local=200,
             dsa_amount_60plus_local=120
         )
 
-        self.copenhagen = PublicsDSARegionFactory(
+        cls.copenhagen = PublicsDSARegionFactory(
             country=denmark,
             area_name='Copenhagen',
             area_code='ds3'
         )
         PublicsDSARateFactory(
-            region=self.copenhagen,
+            region=cls.copenhagen,
             dsa_amount_usd=300,
             dsa_amount_60plus_usd=180,
             dsa_amount_local=300,
             dsa_amount_60plus_local=180
         )
 
-        self.dusseldorf = PublicsDSARegionFactory(
+        cls.dusseldorf = PublicsDSARegionFactory(
             country=germany,
             area_name='Duesseldorf',
             area_code='ds4'
         )
         PublicsDSARateFactory(
-            region=self.dusseldorf,
+            region=cls.dusseldorf,
             dsa_amount_usd=400,
             dsa_amount_60plus_usd=240,
             dsa_amount_local=400,
             dsa_amount_60plus_local=240
         )
 
-        self.essen = PublicsDSARegionFactory(
+        cls.essen = PublicsDSARegionFactory(
             country=germany,
             area_name='Essen',
             area_code='ds5'
         )
         PublicsDSARateFactory(
-            region=self.essen,
+            region=cls.essen,
             dsa_amount_usd=500,
             dsa_amount_60plus_usd=300,
             dsa_amount_local=500,
             dsa_amount_60plus_local=300
         )
 
-        self.frankfurt = PublicsDSARegionFactory(
+        cls.frankfurt = PublicsDSARegionFactory(
             country=germany,
             area_name='Frankfurt',
             area_code='ds6'
         )
         PublicsDSARateFactory(
-            region=self.frankfurt,
+            region=cls.frankfurt,
             dsa_amount_usd=600,
             dsa_amount_60plus_usd=360,
             dsa_amount_local=600,
             dsa_amount_60plus_local=360
         )
 
-        self.travel = TravelFactory()
+        cls.travel = TravelFactory()
 
         # Delete default items created by factory
-        self.travel.itinerary.all().delete()
-        self.travel.expenses.all().delete()
-        self.travel.deductions.all().delete()
+        cls.travel.itinerary.all().delete()
+        cls.travel.expenses.all().delete()
+        cls.travel.deductions.all().delete()
 
     def test_case_1(self):
         ItineraryItemFactory(travel=self.travel,

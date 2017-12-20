@@ -16,9 +16,10 @@ from users.tests.factories import UserFactory
 
 
 class TestActivityListView(TenantTestCase):
-    def setUp(self):
-        self.url = reverse("snapshot_api:activity-list")
-        self.user = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.url = reverse("snapshot_api:activity-list")
+        cls.user = UserFactory(is_staff=True)
 
     def assert_data(self, activity, response):
         self.assertEqual(response["id"], activity.pk)

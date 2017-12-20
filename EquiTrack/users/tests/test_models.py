@@ -6,9 +6,9 @@ from users.tests.factories import ProfileFactory, UserFactory
 
 
 class TestWorkspaceCounter(TenantTestCase):
-    def setUp(self):
-        super(TestWorkspaceCounter, self).setUp()
-        self.counter = models.WorkspaceCounter.objects.first()
+    @classmethod
+    def setUpTestData(cls):
+        cls.counter = models.WorkspaceCounter.objects.first()
 
     def test_unicode(self):
         self.assertEqual(unicode(self.counter), self.counter.workspace.name)
@@ -39,9 +39,9 @@ class TestSection(TenantTestCase):
 
 
 class TestUserProfileModel(TenantTestCase):
-    def setUp(self):
-        super(TestUserProfileModel, self).setUp()
-        self.user = UserFactory(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(
             email="user@example.com",
             first_name="First",
             last_name="Last",

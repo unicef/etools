@@ -11,9 +11,9 @@ from users.tests.factories import UserFactory
 
 
 class VendorNumbers(APITenantTestCase):
-    def setUp(self):
-        super(VendorNumbers, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
         vendor_numbers_list = reverse('t2f:vendor_numbers')

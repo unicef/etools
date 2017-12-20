@@ -22,10 +22,9 @@ from users.tests.factories import UserFactory
 
 
 class DSARateTest(APITenantTestCase):
-
-    def setUp(self):
-        super(DSARateTest, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_new_rate_addition(self):
         region = PublicsDSARegionFactory(rates=[])

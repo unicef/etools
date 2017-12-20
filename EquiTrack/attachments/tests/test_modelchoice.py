@@ -21,9 +21,10 @@ class TestMetadata(ModelChoiceFieldMixin, SimpleMetadata):
 
 
 class TestModelChoiceFileField(FastTenantTestCase):
-    def setUp(self):
-        self.code1_obj = FileTypeFactory(code='code1')
-        self.code2_obj = FileTypeFactory(code='code2')
+    @classmethod
+    def setUpTestData(cls):
+        cls.code1_obj = FileTypeFactory(code='code1')
+        cls.code2_obj = FileTypeFactory(code='code2')
 
     def test_valid_serializer(self):
         valid_serializer = TestSerializer(data={'file_type': self.code1_obj.pk})

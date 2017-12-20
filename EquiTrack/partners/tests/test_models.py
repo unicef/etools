@@ -75,11 +75,11 @@ class TestGetCurrencyNameOrDefault(TenantTestCase):
 
 class TestAgreementNumberGeneration(TenantTestCase):
     '''Test that agreements have the expected base and reference numbers for all types of agreements'''
-
-    def setUp(self):
-        self.date = datetime.date.today()
-        self.tenant.country_short_code = 'LEBA'
-        self.tenant.save()
+    @classmethod
+    def setUpTestData(cls):
+        cls.date = datetime.date.today()
+        cls.tenant.country_short_code = 'LEBA'
+        cls.tenant.save()
 
     def test_reference_number_pca(self):
         '''Thoroughly exercise agreement reference numbers for PCA'''
@@ -178,9 +178,10 @@ class TestAgreementNumberGeneration(TenantTestCase):
 
 
 class TestHACTCalculations(TenantTestCase):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         year = datetime.date.today().year
-        self.intervention = InterventionFactory(
+        cls.intervention = InterventionFactory(
             status=u'active'
         )
         current_cp = CountryProgrammeFactory(
@@ -193,7 +194,7 @@ class TestHACTCalculations(TenantTestCase):
             name='SM12345678'
         )
         InterventionBudgetFactory(
-            intervention=self.intervention,
+            intervention=cls.intervention,
             partner_contribution=10000,
             unicef_cash=60000,
             in_kind_amount=5000
@@ -237,6 +238,7 @@ class TestHACTCalculations(TenantTestCase):
 
 class TestPartnerOrganizationModel(TenantTestCase):
     def setUp(self):
+        super(TestPartnerOrganizationModel, self).setUp()
         self.partner_organization = PartnerFactory(
             name="Partner Org 1",
         )
@@ -738,8 +740,9 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
 
 class TestAgreementModel(TenantTestCase):
-    def setUp(self):
-        self.partner_organization = models.PartnerOrganization.objects.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner_organization = models.PartnerOrganization.objects.create(
             name="Partner Org 1",
         )
         cp = CountryProgrammeFactory(
@@ -748,9 +751,9 @@ class TestAgreementModel(TenantTestCase):
             from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
             to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
         )
-        self.agreement = models.Agreement.objects.create(
+        cls.agreement = models.Agreement.objects.create(
             agreement_type=models.Agreement.PCA,
-            partner=self.partner_organization,
+            partner=cls.partner_organization,
             country_programme=cp
         )
 
@@ -760,6 +763,7 @@ class TestAgreementModel(TenantTestCase):
 
 class TestInterventionModel(TenantTestCase):
     def setUp(self):
+        super(TestInterventionModel, self).setUp()
         self.partner_organization = PartnerFactory(name="Partner Org 1")
         cp = CountryProgrammeFactory(
             name="CP 1",

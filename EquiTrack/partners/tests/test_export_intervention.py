@@ -29,9 +29,9 @@ from users.tests.factories import UserFactory
 
 
 class BaseInterventionModelExportTestCase(APITenantTestCase):
-    def setUp(self):
-        super(BaseInterventionModelExportTestCase, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
         partner = PartnerFactory(
             partner_type='Government',
             vendor_number='Vendor No',
@@ -58,13 +58,13 @@ class BaseInterventionModelExportTestCase(APITenantTestCase):
             start=datetime.date.today(),
             end=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
-            signed_by=self.unicef_staff,
+            signed_by=cls.unicef_staff,
             signed_by_partner_date=datetime.date.today()
         )
         agreement.authorized_officers.add(partnerstaff)
         agreement.save()
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
-        self.intervention = InterventionFactory(
+        cls.intervention = InterventionFactory(
             agreement=agreement,
             document_type='SHPD',
             status='draft',
@@ -75,19 +75,19 @@ class BaseInterventionModelExportTestCase(APITenantTestCase):
             review_date_prc=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
             signed_by_partner_date=datetime.date.today(),
-            unicef_signatory=self.unicef_staff,
+            unicef_signatory=cls.unicef_staff,
             population_focus="Population focus",
             partner_authorized_officer_signatory=partnerstaff,
         )
-        self.ib = InterventionBudgetFactory(
-            intervention=self.intervention,
+        cls.ib = InterventionBudgetFactory(
+            intervention=cls.intervention,
             currency=PublicsCurrencyFactory()
         )
-        self.planned_visit = InterventionPlannedVisitsFactory(
-            intervention=self.intervention,
+        cls.planned_visit = InterventionPlannedVisitsFactory(
+            intervention=cls.intervention,
         )
-        self.attachment = InterventionAttachmentFactory(
-            intervention=self.intervention,
+        cls.attachment = InterventionAttachmentFactory(
+            intervention=cls.intervention,
         )
 
 

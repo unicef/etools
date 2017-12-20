@@ -15,11 +15,11 @@ from users.tests.factories import UserFactory
 
 
 class TestInterventionPartnershipDashView(APITenantTestCase):
-    def setUp(self):
-        super(TestInterventionPartnershipDashView, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.url = reverse("partners_api:interventions-partnership-dash")
-        self.intervention = InterventionFactory(status=Intervention.SIGNED)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = reverse("partners_api:interventions-partnership-dash")
+        cls.intervention = InterventionFactory(status=Intervention.SIGNED)
         InterventionFactory(status=Intervention.DRAFT)
 
     def test_get(self):
