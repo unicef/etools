@@ -3,14 +3,14 @@
 {% block extra_content %}
   <div class="content-section">
     <div class="content-section__header">
-      <div class="content-section__header__title">Specific Procedure To Be Performed</div>
+      <div class="content-section__header__title">{{ serializer.fields.specific_procedures.label }}</div>
     </div>
     <div class="content-section__wrapper">
       <table class="content-section__table">
         <tr class="content-section__table__header">
           <td colspan="2">Finding Number</td>
-          <td colspan="3">Description</td>
-          <td colspan="3">Finding</td>
+          <td colspan="3">{{ serializer.fields.specific_procedures.child.fields.description.label }}</td>
+          <td colspan="3">{{ serializer.fields.specific_procedures.child.fields.finding.label }}</td>
         </tr>
         {% for specific_procedure in engagement.specific_procedures %}
           <tr>
@@ -28,13 +28,13 @@
   </div>
   <div class="content-section">
     <div class="content-section__header">
-      <div class="content-section__header__title">Other Observations and Recommendations</div>
+      <div class="content-section__header__title">{{ serializer.fields.other_recommendations.label }}</div>
     </div>
     <div class="content-section__wrapper">
       <table class="content-section__table">
         <tr class="content-section__table__header">
           <td colspan="2">Finding Number</td>
-          <td colspan="6">Description</td>
+          <td colspan="6">{{ serializer.fields.other_recommendations.child.fields.description.label }}</td>
         </tr>
         {% for recommendation in engagement.other_recommendations %}
           <tr>

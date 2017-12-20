@@ -103,6 +103,8 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
     active_pd = serializers.SerializerMethodField()
     staff_members = StaffMemberPDFSerializer(many=True)
 
+    shared_ip_with = serializers.CharField(source='get_shared_ip_with_display')
+
     start_date = serializers.DateField(label='Start Date', format='%d %b %Y')
     end_date = serializers.DateField(label='End Date', format='%d %b %Y')
 

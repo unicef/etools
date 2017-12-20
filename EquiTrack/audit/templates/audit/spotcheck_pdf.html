@@ -8,29 +8,29 @@
     <table class="content-section__wrapper">
       <tr>
         <td class="input-container">
-          <div class="input-container__label">FACE Forms(s) Start Date</div>
+          <div class="input-container__label">{{ serializer.fields.face_form_start_date.label }}</div>
           <div class="input-container__value">
             {{ engagement.start_date|default:"-" }}</div>
         </td>
         <td class="input-container">
-          <div class="input-container__label">FACE Forms(s) End Date</div>
+          <div class="input-container__label">{{ serializer.fields.face_form_end_date.label }}</div>
           <div class="input-container__value">
             {{ engagement.end_date|default:"-" }}</div>
         </td>
         <td class="input-container">
-          <div class="input-container__label">Total Value of selected FACE form(s)</div>
+          <div class="input-container__label">{{ serializer.fields.total_value.label }}</div>
           <div class="input-container__value">
             $ {{ engagement.total_value|default_if_none:"0.00" }}</div>
         </td>
       </tr>
       <tr>
         <td class="input-container">
-          <div class="input-container__label">Total amount tested</div>
+          <div class="input-container__label">{{ serializer.fields.total_amount_tested.label }}</div>
           <div class="input-container__value">
             $ {{ engagement.total_amount_tested|default_if_none:"0.00" }}</div>
         </td>
         <td class="input-container">
-          <div class="input-container__label">Total amount of ineligible expedinture</div>
+          <div class="input-container__label">{{ serializer.fields.total_amount_of_ineligible_expenditure.label }}</div>
           <div class="input-container__value">
             $ {{ engagement.total_amount_of_ineligible_expenditure|default_if_none:"0.00" }}</div>
         </td>
@@ -47,10 +47,10 @@
       <table class="content-section__table">
         <tr class="content-section__table__header">
           <td>Finding Number</td>
-          <td colspan="3">Category of observation</td>
-          <td colspan="2">Deadline of action</td>
-          <td colspan="4">Recommendation</td>
-          <td colspan="4">Agreed action by IP</td>
+          <td colspan="3">{{ serializer.fields.findings.child.fields.category_of_observation.label }}</td>
+          <td colspan="2">{{ serializer.fields.findings.child.fields.deadline_of_action.label }}</td>
+          <td colspan="4">{{ serializer.fields.findings.child.fields.recommendation.label }}</td>
+          <td colspan="4">{{ serializer.fields.findings.child.fields.agreed_action_by_ip.label }}</td>
         </tr>
         {% for finding in engagement.high_priority_findings %}
           <tr>
@@ -81,10 +81,10 @@
       <table class="content-section__table">
         <tr class="content-section__table__header">
           <td>Finding Number</td>
-          <td colspan="3">Category of observation</td>
-          <td colspan="2">Deadline of action</td>
-          <td colspan="4">Recommendation</td>
-          <td colspan="4">Agreed action by IP</td>
+          <td colspan="3">{{ serializer.fields.findings.child.fields.category_of_observation.label }}</td>
+          <td colspan="2">{{ serializer.fields.findings.child.fields.deadline_of_action.label }}</td>
+          <td colspan="4">{{ serializer.fields.findings.child.fields.recommendation.label }}</td>
+          <td colspan="4">{{ serializer.fields.findings.child.fields.agreed_action_by_ip.label }}</td>
         </tr>
         {% for finding in engagement.low_priority_findings %}
           <tr>
@@ -109,7 +109,7 @@
 
   <div class="content-section">
     <div class="content-section__header">
-      <div class="content-section__header__title">Internal controls</div>
+      <div class="content-section__header__title">{{ serializer.fields.internal_controls.label }}</div>
     </div>
     <table class="content-section__wrapper">
       <tr>
@@ -141,48 +141,48 @@
     <table class="content-section__wrapper">
       <tr>
         <td class="input-container">
-          <div class="input-container__label">Total amount tested</div>
+          <div class="input-container__label">{{ serializer.fields.total_amount_tested.label }}</div>
           <div class="input-container__value">
             $ {{ engagement.total_amount_tested|default:"0.00" }}</div>
         </td>
         <td class="input-container">
-          <div class="input-container__label">Total amount of ineligible expenditure</div>
+          <div class="input-container__label">{{ serializer.fields.total_amount_of_ineligible_expenditure.label }}</div>
           <div class="input-container__value">
             $ {{ engagement.total_amount_of_ineligible_expenditure|default:"0.00" }}</div>
         </td>
         <td class="input-container">
-          <div class="input-container__label">Amount refunded</div>
+          <div class="input-container__label">{{ serializer.fields.amount_refunded.label }}</div>
           <div class="input-container__value">
             $ {{ engagement.amount_refunded|default:"0.00" }}</div>
         </td>
       </tr>
       <tr>
         <td class="input-container">
-          <div class="input-container__label">Additional supporting documentation provided</div>
+          <div class="input-container__label">{{ serializer.fields.additional_supporting_documentation_provided.label }}</div>
           <div class="input-container__value">
             $ {{ engagement.additional_supporting_documentation_provided|default:"0.00" }}</div>
         </td>
         <td class="input-container">
-          <div class="input-container__label">Justification provided and accepted</div>
+          <div class="input-container__label">{{ serializer.fields.justification_provided_and_accepted.label }}</div>
           <div class="input-container__value">
             $ {{ engagement.justification_provided_and_accepted|default:"0.00" }}</div>
         </td>
         <td class="input-container">
-          <div class="input-container__label">Impairment</div>
+          <div class="input-container__label">{{ serializer.fields.write_off_required.label }}</div>
           <div class="input-container__value">
             $ {{ engagement.write_off_required|default:"0.00" }}</div>
         </td>
       </tr>
       <tr>
         <td class="input-container">
-          <div class="input-container__label">Pending unsupported Amount</div>
+          <div class="input-container__label">{{ serializer.fields.pending_unsupported_amount.label }}</div>
           <div class="input-container__value">
             $ {{ engagement.pending_unsupported_amount|default:"0.00" }}</div>
         </td>
       </tr>
       <tr>
         <td class="input-container" colspan="3">
-          <div class="input-container__label">Provide explanation for additional information received from the IP or add attachments</div>
+          <div class="input-container__label">{{ serializer.fields.explanation_for_additional_information.label }}</div>
           <div class="input-container__value">
             {{ engagement.explanation_for_additional_information|default:"-" }}</div>
         </td>
