@@ -34,8 +34,8 @@ class Command(BaseCommand):
         'hact_values.programmatic_visits.completed.total': _('Programmatic Visits Done'),
         'hact_min_requirements.spot_checks': _('Spot Checks M.R'),
         'hact_values.spot_checks.completed.total': _('Spot Checks Done'),
-        'hact_values.audits.completed': _('Audits M.R'),
-        'hact_values.audits.required': _('Audits Done'),
+        'hact_values.audits.required': _('Audits M.R'),
+        'hact_values.audits.completed': _('Audits Done'),
         'hact_values.follow_up_flags': _('Flag for Follow up'),
     }
 
@@ -70,8 +70,13 @@ class Command(BaseCommand):
 
             partner_attribute = fields.pop(0)
             value = getattr(value, partner_attribute)
-            for field in fields:
-                value = value.get(field)
+
+            if len(fields) == 1:
+                value = getattr(value, fields[0])
+            else:
+                # is a dictionary
+                for field in fields:
+                    value = value.get(field)
 
             partner_values[label] = value
 
