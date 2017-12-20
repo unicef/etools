@@ -11,10 +11,8 @@ from rest_framework_csv import renderers as r
 
 
 class HactHistoryAPIView(ListAPIView):
-
     """
-    Create new Partners.
-    Returns a list of Partners.
+    Returns HACT history.
     """
     permission_classes = (IsAdminUser,)
     queryset = HactHistory.objects.all()
