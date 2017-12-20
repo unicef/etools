@@ -1,6 +1,4 @@
 import datetime
-import json
-from unittest import skip
 from actstream.models import model_stream
 
 from django.utils import timezone
@@ -11,7 +9,6 @@ from EquiTrack.factories import (
     AgreementFactory,
     AgreementAmendmentFactory,
     InterventionFactory,
-    InterventionBudgetFactory,
     InterventionPlannedVisitsFactory,
     TravelFactory,
     TravelActivityFactory,
@@ -21,16 +18,11 @@ from EquiTrack.factories import (
 from funds.models import Donor, Grant
 from reports.models import (
     CountryProgramme,
-    ResultType,
 )
 from partners.models import (
     Agreement,
     FundingCommitment,
     PartnerOrganization,
-    Assessment,
-    Result,
-    GovernmentIntervention,
-    GovernmentInterventionResult,
     Intervention,
     InterventionBudget,
     PartnerType,
@@ -245,7 +237,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         }
         self.assertEqual(hact_min_req, data)
 
-
     def test_get_last_pca(self):
         pca = self.partner_organization.get_last_pca
         self.assertEqual(pca, self.pca_signed1)
@@ -262,7 +253,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_hact_min_requirements_ct_between_25k_and_50k(self):
         self.partner_organization.total_ct_cy = 44000.00
         self.assert_min_requirements(1, 0)
-
 
     def test_hact_min_requirements_ct_between_25k_and_100k(self):
         self.partner_organization.total_ct_cy = 99000.00

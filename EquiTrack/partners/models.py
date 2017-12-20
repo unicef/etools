@@ -170,10 +170,10 @@ RISK_RATINGS = (
     (LOW, 'Low'),
 )
 CSO_TYPES = Choices(
-   'International',
-   'National',
-   'Community Based Organization',
-   'Academic Institution',
+    'International',
+    'National',
+    'Community Based Organization',
+    'Academic Institution',
 )
 
 
@@ -277,7 +277,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('WHO', 'WHO')
     )
 
-
     partner_type = models.CharField(
         max_length=50,
         choices=PartnerType.CHOICES
@@ -310,10 +309,10 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     shared_partner = models.CharField(
         help_text='Partner shared with UNDP or UNFPA?',
         choices=Choices(
-           'No',
-           'with UNDP',
-           'with UNFPA',
-           'with UNDP & UNFPA',
+            'No',
+            'with UNDP',
+            'with UNFPA',
+            'with UNDP & UNFPA',
         ),
         default='No',
         max_length=50
@@ -462,13 +461,13 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @cached_property
     def hact_min_requirements(self):
         programme_visits = spot_checks = '-'
-        cash_transferred = self.total_ct_cy
+        ct = self.total_ct_cy
 
-        if cash_transferred <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
+        if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < cash_transferred <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
+        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
             programme_visits = 1
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < cash_transferred <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
+        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
             if self.rating in ['High', 'Significant']:
                 programme_visits = 3
             elif self.rating in ['Moderate']:
@@ -484,7 +483,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 programme_visits = 2
 
         # TODO add condition when is implemented 1.1.10a
-        spot_checks = 1 if cash_transferred > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        spot_checks = 1 if ct > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
         return {
             'programme_visits': programme_visits,
@@ -715,6 +714,7 @@ class Assessment(models.Model):
             date=self.completed_date.strftime("%d-%m-%Y") if
             self.completed_date else'NOT COMPLETED'
         )
+
 
 class AgreementManager(models.Manager):
 
