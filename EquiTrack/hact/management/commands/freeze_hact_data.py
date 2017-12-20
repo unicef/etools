@@ -75,12 +75,6 @@ class Command(BaseCommand):
 
             partner_values[label] = value
 
-        mrpv = value['hact_min_requirements']['programme_visits']
-        mrsp = value['hact_min_requirements']['spot_checks']
-
-        partner_values['hact_values']['programmatic_visits']['minumum_requirements'] = mrpv
-        partner_values['hact_values']['spot_checks']['minumum_requirements'] = mrsp
-
         hact_history.partner_values = json.dumps(partner_values, cls=HactEncoder)
         hact_history.save()
 
