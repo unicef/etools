@@ -192,7 +192,7 @@ class PartnerType(object):
 def hact_default():
     return {
         'audits': {
-            'minumum_requirements': 0,
+            'minimum_requirements': 0,
             'completed': 0,
             'outstanding_findings': 0,
         },
