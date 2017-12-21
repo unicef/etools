@@ -111,20 +111,26 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     pv_applicable = serializers.BooleanField(read_only=True)
 
-    def validate(self, attrs):
-        validated_data = super(TPMActivitySerializer, self).validate(attrs)
-
+    def _validate_partner_intervention(self, validated_data, instance=None):
         if 'partner' in validated_data and 'intervention' not in validated_data:
             validated_data['intervention'] = None
 
-        partner = validated_data.get('partner', self.instance.partner if self.instance else None)
-        intervention = validated_data.get('intervention', self.instance.intervention if self.instance else None)
+        partner = validated_data.get('partner', instance.partner if instance else None)
+        intervention = validated_data.get('intervention', instance.intervention if instance else None)
 
         if partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] and \
            not intervention:
             raise ValidationError({'intervention': _('This field is required.')})
 
-        return validated_data
+        return instance
+
+    def create(self, validated_data):
+        self._validate_partner_intervention(validated_data)
+        return super(TPMActivitySerializer, self).create(validated_data)
+
+    def update(self, instance, validated_data):
+        self._validate_partner_intervention(validated_data, instance=instance)
+        return super(TPMActivitySerializer, self).update(instance, validated_data)
 
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
