@@ -210,7 +210,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
 
 
 class TravelAttachmentSerializer(serializers.ModelSerializer):
-    url = serializers.CharField(source='file.url', read_only=True)
+    url = serializers.SerializerMethodField()
 
     class Meta:
         model = TravelAttachment
@@ -219,6 +219,9 @@ class TravelAttachmentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['travel'] = self.context['travel']
         return super(TravelAttachmentSerializer, self).create(validated_data)
+
+    def get_url(self, obj):
+        return obj.file.url.decode("utf8")
 
 
 class TravelDetailsSerializer(PermissionBasedModelSerializer):

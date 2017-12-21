@@ -208,7 +208,7 @@ class Engagement(TimeStampedModel, models.Model):
         verbose_name=_('Justification Provided and Accepted'), null=True, blank=True, decimal_places=2, max_digits=20
     )
     write_off_required = models.DecimalField(
-        verbose_name=_('Write Off Required '), null=True, blank=True, decimal_places=2, max_digits=20
+        verbose_name=_('Impairment'), null=True, blank=True, decimal_places=2, max_digits=20
     )
     explanation_for_additional_information = models.TextField(
         verbose_name=_('Provide explanation for additional information received from the IP or add attachments'),
