@@ -250,6 +250,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     CT_MR_AUDIT_TRIGGER_LEVEL2 = decimal.Decimal('100000.00')
     CT_MR_AUDIT_TRIGGER_LEVEL3 = decimal.Decimal('500000.00')
 
+    # TODO rating to be converted in choice after prp-refactoring
+    RATING_HIGH = 'High'
+    RATING_SIGNIFICANT = 'Significant'
+    RATING_MODERATE = 'Moderate'
+    RATING_LOW = 'Low'
+
     AGENCY_CHOICES = Choices(
         ('DPKO', 'DPKO'),
         ('ECA', 'ECA'),
@@ -430,6 +436,16 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             self.hact_values = json.dumps(self.hact_values)
 
     @cached_property
+    def partner_type_slug(self):
+        slugs = {
+            PartnerType.BILATERAL_MULTILATERAL: 'Multi',
+            PartnerType.CIVIL_SOCIETY_ORGANIZATION: 'CSO',
+            PartnerType.GOVERNMENT: 'Gov',
+            PartnerType.UN_AGENCY: 'UN',
+        }
+        return slugs.get(self.partner_type, self.partner_type)
+
+    @cached_property
     def get_last_pca(self):
         # exclude Agreements that were not signed
         return self.agreements.filter(
@@ -468,18 +484,18 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
             programme_visits = 1
         elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
-            if self.rating in ['High', 'Significant']:
+            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
                 programme_visits = 3
-            elif self.rating in ['Moderate']:
+            elif self.rating in [PartnerOrganization.RATING_MODERATE, ]:
                 programme_visits = 2
-            elif self.rating in ['Low']:
+            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
                 programme_visits = 1
         else:
-            if self.rating in ['High', 'Significant']:
+            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
                 programme_visits = 4
-            elif self.rating in ['Moderate']:
+            elif self.rating in [PartnerOrganization.RATING_MODERATE, ]:
                 programme_visits = 3
-            elif self.rating in ['Low']:
+            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
                 programme_visits = 2
 
         # TODO add condition when is implemented 1.1.10a
@@ -517,31 +533,35 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         '''
         :return: all completed programmatic visits
         '''
-        quarter_name, quarter_period = get_current_quarter()
+        quarter_name = get_current_quarter()
         pv = partner.hact_values['programmatic_visits']['completed']['total']
         pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
 
         if update_one:
             pv += 1
             pvq += 1
+            partner.hact_values['programmatic_visits']['completed'][quarter_name] = pvq
         else:
-            pv = TravelActivity.objects.filter(
+            pv_year = TravelActivity.objects.filter(
                 travel_type=TravelType.PROGRAMME_MONITORING,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
                 travels__completed_at__year=datetime.datetime.now().year,
                 partner=partner,
-            ).count()
-            pvq = TravelActivity.objects.filter(
-                travel_type=TravelType.PROGRAMME_MONITORING,
-                travels__traveler=F('primary_traveler'),
-                travels__status__in=[Travel.COMPLETED],
-                travels__completed_at__month__in=quarter_period,
-                partner=partner,
-            ).count()
+            )
+
+            pv = pv_year.count()
+            pvq1 = pv_year.filter(travels__completed_at__month__in=[1, 2, 3]).count()
+            pvq2 = pv_year.filter(travels__completed_at__month__in=[4, 5, 6]).count()
+            pvq3 = pv_year.filter(travels__completed_at__month__in=[7, 8, 9]).count()
+            pvq4 = pv_year.filter(travels__completed_at__month__in=[10, 11, 12]).count()
+
+            partner.hact_values['programmatic_visits']['completed']['q1'] = pvq1
+            partner.hact_values['programmatic_visits']['completed']['q2'] = pvq2
+            partner.hact_values['programmatic_visits']['completed']['q3'] = pvq3
+            partner.hact_values['programmatic_visits']['completed']['q4'] = pvq4
 
         partner.hact_values['programmatic_visits']['completed']['total'] = pv
-        partner.hact_values['programmatic_visits']['completed'][quarter_name] = pvq
         partner.save()
 
     @classmethod

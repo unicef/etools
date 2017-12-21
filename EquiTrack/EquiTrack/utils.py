@@ -188,11 +188,11 @@ def import_permissions(model_name):
 def get_current_quarter():
     current_month = datetime.today().month
     if 0 < current_month <= 3:
-        quarter = 'q1', [1, 2, 3]
+        quarter = 'q1'
     elif 3 < current_month <= 6:
-        quarter = 'q2', [4, 5, 6]
+        quarter = 'q2'
     elif 6 < current_month <= 9:
-        quarter = 'q3', [7, 8, 9]
+        quarter = 'q3'
     else:
-        quarter = 'q4', [10, 11, 12]
+        quarter = 'q4'
     return quarter
