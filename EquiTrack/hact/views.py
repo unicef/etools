@@ -26,9 +26,8 @@ class HactHistoryAPIView(ListAPIView):
 
     def get_serializer_class(self):
         query_params = self.request.query_params
-        if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
-                return HactHistoryExportSerializer
+        if query_params.get("format") == 'csv':
+            return HactHistoryExportSerializer
         return super(HactHistoryAPIView, self).get_serializer_class()
 
     def list(self, request, format=None):
@@ -38,9 +37,8 @@ class HactHistoryAPIView(ListAPIView):
         """
         query_params = self.request.query_params
         response = super(HactHistoryAPIView, self).list(request)
-        if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
-                response['Content-Disposition'] = "attachment;filename={}.csv".format(self.filename)
+        if query_params.get("format") == 'csv':
+            response['Content-Disposition'] = "attachment;filename={}.csv".format(self.filename)
         return response
 
 

@@ -143,3 +143,39 @@ class TestHactHistoryAPIView(APITenantTestCase):
             "2",
             "No",
         ))
+
+    def test_export_csv_key_errors(self):
+        self.hact_data = {"planned_cash_transfer": "wrong"}
+        HactHistoryFactory(
+            partner=self.partner,
+            year=2017,
+            partner_values=self.hact_data
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_user,
+            data={"format": "csv"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, "csv")
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset[0], (
+            self.partner.name,
+            self.partner.partner_type,
+            self.partner.shared_partner,
+            ", ".join(self.partner.shared_with),
+            "{:.2f}".format(self.partner.total_ct_cp),
+            "wrong",
+            "{:.2f}".format(self.partner.total_ct_cy),
+            "",
+            self.partner.rating,
+            "",  # programmatic visits
+            "",
+            "",
+            "",  # spot checks
+            "",
+            "",  # audits
+            "",
+            "",
+        ))
