@@ -2,12 +2,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django_filters.rest_framework import DjangoFilterBackend
 from hact.models import HactHistory
-from hact.serializers import HactHistorySerializer
+from hact.serializers import HactHistoryExportSerializer, HactHistorySerializer
+from hact.renderers import HactHistoryCSVRenderer
 from rest_framework import views
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from rest_framework_csv import renderers as r
+from rest_framework_csv.renderers import JSONRenderer
 
 
 class HactHistoryAPIView(ListAPIView):
@@ -17,11 +18,18 @@ class HactHistoryAPIView(ListAPIView):
     permission_classes = (IsAdminUser,)
     queryset = HactHistory.objects.all()
     serializer_class = HactHistorySerializer
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+    renderer_classes = (JSONRenderer, HactHistoryCSVRenderer)
 
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('year', )
     filename = 'hact_history'
+
+    def get_serializer_class(self):
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return HactHistoryExportSerializer
+        return super(HactHistoryAPIView, self).get_serializer_class()
 
     def list(self, request, format=None):
         """
