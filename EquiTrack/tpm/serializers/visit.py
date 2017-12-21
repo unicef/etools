@@ -118,8 +118,8 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
         partner = validated_data.get('partner', instance.partner if instance else None)
         intervention = validated_data.get('intervention', instance.intervention if instance else None)
 
-        if partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] and \
-           not intervention:
+        if partner and partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] \
+                and not intervention:
             raise ValidationError({'intervention': _('This field is required.')})
 
         return instance
