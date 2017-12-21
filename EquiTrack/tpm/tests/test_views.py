@@ -4,10 +4,12 @@ from datetime import timedelta, datetime
 
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
+from partners.models import PartnerType
 from tpm.models import TPMActionPoint
 from tpm.tests.base import TPMTestCaseMixin
 from tpm.tests.factories import TPMPartnerFactory, TPMVisitFactory, UserFactory
@@ -97,6 +99,84 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, APITenantTestCase):
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(TPMActionPoint.objects.filter(tpm_visit=visit).exists())
+
+    def test_intervention_bilateral_partner(self):
+        visit = TPMVisitFactory(
+            tpm_activities__count=1,
+            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.BILATERAL_MULTILATERAL
+        )
+
+        existing_activity = visit.tpm_activities.first()
+        self.assertIsNotNone(existing_activity)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('tpm:visits-detail', args=(visit.id,)),
+            user=self.pme_user,
+            data={
+                'tpm_activities': [
+                    {
+                        'partner': existing_activity.partner.id,
+                        'date': datetime.now().date(),
+                        'section': existing_activity.section.id,
+                        'locations': existing_activity.locations.all().values_list('id', flat=True)
+                    }
+                ]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_intervention_government_partner(self):
+        visit = TPMVisitFactory(
+            tpm_activities__count=1,
+            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.GOVERNMENT
+        )
+
+        existing_activity = visit.tpm_activities.first()
+        self.assertIsNotNone(existing_activity)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('tpm:visits-detail', args=(visit.id,)),
+            user=self.pme_user,
+            data={
+                'tpm_activities': [
+                    {
+                        'partner': existing_activity.partner.id,
+                        'date': datetime.now().date(),
+                        'section': existing_activity.section.id,
+                        'locations': existing_activity.locations.all().values_list('id', flat=True)
+                    }
+                ]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_intervention_other_partner(self):
+        visit = TPMVisitFactory(
+            tpm_activities__count=1,
+            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION
+        )
+
+        existing_activity = visit.tpm_activities.first()
+        self.assertIsNotNone(existing_activity)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('tpm:visits-detail', args=(visit.id,)),
+            user=self.pme_user,
+            data={
+                'tpm_activities': [
+                    {
+                        'partner': existing_activity.partner.id,
+                        'date': datetime.now().date(),
+                        'section': existing_activity.section.id,
+                        'locations': existing_activity.locations.all().values_list('id', flat=True)
+                    }
+                ]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('tpm_activities', response.data)
+        self.assertIn('intervention', response.data['tpm_activities'][0])
+        self.assertEqual(response.data['tpm_activities'][0]['intervention'][0], _('This field is required.'))
 
     def test_visits_csv(self):
         self._test_export(self.pme_user, 'tpm:visits-export')

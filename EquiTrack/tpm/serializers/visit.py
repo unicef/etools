@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from activities.serializers import ActivitySerializer
-from partners.models import InterventionResultLink, PartnerOrganization
+from partners.models import InterventionResultLink, PartnerOrganization, PartnerType
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from tpm.models import (
     TPMActionPoint, TPMActivity, TPMPartnerStaffMember, TPMPermission, TPMVisit, TPMVisitReportRejectComment,)
@@ -89,6 +89,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     )
     intervention = SeparatedReadWriteField(
         read_field=InterventionCreateUpdateSerializer(read_only=True, label=_('PD/SSFA')),
+        required=False,
     )
 
     cp_output = SeparatedReadWriteField(
@@ -110,6 +111,21 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
 
     pv_applicable = serializers.BooleanField(read_only=True)
 
+    def validate(self, attrs):
+        validated_data = super(TPMActivitySerializer, self).validate(attrs)
+
+        if 'partner' in validated_data and 'intervention' not in validated_data:
+            validated_data['intervention'] = None
+
+        partner = validated_data.get('partner', self.instance.partner if self.instance else None)
+        intervention = validated_data.get('intervention', self.instance.intervention if self.instance else None)
+
+        if partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] and \
+           not intervention:
+            raise ValidationError({'intervention': _('This field is required.')})
+
+        return validated_data
+
     class Meta(TPMPermissionsBasedSerializerMixin.Meta, WritableNestedSerializerMixin.Meta):
         model = TPMActivity
         fields = [
@@ -121,7 +137,6 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
             'id': {'label': _('Activity ID')},
             'date': {'required': True},
             'partner': {'required': True},
-            'intervention': {'required': True},
         }
 
 
