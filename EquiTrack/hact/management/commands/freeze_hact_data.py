@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 
 from django.core.management import BaseCommand
+from django.db import transaction
 from django.utils.translation import ugettext as _
 
 from hact.models import HactEncoder, HactHistory
@@ -31,58 +32,38 @@ class Command(BaseCommand):
         'rating': _('Risk Rating'),
         'hact_values.planned_visits': _('Programmatic Visits Planned'),
         'hact_min_requirements.programme_visits': _('Programmatic Visits M.R'),
-        'hact_values.programmatic_visits.completed.total': _('Programmatic Visits Done'),
+        'hact_values.programmatic_visits': _('Programmatic Visits Done'),
         'hact_min_requirements.spot_checks': _('Spot Checks M.R'),
-        'hact_values.spot_checks.completed.total': _('Spot Checks Done'),
-        'hact_values.audits.required': _('Audits M.R'),
-        'hact_values.audits.completed': _('Audits Done'),
+        'hact_values.spot_checks': _('Spot Checks Done'),
+        'hact_values.audits_mr': _('Audits M.R'),
+        'hact_values.audits_done': _('Audits Done'),
         'hact_values.follow_up_flags': _('Flag for Follow up'),
     }
 
-    @staticmethod
-    def update_legacy_json(hact_json):
-
-        hact_json['programmatic_visits_v1'] = hact_json.pop('programmatic_visits')
-        hact_json['spot_checks_v1'] = hact_json.pop('spot_checks')
-
-        v2_hact = hact_default()
-        for key, value in v2_hact.items():
-            if key in hact_json:
-                raise Exception('Key is already there')
-            hact_json[key] = value
-
-        hact_json['programmatic_visits']['completed']['total'] = hact_json['programmatic_visits_v1']
-        hact_json['programmatic_visits']['planned']['total'] = hact_json['planned_visits']
-        hact_json['spot_checks']['completed']['total'] = hact_json['spot_checks_v1']
-
-        hact_json['audits']['required'] = hact_json['audits_mr']
-        hact_json['audits']['completed'] = hact_json['audits_done']
-
-        return hact_json
-
     def freeze_data(self, hact_history):
+
+        partner = hact_history.partner
         partner_values = {}
 
         for field_name, label in self.mapping_labels.items():
+
             fields = field_name.split('.')
-
-            value = hact_history.partner
-
             partner_attribute = fields.pop(0)
-            value = getattr(value, partner_attribute)
+            partner_attribute_value = getattr(partner, partner_attribute)
 
-            if len(fields) == 1:
-                value = getattr(value, fields[0])
-            else:
+            if fields:
                 # is a dictionary
                 for field in fields:
-                    value = value.get(field)
+                    value = partner_attribute_value.get(field)
+            else:
+                value = partner_attribute_value
 
             partner_values[label] = value
 
         hact_history.partner_values = json.dumps(partner_values, cls=HactEncoder)
         hact_history.save()
 
+    @transaction.atomic
     def handle(self, *args, **options):
 
         countries = Country.objects.exclude(schema_name='global')
@@ -98,9 +79,6 @@ class Command(BaseCommand):
             for partner in PartnerOrganization.objects.all():
                 hact_history, created = HactHistory.objects.get_or_create(partner=partner, year=year)
                 if created:
-                    partner.hact_values = self.update_legacy_json(partner.hact_values)
-                    partner.save()
-
                     self.freeze_data(hact_history)
 
                     partner.hact_values = hact_default()
