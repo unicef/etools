@@ -11,8 +11,22 @@ from EquiTrack.factories import (
 from publics.tests.factories import (
     AirlineCompanyFactory, CurrencyFactory, DSARegionFactory, ExpenseTypeFactory, FundFactory, GrantFactory, WBSFactory)
 from t2f.models import (
-    ActionPoint, Clearances, CostAssignment, Deduction, Expense, Invoice, InvoiceItem, ItineraryItem,
-    make_action_point_number, make_travel_reference_number, ModeOfTravel, Travel, TravelActivity, TravelType,)
+    ActionPoint,
+    Clearances,
+    CostAssignment,
+    Deduction,
+    Expense,
+    Invoice,
+    InvoiceItem,
+    ItineraryItem,
+    make_action_point_number,
+    make_travel_reference_number,
+    ModeOfTravel,
+    Travel,
+    TravelActivity,
+    TravelAttachment,
+    TravelType,
+)
 
 _FUZZY_START_DATE = timezone.now() - timedelta(days=5)
 _FUZZY_END_DATE = timezone.now() + timedelta(days=5)
@@ -157,3 +171,13 @@ class InvoiceItemFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = InvoiceItem
+
+
+class TravelAttachmentFactory(factory.DjangoModelFactory):
+    travel = factory.SubFactory(TravelFactory)
+    type = fuzzy.FuzzyText(length=64)
+    name = fuzzy.FuzzyText(length=50)
+    file = factory.django.FileField(filename='test_file.pdf')
+
+    class Meta:
+        model = TravelAttachment
