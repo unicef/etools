@@ -302,8 +302,7 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "shared_with",
             "total_ct_cp",
             "total_ct_cy",
-            "hact_min_requirements",
             "hact_values",
-            "expiring_assessment_flag",
-            "approaching_threshold_flag",
+            "hact_min_requirements",
+            "flags",
         )

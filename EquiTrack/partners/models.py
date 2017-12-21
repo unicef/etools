@@ -23,7 +23,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
-from EquiTrack.utils import import_permissions
+from EquiTrack.utils import import_permissions, get_current_quarter
 from EquiTrack.mixins import AdminURLMixin
 from funds.models import Grant
 from reports.models import (
@@ -170,10 +170,10 @@ RISK_RATINGS = (
     (LOW, 'Low'),
 )
 CSO_TYPES = Choices(
-   'International',
-   'National',
-   'Community Based Organization',
-   'Academic Institution',
+    'International',
+    'National',
+    'Community Based Organization',
+    'Academic Institution',
 )
 
 
@@ -211,7 +211,6 @@ def hact_default():
                 'q4': 0,
                 'total': 0,
             },
-            'minumum_requirements': 0,
             'follow_up_required': 0,
         },
         'programmatic_visits': {
@@ -229,7 +228,6 @@ def hact_default():
                 'q4': 0,
                 'total': 0,
             },
-            'minumum_requirements': 0
         },
     }
 
@@ -279,7 +277,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('WHO', 'WHO')
     )
 
-
     partner_type = models.CharField(
         max_length=50,
         choices=PartnerType.CHOICES
@@ -312,10 +309,10 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     shared_partner = models.CharField(
         help_text='Partner shared with UNDP or UNFPA?',
         choices=Choices(
-           'No',
-           'with UNDP',
-           'with UNFPA',
-           'with UNDP & UNFPA',
+            'No',
+            'with UNDP',
+            'with UNFPA',
+            'with UNDP & UNFPA',
         ),
         default='No',
         max_length=50
@@ -408,18 +405,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     tracker = FieldTracker()
 
-    @cached_property
-    def expiring_assessment_flag(self):
-        if self.last_assessment_date:
-            last_assessment_age = (datetime.date.today() - self.last_assessment_date).days
-            return last_assessment_age > PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_DAYS
-        return False
-
-
-    @cached_property
-    def approaching_threshold_flag(self):
-        return self.rating == u'Non-Assessed' and self.total_ct_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
-
     class Meta:
         ordering = ['name']
         unique_together = ('name', 'vendor_number')
@@ -455,32 +440,50 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             status__in=[Agreement.DRAFT, Agreement.TERMINATED]
         ).order_by('signed_by_unicef_date').last()
 
-    @property
+    @cached_property
+    def expiring_assessment_flag(self):
+        if self.last_assessment_date:
+            last_assessment_age = (datetime.date.today() - self.last_assessment_date).days
+            return last_assessment_age > PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_DAYS
+        return False
+
+    @cached_property
+    def approaching_threshold_flag(self):
+        return self.rating == u'Non-Assessed' and self.total_ct_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+
+    @cached_property
+    def flags(self):
+        return {
+            'expiring_assessment_flag': self.expiring_assessment_flag,
+            'approaching_threshold_flag': self.approaching_threshold_flag
+        }
+
+    @cached_property
     def hact_min_requirements(self):
         programme_visits = spot_checks = '-'
-        cash_transferred = self.total_ct_cy
+        ct = self.total_ct_cy
 
-        if cash_transferred <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
+        if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < cash_transferred <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
+        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
             programme_visits = 1
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < cash_transferred <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
+        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
             if self.rating in ['High', 'Significant']:
                 programme_visits = 3
-            elif self.rating in ['Moderate', 'Medium']:
+            elif self.rating in ['Moderate']:
                 programme_visits = 2
             elif self.rating in ['Low']:
                 programme_visits = 1
         else:
             if self.rating in ['High', 'Significant']:
                 programme_visits = 4
-            elif self.rating in ['Moderate', 'Medium']:
+            elif self.rating in ['Moderate']:
                 programme_visits = 3
             elif self.rating in ['Low']:
                 programme_visits = 2
 
         # TODO add condition when is implemented 1.1.10a
-        spot_checks = 1 if cash_transferred > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        spot_checks = 1 if ct > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
         return {
             'programme_visits': programme_visits,
@@ -514,9 +517,13 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         '''
         :return: all completed programmatic visits
         '''
-        pv = partner.hact_values['programmatic_visits'] if partner.hact_values['programmatic_visits'] else 0
+        quarter_name, quarter_period = get_current_quarter()
+        pv = partner.hact_values['programmatic_visits']['completed']['total']
+        pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
+
         if update_one:
             pv += 1
+            pvq += 1
         else:
             pv = TravelActivity.objects.filter(
                 travel_type=TravelType.PROGRAMME_MONITORING,
@@ -524,9 +531,17 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 travels__status__in=[Travel.COMPLETED],
                 travels__completed_at__year=datetime.datetime.now().year,
                 partner=partner,
-            ).count() or 0
+            ).count()
+            pvq = TravelActivity.objects.filter(
+                travel_type=TravelType.PROGRAMME_MONITORING,
+                travels__traveler=F('primary_traveler'),
+                travels__status__in=[Travel.COMPLETED],
+                travels__completed_at__month__in=quarter_period,
+                partner=partner,
+            ).count()
 
         partner.hact_values['programmatic_visits']['completed']['total'] = pv
+        partner.hact_values['programmatic_visits']['completed'][quarter_name] = pvq
         partner.save()
 
     @classmethod
@@ -534,7 +549,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         '''
         :return: all completed spot checks
         '''
-        sc = partner.hact_values['spot_checks'] if partner.hact_values['spot_checks'] else 0
+        sc = partner.hact_values['spot_checks']['completed']['total']
         if update_one:
             sc += 1
         else:
@@ -544,7 +559,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 travels__status__in=[Travel.COMPLETED],
                 travels__completed_at__year=datetime.datetime.now().year,
                 partner=partner,
-            ).count() or 0
+            ).count()
 
         partner.hact_values['spot_checks']['completed']['total'] = sc
         partner.save()
@@ -699,6 +714,7 @@ class Assessment(models.Model):
             date=self.completed_date.strftime("%d-%m-%Y") if
             self.completed_date else'NOT COMPLETED'
         )
+
 
 class AgreementManager(models.Manager):
 
