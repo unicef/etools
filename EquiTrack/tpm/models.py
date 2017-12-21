@@ -129,8 +129,12 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             models.Max('date'))['date__max']
 
     def __str__(self):
-        return 'Visit ({}, {})'.format(
-            self.tpm_partner, ', '.join(self.tpm_activities.values_list('intervention__title', flat=True))
+        return 'Visit ({} to {} at {} - {})'.format(
+            self.tpm_partner, ', '.join(filter(
+                lambda x: x,
+                self.tpm_activities.values_list('partner__name', flat=True)
+            )),
+            self.start_date, self.end_date
         )
 
     def has_action_permission(self, user=None, action=None):
@@ -144,7 +148,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             'url': site_url(),
             'environment': get_environment(),
             'implementing_partners': set(map(lambda a: a.partner.name, self.tpm_activities.all())),
-            'partnerships': set(map(lambda a: a.intervention.title, self.tpm_activities.all())),
+            'partnerships': set(map(
+                lambda a: a.intervention.title,
+                self.tpm_activities.filter(intervention__isnull=False)
+            )),
         }
         base_context.update(context)
         context = base_context
