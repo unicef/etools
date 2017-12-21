@@ -288,7 +288,7 @@ class TPMVisitViewSet(
         ).order_by('tpm_visit', 'id')
         serializer = TPMActivityExportSerializer(tpm_activities, many=True)
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=tpm_attachments_{}.csv'.format(timezone.now().date())
+            'Content-Disposition': 'attachment;filename=tpm_activities_{}.csv'.format(timezone.now().date())
         })
 
     @list_route(methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
