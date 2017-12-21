@@ -296,6 +296,7 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "short_name",
             "type_of_assessment",
             "partner_type",
+            "partner_type_slug",
             "cso_type",
             "rating",
             "shared_partner",

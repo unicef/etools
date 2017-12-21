@@ -260,42 +260,42 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     def test_hact_min_requirements_ct_between_100k_and_500k_high(self):
         self.partner_organization.total_ct_cy = 490000.00
-        self.partner_organization.rating = "High"
+        self.partner_organization.rating = PartnerOrganization.RATING_HIGH
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_significant(self):
         self.partner_organization.total_ct_cy = 490000.00
-        self.partner_organization.rating = "Significant"
+        self.partner_organization.rating = PartnerOrganization.RATING_SIGNIFICANT
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_moderate(self):
         self.partner_organization.total_ct_cy = 490000.00
-        self.partner_organization.rating = "Moderate"
+        self.partner_organization.rating = PartnerOrganization.RATING_MODERATE
         self.assert_min_requirements(2, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_low(self):
         self.partner_organization.total_ct_cy = 490000.00
-        self.partner_organization.rating = "Low"
+        self.partner_organization.rating = PartnerOrganization.RATING_LOW
         self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_over_500k_high(self):
         self.partner_organization.total_ct_cy = 510000.00
-        self.partner_organization.rating = "High"
+        self.partner_organization.rating = PartnerOrganization.RATING_HIGH
         self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_significant(self):
         self.partner_organization.total_ct_cy = 510000.00
-        self.partner_organization.rating = "Significant"
+        self.partner_organization.rating = PartnerOrganization.RATING_SIGNIFICANT
         self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_moderate(self):
         self.partner_organization.total_ct_cy = 510000.00
-        self.partner_organization.rating = "Moderate"
+        self.partner_organization.rating = PartnerOrganization.RATING_MODERATE
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_over_500k_low(self):
         self.partner_organization.total_ct_cy = 510000.00
-        self.partner_organization.rating = "Low"
+        self.partner_organization.rating = PartnerOrganization.RATING_LOW
         self.assert_min_requirements(2, 1)
 
     def test_planned_visits_gov(self):
