@@ -304,27 +304,18 @@ class TestPartnerOrganizationModel(TenantTestCase):
         PartnerOrganization.micro_assessment_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "No")
 
-    def test_audit_needed_under_500k(self):
-        self.partner_organization.total_ct_cp = 500000.00
+    def test_audit_trigger_negative(self):
+        '''Ensure an audit is not required when cash transferred is <= the trigger level'''
+        self.partner_organization.total_ct_cp = PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
         self.partner_organization.save()
         PartnerOrganization.audit_needed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 0)
 
-    def test_audit_needed_over_500k(self):
-        self.partner_organization.total_ct_cp = 500001.00
+    def test_audit_trigger_positive(self):
+        '''Ensure an audit is required when cash transferred is > the trigger level'''
+        self.partner_organization.total_ct_cp = PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1
         self.partner_organization.save()
         PartnerOrganization.audit_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
-
-    def test_audit_needed_extra_assessment_only(self):
-        assessment = Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Scheduled Audit report",
-            completed_date=datetime.date(datetime.date.today().year, 2, 1)
-        )
-        self.partner_organization.total_ct_cp = 500001.00
-        self.partner_organization.save()
-        PartnerOrganization.audit_needed(self.partner_organization, assessment)
         self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
 
     def test_audit_done(self):
@@ -333,7 +324,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             type="Scheduled Audit report",
             completed_date=datetime.date(datetime.date.today().year, 1, 1)
         )
-        self.partner_organization.total_ct_cp = 500001.00
+        self.partner_organization.total_ct_cp = PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1
         self.partner_organization.save()
         PartnerOrganization.audit_done(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values['audits_done'], 1)
@@ -344,7 +335,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     def test_hact_min_requirements_ct_equals_0(self):
         self.partner_organization.total_ct_cy = 0
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 0,
@@ -354,7 +344,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     def test_hact_min_requirements_ct_under_50k(self):
         self.partner_organization.total_ct_cy = 50000.00
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 1,
@@ -364,7 +353,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     def test_hact_min_requirements_ct_between_50k_and_100k(self):
         self.partner_organization.total_ct_cy = 50001.00
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 1,
@@ -375,7 +363,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_hact_min_requirements_ct_between_100k_and_350k_moderate(self):
         self.partner_organization.total_ct_cy = 100001.00
         self.partner_organization.rating = "Moderate"
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 1,
@@ -386,7 +373,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_hact_min_requirements_ct_between_100k_and_350k_high(self):
         self.partner_organization.total_ct_cy = 100001.00
         self.partner_organization.rating = "High"
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 2,
@@ -397,7 +383,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_hact_min_requirements_ct_over_350k_moderate(self):
         self.partner_organization.total_ct_cy = 350001.00
         self.partner_organization.rating = "Moderate"
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 2,
@@ -408,7 +393,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def test_hact_min_requirements_ct_over_350k_high(self):
         self.partner_organization.total_ct_cy = 350001.00
         self.partner_organization.rating = "High"
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 4,
