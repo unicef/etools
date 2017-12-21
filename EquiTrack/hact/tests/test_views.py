@@ -62,6 +62,34 @@ class TestHactHistoryAPIView(APITenantTestCase):
         self.assertEqual(data["id"], history.pk)
         self.assertEqual(data["partner_values"], self.hact_data)
 
+    def test_filter_year(self):
+        history = HactHistoryFactory(
+            partner=self.partner,
+            year=2017,
+            partner_values=self.hact_data,
+        )
+        HactHistoryFactory(
+            partner=self.partner,
+            year=2018,
+            partner_values=self.hact_data,
+        )
+        HactHistoryFactory(
+            partner=self.partner,
+            year=2016,
+            partner_values=self.hact_data,
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_user,
+            data={"year": 2017}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        data = response.data[0]
+        self.assertEqual(data["id"], history.pk)
+        self.assertEqual(data["partner_values"], self.hact_data)
+
     def test_export_csv(self):
         HactHistoryFactory(
             partner=self.partner,
