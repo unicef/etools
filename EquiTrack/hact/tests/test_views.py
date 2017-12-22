@@ -144,7 +144,57 @@ class TestHactHistoryAPIView(APITenantTestCase):
             "No",
         ))
 
+    def test_export_csv_empty_shared_with(self):
+        """If partner shared_with value is empty
+        make sure we handle that gracefully
+        """
+        partner = PartnerFactory(
+            name="Partner Name",
+            partner_type=PartnerType.UN_AGENCY,
+            shared_partner="with UNFPA",
+            shared_with=None,
+            rating="High",
+            total_ct_cp=200.0,
+            total_ct_cy=150.0
+        )
+        HactHistoryFactory(
+            partner=partner,
+            year=2017,
+            partner_values=self.hact_data
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_user,
+            data={"format": "csv"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, "csv")
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset[0], (
+            self.partner.name,
+            self.partner.partner_type,
+            self.partner.shared_partner,
+            "",
+            "{:.2f}".format(self.partner.total_ct_cp),
+            "300.00",
+            "{:.2f}".format(self.partner.total_ct_cy),
+            "Yes",
+            self.partner.rating,
+            "10",  # programmatic visits
+            "8",
+            "5",
+            "3",  # spot checks
+            "2",
+            "4",  # audits
+            "2",
+            "No",
+        ))
+
     def test_export_csv_key_errors(self):
+        """If keys for hact dict do not match,
+        make sure we handle that gracefully
+        """
         self.hact_data = {"planned_cash_transfer": "wrong"}
         HactHistoryFactory(
             partner=self.partner,

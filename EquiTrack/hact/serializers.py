@@ -68,7 +68,12 @@ class HactHistoryExportSerializer(serializers.ModelSerializer):
         return json.loads(obj.partner_values) if isinstance(obj.partner_values, unicode) else obj.partner_values
 
     def get_shared_with(self, obj):
-        return ", ".join(obj.partner.shared_with)
+        val = obj.partner.shared_with
+        try:
+            val = ", ".join(obj.partner.shared_with)
+        except TypeError:
+            pass
+        return val
 
     def get_planned_cash_transfer(self, obj):
         vals = self._get_hact(obj)
