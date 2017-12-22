@@ -6,6 +6,7 @@ from StringIO import StringIO
 from unittest import skip
 
 from django.core.urlresolvers import reverse
+import factory
 from freezegun import freeze_time
 from pytz import UTC
 
@@ -15,9 +16,14 @@ from partners.models import PartnerType
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
 from t2f.models import ModeOfTravel, Travel, TravelAttachment, TravelType
-from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, ExpenseTypeFactory, ItineraryItemFactory
-
-from .factories import TravelFactory
+from t2f.tests.factories import (
+    AirlineCompanyFactory,
+    CurrencyFactory,
+    ExpenseTypeFactory,
+    ItineraryItemFactory,
+    TravelAttachmentFactory,
+    TravelFactory,
+)
 
 
 class TravelDetails(URLAssertionMixin, APITenantTestCase):
@@ -64,6 +70,70 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                            'itinerary'],
                           response_json,
                           exact=True)
+
+    def test_details_view_with_attachment(self):
+        attachment = TravelAttachmentFactory(
+            travel=self.travel,
+            name=u'\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
+            file=factory.django.FileField(filename=u'travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
+        )
+        with self.assertNumQueries(25):
+            response = self.forced_auth_req(
+                'get',
+                reverse('t2f:travels:details:index', args=[self.travel.pk]),
+                user=self.unicef_staff
+            )
+        response_json = json.loads(response.rendered_content)
+
+        self.assertKeysIn(
+            ['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
+             'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
+             'section', 'clearances', 'cost_assignments', 'start_date', 'status', 'activities',
+             'rejection_note', 'end_date', 'mode_of_travel', 'international_travel',
+             'first_submission_date', 'deductions', 'purpose', 'report', 'action_points',
+             'reference_number', 'cost_summary', 'currency', 'canceled_at', 'estimated_travel_cost',
+             'itinerary'],
+            response_json,
+            exact=True
+        )
+        self.assertEqual(len(response_json['attachments']), 1)
+        self.assertEqual(response_json['attachments'][0]["id"], attachment.pk)
+
+    def test_travel_attachment(self):
+        attachment = TravelAttachmentFactory(travel=self.travel)
+        response = self.forced_auth_req(
+            'get',
+            reverse('t2f:travels:details:attachments', args=[self.travel.pk]),
+            user=self.unicef_staff
+        )
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json), 1)
+        self.assertKeysIn(
+            ['id', 'name', 'type', 'url', 'file'],
+            response_json[0],
+            exact=True
+        )
+        self.assertEqual(response_json[0]["id"], attachment.pk)
+
+    def test_travel_attachment_unicode(self):
+        attachment = TravelAttachmentFactory(
+            travel=self.travel,
+            name=u'\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
+            file=factory.django.FileField(filename=u'travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
+        )
+        response = self.forced_auth_req(
+            'get',
+            reverse('t2f:travels:details:attachments', args=[self.travel.pk]),
+            user=self.unicef_staff
+        )
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json), 1)
+        self.assertKeysIn(
+            ['id', 'name', 'type', 'url', 'file'],
+            response_json[0],
+            exact=True
+        )
+        self.assertEqual(response_json[0]["id"], attachment.pk)
 
     @skip('Fix this')
     def test_file_attachments(self):
