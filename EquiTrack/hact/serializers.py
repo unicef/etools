@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import json
 
+from hact.mappings import map_hact_values
 from hact.models import HactHistory
 from rest_framework import serializers
 
@@ -64,8 +65,11 @@ class HactHistoryExportSerializer(serializers.ModelSerializer):
             "follow_up_flags",
         )
 
-    def _get_hact(self, obj):
-        return json.loads(obj.partner_values) if isinstance(obj.partner_values, unicode) else obj.partner_values
+    def _get_hact_data(self, obj):
+        data = obj.partner_values
+        if isinstance(obj.partner_values, unicode):
+            data = json.loads(obj.partner_values)
+        return map_hact_values(obj.year, data)
 
     def get_shared_with(self, obj):
         val = obj.partner.shared_with
@@ -76,7 +80,7 @@ class HactHistoryExportSerializer(serializers.ModelSerializer):
         return val
 
     def get_planned_cash_transfer(self, obj):
-        vals = self._get_hact(obj)
+        vals = self._get_hact_data(obj)
         val = vals.get("planned_cash_transfer", None)
         try:
             val = "{:.2f}".format(val)
@@ -85,58 +89,37 @@ class HactHistoryExportSerializer(serializers.ModelSerializer):
         return val
 
     def get_micro_assessment_needed(self, obj):
-        vals = self._get_hact(obj)
+        vals = self._get_hact_data(obj)
         return vals.get("micro_assessment_needed", None)
 
     def get_planned_visits(self, obj):
-        vals = self._get_hact(obj)
-        try:
-            return vals["programmatic_visits"]["planned"]["total"]
-        except KeyError:
-            return None
+        vals = self._get_hact_data(obj)
+        return vals.get("programmatic_visits_planned", None)
 
     def get_programmatic_visits_required(self, obj):
-        vals = self._get_hact(obj)
-        try:
-            return vals["programmatic_visits"]["required"]["total"]
-        except KeyError:
-            return None
+        vals = self._get_hact_data(obj)
+        return vals.get("programmatic_visits_required", None)
 
     def get_programmatic_visits_done(self, obj):
-        vals = self._get_hact(obj)
-        try:
-            return vals["programmatic_visits"]["completed"]["total"]
-        except KeyError:
-            return None
+        vals = self._get_hact_data(obj)
+        return vals.get("programmatic_visits_completed", None)
 
     def get_spot_checks_required(self, obj):
-        vals = self._get_hact(obj)
-        try:
-            return vals["spot_checks"]["required"]["total"]
-        except KeyError:
-            return None
+        vals = self._get_hact_data(obj)
+        return vals.get("spot_checks_required", None)
 
     def get_spot_checks_done(self, obj):
-        vals = self._get_hact(obj)
-        try:
-            return vals["spot_checks"]["completed"]["total"]
-        except KeyError:
-            return None
+        vals = self._get_hact_data(obj)
+        return vals.get("spot_checks_completed", None)
 
     def get_audits_required(self, obj):
-        vals = self._get_hact(obj)
-        try:
-            return vals["audits"]["required"]
-        except KeyError:
-            return None
+        vals = self._get_hact_data(obj)
+        return vals.get("audits_required", None)
 
     def get_audits_done(self, obj):
-        vals = self._get_hact(obj)
-        try:
-            return vals["audits"]["completed"]
-        except KeyError:
-            return None
+        vals = self._get_hact_data(obj)
+        return vals.get("audits_completed", None)
 
     def get_follow_up_flags(self, obj):
-        vals = self._get_hact(obj)
+        vals = self._get_hact_data(obj)
         return vals.get("follow_up_flags", None)
