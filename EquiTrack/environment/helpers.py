@@ -30,6 +30,4 @@ def tenant_switch_is_active(switch_name):
     tenant, and return False in all other cases.
     """
     switch = TenantSwitch.get(switch_name)
-    if switch.id is None:
-        return False
     return switch.is_active()

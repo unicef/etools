@@ -3,15 +3,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-try:
-    from django.utils import timezone as datetime
-except ImportError:
-    from datetime import datetime
-
 from django.db import connection, models
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils import timezone
 from waffle.models import Flag, BaseModel
 from waffle import managers
+
 from users.models import Country
 
 
@@ -57,19 +54,20 @@ class TenantSwitchManager(managers.BaseManager):
 class TenantSwitch(BaseModel):
     """
     Associate one or more countries with a Switch.
-    """
-    countries = models.ManyToManyField(Country, blank=True, help_text=(
-        'Activate this switch for these countries.'))
 
+    'countries' is the only field we add. All other fields are copy/pasted from waffle.Switch.
+    """
     name = models.CharField(max_length=100, unique=True,
                             help_text='The human/computer readable name.')
     active = models.BooleanField(default=False, help_text=(
         'Is this switch active?'))
+    countries = models.ManyToManyField(Country, blank=True, help_text=(
+        'Activate this switch for these countries.'))
     note = models.TextField(blank=True, help_text=(
         'Note where this Switch is used.'))
-    created = models.DateTimeField(default=datetime.now, db_index=True,
+    created = models.DateTimeField(default=timezone.now, db_index=True,
                                    help_text=('Date when this Switch was created.'))
-    modified = models.DateTimeField(default=datetime.now, help_text=(
+    modified = models.DateTimeField(default=timezone.now, help_text=(
         'Date when this Switch was last modified.'))
 
     objects = TenantSwitchManager()
@@ -85,6 +83,9 @@ class TenantSwitch(BaseModel):
 
     def is_active(self):
         "Is this switch on for this tenant?"
+        if not self.pk:
+            # Nonexistent flag, return False
+            return False
         if connection.tenant in self.countries.all():
             return self.active
         return False

@@ -87,20 +87,24 @@ class TenantFlagTest(TestCase):
 class TenantSwitchTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant_switch = TenantSwitchFactory()
+        cls.tenant_switch = TenantSwitchFactory(active=True)
         connection.tenant = CountryFactory()
 
     def setUp(self):
-        # assert the tenant switch is active but has no countries and returns false
+        # assert that the tenant switch is 'active', to make it easier to make
+        # sure that our country override is working
         self.assertTrue(self.tenant_switch.active)
-        self.assertEqual(0, self.tenant_switch.countries.count())
-        self.assertFalse(self.tenant_switch.is_active())
+
+    def tearDown(self):
+        # flush the cache
+        self.tenant_switch.flush()
 
     def test_str_method(self):
         self.assertEqual(str(self.tenant_switch), self.tenant_switch.name)
 
     def test_blank_countries(self):
-        "Return the False if TenantSwitch has no countries."
+        "Return False if TenantSwitch has no countries."
+        self.assertEqual(0, self.tenant_switch.countries.count())
         self.assertFalse(self.tenant_switch.is_active())
 
     def test_tenant_in_countries(self):
@@ -123,8 +127,10 @@ class TenantSwitchTest(TestCase):
 
     def test_is_active_function_switch_on(self):
         self.tenant_switch.countries.add(connection.tenant)
-        # remove from cache after adding a country
-        self.tenant_switch.flush()
+        # In tests, we have to manually flush the cache. When created through
+        # the admin, the only way to change countries is to click the 'Save'
+        # button, which flushes the cache
+        self.tenant_switch.save()  # <- save is necessary to mimic the admin
         switch_active = tenant_switch_is_active(self.tenant_switch.name)
         # tenant in countries, so this should return True
         self.assertTrue(switch_active)
@@ -133,3 +139,15 @@ class TenantSwitchTest(TestCase):
         "Nonexistent TenantSwitch should return False."
         switch_active = tenant_switch_is_active('foo')
         self.assertFalse(switch_active)
+
+    def test_is_active_function_is_cached(self):
+        self.tenant_switch.countries.add(connection.tenant)
+        self.tenant_switch.save()  # <- save is necessary to mimic the admin
+        with self.assertNumQueries(2):
+            # First time takes 2 queries (one to get switch, and one to get countries list)
+            switch_active = tenant_switch_is_active(self.tenant_switch.name)
+        self.assertTrue(switch_active)
+        with self.assertNumQueries(0):
+            # Second time, takes zero queries
+            switch_active = tenant_switch_is_active(self.tenant_switch.name)
+        self.assertTrue(switch_active)
