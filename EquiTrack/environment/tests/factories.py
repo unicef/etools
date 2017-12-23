@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import factory
 from factory import fuzzy
-from waffle.models import Flag
 
 from environment import models
 
@@ -17,17 +16,11 @@ class IssueCheckConfigFactory(factory.django.DjangoModelFactory):
     check_id = fuzzy.FuzzyText()
 
 
-class FlagFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = Flag
-    name = fuzzy.FuzzyText()
-
-
 class TenantFlagFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.TenantFlag
 
-    flag = factory.SubFactory(FlagFactory)
+    name = fuzzy.FuzzyText()
 
     @factory.post_generation
     def countries(self, create, extracted, **kwargs):
@@ -38,11 +31,11 @@ class TenantFlagFactory(factory.django.DjangoModelFactory):
 
 
 class TenantSwitchFactory(factory.django.DjangoModelFactory):
-    name = fuzzy.FuzzyText()
-    active = True
-
     class Meta:
         model = models.TenantSwitch
+
+    name = fuzzy.FuzzyText()
+    active = True
 
     @factory.post_generation
     def countries(self, create, extracted, **kwargs):

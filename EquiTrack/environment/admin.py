@@ -16,14 +16,8 @@ class IssueCheckConfigAdmin(admin.ModelAdmin):
     list_filter = ['is_active']
 
 
-# add the TenantFlag as an Inline on the Flag Admin
-class TenantFlagInline(admin.StackedInline):
-    model = TenantFlag
-    filter_horizontal = ('countries', )
-
-
 class TenantFlagAdmin(FlagAdmin):
-    inlines = FlagAdmin.inlines + [TenantFlagInline, ]
+    filter_horizontal = ['countries']
 
 
 class TenantSwitchAdmin(SwitchAdmin):
@@ -32,6 +26,6 @@ class TenantSwitchAdmin(SwitchAdmin):
 
 # unregister the waffle admin instances and use our own
 admin.site.unregister(Flag)
-admin.site.register(Flag, TenantFlagAdmin)
+admin.site.register(TenantFlag, TenantFlagAdmin)
 admin.site.unregister(Switch)
 admin.site.register(TenantSwitch, TenantSwitchAdmin)
