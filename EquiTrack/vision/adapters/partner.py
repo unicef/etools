@@ -4,7 +4,7 @@ from datetime import datetime
 
 from partners.models import PartnerOrganization
 from vision.utils import comp_decimals
-from vision.vision_data_synchronizer import VisionDataSynchronizer
+from vision.vision_data_synchronizer import VisionDataSynchronizer, VISION_NO_DATA_MESSAGE
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         return filter(bad_record, records)
 
     def _get_json(self, data):
-        return [] if data == self.NO_DATA_MESSAGE else data
+        return [] if data == VISION_NO_DATA_MESSAGE else data
 
     def update_stuff(self, records):
         _pos = []
