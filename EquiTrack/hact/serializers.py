@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import json
 
-from hact.mappings import map_hact_values
 from hact.models import HactHistory
 from rest_framework import serializers
 
@@ -24,102 +23,10 @@ class HactHistorySerializer(serializers.ModelSerializer):
         )
 
 
-class HactHistoryExportSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source="partner.name")
-    partner_type = serializers.CharField(source="partner.partner_type")
-    shared = serializers.CharField(source="partner.shared_partner")
-    shared_with = serializers.SerializerMethodField()
-    total_ct_cp = serializers.CharField(source="partner.total_ct_cp")
-    planned_cash_transfer = serializers.SerializerMethodField()
-    total_ct_cy = serializers.CharField(source="partner.total_ct_cy")
-    micro_assessment_needed = serializers.SerializerMethodField()
-    rating = serializers.CharField(source="partner.rating")
-    planned_visits = serializers.SerializerMethodField()
-    programmatic_visits_required = serializers.SerializerMethodField()
-    programmatic_visits_done = serializers.SerializerMethodField()
-    spot_checks_required = serializers.SerializerMethodField()
-    spot_checks_done = serializers.SerializerMethodField()
-    audits_required = serializers.SerializerMethodField()
-    audits_done = serializers.SerializerMethodField()
-    follow_up_flags = serializers.SerializerMethodField()
+class HactHistoryExportSerializer(serializers.BaseSerializer):
+    @property
+    def data(self):
+        return self.to_presentation(self.initial_data)
 
-    class Meta:
-        model = HactHistory
-        fields = (
-            "name",
-            "partner_type",
-            "shared",
-            "shared_with",
-            "total_ct_cp",
-            "planned_cash_transfer",
-            "total_ct_cy",
-            "micro_assessment_needed",
-            "rating",
-            "planned_visits",
-            "programmatic_visits_required",
-            "programmatic_visits_done",
-            "spot_checks_required",
-            "spot_checks_done",
-            "audits_required",
-            "audits_done",
-            "follow_up_flags",
-        )
-
-    def _get_hact_data(self, obj):
-        data = obj.partner_values
-        if isinstance(obj.partner_values, unicode):
-            data = json.loads(obj.partner_values)
-        return map_hact_values(obj.year, data)
-
-    def get_shared_with(self, obj):
-        val = obj.partner.shared_with
-        try:
-            val = ", ".join(obj.partner.shared_with)
-        except TypeError:
-            pass
-        return val
-
-    def get_planned_cash_transfer(self, obj):
-        vals = self._get_hact_data(obj)
-        val = vals.get("planned_cash_transfer", None)
-        try:
-            val = "{:.2f}".format(val)
-        except ValueError:
-            pass
-        return val
-
-    def get_micro_assessment_needed(self, obj):
-        vals = self._get_hact_data(obj)
-        return vals.get("micro_assessment_needed", None)
-
-    def get_planned_visits(self, obj):
-        vals = self._get_hact_data(obj)
-        return vals.get("programmatic_visits_planned", None)
-
-    def get_programmatic_visits_required(self, obj):
-        vals = self._get_hact_data(obj)
-        return vals.get("programmatic_visits_required", None)
-
-    def get_programmatic_visits_done(self, obj):
-        vals = self._get_hact_data(obj)
-        return vals.get("programmatic_visits_completed", None)
-
-    def get_spot_checks_required(self, obj):
-        vals = self._get_hact_data(obj)
-        return vals.get("spot_checks_required", None)
-
-    def get_spot_checks_done(self, obj):
-        vals = self._get_hact_data(obj)
-        return vals.get("spot_checks_completed", None)
-
-    def get_audits_required(self, obj):
-        vals = self._get_hact_data(obj)
-        return vals.get("audits_required", None)
-
-    def get_audits_done(self, obj):
-        vals = self._get_hact_data(obj)
-        return vals.get("audits_completed", None)
-
-    def get_follow_up_flags(self, obj):
-        vals = self._get_hact_data(obj)
-        return vals.get("follow_up_flags", None)
+    def to_representation(self, data):
+        return [x[1] for x in data.partner_values]

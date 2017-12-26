@@ -4,42 +4,27 @@ from rest_framework_csv.renderers import CSVRenderer
 
 
 class HactHistoryCSVRenderer(CSVRenderer):
-    header = [
-        "name",
-        "partner_type",
-        "shared",
-        "shared_with",
-        "total_ct_cp",
-        "planned_cash_transfer",
-        "total_ct_cy",
-        "micro_assessment_needed",
-        "rating",
-        "planned_visits",
-        "programmatic_visits_required",
-        "programmatic_visits_done",
-        "spot_checks_required",
-        "spot_checks_done",
-        "audits_required",
-        "audits_done",
-        "follow_up_flags",
-    ]
+    def tablize(self, data, header=None, labels=None):
+        # header is changed, so set labels first
+        labels = self.set_labels(header)
+        header = self.set_header(header)
+        return super(HactHistoryCSVRenderer, self).tablize(
+            data,
+            header=header,
+            labels=labels
+        )
 
-    labels = {
-        "name": "Implementing Partner",
-        "partner_type": "Partner Type",
-        "shared": "Shared",
-        "shared_with": "Shared IP",
-        "total_ct_cp": "TOTAL for current CP cycle",
-        "planned_cash_transfer": "PLANNED for current year",
-        "total_ct_cy": "Current Year (1 Oct - 30 Sep)",
-        "micro_assessment_needed": "Micro Assessment",
-        "rating": "Risk Rating",
-        "planned_visits": "Programmatic Visits Planned",
-        "programmatic_visits_required": "Programmatic Visits M.R",
-        "programmatic_visits_done": "Programmatic Visits Done",
-        "spot_checks_required": "Spot Checks M.R",
-        "spot_checks_done": "Spot Checks Done",
-        "audits_required": "Audits M.R",
-        "audits_done": "Audits Done",
-        "follow_up_flags": "Flag for Follow up",
-    }
+    def set_header(self, header):
+        return range(0, len(header))
+
+    def set_labels(self, header):
+        labels = {}
+        for i, k in enumerate(header):
+            labels[i] = k
+        return labels
+
+    def flatten_item(self, item):
+        flat_item = {}
+        for k, v in enumerate(item):
+            flat_item[k] = v
+        return flat_item

@@ -26,24 +26,25 @@ class TestHactHistoryAPIView(APITenantTestCase):
         cls.url = reverse("hact_api:hact-history")
 
     def setUp(self):
-        self.hact_data = {
-            "planned_cash_transfer": 300.0,
-            "micro_assessment_needed": "Yes",
-            "programmatic_visits": {
-                "planned": {"total": 10},
-                "required": {"total": 8},
-                "completed": {"total": 5},
-            },
-            "spot_checks": {
-                "required": {"total": 3},
-                "completed": {"total": 2},
-            },
-            "audits": {
-                "required": 4,
-                "completed": 2,
-            },
-            "follow_up_flags": "No",
-        }
+        self.hact_data = [
+            ['Implementing Partner', "Partner Name"],
+            ['Partner Type', PartnerType.UN_AGENCY],
+            ['Shared', "with UNFPA"],
+            ['Shared IP', PartnerOrganization.AGENCY_CHOICES.UN],
+            ['TOTAL for current CP cycle', "200.00"],
+            ['PLANNED for current year', "300.00"],
+            ['Current Year (1 Oct - 30 Sep)', "150.00"],
+            ['Micro Assessment', "Yes"],
+            ['Risk Rating', "High"],
+            ['Programmatic Visits Planned', 10],
+            ['Programmatic Visits M.R', 8],
+            ['Programmatic Visits Done', 5],
+            ['Spot Checks M.R', 3],
+            ['Spot Checks Done', 2],
+            ['Audits M.R', 4],
+            ['Audits Done', 2],
+            ['Flag for Follow up', "No"],
+        ]
 
     def test_get(self):
         history = HactHistoryFactory(
@@ -125,15 +126,15 @@ class TestHactHistoryAPIView(APITenantTestCase):
             "Flag for Follow up",
         ])
         self.assertEqual(dataset[0], (
-            self.partner.name,
-            self.partner.partner_type,
-            self.partner.shared_partner,
-            ", ".join(self.partner.shared_with),
-            "{:.2f}".format(self.partner.total_ct_cp),
+            "Partner Name",
+            PartnerType.UN_AGENCY,
+            "with UNFPA",
+            PartnerOrganization.AGENCY_CHOICES.UN,
+            "200.00",
             "300.00",
-            "{:.2f}".format(self.partner.total_ct_cy),
+            "150.00",
             "Yes",
-            self.partner.rating,
+            "High",
             "10",  # programmatic visits
             "8",
             "5",
@@ -172,15 +173,15 @@ class TestHactHistoryAPIView(APITenantTestCase):
         dataset = Dataset().load(response.content, "csv")
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset[0], (
-            self.partner.name,
-            self.partner.partner_type,
-            self.partner.shared_partner,
-            "",
-            "{:.2f}".format(self.partner.total_ct_cp),
+            "Partner Name",
+            PartnerType.UN_AGENCY,
+            "with UNFPA",
+            PartnerOrganization.AGENCY_CHOICES.UN,
+            "200.00",
             "300.00",
-            "{:.2f}".format(self.partner.total_ct_cy),
+            "150.00",
             "Yes",
-            self.partner.rating,
+            "High",
             "10",  # programmatic visits
             "8",
             "5",
@@ -189,43 +190,4 @@ class TestHactHistoryAPIView(APITenantTestCase):
             "4",  # audits
             "2",
             "No",
-        ))
-
-    def test_export_csv_key_errors(self):
-        """If keys for hact dict do not match,
-        make sure we handle that gracefully
-        """
-        self.hact_data = {"planned_cash_transfer": "wrong"}
-        HactHistoryFactory(
-            partner=self.partner,
-            year=2017,
-            partner_values=self.hact_data
-        )
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_user,
-            data={"format": "csv"}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, "csv")
-        self.assertEqual(dataset.height, 1)
-        self.assertEqual(dataset[0], (
-            self.partner.name,
-            self.partner.partner_type,
-            self.partner.shared_partner,
-            ", ".join(self.partner.shared_with),
-            "{:.2f}".format(self.partner.total_ct_cp),
-            "wrong",
-            "{:.2f}".format(self.partner.total_ct_cy),
-            "",
-            self.partner.rating,
-            "",  # programmatic visits
-            "",
-            "",
-            "",  # spot checks
-            "",
-            "",  # audits
-            "",
-            "",
         ))

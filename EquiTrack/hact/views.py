@@ -30,6 +30,17 @@ class HactHistoryAPIView(ListAPIView):
             return HactHistoryExportSerializer
         return super(HactHistoryAPIView, self).get_serializer_class()
 
+    def get_serializer(self, *args, **kwargs):
+        if self.request.query_params.get("format") == 'csv':
+            return super(HactHistoryAPIView, self).get_serializer(*args, **kwargs)
+        return super(HactHistoryAPIView, self).get_serializer(*args, **kwargs)
+
+    def get_renderer_context(self):
+        context = super(HactHistoryAPIView, self).get_renderer_context()
+        sample_data = self.get_queryset().first()
+        context["header"] = [x[0] for x in sample_data.partner_values]
+        return context
+
     def list(self, request, format=None):
         """
         Checks for format query parameter
