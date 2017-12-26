@@ -35,7 +35,7 @@ from reports.models import (
 )
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
-from users.models import Section, Office
+from users.models import Office
 from partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreements_illegal_transition,
@@ -1997,139 +1997,6 @@ class InterventionSectorLocationLink(TimeStampedModel):
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
 
     tracker = FieldTracker()
-
-
-class GovernmentInterventionManager(models.Manager):
-    def get_queryset(self):
-        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results', 'results__sectors',
-                                                                                          'results__unicef_managers')
-
-
-# TODO: check this for sanity
-@python_2_unicode_compatible
-class GovernmentIntervention(models.Model):
-    """
-    Represents a government intervention.
-
-    Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`reports.CountryProgramme`
-    """
-    objects = GovernmentInterventionManager()
-
-    partner = models.ForeignKey(
-        PartnerOrganization,
-        related_name='work_plans',
-    )
-    country_programme = models.ForeignKey(
-        CountryProgramme, on_delete=models.DO_NOTHING, null=True, blank=True,
-        related_query_name='government_interventions'
-    )
-    number = models.CharField(
-        max_length=45,
-        blank=True,
-        verbose_name='Reference Number',
-        unique=True
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    tracker = FieldTracker()
-
-    def __str__(self):
-        return 'Number: {}'.format(self.number) if self.number else \
-            '{}: {}'.format(self.pk, self.reference_number)
-
-    # country/partner/year/#
-    @property
-    def reference_number(self):
-        if self.number:
-            number = self.number
-        else:
-            objects = list(GovernmentIntervention.objects.filter(
-                partner=self.partner,
-                country_programme=self.country_programme,
-            ).order_by('created_at').values_list('id', flat=True))
-            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-            number = '{code}/{partner}/{seq}'.format(
-                code=connection.tenant.country_short_code or '',
-                partner=self.partner.short_name,
-                seq=sequence
-            )
-        return number
-
-    def save(self, **kwargs):
-
-        # commit the reference number to the database once the agreement is
-        # signed
-        if not self.number:
-            self.number = self.reference_number
-
-        super(GovernmentIntervention, self).save(**kwargs)
-
-
-def activity_default():
-    return {}
-
-
-@python_2_unicode_compatible
-class GovernmentInterventionResult(models.Model):
-    """
-    Represents an result from government intervention.
-
-    Relates to :model:`partners.GovernmentIntervention`
-    Relates to :model:`auth.User`
-    Relates to :model:`reports.Sector`
-    Relates to :model:`users.Section`
-    Relates to :model:`reports.Result`
-    """
-
-    intervention = models.ForeignKey(
-        GovernmentIntervention,
-        related_name='results'
-    )
-    result = models.ForeignKey(
-        Result,
-    )
-    year = models.CharField(
-        max_length=4,
-    )
-    planned_amount = models.IntegerField(
-        default=0,
-        verbose_name='Planned Cash Transfers'
-    )
-    activity = JSONField(blank=True, null=True, default=activity_default)
-    unicef_managers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        verbose_name='Unicef focal points',
-        blank=True
-    )
-    sectors = models.ManyToManyField(
-        Sector, blank=True,
-        verbose_name='Programme/Sector', related_name='+')
-    sections = models.ManyToManyField(
-        Section, blank=True, related_name='+')
-    planned_visits = models.IntegerField(default=0)
-
-    tracker = FieldTracker()
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        if self.pk:
-            prev_result = GovernmentInterventionResult.objects.get(id=self.id)
-            if prev_result.planned_visits != self.planned_visits:
-                PartnerOrganization.planned_visits(self.intervention.partner, self)
-        else:
-            PartnerOrganization.planned_visits(self.intervention.partner, self)
-
-        super(GovernmentInterventionResult, self).save(**kwargs)
-
-    def __str__(self):
-        return '{}, {}'.format(self.intervention.number, self.result)
-
-
-class GovernmentInterventionResultActivity(models.Model):
-    intervention_result = models.ForeignKey(GovernmentInterventionResult, related_name='result_activities')
-    code = models.CharField(max_length=36)
-    description = models.CharField(max_length=1024)
 
 
 # TODO: Move to funds
