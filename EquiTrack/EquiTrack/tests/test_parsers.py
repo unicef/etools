@@ -42,23 +42,29 @@ class TestCreateListsFromDictKeys(TestCase):
         data = {
             "1": "Int",
             "str": "Str",
-            "[1]": "List Int",
-            "[str]": "List Str",
-            "[1 str]": "List Int Str"
+            "sample[1]": "List Int",
+            "sample[str]": "List Str",
+            "sample[1][str]": "Var Int Str"
         }
         self.assertEqual(
             parsers._create_lists_from_dict_keys(data),
-            [[1], ["", 1, "str"], ["", 1], ["", "str"], ["str"]]
+            [
+                [1],
+                ["sample", 1],
+                ["sample", 1, "str"],
+                ["sample", "str"],
+                ["str"],
+            ]
         )
 
     def test_sorted_keys(self):
         data = {
-            "a 10": "Int10",
-            "a 2": "Int2",
-            "a 30": "Int30",
-            "a 3": "Int3",
-            "a 4": "Int4",
-            "a b": "Str",
+            "a[10]": "Int10",
+            "a[2]": "Int2",
+            "a[30]": "Int30",
+            "a[3]": "Int3",
+            "a[4]": "Int4",
+            "a[b]": "Str",
         }
         self.assertEqual(
             parsers._create_lists_from_dict_keys(data),
@@ -73,17 +79,38 @@ class TestCreateKey(TestCase):
 
     def test_single_element(self):
         """If only one element in list then return str of that element"""
-        self.assertEqual(parsers._create_key(["", 1]), "[1]")
+        self.assertEqual(parsers._create_key(["sample", 1]), "sample[1]")
 
     def test_multi_element(self):
         """If multiple elements in list then return dict str of path"""
-        res = parsers._create_key(["", "d", "k", "2"])
-        self.assertEqual(res, "[d][k][2]")
+        res = parsers._create_key(["sample", "d", "k", "2"])
+        self.assertEqual(res, "sample[d][k][2]")
 
     def test_unicode(self):
         """If multiple elements in list then return dict str of path"""
-        res = parsers._create_key(["", u"m\xe9lange", "k", "2"])
-        self.assertEqual(res, "[m\xe9lange][k][2]")
+        res = parsers._create_key(["sample", u"m\xe9lange", "k", "2"])
+        self.assertEqual(res, "sample[m\xe9lange][k][2]")
+
+
+class TestInitData(TestCase):
+    def test_int_new(self):
+        """Test int key, that does NOT exist"""
+        self.assertEqual(parsers._init_data([], 0, []), [[]])
+
+    def test_int_exists(self):
+        """Test int key, that does exist"""
+        self.assertEqual(parsers._init_data([[1, 2, 3]], 0, []), [[1, 2, 3]])
+
+    def test_str_new(self):
+        """Test str key, that does NOT exist"""
+        self.assertEqual(parsers._init_data({}, "new", {}), {"new": {}})
+
+    def test_str_exists(self):
+        """Test str key, that does exist"""
+        self.assertEqual(
+            parsers._init_data({"old": "exists"}, "old", {}),
+            {"old": "exists"}
+        )
 
 
 class TestBuildParsedData(TestCase):
@@ -127,12 +154,11 @@ class TestParseMultipartData(TestCase):
     def test_str_list_key(self):
         """Check that string keys results in valid dictionary"""
         data = {
-            "[d _obj key-2]": "val-2",
-            "[d][_obj][key-2]": "val-2",
+            "sample[d][_obj][key-2]": "val-2",
         }
         res = parsers.parse_multipart_data(data)
         self.assertEqual(res, {
-            "": {
+            "sample": {
                 "d": {"key-2": "val-2"},
             }
         })
@@ -140,14 +166,12 @@ class TestParseMultipartData(TestCase):
     def test_multi_str_list_key(self):
         """Check that string keys results in valid dictionary"""
         data = {
-            "[d _obj key-2]": "val-2",
-            "[d][_obj][key-2]": "val-2",
-            "[d _obj key-5]": "val-5",
-            "[d][_obj][key-5]": "val-5",
+            "sample[d][_obj][key-2]": "val-2",
+            "sample[d][_obj][key-5]": "val-5",
         }
         res = parsers.parse_multipart_data(data)
         self.assertEqual(res, {
-            "": {
+            "sample": {
                 "d": {
                     "key-2": "val-2",
                     "key-5": "val-5",
@@ -158,12 +182,11 @@ class TestParseMultipartData(TestCase):
     def test_int_list_key(self):
         """Check that int key results in valid dictionary with list"""
         data = {
-            "[d 0]": "val-2",
-            "[d][0]": "val-2",
+            "sample[d][0]": "val-2",
         }
         res = parsers.parse_multipart_data(data)
         self.assertEqual(res, {
-            "": {
+            "sample": {
                 "d": ["val-2"],
             }
         })
@@ -171,14 +194,12 @@ class TestParseMultipartData(TestCase):
     def test_multi_int_list_key(self):
         """Check that int key results in valid dictionary with list"""
         data = {
-            "[d 0]": "val-0",
-            "[d][0]": "val-0",
-            "[d 1]": "val-1",
-            "[d][1]": "val-1",
+            "sample[d][0]": "val-0",
+            "sample[d][1]": "val-1",
         }
         res = parsers.parse_multipart_data(data)
         self.assertEqual(res, {
-            "": {
+            "sample": {
                 "d": ["val-0", "val-1"],
             }
         })
@@ -187,20 +208,86 @@ class TestParseMultipartData(TestCase):
         """Check that int key results in valid dictionary with list"""
         data = {
             "one": "two",
-            "[d 0]": "val-0",
-            "[d][0]": "val-0",
-            "[d 1]": "val-1",
-            "[d][1]": "val-1",
-            "[extra _obj key-2]": "val-2",
-            "[extra][_obj][key-2]": "val-2",
-            "[extra _obj key-5]": "val-5",
-            "[extra][_obj][key-5]": "val-5",
+            "sample[d][0]": "val-0",
+            "sample[d][1]": "val-1",
+            "sample[extra][_obj][key-2]": "val-2",
+            "sample[extra][_obj][key-5]": "val-5",
         }
         res = parsers.parse_multipart_data(data)
         self.assertEqual(res, {
             "one": "two",
-            "": {
+            "sample": {
                 "d": ["val-0", "val-1"],
                 "extra": {"key-2": "val-2", "key-5": "val-5"}
             }
+        })
+
+    def test_use_case(self):
+        """Check live use case sample"""
+        data = {
+            u'attachments[8][_obj][type]': [u'133'],
+            u'attachments[7][_obj][id]': [u'1681'],
+            u'attachments[0][_obj][intervention]': [u'71'],
+            u'sector_locations[0][_obj][locations][4]': [u'7705'],
+            u'sector_locations[0][_obj][locations][0]': [u'7699'],
+            u'attachments[8][_obj][id]': [u'1693'],
+            u'sector_locations[0][_obj][locations][2]': [u'7702'],
+            u'attachments[1][_obj][id]': [u'1691'],
+            u'attachments[2][_obj][id]': [u'1692'],
+            u'attachments[5][_obj][type]': [u'135'],
+            u'attachments[2][_obj][type]': [u'135'],
+            u'attachments[6][_obj][id]': [u'1680'],
+            u'offices[0]': [u'1'],
+            u'unicef_focal_points[0]': [u'1086'],
+            u'attachments[0][_obj][attachment]': ["sample.pdf"],
+            u'partner_focal_points[0]': [u'99'],
+            u'attachments[1][_obj][type]': [u'135'],
+            u'sector_locations[0][_obj][id]': [u'230'],
+            u'sector_locations[0][_obj][sector]': [u'4'],
+            u'attachments[6][_obj][type]': [u'135'],
+            u'attachments[5][_obj][id]': [u'1679'],
+            u'sector_locations[0][_obj][locations][3]': [u'7704'],
+            u'attachments[0][_obj][type]': [u'135'],
+            u'sector_locations[0][_obj][locations][5]': [u'7701'],
+            u'attachments[4][_obj][type]': [u'135'],
+            u'sector_locations[0][_obj][locations][1]': [u'7706'],
+            u'attachments[0][_obj][id]': [None],
+            u'attachments[3][_obj][id]': [u'1677'],
+            u'attachments[4][_obj][id]': [u'1678'],
+            u'attachments[3][_obj][type]': [u'135'],
+            u'attachments[9][_obj][type]': [u'135'],
+            u'attachments[9][_obj][id]': [u'1694'],
+            u'attachments[7][_obj][type]': [u'135']
+        }
+        res = parsers.parse_multipart_data(data)
+        self.assertEqual(res, {
+            'unicef_focal_points': [[u'1086']],
+            'sector_locations': [
+                {
+                    'sector': [u'4'],
+                    'id': [u'230'],
+                    'locations': [
+                        [u'7699'],
+                        [u'7706'],
+                        [u'7702'],
+                        [u'7704'],
+                        [u'7705'],
+                        [u'7701']
+                    ]
+                }
+            ],
+            'offices': [[u'1']],
+            'attachments': [
+                {'intervention': [u'71'], 'type': [u'135'], 'attachment': ['sample.pdf'], 'id': [None]},
+                {'type': [u'135'], 'id': [u'1691']},
+                {'type': [u'135'], 'id': [u'1692']},
+                {'type': [u'135'], 'id': [u'1677']},
+                {'type': [u'135'], 'id': [u'1678']},
+                {'type': [u'135'], 'id': [u'1679']},
+                {'type': [u'135'], 'id': [u'1680']},
+                {'type': [u'135'], 'id': [u'1681']},
+                {'type': [u'133'], 'id': [u'1693']},
+                {'type': [u'135'], 'id': [u'1694']}
+            ],
+            'partner_focal_points': [[u'99']]
         })
