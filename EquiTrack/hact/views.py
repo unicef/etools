@@ -53,7 +53,7 @@ class HactHistoryAPIView(ListAPIView):
         return response
 
 
-class GlobalHactView(views.APIView):
+class GraphHactView(views.APIView):
     permission_classes = []
 
     # temporary static json
