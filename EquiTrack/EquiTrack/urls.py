@@ -93,7 +93,7 @@ urlpatterns = [
     url(r'^api/audit/', include('audit.urls', namespace='audit')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
-    url(r'^api/v2/', include('hact.urls', namespace='hact_api')),
+    url(r'^api/v2/hact/', include('hact.urls', namespace='hact_api')),
     url(r'^api/v2/users/', include('users.urls_v2', namespace='users_v2')),
     url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
     url(r'^api/v2/environment/', include('environment.urls_v2', namespace='environment')),

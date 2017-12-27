@@ -255,6 +255,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     RATING_SIGNIFICANT = 'Significant'
     RATING_MODERATE = 'Moderate'
     RATING_LOW = 'Low'
+    RATING_NON_ASSESSED = 'Non-Assessed'
 
     AGENCY_CHOICES = Choices(
         ('DPKO', 'DPKO'),
@@ -465,7 +466,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @cached_property
     def approaching_threshold_flag(self):
-        return self.rating == u'Non-Assessed' and self.total_ct_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+        return self.rating == PartnerOrganization.RATING_NON_ASSESSED and \
+               self.total_ct_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
 
     @cached_property
     def flags(self):
@@ -475,8 +477,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         }
 
     @cached_property
-    def hact_min_requirements(self):
-        programme_visits = spot_checks = '-'
+    def min_req_programme_visits(self):
+        programme_visits = 0
         ct = self.total_ct_cy
 
         if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
@@ -497,13 +499,20 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 programme_visits = 3
             elif self.rating in [PartnerOrganization.RATING_LOW, ]:
                 programme_visits = 2
+        return programme_visits
 
+    @cached_property
+    def min_req_spot_checks(self):
         # TODO add condition when is implemented 1.1.10a
-        spot_checks = 1 if ct > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        ct = self.total_ct_cy
+        return 1 if ct > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+
+    @cached_property
+    def hact_min_requirements(self):
 
         return {
-            'programme_visits': programme_visits,
-            'spot_checks': spot_checks,
+            'programme_visits': self.min_req_programme_visits,
+            'spot_checks': self.min_req_spot_checks,
         }
 
     @classmethod

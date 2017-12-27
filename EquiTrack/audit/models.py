@@ -126,11 +126,16 @@ class Engagement(TimeStampedModel, models.Model):
         ('sa', _('Special Audit')),
     )
 
+    PARTNER_CONTACTED = 'partner_contacted'
+    REPORT_SUBMITTED = 'report_submitted'
+    FINAL = 'final'
+    CANCELLED = 'cancelled'
+
     STATUSES = Choices(
-        ('partner_contacted', _('IP Contacted')),
-        ('report_submitted', _('Report Submitted')),
-        ('final', _('Final Report')),
-        ('cancelled', _('Cancelled')),
+        (PARTNER_CONTACTED, _('IP Contacted')),
+        (REPORT_SUBMITTED, _('Report Submitted')),
+        (FINAL, _('Final Report')),
+        (CANCELLED , _('Cancelled')),
     )
 
     DISPLAY_STATUSES = Choices(
