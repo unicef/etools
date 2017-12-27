@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import json
+
 from django_filters.rest_framework import DjangoFilterBackend
 from hact.models import HactHistory
 from hact.serializers import HactHistoryExportSerializer, HactHistorySerializer
@@ -32,8 +34,12 @@ class HactHistoryAPIView(ListAPIView):
 
     def get_renderer_context(self):
         context = super(HactHistoryAPIView, self).get_renderer_context()
-        sample_data = self.get_queryset().first()
-        context["header"] = [x[0] for x in sample_data.partner_values]
+        data = self.get_queryset().first().partner_values
+        try:
+            data = json.loads(data)
+        except (ValueError, TypeError):
+            pass
+        context["header"] = [x[0] for x in data]
         return context
 
     def list(self, request, format=None):
