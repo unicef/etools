@@ -135,7 +135,7 @@ class Engagement(TimeStampedModel, models.Model):
         (PARTNER_CONTACTED, _('IP Contacted')),
         (REPORT_SUBMITTED, _('Report Submitted')),
         (FINAL, _('Final Report')),
-        (CANCELLED , _('Cancelled')),
+        (CANCELLED , ('Cancelled')),
     )
 
     DISPLAY_STATUSES = Choices(
