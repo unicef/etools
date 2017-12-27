@@ -5,7 +5,7 @@ from django.conf.urls import url
 from hact.views import GraphHactView, HactHistoryAPIView
 
 urlpatterns = (
-    url(r'^hact_history/$', view=HactHistoryAPIView.as_view(http_method_names=['get', ]), name='hact-history'),
-    url(r'^global_hact_history/$', view=GraphHactView.as_view(), name='global-hact-history'),
+    url(r'^history/$', view=HactHistoryAPIView.as_view(http_method_names=['get', ]), name='hact-history'),
+    url(r'^global_history/$', view=GraphHactView.as_view(), name='global-hact-history'),
 
 )
