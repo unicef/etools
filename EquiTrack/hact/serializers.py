@@ -29,4 +29,8 @@ class HactHistoryExportSerializer(serializers.BaseSerializer):
         return self.to_presentation(self.initial_data)
 
     def to_representation(self, data):
-        return [x[1] for x in data.partner_values]
+        try:
+            data = json.loads(data.partner_values)
+        except (ValueError, TypeError):
+            data = data.partner_values
+        return [x[1] for x in data]
