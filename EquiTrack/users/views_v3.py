@@ -3,16 +3,14 @@ from __future__ import unicode_literals
 import logging
 
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from EquiTrack.permissions import IsSuperUserOrStaff
 
 from users import views as v1
-from users.models import Country, UserProfile
 from users.serializers_v3 import (
     CountryDetailSerializer,
     MinimalUserDetailSerializer,
