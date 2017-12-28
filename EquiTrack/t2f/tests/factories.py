@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-from datetime import timedelta
-
 import factory
 from django.utils import timezone
 from factory import fuzzy
