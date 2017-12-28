@@ -4,7 +4,7 @@ import json
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
@@ -28,6 +28,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
         data = super(PartnerStaffMemberCreateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
+        User = get_user_model()
         existing_user = None
 
         # user should be active first time it's created
@@ -90,6 +91,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         data = super(PartnerStaffMemberCreateUpdateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
+        User = get_user_model()
 
         try:
             existing_user = User.objects.get(email=email)
@@ -292,13 +294,16 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "short_name",
+            "type_of_assessment",
             "partner_type",
+            "partner_type_slug",
             "cso_type",
             "rating",
             "shared_partner",
             "shared_with",
             "total_ct_cp",
             "total_ct_cy",
-            "hact_min_requirements",
             "hact_values",
+            "hact_min_requirements",
+            "flags",
         )

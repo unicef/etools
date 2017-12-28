@@ -415,4 +415,9 @@ class Migration(migrations.Migration):
             name='internal_controls',
             field=models.TextField(blank=True, verbose_name='Internal Controls'),
         ),
+        migrations.AlterField(
+            model_name='engagement',
+            name='write_off_required',
+            field=models.DecimalField(blank=True, decimal_places=2, max_digits=20, null=True, verbose_name='Impairment'),
+        ),
     ]

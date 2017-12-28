@@ -80,11 +80,12 @@ class AttachmentPDFSerializer(serializers.ModelSerializer):
     created = serializers.DateTimeField(format='%d %b %Y')
     file_type = serializers.CharField(source='file_type.name')
     url = serializers.SerializerMethodField()
+    filename = serializers.CharField()
 
     class Meta:
         model = Attachment
         fields = [
-            'created', 'file_type', 'url'
+            'created', 'file_type', 'url', 'filename',
         ]
 
     def get_url(self, obj):
@@ -120,7 +121,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
         model = Engagement
         fields = [
             'id', 'agreement', 'partner', 'engagement_type_display', 'engagement_type', 'status_display', 'status',
-            'unique_id', 'authorized_officers', 'active_pd', 'staff_members',
+            'unique_id', 'authorized_officers', 'active_pd', 'staff_members', 'po_item',
             'date_of_field_visit', 'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef', 'partner_contacted_at',
             'action_points', 'engagement_attachments', 'report_attachments',
@@ -167,7 +168,7 @@ class AuditPDFSerializer(EngagementPDFSerializer):
         model = Audit
         fields = EngagementPDFSerializer.Meta.fields + [
             'audited_expenditure', 'financial_findings', 'financial_finding_set', 'percent_of_audited_expenditure',
-            'audit_opinion',  'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness',
+            'audit_opinion', 'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness',
 
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
