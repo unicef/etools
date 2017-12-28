@@ -13,12 +13,13 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from EquiTrack.permissions import IsSuperUserOrStaff
 from audit.models import Auditor
 from reports.models import Sector
 from reports.serializers.v1 import SectorSerializer
 from users.forms import ProfileForm
 from users.models import UserProfile, Country, Office
-from .serializers import (
+from users.serializers import (
     UserSerializer,
     GroupSerializer,
     OfficeSerializer,
@@ -73,14 +74,14 @@ class ChangeUserCountryView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UsersView(ListAPIView):
+class StaffUsersView(ListAPIView):
     """
     Gets a list of Unicef Staff users in the current country.
     Country is determined by the currently logged in user.
     """
     model = UserProfile
     serializer_class = SimpleProfileSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsSuperUserOrStaff, )
 
     def get_queryset(self):
         user = self.request.user

@@ -11,6 +11,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdate
 from rest_framework.response import Response
 from EquiTrack.permissions import IsSuperUserOrStaff
 
+from users import views as v1
 from users.models import Country, UserProfile
 from users.serializers_v3 import (
     CountryDetailSerializer,
@@ -22,27 +23,12 @@ from users.serializers_v3 import (
 logger = logging.getLogger(__name__)
 
 
-class MyProfileAPIView(RetrieveUpdateAPIView):
-    """
-    Updates a UserProfile object
-    """
-    queryset = UserProfile.objects.all()
+class ChangeUserCountryView(v1.ChangeUserCountryView):
+    """Stub for ChangeUserCountryView"""
+
+
+class MyProfileAPIView(v1.MyProfileAPIView):
     serializer_class = ProfileRetrieveUpdateSerializer
-    permission_classes = (permissions.IsAuthenticated, )
-
-    def get_object(self):
-        """
-        Always returns current user's profile
-        """
-        try:
-            self.request.user.profile
-        except AttributeError:
-            self.request.user.save()
-
-        obj = get_object_or_404(UserProfile, user__id=self.request.user.id)
-        # May raise a permission denied
-        self.check_object_permissions(self.request, obj)
-        return obj
 
 
 class UsersDetailAPIView(RetrieveAPIView):
@@ -70,7 +56,7 @@ class UsersDetailAPIView(RetrieveAPIView):
         )
 
 
-class UsersListApiView(ListAPIView):
+class UsersListAPIView(ListAPIView):
     """
     Gets a list of Unicef Staff users in the current country.
     Country is determined by the currently logged in user.
@@ -109,20 +95,5 @@ class UsersListApiView(ListAPIView):
         return queryset
 
 
-class CountryView(ListAPIView):
-    """
-    Gets a list of Unicef Staff users in the current country.
-    Country is determined by the currently logged in user.
-    """
-    model = Country
+class CountryView(v1.CountryView):
     serializer_class = CountryDetailSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user.profile.country:
-            logger.warning('{} has not an assigned country'.format(user))
-            return self.model.objects.none()
-
-        return self.model.objects.filter(
-            name=user.profile.country.name,
-        )
