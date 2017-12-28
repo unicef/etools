@@ -78,7 +78,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'shared_with': 'Shared IP',
         'type_of_assessment': 'Assessment Type',
         # 'total_ct_cp': 'TOTAL for current CP cycle',
-        'total_ct_cy': 'Current Year (1 Oct - 30 Sep)',
+        'total_ct_cy': 'Cash Transfer 1 OCT - 30 SEP)',
         'rating': 'Risk Rating',
         'hact_values.programmatic_visits.planned.total': 'Programmatic Visits Planned',
         # 'hact_values.programmatic_visits.planned.q1': 'Q1',
