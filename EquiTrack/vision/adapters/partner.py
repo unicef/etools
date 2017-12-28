@@ -158,7 +158,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                                           partner_org, partner):
                     partner_org.name = partner["VENDOR_NAME"]
                     partner_org.cso_type = partner["CSO_TYPE"]
-                    partner_org.rating = partner.get("RISK_RATING", None)
+                    partner_org.rating = partner.get("RISK_RATING", None)  # TODO add mapping to choices
                     partner_org.type_of_assessment = partner.get("TYPE_OF_ASSESSMENT", None)
                     partner_org.address = partner.get("STREET", None)
                     partner_org.city = partner.get("CITY", None)
