@@ -10,7 +10,7 @@ class ChangeUserCountryView(v1.ChangeUserCountryView):
 
 
 class StaffUsersView(v1.StaffUsersView):
-    """Stub for UsersView"""
+    """Stub for StaffUsersView"""
 
 
 class CountryView(v1.CountryView):
