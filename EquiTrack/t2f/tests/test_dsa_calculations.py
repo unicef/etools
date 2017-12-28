@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest import skip
 
 from pytz import UTC
 
@@ -415,6 +416,7 @@ class TestDSACalculator(APITenantTestCase):
             dsa_dto_list
         )
 
+    @skip("DSA Calculations have been disabled")
     # TODO: Confirm that this is correct, Seems counterintuitive
     # shouldn't we add the hours of the itineraries up and if total >= 8 hours
     # then considered as a valid day?
@@ -519,6 +521,7 @@ class TestDSACalculator(APITenantTestCase):
         dsa.add_same_day_travels(dto, 1)
         self.assertEqual(dto.dsa_amount, 0)
 
+    @skip("DSA Calculations have been disabled")
     # TODO: confirm that this is correct
     # If only a single itinerary, but still >= 8 hrs, no change
     # Also why does this only get calculated against different regions?
@@ -707,6 +710,7 @@ class TestDSACalculator(APITenantTestCase):
                 self.amsterdam.dsa_amount_60plus_usd
             )
 
+    @skip("DSA Calculations have been disabled")
     # TODO: Confirm this is correct.
     # If travel on same day, falls on a date prior to last day of
     # of dsa dto list, then the last is definitely longer than 8 hrs
