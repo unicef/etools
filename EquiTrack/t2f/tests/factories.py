@@ -29,7 +29,7 @@ from t2f.models import (
 )
 
 _FUZZY_START_DATE = timezone.now() - timedelta(days=5)
-_FUZZY_END_DATE = timezone.now() + timedelta(days=5)
+_FUZZY_END_DATE = timezone.now() + timedelta(days=2)
 
 
 class TravelActivityFactory(factory.django.DjangoModelFactory):
