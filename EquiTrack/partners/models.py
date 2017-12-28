@@ -194,6 +194,7 @@ def hact_default():
         'audits': {
             'minimum_requirements': 0,
             'completed': 0,
+            'outstanding_findings': 0,
         },
         'spot_checks': {
             'planned': {
