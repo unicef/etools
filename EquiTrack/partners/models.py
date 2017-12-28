@@ -250,7 +250,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     CT_MR_AUDIT_TRIGGER_LEVEL2 = decimal.Decimal('100000.00')
     CT_MR_AUDIT_TRIGGER_LEVEL3 = decimal.Decimal('500000.00')
 
-    # TODO rating to be converted in choice after prp-refactoring
+    # TODO 1.1.5 rating to be converted in choice after prp-refactoring
     RATING_HIGH = 'High'
     RATING_SIGNIFICANT = 'Significant'
     RATING_MODERATE = 'Moderate'
@@ -312,7 +312,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     shared_with = ArrayField(models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES), blank=True, null=True)
 
     # TODO remove this after migration to shared_with + add calculation to
-    # hact_field
     shared_partner = models.CharField(
         help_text='Partner shared with UNDP or UNFPA?',
         choices=Choices(
@@ -466,6 +465,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @cached_property
     def approaching_threshold_flag(self):
+        # TODO 1.1.6b change total_ct_cy when the vision API is ready
         return self.rating == PartnerOrganization.RATING_NON_ASSESSED and \
                self.total_ct_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
 
@@ -503,7 +503,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @cached_property
     def min_req_spot_checks(self):
-        # TODO add condition when is implemented 1.1.10a
+        # TODO 1.1.9b add condition when is implemented 1.1.10a
         ct = self.total_ct_cy
         return 1 if ct > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
@@ -593,11 +593,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         '''
         :return: all completed spot checks
         '''
+        from audit.models import Engagement, SpotCheck
         sc = partner.hact_values['spot_checks']['completed']['total']
         if update_one:
             sc += 1
         else:
-            sc = TravelActivity.objects.filter(
+            trip = TravelActivity.objects.filter(
                 travel_type=TravelType.SPOT_CHECK,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
@@ -605,7 +606,23 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 partner=partner,
             ).count()
 
+            audit_spot_check = SpotCheck.objects.filter(partner=partner, status=Engagement.FINAL).count()
+            sc = trip + audit_spot_check  # TODO 1.1.9c add spot checks from field monitoring
+
         partner.hact_values['spot_checks']['completed']['total'] = sc
+        partner.save()
+
+    @classmethod
+    def audits_completed(cls, partner, update_one=False):
+        from audit.models import Audit, Engagement, SpecialAudit
+        completed_audit = partner.hact_values['audits']['completed']
+        if update_one:
+            completed_audit += 1
+        else:
+            completed_audit = Audit.objects.filter(partner=partner, status=Engagement.FINAL).count() + \
+                              SpecialAudit.objects.filter(partner=partner, status=Engagement.FINAL).count()
+
+        partner.hact_values['audits']['completed'] = completed_audit
         partner.save()
 
 
