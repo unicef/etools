@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 import django.db.models.deletion
 import mptt.fields
-import paintstore.fields
 
 
 class Migration(migrations.Migration):
@@ -126,7 +125,7 @@ class Migration(migrations.Migration):
                 ('alternate_id', models.IntegerField(blank=True, null=True)),
                 ('alternate_name', models.CharField(blank=True, max_length=255, null=True)),
                 ('dashboard', models.BooleanField(default=False)),
-                ('color', paintstore.fields.ColorPickerField(blank=True, max_length=7, null=True)),
+                ('color', models.CharField(blank=True, max_length=7, null=True)),
             ],
             options={
                 'ordering': ['name'],
