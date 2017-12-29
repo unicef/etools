@@ -27,7 +27,7 @@ from audit.models import (
     SpecialAudit,
     SpotCheck,
 )
-from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
+from firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
 from partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
