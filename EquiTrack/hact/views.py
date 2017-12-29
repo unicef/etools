@@ -246,25 +246,34 @@ class GraphHactView(views.APIView):
         }
 
     def get_financial_findings(self):
-
-        refunds = Audit.objects.all().aggregate(total=Coalesce(Sum('amount_refunded'),0))['total']
-        additional_supporting_document_provided = Audit.objects.filter(status=Engagement.FINAL).aggregate(
+        refunds = Audit.objects.filter(amount_refunded__isnull=False).aggregate(
+            total=Coalesce(Sum('amount_refunded'),0))['total']
+        additional_supporting_document_provided = Audit.objects.filter(
+            additional_supporting_documentation_provided__isnull=False, status=Engagement.FINAL).aggregate(
             total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
-        justification_provided_and_accepted = Audit.objects.all().aggregate(
+        justification_provided_and_accepted = Audit.objects.filter(
+            justification_provided_and_accepted__isnull=False).aggregate(
             total=Coalesce(Sum('justification_provided_and_accepted'), 0))['total']
-        impairment = Audit.objects.all().aggregate(
+        impairment = Audit.objects.filter(write_off_required__isnull=False).aggregate(
             total=Coalesce(Sum('write_off_required'), 0))['total']
+
         # pending_unsupported_amount property
-        outstanding = Audit.objects.filter(status=Engagement.FINAL).aggregate(
-            total=Coalesce(Sum(F('financial_findings')
-                               - F('amount_refunded')
-                               - F('additional_supporting_documentation_provided')
-                               - F('justification_provided_and_accepted')
-                               - F('write_off_required')
-                               ), 0))['total']
-        total_financial_findings = Audit.objects.filter(status=Engagement.FINAL).aggregate(
+        outstanding_audits = Audit.objects.filter(partner=self, status=Engagement.FINAL)
+        _ff = outstanding_audits.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
-        total_audited_expenditure = Audit.objects.filter(status=Engagement.FINAL).aggregate(
+        _ar = outstanding_audits.filter(amount_refunded__isnull=False).aggregate(
+            total=Coalesce(Sum('amount_refunded'), 0))['total']
+        _asdp = outstanding_audits.filter(additional_supporting_documentation_provided__isnull=False).aggregate(
+            total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
+        _wor = outstanding_audits.filter(write_off_required__isnull=False).aggregate(
+            total=Coalesce(Sum('write_off_required'), 0))['total']
+        outstanding = _ff - _ar - _asdp - _wor
+
+        total_financial_findings = Audit.objects.filter(
+            financial_findings__isnull=False, status=Engagement.FINAL).aggregate(
+            total=Coalesce(Sum('financial_findings'), 0))['total']
+        total_audited_expenditure = Audit.objects.filter(
+            audited_expenditure__isnull=False, status=Engagement.FINAL).aggregate(
             total=Coalesce(Sum('audited_expenditure'), 0))['total']
 
         return [
