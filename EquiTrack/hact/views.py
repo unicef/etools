@@ -5,7 +5,6 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from django.db.models import Count, Sum
-from django.db.models.expressions import F
 from django.db.models.functions import Coalesce
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -247,7 +246,7 @@ class GraphHactView(views.APIView):
 
     def get_financial_findings(self):
         refunds = Audit.objects.filter(amount_refunded__isnull=False).aggregate(
-            total=Coalesce(Sum('amount_refunded'),0))['total']
+            total=Coalesce(Sum('amount_refunded'), 0))['total']
         additional_supporting_document_provided = Audit.objects.filter(
             additional_supporting_documentation_provided__isnull=False, status=Engagement.FINAL).aggregate(
             total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
