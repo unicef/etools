@@ -8,7 +8,8 @@ from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, transaction
-from django.db.models import F
+from django.db.models import F, Sum
+from django.db.models.functions import Coalesce
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
@@ -513,6 +514,18 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             'programme_visits': self.min_req_programme_visits,
             'spot_checks': self.min_req_spot_checks,
         }
+
+    @cached_property
+    def outstanding_findings(self):
+        # pending_unsupported_amount property
+        from audit.models import Audit, Engagement
+        return Audit.objects.filter(partner=self, status=Engagement.FINAL).aggregate(
+            total=Coalesce(Sum(
+                F('financial_findings') -
+                F('amount_refunded') -
+                F('additional_supporting_documentation_provided') -
+                F('justification_provided_and_accepted') -
+                F('write_off_required')), 0))['total']
 
     @classmethod
     def planned_visits(cls, partner, pv_intervention=None):

@@ -43,6 +43,8 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         # 'total_ct_cp',
         'total_ct_cy',
         'rating',
+        'expiring_assessment_flag',
+        'approaching_threshold_flag',
         'hact_values.programmatic_visits.planned.total',
         # 'hact_values.programmatic_visits.planned.q1',
         # 'hact_values.programmatic_visits.planned.q2',
@@ -68,6 +70,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         # 'hact_values.spot_checks.completed.q4',
         'hact_values.audits.minimum_requirements',
         'hact_values.audits.completed',
+        'outstanding_findings',
     ]
 
     labels = {
@@ -79,6 +82,8 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         # 'total_ct_cp': 'TOTAL for current CP cycle',
         'total_ct_cy': 'Cash Transfer 1 OCT - 30 SEP)',
         'rating': 'Risk Rating',
+        'expiring_assessment_flag': 'Expiring Threshold',
+        'approaching_threshold_flag': 'Approach Threshold',
         'hact_values.programmatic_visits.planned.total': 'Programmatic Visits Planned',
         # 'hact_values.programmatic_visits.planned.q1': 'Q1',
         # 'hact_values.programmatic_visits.planned.q2': 'Q2',
@@ -104,6 +109,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         # 'hact_values.spot_checks.completed.q4': 'Q4',
         'hact_values.audits.minimum_requirements': 'Audits M.R',
         'hact_values.audits.completed': 'Audit Completed',
+        'outstanding_findings': 'Audits Outstanding Findings',
     }
 
 
