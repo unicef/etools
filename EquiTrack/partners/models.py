@@ -530,7 +530,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             total=Coalesce(Sum('write_off_required'), 0))['total']
         return ff - ar - asdp - wor
 
-
     @classmethod
     def planned_visits(cls, partner, pv_intervention=None):
         """For current year sum all programmatic values of planned visits
