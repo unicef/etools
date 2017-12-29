@@ -51,7 +51,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
         model = models.Agreement
 
     partner = factory.SubFactory(PartnerFactory)
-    agreement_type = u'PCA'
+    agreement_type = 'PCA'
     signed_by_unicef_date = datetime.date.today()
     signed_by_partner_date = datetime.date.today()
     status = 'signed'
@@ -65,11 +65,11 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     type = fuzzy.FuzzyChoice([
-        u'Micro Assessment',
-        u'Simplified Checklist',
-        u'Scheduled Audit report',
-        u'Special Audit report',
-        u'Other',
+        'Micro Assessment',
+        'Simplified Checklist',
+        'Scheduled Audit report',
+        'Special Audit report',
+        'Other',
     ])
     names_of_other_agencies = fuzzy.FuzzyText(length=50)
     expected_budget = fuzzy.FuzzyInteger(1000)
@@ -89,13 +89,13 @@ class FileTypeFactory(factory.django.DjangoModelFactory):
         model = models.FileType
 
     name = fuzzy.FuzzyChoice([
-        u'FACE',
-        u'Progress Report',
-        u'Partnership Review',
-        u'Final Partnership Review',
-        u'Correspondence',
-        u'Supply/Distribution Plan',
-        u'Other',
+        'FACE',
+        'Progress Report',
+        'Partnership Review',
+        'Final Partnership Review',
+        'Correspondence',
+        'Supply/Distribution Plan',
+        'Other',
     ])
 
 
@@ -114,10 +114,10 @@ class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     types = fuzzy.FuzzyChoice([
-        [u'Change IP name'],
-        [u'Change authorized officer'],
-        [u'Change banking info'],
-        [u'Change in clause'],
+        ['Change IP name'],
+        ['Change authorized officer'],
+        ['Change banking info'],
+        ['Change in clause'],
     ])
     other_description = fuzzy.FuzzyText(length=50)
     amendment_number = fuzzy.FuzzyInteger(1000)

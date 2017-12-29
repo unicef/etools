@@ -1,8 +1,13 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import json
 
 import factory
 
-from notification import models as notification_models
+from notification import models
 from partners.tests.factories import AgreementFactory
 
 
@@ -19,7 +24,7 @@ class JSONFieldFactory(factory.DictFactory):
 
 class NotificationFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = notification_models.Notification
+        model = models.Notification
 
     type = "Email"
     sender = factory.SubFactory(AgreementFactory)
