@@ -7,6 +7,13 @@ from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
 from users import models
 
 
+class GroupFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Group
+
+    name = "Partnership Manager"
+
+
 class OfficeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Office

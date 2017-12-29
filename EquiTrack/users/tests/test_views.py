@@ -8,13 +8,13 @@ from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 from unittest import skip
 
-from EquiTrack.factories import GroupFactory
 from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
 from publics.tests.factories import PublicsBusinessAreaFactory
 from users.models import Group, User, UserProfile
 from users.serializers_v3 import AP_ALLOWED_COUNTRIES
 from users.tests.factories import (
     CountryFactory,
+    GroupFactory,
     OfficeFactory,
     SectionFactory,
     UserFactory,

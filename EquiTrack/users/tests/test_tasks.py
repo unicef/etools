@@ -11,12 +11,12 @@ from tenant_schemas.utils import schema_context
 
 from django.conf import settings
 
-from EquiTrack.factories import GroupFactory
 from EquiTrack.tests.mixins import SCHEMA_NAME, FastTenantTestCase
 from users import tasks
 from users.models import Section, User, UserProfile
 from users.tests.factories import (
     CountryFactory,
+    GroupFactory,
     ProfileFactory,
     SectionFactory,
     UserFactory,

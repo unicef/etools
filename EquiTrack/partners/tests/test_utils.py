@@ -1,6 +1,5 @@
 import datetime
 
-from EquiTrack.factories import GroupFactory
 from funds.tests.factories import FundsReservationHeaderFactory
 from locations.tests.factories import GatewayTypeFactory, LocationFactory
 from partners.models import Intervention, InterventionBudget, InterventionResultLink
@@ -11,7 +10,7 @@ from partners.tests.factories import (
 )
 from reports.models import ResultType, LowerResult, IndicatorBlueprint, AppliedIndicator
 from reports.tests.factories import ResultFactory
-from users.tests.factories import UserFactory
+from users.tests.factories import GroupFactory, UserFactory
 
 
 def setup_intervention_test_data(test_case, include_results_and_indicators=False):
