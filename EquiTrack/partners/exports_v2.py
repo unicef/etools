@@ -80,7 +80,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'shared_with': 'Shared IP',
         'type_of_assessment': 'Assessment Type',
         # 'total_ct_cp': 'TOTAL for current CP cycle',
-        'total_ct_cy': 'Cash Transfer 1 OCT - 30 SEP)',
+        'total_ct_cy': 'Cash Transfer 1 OCT - 30 SEP',
         'rating': 'Risk Rating',
         'expiring_assessment_flag': 'Expiring Threshold',
         'approaching_threshold_flag': 'Approach Threshold',
