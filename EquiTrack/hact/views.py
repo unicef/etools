@@ -258,7 +258,7 @@ class GraphHactView(views.APIView):
             total=Coalesce(Sum('write_off_required'), 0))['total']
 
         # pending_unsupported_amount property
-        outstanding_audits = Audit.objects.filter(partner=self, status=Engagement.FINAL)
+        outstanding_audits = Audit.objects.filter(status=Engagement.FINAL)
         _ff = outstanding_audits.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
         _ar = outstanding_audits.filter(amount_refunded__isnull=False).aggregate(
