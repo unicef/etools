@@ -519,13 +519,17 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def outstanding_findings(self):
         # pending_unsupported_amount property
         from audit.models import Audit, Engagement
-        return Audit.objects.filter(partner=self, status=Engagement.FINAL).aggregate(
-            total=Coalesce(Sum(
-                F('financial_findings') -
-                F('amount_refunded') -
-                F('additional_supporting_documentation_provided') -
-                F('justification_provided_and_accepted') -
-                F('write_off_required')), 0))['total']
+        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL)
+        ff = audits.filter(financial_findings__isnull=False).aggregate(
+            total=Coalesce(Sum('financial_findings'), 0))['total']
+        ar = audits.filter(amount_refunded__isnull=False).aggregate(
+            total=Coalesce(Sum('amount_refunded'), 0))['total']
+        asdp = audits.filter(additional_supporting_documentation_provided__isnull=False).aggregate(
+            total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
+        wor = audits.filter(write_off_required__isnull=False).aggregate(
+            total=Coalesce(Sum('write_off_required'), 0))['total']
+        return ff - ar - asdp - wor
+
 
     @classmethod
     def planned_visits(cls, partner, pv_intervention=None):
