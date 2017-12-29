@@ -34,7 +34,7 @@ from audit.tests.factories import (
     SpotCheckFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase
-from firms.factories import UserFactory
+from firms.tests.factories import BaseUserFactory
 
 
 class AuditorStaffMemberTestCase(FastTenantTestCase):
@@ -43,7 +43,7 @@ class AuditorStaffMemberTestCase(FastTenantTestCase):
         cls.firm = AuditPartnerFactory()
 
     def test_signal(self):
-        user = UserFactory()
+        user = BaseUserFactory()
         Auditor.invalidate_cache()
 
         staff_member = AuditorStaffMember.objects.create(auditor_firm=self.firm, user=user)
@@ -57,12 +57,12 @@ class AuditorStaffMemberTestCase(FastTenantTestCase):
 class TestStrUnicode(TestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
     def test_auditor_staff_member(self):
-        user = UserFactory.build(first_name='Bugs', last_name='Bunny')
+        user = BaseUserFactory.build(first_name='Bugs', last_name='Bunny')
         instance = AuditorStaffMemberFactory.build(user=user)
         self.assertEqual(str(instance), b'Bugs Bunny')
         self.assertEqual(unicode(instance), 'Bugs Bunny')
 
-        user = UserFactory.build(first_name='Harald', last_name='H\xe5rdr\xe5da')
+        user = BaseUserFactory.build(first_name='Harald', last_name='H\xe5rdr\xe5da')
         instance = AuditorStaffMemberFactory.build(user=user)
         self.assertEqual(str(instance), b'Harald H\xc3\xa5rdr\xc3\xa5da')
         self.assertEqual(unicode(instance), 'Harald H\xe5rdr\xe5da')
