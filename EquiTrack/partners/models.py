@@ -8,7 +8,8 @@ from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, transaction
-from django.db.models import F
+from django.db.models import F, Sum
+from django.db.models.functions import Coalesce
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
@@ -513,6 +514,21 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             'programme_visits': self.min_req_programme_visits,
             'spot_checks': self.min_req_spot_checks,
         }
+
+    @cached_property
+    def outstanding_findings(self):
+        # pending_unsupported_amount property
+        from audit.models import Audit, Engagement
+        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL)
+        ff = audits.filter(financial_findings__isnull=False).aggregate(
+            total=Coalesce(Sum('financial_findings'), 0))['total']
+        ar = audits.filter(amount_refunded__isnull=False).aggregate(
+            total=Coalesce(Sum('amount_refunded'), 0))['total']
+        asdp = audits.filter(additional_supporting_documentation_provided__isnull=False).aggregate(
+            total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
+        wor = audits.filter(write_off_required__isnull=False).aggregate(
+            total=Coalesce(Sum('write_off_required'), 0))['total']
+        return ff - ar - asdp - wor
 
     @classmethod
     def planned_visits(cls, partner, pv_intervention=None):
