@@ -2,6 +2,7 @@ from django.conf.urls import url
 
 from users.views_v2 import (
     ChangeUserCountryView,
+    CountriesViewSet,
     CountryView,
     MyProfileAPIView,
     StaffUsersView,
@@ -17,4 +18,5 @@ urlpatterns = (
     url(r'^(?P<pk>\d)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
     url(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
     url(r'^country/$', CountryView.as_view(http_method_names=['get']), name="country-detail"),
+    url(r'^workspaces', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
 )

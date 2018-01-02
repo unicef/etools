@@ -69,3 +69,14 @@ class SectionViewSet(v1.SectionViewSet):
 
 class ModuleRedirectView(v1.ModuleRedirectView):
     """Stub for ModuleRedirectView"""
+
+
+class CountriesViewSet(ListAPIView):
+    """
+    Gets the list of countries
+    """
+    model = Country
+    serializer_class = CountrySerializer
+
+    def get_queryset(self):
+        return Country.objects.prefetch_related('local_currency').all()

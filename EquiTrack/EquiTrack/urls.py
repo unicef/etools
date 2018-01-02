@@ -20,7 +20,7 @@ from publics import urls as publics_patterns
 from publics.views import StaticDataView
 from reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, SectorViewSet, UnitViewSet
 from t2f.urls import urlpatterns as t2f_patterns
-from users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet
+from users.views import GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
@@ -102,7 +102,6 @@ urlpatterns = [
     url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
     url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
         name='workspace-inactive'),
-    url(r'^api/v2/workspaces', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
 
     url(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
 

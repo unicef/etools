@@ -103,17 +103,6 @@ class StaffUsersView(ListAPIView):
         ).order_by('user__first_name')
 
 
-class CountriesViewSet(ListAPIView):
-    """
-    Gets the list of countries
-    """
-    model = Country
-    serializer_class = CountrySerializer
-
-    def get_queryset(self):
-        return Country.objects.prefetch_related('local_currency').all()
-
-
 class MyProfileAPIView(RetrieveUpdateAPIView):
     """
     Updates a UserProfile object
