@@ -44,7 +44,7 @@ from partners.serializers.interventions_v2 import (
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
-from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
+from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
@@ -53,7 +53,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     Returns a list of Interventions.
     """
     serializer_class = InterventionListSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, InterventionCvsRenderer)
 
@@ -205,7 +205,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     """
     queryset = Intervention.objects.detail_qs().all()
     serializer_class = InterventionDetailSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
 
     SERIALIZER_MAP = {
         'planned_budget': InterventionBudgetCUSerializer,
@@ -250,7 +250,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
 
 class InterventionPlannedVisitsDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -269,7 +269,7 @@ class InterventionPlannedVisitsDeleteView(DestroyAPIView):
 
 
 class InterventionAttachmentDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -288,7 +288,7 @@ class InterventionAttachmentDeleteView(DestroyAPIView):
 
 
 class InterventionResultLinkDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -307,7 +307,7 @@ class InterventionResultLinkDeleteView(DestroyAPIView):
 
 
 class InterventionAmendmentDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -325,7 +325,7 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
 
 
 class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
