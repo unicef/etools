@@ -67,34 +67,52 @@ class TestChangeUserCountry(APITenantTestCase):
 class TestSectionViews(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
+        self.url = '/api/sections/'
 
     def test_api_section_list_values(self):
         s1 = SectionFactory()
         s2 = SectionFactory()
         response = self.forced_auth_req(
             'get',
-            '/api/sections/',
+            self.url,
             user=self.unicef_staff,
             data={"values": "{},{}".format(s1.id, s2.id)}
         )
         # Returns empty set - figure out public schema testing
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_api_sections_detail(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class TestOfficeViews(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
+        self.url = '/api/offices/'
 
     def test_api_office_list_values(self):
         o1 = OfficeFactory()
         o2 = OfficeFactory()
         response = self.forced_auth_req(
             'get',
-            '/api/offices/',
+            self.url,
             user=self.unicef_staff,
             data={"values": "{},{}".format(o1.id, o2.id)}
         )
         # Returns empty set - figure out public schema testing
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_api_offices_detail(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
@@ -105,12 +123,6 @@ class TestStaffUsersView(APITenantTestCase):
         self.partnership_manager_user = UserFactory(is_staff=True)
         self.group = GroupFactory()
         self.partnership_manager_user.groups.add(self.group)
-
-    def test_api_users_list(self):
-        response = self.forced_auth_req('get', '/api/users/', user=self.unicef_staff)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
 
     def test_users_api_list_values(self):
         response = self.forced_auth_req(
@@ -141,45 +153,6 @@ class TestStaffUsersView(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, [u'Query parameter values are not integers'])
-
-    def test_api_users_list_managers(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/users/',
-            user=self.unicef_staff,
-            data={"partnership_managers": True}
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-
-    def test_api_groups_list(self):
-        response = self.forced_auth_req('get', '/api/groups/', user=self.unicef_staff)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_api_offices_detail(self):
-        response = self.forced_auth_req('get', '/api/offices/', user=self.unicef_staff)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_api_sections_detail(self):
-        response = self.forced_auth_req('get', '/api/sections/', user=self.unicef_staff)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_minimal_verbosity(self):
-        response = self.forced_auth_req('get', '/api/users/', data={'verbosity': 'minimal'}, user=self.unicef_superuser)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json), 1)
-
-    def test_workspace_api(self):
-        response = self.forced_auth_req('get', reverse('list-workspaces'), user=self.unicef_superuser)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json), 1)
-        result = response_json[0]
-        self.assertEqual(result['id'], self.tenant.id)
-        self.assertEqual(result['business_area_code'], self.tenant.business_area_code)
 
     @skip('How to create new schemas?')
     def test_business_area_code(self):
@@ -343,14 +316,12 @@ class TestProfileEdit(FastTenantTestCase):
     def test_post(self):
         user = UserFactory(is_staff=True)
         self.client.force_login(user)
-        office = OfficeFactory()
-        section = SectionFactory()
         response = self.client.post(
             self.url,
             data={
                 "guid": "123",
-                "office": office.pk,
-                "section": section.pk,
+                "office": "",
+                "section": "",
                 "job_title": "New Job",
                 "phone_number": "123-546-7890",
             }
@@ -358,8 +329,6 @@ class TestProfileEdit(FastTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, "users/profile.html")
         profile = UserProfile.objects.get(user=user)
-        self.assertEqual(profile.office.pk, office.pk)
-        self.assertEqual(profile.section, section)
         self.assertEqual(profile.job_title, "New Job")
         self.assertEqual(profile.phone_number, "123-546-7890")
 
@@ -376,10 +345,17 @@ class TestGroupViewSet(APITenantTestCase):
             "get",
             self.url,
             user=self.unicef_staff,
-            data={}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data[0]["id"], str(group.pk))
+
+    def test_api_groups_list(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_post(self):
         """Ensure group object is created"""
@@ -418,7 +394,40 @@ class TestUserViewSet(APITenantTestCase):
     def setUp(self):
         super(TestUserViewSet, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
+        self.unicef_superuser = UserFactory(is_superuser=True)
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.group = GroupFactory()
+        self.partnership_manager_user.groups.add(self.group)
         self.url = "/api/users/"
+
+    def test_api_users_list(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+
+    def test_api_users_list_managers(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"partnership_managers": True}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_minimal_verbosity(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_superuser,
+            data={'verbosity': 'minimal'},
+        )
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json), 1)
 
     def test_post(self):
         """Ensure user object is created"""
@@ -445,7 +454,6 @@ class TestUserViewSet(APITenantTestCase):
 
     def test_post_with_groups(self):
         """Ensure user object is created, and associated with groups"""
-        group = GroupFactory()
         username = "new@example.com"
         response = self.forced_auth_req(
             "post",
@@ -462,10 +470,10 @@ class TestUserViewSet(APITenantTestCase):
                     "phone_number": "123-546-7890",
                     "country_override": None,
                 },
-                "groups": [group.pk]
+                "groups": [self.group.pk]
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(User.objects.filter(username=username).exists())
         user_created = User.objects.get(username=username)
-        self.assertIn(group, user_created.groups.all())
+        self.assertIn(self.group, user_created.groups.all())
