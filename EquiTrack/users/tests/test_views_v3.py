@@ -10,29 +10,8 @@ from rest_framework import status
 
 from EquiTrack.factories import GroupFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from users.models import UserProfile
 from users.serializers_v3 import AP_ALLOWED_COUNTRIES
-
-
-class TestCountryView(APITenantTestCase):
-    def test_get(self):
-        user = UserFactory(is_staff=True)
-        response = self.forced_auth_req(
-            "get",
-            reverse("users_v3:country-detail"),
-            user=user
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]["id"], user.profile.country.pk)
-
-    def test_get_no_result(self):
-        user = UserFactory(is_staff=True, profile__country=None)
-        response = self.forced_auth_req(
-            "get",
-            reverse("users_v3:country-detail"),
-            user=user
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
 
 
 class TestUsersDetailAPIView(APITenantTestCase):
@@ -160,3 +139,67 @@ class TestUsersListAPIView(APITenantTestCase):
         )
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 2)
+
+
+class TestMyProfileAPIView(APITenantTestCase):
+    def setUp(self):
+        super(TestMyProfileAPIView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.unicef_superuser = UserFactory(is_superuser=True)
+        self.url = reverse("users_v3:myprofile-detail")
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data["name"],
+            self.unicef_staff.get_full_name()
+        )
+        self.assertEqual(response.data["is_superuser"], "False")
+
+    def test_get_no_profile(self):
+        """Ensure profile is created for user, if it does not exist"""
+        user = UserFactory()
+        UserProfile.objects.get(user=user).delete()
+        self.assertFalse(UserProfile.objects.filter(user=user).exists())
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], user.get_full_name())
+        self.assertFalse(UserProfile.objects.filter(user=user).exists())
+
+    def test_patch(self):
+        self.assertNotEqual(
+            self.unicef_staff.profile.oic,
+            self.unicef_superuser
+        )
+        data = {
+            "oic": self.unicef_superuser.id,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["oic"], self.unicef_superuser.id)
+        self.assertEqual(response.data["is_superuser"], "False")
+
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["oic"], self.unicef_superuser.id)
+        self.assertEqual(response.data["is_superuser"], "False")
