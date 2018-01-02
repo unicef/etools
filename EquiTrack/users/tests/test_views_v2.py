@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import json
+
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
@@ -90,3 +92,23 @@ class TestCountryView(APITenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
+
+
+class TestCountriesViewSet(APITenantTestCase):
+    def setUp(self):
+        self.unicef_superuser = UserFactory(is_superuser=True)
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.group = GroupFactory()
+        self.partnership_manager_user.groups.add(self.group)
+
+    def test_workspace_api(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('users_v2:list-workspaces'),
+            user=self.unicef_superuser
+        )
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json), 1)
+        result = response_json[0]
+        self.assertEqual(result['id'], self.tenant.id)
+        self.assertEqual(result['business_area_code'], self.tenant.business_area_code)
