@@ -266,7 +266,7 @@ class TestMyProfileAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            reverse('users_v2:myprofile-detail'),
+            self.url,
             user=self.unicef_staff,
             data=data
         )
@@ -276,7 +276,7 @@ class TestMyProfileAPIView(APITenantTestCase):
 
         response = self.forced_auth_req(
             'get',
-            reverse('users_v2:myprofile-detail'),
+            self.url,
             user=self.unicef_staff,
         )
 
