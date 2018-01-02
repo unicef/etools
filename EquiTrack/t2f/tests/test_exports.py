@@ -274,7 +274,7 @@ class TravelExports(APITenantTestCase):
                           'deductions_total'])
 
         self.assertEqual(rows[1],
-                         ['2017/1',
+                         ['{}/1'.format(datetime.date.today().year),
                           'John Doe',
                           'An Office',
                           travel.sector.name,
@@ -291,7 +291,7 @@ class TravelExports(APITenantTestCase):
                           '0.00'])
 
         self.assertEqual(rows[2],
-                         ['2017/2',
+                         ['{}/2'.format(datetime.date.today().year),
                           'John Doe',
                           'An Office',
                           travel_2.sector.name,
@@ -399,7 +399,7 @@ class TravelExports(APITenantTestCase):
                           'airline'])
 
         self.assertEqual(rows[1],
-                         ['2017/1',
+                         ['{}/1'.format(datetime.date.today().year),
                           'John Doe',
                           'An Office',
                           travel_1.sector.name,
@@ -414,7 +414,7 @@ class TravelExports(APITenantTestCase):
                           ''])
 
         self.assertEqual(rows[2],
-                         ['2017/1',
+                         ['{}/1'.format(datetime.date.today().year),
                           'John Doe',
                           'An Office',
                           travel_1.sector.name,
@@ -429,7 +429,7 @@ class TravelExports(APITenantTestCase):
                           'JetStar'])
 
         self.assertEqual(rows[3],
-                         ['2017/1',
+                         ['{}/1'.format(datetime.date.today().year),
                           'John Doe',
                           'An Office',
                           travel_1.sector.name,
@@ -444,7 +444,7 @@ class TravelExports(APITenantTestCase):
                           'SpiceAir'])
 
         self.assertEqual(rows[4],
-                         ['2017/2',
+                         ['{}/2'.format(datetime.date.today().year),
                           'Max Mustermann',
                           'An Office',
                           travel_2.sector.name,
@@ -459,7 +459,7 @@ class TravelExports(APITenantTestCase):
                           'JetStar'])
 
         self.assertEqual(rows[5],
-                         ['2017/2',
+                         ['{}/2'.format(datetime.date.today().year),
                           'Max Mustermann',
                           'An Office',
                           travel_2.sector.name,
@@ -570,8 +570,8 @@ class TravelExports(APITenantTestCase):
                           'amount'])
 
         self.assertEqual(rows[1],
-                         ['2060/2017/1/01',
-                          '2017/1',
+                         ['2060/{}/1/01'.format(datetime.date.today().year),
+                          '{}/1'.format(datetime.date.today().year),
                           '100009998',
                           'USD',
                           '1232.1200',
@@ -584,8 +584,8 @@ class TravelExports(APITenantTestCase):
                           '1232.1200'])
 
         self.assertEqual(rows[2],
-                         ['2060/2017/1/02',
-                          '2017/1',
+                         ['2060/{}/1/02'.format(datetime.date.today().year),
+                          '{}/1'.format(datetime.date.today().year),
                           '100009998',
                           'USD',
                           '123.0000',
@@ -598,8 +598,8 @@ class TravelExports(APITenantTestCase):
                           '123.0000'])
 
         self.assertEqual(rows[3],
-                         ['2060/2017/2/01',
-                          '2017/2',
+                         ['2060/{}/2/01'.format(datetime.date.today().year),
+                          '{}/2'.format(datetime.date.today().year),
                           '12343424',
                           'USD',
                           '1919.1100',
@@ -612,8 +612,8 @@ class TravelExports(APITenantTestCase):
                           '1000.0000'])
 
         self.assertEqual(rows[4],
-                         ['2060/2017/2/01',
-                          '2017/2',
+                         ['2060/{}/2/01'.format(datetime.date.today().year),
+                          '{}/2'.format(datetime.date.today().year),
                           '12343424',
                           'USD',
                           '1919.1100',
