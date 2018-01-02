@@ -135,7 +135,6 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         )
         self.assertEqual(response_json[0]["id"], attachment.pk)
 
-    @skip('Fix this')
     def test_file_attachments(self):
         class FakeFile(StringIO):
             def size(self):
@@ -492,7 +491,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})
 
-    def test_itinerary_couny(self):
+    def test_itinerary_submit_fail(self):
         data = {'cost_assignments': [],
                 'deductions': [],
                 'expenses': [],
