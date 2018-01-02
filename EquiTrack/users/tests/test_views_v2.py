@@ -78,4 +78,15 @@ class TestCountryView(APITenantTestCase):
             user=user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]["id"], user.profile.country.pk)
         self.assertEqual(response.data[0]["name"], user.profile.country.name)
+
+    def test_get_no_result(self):
+        user = UserFactory(is_staff=True, profile__country=None)
+        response = self.forced_auth_req(
+            "get",
+            reverse("users_v2:country-detail"),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
