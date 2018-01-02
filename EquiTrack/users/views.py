@@ -103,24 +103,6 @@ class StaffUsersView(ListAPIView):
         ).order_by('user__first_name')
 
 
-class CountryView(ListAPIView):
-    """
-    Gets a list of Unicef Staff users in the current country.
-    Country is determined by the currently logged in user.
-    """
-    model = Country
-    serializer_class = CountrySerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user.profile.country:
-            logger.warning('{} has not an assigned country'.format(user))
-            return self.model.objects.none()
-        return self.model.objects.filter(
-            name=user.profile.country.name,
-        )
-
-
 class CountriesViewSet(ListAPIView):
     """
     Gets the list of countries

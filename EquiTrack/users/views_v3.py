@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from EquiTrack.permissions import IsSuperUserOrStaff
 
 from users import views as v1
+from users import views_v2 as v2
 from users.serializers_v3 import (
     CountryDetailSerializer,
     MinimalUserDetailSerializer,
@@ -93,5 +94,5 @@ class UsersListAPIView(ListAPIView):
         return queryset
 
 
-class CountryView(v1.CountryView):
+class CountryView(v2.CountryView):
     serializer_class = CountryDetailSerializer
