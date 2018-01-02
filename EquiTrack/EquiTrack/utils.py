@@ -185,6 +185,10 @@ def import_permissions(model_name):
     return response
 
 
+def get_current_year():
+    return datetime.today().year
+
+
 def get_current_quarter():
     current_month = datetime.today().month
     if 0 < current_month <= 3:
