@@ -3,8 +3,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from django.contrib.gis.geos import GEOSGeometry
-
 from EquiTrack.tests.mixins import FastTenantTestCase
 from EquiTrack.factories import CartoDBTableFactory, LocationFactory
 from locations import tasks
