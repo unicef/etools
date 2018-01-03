@@ -24,7 +24,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
-from EquiTrack.utils import import_permissions, get_current_quarter
+from EquiTrack.utils import import_permissions, get_current_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from funds.models import Grant
 from reports.models import (
@@ -1583,7 +1583,7 @@ class InterventionPlannedVisits(models.Model):
     Represents planned visits for the intervention
     """
     intervention = models.ForeignKey(Intervention, related_name='planned_visits')
-    year = models.IntegerField(default=datetime.datetime.now().year)
+    year = models.IntegerField(default=get_current_year)
     programmatic = models.IntegerField(default=0)
     spot_checks = models.IntegerField(default=0)
     audit = models.IntegerField(default=0)
