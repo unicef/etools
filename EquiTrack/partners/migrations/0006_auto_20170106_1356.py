@@ -7,6 +7,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django_fsm
 import partners.models
+import EquiTrack.utils
 
 
 class Migration(migrations.Migration):
@@ -156,7 +157,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='interventionplannedvisits',
             name='year',
-            field=models.IntegerField(default=2017),
+            field=models.IntegerField(default=EquiTrack.utils.get_current_year),
         ),
         migrations.AlterUniqueTogether(
             name='interventionbudget',

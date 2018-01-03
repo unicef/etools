@@ -7,6 +7,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
 import model_utils.fields
+import EquiTrack.utils
 
 
 class Migration(migrations.Migration):
@@ -24,7 +25,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('year', models.IntegerField(default=2017)),
+                ('year', models.IntegerField(default=EquiTrack.utils.get_current_year)),
                 ('partner_values', django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True)),
                 ('partner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='related_partner', to='partners.PartnerOrganization')),
             ],
