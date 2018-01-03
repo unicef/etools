@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import json
 from datetime import datetime
 from StringIO import StringIO
-from unittest import skip
 
 from django.core.urlresolvers import reverse
 import factory
