@@ -1,4 +1,3 @@
-import datetime
 import time
 
 from django.db import connection
@@ -130,56 +129,6 @@ def sync_handler(country_name, handler):
             logger.error(u"{} sync failed, Reason: {}, Country: {}".format(
                 handler.__name__, e.message, country_name
             ))
-
-
-@app.task
-def sync(country_name=None, synchronizers=None):
-    synchronizers = synchronizers or SYNC_HANDLERS
-    processed = []
-    countries = Country.objects.filter(vision_sync_enabled=True)
-    if country_name is not None:
-        countries = countries.filter(name=country_name)
-
-    global_handlers = [handler for handler in synchronizers if handler.GLOBAL_CALL]
-    tenant_handlers = [handler for handler in synchronizers if not handler.GLOBAL_CALL]
-
-    public_tenant = Country.objects.get(schema_name='public')
-    for handler in global_handlers:
-        try:
-            logger.info(u'Starting vision sync handler {} for country {}'.format(
-                handler.__name__, public_tenant.name
-            ))
-            handler(public_tenant).sync()
-            logger.info(u"{} sync successfully".format(handler.__name__))
-
-        except VisionException as e:
-            logger.error(u"{} sync failed, Reason: {}".format(
-                handler.__name__, e.message
-            ))
-
-    for country in countries:
-        connection.set_tenant(country)
-        for handler in tenant_handlers:
-            try:
-                logger.info(u'Starting vision sync handler {} for country {}'.format(
-                    handler.__name__, country.name
-                ))
-                handler(country).sync()
-                logger.info(u"{} sync successfully".format(handler.__name__))
-
-            except VisionException as e:
-                logger.error(u"{} sync failed, Reason: {}".format(
-                    handler.__name__, e.message
-                ))
-        country.vision_last_synced = datetime.datetime.now()
-        country.save()
-        processed.append(country)
-
-    text = u'Processed the following countries during sync: {}'.format(
-        ',\n '.join([country.name for country in processed])
-    )
-    send_to_slack(text)
-    logger.info(text)
 
 
 @app.task
