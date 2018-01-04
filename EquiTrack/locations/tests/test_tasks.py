@@ -236,7 +236,6 @@ class TestCreateLocations(FastTenantTestCase):
 class TestUpdateSitesFromCartoDB(FastTenantTestCase):
     def setUp(self):
         super(TestUpdateSitesFromCartoDB, self).setUp()
-        self.mock_auth = Mock()
         self.mock_sql = Mock()
 
     def _run_update(self, carto_table_pk):
