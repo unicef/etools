@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from partners.models import Intervention
-from partners.permissions import PartneshipManagerRepPermission
+from partners.permissions import PartnershipManagerRepPermission
 from reports.models import CountryProgramme, Indicator, LowerResult, Result
 from reports.serializers.v1 import IndicatorSerializer
 from reports.serializers.v2 import MinimalOutputListSerializer, OutputListSerializer
@@ -104,7 +104,7 @@ class ResultIndicatorListAPIView(ListAPIView):
 
 
 class LowerResultsDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:
