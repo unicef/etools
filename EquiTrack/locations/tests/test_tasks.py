@@ -3,10 +3,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from carto.exceptions import CartoException
+from mock import patch, Mock
+
 from EquiTrack.tests.mixins import FastTenantTestCase
 from EquiTrack.factories import CartoDBTableFactory, LocationFactory
 from locations import tasks
-from locations.models import Location
+from locations.models import CartoDBTable, Location
 
 
 class TestCreateLocations(FastTenantTestCase):
@@ -228,3 +231,151 @@ class TestCreateLocations(FastTenantTestCase):
         self.assertIsNone(location.geom)
         self.assertEqual(location.name, name)
         self.assertEqual(location.parent, parent)
+
+
+class TestUpdateSitesFromCartoDB(FastTenantTestCase):
+    def setUp(self):
+        super(TestUpdateSitesFromCartoDB, self).setUp()
+        self.mock_auth = Mock()
+        self.mock_sql = Mock()
+
+    def _run_update(self, carto_table_pk):
+        with patch("locations.tasks.SQLClient.send", self.mock_sql):
+            return tasks.update_sites_from_cartodb(carto_table_pk)
+
+    def _assert_response(self, response, name, created, updated, not_added):
+        self.assertEqual(
+            response,
+            "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
+                name, created,
+                updated,
+                not_added,
+            )
+        )
+
+    def test_not_exist(self):
+        """Test that when carto record does not exist, nothing happens"""
+        self.assertFalse(CartoDBTable.objects.filter(pk=404).exists())
+        self.assertIsNone(tasks.update_sites_from_cartodb(404))
+
+    def test_sql_client_error(self):
+        """Check that a CartoException on SQLClient.send
+        is handled gracefully
+        """
+        self.mock_sql.side_effect = CartoException
+        carto = CartoDBTableFactory()
+        response = self._run_update(carto.pk)
+        self._assert_response(response, carto.table_name, 0, 0, 0)
+
+    def test_add(self):
+        """Check that rows returned by SQLClient create a location record"""
+        self.mock_sql.return_value = {"rows": [{
+            "the_geom": "Point(20 20)",
+            "name": "New Location",
+            "pcode": "123",
+        }]}
+        carto = CartoDBTableFactory()
+        self.assertFalse(
+            Location.objects.filter(name="New Location", p_code="123").exists()
+        )
+        response = self._run_update(carto.pk)
+        self._assert_response(response, carto.table_name, 1, 0, 0)
+        self.assertTrue(
+            Location.objects.filter(name="New Location", p_code="123").exists()
+        )
+
+    def test_no_name(self):
+        """Check that if name provided is just a space
+        that a location record is NOT created
+        """
+        self.mock_sql.return_value = {"rows": [{
+            "the_geom": "Point(20 20)",
+            "name": " ",
+            "pcode": "123",
+        }]}
+        carto = CartoDBTableFactory()
+        self.assertFalse(
+            Location.objects.filter(name="New Location", p_code="123").exists()
+        )
+        response = self._run_update(carto.pk)
+        self._assert_response(response, carto.table_name, 0, 0, 1)
+        self.assertFalse(
+            Location.objects.filter(name="New Location", p_code="123").exists()
+        )
+
+    def test_add_with_parent(self):
+        """Check that if parent is provided that record is created with parent
+        """
+        carto_parent = CartoDBTableFactory()
+        parent = LocationFactory(p_code="456")
+        self.mock_sql.return_value = {"rows": [{
+            "the_geom": "Point(20 20)",
+            "name": "New Location",
+            "pcode": "123",
+            "parent": "456"
+        }]}
+        carto = CartoDBTableFactory(
+            parent=carto_parent,
+            parent_code_col="parent",
+        )
+        self.assertFalse(
+            Location.objects.filter(name="New Location", p_code="123").exists()
+        )
+        response = self._run_update(carto.pk)
+        self._assert_response(response, carto.table_name, 1, 0, 0)
+        self.assertTrue(
+            Location.objects.filter(name="New Location", p_code="123").exists()
+        )
+        location = Location.objects.get(name="New Location", p_code="123")
+        self.assertEqual(location.parent, parent)
+
+    def test_add_parent_multiple(self):
+        """Check that if parent is provided but multiple locations match parent
+        that location record is NOT created
+        """
+        carto_parent = CartoDBTableFactory()
+        LocationFactory(p_code="456")
+        LocationFactory(p_code="456")
+        self.mock_sql.return_value = {"rows": [{
+            "the_geom": "Point(20 20)",
+            "name": "New Location",
+            "pcode": "123",
+            "parent": "456"
+        }]}
+        carto = CartoDBTableFactory(
+            parent=carto_parent,
+            parent_code_col="parent",
+        )
+        self.assertFalse(
+            Location.objects.filter(name="New Location", p_code="123").exists()
+        )
+        response = self._run_update(carto.pk)
+        self._assert_response(response, carto.table_name, 0, 0, 1)
+        self.assertFalse(
+            Location.objects.filter(name="New Location", p_code="123").exists()
+        )
+
+    def test_add_parent_invalid(self):
+        """Check that if parent is provided but does not exist
+        that location record is NOT created
+        """
+        carto_parent = CartoDBTableFactory()
+        LocationFactory(p_code="456")
+        self.mock_sql.return_value = {"rows": [{
+            "the_geom": "Point(20 20)",
+            "name": "New Location",
+            "pcode": "123",
+            "parent": "654"
+        }]}
+        carto = CartoDBTableFactory(
+            parent=carto_parent,
+            parent_code_col="parent"
+        )
+        self.assertFalse(
+            Location.objects.filter(name="New Location", p_code="123").exists()
+        )
+        response = self._run_update(carto.pk)
+        self._assert_response(response, carto.table_name, 0, 0, 1)
+        self.assertFalse(
+            Location.objects.filter(name="New Location", p_code="123").exists()
+        )

@@ -133,19 +133,25 @@ def update_sites_from_cartodb(carto_table_pk):
 
             # attempt to reference the parent of this location
             if carto_table.parent_code_col and carto_table.parent:
+                msg = None
                 try:
                     parent = carto_table.parent.__class__
                     parent_code = row[carto_table.parent_code_col]
                     parent_instance = Location.objects.get(p_code=parent_code)
+                except Location.MultipleObjectsReturned:
+                    msg = "Multiple locations found for parent code: {}".format(
+                        msg,
+                        parent_code
+                    )
+                except Location.DoesNotExist:
+                    msg = "No locations found for parent code: {}".format(
+                        msg,
+                        parent_code
+                    )
                 except Exception as exp:
-                    msg = " "
-                    if exp is parent.MultipleObjectsReturned:
-                        msg = "{} locations found for parent code: {}".format(
-                            'Multiple' if exp is parent.MultipleObjectsReturned else 'No',
-                            parent_code
-                        )
-                    else:
-                        msg = exp.message
+                    msg = exp.message
+
+                if msg is not None:
                     logger.warning(msg)
                     sites_not_added += 1
                     continue
