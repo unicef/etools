@@ -36,14 +36,14 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
 )
-from partners.permissions import PartneshipManagerPermission
+from partners.permissions import PartnershipManagerPermission
 from partners.filters import PartnerScopeFilter
 
 
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self, format=None):
