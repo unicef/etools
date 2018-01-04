@@ -9,6 +9,7 @@ from django.db import models
 
 from model_utils.models import TimeStampedModel
 
+from EquiTrack.utils import get_current_year
 from partners.models import PartnerOrganization
 
 
@@ -24,7 +25,7 @@ class HactEncoder(json.JSONEncoder):
 class HactHistory(TimeStampedModel):
 
     partner = models.ForeignKey(PartnerOrganization, related_name='related_partner')
-    year = models.IntegerField(default=datetime.now().year)
+    year = models.IntegerField(default=get_current_year)
     partner_values = JSONField(null=True, blank=True)
 
     class Meta:
