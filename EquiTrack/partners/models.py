@@ -409,6 +409,15 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     hact_values = JSONField(blank=True, null=True, default=hact_default)
 
+    # TODO these property will be replaced with correct field coming from vision
+    @cached_property
+    def cash_transfer(self):
+        return self.total_ct_cy
+
+    @cached_property
+    def liquidation(self):
+        return self.total_ct_cy
+
     tracker = FieldTracker()
 
     class Meta:
@@ -467,7 +476,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def approaching_threshold_flag(self):
         # TODO 1.1.6b change total_ct_cy when the vision API is ready
         return self.rating == PartnerOrganization.RATING_NON_ASSESSED and \
-               self.total_ct_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+               self.cash_transfer > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
 
     @cached_property
     def flags(self):
@@ -504,8 +513,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @cached_property
     def min_req_spot_checks(self):
         # TODO 1.1.9b add condition when is implemented 1.1.10a
-        ct = self.total_ct_cy
-        return 1 if ct > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        return 1 if self.liquidation > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
     @cached_property
     def hact_min_requirements(self):
@@ -519,7 +527,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def outstanding_findings(self):
         # pending_unsupported_amount property
         from audit.models import Audit, Engagement
-        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL)
+        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL)  # TODO add filter for current year
         ff = audits.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
         ar = audits.filter(amount_refunded__isnull=False).aggregate(
@@ -606,6 +614,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 partner=partner,
             ).count()
 
+            # TODO add filter for current year
             audit_spot_check = SpotCheck.objects.filter(partner=partner, status=Engagement.FINAL).count()
             sc = trip + audit_spot_check  # TODO 1.1.9c add spot checks from field monitoring
 
@@ -619,6 +628,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         if update_one:
             completed_audit += 1
         else:
+            # TODO add filter for current year
             completed_audit = Audit.objects.filter(partner=partner, status=Engagement.FINAL).count() + \
                               SpecialAudit.objects.filter(partner=partner, status=Engagement.FINAL).count()
 
