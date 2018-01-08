@@ -15,8 +15,9 @@ from EquiTrack.factories import (
     UserFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase
-from management.models import FlaggedIssue
 from management.issues import checks
+from management.models import FlaggedIssue
+from management.tests.factories import InterventionAmendmentFactory
 from partners.models import Agreement, Intervention, InterventionResultLink
 from partners.validation.interventions import InterventionValid
 
@@ -289,6 +290,35 @@ class TestInterventionsAreValidCheck(FastTenantTestCase):
         intervention = InterventionFactory()
         validator = InterventionValid(intervention, self.master_user)
         self.assertTrue(validator.is_valid)
+        self.assertFalse(self.qs_issue.exists())
+        checks.bootstrap_checks(default_is_active=True)
+        checks.run_all_checks()
+        self.assertFalse(self.qs_issue.exists())
+
+
+class TestPDAmendmentsMissingFilesCheck(FastTenantTestCase):
+    def setUp(self):
+        super(TestPDAmendmentsMissingFilesCheck, self).setUp()
+        self.master_user = UserFactory(username="etools_task_admin")
+        self.qs_issue = FlaggedIssue.objects.filter(
+            issue_id="interventions_amendments_no_file"
+        )
+
+    def test_no_amendment_file(self):
+        """Check that if no amendment file, then issue is raised"""
+        amendment = InterventionAmendmentFactory(signed_amendment=None)
+        self.assertFalse(amendment.signed_amendment)
+        self.assertFalse(self.qs_issue.exists())
+        checks.bootstrap_checks(default_is_active=True)
+        checks.run_all_checks()
+        self.assertTrue(self.qs_issue.exists())
+        issue = self.qs_issue.first()
+        self.assertIn("has missing amendment file", issue.message)
+
+    def test_no_issue(self):
+        """Check that if amendment file, then issue is NOT raised"""
+        amendment = InterventionAmendmentFactory()
+        self.assertTrue(amendment.signed_amendment)
         self.assertFalse(self.qs_issue.exists())
         checks.bootstrap_checks(default_is_active=True)
         checks.run_all_checks()
