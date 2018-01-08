@@ -18,6 +18,7 @@ from EquiTrack.tests.mixins import FastTenantTestCase
 from management.models import FlaggedIssue
 from management.issues import checks
 from partners.models import Agreement, Intervention, InterventionResultLink
+from partners.validation.interventions import InterventionValid
 
 
 class TestActivePCANoSignedDocCheck(FastTenantTestCase):
@@ -252,6 +253,42 @@ class TestInterventionsAssociatedSSFACheck(FastTenantTestCase):
             agreement=agreement,
             document_type=Intervention.PD,
         )
+        self.assertFalse(self.qs_issue.exists())
+        checks.bootstrap_checks(default_is_active=True)
+        checks.run_all_checks()
+        self.assertFalse(self.qs_issue.exists())
+
+
+class TestInterventionsAreValidCheck(FastTenantTestCase):
+    def setUp(self):
+        super(TestInterventionsAreValidCheck, self).setUp()
+        self.master_user = UserFactory(username="etools_task_admin")
+        self.qs_issue = FlaggedIssue.objects.filter(
+            issue_id="interventions_are_valid"
+        )
+
+    def test_invalid_intervention(self):
+        """Check if intervention fails validation, issue is raised"""
+        intervention = InterventionFactory(
+            signed_by_unicef_date=datetime.date(2001, 2, 1),
+            signed_by_partner_date=datetime.date(2001, 3, 1),
+            signed_pd_document="random.pdf",
+            start=datetime.date(2001, 1, 1)
+        )
+        validator = InterventionValid(intervention, self.master_user)
+        self.assertFalse(validator.is_valid)
+        self.assertFalse(self.qs_issue.exists())
+        checks.bootstrap_checks(default_is_active=True)
+        checks.run_all_checks()
+        self.assertTrue(self.qs_issue.exists())
+
+    def test_no_issue(self):
+        """Check if intervention does not fail validation,
+        no issue is raised
+        """
+        intervention = InterventionFactory()
+        validator = InterventionValid(intervention, self.master_user)
+        self.assertTrue(validator.is_valid)
         self.assertFalse(self.qs_issue.exists())
         checks.bootstrap_checks(default_is_active=True)
         checks.run_all_checks()
