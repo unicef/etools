@@ -228,6 +228,7 @@ class GraphHactView(views.APIView):
 
         today = date.today()
         deadline = today - timedelta(PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_DAYS)
+        # TODO add filter for current year
         return {
             'programmatic_visits': {
                 'completed': self._sum_json_values('hact_values__programmatic_visits__completed__total'),
@@ -245,6 +246,7 @@ class GraphHactView(views.APIView):
         }
 
     def get_financial_findings(self):
+        # TODO add filter for current year
         refunds = Audit.objects.filter(amount_refunded__isnull=False).aggregate(
             total=Coalesce(Sum('amount_refunded'), 0))['total']
         additional_supporting_document_provided = Audit.objects.filter(
@@ -317,19 +319,19 @@ class GraphHactView(views.APIView):
         return [
             {
                 'name': 'Number of High Priority Findings',
-                'value': Audit.objects.filter(risks__value=4).count()
+                'value': Audit.objects.filter(risks__value=4).count(),  # TODO add filter for current year
             },
             {
                 'name': 'Number of Medium Priority Findings',
-                'value': Audit.objects.filter(risks__value=2).count(),
+                'value': Audit.objects.filter(risks__value=2).count(),  # TODO add filter for current year
             },
             {
                 'name': 'Number of Low Priority Findings',
-                'value': Audit.objects.filter(risks__value=1).count(),
+                'value': Audit.objects.filter(risks__value=1).count(),  # TODO add filter for current year
             },
             {
                 'name': 'Audit Opinion',
-                'value': Audit.objects.filter(risks__value=0).count(),
+                'value': Audit.objects.filter(risks__value=0).count(),  # TODO add filter for current year
                 # 'value': [
                 #     {
                 #         'name': 'qualified',
