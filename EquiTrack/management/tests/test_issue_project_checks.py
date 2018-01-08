@@ -17,7 +17,7 @@ from EquiTrack.factories import (
 from EquiTrack.tests.mixins import FastTenantTestCase
 from management.models import FlaggedIssue
 from management.issues import checks
-from partners.models import Agreement, InterventionResultLink
+from partners.models import Agreement, Intervention, InterventionResultLink
 
 
 class TestActivePCANoSignedDocCheck(FastTenantTestCase):
@@ -27,6 +27,7 @@ class TestActivePCANoSignedDocCheck(FastTenantTestCase):
 
     @override_settings(ISSUE_CHECKS=['management.issues.project_checks.ActivePCANoSignedDocCheck'])
     def test_issue_found(self):
+        """Check that if no attached agreement, then an issue is raised"""
         qs_issue = FlaggedIssue.objects.filter(
             issue_id="active_pca_no_signed_doc"
         )
@@ -42,6 +43,7 @@ class TestActivePCANoSignedDocCheck(FastTenantTestCase):
         self.assertIn("does not have a signed PCA attached", issue.message)
 
     def test_no_issue(self):
+        """Check that is attached agreement, then no issue"""
         qs_issue = FlaggedIssue.objects.filter(
             issue_id="active_pca_no_signed_doc"
         )
@@ -62,6 +64,8 @@ class TestPdOutputsWrongCheck(FastTenantTestCase):
 
     @override_settings(ISSUE_CHECKS=['management.issues.project_checks.PdOutputsWrongCheck'])
     def test_issue_found(self):
+        """Check that is country programme for intervention does not
+        match result country programme then issue is created"""
         qs_issue = FlaggedIssue.objects.filter(
             issue_id="pd_outputs_wrong"
         )
@@ -127,6 +131,9 @@ class TestPdOutputsWrongCheck(FastTenantTestCase):
 
     @override_settings(ISSUE_CHECKS=['management.issues.project_checks.PdOutputsWrongCheck'])
     def test_no_country_programme(self):
+        """Check that if intervention has no country programme
+        the intervention is ignored during the check
+        """
         qs_issue = FlaggedIssue.objects.filter(
             issue_id="pd_outputs_wrong"
         )
@@ -149,6 +156,7 @@ class TestPdOutputsWrongCheck(FastTenantTestCase):
 
     @override_settings(ISSUE_CHECKS=['management.issues.project_checks.PdOutputsWrongCheck'])
     def test_no_issue(self):
+        """Check that valida interventions results in no issue"""
         qs_issue = FlaggedIssue.objects.filter(
             issue_id="pd_outputs_wrong"
         )
@@ -176,3 +184,75 @@ class TestPdOutputsWrongCheck(FastTenantTestCase):
         checks.bootstrap_checks(default_is_active=True)
         checks.run_all_checks()
         self.assertFalse(qs_issue.exists())
+
+
+class TestInterventionsAssociatedSSFACheck(FastTenantTestCase):
+    def setUp(self):
+        super(TestInterventionsAssociatedSSFACheck, self).setUp()
+        self.qs_issue = FlaggedIssue.objects.filter(
+            issue_id="interventions_associated_ssfa"
+        )
+
+    @override_settings(ISSUE_CHECKS=['management.issues.project_checks.InterventionsAssociatedSSFACheck'])
+    def test_document_type_pd(self):
+        """Check that if agreement type SSFA but document type PD
+        then issue is raised
+        """
+        agreement = AgreementFactory(agreement_type=Agreement.SSFA)
+        InterventionFactory(
+            agreement=agreement,
+            document_type=Intervention.PD,
+        )
+        self.assertFalse(self.qs_issue.exists())
+        checks.bootstrap_checks(default_is_active=True)
+        checks.run_all_checks()
+        self.assertTrue(self.qs_issue.exists())
+        issue = self.qs_issue.first()
+        self.assertIn("type {}".format(Intervention.PD), issue.message)
+
+    @override_settings(ISSUE_CHECKS=['management.issues.project_checks.InterventionsAssociatedSSFACheck'])
+    def test_document_type_ssfa(self):
+        """Check that if agreement type PCA but document type SSFA
+        then issue is raised
+        """
+        agreement = AgreementFactory(agreement_type=Agreement.PCA)
+        InterventionFactory(
+            agreement=agreement,
+            document_type=Intervention.SSFA,
+        )
+        self.assertFalse(self.qs_issue.exists())
+        checks.bootstrap_checks(default_is_active=True)
+        checks.run_all_checks()
+        self.assertTrue(self.qs_issue.exists())
+        issue = self.qs_issue.first()
+        self.assertIn("type {}".format(Intervention.SSFA), issue.message)
+
+    @override_settings(ISSUE_CHECKS=['management.issues.project_checks.InterventionsAssociatedSSFACheck'])
+    def test_no_issue_pd(self):
+        """Check that if agreement type SSFA and document type PD
+        then issue is NOT raised
+        """
+        agreement = AgreementFactory(agreement_type=Agreement.SSFA)
+        InterventionFactory(
+            agreement=agreement,
+            document_type=Intervention.SSFA,
+        )
+        self.assertFalse(self.qs_issue.exists())
+        checks.bootstrap_checks(default_is_active=True)
+        checks.run_all_checks()
+        self.assertFalse(self.qs_issue.exists())
+
+    @override_settings(ISSUE_CHECKS=['management.issues.project_checks.InterventionsAssociatedSSFACheck'])
+    def test_no_issue_ssfa(self):
+        """Check that if agreement type PCA and document type SSFA
+        then issue is NOT raised
+        """
+        agreement = AgreementFactory(agreement_type=Agreement.PCA)
+        InterventionFactory(
+            agreement=agreement,
+            document_type=Intervention.PD,
+        )
+        self.assertFalse(self.qs_issue.exists())
+        checks.bootstrap_checks(default_is_active=True)
+        checks.run_all_checks()
+        self.assertFalse(self.qs_issue.exists())
