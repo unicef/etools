@@ -139,13 +139,11 @@ def update_sites_from_cartodb(carto_table_pk):
                     parent_code = row[carto_table.parent_code_col]
                     parent_instance = Location.objects.get(p_code=parent_code)
                 except Location.MultipleObjectsReturned:
-                    msg = "Multiple locations found for parent code: {}".format(
-                        msg,
+                    msg = u"Multiple locations found for parent code: {}".format(
                         parent_code
                     )
                 except Location.DoesNotExist:
-                    msg = "No locations found for parent code: {}".format(
-                        msg,
+                    msg = u"No locations found for parent code: {}".format(
                         parent_code
                     )
                 except Exception as exp:
