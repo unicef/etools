@@ -329,7 +329,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     )
     city = models.CharField(
         verbose_name=_("City"),
-        max_length=32,
+        max_length=64,
         blank=True,
         null=True,
     )
@@ -341,7 +341,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     )
     country = models.CharField(
         verbose_name=_("Country"),
-        max_length=32,
+        max_length=64,
         blank=True,
         null=True,
     )
@@ -362,7 +362,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     )
     phone_number = models.CharField(
         verbose_name=_("Phone Number"),
-        max_length=32,
+        max_length=64,
         blank=True,
         null=True,
     )
