@@ -4,9 +4,14 @@ from django.core.urlresolvers import reverse
 
 from mock import patch
 from rest_framework import status
+from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.factories import CountryFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.factories import (
+    CountryFactory,
+    SectionFactory,
+    UserFactory,
+)
+from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
 
 
 class InvalidateCacheTest(APITenantTestCase):
@@ -107,3 +112,46 @@ class LoadResultStructureTest(APITenantTestCase):
         mock_synchronizer.return_value.sync.side_effect = Exception
         response = self.forced_auth_req('get', self.url, user=self.superuser, data=request_data)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TestActiveUserSection(APITenantTestCase):
+    def setUp(self):
+        super(TestActiveUserSection, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse("management:stats_user_counts"),
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [{
+            "countryName": "",
+            "records": {"total": 1, "sections": []}
+        }])
+
+
+class TestAgreementsStatisticsView(APITenantTestCase):
+    def setUp(self):
+        super(TestAgreementsStatisticsView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse("management:stats_agreements"),
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [{
+            "countryName": "",
+            "totalAgreements": 0
+        }])
+
+
+class TestPortalDashView(FastTenantTestCase):
+    def test_get(self):
+        self.client = TenantClient(self.tenant)
+        response = self.client.get(reverse("management:dashboard"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
