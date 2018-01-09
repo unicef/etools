@@ -1,8 +1,7 @@
 import copy
 import datetime
-import json
 import sys
-from unittest import skip, skipIf, TestCase
+from unittest import skipIf, TestCase
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
@@ -40,7 +39,6 @@ from EquiTrack.factories import (
     UserFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from reports.models import ResultType
 from partners import models
 from partners.tests.factories import (
     GovernmentInterventionResultFactory,
@@ -541,22 +539,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
             self.partner_organization.hact_values['spot_checks']['completed']['total'],
             1
         )
-
-    def test_follow_up_flags(self):
-        """Test that follow_up_flags method resets the hact_value
-        'follow_up_flags' to 0
-        """
-        self.partner_organization.hact_values["follow_up_flags"] = 1
-        self.partner_organization.save()
-        self.assertEqual(
-            self.partner_organization.hact_values["follow_up_flags"],
-            1
-        )
-        models.PartnerOrganization.follow_up_flags(self.partner_organization)
-        partner_update = models.PartnerOrganization.objects.get(
-            pk=self.partner_organization.pk
-        )
-        self.assertEqual(partner_update.hact_values["follow_up_flags"], 0)
 
 
 class TestAgreementModel(TenantTestCase):
