@@ -559,7 +559,8 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     def outstanding_findings(self):
         # pending_unsupported_amount property
         from audit.models import Audit, Engagement
-        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL)  # TODO add filter for current year
+        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL,
+                                      end_date__year=datetime.datetime.now().year)
         ff = audits.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
         ar = audits.filter(amount_refunded__isnull=False).aggregate(
@@ -634,9 +635,14 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         :return: all completed spot checks
         '''
         from audit.models import Engagement, SpotCheck
+        quarter_name = get_current_quarter()
         sc = partner.hact_values['spot_checks']['completed']['total']
+        scq = partner.hact_values['spot_checks']['completed'][quarter_name]
+
         if update_one:
             sc += 1
+            scq += 1
+            partner.hact_values['spot_checks']['completed'][quarter_name] = scq
         else:
             trip = TravelActivity.objects.filter(
                 travel_type=TravelType.SPOT_CHECK,
@@ -644,11 +650,27 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
                 travels__status__in=[Travel.COMPLETED],
                 travels__completed_at__year=datetime.datetime.now().year,
                 partner=partner,
-            ).count()
+            )
 
-            # TODO add filter for current year
-            audit_spot_check = SpotCheck.objects.filter(partner=partner, status=Engagement.FINAL).count()
-            sc = trip + audit_spot_check  # TODO 1.1.9c add spot checks from field monitoring
+            trq1 = trip.filter(travels__completed_at__month__in=[1, 2, 3]).count()
+            trq2 = trip.filter(travels__completed_at__month__in=[4, 5, 6]).count()
+            trq3 = trip.filter(travels__completed_at__month__in=[7, 8, 9]).count()
+            trq4 = trip.filter(travels__completed_at__month__in=[10, 11, 12]).count()
+
+            audit_spot_check = SpotCheck.objects.filter(partner=partner, status=Engagement.FINAL,
+                                                        end_date__year=datetime.datetime.now().year)
+
+            asc1 = audit_spot_check.filter(end_date__month__in=[1, 2, 3]).count()
+            asc2 = audit_spot_check.filter(end_date__month__in=[4, 5, 6]).count()
+            asc3 = audit_spot_check.filter(end_date__month__in=[7, 8, 9]).count()
+            asc4 = audit_spot_check.filter(end_date__month__in=[10, 11, 12]).count()
+
+            partner.hact_values['spot_checks']['completed']['q1'] = trq1 + asc1
+            partner.hact_values['programmatic_visits']['completed']['q2'] = trq2 + asc2
+            partner.hact_values['programmatic_visits']['completed']['q3'] = trq3 + asc3
+            partner.hact_values['programmatic_visits']['completed']['q4'] = trq4 + asc4
+
+            sc = trip.count() + audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
 
         partner.hact_values['spot_checks']['completed']['total'] = sc
         partner.save()
@@ -660,9 +682,10 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         if update_one:
             completed_audit += 1
         else:
-            # TODO add filter for current year
-            completed_audit = Audit.objects.filter(partner=partner, status=Engagement.FINAL).count() + \
-                              SpecialAudit.objects.filter(partner=partner, status=Engagement.FINAL).count()
+            completed_audit = Audit.objects.filter(partner=partner, status=Engagement.FINAL,
+                                                   end_date__year=datetime.datetime.now().year).count() + \
+                              SpecialAudit.objects.filter(partner=partner, status=Engagement.FINAL,
+                                                          end_date__year=datetime.datetime.now().year).count()
 
         partner.hact_values['audits']['completed'] = completed_audit
         partner.save()
