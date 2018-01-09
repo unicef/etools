@@ -560,7 +560,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         # pending_unsupported_amount property
         from audit.models import Audit, Engagement
         audits = Audit.objects.filter(partner=self, status=Engagement.FINAL,
-                                      end_date__year=datetime.datetime.now().year)
+                                      date_of_draft_report_to_unicef__year=datetime.datetime.now().year)
         ff = audits.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
         ar = audits.filter(amount_refunded__isnull=False).aggregate(
@@ -631,9 +631,9 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     @classmethod
     def spot_checks(cls, partner, update_one=False):
-        '''
+        """
         :return: all completed spot checks
-        '''
+        """
         from audit.models import Engagement, SpotCheck
         quarter_name = get_current_quarter()
         sc = partner.hact_values['spot_checks']['completed']['total']
@@ -658,12 +658,12 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             trq4 = trip.filter(travels__completed_at__month__in=[10, 11, 12]).count()
 
             audit_spot_check = SpotCheck.objects.filter(partner=partner, status=Engagement.FINAL,
-                                                        end_date__year=datetime.datetime.now().year)
+                                                        date_of_draft_report_to_unicef__year=datetime.datetime.now().year)
 
-            asc1 = audit_spot_check.filter(end_date__month__in=[1, 2, 3]).count()
-            asc2 = audit_spot_check.filter(end_date__month__in=[4, 5, 6]).count()
-            asc3 = audit_spot_check.filter(end_date__month__in=[7, 8, 9]).count()
-            asc4 = audit_spot_check.filter(end_date__month__in=[10, 11, 12]).count()
+            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[1, 2, 3]).count()
+            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[4, 5, 6]).count()
+            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
+            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
 
             partner.hact_values['spot_checks']['completed']['q1'] = trq1 + asc1
             partner.hact_values['programmatic_visits']['completed']['q2'] = trq2 + asc2
@@ -677,15 +677,20 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     @classmethod
     def audits_completed(cls, partner, update_one=False):
+        """
+        :param partner: Partner Organization
+        :param update_one: if True will increase by one the value, if False would recalculte the value
+        :return: all completed audit (including special audit)
+        """
         from audit.models import Audit, Engagement, SpecialAudit
         completed_audit = partner.hact_values['audits']['completed']
         if update_one:
             completed_audit += 1
         else:
             completed_audit = Audit.objects.filter(partner=partner, status=Engagement.FINAL,
-                                                   end_date__year=datetime.datetime.now().year).count() + \
+                                                   date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count() + \
                               SpecialAudit.objects.filter(partner=partner, status=Engagement.FINAL,
-                                                          end_date__year=datetime.datetime.now().year).count()
+                                                          date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
 
         partner.hact_values['audits']['completed'] = completed_audit
         partner.save()
