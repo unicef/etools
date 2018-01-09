@@ -237,31 +237,36 @@ class GraphHactView(views.APIView):
                 'completed': self._sum_json_values('hact_values__spot_checks__completed__total'),
                 'min_required': sum([p.min_req_spot_checks for p in PartnerOrganization.objects.all()]),
             },
-            'scheduled_audit': Audit.objects.filter(status=Engagement.FINAL,
-                                                    end_date__year=datetime.now().year).count(),
-            'special_audit': SpecialAudit.objects.filter(status=Engagement.FINAL,
-                                                         end_date__year=datetime.now().year).count(),
-            'micro_assessment': MicroAssessment.objects.filter(status=Engagement.FINAL,
-                                                               end_date__year=datetime.now().year).count(),
+            'scheduled_audit': Audit.objects.filter(
+                status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+            'special_audit': SpecialAudit.objects.filter(
+                status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
+            'micro_assessment': MicroAssessment.objects.filter(
+                status=Engagement.FINAL, date_of_draft_report_to_unicef__year=datetime.now().year).count(),
             'missing_micro_assessment': PartnerOrganization.objects.filter(last_assessment_date__isnull=False,
                                                                            last_assessment_date__lte=deadline).count(),
         }
 
     def get_financial_findings(self):
-        refunds = Audit.objects.filter(amount_refunded__isnull=False, end_date__year=datetime.now().year).aggregate(
+        refunds = Audit.objects.filter(amount_refunded__isnull=False,
+                                       date_of_draft_report_to_unicef__year=datetime.now().year).aggregate(
             total=Coalesce(Sum('amount_refunded'), 0))['total']
         additional_supporting_document_provided = Audit.objects.filter(
-            end_date__year=datetime.now().year, additional_supporting_documentation_provided__isnull=False,
+            date_of_draft_report_to_unicef__year=datetime.now().year,
+            additional_supporting_documentation_provided__isnull=False,
             status=Engagement.FINAL).aggregate(
             total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
         justification_provided_and_accepted = Audit.objects.filter(
-            end_date__year=datetime.now().year, justification_provided_and_accepted__isnull=False).aggregate(
+            date_of_draft_report_to_unicef__year=datetime.now().year,
+            justification_provided_and_accepted__isnull=False).aggregate(
             total=Coalesce(Sum('justification_provided_and_accepted'), 0))['total']
         impairment = Audit.objects.filter(write_off_required__isnull=False).aggregate(
-            end_date__year=datetime.now().year, total=Coalesce(Sum('write_off_required'), 0))['total']
+            date_of_draft_report_to_unicef__year=datetime.now().year,
+            total=Coalesce(Sum('write_off_required'), 0))['total']
 
         # pending_unsupported_amount property
-        outstanding_audits = Audit.objects.filter(status=Engagement.FINAL, end_date__year=datetime.now().year)
+        outstanding_audits = Audit.objects.filter(status=Engagement.FINAL,
+                                                  date_of_draft_report_to_unicef__year=datetime.now().year)
         _ff = outstanding_audits.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
         _ar = outstanding_audits.filter(amount_refunded__isnull=False).aggregate(
@@ -273,10 +278,12 @@ class GraphHactView(views.APIView):
         outstanding = _ff - _ar - _asdp - _wor
 
         total_financial_findings = Audit.objects.filter(
-            end_date__year=datetime.now().year, financial_findings__isnull=False, status=Engagement.FINAL).aggregate(
+            date_of_draft_report_to_unicef__year=datetime.now().year, financial_findings__isnull=False,
+            status=Engagement.FINAL).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
         total_audited_expenditure = Audit.objects.filter(
-            end_date__year=datetime.now().year, audited_expenditure__isnull=False, status=Engagement.FINAL).aggregate(
+            date_of_draft_report_to_unicef__year=datetime.now().year, audited_expenditure__isnull=False,
+            status=Engagement.FINAL).aggregate(
             total=Coalesce(Sum('audited_expenditure'), 0))['total']
 
         return [
@@ -321,19 +328,23 @@ class GraphHactView(views.APIView):
         return [
             {
                 'name': 'Number of High Priority Findings',
-                'value': Audit.objects.filter(risks__value=4, end_date__year=datetime.now().year).count(),
+                'value': Audit.objects.filter(risks__value=4,
+                                              date_of_draft_report_to_unicef__year=datetime.now().year).count(),
             },
             {
                 'name': 'Number of Medium Priority Findings',
-                'value': Audit.objects.filter(risks__value=2, end_date__year=datetime.now().year).count(),
+                'value': Audit.objects.filter(risks__value=2,
+                                              date_of_draft_report_to_unicef__year=datetime.now().year).count(),
             },
             {
                 'name': 'Number of Low Priority Findings',
-                'value': Audit.objects.filter(risks__value=1, end_date__year=datetime.now().year).count(),
+                'value': Audit.objects.filter(risks__value=1,
+                                              date_of_draft_report_to_unicef__year=datetime.now().year).count(),
             },
             {
                 'name': 'Audit Opinion',
-                'value': Audit.objects.filter(risks__value=0, end_date__year=datetime.now().year).count(),
+                'value': Audit.objects.filter(risks__value=0,
+                                              date_of_draft_report_to_unicef__year=datetime.now().year).count(),
                 # 'value': [
                 #     {
                 #         'name': 'qualified',

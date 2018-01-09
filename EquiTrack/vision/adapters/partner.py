@@ -181,6 +181,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org.country = partner['COUNTRY']
                     partner_org.phone_number = partner.get('PHONE_NUMBER', None)
                     partner_org.email = partner.get('EMAIL', None)
+                    partner_org.phone_number = partner.get('PHONE_NUMBER', None)
+                    # partner_org.liquidation = partner.get('LIQUIDATION', None)
+                    # partner_org.cash_transfer = partner.get('CASH_TRANSFER', None)
                     partner_org.core_values_assessment_date = datetime.strptime(
                         partner['CORE_VALUE_ASSESSMENT_DT'],
                         '%d-%b-%y') if 'CORE_VALUE_ASSESSMENT_DT' in partner else None
