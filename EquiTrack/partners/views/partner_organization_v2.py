@@ -53,7 +53,7 @@ from partners.permissions import PartnershipManagerRepPermission, PartnershipMan
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
-    PartnerOrganizationHactCSVRenderer,
+    PartnerOrganizationHactCsvRenderer,
 )
 
 
@@ -191,7 +191,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.filter(Q(total_ct_cp__gt=0) | Q(total_ct_cy__gt=0)).all()
     serializer_class = PartnerOrganizationHactSerializer
-    renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCSVRenderer)
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
 
     def list(self, request, format=None):
         """

@@ -190,6 +190,7 @@ TENANT_APPS = (
     'locations',
     'reports',
     'partners',
+    'hact',
     'trips',
     'supplies',
     't2f',
@@ -345,6 +346,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework_csv.renderers.CSVRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
+        'rest_framework.renderers.MultiPartRenderer',
     )
 }
 
@@ -546,5 +548,5 @@ ISSUE_CHECKS = [
 ]
 
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
-    'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@un.org'
+    'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
