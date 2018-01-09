@@ -8,6 +8,7 @@ import datetime
 from django.test import override_settings
 
 from EquiTrack.factories import (
+    AgreementAmendmentFactory,
     AgreementFactory,
     CountryProgrammeFactory,
     InterventionFactory,
@@ -318,6 +319,41 @@ class TestPDAmendmentsMissingFilesCheck(FastTenantTestCase):
     def test_no_issue(self):
         """Check that if amendment file, then issue is NOT raised"""
         amendment = InterventionAmendmentFactory()
+        self.assertTrue(amendment.signed_amendment)
+        self.assertFalse(self.qs_issue.exists())
+        checks.bootstrap_checks(default_is_active=True)
+        checks.run_all_checks()
+        self.assertFalse(self.qs_issue.exists())
+
+
+class TestPCAAmendmentsMissingFilesCheck(FastTenantTestCase):
+    def setUp(self):
+        super(TestPCAAmendmentsMissingFilesCheck, self).setUp()
+        self.master_user = UserFactory(username="etools_task_admin")
+        self.qs_issue = FlaggedIssue.objects.filter(
+            issue_id="agreement_amendments_no_file"
+        )
+
+    def test_no_signed_amendment(self):
+        """Check that if agreement has no signed amendment
+        then issue is raised
+        """
+        amendment = AgreementAmendmentFactory(
+            signed_amendment=None
+        )
+        self.assertFalse(amendment.signed_amendment)
+        self.assertFalse(self.qs_issue.exists())
+        checks.bootstrap_checks(default_is_active=True)
+        checks.run_all_checks()
+        self.assertTrue(self.qs_issue.exists())
+        issue = self.qs_issue.first()
+        self.assertIn("has missing amendment file", issue.message)
+
+    def test_no_issue(self):
+        """Check that if agreement has signed amendment
+        then issue is NOT raised
+        """
+        amendment = AgreementAmendmentFactory(signed_amendment="random.pdf")
         self.assertTrue(amendment.signed_amendment)
         self.assertFalse(self.qs_issue.exists())
         checks.bootstrap_checks(default_is_active=True)
