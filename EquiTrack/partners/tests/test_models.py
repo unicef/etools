@@ -1,8 +1,7 @@
 import copy
 import datetime
-import json
 import sys
-from unittest import skip, skipIf, TestCase
+from unittest import skipIf, TestCase
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
@@ -40,7 +39,6 @@ from EquiTrack.factories import (
     UserFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from reports.models import ResultType
 from partners import models
 from partners.tests.factories import (
     GovernmentInterventionResultFactory,
@@ -230,13 +228,6 @@ class TestHACTCalculations(TenantTestCase):
             expenditure_amount=40000.00
         )
 
-    def test_planned_cash_transfers(self):
-
-        models.PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner)
-        hact = self.intervention.agreement.partner.hact_values
-        hact = json.loads(hact) if isinstance(hact, str) else hact
-        self.assertEqual(hact['planned_cash_transfer'], 60000)
-
 
 class TestPartnerOrganizationModel(TenantTestCase):
     fixtures = ['initial_data.json']
@@ -300,128 +291,21 @@ class TestPartnerOrganizationModel(TenantTestCase):
             assessment
         )
 
+    def assert_min_requirements(self, programmatic_visit, spot_check):
+        """common assert for minimum requirement calculation"""
+        hact_min_req = self.partner_organization.hact_min_requirements
+        data = {
+            "programme_visits": programmatic_visit,
+            "spot_checks": spot_check,
+        }
+        self.assertEqual(hact_min_req, data)
+
     def test_get_last_pca(self):
         pca = self.partner_organization.get_last_pca
         self.assertEqual(pca, self.pca_signed1)
 
-    def test_micro_assessment_needed_high_risk(self):
-        year = datetime.date.today().year
-        self.partner_organization.type_of_assessment = "High Risk Assumed"
-        self.partner_organization.save()
-        models.Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Micro Assessment",
-            completed_date=datetime.date(year, 1, 1)
-        )
-        models.PartnerOrganization.micro_assessment_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
-
-    def test_micro_assessment_needed_pct_over_100k(self):
-        year = datetime.date.today().year
-        self.partner_organization.type_of_assessment = "Simplified Checklist"
-        self.partner_organization.hact_values["planned_cash_transfer"] = 100001.00
-        self.partner_organization.save()
-        models.Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Micro Assessment",
-            completed_date=datetime.date(year, 1, 1)
-        )
-        models.PartnerOrganization.micro_assessment_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
-
-    def test_micro_assessment_needed_older_than_54m(self):
-        self.partner_organization.type_of_assessment = "Micro Assessment"
-        self.partner_organization.rating = "low"
-        self.partner_organization.hact_values["planned_cash_transfer"] = 10000.00
-        self.partner_organization.save()
-        models.Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Micro Assessment",
-            completed_date=datetime.date.today() - datetime.timedelta(days=1643)
-        )
-        models.PartnerOrganization.micro_assessment_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
-
-    def test_micro_assessment_needed_missing(self):
-        self.partner_organization.hact_values["planned_cash_transfer"] = 10000.00
-        self.partner_organization.save()
-        models.PartnerOrganization.micro_assessment_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Missing")
-
-    def test_micro_assessment_needed_no(self):
-        year = datetime.date.today().year
-        self.partner_organization.type_of_assessment = "Other"
-        self.partner_organization.hact_values["planned_cash_transfer"] = 100000.00
-        self.partner_organization.save()
-        models.Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Micro Assessment",
-            completed_date=datetime.date(year, 1, 1)
-        )
-        models.PartnerOrganization.micro_assessment_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "No")
-
-    def test_micro_assessment_needed_completed_date(self):
-        year = datetime.date.today().year
-        self.partner_organization.type_of_assessment = "High Risk Assumed"
-        self.partner_organization.save()
-        models.Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Micro Assessment",
-            completed_date=datetime.date(year, 1, 1)
-        )
-        assessment_last = models.Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Micro Assessment",
-            completed_date=datetime.date(year, 2, 1)
-        )
-        models.PartnerOrganization.micro_assessment_needed(
-            self.partner_organization,
-            assessment_last
-        )
-        self.assertEqual(self.partner_organization.hact_values["micro_assessment_needed"], "Yes")
-
-    def test_audit_needed_under_500k(self):
-        self.partner_organization.total_ct_cp = 500000.00
-        self.partner_organization.save()
-        models.PartnerOrganization.audit_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_mr'], 0)
-
-    def test_audit_needed_over_500k(self):
-        self.partner_organization.total_ct_cp = 500001.00
-        self.partner_organization.save()
-        models.PartnerOrganization.audit_needed(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
-
-    def test_audit_needed_extra_assessment_only(self):
-        assessment = models.Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Scheduled Audit report",
-            completed_date=datetime.date(datetime.date.today().year, 2, 1)
-        )
-        self.partner_organization.total_ct_cp = 500001.00
-        self.partner_organization.save()
-        models.PartnerOrganization.audit_needed(self.partner_organization, assessment)
-        self.assertEqual(self.partner_organization.hact_values['audits_mr'], 1)
-
-    def test_audit_done(self):
-        models.Assessment.objects.create(
-            partner=self.partner_organization,
-            type="Scheduled Audit report",
-            completed_date=datetime.date(datetime.date.today().year, 1, 1)
-        )
-        self.partner_organization.total_ct_cp = 500001.00
-        self.partner_organization.save()
-        models.PartnerOrganization.audit_done(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_done'], 1)
-
-    def test_audit_done_zero(self):
-        models.PartnerOrganization.audit_done(self.partner_organization)
-        self.assertEqual(self.partner_organization.hact_values['audits_done'], 0)
-
-    def test_hact_min_requirements_ct_equals_0(self):
+    def test_hact_min_requirements_ct_under_25k(self):
         self.partner_organization.total_ct_cy = 0
-        self.partner_organization.save()
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 0,
@@ -429,122 +313,53 @@ class TestPartnerOrganizationModel(TenantTestCase):
         }
         self.assertEqual(hact_min_req, data)
 
-    def test_hact_min_requirements_ct_under_50k(self):
-        self.partner_organization.total_ct_cy = 50000.00
-        self.partner_organization.save()
-        hact_min_req = self.partner_organization.hact_min_requirements
-        data = {
-            "programme_visits": 1,
-            "spot_checks": 0,
-        }
-        self.assertEqual(hact_min_req, data)
+    def test_hact_min_requirements_ct_between_25k_and_50k(self):
+        self.partner_organization.total_ct_cy = 44000.00
+        self.assert_min_requirements(1, 0)
 
-    def test_hact_min_requirements_ct_between_50k_and_100k(self):
-        self.partner_organization.total_ct_cy = 50001.00
-        self.partner_organization.save()
-        hact_min_req = self.partner_organization.hact_min_requirements
-        data = {
-            "programme_visits": 1,
-            "spot_checks": 1,
-        }
-        self.assertEqual(hact_min_req, data)
+    def test_hact_min_requirements_ct_between_25k_and_100k(self):
+        self.partner_organization.total_ct_cy = 99000.00
+        self.assert_min_requirements(1, 1)
 
-    def test_hact_min_requirements_ct_between_100k_and_350k_moderate(self):
-        self.partner_organization.total_ct_cy = 100001.00
-        self.partner_organization.rating = "Moderate"
-        self.partner_organization.save()
-        hact_min_req = self.partner_organization.hact_min_requirements
-        data = {
-            "programme_visits": 1,
-            "spot_checks": 1,
-        }
-        self.assertEqual(hact_min_req, data)
+    def test_hact_min_requirements_ct_between_100k_and_500k_high(self):
+        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
+        self.assert_min_requirements(3, 1)
 
-    def test_hact_min_requirements_ct_between_100k_and_350k_high(self):
-        self.partner_organization.total_ct_cy = 100001.00
-        self.partner_organization.rating = "High"
-        self.partner_organization.save()
-        hact_min_req = self.partner_organization.hact_min_requirements
-        data = {
-            "programme_visits": 2,
-            "spot_checks": 2,
-        }
-        self.assertEqual(hact_min_req, data)
+    def test_hact_min_requirements_ct_between_100k_and_500k_significant(self):
+        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.assert_min_requirements(3, 1)
 
-    def test_hact_min_requirements_ct_over_350k_moderate(self):
-        self.partner_organization.total_ct_cy = 350001.00
-        self.partner_organization.rating = "Moderate"
-        self.partner_organization.save()
-        hact_min_req = self.partner_organization.hact_min_requirements
-        data = {
-            "programme_visits": 2,
-            "spot_checks": 1,
-        }
-        self.assertEqual(hact_min_req, data)
+    def test_hact_min_requirements_ct_between_100k_and_500k_moderate(self):
+        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MODERATE
+        self.assert_min_requirements(2, 1)
 
-    def test_hact_min_requirements_ct_over_350k_high(self):
-        self.partner_organization.total_ct_cy = 350001.00
-        self.partner_organization.rating = "High"
-        self.partner_organization.save()
-        hact_min_req = self.partner_organization.hact_min_requirements
-        data = {
-            "programme_visits": 4,
-            "spot_checks": 3,
-        }
-        self.assertEqual(hact_min_req, data)
+    def test_hact_min_requirements_ct_between_100k_and_500k_low(self):
+        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
+        self.assert_min_requirements(1, 1)
 
-    @skip('Deprecated Functionality')
-    def test_planned_cash_transfers_gov(self):
-        self.partner_organization.partner_type = models.PartnerType.GOVERNMENT
-        self.partner_organization.save()
-        CountryProgrammeFactory(
-            name="CP 1",
-            wbs="0001/A0/01",
-            from_date=datetime.date(datetime.date.today().year - 1, 1, 1),
-            to_date=datetime.date(datetime.date.today().year + 1, 1, 1),
-        )
-        gi = GovernmentInterventionFactory(
-            partner=self.partner_organization,
-        )
-        rt = ResultType.objects.get(id=1)
-        r = ResultFactory(
-            result_type=rt,
-        )
-        models.GovernmentInterventionResult.objects.create(
-            intervention=gi,
-            result=r,
-            year=datetime.date.today().year,
-            planned_amount=100000,
-        )
-        models.GovernmentInterventionResult.objects.create(
-            intervention=gi,
-            result=r,
-            year=datetime.date.today().year,
-            planned_amount=50000,
-        )
-        hact = json.loads(self.partner_organization.hact_values) \
-            if isinstance(self.partner_organization.hact_values, str) \
-            else self.partner_organization.hact_values
-        self.assertEqual(hact['planned_cash_transfer'], 150000)
+    def test_hact_min_requirements_ct_over_500k_high(self):
+        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
+        self.assert_min_requirements(4, 1)
 
-    def test_planned_cash_transfers_non_gov(self):
-        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
-        self.partner_organization.save()
-        agreement = AgreementFactory(
-            agreement_type=models.Agreement.PCA,
-            partner=self.partner_organization,
-            country_programme=self.cp,
-        )
+    def test_hact_min_requirements_ct_over_500k_significant(self):
+        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.assert_min_requirements(4, 1)
 
-        intervention = InterventionFactory(
-            status=u'active', agreement=agreement
-        )
-        InterventionBudgetFactory(intervention=intervention)
+    def test_hact_min_requirements_ct_over_500k_moderate(self):
+        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MODERATE
+        self.assert_min_requirements(3, 1)
 
-        hact = json.loads(self.partner_organization.hact_values) \
-            if isinstance(self.partner_organization.hact_values, str) \
-            else self.partner_organization.hact_values
-        self.assertEqual(hact['planned_cash_transfer'], 100001)
+    def test_hact_min_requirements_ct_over_500k_low(self):
+        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
+        self.assert_min_requirements(2, 1)
 
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = models.PartnerType.GOVERNMENT
@@ -564,7 +379,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             year=year - 1,
             programmatic=2
         )
-        self.assertEqual(self.partner_organization.hact_values['planned_visits'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 0)
 
     def test_planned_visits_non_gov(self):
         self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
@@ -584,7 +399,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             year=year - 1,
             programmatic=2
         )
-        self.assertEqual(self.partner_organization.hact_values['planned_visits'], 3)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
 
     def test_planned_visits_non_gov_no_pv_intervention(self):
         self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
@@ -612,7 +427,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             self.partner_organization
         )
         self.assertEqual(
-            self.partner_organization.hact_values['planned_visits'],
+            self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
             3
         )
 
@@ -643,13 +458,13 @@ class TestPartnerOrganizationModel(TenantTestCase):
             pv
         )
         self.assertEqual(
-            self.partner_organization.hact_values['planned_visits'],
+            self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
             3
         )
 
     def test_programmatic_visits_update_one(self):
         self.assertEqual(
-            self.partner_organization.hact_values["programmatic_visits"],
+            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
             0
         )
         models.PartnerOrganization.programmatic_visits(
@@ -657,13 +472,13 @@ class TestPartnerOrganizationModel(TenantTestCase):
             update_one=True
         )
         self.assertEqual(
-            self.partner_organization.hact_values["programmatic_visits"],
+            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
             1
         )
 
     def test_programmatic_visits_update_travel_activity(self):
         self.assertEqual(
-            self.partner_organization.hact_values["programmatic_visits"],
+            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
             0
         )
         traveller = UserFactory()
@@ -682,13 +497,13 @@ class TestPartnerOrganizationModel(TenantTestCase):
             self.partner_organization,
         )
         self.assertEqual(
-            self.partner_organization.hact_values["programmatic_visits"],
+            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
             1
         )
 
     def test_spot_checks_update_one(self):
         self.assertEqual(
-            self.partner_organization.hact_values["spot_checks"],
+            self.partner_organization.hact_values['spot_checks']['completed']['total'],
             0
         )
         models.PartnerOrganization.spot_checks(
@@ -696,13 +511,13 @@ class TestPartnerOrganizationModel(TenantTestCase):
             update_one=True,
         )
         self.assertEqual(
-            self.partner_organization.hact_values["spot_checks"],
+            self.partner_organization.hact_values['spot_checks']['completed']['total'],
             1
         )
 
     def test_spot_checks_update_travel_activity(self):
         self.assertEqual(
-            self.partner_organization.hact_values["spot_checks"],
+            self.partner_organization.hact_values['spot_checks']['completed']['total'],
             0
         )
         traveller = UserFactory()
@@ -721,25 +536,9 @@ class TestPartnerOrganizationModel(TenantTestCase):
             self.partner_organization,
         )
         self.assertEqual(
-            self.partner_organization.hact_values["spot_checks"],
+            self.partner_organization.hact_values['spot_checks']['completed']['total'],
             1
         )
-
-    def test_follow_up_flags(self):
-        """Test that follow_up_flags method resets the hact_value
-        'follow_up_flags' to 0
-        """
-        self.partner_organization.hact_values["follow_up_flags"] = 1
-        self.partner_organization.save()
-        self.assertEqual(
-            self.partner_organization.hact_values["follow_up_flags"],
-            1
-        )
-        models.PartnerOrganization.follow_up_flags(self.partner_organization)
-        partner_update = models.PartnerOrganization.objects.get(
-            pk=self.partner_organization.pk
-        )
-        self.assertEqual(partner_update.hact_values["follow_up_flags"], 0)
 
 
 class TestAgreementModel(TenantTestCase):
@@ -1501,40 +1300,6 @@ class TestAssessment(TenantTestCase):
             completed_date=datetime.date(2001, 1, 1)
         )
         self.assertEqual(str(a), "Type: Partner Rating 01-01-2001")
-
-    def test_save_update_micro_assessment(self):
-        partner = PartnerFactory(
-            rating=models.Assessment.LOW,
-            type_of_assessment="Micro Assessment",
-        )
-        assessment = AssessmentFactory(
-            partner=partner,
-            type="Micro Assessment",
-            completed_date=datetime.date(2001, 1, 1)
-        )
-        self.assertEqual(partner.hact_values["micro_assessment_needed"], "Yes")
-        assessment.completed_date = datetime.date.today()
-        assessment.save()
-        partner_updated = models.PartnerOrganization.objects.get(pk=partner.pk)
-        self.assertEqual(
-            partner_updated.hact_values["micro_assessment_needed"],
-            "No"
-        )
-
-    def test_save_update_scheduled_audit_report(self):
-        partner = PartnerFactory(
-            rating=models.Assessment.LOW,
-            type_of_assessment="Micro Assessment",
-        )
-        assessment = AssessmentFactory(
-            partner=partner,
-            type="Micro Assessment",
-            completed_date=datetime.date(2001, 1, 1)
-        )
-        self.assertEqual(partner.hact_values["audits_done"], 0)
-        assessment.type = "Scheduled Audit report"
-        assessment.save()
-        self.assertEqual(partner.hact_values["audits_done"], 1)
 
 
 class TestAgreement(TenantTestCase):
