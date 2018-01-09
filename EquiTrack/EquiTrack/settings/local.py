@@ -3,6 +3,7 @@ import sys
 
 from EquiTrack.settings.base import *  # noqa: F403
 
+ALLOWED_HOSTS = ['*']
 DEBUG = True
 CELERY_ALWAYS_EAGER = True
 
