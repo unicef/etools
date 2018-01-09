@@ -440,7 +440,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         help_text='Total Cash Transferred per Current Year'
     )
 
-    hact_values = JSONField(blank=True, null=True, default=hact_default)
+    hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
 
     tracker = FieldTracker()
 
