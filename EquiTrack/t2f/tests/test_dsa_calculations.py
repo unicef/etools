@@ -122,43 +122,43 @@ class TestDSACalculator(APITenantTestCase):
 
         # For Amsterdam daylight saving occurred on March 26 (2am) in 2017
         self.amsterdam = PublicsDSARegionFactory(country=netherlands,
-                                                area_name='Amsterdam',
-                                                area_code='ds1')
+                                                 area_name='Amsterdam',
+                                                 area_code='ds1')
         self.amsterdam_rate = PublicsDSARateFactory(region=self.amsterdam,
-                                                   dsa_amount_usd=100,
-                                                   dsa_amount_60plus_usd=60)
+                                                    dsa_amount_usd=100,
+                                                    dsa_amount_60plus_usd=60)
 
         self.budapest = PublicsDSARegionFactory(country=hungary,
-                                               area_name='Budapest',
-                                               area_code='ds2')
+                                                area_name='Budapest',
+                                                area_code='ds2')
         PublicsDSARateFactory(region=self.budapest,
                               dsa_amount_usd=200,
                               dsa_amount_60plus_usd=120)
 
         self.copenhagen = PublicsDSARegionFactory(country=denmark,
-                                                 area_name='Copenhagen',
-                                                 area_code='ds3')
+                                                  area_name='Copenhagen',
+                                                  area_code='ds3')
         PublicsDSARateFactory(region=self.copenhagen,
                               dsa_amount_usd=300,
                               dsa_amount_60plus_usd=180)
 
         self.dusseldorf = PublicsDSARegionFactory(country=germany,
-                                                 area_name='Duesseldorf',
-                                                 area_code='ds4')
+                                                  area_name='Duesseldorf',
+                                                  area_code='ds4')
         PublicsDSARateFactory(region=self.dusseldorf,
                               dsa_amount_usd=400,
                               dsa_amount_60plus_usd=240)
 
         self.essen = PublicsDSARegionFactory(country=germany,
-                                            area_name='Essen',
-                                            area_code='ds5')
+                                             area_name='Essen',
+                                             area_code='ds5')
         PublicsDSARateFactory(region=self.essen,
                               dsa_amount_usd=500,
                               dsa_amount_60plus_usd=300)
 
         self.frankfurt = PublicsDSARegionFactory(country=germany,
-                                                area_name='Frankfurt',
-                                                area_code='ds6')
+                                                 area_name='Frankfurt',
+                                                 area_code='ds6')
         PublicsDSARateFactory(region=self.frankfurt,
                               dsa_amount_usd=600,
                               dsa_amount_60plus_usd=360)
