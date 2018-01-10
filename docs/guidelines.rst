@@ -166,3 +166,8 @@ Boolean in other parts of the code then ``bool(‘False’)`` equals ``True``, w
 what you wanted. We have a helper function called ``str2bool`` that converts commonly used boolean
 representations from a string to a proper Python Boolean value, which allows us to write ``ENABLE_FOO
 = str2bool(os.environ.get(‘ENABLE_FOO’, True))``.
+
+Factories
+---------
+
+Factories should be defined in the app `<app>/tests/factories.py` file where the app's models are defined.
