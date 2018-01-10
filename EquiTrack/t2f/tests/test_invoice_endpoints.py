@@ -1,12 +1,12 @@
 from __future__ import unicode_literals
 
-import json
 from decimal import getcontext
 
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.utils import as_json
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.models import Invoice
 from t2f.tests.factories import TravelFactory
@@ -37,7 +37,7 @@ class InvoiceEndpoints(APITenantTestCase):
         with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('t2f:invoices:list'), user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         expected_keys = ['data', 'page_count', 'total_count']
         self.assertKeysIn(expected_keys, response_json)
 
@@ -52,7 +52,7 @@ class InvoiceEndpoints(APITenantTestCase):
                                                        kwargs={'invoice_pk': self.travel.invoices.first().pk}),
                                         user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         expected_keys = ['id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency',
                          'amount', 'status', 'message', 'vision_fi_id', 'items']
         self.assertKeysIn(expected_keys, response_json)
@@ -63,14 +63,14 @@ class InvoiceEndpoints(APITenantTestCase):
                                               'f_ta_number': '12',
                                               'f_vision_fi_id': '12'},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(len(response_json['data']), 0)
 
     def test_search(self):
         response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
                                         data={'search': '12'},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(len(response_json['data']), 0)
 
     def test_sorting(self):
@@ -107,7 +107,7 @@ class InvoiceEndpoints(APITenantTestCase):
 
         response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         invoice_data = response_json['data'][0]
 
         self.assertEqual(invoice_data['amount'], '123.457')
@@ -119,7 +119,7 @@ class InvoiceEndpoints(APITenantTestCase):
 
         response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         invoice_data = response_json['data'][0]
 
         self.assertEqual(invoice_data['amount'], '123.46')
@@ -131,7 +131,7 @@ class InvoiceEndpoints(APITenantTestCase):
 
         response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         invoice_data = response_json['data'][0]
 
         self.assertEqual(invoice_data['amount'], '123')
@@ -143,7 +143,7 @@ class InvoiceEndpoints(APITenantTestCase):
 
         response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         invoice_data = response_json['data'][0]
 
         really_precise_number = '123.4567000000000000000000000'

@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.db import ProgrammingError
 from django.http import Http404
+from django.utils import six
 
-import six
 from django_fsm import can_proceed, has_transition_perm
 from rest_framework import exceptions
 from rest_framework.compat import is_authenticated
@@ -56,7 +56,7 @@ class ExportViewSetDataMixin(object):
 
     def dispatch(self, request, *args, **kwargs):
         response = super(ExportViewSetDataMixin, self).dispatch(request, *args, **kwargs)
-        if self.request.method == "GET" and 'format' in self.request.query_params.keys():
+        if self.request.method == "GET" and 'format' in list(self.request.query_params.keys()):
             response['Content-Disposition'] = "attachment;filename={}".format(
                 self.get_export_filename(format=self.request.query_params.get('format'))
             )

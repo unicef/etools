@@ -6,6 +6,7 @@ from EquiTrack.utils import HashableDict
 from EquiTrack.validation_mixins import check_rigid_related
 from environment.helpers import tenant_switch_is_active
 from utils.common.utils import get_all_field_names
+from django.utils import six
 
 # READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
 # Initially, this is only being used for PRP-related endpoints.
@@ -16,7 +17,7 @@ def _is_user_in_groups(user, group_names):
     '''Utility function; returns True if user is in ANY of the groups in the group_names list, False if the user
     is in none of them. Note that group_names should be a tuple or list, not a single string.
     '''
-    if isinstance(group_names, basestring):
+    if isinstance(group_names, six.string_types):
         # Anticipate common programming oversight.
         raise ValueError('group_names parameter must be a tuple or list, not a string')
     return user.groups.filter(name__in=group_names).exists()

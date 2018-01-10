@@ -8,12 +8,15 @@ from django.db.models import ObjectDoesNotExist
 from django.db.models.fields.files import FieldFile
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
+from django.utils.six import binary_type
 
 from django_fsm import can_proceed, get_all_FIELD_transitions, has_transition_perm
 from rest_framework.exceptions import ValidationError
 
 from EquiTrack.parsers import parse_multipart_data
 from utils.common.utils import get_all_field_names
+from django.utils import six
+from django.utils.six.moves import zip
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +78,7 @@ def check_rigid_related(obj, related):
     field_names = get_all_field_names(current_related[0])
     current_related.sort(key=lambda x: x.id)
     old_related.sort(key=lambda x: x.id)
-    comparison_map = zip(current_related, old_related)
+    comparison_map = list(zip(current_related, old_related))
     # check if any field on the related model was changed
     for i in comparison_map:
         for field in field_names:
@@ -213,7 +216,7 @@ class ValidatorViewMixin(object):
 
         def _get_reverse_for_field(field):
             return main_object.__class__._meta.get_field(field).remote_field.name
-        for k, v in my_relations.iteritems():
+        for k, v in six.iteritems(my_relations):
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
                                   k, _get_reverse_for_field(k), partial, nested_related_names)
 
@@ -235,7 +238,7 @@ class ValidatorViewMixin(object):
 
         main_object = main_serializer.save()
 
-        for k in my_relations.iterkeys():
+        for k in six.iterkeys(my_relations):
             try:
                 rel_field_val = getattr(old_instance, k)
             except ObjectDoesNotExist:
@@ -257,7 +260,7 @@ class ValidatorViewMixin(object):
         def _get_reverse_for_field(field):
             return main_object.__class__._meta.get_field(field).remote_field.name
 
-        for k, v in my_relations.iteritems():
+        for k, v in six.iteritems(my_relations):
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
                                   k, _get_reverse_for_field(k), partial, nested_related_names)
 
@@ -269,10 +272,10 @@ def _unicode_if(s):
 
     This function is Python 2- and 3-compatible.
     '''
-    # Under Python 2, we can use isinstance(s, unicode), but that syntax doesn't work under Python 3 because the
-    # unicode type doesn't exist (only str which is Unicode by default). Instead I rely on the quirk that Python 2
-    # str instances lack a method (.isnumeric()) that exists on Python 2 unicode instances and Python 3 str instances.
-    return s if hasattr(s, 'isnumeric') else s.decode('utf-8')
+    if isinstance(s, binary_type):
+        return s.decode('utf-8')
+    else:
+        return s
 
 
 @python_2_unicode_compatible
@@ -345,7 +348,7 @@ def state_error_string(function):
 
 
 def update_object(obj, kwdict):
-    for k, v in kwdict.iteritems():
+    for k, v in six.iteritems(kwdict):
         setattr(obj, k, v)
 
 

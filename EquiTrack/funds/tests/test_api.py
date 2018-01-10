@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from unittest import TestCase
 
 from django.core.urlresolvers import reverse
+from django.utils import six
 from rest_framework import status
 from tablib.core import Dataset
 
@@ -61,7 +62,7 @@ class TestFundsReservationHeaderExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 16)
         self.assertEqual(len(dataset[0]), 16)
@@ -75,7 +76,7 @@ class TestFundsReservationHeaderExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 16)
         self.assertEqual(len(dataset[0]), 16)
@@ -108,7 +109,7 @@ class TestFundsReservationItemExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 14)
         self.assertEqual(len(dataset[0]), 14)
@@ -122,7 +123,7 @@ class TestFundsReservationItemExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 14)
         self.assertEqual(len(dataset[0]), 14)
@@ -155,7 +156,7 @@ class TestFundsCommitmentHeaderExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 11)
         self.assertEqual(len(dataset[0]), 11)
@@ -169,7 +170,7 @@ class TestFundsCommitmentHeaderExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 11)
         self.assertEqual(len(dataset[0]), 11)
@@ -199,7 +200,7 @@ class TestFundsCommitmentItemExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 16)
         self.assertEqual(len(dataset[0]), 16)
@@ -213,7 +214,7 @@ class TestFundsCommitmentItemExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 16)
         self.assertEqual(len(dataset[0]), 16)
@@ -243,9 +244,9 @@ class TestGrantExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertItemsEqual(dataset._get_headers(), [
+        six.assertCountEqual(self, dataset._get_headers(), [
             "Description",
             "Donor",
             "Expiry",
@@ -265,9 +266,9 @@ class TestGrantExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertItemsEqual(dataset._get_headers(), [
+        six.assertCountEqual(self, dataset._get_headers(), [
             "Description",
             "Donor",
             "Expiry",
@@ -306,9 +307,9 @@ class TestDonorExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertItemsEqual(dataset._get_headers(), [
+        six.assertCountEqual(self, dataset._get_headers(), [
             "Grant",
             "ID",
             "Name",
@@ -326,9 +327,9 @@ class TestDonorExportList(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertItemsEqual(dataset._get_headers(), [
+        six.assertCountEqual(self, dataset._get_headers(), [
             "Grant",
             "ID",
             "Name",

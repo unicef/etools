@@ -17,7 +17,7 @@ def gov_int_copy_section_sectors(apps, schema_editor):
         if gir.sector:
             gir.sectors.add(gir.sector)
         gir.save()
-        print 'saved gir {}'.format(gir.id)
+        print('saved gir {}'.format(gir.id))
 
 class Migration(migrations.Migration):
 

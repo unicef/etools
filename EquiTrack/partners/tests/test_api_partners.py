@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import datetime
-import json
 
 from django.core.urlresolvers import reverse
 from mock import patch, Mock
@@ -16,6 +15,7 @@ from EquiTrack.factories import (
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.utils import as_json
 from partners.models import PartnerOrganization, PartnerType
 from partners.views.partner_organization_v2 import PartnerOrganizationAddView
 
@@ -49,10 +49,10 @@ class TestPartnerOrganizationHactAPIView(APITenantTestCase):
             user=self.unicef_staff
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
-        self.assertIn('id', response_json[0].keys())
+        self.assertIn('id', list(response_json[0].keys()))
         self.assertEqual(response_json[0]['id'], self.partner.pk)
 
 

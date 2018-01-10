@@ -5,6 +5,8 @@ from decimal import Decimal
 
 from pytz import UTC
 
+from django.utils import six
+
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
@@ -399,7 +401,7 @@ class CostSummaryTest(APITenantTestCase):
             "total_amount": total,
             "deduction": Decimal("0.0000"),
         }])
-        self.assertItemsEqual(cost_summary["expenses_total"], [
+        six.assertCountEqual(self, cost_summary["expenses_total"], [
             {"currency": self.currency_huf, "amount": expense_huf.amount},
             {"currency": self.currency_usd, "amount": expense_usd.amount},
         ])

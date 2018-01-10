@@ -17,16 +17,24 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
+          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum "EquiTrack/requirements/local.txt" }}
       - run:
           command: |
+            apt-get install -y --no-install-recommends \
+                python-dev \
+                python-software-properties \
+                python-setuptools \
+                python3.4 \
+                python3.4-dev \
+                python3.4-venv \
+                python3-pip \
+                libpython3.4-dev
             virtualenv env1
             . env1/bin/activate
-            pip install -r requirements.txt
-            # for tests to run
-            pip install django-extensions
+            # Just need to run tox
+            pip --quiet install tox
       - save_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
+          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum "EquiTrack/requirements/local.txt" }}
           paths:
             - "env1"
       - run:
@@ -40,7 +48,7 @@ jobs:
             . env1/bin/activate
             cd EquiTrack
             mkdir media
-            bash runtests.sh;
+            tox
       - store_artifacts:
           path: test-reports/
           destination: tr1
@@ -109,7 +117,7 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             HOSTIP=`/sbin/ip route|awk '/default/ { print $3 }'`
-            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG bash runtests.sh
+            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG bash tox
       - run:
           name: Pushing to Docker Hub
           command: |

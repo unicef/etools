@@ -1,11 +1,10 @@
 from __future__ import unicode_literals
 
-import json
-
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.utils import as_json
 from publics.models import EPOCH_ZERO, TravelExpenseType
 from publics.tests.factories import AirlineCompanyFactory, ExpenseTypeFactory
 
@@ -70,7 +69,7 @@ class GhostData(APITenantTestCase):
         response = self.forced_auth_req('get', reverse('public:expense_types'),
                                         user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(len(response_json), 1)
 
         expense_type.delete()
@@ -78,13 +77,13 @@ class GhostData(APITenantTestCase):
         response = self.forced_auth_req('get', reverse('public:expense_types'),
                                         user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(len(response_json), 0)
 
         response = self.forced_auth_req('get', reverse('public:missing_expense_types'),
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(response_json,
                          {'values': ['This list may not be empty.']})
 
@@ -98,21 +97,21 @@ class GhostData(APITenantTestCase):
 
         response = self.forced_auth_req('get', reverse('public:static'),
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(len(response_json['airlines']), 1)
 
         airline.delete()
 
         response = self.forced_auth_req('get', reverse('public:static'),
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(len(response_json['airlines']), 0)
 
         response = self.forced_auth_req('get', reverse('public:missing_static'),
                                         data={'values': [airline.pk]},
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(response_json,
                          {'category': ['This field is required.']})
 

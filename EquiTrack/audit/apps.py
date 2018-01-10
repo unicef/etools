@@ -7,6 +7,7 @@ class AppConfig(BaseAppConfig):
     name = __name__.rpartition('.')[0]
     verbose_name = 'Auditor Portal'
 
+    # noinspection PyUnresolvedReferences
     def ready(self):
         from audit import signals  # NOQA
         from utils.permissions import signals as permissions_signals

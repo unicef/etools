@@ -6,8 +6,6 @@ from django.conf import settings
 import django.contrib.postgres.fields
 from django.db import migrations, models
 from django.db.models import Count
-import django.db.models.deletion
-import django.db.models.manager
 import django.utils.timezone
 import django_fsm
 import model_utils.fields
@@ -185,7 +183,7 @@ class Migration(migrations.Migration):
             name='WorkspaceFileType',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=64L, unique=True)),
+                ('name', models.CharField(max_length=64, unique=True)),
             ],
         ),
         migrations.AlterModelManagers(
@@ -222,17 +220,17 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='partnerorganization',
             name='city',
-            field=models.CharField(blank=True, max_length=32L, null=True),
+            field=models.CharField(blank=True, max_length=32, null=True),
         ),
         migrations.AddField(
             model_name='partnerorganization',
             name='country',
-            field=models.CharField(blank=True, max_length=32L, null=True),
+            field=models.CharField(blank=True, max_length=32, null=True),
         ),
         migrations.AddField(
             model_name='partnerorganization',
             name='postal_code',
-            field=models.CharField(blank=True, max_length=32L, null=True),
+            field=models.CharField(blank=True, max_length=32, null=True),
         ),
         migrations.AddField(
             model_name='partnerorganization',
@@ -242,12 +240,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='partnerorganization',
             name='street_address',
-            field=models.CharField(blank=True, max_length=500L, null=True),
+            field=models.CharField(blank=True, max_length=500, null=True),
         ),
         migrations.AlterField(
             model_name='agreement',
             name='agreement_number',
-            field=models.CharField(blank=True, max_length=45L, unique=True, verbose_name='Reference Number'),
+            field=models.CharField(blank=True, max_length=45, unique=True, verbose_name='Reference Number'),
         ),
         migrations.AlterField(
             model_name='agreement',
@@ -267,12 +265,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='agreementamendmentlog',
             name='status',
-            field=models.CharField(blank=True, choices=[('in_process', 'In Process'), ('active', 'Active'), ('implemented', 'Implemented'), ('cancelled', 'Cancelled'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], max_length=32L),
+            field=models.CharField(blank=True, choices=[('in_process', 'In Process'), ('active', 'Active'), ('implemented', 'Implemented'), ('cancelled', 'Cancelled'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], max_length=32),
         ),
         migrations.AlterField(
             model_name='amendmentlog',
             name='status',
-            field=models.CharField(blank=True, choices=[('in_process', 'In Process'), ('active', 'Active'), ('implemented', 'Implemented'), ('cancelled', 'Cancelled'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], max_length=32L),
+            field=models.CharField(blank=True, choices=[('in_process', 'In Process'), ('active', 'Active'), ('implemented', 'Implemented'), ('cancelled', 'Cancelled'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], max_length=32),
         ),
         migrations.AlterField(
             model_name='assessment',

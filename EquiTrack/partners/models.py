@@ -461,7 +461,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
             self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
         except ValueError as e:
-            e.message = 'hact_values needs to be a valid format (dict)'
+            e.args = tuple(['hact_values needs to be a valid format (dict)'] + list(e.args))
             raise e
 
         super(PartnerOrganization, self).save(*args, **kwargs)
@@ -512,6 +512,8 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     def min_req_programme_visits(self):
         programme_visits = 0
         ct = self.total_ct_cy
+        if ct is None:
+            ct = 0
 
         if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
@@ -537,6 +539,8 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     def min_req_spot_checks(self):
         # TODO add condition when is implemented 1.1.10a
         ct = self.total_ct_cy
+        if ct is None:
+            ct = 0
         return 1 if ct > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
     @cached_property

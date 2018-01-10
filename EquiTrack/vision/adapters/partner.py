@@ -2,6 +2,8 @@ import json
 import logging
 from datetime import datetime
 
+from django.utils.six.moves import filter
+
 from partners.models import PartnerOrganization
 from vision.utils import comp_decimals
 from vision.vision_data_synchronizer import VisionDataSynchronizer, VISION_NO_DATA_MESSAGE
@@ -69,7 +71,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return list(filter(bad_record, records))
 
     def _get_json(self, data):
         return [] if data == VISION_NO_DATA_MESSAGE else data

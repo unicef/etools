@@ -2,17 +2,19 @@ import datetime
 import re
 from itertools import groupby
 from operator import itemgetter
+from django.utils import six
+from django.utils.six.moves import zip
 
 
 def convert_vision_value(key, value):
-    if isinstance(value, unicode):
+    if isinstance(value, six.text_type):
         try:
             encoded_value = value.encode('ascii', 'ignore')
             return int(encoded_value)
         except ValueError:
             pass
 
-    if isinstance(value, basestring):
+    if isinstance(value, six.string_types):
         matched_date = re.match(r'/Date\((\d+)\)/', value, re.I)
         if matched_date:
             return datetime.datetime.fromtimestamp(int(matched_date.group(1)) / 1000.0)
@@ -25,7 +27,7 @@ def convert_vision_value(key, value):
 
 def format_records(records, order_info):
     def _to_dict(record_order, record_items):
-        result = dict(zip(order_info, record_order))
+        result = dict(list(zip(order_info, record_order)))
         result.update({'ITEMS': list(record_items)})
         return result
 

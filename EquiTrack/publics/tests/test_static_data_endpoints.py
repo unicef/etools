@@ -1,11 +1,10 @@
 from __future__ import unicode_literals
 
-import json
-
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.utils import as_json
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
     AirlineCompanyFactory, BusinessAreaFactory, CountryFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory,
@@ -59,7 +58,7 @@ class StaticDataEndpoints(APITenantTestCase):
             response = self.forced_auth_req('get', reverse('public:static'),
                                             user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertKeysIn(['currencies',
                            'travel_types',
                            'countries',
@@ -99,7 +98,7 @@ class StaticDataEndpoints(APITenantTestCase):
         response = self.forced_auth_req('get', reverse('public:static'),
                                         user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(len(response_json['expense_types']), 3)
         got_expense_type_ids = {et['id'] for et in response_json['expense_types']}
         self.assertEqual(got_expense_type_ids, {user_1_et.id,
@@ -115,7 +114,7 @@ class StaticDataEndpoints(APITenantTestCase):
             response = self.forced_auth_req('get', reverse('public:currencies'),
                                             user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
 
         self.assertEqual(len(response_json), 3)
 
@@ -142,7 +141,7 @@ class StaticDataEndpoints(APITenantTestCase):
             response = self.forced_auth_req('get', reverse('public:dsa_regions'),
                                             user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
 
         self.assertEqual(len(response_json), 3)
 
@@ -160,7 +159,7 @@ class StaticDataEndpoints(APITenantTestCase):
             response = self.forced_auth_req('get', reverse('public:business_areas'),
                                             user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
 
         self.assertEqual(len(response_json), 3)
 
@@ -176,7 +175,7 @@ class StaticDataEndpoints(APITenantTestCase):
             response = self.forced_auth_req('get', reverse('public:expense_types'),
                                             user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
 
         self.assertEqual(len(response_json), 3)
 
@@ -191,7 +190,7 @@ class StaticDataEndpoints(APITenantTestCase):
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('public:airlines'),
                                             user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
 
         self.assertEqual(len(response_json), 3)
 

@@ -13,6 +13,7 @@ from django.db import connection
 from django.db.models.query_utils import Q
 from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDict
+from django.utils.six import BytesIO
 
 from t2f.models import Invoice
 from users.models import Country as Workspace
@@ -105,7 +106,9 @@ class InvoiceExport(object):
 
     def generate_tree(self, root):
         # https://docs.python.org/2/library/xml.etree.elementtree.html
-        return ET.tostring(root, encoding='UTF-8', method='xml')
+        io = BytesIO()
+        ET.ElementTree(root).write(io, encoding='UTF-8', xml_declaration=True)
+        return io.getvalue()
 
     @staticmethod
     def get_posting_key(amount):

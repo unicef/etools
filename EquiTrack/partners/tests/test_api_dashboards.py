@@ -3,13 +3,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import json
-
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from EquiTrack.factories import InterventionFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.utils import as_json
 from partners.models import Intervention
 
 
@@ -28,7 +27,7 @@ class TestInterventionPartnershipDashView(APITenantTestCase):
             user=self.unicef_staff
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.rendered_content)
+        data = as_json(response)
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["intervention_id"], str(self.intervention.pk))
 

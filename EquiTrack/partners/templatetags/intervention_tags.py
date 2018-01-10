@@ -53,9 +53,9 @@ def show_government_funding(value):
             fc_summary.append(row)
 
     if fc_summary:
-        data.headers = fc_summary[0].keys()
+        data.headers = list(fc_summary[0].keys())
         for row in fc_summary:
-            data.append(row.values())
+            data.append(list(row.values()))
 
         return data.html
 
@@ -87,9 +87,9 @@ def show_dct(value):
     dct_summary.append(row)
 
     if dct_summary:
-        data.headers = dct_summary[0].keys()
+        data.headers = list(dct_summary[0].keys())
         for row in dct_summary:
-            data.append(row.values())
+            data.append(list(row.values()))
 
         return data.html
 

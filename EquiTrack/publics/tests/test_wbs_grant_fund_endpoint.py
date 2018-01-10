@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-import json
-
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.utils import as_json
 from publics.tests.factories import BusinessAreaFactory, WBSFactory
 from publics.views import WBSGrantFundView
 
@@ -39,7 +38,7 @@ class WBSGrantFundEndpoint(APITenantTestCase):
         with self.assertNumQueries(4):
             response = self.forced_auth_req('get', reverse('public:wbs_grants_funds'),
                                             user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
 
         self.assertEqual(len(response_json['wbs']), 5)
         self.assertKeysIn(['wbs', 'grants', 'funds'], response_json)
@@ -56,7 +55,7 @@ class WBSGrantFundEndpoint(APITenantTestCase):
             response = self.forced_auth_req('get', reverse('public:wbs_grants_funds'),
                                             data={'business_area': business_area_2.id},
                                             user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(len(response_json['wbs']), 2)
 
     def test_caching(self):

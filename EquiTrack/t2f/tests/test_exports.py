@@ -2,11 +2,11 @@ from __future__ import unicode_literals
 
 import csv
 import logging
-from cStringIO import StringIO
 from datetime import datetime
 from decimal import Decimal
 
 from django.core.urlresolvers import reverse
+from django.utils.six import StringIO
 from pytz import UTC
 
 from EquiTrack.factories import (
@@ -143,7 +143,7 @@ class TravelExports(APITenantTestCase):
         with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activity_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 5)
@@ -250,7 +250,7 @@ class TravelExports(APITenantTestCase):
         with self.assertNumQueries(27):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 3)
@@ -377,7 +377,7 @@ class TravelExports(APITenantTestCase):
         with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 6)
@@ -550,7 +550,7 @@ class TravelExports(APITenantTestCase):
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
                                             user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
 
         self.assertEqual(len(rows), 5)

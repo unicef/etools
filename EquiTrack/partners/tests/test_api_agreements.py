@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 from unittest import TestCase
-import json
 import datetime
 from django.core.urlresolvers import reverse
 from rest_framework import status
@@ -12,6 +11,7 @@ from EquiTrack.factories import (
     InterventionFactory,
     CountryProgrammeFactory, GroupFactory)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.utils import as_json
 from partners.models import (
     PartnerType,
     Agreement,
@@ -63,7 +63,7 @@ class TestAgreementsAPI(APITenantTestCase):
             user=user or self.partnership_manager_user,
             data=data
         )
-        return response.status_code, json.loads(response.rendered_content)
+        return response.status_code, as_json(response)
 
     def run_request(self, agreement_id, data=None, method='get', user=None):
         response = self.forced_auth_req(
@@ -72,7 +72,7 @@ class TestAgreementsAPI(APITenantTestCase):
             user=user or self.partnership_manager_user,
             data=data or {}
         )
-        return response.status_code, json.loads(response.rendered_content)
+        return response.status_code, as_json(response)
 
     def test_add_new_PCA(self):
         self.assertFalse(Activity.objects.exists())

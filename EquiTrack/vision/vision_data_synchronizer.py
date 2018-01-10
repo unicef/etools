@@ -3,6 +3,8 @@ from abc import ABCMeta, abstractmethod
 
 from django.conf import settings
 from django.db import connection
+from django.utils.six.moves import filter
+from django.utils import six
 
 import requests
 from celery.utils.log import get_task_logger
@@ -26,7 +28,7 @@ class VisionDataLoader(object):
             self.URL = settings.VISION_URL
 
         if endpoint is None:
-            raise VisionException(message='You must set the ENDPOINT name')
+            raise VisionException('You must set the ENDPOINT name')
 
         separator = '' if self.URL.endswith('/') else '/'
 
@@ -44,7 +46,7 @@ class VisionDataLoader(object):
 
         if response.status_code != 200:
             raise VisionException(
-                message=('Load data failed! Http code: {}'.format(response.status_code))
+                'Load data failed! Http code: {}'.format(response.status_code)
             )
         json_response = response.json()
         if json_response == VISION_NO_DATA_MESSAGE:
@@ -53,9 +55,7 @@ class VisionDataLoader(object):
         return json_response
 
 
-class VisionDataSynchronizer(object):
-
-    __metaclass__ = ABCMeta
+class VisionDataSynchronizer(six.with_metaclass(ABCMeta, object)):
 
     ENDPOINT = None
     REQUIRED_KEYS = {}
@@ -65,9 +65,9 @@ class VisionDataSynchronizer(object):
 
     def __init__(self, country=None):
         if not country:
-            raise VisionException(message='Country is required')
+            raise VisionException('Country is required')
         if self.ENDPOINT is None:
-            raise VisionException(message='You must set the ENDPOINT name')
+            raise VisionException('You must set the ENDPOINT name')
 
         logger.info('Synchronizer is {}'.format(self.__class__.__name__))
 
@@ -91,7 +91,7 @@ class VisionDataSynchronizer(object):
                     return False
             return True
 
-        return filter(is_valid_record, records)
+        return list(filter(is_valid_record, records))
 
     def sync(self):
         """
@@ -129,9 +129,10 @@ class VisionDataSynchronizer(object):
             else:
                 log.total_processed = totals
         except Exception as e:
-            logger.info('sync caught {} with message "{}"'.format(type(e).__name__, e.message))
-            log.exception_message = e.message
-            raise VisionException(message=e.message), None, sys.exc_info()[2]
+            logger.exception('sync caught {} with message "{}"'.format(type(e).__name__, e.args[0]))
+            log.exception_message = e.args[0]
+            six.reraise(
+                VisionException, VisionException(e.args[0]), sys.exc_info()[2])
         else:
             log.successful = True
         finally:

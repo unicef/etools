@@ -69,7 +69,7 @@ class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIVi
         """
         if self.request.method == "GET":
             query_params = self.request.query_params
-            if "format" in query_params.keys():
+            if "format" in list(query_params.keys()):
                 if query_params.get("format") == 'csv':
                     return AgreementExportSerializer
                 if query_params.get("format") == 'csv_flat':
@@ -86,17 +86,17 @@ class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIVi
         if query_params:
             queries = []
 
-            if "agreement_type" in query_params.keys():
+            if "agreement_type" in list(query_params.keys()):
                 queries.append(Q(agreement_type=query_params.get("agreement_type")))
-            if "status" in query_params.keys():
+            if "status" in list(query_params.keys()):
                 queries.append(Q(status=query_params.get("status")))
-            if "partner_name" in query_params.keys():
+            if "partner_name" in list(query_params.keys()):
                 queries.append(Q(partner__name=query_params.get("partner_name")))
-            if "start" in query_params.keys():
+            if "start" in list(query_params.keys()):
                 queries.append(Q(start__gt=query_params.get("start")))
-            if "end" in query_params.keys():
+            if "end" in list(query_params.keys()):
                 queries.append(Q(end__lte=query_params.get("end")))
-            if "search" in query_params.keys():
+            if "search" in list(query_params.keys()):
                 queries.append(
                     Q(partner__name__icontains=query_params.get("search")) |
                     Q(agreement_number__icontains=query_params.get("search"))
@@ -116,7 +116,7 @@ class AgreementListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIVi
         """
         query_params = self.request.query_params
         response = super(AgreementListAPIView, self).list(request)
-        if "format" in query_params.keys():
+        if "format" in list(query_params.keys()):
             if query_params.get("format") in ['csv', 'csv_flat']:
                 response['Content-Disposition'] = "attachment;filename=agreements.csv"
 
@@ -202,7 +202,7 @@ class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
         Use restricted field set for listing
         """
         query_params = self.request.query_params
-        if "format" in query_params.keys():
+        if "format" in list(query_params.keys()):
             if query_params.get("format") == 'csv':
                 return AgreementAmendmentExportSerializer
             if query_params.get("format") == 'csv_flat':
@@ -216,9 +216,9 @@ class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
         if query_params:
             queries = []
 
-            if "agreement_number" in query_params.keys():
+            if "agreement_number" in list(query_params.keys()):
                 queries.append(Q(agreement__agreement_number=query_params.get("agreement_number")))
-            if "search" in query_params.keys():
+            if "search" in list(query_params.keys()):
                 queries.append(
                     Q(number__icontains=query_params.get("search")) |
                     Q(agreement__agreement_number__icontains=query_params.get("search"))
@@ -238,7 +238,7 @@ class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
         """
         query_params = self.request.query_params
         response = super(AgreementAmendmentListAPIView, self).list(request)
-        if "format" in query_params.keys():
+        if "format" in list(query_params.keys()):
             if query_params.get("format") in ['csv', 'csv_flat']:
                 response['Content-Disposition'] = "attachment;filename=agreement_amendments.csv"
 

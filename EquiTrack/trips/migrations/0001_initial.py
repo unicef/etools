@@ -87,10 +87,10 @@ class Migration(migrations.Migration):
             name='Trip',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('planned', 'Planned'), ('submitted', 'Submitted'), ('approved', 'Approved'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='planned', max_length=32L)),
+                ('status', models.CharField(choices=[('planned', 'Planned'), ('submitted', 'Submitted'), ('approved', 'Approved'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='planned', max_length=32)),
                 ('cancelled_reason', models.CharField(blank=True, help_text=b'Please provide a reason if the mission is cancelled', max_length=254, null=True)),
                 ('purpose_of_travel', models.CharField(max_length=254)),
-                ('travel_type', models.CharField(choices=[('programme_monitoring', 'PROGRAMMATIC VISIT'), ('spot_check', 'SPOT CHECK'), ('advocacy', 'ADVOCACY'), ('technical_support', 'TECHNICAL SUPPORT'), ('meeting', 'MEETING'), ('staff_development', 'STAFF DEVELOPMENT'), ('staff_entitlement', 'STAFF ENTITLEMENT')], default='programme_monitoring', max_length=32L)),
+                ('travel_type', models.CharField(choices=[('programme_monitoring', 'PROGRAMMATIC VISIT'), ('spot_check', 'SPOT CHECK'), ('advocacy', 'ADVOCACY'), ('technical_support', 'TECHNICAL SUPPORT'), ('meeting', 'MEETING'), ('staff_development', 'STAFF DEVELOPMENT'), ('staff_entitlement', 'STAFF ENTITLEMENT')], default='programme_monitoring', max_length=32)),
                 ('security_clearance_required', models.BooleanField(default=False, help_text=b'Do you need security clarance for this trip?')),
                 ('international_travel', models.BooleanField(default=False, help_text=b'International travel will require approval from the representative')),
                 ('from_date', models.DateField()),

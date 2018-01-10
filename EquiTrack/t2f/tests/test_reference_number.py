@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-import json
-
 from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.utils import as_json
 
 
 class TestReferenceNumber(APITenantTestCase):
@@ -17,7 +16,7 @@ class TestReferenceNumber(APITenantTestCase):
     def _create_travel(self):
         data = {'traveler': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         return response_json
 
     @freeze_time('2016-12-09')

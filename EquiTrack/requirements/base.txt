@@ -14,7 +14,7 @@ django-cors-headers==1.3.1
 django-tenant-schemas==1.9.0
 django-allauth==0.28.0
 django-analytical==2.2.2
-django-celery==3.1.17
+django-celery==3.2.2
 django-fsm==2.4.0
 django-celery-email==1.1.5
 django-import-export==0.5.1
@@ -42,7 +42,12 @@ sqlparse==0.2.2  # for django debug toolbar to not break admin
 azure-storage==0.20.2
 requests==2.11.1
 xlrd==1.0.0
-xhtml2pdf==0.1b3
+
+#xhtml2pdf==0.0.6  <--- Python 2 only
+# This is a work-in-progress:
+git+https://github.com/xhtml2pdf/xhtml2pdf@3659186ab21c29a0e6d90097689514e9591297cb#egg_info=xhtml2pdf
+# TODO: use a released version once Python 3 is supported that way.
+
 html5lib==1.0b8 #must be added after xhtml2pdf
 reportlab==3.3.0
 flower==0.9.1
@@ -51,6 +56,7 @@ pyyaml==3.12
 django-ordered-model==1.3.0
 django-filter==1.0.2
 raven==6.2.1  # used for sentry config and dependencies
+python-memcached==1.59   # Required by djangosaml2
 
 # Testing packages
 coverage==4.2
@@ -61,5 +67,5 @@ flake8==3.3.0
 mock==2.0.0
 
 # Git python packages
-git+https://github.com/robertavram/djangosaml2.git@0.13.3#egg=djangosaml2
-git+https://github.com/robertavram/django-storages.git@1.6.5.1#egg=django-storages
+git+https://github.com/knaperek/djangosaml2.git@v0.16.11#egg=djangosaml2
+git+https://github.com/robertavram/django-storages.git@1.3.1.1#egg=django-storages-redux
