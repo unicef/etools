@@ -19,17 +19,20 @@ from users.tests.factories import UserFactory
 
 
 class TestDASdto(APITenantTestCase):
-    def setUp(self):
-        super(TestDASdto, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
         netherlands = PublicsCountryFactory(
             name='Netherlands',
             long_name='Netherlands'
         )
-        self.amsterdam = PublicsDSARegionFactory(
+        cls.amsterdam = PublicsDSARegionFactory(
             country=netherlands,
             area_name='Amsterdam',
             area_code='ds1'
         )
+
+    def setUp(self):
+        super(TestDASdto, self).setUp()
         self.travel = TravelFactory()
         self.itinerary_item = ItineraryItemFactory(
             travel=self.travel,
@@ -111,9 +114,9 @@ class TestDASdto(APITenantTestCase):
 
 
 class TestDSACalculator(APITenantTestCase):
-    def setUp(self):
-        super(TestDSACalculator, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
 
         netherlands = PublicsCountryFactory(name='Netherlands', long_name='Netherlands')
         hungary = PublicsCountryFactory(name='Hungary', long_name='Hungary')
@@ -121,48 +124,50 @@ class TestDSACalculator(APITenantTestCase):
         germany = PublicsCountryFactory(name='Germany', long_name='Germany')
 
         # For Amsterdam daylight saving occurred on March 26 (2am) in 2017
-        self.amsterdam = PublicsDSARegionFactory(country=netherlands,
-                                                 area_name='Amsterdam',
-                                                 area_code='ds1')
-        self.amsterdam_rate = PublicsDSARateFactory(region=self.amsterdam,
-                                                    dsa_amount_usd=100,
-                                                    dsa_amount_60plus_usd=60)
+        cls.amsterdam = PublicsDSARegionFactory(country=netherlands,
+                                                area_name='Amsterdam',
+                                                area_code='ds1')
+        cls.amsterdam_rate = PublicsDSARateFactory(region=cls.amsterdam,
+                                                   dsa_amount_usd=100,
+                                                   dsa_amount_60plus_usd=60)
 
-        self.budapest = PublicsDSARegionFactory(country=hungary,
-                                                area_name='Budapest',
-                                                area_code='ds2')
-        PublicsDSARateFactory(region=self.budapest,
+        cls.budapest = PublicsDSARegionFactory(country=hungary,
+                                               area_name='Budapest',
+                                               area_code='ds2')
+        PublicsDSARateFactory(region=cls.budapest,
                               dsa_amount_usd=200,
                               dsa_amount_60plus_usd=120)
 
-        self.copenhagen = PublicsDSARegionFactory(country=denmark,
-                                                  area_name='Copenhagen',
-                                                  area_code='ds3')
-        PublicsDSARateFactory(region=self.copenhagen,
+        cls.copenhagen = PublicsDSARegionFactory(country=denmark,
+                                                 area_name='Copenhagen',
+                                                 area_code='ds3')
+        PublicsDSARateFactory(region=cls.copenhagen,
                               dsa_amount_usd=300,
                               dsa_amount_60plus_usd=180)
 
-        self.dusseldorf = PublicsDSARegionFactory(country=germany,
-                                                  area_name='Duesseldorf',
-                                                  area_code='ds4')
-        PublicsDSARateFactory(region=self.dusseldorf,
+        cls.dusseldorf = PublicsDSARegionFactory(country=germany,
+                                                 area_name='Duesseldorf',
+                                                 area_code='ds4')
+        PublicsDSARateFactory(region=cls.dusseldorf,
                               dsa_amount_usd=400,
                               dsa_amount_60plus_usd=240)
 
-        self.essen = PublicsDSARegionFactory(country=germany,
-                                             area_name='Essen',
-                                             area_code='ds5')
-        PublicsDSARateFactory(region=self.essen,
+        cls.essen = PublicsDSARegionFactory(country=germany,
+                                            area_name='Essen',
+                                            area_code='ds5')
+        PublicsDSARateFactory(region=cls.essen,
                               dsa_amount_usd=500,
                               dsa_amount_60plus_usd=300)
 
-        self.frankfurt = PublicsDSARegionFactory(country=germany,
-                                                 area_name='Frankfurt',
-                                                 area_code='ds6')
-        PublicsDSARateFactory(region=self.frankfurt,
+        cls.frankfurt = PublicsDSARegionFactory(country=germany,
+                                                area_name='Frankfurt',
+                                                area_code='ds6')
+        PublicsDSARateFactory(region=cls.frankfurt,
                               dsa_amount_usd=600,
                               dsa_amount_60plus_usd=360)
 
+    def setUp(self):
+        super(TestDSACalculator, self).setUp()
         currency = PublicsCurrencyFactory(code="USD")
         self.travel = TravelFactory(currency=currency)
 
