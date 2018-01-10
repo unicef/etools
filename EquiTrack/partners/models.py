@@ -23,7 +23,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
-from EquiTrack.utils import import_permissions, get_current_quarter, get_current_year
+from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
 from funds.models import Grant
@@ -595,10 +595,10 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     @classmethod
     def programmatic_visits(cls, partner, update_one=False):
-        '''
+        """
         :return: all completed programmatic visits
-        '''
-        quarter_name = get_current_quarter()
+        """
+        quarter_name = get_quarter()
         pv = partner.hact_values['programmatic_visits']['completed']['total']
         pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
 
@@ -635,7 +635,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         :return: all completed spot checks
         """
         from audit.models import Engagement, SpotCheck
-        quarter_name = get_current_quarter()
+        quarter_name = get_quarter()
         sc = partner.hact_values['spot_checks']['completed']['total']
         scq = partner.hact_values['spot_checks']['completed'][quarter_name]
 
@@ -657,8 +657,10 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             trq3 = trip.filter(travels__completed_at__month__in=[7, 8, 9]).count()
             trq4 = trip.filter(travels__completed_at__month__in=[10, 11, 12]).count()
 
-            audit_spot_check = SpotCheck.objects.filter(partner=partner, status=Engagement.FINAL,
-                                                        date_of_draft_report_to_unicef__year=datetime.datetime.now().year)
+            audit_spot_check = SpotCheck.objects.filter(
+                partner=partner, status=Engagement.FINAL,
+                date_of_draft_report_to_unicef__year=datetime.datetime.now().year
+            )
 
             asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[1, 2, 3]).count()
             asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[4, 5, 6]).count()
@@ -666,9 +668,9 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
 
             partner.hact_values['spot_checks']['completed']['q1'] = trq1 + asc1
-            partner.hact_values['programmatic_visits']['completed']['q2'] = trq2 + asc2
-            partner.hact_values['programmatic_visits']['completed']['q3'] = trq3 + asc3
-            partner.hact_values['programmatic_visits']['completed']['q4'] = trq4 + asc4
+            partner.hact_values['spot_checks']['completed']['q2'] = trq2 + asc2
+            partner.hact_values['spot_checks']['completed']['q3'] = trq3 + asc3
+            partner.hact_values['spot_checks']['completed']['q4'] = trq4 + asc4
 
             sc = trip.count() + audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
 
@@ -679,7 +681,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     def audits_completed(cls, partner, update_one=False):
         """
         :param partner: Partner Organization
-        :param update_one: if True will increase by one the value, if False would recalculte the value
+        :param update_one: if True will increase by one the value, if False would recalculate the value
         :return: all completed audit (including special audit)
         """
         from audit.models import Audit, Engagement, SpecialAudit
@@ -687,11 +689,15 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         if update_one:
             completed_audit += 1
         else:
-            completed_audit = Audit.objects.filter(partner=partner, status=Engagement.FINAL,
-                                                   date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count() + \
-                              SpecialAudit.objects.filter(partner=partner, status=Engagement.FINAL,
-                                                          date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
-
+            audits = Audit.objects.filter(
+                partner=partner,
+                status=Engagement.FINAL,
+                date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
+            s_audits = SpecialAudit.objects.filter(
+                partner=partner,
+                status=Engagement.FINAL,
+                date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
+            completed_audit = audits + s_audits
         partner.hact_values['audits']['completed'] = completed_audit
         partner.save()
 
