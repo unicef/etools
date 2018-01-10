@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 
 import factory
@@ -22,7 +22,7 @@ class UserProfileFactory(factory.DjangoModelFactory):
 @factory.django.mute_signals(post_save)
 class UserFactory(factory.DjangoModelFactory):
     class Meta:
-        model = User
+        model = get_user_model()
 
     username = factory.LazyFunction(generate_username)
     first_name = factory.Faker('first_name')

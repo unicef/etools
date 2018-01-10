@@ -103,6 +103,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
+    'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
     'security.auth.middleware.TokenAuthenticationMiddleware',
 )
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
@@ -161,7 +162,6 @@ SHARED_APPS = (
     'djcelery',
     'djcelery_email',
     'leaflet',
-    'paintstore',
     'corsheaders',
     'djangosaml2',
     'allauth',
@@ -187,6 +187,7 @@ SHARED_APPS = (
     'utils.mail',
     'utils.writable_serializers',
     'utils.permissions',
+    'waffle',
     'security',
 )
 TENANT_APPS = (
@@ -196,6 +197,7 @@ TENANT_APPS = (
     'locations',
     'reports',
     'partners',
+    'hact',
     'trips',
     'supplies',
     't2f',
@@ -352,6 +354,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework_csv.renderers.CSVRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
+        'rest_framework.renderers.MultiPartRenderer',
     )
 }
 
@@ -553,7 +556,7 @@ ISSUE_CHECKS = [
 ]
 
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
-    'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@un.org'
+    'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
 
 SECURITY_TOKEN_NAME = os.getenv('SECURITY_TOKEN_NAME', 'url_auth_token')

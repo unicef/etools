@@ -3,7 +3,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -52,11 +52,16 @@ class Engagement(TimeStampedModel, models.Model):
         ('sa', _('Special Audit')),
     )
 
+    PARTNER_CONTACTED = 'partner_contacted'
+    REPORT_SUBMITTED = 'report_submitted'
+    FINAL = 'final'
+    CANCELLED = 'cancelled'
+
     STATUSES = Choices(
-        ('partner_contacted', _('IP Contacted')),
-        ('report_submitted', _('Report Submitted')),
-        ('final', _('Final Report')),
-        ('cancelled', _('Cancelled')),
+        (PARTNER_CONTACTED, _('IP Contacted')),
+        (REPORT_SUBMITTED, _('Report Submitted')),
+        (FINAL, _('Final Report')),
+        (CANCELLED, _('Cancelled')),
     )
 
     DISPLAY_STATUSES = Choices(
@@ -134,7 +139,7 @@ class Engagement(TimeStampedModel, models.Model):
         verbose_name=_('Justification Provided and Accepted'), null=True, blank=True, decimal_places=2, max_digits=20
     )
     write_off_required = models.DecimalField(
-        verbose_name=_('Write Off Required '), null=True, blank=True, decimal_places=2, max_digits=20
+        verbose_name=_('Impairment'), null=True, blank=True, decimal_places=2, max_digits=20
     )
     explanation_for_additional_information = models.TextField(
         verbose_name=_('Provide explanation for additional information received from the IP or add attachments'),
@@ -229,7 +234,7 @@ class Engagement(TimeStampedModel, models.Model):
         )
 
     def _notify_focal_points(self, template_name, context=None, **kwargs):
-        for focal_point in User.objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
+        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
             ctx = {
                 'focal_point': focal_point,
             }
@@ -632,9 +637,16 @@ class EngagementActionPoint(models.Model):
     engagement = models.ForeignKey(Engagement, related_name='action_points', verbose_name=_('Engagement'))
     description = models.CharField(verbose_name=_('Description'), max_length=100, choices=DESCRIPTION_CHOICES)
     due_date = models.DateField(verbose_name=_('Due Date'))
-    author = models.ForeignKey(User, related_name='created_engagement_action_points', verbose_name=_('Author'))
-    person_responsible = models.ForeignKey(User, related_name='engagement_action_points',
-                                           verbose_name=_('Person Responsible'))
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='created_engagement_action_points',
+        verbose_name=_('Author')
+    )
+    person_responsible = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='engagement_action_points',
+        verbose_name=_('Person Responsible')
+    )
     comments = models.TextField(verbose_name=_('Comments'))
 
     def __str__(self):

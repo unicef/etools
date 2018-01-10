@@ -29,7 +29,7 @@ from partners.serializers.agreements_v2 import (
 )
 
 from partners.filters import PartnerScopeFilter
-from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
+from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
 
 from partners.exports_v2 import AgreementCvsRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -43,7 +43,7 @@ class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
     """
     serializer_class = AgreementListSerializer
     filter_backends = (PartnerScopeFilter,)
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     renderer_classes = (r.JSONRenderer, AgreementCvsRenderer)
 
     SERIALIZER_MAP = {
@@ -136,7 +136,7 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     queryset = Agreement.objects.all()
     serializer_class = AgreementDetailSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
 
     SERIALIZER_MAP = {
         'amendments': AgreementAmendmentCreateUpdateSerializer
@@ -173,7 +173,7 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
 
 class AgreementAmendmentDeleteView(DestroyAPIView):
-    permission_classes = (PartneshipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
         try:

@@ -15,10 +15,11 @@
 {% if app_list %}
     {% for app in app_list %}
         {% tenant_model_filter app.app_label as tenant_app %}
+        {% tenant_app_filter app.app_label as tenant_app_filter %}
         <div class="app-{{ app.app_label }} module">
         <table id="change-history">
         {% if tenant_app %}
-            <caption>
+            <caption {% if tenant_app_filter %}style="background-color:#f7d904"{% endif %} >
                 <a href="{{ app.app_url }}" class="section" title="{% blocktrans with name=app.name %}Models in the {{ name }} application{% endblocktrans %}">{{ app.name }}</a>
             </caption>
             {% for model in app.models %}
@@ -43,13 +44,12 @@
                 </tr>
             {% endfor %}
         {% else %}
-            <caption>
+            <caption {% if tenant_app_filter %}style="background-color:#dcc103"{% endif %}>
             <span class="section" title="{% blocktrans with name=app.name %}Models in the {{ name }} application{% endblocktrans %}">{{ app.name }}</span>
             <tr>
                 <td scope="row">{% trans "Not available for Global schema" %}</td>
             </tr>
             </caption>
-
         {% endif %}
         </table>
         </div>

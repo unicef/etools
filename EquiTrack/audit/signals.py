@@ -22,7 +22,7 @@ def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwa
     if action == 'post_add':
         new_members = AuditorStaffMember.objects.filter(id__in=pk_set).select_related('user', 'user__profile')
         for member in new_members:
-            member.send_user_appointed_email(instance)
+            member.send_user_appointed_email(Engagement.objects.get_subclass(id=instance.id))
 
         country = Country.objects.get(schema_name=connection.schema_name)
         for member in new_members:
