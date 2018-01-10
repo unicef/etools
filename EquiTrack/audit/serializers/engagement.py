@@ -398,7 +398,8 @@ class SpecialAuditRecommendationSerializer(WritableNestedSerializerMixin, serial
 
 
 class SpecialAuditSerializer(EngagementSerializer):
-    other_recommendations = SpecialAuditRecommendationSerializer(many=True)
+    other_recommendations = SpecialAuditRecommendationSerializer(label='Other Observations and Recommendations',
+                                                                 many=True)
 
     class Meta(EngagementSerializer.Meta):
         model = SpecialAudit

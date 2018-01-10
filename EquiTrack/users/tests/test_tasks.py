@@ -21,7 +21,7 @@ from users.tests.factories import (
     SectionFactory,
     UserFactory,
 )
-from vision.vision_data_synchronizer import VisionException
+from vision.vision_data_synchronizer import VisionException, VISION_NO_DATA_MESSAGE
 
 
 class TestUserMapper(FastTenantTestCase):
@@ -493,7 +493,7 @@ class TestUserSynchronizer(FastTenantTestCase):
 
     def test_get_json_no_data(self):
         self.assertEqual(
-            self.synchronizer._get_json("No Data Available"),
+            self.synchronizer._get_json(VISION_NO_DATA_MESSAGE),
             "{}"
         )
 

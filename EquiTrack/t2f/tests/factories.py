@@ -17,10 +17,6 @@ from publics.tests.factories import (
 )
 from reports.tests.factories import ResultFactory, SectorFactory
 from t2f import models
-from t2f.models import (
-    make_action_point_number,
-    make_travel_reference_number,
-)
 from users.tests.factories import OfficeFactory, UserFactory
 
 _FUZZY_START_DATE = timezone.datetime(timezone.now().year, 1, 1, tzinfo=timezone.now().tzinfo)
@@ -119,7 +115,7 @@ class ClearanceFactory(factory.DjangoModelFactory):
 
 
 class ActionPointFactory(factory.DjangoModelFactory):
-    action_point_number = factory.Sequence(lambda n: make_action_point_number())
+    action_point_number = factory.Sequence(lambda n: models.make_action_point_number())
     description = fuzzy.FuzzyText(length=128)
     due_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=timezone.now())
     person_responsible = factory.SubFactory(UserFactory)
@@ -141,7 +137,7 @@ class TravelFactory(factory.DjangoModelFactory):
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
     international_travel = False
     ta_required = True
-    reference_number = factory.Sequence(lambda n: make_travel_reference_number())
+    reference_number = factory.Sequence(lambda n: models.make_travel_reference_number())
     currency = factory.SubFactory(PublicsCurrencyFactory)
     mode_of_travel = []
 
@@ -190,3 +186,13 @@ class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
         return factory.fuzzy._random.choice(
             [t[0] for t in models.Travel.CHOICES]
         )
+
+
+class TravelAttachmentFactory(factory.DjangoModelFactory):
+    travel = factory.SubFactory(TravelFactory)
+    type = fuzzy.FuzzyText(length=64)
+    name = fuzzy.FuzzyText(length=50)
+    file = factory.django.FileField(filename='test_file.pdf')
+
+    class Meta:
+        model = models.TravelAttachment

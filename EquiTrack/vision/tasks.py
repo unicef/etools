@@ -183,25 +183,6 @@ def sync(country_name=None, synchronizers=None):
 
 
 @app.task
-def update_partners(country_name=None):
-    logger.info(u'Starting update HACT values for partners')
-    countries = Country.objects.filter(vision_sync_enabled=True)
-    if country_name is not None:
-        countries = countries.filter(name=country_name)
-    for country in countries:
-        connection.set_tenant(country)
-        logger.info(u'Updating '.format(country.name))
-        partners = PartnerOrganization.objects.all()
-        for partner in partners:
-            try:
-                PartnerOrganization.micro_assessment_needed(partner)
-                if partner.total_ct_cp > 500000:
-                    PartnerOrganization.audit_needed(partner)
-            except Exception:
-                logger.exception(u'Exception {} {}'.format(partner.name, partner.hact_values))
-
-
-@app.task
 def update_all_partners(country_name=None):
     logger.info(u'Starting update HACT values for partners')
     countries = Country.objects.filter(vision_sync_enabled=True)
@@ -213,14 +194,9 @@ def update_all_partners(country_name=None):
         partners = PartnerOrganization.objects.all()
         for partner in partners:
             try:
-                PartnerOrganization.planned_cash_transfers(partner)
-                PartnerOrganization.micro_assessment_needed(partner)
-                PartnerOrganization.audit_needed(partner)
-                PartnerOrganization.audit_done(partner)
                 PartnerOrganization.planned_visits(partner)
                 PartnerOrganization.programmatic_visits(partner)
                 PartnerOrganization.spot_checks(partner)
-                PartnerOrganization.follow_up_flags(partner)
 
             except Exception:
                 logger.exception(u'Exception {} {}'.format(partner.name, partner.hact_values))
