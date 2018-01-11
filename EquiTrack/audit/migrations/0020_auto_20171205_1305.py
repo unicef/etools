@@ -61,8 +61,8 @@ def migrate_purchase_order(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('audit', '0018_auto_20171113_1009'),
-        ('purchase_order', '0001_initial'),
+        ('audit', '0019_auto_20171113_1150'),
+        ('purchase_order', '0002_auto_20180111_0808'),
     ]
 
     operations = [
