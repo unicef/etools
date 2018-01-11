@@ -40,7 +40,7 @@ from reports.views.v1 import (
 )
 from t2f.urls import urlpatterns as t2f_patterns
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
-from security.urls import urlpatterns as security_patterns
+from token_auth.urls import urlpatterns as security_patterns
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')

@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login
 
 class TokenAuthenticationMiddleware(object):
     def process_request(self, request):
-        token = request.GET.get(settings.SECURITY_TOKEN_NAME)
+        token = request.GET.get(settings.TOKEN_AUTH_NAME)
         if token is None:
             return
 

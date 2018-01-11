@@ -5,8 +5,8 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.views.generic import FormView
 from post_office import mail
 
-from security.forms import LoginForm
-from security.utils import update_url_with_token
+from token_auth.forms import LoginForm
+from token_auth.utils import update_url_with_token
 from utils.common.urlresolvers import site_url
 
 
