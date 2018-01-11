@@ -21,7 +21,7 @@ def get_all_field_names(TheModel):
         for field in TheModel._meta.get_fields()
         if not (field.many_to_one and field.related_model is None) and
         not isinstance(field, GenericForeignKey)
-    )))
+    )) | set(TheModel.ExtraRequiredFields.fields if getattr(TheModel, 'ExtraRequiredFields') else []))
 
 
 def pop_keys(d, keys):
