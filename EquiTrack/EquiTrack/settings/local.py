@@ -18,7 +18,7 @@ POST_OFFICE = {
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
-    'token_auth.auth.backends.SecurityTokenAuthBackend',
+    'email_auth.auth.backends.SecurityTokenAuthBackend',
 )
 
 # No Redis for local dev

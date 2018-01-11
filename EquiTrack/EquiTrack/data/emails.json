@@ -72,7 +72,7 @@
     {
         "model": "post_office.emailtemplate",
         "fields": {
-            "name": "token_auth/token/login",
+            "name": "email_auth/token/login",
             "description": "The email that is sent to user to login without password.",
             "created": "2017-12-06T14:28:40.404Z",
             "last_updated": "2017-12-06T14:28:40.404Z",
