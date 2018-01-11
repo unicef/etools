@@ -9,15 +9,15 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
-from model_utils import Choices
+from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from post_office import mail
 
 from activities.models import Activity
 from attachments.models import Attachment
 from EquiTrack.utils import get_environment
-from firms.models import BaseFirm, BaseStaffMember
 from publics.models import SoftDeleteMixin
+from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer
 from tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck, TPMVisitReportValidations, ValidateTPMVisitActivities,)
@@ -27,20 +27,6 @@ from utils.groups.wrappers import GroupWrapper
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from utils.permissions.utils import has_action_permission
-
-
-class TPMPartner(BaseFirm):
-    attachments = GenericRelation(Attachment, verbose_name=_('attachments'), blank=True)
-
-
-@python_2_unicode_compatible
-class TPMPartnerStaffMember(BaseStaffMember):
-    tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), related_name='staff_members')
-
-    receive_tpm_notifications = models.BooleanField(verbose_name=_('Receive Notifications on TPM Tasks'), default=False)
-
-    def __str__(self):
-        return self.get_full_name()
 
 
 def _has_action_permission(action):
@@ -100,6 +86,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     tpm_partner_focal_points = models.ManyToManyField(
         TPMPartnerStaffMember, verbose_name=_('TPM Focal Points'), related_name='tpm_visits', blank=True
     )
+
+    tpm_partner_tracker = FieldTracker(fields=['tpm_partner', ])
 
     @property
     def date_created(self):
@@ -478,7 +466,7 @@ class TPMPermission(StatusBasePermission):
                 return user_type
 
             try:
-                member = user.tpm_tpmpartnerstaffmember
+                member = user.tpmpartners_tpmpartnerstaffmember
             except TPMPartnerStaffMember.DoesNotExist:
                 return None
             else:

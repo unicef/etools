@@ -5,7 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from firms.serializers import BaseStaffMemberSerializer
-from tpm.models import TPMPartner, TPMPartnerStaffMember
+from tpm.models import TPMPartnerStaffMember
+from tpm.tpmpartners.models import TPMPartner
 from tpm.serializers.attachments import TPMPartnerAttachmentsSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 

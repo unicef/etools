@@ -8,7 +8,7 @@ from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app, send_to_slack
 from partners.models import PartnerOrganization
-from tpm.models import TPMPartner
+from tpm.tpmpartners.models import TPMPartner
 from users.models import Country
 from vision.adapters.funding import FundCommitmentSynchronizer, FundReservationsSynchronizer
 from vision.adapters.partner import PartnerSynchronizer

@@ -17,8 +17,8 @@ from EquiTrack.factories import (
 from firms.factories import BaseFirmFactory, BaseStaffMemberFactory, UserFactory as SimpleUserFactory
 from partners.models import InterventionResultLink, InterventionSectorLocationLink
 from reports.models import Sector
-from tpm.models import TPMActivity, TPMPartner, TPMPartnerStaffMember, TPMVisit, TPMVisitReportRejectComment
-
+from tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
+from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
 _FUZZY_END_DATE = timezone.now().date() + datetime.timedelta(days=5)

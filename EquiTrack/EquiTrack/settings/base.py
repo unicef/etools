@@ -183,6 +183,7 @@ SHARED_APPS = (
     'django_filters',
     'environment',
     'audit.purchase_order',
+    'tpm.tpmpartners',
     'utils.common',
     'utils.mail',
     'utils.writable_serializers',
