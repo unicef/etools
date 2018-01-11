@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from audit.models import AuditorFirm, AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
+from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from audit.serializers.mixins import AuditPermissionsBasedSerializerMixin
 from firms.serializers import BaseStaffMemberSerializer, UserSerializer as BaseUserSerializer
 from utils.common.serializers.fields import SeparatedReadWriteField

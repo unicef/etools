@@ -1,0 +1,147 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+{% load static %}
+
+{% block head_title %}{% trans "Sign In with Email" %}{% endblock %}
+
+{% block extra_head %}
+
+  <style>
+    #mainPanel {
+      background-color: #1ea4ff;
+    }
+
+    .card-heading {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .card-heading :last-child {
+      margin-bottom: 0;
+    }
+
+    .form-error {
+      color: #F03300
+    }
+
+    paper-card {
+      max-width: 600px;
+      min-width: 410px;
+      width: 90%;
+      margin: 2% auto;
+      display: block;
+      position: relative;
+    }
+
+    paper-card .card-content {
+      background-color: #0098ff;
+      color: white;
+      text-align: center;
+    }
+
+    paper-card .status-success {
+      color: #8EDB69;
+    }
+  </style>
+  <style is="custom-style">
+    paper-input {
+      text-align: left;
+      --paper-input-container-color: white;
+      --paper-input-container-focus-color: white;
+      --paper-input-container-input-color: #3c3c3c;
+      --paper-input-container-invalid-color: #b7362b;
+      --paper-input-container-underline: {
+        background: #54bfff;
+      };
+      --paper-input-container-underline-focus: {
+        background: white;
+      };
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    paper-input, paper-button.submit {
+      width: 90%;
+      max-width: 200px;
+    }
+
+    paper-button.submit {
+      --paper-button: {
+        background: white;
+        color: #212123;
+      };
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <paper-card>
+    <div class="card-heading">
+      <img class="card-heading-image" src="{% static "images/unicefetools_black_text.svg" %}" width="200">
+      <p>eTools portal</p>
+    </div>
+    <div class="card-content">
+      <h3>Sign in with Email</h3>
+      <form id="form" method="POST">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+          {% if error %}
+            <span class="form-error">
+                    <iron-icon icon="error"></iron-icon>
+                    <span>{{ error }}</span>
+                    </span>
+          {% endif %}
+        {% endfor %}
+        {{ form.NON_FIELD_ERRORS }}
+        {% for field in form %}
+          {% if field.field.widget.input_type %}
+            <paper-input name="{{ field.name }}"
+                         error-message="{% for error in field.errors %}{{ error }}{% endfor %}"
+                {% for error in field.errors %}
+                  {% if error %}
+                         invalid="true"
+                  {% endif %}
+                {% endfor %}
+                         label="{{ field.label }}"
+                         type="{{ field.field.widget.input_type }}"
+                         autovalidate="true" required>
+            </paper-input>
+          {% else %}
+            <br>
+            <paper-checkbox name="{{ field.name }}">{{ field.label }}</paper-checkbox>
+          {% endif %}
+          {% if field.help_text %}
+            <p class="help">{{ field.help_text|safe }}</p>
+          {% endif %}
+        {% endfor %}
+
+        {% if form.is_valid %}
+          <span class="status-success">
+            <iron-icon icon="check-circle"></iron-icon> <span>email with login info was sent to {{ form.email.value }}.</span>
+          </span>
+        {% endif %}
+        <br>
+
+        <custom-style>
+          <style is="custom-style">
+            paper-card .card-actions {
+              border-top: none;
+            }
+          </style>
+        </custom-style>
+        <div class="card-actions">
+          <paper-button class="submit" onclick="submitForm()" type="submit">{% trans "Submit" %}</paper-button>
+        </div>
+      </form>
+    </div>
+  </paper-card>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    function submitForm() {
+      document.getElementById('form').submit();
+    }
+  </script>
+{% endblock %}

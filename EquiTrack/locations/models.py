@@ -9,7 +9,6 @@ from django.dispatch.dispatcher import receiver
 from django.utils.encoding import python_2_unicode_compatible
 
 from mptt.models import MPTTModel, TreeForeignKey
-from paintstore.fields import ColorPickerField
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +116,7 @@ class CartoDBTable(MPTTModel):
     pcode_col = models.CharField(max_length=254, default='pcode')
     parent_code_col = models.CharField(max_length=254, null=True, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
-    color = ColorPickerField(null=True, blank=True, default=get_random_color)
+    color = models.CharField(null=True, blank=True, default=get_random_color, max_length=7)
 
     def __str__(self):
         return self.table_name

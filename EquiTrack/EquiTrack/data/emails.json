@@ -69,6 +69,20 @@
             "default_template": null
         }
     },
+    {
+        "model": "post_office.emailtemplate",
+        "fields": {
+            "name": "security/token/login",
+            "description": "The email that is sent to user to login without password.",
+            "created": "2017-12-06T14:28:40.404Z",
+            "last_updated": "2017-12-06T14:28:40.404Z",
+            "subject": "eTools Access Token",
+            "content": "Dear {{ recipient.get_full_name }},\r\n\r\nPlease click on this link to sign in to eTools portal: \r\n\r\n{{ login_link }}\r\n\r\nThank you.",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block title %}eTools Access Token{% endblock %}\r\n\r\n{% block content %}\r\n<p>Dear {{ recipient.get_full_name }},</p>\r\n\r\n<p>Please click on <a href=\"{{ login_link }}\">this link</a> to sign in to eTools portal.</p>\r\n\r\n<p>Thank you.</p>\r\n{% endblock %}",
+            "language": "",
+            "default_template": null
+        }
+    },
   {
     "model": "post_office.emailtemplate",
     "fields": {

@@ -36,14 +36,14 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
 )
-from partners.permissions import PartneshipManagerPermission
+from partners.permissions import PartnershipManagerPermission
 from partners.filters import PartnerScopeFilter
 
 
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self, format=None):
@@ -84,7 +84,7 @@ class PmpStaticDropdownsListApiView(APIView):
                     flat=True).order_by('cso_type').distinct('cso_type')))
         partner_types = choices_to_json_ready(PartnerType.CHOICES)
         agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
-        assessment_types = choices_to_json_ready(Assessment.ASSESMENT_TYPES)
+        assessment_types = choices_to_json_ready(Assessment.ASSESSMENT_TYPES)
         agreement_types = choices_to_json_ready(
             [typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)

@@ -153,7 +153,8 @@ class Command(BaseCommand):
             'riskblueprint.*',
             'riskcategory.*',
         ])
-        self.revoke_permissions(self.partner_contacted, self.auditor, 'edit', self.engagement_overview_page)
+        self.revoke_permissions(self.partner_contacted, self.auditor, 'edit',
+                                self.engagement_overview_block + self.partner_block)
         self.revoke_permissions(self.partner_contacted, self.auditor, 'edit', 'engagement.engagement_attachments')
         self.add_permissions(self.partner_contacted, self.auditor, 'action', ['engagement.submit'])
         self.add_permissions(self.partner_contacted, self.auditor, 'view', [

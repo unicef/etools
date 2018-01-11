@@ -9,8 +9,9 @@ from rest_framework import serializers
 
 from attachments.models import Attachment
 from audit.models import (
-    Audit, AuditorFirm, AuditorStaffMember, Engagement, EngagementActionPoint, MicroAssessment, PurchaseOrder,
-    SpotCheck, Finding, SpecificProcedure, SpecialAuditRecommendation)
+    Audit, Engagement, EngagementActionPoint, MicroAssessment, SpotCheck, Finding, SpecificProcedure,
+    SpecialAuditRecommendation)
+from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from audit.serializers.engagement import DetailedFindingInfoSerializer
 from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from partners.models import PartnerOrganization
@@ -80,11 +81,12 @@ class AttachmentPDFSerializer(serializers.ModelSerializer):
     created = serializers.DateTimeField(format='%d %b %Y')
     file_type = serializers.CharField(source='file_type.name')
     url = serializers.SerializerMethodField()
+    filename = serializers.CharField()
 
     class Meta:
         model = Attachment
         fields = [
-            'created', 'file_type', 'url'
+            'created', 'file_type', 'url', 'filename',
         ]
 
     def get_url(self, obj):
@@ -120,7 +122,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
         model = Engagement
         fields = [
             'id', 'agreement', 'partner', 'engagement_type_display', 'engagement_type', 'status_display', 'status',
-            'unique_id', 'authorized_officers', 'active_pd', 'staff_members',
+            'unique_id', 'authorized_officers', 'active_pd', 'staff_members', 'po_item',
             'date_of_field_visit', 'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef', 'partner_contacted_at',
             'action_points', 'engagement_attachments', 'report_attachments',

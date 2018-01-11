@@ -10,6 +10,7 @@ from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
+from future.backports.urllib.parse import urlsplit
 
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
@@ -66,3 +67,7 @@ class Attachment(TimeStampedModel, models.Model):
     @property
     def url(self):
         return six.text_type(self.file.url if self.file else self.hyperlink)
+
+    @property
+    def filename(self):
+        return os.path.basename(self.file.name if self.file else urlsplit(self.hyperlink).path)

@@ -136,11 +136,6 @@ class ManualVisionSynchronizer(MultiModelDataSynchronizer):
                 raise VisionException(message='You must set the ENDPOINT name')
 
             self.country = country
-            self.url = '{}/{}/{}'.format(
-                self.URL,
-                self.ENDPOINT,
-                object_number
-            )
 
-            logger.info("Vision sync url:%s" % self.url)
             connection.set_tenant(country)
+            logger.info('Country is {}'.format(country.name))

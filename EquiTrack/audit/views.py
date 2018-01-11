@@ -17,8 +17,8 @@ from audit.exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
 from audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
 from audit.metadata import AuditBaseMetadata, EngagementMetadata
 from audit.models import (
-    Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, PurchaseOrder,
-    AuditorStaffMember, Auditor, AuditPermission, SpecialAudit, UNICEFUser)
+    Engagement, MicroAssessment, Audit, SpotCheck, Auditor, AuditPermission, SpecialAudit, UNICEFUser)
+from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from audit.permissions import HasCreatePermission, CanCreateStaffMembers
 from audit.serializers.auditor import (
     AuditorFirmExportSerializer, AuditorFirmLightSerializer, AuditorFirmSerializer, AuditorStaffMemberSerializer,
