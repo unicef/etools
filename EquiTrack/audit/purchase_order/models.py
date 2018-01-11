@@ -10,7 +10,8 @@ from firms.models import BaseFirm, BaseStaffMember
 
 
 class AuditorFirm(BaseFirm):
-    pass
+    vision_synced = models.BooleanField(verbose_name=_('Synced from VISION'), default=False)
+    deleted_flag = models.BooleanField(default=False, verbose_name=_('Marked For Deletion in VISION'))
 
 
 @python_2_unicode_compatible
