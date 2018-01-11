@@ -1446,7 +1446,7 @@ class Intervention(TimeStampedModel):
         ordering = ['-created']
 
     class ExtraRequiredFields:
-        fields = ['combined_sections',]
+        fields = ['combined_sections', ]
 
     def __str__(self):
         return '{}'.format(
