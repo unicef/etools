@@ -40,20 +40,10 @@ def migrate_tpm_partner_relation(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tpm', '0008_auto_20171208_1353'),
+        ('tpm', '0006_auto_20171208_1407'),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='tpmvisit',
-            name='tpm_partner1',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='tpmpartners.TPMPartner', verbose_name='TPM Vendor'),
-        ),
-        migrations.AddField(
-            model_name='tpmvisit',
-            name='tpm_partner_focal_points1',
-            field=models.ManyToManyField(blank=True, related_name='tpm_visits', to='tpmpartners.TPMPartnerStaffMember', verbose_name='TPM Focal Points'),
-        ),
         migrations.RunPython(
             migrate_tpm_partner_relation,
         ),

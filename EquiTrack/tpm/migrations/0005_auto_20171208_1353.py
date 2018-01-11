@@ -35,7 +35,7 @@ def migrate_tpm_partners(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tpm', '0007_auto_20171113_1222'),
+        ('tpm', '0004_auto_20171214_0802'),
         ('tpmpartners', '0001_initial'),
     ]
 
