@@ -104,7 +104,7 @@ MIDDLEWARE_CLASSES = (
     'corsheaders.middleware.CorsMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
-    'token_auth.auth.middleware.TokenAuthenticationMiddleware',
+    'email_auth.auth.middleware.TokenAuthenticationMiddleware',
 )
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 
@@ -189,7 +189,7 @@ SHARED_APPS = (
     'utils.writable_serializers',
     'utils.permissions',
     'waffle',
-    'token_auth',
+    'email_auth',
 )
 TENANT_APPS = (
     'django_fsm',
@@ -268,7 +268,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'djangosaml2.backends.Saml2Backend',
     'allauth.account.auth_backends.AuthenticationBackend',
-    'token_auth.auth.backends.SecurityTokenAuthBackend',
+    'email_auth.auth.backends.SecurityTokenAuthBackend',
 )
 AUTH_USER_MODEL = 'auth.User'
 LOGIN_REDIRECT_URL = '/'
@@ -561,5 +561,5 @@ EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
 
-TOKEN_AUTH_NAME = os.getenv('TOKEN_AUTH_NAME', 'url_auth_token')
-TOKEN_AUTH_LIFETIME = datetime.timedelta(days=1)
+EMAIL_AUTH_TOKEN_NAME = os.getenv('EMAIL_AUTH_TOKEN_NAME', 'url_auth_token')
+EMAIL_AUTH_TOKEN_LIFETIME = datetime.timedelta(days=1)

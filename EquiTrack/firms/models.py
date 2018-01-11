@@ -12,7 +12,7 @@ from model_utils.models import TimeStampedModel
 from post_office import mail
 
 from EquiTrack.utils import get_current_site, get_environment
-from token_auth.utils import update_url_with_token
+from email_auth.utils import update_url_with_token
 from utils.common.urlresolvers import site_url
 
 

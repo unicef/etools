@@ -40,7 +40,7 @@ from reports.views.v1 import (
 )
 from t2f.urls import urlpatterns as t2f_patterns
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
-from token_auth.urls import urlpatterns as security_patterns
+from email_auth.urls import urlpatterns as email_auth_patterns
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
@@ -75,7 +75,7 @@ urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
-    url(r'^security/', include(security_patterns, namespace='security')),
+    url(r'^token-auth/', include(email_auth_patterns, namespace='email_auth')),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
