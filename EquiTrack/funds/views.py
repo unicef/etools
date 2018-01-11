@@ -7,7 +7,7 @@ from rest_framework import (
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from funds.models import FundsReservationHeader
+from funds.models import FundsReservationHeader, FundsReservationItem, Grant
 from funds.serializers import FRsSerializer
 
 
@@ -16,6 +16,43 @@ class FRsView(APIView):
     Returns the FRs requested with the values query param
     """
     permission_classes = (permissions.IsAdminUser,)
+
+    def filter_by_donors(self, qs, donors):
+        grant_numbers = Grant.objects.values_list(
+            "name",
+            flat=True
+        ).filter(donor__pk__in=donors)
+        qs = self.filter_by_grants(qs, None, list(grant_numbers))
+        return qs
+
+    def filter_by_grants(self, qs, grants, grant_numbers=[]):
+        """Filter queryset by grant ids provided
+
+        `name` field in Grants table matches `grant_number` in
+        FundsReservationItem, from FundsReservationItem we can
+        access FundsReservationHeader
+        """
+        if not isinstance(grant_numbers, list):
+            return qs.none()
+
+        if grants:
+            grant_qs = Grant.objects.values_list(
+                "name",
+                flat=True
+            ).filter(pk__in=grants)
+            if grant_numbers:
+                grant_qs = grant_qs.filter(name__in=grant_numbers)
+            grant_numbers = grant_qs
+
+        if not grant_numbers:
+            qs = qs.none()
+        else:
+            fr_headers = FundsReservationItem.objects.values_list(
+                "fund_reservation__pk",
+                flat=True
+            ).filter(grant_number__in=grant_numbers)
+            qs = qs.filter(pk__in=fr_headers)
+        return qs
 
     def get(self, request, format=None):
         values = request.query_params.get("values", '').split(",")
@@ -31,7 +68,15 @@ class FRsView(APIView):
         else:
             qs = qs.filter(intervention__isnull=True)
 
-        if qs.count() != len(values):
+        donors = [x for x in request.query_params.get("donors", "").split(",") if x]
+        if donors:
+            qs = self.filter_by_donors(qs, donors)
+
+        grants = [x for x in request.query_params.get("grants", "").split(",") if x]
+        if grants:
+            qs = self.filter_by_grants(qs, grants)
+
+        if not grants and not donors and qs.count() != len(values):
             return Response(
                 data={'error': _('One or more of the FRs are used by another PD/SSFA '
                                  'or could not be found in eTools.')},
