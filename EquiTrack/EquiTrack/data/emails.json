@@ -16,13 +16,13 @@
     {
         "model": "post_office.emailtemplate",
         "fields": {
-            "name": "organisations/staff_member/set_password",
+            "name": "organisations/staff_member/invite",
             "description": "The email that is sent to partner staff member when he have been registered in the system.",
             "created": "2017-04-26T16:08:40.404Z",
             "last_updated": "2017-05-04T09:39:09.127Z",
             "subject": "eTools {% if environment %}{{ environment }} {% endif %}- Invitation",
-            "content": "Dear Colleague,\r\n\r\nYou have been invited to the eTools. To get access to our system follow link and set password.\r\n\r\n{{ set_password_url }}\r\n\r\neTools Team",
-            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block title %}eTools {% if environment %}{{ environment }} {% endif %}- Invitation{% endblock %}\r\n\r\n{% block content %}\r\n<p>Dear Colleague,</p>\r\n\r\n<p>You have been invited to the <b>eTools</b>. To get access to our system follow <a href=\"{{ set_password_url }}\">link</a> and set password.</p>\r\n\r\n<p style=\"text-align:right\">eTools Team</p>\r\n{% endblock %}",
+            "content": "Dear Colleague,\r\n\r\nYou have been invited to the eTools. To get access to our system follow link.\r\n\r\n{{ login_link }}\r\n\r\neTools Team",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block title %}eTools {% if environment %}{{ environment }} {% endif %}- Invitation{% endblock %}\r\n\r\n{% block content %}\r\n<p>Dear Colleague,</p>\r\n\r\n<p>You have been invited to the <b>eTools</b>. To get access to our system follow <a href=\"{{ login_link }}\">link</a>.</p>\r\n\r\n<p style=\"text-align:right\">eTools Team</p>\r\n{% endblock %}",
             "language": "",
             "default_template": null
         }
@@ -72,7 +72,7 @@
     {
         "model": "post_office.emailtemplate",
         "fields": {
-            "name": "security/token/login",
+            "name": "token_auth/token/login",
             "description": "The email that is sent to user to login without password.",
             "created": "2017-12-06T14:28:40.404Z",
             "last_updated": "2017-12-06T14:28:40.404Z",
