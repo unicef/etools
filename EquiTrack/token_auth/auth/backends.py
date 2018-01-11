@@ -12,7 +12,7 @@ class SecurityTokenAuthBackend(ModelBackend):
 
         user = UserModel.objects.filter(
             security_tokens__token=url_auth_token, security_tokens__is_used=False,
-            security_tokens__created__gt=timezone.now() - settings.SECURITY_TOKEN_LIFETIME
+            security_tokens__created__gt=timezone.now() - settings.TOKEN_AUTH_LIFETIME
         ).first()
 
         if not user:

@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.conf.urls import url
 
-from security import views
+from token_auth import views
 
 
 urlpatterns = [

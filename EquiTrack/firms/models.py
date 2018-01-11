@@ -12,6 +12,8 @@ from model_utils.models import TimeStampedModel
 from post_office import mail
 
 from EquiTrack.utils import get_current_site, get_environment
+from token_auth.utils import update_url_with_token
+from utils.common.urlresolvers import site_url
 
 
 class BaseFirmManager(models.Manager):
@@ -104,21 +106,15 @@ class BaseStaffMember(models.Model):
         return self.get_full_name()
 
     def send_invite_email(self):
-        token = default_token_generator.make_token(self.user)
-
-        # TODO: Use special endpoint for this. Don't use "reset password" url.
-        set_password_url = reverse("account_reset_password_from_key",
-                                   kwargs=dict(uidb36=user_pk_to_url_str(self.user), key=token))
-
         context = {
             'environment': get_environment(),
             'staff_member': self,
-            'set_password_url': 'https://{}{}'.format(get_current_site().domain, set_password_url),
+            'login_link': update_url_with_token(site_url(), self.user)
         }
 
         mail.send(
             self.user.email,
             settings.DEFAULT_FROM_EMAIL,
-            template='organisations/staff_member/set_password',
+            template='organisations/staff_member/invite',
             context=context,
         )

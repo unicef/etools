@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from security.models import SecurityToken
+from token_auth.models import SecurityToken
 
 
 @admin.register(SecurityToken)
