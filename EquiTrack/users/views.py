@@ -28,7 +28,6 @@ from users.serializers import (
     SimpleProfileSerializer,
     SimpleUserSerializer,
     ProfileRetrieveUpdateSerializer,
-    CountrySerializer
 )
 
 logger = logging.getLogger(__name__)
