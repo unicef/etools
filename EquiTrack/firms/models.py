@@ -1,17 +1,14 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
-from django.contrib.auth.tokens import default_token_generator
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
-from allauth.account.utils import user_pk_to_url_str
 from model_utils.models import TimeStampedModel
 from post_office import mail
 
-from EquiTrack.utils import get_current_site, get_environment
+from EquiTrack.utils import get_environment
 from email_auth.utils import update_url_with_token
 from utils.common.urlresolvers import site_url
 
