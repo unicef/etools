@@ -17,15 +17,15 @@ class FRsView(APIView):
     """
     permission_classes = (permissions.IsAdminUser,)
 
-    def filter_by_donor_pks(self, qs, donors):
+    def filter_by_donors(self, qs, donor_pks):
         grant_numbers = Grant.objects.values_list(
             "name",
             flat=True
-        ).filter(donor__pk__in=donors)
-        qs = self.filter_by_grant_pks(qs, None, list(grant_numbers))
+        ).filter(donor__pk__in=donor_pks)
+        qs = self.filter_by_grants(qs, None, list(grant_numbers))
         return qs
 
-    def filter_by_grant_pks(self, qs, grants, grant_numbers=[]):
+    def filter_by_grants(self, qs, grant_pks, grant_numbers=[]):
         """Filter queryset by grant ids provided
 
         `name` field in Grants table matches `grant_number` in
@@ -35,11 +35,11 @@ class FRsView(APIView):
         if not isinstance(grant_numbers, list):
             return qs.none()
 
-        if grants:
+        if grant_pks:
             grant_qs = Grant.objects.values_list(
                 "name",
                 flat=True
-            ).filter(pk__in=grants)
+            ).filter(pk__in=grant_pks)
             if grant_numbers:
                 grant_qs = grant_qs.filter(name__in=grant_numbers)
             grant_numbers = grant_qs
@@ -70,11 +70,11 @@ class FRsView(APIView):
 
         donors = [x for x in request.query_params.get("donors", "").split(",") if x]
         if donors:
-            qs = self.filter_by_donor_pks(qs, donors)
+            qs = self.filter_by_donors(qs, donors)
 
         grants = [x for x in request.query_params.get("grants", "").split(",") if x]
         if grants:
-            qs = self.filter_by_grant_pks(qs, grants)
+            qs = self.filter_by_grants(qs, grants)
 
         if not grants and not donors and qs.count() != len(values):
             return Response(
