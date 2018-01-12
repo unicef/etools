@@ -315,7 +315,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
     def test_hact_min_requirements_ct_between_25k_and_50k(self):
         self.partner_organization.total_ct_cy = 44000.00
-        self.assert_min_requirements(1, None)
+        self.assert_min_requirements(1, 0)
 
     def test_hact_min_requirements_ct_between_25k_and_100k(self):
         self.partner_organization.total_ct_cy = 99000.00
