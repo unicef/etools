@@ -24,7 +24,7 @@ class TokenAuthView(FormView):
         mail.send(
             [form.get_user().email, ],
             settings.DEFAULT_FROM_EMAIL,
-            template='security/token/login',
+            template='email_auth/token/login',
             context=context,
         )
 
