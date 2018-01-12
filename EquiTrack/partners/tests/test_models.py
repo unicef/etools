@@ -308,8 +308,8 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.partner_organization.total_ct_cy = 0
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
-            "programme_visits": None,
-            "spot_checks": None,
+            "programme_visits": 0,
+            "spot_checks": 0,
         }
         self.assertEqual(hact_min_req, data)
 
