@@ -75,7 +75,7 @@ urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
-    url(r'^token-auth/', include(email_auth_patterns, namespace='email_auth')),
+    url(r'^email-auth/', include(email_auth_patterns, namespace='email_auth')),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
