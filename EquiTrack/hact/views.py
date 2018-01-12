@@ -4,7 +4,7 @@ import json
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import Coalesce
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -66,7 +66,7 @@ class GraphHactView(views.APIView):
     permission_classes = []
 
     def get_queryset(self):
-        return PartnerOrganization.objects.all()
+        return PartnerOrganization.objects.filter(Q(total_ct_cp__gt=0) | Q(total_ct_cy__gt=0))
 
     def _sum_json_values(self, filters, filter_dict={}):
         partners = self.get_queryset().filter(**filter_dict)
