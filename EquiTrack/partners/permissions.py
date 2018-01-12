@@ -110,7 +110,7 @@ class InterventionPermissions(PMPPermissions):
             return not check_rigid_related(instance, 'amendments')
 
         def prp_mode_off():
-            return not tenant_switch_is_active("prp_mode_off")
+            return tenant_switch_is_active("prp_mode_off")
 
         def inbound_amendment_check(instance):
             return False if not inbound_check else user_added_amendment(instance)
@@ -121,8 +121,9 @@ class InterventionPermissions(PMPPermissions):
             'contingency on': self.instance.contingency_pd is True,
             # this condition can only be checked on data save
             'user_adds_amendment': inbound_amendment_check(self.instance),
+            'prp_mode_on': not prp_mode_off(),
             'prp_mode_off': prp_mode_off(),
-            'user_adds_amendment+prp_mode_off': inbound_amendment_check(self.instance) and prp_mode_off()
+            'user_adds_amendment+prp_mode_on': inbound_amendment_check(self.instance) and not prp_mode_off()
         }
 
 

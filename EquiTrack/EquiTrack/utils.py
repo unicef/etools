@@ -6,6 +6,7 @@ import json
 import uuid
 from functools import wraps
 
+from datetime import datetime
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.cache import cache
@@ -182,3 +183,20 @@ def import_permissions(model_name):
     response = cache.get_or_set(cache_key, process_file, 60 * 60 * 24)
 
     return response
+
+
+def get_current_year():
+    return datetime.today().year
+
+
+def get_current_quarter():
+    current_month = datetime.today().month
+    if 0 < current_month <= 3:
+        quarter = 'q1'
+    elif 3 < current_month <= 6:
+        quarter = 'q2'
+    elif 6 < current_month <= 9:
+        quarter = 'q3'
+    else:
+        quarter = 'q4'
+    return quarter

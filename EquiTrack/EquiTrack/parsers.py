@@ -1,114 +1,111 @@
+import re
 
-def int_or_str(c):
+
+def _int_or_str(c):
+    """Return parameter as type integer, if possible
+    otherwise as type string
+    """
     try:
         return int(c)
     except ValueError:
         return c
 
 
-def list_or_dict(a):
-    return '[]' if isinstance(a, int) else '{}'
+def _natural_keys(text):
+    return [_int_or_str(c) for c in re.split('(\d+)', text)]
 
 
-def l_o_k(myd):
-    r = []
-    myl = list(myd.keys())
-    myl.sort()
-    for k in myl:
-        split_c = k.replace('[', ' ').replace(']', '').split(' ')
-        split_c = map(int_or_str, split_c)
-        r.append(split_c)
+def _create_lists_from_dict_keys(data):
+    """Convert dictionary keys into lists
+    returning a list of these keys in list format
 
-    return r
-
-
-def form_path_from_list(p_l, list=False, end=False):
-    r = ''
-    p_l = [x for x in p_l if x != u'_obj']
-    for i in range(0, len(p_l)):
-        k = p_l[i]
-        if isinstance(k, int):
-            if list and i == len(p_l) - 1:
-                r += '.append({})'
-            else:
-                r += '[' + str(k) + ']'
-        else:
-            r += '["' + str(k) + '"]'
-    return r
+    eg: {
+      'sample[1][_obj][k]': 'val1',
+      'sample[2][_obj][k]': 'val2'
+    } => [
+      ['sample', 1, '_obj', 'k'],
+      ['sample', 2, '_obj', 'k']
+    ]
+    """
+    list_of_keys_in_list_format = []
+    keys = list(data.keys())
+    keys.sort(key=_natural_keys)
+    for k in keys:
+        key_in_list_format = k.replace('[', ' ').replace(']', '').split(' ')
+        key_in_list_format = map(_int_or_str, key_in_list_format)
+        list_of_keys_in_list_format.append(key_in_list_format)
+    return list_of_keys_in_list_format
 
 
-def set_current_path_in_dict(r, path, next_value, end=False):
-    # the last element in the path will need attention
-    l_e = path[-1]
+def _create_key(key_in_list_format):
+    """Create a key from the list provided
 
-    if isinstance(l_e, int):
-        # we have to append to previous path
-        pth = form_path_from_list(path, list=True)
-        exec_str = 'r' + pth
-        exec exec_str in globals(), locals()
+    First element is variable name
+
+    eg: ['sample', 'one', 'two'] => 'sample[one][two]'
+    """
+    if not key_in_list_format:
+        return ""
+    keys = ''.join([u'[{}]'.format(item) for item in key_in_list_format[1:]])
+    return key_in_list_format[0] + keys
+
+
+def _init_data(data, key, init_data):
+    """Initialize the data at specified key, if needed"""
+    if isinstance(key, int):
+        try:
+            data[key]
+        except IndexError:
+            data.append(init_data)
     else:
-        pth = form_path_from_list(path)
-        exec_str = 'r' + pth + ' = ' + next_value
-        exec exec_str in globals(), locals()
-    return r
+        data[key] = data.get(key, init_data)
+    return data
 
 
-def path_in_dict_exists(r, pth):
+def build_parsed_data(data, key_in_list_format, val):
+    """Use recursion to drill down through the keys (in list format)
 
-    try:
-        exec_str = 'r' + pth
-        exec exec_str in globals(), locals()
-    except Exception as e:
-        return False
-    return True
+    Each element in the key list, should become a key in the parsed data,
+    and assign the value to the last key.
+    Unless the element is an integer, in which case we create a list
+    and append the value to the list
+    """
+    first_key = key_in_list_format[0]
+    if len(key_in_list_format) > 1:
+        init_data = [] if isinstance(key_in_list_format[1], int) else {}
+        data = _init_data(data, first_key, init_data)
+        val = build_parsed_data(data[first_key], key_in_list_format[1:], val)
+
+    if isinstance(data, list):
+        if val not in data:
+            data.append(val)
+    else:
+        data[first_key] = val
+
+    return data
 
 
-def form_myd_path(path):
-    mys = ''
-    for i in range(0, len(path)):
-        if i == 0:
-            mys += str(path[i])
-        else:
-            mys += '[' + str(path[i]) + ']'
-    return mys
+def parse_multipart_data(data):
+    """Convert data in a relatively 'flat' structure into an 'expanded'
+    structure
 
-
-def parse_multipart_data(myd):
-    r = {}
-    lok = l_o_k(myd)
-
-    def set_in_path(r, path, next_value, original_list):
-        # 'strip the _obj elements before set'
-        pth = form_path_from_list(path)
-
-        if path_in_dict_exists(r, pth):
-            # move to the next bit
-            pass
-        else:
-            r = set_current_path_in_dict(r, path, list_or_dict(next_value))
-
-        return r
-
-    for k in lok:
-        i = 0
-        parcurs = []
-        if i >= len(k) - 1:
-            r[k[i]] = myd[k[i]]
-        while i < len(k) - 1:
-            parcurs.append(k[i])
-            e = k[i]
-            r = set_in_path(r, parcurs, k[i + 1], k)
-            if i == len(k) - 2:
-                if not isinstance(k[i + 1], int):
-                    parcurs.append(k[i + 1])
-                    pth = form_path_from_list(parcurs)
-                    exec_str = 'r' + pth + ' = ' + 'myd[form_myd_path(parcurs)]'
-                    exec exec_str in globals(), locals()
-                else:
-                    pth = form_path_from_list(parcurs)
-                    parcurs.append(k[i + 1])
-                    exec_str = 'r' + pth + '.append(myd[form_myd_path(parcurs)])'
-                    exec exec_str in globals(), locals()
-            i += 1
-
-    return r
+    eg: data arrives in a format similar to {
+      'sample[d][obj][str]': 'val2'
+    }
+    and we return {'sample': {'d': {'str': 'val2'}}}
+    something we can easily work with
+    """
+    parsed_data = {}
+    for key_in_list_format in _create_lists_from_dict_keys(data):
+        val = data[_create_key(key_in_list_format)]
+        # remove _obj from key
+        # as we don't want this in the final parsed data
+        key_in_list_format_scrubbed = [
+            x for x in key_in_list_format if x != "_obj"
+        ]
+        parsed_data = build_parsed_data(
+            parsed_data,
+            key_in_list_format_scrubbed,
+            val
+        )
+    return parsed_data
