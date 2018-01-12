@@ -75,6 +75,7 @@ class GraphHactView(views.APIView):
             filters = filters.split('__')
             json_field_name = filters.pop(0)
             json_field = getattr(obj, json_field_name)
+            json_field = json_field if type(json_field) is dict else json.loads(json_field)
             for filter in filters:
                 json_field = json_field[filter]
             return json_field
@@ -260,8 +261,8 @@ class GraphHactView(views.APIView):
             date_of_draft_report_to_unicef__year=datetime.now().year,
             justification_provided_and_accepted__isnull=False).aggregate(
             total=Coalesce(Sum('justification_provided_and_accepted'), 0))['total']
-        impairment = Audit.objects.filter(write_off_required__isnull=False).aggregate(
-            date_of_draft_report_to_unicef__year=datetime.now().year,
+        impairment = Audit.objects.filter(write_off_required__isnull=False,
+                                          date_of_draft_report_to_unicef__year=datetime.now().year).aggregate(
             total=Coalesce(Sum('write_off_required'), 0))['total']
 
         # pending_unsupported_amount property

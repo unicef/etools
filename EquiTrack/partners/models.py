@@ -491,7 +491,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ct = self.total_ct_cy
 
         if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
-            programme_visits = None
+            programme_visits = 0
         elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
             programme_visits = 1
         elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
@@ -513,7 +513,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @cached_property
     def min_req_spot_checks(self):
         # TODO 1.1.9b add condition when is implemented 1.1.10a
-        return 1 if self.liquidation > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else None
+        return 1 if self.liquidation > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
     @cached_property
     def hact_min_requirements(self):
