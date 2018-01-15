@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from mock import patch, Mock
 from unittest import TestCase
 
-# from django.db.utils import OperationalError
+from django.conf import settings
 
 from EquiTrack.factories import UserFactory
 from monitoring.service_checks import check_celery, check_db
@@ -18,7 +18,9 @@ class TestCheckDB(TestCase):
         self.assertFalse(check.success)
         self.assertEqual(
             check.message,
-            "test_etools:OK No users found in postgres"
+            "{}:OK No users found in postgres".format(
+                settings.DATABASES["default"]["NAME"]
+            )
         )
 
     def test_users(self):
@@ -27,22 +29,10 @@ class TestCheckDB(TestCase):
         self.assertTrue(check.success)
         self.assertEqual(
             check.message,
-            "test_etools:OK Successfully got a user from postgres"
+            "{}:OK Successfully got a user from postgres".format(
+                settings.DATABASES["default"]["NAME"]
+            )
         )
-
-    # def test_no_conn(self):
-    #     mock_conn = Mock()
-    #     mock_conn.cursor.side_effect = OperationalError
-    #     conn = {"test_etools": mock_conn}
-    #     with patch("monitoring.service_checks.connections", conn):
-    #         check = check_db()
-    #     self.assertEqual(
-    #         check,
-    #         ServiceStatus(
-    #             success=False,
-    #             message="etools:FAIL No users found in postgres"
-    #         )
-    #     )
 
 
 class TestCheckCelery(TestCase):
