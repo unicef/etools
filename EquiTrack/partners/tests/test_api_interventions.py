@@ -82,8 +82,7 @@ class TestInterventionsAPI(APITenantTestCase):
                   "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
-                  "offices", "population_focus", "country_programme_id", "engagement", "sections", "reporting_periods",
-                  "flat_locations"],
+                  "offices", "population_focus", "country_programme_id", "engagement", "sections", "reporting_periods"],
         'signed': [],
         'active': ['']
     }
@@ -365,6 +364,8 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertFalse(Activity.objects.exists())
 
     def test_permissions_for_intervention_status_draft(self):
+
+        # TODO: this tests only with PRP mode on. PRP mode off tests needed here.
         # intervention is in Draft status
         self.assertEqual(self.intervention.status, Intervention.DRAFT)
 
