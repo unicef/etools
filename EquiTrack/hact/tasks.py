@@ -14,7 +14,6 @@ logger = get_task_logger(__name__)
 @app.task
 def update_aggregate_hact_values():
     for country in Country.objects.exclude(schema_name='public'):
-        print(country)
         connection.set_tenant(country)
         aggregate_hact, _ = AggregateHact.objects.get_or_create(year=datetime.today().year)
         try:
