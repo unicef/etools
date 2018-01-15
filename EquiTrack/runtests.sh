@@ -15,7 +15,7 @@ rm mig.out
 
 # Run unittests and coverage report
 coverage erase
-time coverage run manage.py test --noinput --keepdb --failfast --settings="$TEST_SETTINGS" "$@"
+time coverage run manage.py test --noinput --keepdb --settings="$TEST_SETTINGS" "$@"
 coverage report -m
 
 # Check code style

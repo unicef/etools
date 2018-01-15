@@ -107,7 +107,7 @@ class InvoiceExport(object):
     def generate_tree(self, root):
         # https://docs.python.org/2/library/xml.etree.elementtree.html
         io = BytesIO()
-        ET.ElementTree(root).write(io, encoding='UTF-8', xml_declaration=True)
+        ET.ElementTree(root).write(io, encoding='utf-8', xml_declaration=True)
         return io.getvalue()
 
     @staticmethod

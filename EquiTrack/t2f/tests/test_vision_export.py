@@ -130,7 +130,7 @@ class VisionXML(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
         xml_data = response.content.decode('utf-8')
 
-        self.assertEqual(xml_data, "<?xml version='1.0' encoding='UTF-8'?>\n<ta_invoices />")
+        self.assertEqual(xml_data, "<?xml version='1.0' encoding='utf-8'?>\n<ta_invoices />")
 
     def test_error_mail(self):
         travel = self.prepare_travel()
