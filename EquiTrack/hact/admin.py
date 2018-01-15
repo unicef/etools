@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.contrib import admin
 
-from hact.models import HactHistory
+from hact.models import HactHistory, AggregateHact
 
 
 @admin.register(HactHistory)
@@ -16,5 +16,11 @@ class HactHistoryAdmin(admin.ModelAdmin):
     )
     list_display = (
         'partner',
+        'year',
+    )
+
+@admin.register(AggregateHact)
+class AggregateHactAdmin(admin.ModelAdmin):
+    list_filter = (
         'year',
     )
