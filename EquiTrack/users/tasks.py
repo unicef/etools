@@ -15,6 +15,7 @@ from EquiTrack.celery import app
 from users.models import Country, Section, User, UserProfile
 from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
+from vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE
 
 logger = get_task_logger(__name__)
 
@@ -287,7 +288,6 @@ def sync_users_local(n=20):
 
 class UserSynchronizer(object):
 
-    NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS_MAP = {
         'GetOrgChartUnitsInfo_JSON': (
             "ORG_UNIT_NAME",  # VARCHAR2	Vendor Name
@@ -308,7 +308,7 @@ class UserSynchronizer(object):
         self.required_keys = self.REQUIRED_KEYS_MAP[endpoint_name]
 
     def _get_json(self, data):
-        return '{}' if data == self.NO_DATA_MESSAGE else data
+        return '{}' if data == VISION_NO_DATA_MESSAGE else data
 
     def _filter_records(self, records):
         def is_valid_record(record):
