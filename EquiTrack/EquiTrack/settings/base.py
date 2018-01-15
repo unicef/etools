@@ -413,7 +413,8 @@ SAML_ATTRIBUTE_MAPPING = {
     'givenName': ('first_name',),
     'surname': ('last_name',),
 }
-SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
+SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'username'
+SAML_USE_NAME_ID_AS_USERNAME = True
 SAML_CREATE_UNKNOWN_USER = True
 SAML_CONFIG = {
     # full path to the xmlsec1 binary programm
@@ -467,6 +468,10 @@ SAML_CONFIG = {
     # certificate
     'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
     'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),  # public part
+    'encryption_keypairs': [{
+        'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),
+        'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),
+    }],
 
     # own metadata settings
     'contact_person': [
