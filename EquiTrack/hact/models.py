@@ -66,11 +66,8 @@ class AggregateHact(TimeStampedModel):
             json_field_name = filters.pop(0)
             json_field = getattr(obj, json_field_name)
             json_field = json_field if type(json_field) is dict else json.loads(json_field)
-            try:
-                for filter in filters:
-                    json_field = json_field[filter]
-            except:
-                import pdb; pdb.set_trace()
+            for filter in filters:
+                json_field = json_field[filter]
             return json_field
 
         return sum([get_value(p, filters) for p in partners])

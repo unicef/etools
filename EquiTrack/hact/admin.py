@@ -19,6 +19,7 @@ class HactHistoryAdmin(admin.ModelAdmin):
         'year',
     )
 
+
 @admin.register(AggregateHact)
 class AggregateHactAdmin(admin.ModelAdmin):
     list_filter = (
