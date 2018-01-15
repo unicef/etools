@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from mock import patch, Mock
 
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import Client
 from rest_framework import status
@@ -27,7 +28,6 @@ class TestCheckView(FastTenantTestCase):
         with patch("monitoring.service_checks.Celery", mock_celery):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response)
         self.assertEqual(response.content, "all is well (checked: celery, db)")
 
     def test_get_fail(self):
@@ -42,5 +42,7 @@ class TestCheckView(FastTenantTestCase):
         )
         self.assertEqual(
             response.content,
-            "Problems with the following services:\ndb: test_etools:OK No users found in postgres"
+            "Problems with the following services:\ndb: {}:OK No users found in postgres".format(
+                settings.DATABASES["default"]["NAME"]
+            )
         )
