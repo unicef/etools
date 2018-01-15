@@ -75,6 +75,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.10.1,frs,UNICEF User,,Draft,Required,FALSE
 3.10.1,frs,UNICEF User,,Signed,Required,FALSE
 3.10.1,frs,UNICEF User,,Suspended,Required,FALSE
+3.13.1,flat_locations,UNICEF User,prp_mode_off,Draft,Edit,TRUE
+3.13.1,flat_locations,Partnership Manager,prp_mode_off,Signed,Edit,TRUE
 3.13.1,reporting_periods,Partnership Manager,prp_mode_on,Draft,Edit,TRUE
 3.13.1,reporting_periods,Partnership Manager,user_adds_amendment+prp_mode_on,*,Edit,TRUE
 3.13.1,reporting_periods,UNICEF User,prp_mode_on,*,View,TRUE
