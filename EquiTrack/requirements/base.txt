@@ -61,5 +61,5 @@ flake8==3.3.0
 mock==2.0.0
 
 # Git python packages
-git+https://github.com/robertavram/djangosaml2.git@0.13.3#egg=djangosaml2
+git+https://github.com/unicef/djangosaml2.git@v0.16.11.1#egg=djangosaml2
 git+https://github.com/robertavram/django-storages.git@1.6.5.1#egg=django-storages
