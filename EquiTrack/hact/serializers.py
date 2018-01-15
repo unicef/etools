@@ -23,6 +23,23 @@ class HactHistorySerializer(serializers.ModelSerializer):
         )
 
 
+class AggregateHactSerializer(serializers.ModelSerializer):
+    partner_values = serializers.SerializerMethodField()
+
+    def get_partner_values(self, obj):
+        return json.loads(obj.partner_values) if isinstance(obj.partner_values, unicode) else obj.partner_values
+
+    class Meta:
+        model = HactHistory
+        fields = (
+            "id",
+            "year",
+            "created",
+            "modified",
+            "partner_values",
+        )
+
+
 class HactHistoryExportSerializer(serializers.BaseSerializer):
     @property
     def data(self):
