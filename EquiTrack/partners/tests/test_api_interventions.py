@@ -92,7 +92,7 @@ class TestInterventionsAPI(APITenantTestCase):
         'signed': [],
         'active': ['']
     }
-    ALL_FIELDS = get_all_field_names(Intervention)
+    ALL_FIELDS = get_all_field_names(Intervention) + ['sections_present']
 
     def setUp(self):
         setup_intervention_test_data(self)
