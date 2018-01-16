@@ -14,7 +14,7 @@ class TestAttachmentsModels(FastTenantTestCase):
     def setUp(self):
         self.file_type = FileTypeFactory()
         self.file_name = 'simple_file.txt'
-        file_content = 'these are the file contents!'
+        file_content = b'these are the file contents!'
         self.base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(file_content))
 
     def test_invalid(self):
