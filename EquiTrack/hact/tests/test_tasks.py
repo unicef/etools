@@ -6,7 +6,7 @@ from hact.tests.factories import AggregateHactFactory
 
 class TestUpdateHactAggregateHactValues(FastTenantTestCase):
     """
-    Test task which freeze global
+    Test task which freeze global aggregated values for hact dashboard
     """
     def test_task_create(self):
         self.assertEqual(AggregateHact.objects.count(), 0)
