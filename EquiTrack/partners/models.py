@@ -1494,6 +1494,12 @@ class Intervention(TimeStampedModel):
                     sections.add(applied_indicator.section)
         return sections
 
+    @property
+    def sections_present(self):
+        # for permissions validation. the name of this def needs to remain the same as defined in the permission matrix.
+        # /assets/partner/intervention_permission.csv
+        return True if len(self.combined_sections) > 0 else None
+
     @cached_property
     def total_partner_contribution(self):
         return self.planned_budget.partner_contribution if hasattr(self, 'planned_budget') else 0
