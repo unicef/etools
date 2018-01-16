@@ -4,7 +4,7 @@ from audit.serializers.auditor import PurchaseOrderItemSerializer
 
 from django.utils.translation import ugettext_lazy as _
 
-from six.moves import urllib_parse
+from django.utils.six.moves import urllib_parse
 from rest_framework import serializers
 
 from attachments.models import Attachment
