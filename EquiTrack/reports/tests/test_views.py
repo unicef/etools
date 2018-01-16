@@ -15,6 +15,7 @@ from EquiTrack.factories import (
     LowerResultFactory,
     UserFactory,
     ResultFactory,
+    ResultTypeFactory,
     CountryProgrammeFactory,
     DisaggregationFactory,
     DisaggregationValueFactory,
@@ -23,13 +24,24 @@ from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from reports.serializers.v2 import DisaggregationSerializer
 
 
-class TestReportViews(APITenantTestCase):
-    fixtures = ['initial_data.json']
+class UrlsTestCase(URLAssertionMixin, TestCase):
+    '''Simple test case to verify URL reversal'''
+    def test_urls(self):
+        '''Verify URL pattern names generate the URLs we expect them to.'''
+        names_and_paths = (
+            ('applied-indicator', 'applied-indicators/', {}),
+            ('country-programme-list', 'countryprogramme/', {}),
+            ('lower-results', 'lower_results/', {}),
+            ('report-result-list', 'results/', {}),
+        )
+        self.assertReversal(names_and_paths, '', '/api/v2/reports/')
 
+
+class TestReportViews(APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)  # UNICEF staff user
-        cls.result_type = ResultType.objects.get(name=ResultType.OUTPUT)
+        cls.result_type = ResultTypeFactory(name=ResultType.OUTPUT)
 
         today = datetime.date.today()
         cls.country_programme = CountryProgrammeFactory(
@@ -347,17 +359,6 @@ class TestDisaggregationRetrieveUpdateViews(APITenantTestCase):
         response = self.forced_auth_req('delete', self._get_url(disaggregation))
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertTrue(Disaggregation.objects.filter(pk=disaggregation.pk).exists())
-
-
-class UrlsTestCase(URLAssertionMixin, TestCase):
-    '''Simple test case to verify URL reversal'''
-    def test_urls(self):
-        '''Verify URL pattern names generate the URLs we expect them to.'''
-        names_and_paths = (
-            ('applied-indicator', 'applied-indicators/', {}),
-            ('lower-results', 'lower_results/', {}),
-        )
-        self.assertReversal(names_and_paths, '', '/api/v2/reports/')
 
 
 class TestLowerResultExportList(APITenantTestCase):
