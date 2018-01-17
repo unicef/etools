@@ -17,7 +17,7 @@ def gov_int_copy_section_sectors(apps, schema_editor):
         if gir.sector:
             gir.sectors.add(gir.sector)
         gir.save()
-        print 'saved gir {}'.format(gir.id)
+        print('saved gir {}'.format(gir.id))
 
 class Migration(migrations.Migration):
 
@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='governmentinterventionresult',
             name='sectors',
-            field=models.ManyToManyField(blank=True, related_name='_governmentinterventionresult_sectors_+', to='reports.Sector', verbose_name=b'Programme/Sector'),
+            field=models.ManyToManyField(blank=True, related_name='_governmentinterventionresult_sectors_+', to='reports.Sector', verbose_name='Programme/Sector'),
         ),
         migrations.RunPython(
             gov_int_copy_section_sectors, reverse_code=reverse

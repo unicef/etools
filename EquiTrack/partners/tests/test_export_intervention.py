@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import datetime
 
 from django.core.urlresolvers import reverse
+from django.utils import six
 from rest_framework import status
 from tablib.core import Dataset
 
@@ -108,7 +109,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
             'Status',
@@ -152,13 +153,13 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
 
         self.assertEqual(dataset[0], (
             self.intervention.status,
-            unicode(self.intervention.agreement.partner.name),
+            six.text_type(self.intervention.agreement.partner.name),
             self.intervention.agreement.partner.partner_type,
             self.intervention.agreement.agreement_number,
-            unicode(self.intervention.agreement.country_programme.name),
+            six.text_type(self.intervention.agreement.country_programme.name),
             self.intervention.document_type,
             self.intervention.reference_number,
-            unicode(self.intervention.title),
+            six.text_type(self.intervention.title),
             '{}'.format(self.intervention.start),
             '{}'.format(self.intervention.end),
             u'',
@@ -199,7 +200,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 52)
         self.assertEqual(len(dataset[0]), 52)
@@ -230,7 +231,7 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 10)
         self.assertEqual(len(dataset[0]), 10)
@@ -244,7 +245,7 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 10)
         self.assertEqual(len(dataset[0]), 10)
@@ -277,7 +278,7 @@ class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 42)
         self.assertEqual(len(dataset[0]), 42)
@@ -291,7 +292,7 @@ class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 42)
         self.assertEqual(len(dataset[0]), 42)
@@ -327,7 +328,7 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 19)
         self.assertEqual(len(dataset[0]), 19)
@@ -341,7 +342,7 @@ class TestInterventionIndicatorModelExport(BaseInterventionModelExportTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 19)
         self.assertEqual(len(dataset[0]), 19)
@@ -376,7 +377,7 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 19)
         self.assertEqual(len(dataset[0]), 19)
@@ -390,7 +391,7 @@ class TestInterventionSectorLocationLinkModelExport(BaseInterventionModelExportT
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(len(dataset._get_headers()), 18)
         self.assertEqual(len(dataset[0]), 18)

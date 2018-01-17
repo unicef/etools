@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='AgreementAmendmentType',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(choices=[(b'Change IP name', b'Change in Legal Name of Implementing Partner'), (b'CP extension', b'Extension of Country Programme Cycle'), (b'Change authorized officer', b'Change Authorized Officer'), (b'Change banking info', b'Banking Information'), (b'Additional clause', b'Additional Clause'), (b'Amend existing clause', b'Amend Existing Clause')], max_length=64)),
+                ('type', models.CharField(choices=[('Change IP name', 'Change in Legal Name of Implementing Partner'), ('CP extension', 'Extension of Country Programme Cycle'), ('Change authorized officer', 'Change Authorized Officer'), ('Change banking info', 'Banking Information'), ('Additional clause', 'Additional Clause'), ('Amend existing clause', 'Amend Existing Clause')], max_length=64)),
                 ('label', models.TextField(blank=True, null=True)),
                 ('officer', models.IntegerField(blank=True, null=True)),
                 ('bank_info', models.TextField(blank=True, null=True)),

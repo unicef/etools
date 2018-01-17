@@ -229,12 +229,12 @@ def migrate_cps(apps, schema_editor):
                     a.type = rft[k]
                     a.save()
 
-    print 'Skipped %s'%skipped
-    print 'Migrated %s'%migrated
-    print 'Total %s'%total
+    print('Skipped %s'%skipped)
+    print('Migrated %s'%migrated)
+    print('Total %s'%total)
     # check to ensure that there are no other file types that have been messed up
     if InterventionAttachment.objects.exclude(type__name__in=required_file_types).all().count():
-        print '################################################### Some Attachments are still messed up'
+        print('################################################### Some Attachments are still messed up')
         # raise BaseException('Attachments in {} are still messed up..please check again')
 
 

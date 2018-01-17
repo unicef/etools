@@ -2,11 +2,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import json
+from operator import itemgetter
 from unittest import TestCase
 
 from django.core.urlresolvers import reverse
-
+from django.utils.six.moves import range
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
@@ -67,7 +69,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
     def _assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response and return the response JSON as a dict.'''
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertIsInstance(response_json, dict)
         self.assertEqual(sorted(response_json.keys()), self.expected_keys)
         for key, value in response_json.items():
@@ -83,7 +85,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         '''Given a list of 2 tuples of (value, name), returns those in a list in the same format in which I expect
         PmpStaticDropdownsListApiView to format its responses.
         '''
-        return sorted([{'value': value, 'label': label} for value, label in choices])
+        return sorted([{'value': value, 'label': label} for value, label in choices], key=itemgetter('label'))
 
     def test_cso_types(self):
         '''Verify the cso_types portion of the response'''
@@ -102,7 +104,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['partner_types']),
+        self.assertEqual(sorted(d['partner_types'], key=itemgetter('label')),
                          self._make_value_label_list_from_choices(PartnerType.CHOICES))
 
     def test_agency_choices(self):
@@ -110,7 +112,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['agency_choices']),
+        self.assertEqual(sorted(d['agency_choices'], key=itemgetter('label')),
                          self._make_value_label_list_from_choices(PartnerOrganization.AGENCY_CHOICES))
 
     def test_assessment_types(self):
@@ -118,7 +120,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['assessment_types']),
+        self.assertEqual(sorted(d['assessment_types'], key=itemgetter('label')),
                          self._make_value_label_list_from_choices(Assessment.ASSESSMENT_TYPES))
 
     def test_agreement_types(self):
@@ -126,7 +128,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['agreement_types']),
+        self.assertEqual(sorted(d['agreement_types'], key=itemgetter('label')),
                          self._make_value_label_list_from_choices(Agreement.AGREEMENT_TYPES))
 
     def test_agreement_status(self):
@@ -134,7 +136,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['agreement_status']),
+        self.assertEqual(sorted(d['agreement_status'], key=itemgetter('label')),
                          self._make_value_label_list_from_choices(Agreement.STATUS_CHOICES))
 
     def test_agreement_amendment_types(self):
@@ -142,7 +144,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['agreement_amendment_types']),
+        self.assertEqual(sorted(d['agreement_amendment_types'], key=itemgetter('label')),
                          self._make_value_label_list_from_choices(AgreementAmendment.AMENDMENT_TYPES))
 
     def test_intervention_types(self):
@@ -150,7 +152,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['intervention_doc_type']),
+        self.assertEqual(sorted(d['intervention_doc_type'], key=itemgetter('label')),
                          self._make_value_label_list_from_choices(Intervention.INTERVENTION_TYPES))
 
     def test_intervention_status(self):
@@ -158,7 +160,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['intervention_status']),
+        self.assertEqual(sorted(d['intervention_status'], key=itemgetter('label')),
                          self._make_value_label_list_from_choices(Intervention.INTERVENTION_STATUS))
 
     def test_intervention_amendment_types(self):
@@ -166,7 +168,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['intervention_amendment_types']),
+        self.assertEqual(sorted(d['intervention_amendment_types'], key=itemgetter('label')),
                          self._make_value_label_list_from_choices(InterventionAmendment.AMENDMENT_TYPES))
 
     def test_location_types(self):
@@ -179,7 +181,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         # These are formatted differently than most other elements in the response.
         gateway_types = [{name: getattr(gateway_type, name) for name in ('id', 'name', 'admin_level')}
                          for gateway_type in gateway_types]
-        gateway_types.sort(key=lambda gateway_type: gateway_type['id'])
+        gateway_types.sort(key=itemgetter('id'))
         self.assertEqual(d['location_types'], gateway_types)
 
     def test_currencies(self):
@@ -198,7 +200,7 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
-        self.assertEqual(sorted(d['currencies']),
+        self.assertEqual(sorted(d['currencies'], key=itemgetter('label')),
                          self._make_value_label_list_from_choices(choices))
 
     def test_local_currency(self):

@@ -59,7 +59,7 @@ class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
         self.assertTrue(hasattr(exception, 'detail'))
         self.assertIsInstance(exception.detail, dict)
         # exception.detail should have only one key.
-        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertEqual(list(exception.detail.keys()), ['errors'])
         # exception.detail['errors'] should map to a list that contains the expected message.
         self.assertIsInstance(exception.detail['errors'], list)
         self.assertEqual(exception.detail['errors'], [expected_message])
@@ -83,12 +83,12 @@ class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
         #    }
         self.assertTrue(hasattr(exception, 'detail'))
         self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertEqual(list(exception.detail.keys()), ['errors'])
         self.assertIsInstance(exception.detail['errors'], list)
         self.assertEqual(len(exception.detail['errors']), 1)
         the_error = exception.detail['errors'][0]
         self.assertIsInstance(the_error, dict)
-        self.assertEqual(the_error.keys(), ['signed_amendment'])
+        self.assertEqual(list(the_error.keys()), ['signed_amendment'])
         self.assertIsInstance(the_error['signed_amendment'], list)
         self.assertEqual(the_error['signed_amendment'], [expected_message])
 
@@ -120,7 +120,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         exception = context_manager.exception
 
         self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['country_programme'])
+        self.assertEqual(list(exception.detail.keys()), ['country_programme'])
         self.assertEqual(exception.detail['country_programme'], 'Country Programme is required for PCAs!')
 
     def test_create_fail_one_PCA_per_country_programme_and_partner(self):

@@ -32,6 +32,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='assessment',
             name='type',
-            field=models.CharField(choices=[(b'Micro Assessment', 'Micro Assessment'), (b'Simplified Checklist', 'Simplified Checklist'), (b'Scheduled Audit report', 'Scheduled Audit report'), (b'Special Audit report', 'Special Audit report'), (b'Other', 'Other')], max_length=50),
+            field=models.CharField(choices=[('Micro Assessment', 'Micro Assessment'), ('Simplified Checklist', 'Simplified Checklist'), ('Scheduled Audit report', 'Scheduled Audit report'), ('Special Audit report', 'Special Audit report'), ('Other', 'Other')], max_length=50),
         ),
     ]

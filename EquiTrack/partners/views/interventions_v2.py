@@ -102,12 +102,12 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
         """
         if self.request.method == "GET":
             query_params = self.request.query_params
-            if "format" in query_params.keys():
+            if "format" in query_params:
                 if query_params.get("format") == 'csv':
                     return InterventionExportSerializer
                 if query_params.get("format") == 'csv_flat':
                     return InterventionExportFlatSerializer
-            if "verbosity" in query_params.keys():
+            if "verbosity" in query_params:
                 if query_params.get("verbosity") == 'minimal':
                     return MinimalInterventionListSerializer
         if self.request.method == "POST":
@@ -157,7 +157,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
 
         if query_params:
             queries = []
-            if "values" in query_params.keys():
+            if "values" in query_params:
                 # Used for ghost data - filter in all(), and return straight away.
                 try:
                     ids = [int(x) for x in query_params.get("values").split(",")]
@@ -168,30 +168,30 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
             if query_params.get("my_partnerships", "").lower() == "true":
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
-            if "document_type" in query_params.keys():
+            if "document_type" in query_params:
                 queries.append(Q(document_type=query_params.get("document_type")))
-            if "country_programme" in query_params.keys():
+            if "country_programme" in query_params:
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
-            if "section" in query_params.keys():
+            if "section" in query_params:
                 queries.append(Q(sections__pk=query_params.get("section")))
-            if "cluster" in query_params.keys():
+            if "cluster" in query_params:
                 queries.append(Q(
                     result_links__ll_results__applied_indicators__cluster_indicator_title__icontains=query_params
                     .get("cluster")))
-            if "status" in query_params.keys():
+            if "status" in query_params:
                 queries.append(Q(status__in=query_params.get("status").split(',')))
-            if "unicef_focal_points" in query_params.keys():
+            if "unicef_focal_points" in query_params:
                 queries.append(Q(unicef_focal_points__in=[query_params.get("unicef_focal_points")]))
-            if "start" in query_params.keys():
+            if "start" in query_params:
                 queries.append(Q(start__gte=query_params.get("start")))
-            if "end" in query_params.keys():
+            if "end" in query_params:
                 queries.append(Q(end__lte=query_params.get("end")))
-            if "office" in query_params.keys():
+            if "office" in query_params:
                 queries.append(Q(offices__in=[query_params.get("office")]))
-            if "location" in query_params.keys():
+            if "location" in query_params:
                 queries.append(Q(result_links__ll_results__applied_indicators__locations__name__icontains=query_params
                                  .get("location")))
-            if "search" in query_params.keys():
+            if "search" in query_params:
                 queries.append(
                     Q(title__icontains=query_params.get("search")) |
                     Q(agreement__partner__name__icontains=query_params.get("search")) |
@@ -209,7 +209,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
         """
         query_params = self.request.query_params
         response = super(InterventionListAPIView, self).list(request)
-        if "format" in query_params.keys():
+        if "format" in query_params:
             if query_params.get("format") in ['csv', "csv_flat"]:
                 response['Content-Disposition'] = "attachment;filename=interventions.csv"
 
@@ -338,7 +338,7 @@ class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
         Use different serializers for methods
         """
         query_params = self.request.query_params
-        if "format" in query_params.keys():
+        if "format" in query_params:
             if query_params.get("format") == 'csv':
                 return InterventionResultExportSerializer
             if query_params.get("format") == 'csv_flat':
@@ -351,7 +351,7 @@ class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
 
         if query_params:
             queries = []
-            if "search" in query_params.keys():
+            if "search" in query_params:
                 queries.append(
                     Q(intervention__number__icontains=query_params.get("search")) |
                     Q(cp_output__name__icontains=query_params.get("search")) |
@@ -381,7 +381,7 @@ class InterventionIndicatorListAPIView(ExportModelMixin, ListAPIView):
         Use different serializers for methods
         """
         query_params = self.request.query_params
-        if "format" in query_params.keys():
+        if "format" in query_params:
             if query_params.get("format") == 'csv':
                 return InterventionIndicatorExportSerializer
             if query_params.get("format") == 'csv_flat':
@@ -394,7 +394,7 @@ class InterventionIndicatorListAPIView(ExportModelMixin, ListAPIView):
 
         if query_params:
             queries = []
-            if "search" in query_params.keys():
+            if "search" in query_params:
                 queries.append(
                     Q(intervention__number__icontains=query_params.get("search"))
                 )
@@ -447,7 +447,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
         Use different serializers for methods
         """
         query_params = self.request.query_params
-        if "format" in query_params.keys():
+        if "format" in query_params:
             if query_params.get("format") == 'csv':
                 return InterventionAmendmentExportSerializer
             if query_params.get("format") == 'csv_flat':
@@ -460,7 +460,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
 
         if query_params:
             queries = []
-            if "search" in query_params.keys():
+            if "search" in query_params:
                 queries.append(
                     Q(intervention__number__icontains=query_params.get("search")) |
                     Q(amendment_number__icontains=query_params.get("search"))
@@ -507,7 +507,7 @@ class InterventionSectorLocationLinkListAPIView(ExportModelMixin, ListAPIView):
         Use different serializers for methods
         """
         query_params = self.request.query_params
-        if "format" in query_params.keys():
+        if "format" in query_params:
             if query_params.get("format") == 'csv':
                 return InterventionSectorLocationLinkExportSerializer
             if query_params.get("format") == 'csv_flat':
@@ -520,7 +520,7 @@ class InterventionSectorLocationLinkListAPIView(ExportModelMixin, ListAPIView):
 
         if query_params:
             queries = []
-            if "search" in query_params.keys():
+            if "search" in query_params:
                 queries.append(
                     Q(intervention__number__icontains=query_params.get("search")) |
                     Q(sector__name__icontains=query_params.get("search"))
@@ -556,17 +556,17 @@ class InterventionListMapView(ListCreateAPIView):
 
         if query_params:
             queries = []
-            if "country_programme" in query_params.keys():
+            if "country_programme" in query_params:
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
-            if "section" in query_params.keys():
+            if "section" in query_params:
                 if tenant_switch_is_active("prp_mode_off"):
                     sq = Q(sections__pk=query_params.get("section"))
                 else:
                     sq = Q(result_links__ll_results__applied_indicators__section__pk=query_params.get("section"))
                 queries.append(sq)
-            if "status" in query_params.keys():
+            if "status" in query_params:
                 queries.append(Q(status=query_params.get("status")))
-            if "partner" in query_params.keys():
+            if "partner" in query_params:
                 queries.append(Q(agreement__partner=query_params.get("partner")))
             if queries:
                 expression = functools.reduce(operator.and_, queries)

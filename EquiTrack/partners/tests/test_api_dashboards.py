@@ -28,7 +28,7 @@ class TestInterventionPartnershipDashView(APITenantTestCase):
             user=self.unicef_staff
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.rendered_content)
+        data = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["intervention_id"], str(self.intervention.pk))
 
