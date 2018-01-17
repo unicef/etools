@@ -1,11 +1,14 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+from datetime import datetime
+
+from audit.models import Audit, Engagement
+from audit.tests.factories import (
+    AuditFactory, MicroAssessmentFactory, RiskFactory, SpecialAuditFactory, SpotCheckFactory,)
 from EquiTrack.factories import PartnerFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
-from audit.models import Engagement, Audit
-from audit.tests.factories import SpotCheckFactory, AuditFactory, SpecialAuditFactory, MicroAssessmentFactory, \
-    RiskFactory
 from hact.tests.factories import AggregateHactFactory
-from partners.models import PartnerType, PartnerOrganization
-from datetime import datetime
+from partners.models import PartnerOrganization, PartnerType
 
 
 class TestAggregateHact(FastTenantTestCase):
@@ -92,7 +95,7 @@ class TestAggregateHact(FastTenantTestCase):
         MicroAssessmentFactory(
             status=Engagement.FINAL, date_of_draft_report_to_unicef=datetime(datetime.today().year, 8, 10))
         assurance_activities = self.aggregate_hact.get_assurance_activities()
-        self.assertEqual(len(assurance_activities.keys()), 6)
+        self.assertEqual(len(list(assurance_activities.keys())), 6)
         self.assertEqual(assurance_activities['programmatic_visits']['completed'], 0)
         self.assertEqual(assurance_activities['programmatic_visits']['min_required'], 5)
         self.assertEqual(assurance_activities['spot_checks']['completed'], 0)

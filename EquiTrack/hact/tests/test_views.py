@@ -1,11 +1,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.core.urlresolvers import reverse
+
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.tests.mixins import APITenantTestCase
 from EquiTrack.factories import PartnerFactory, UserFactory
+from EquiTrack.tests.mixins import APITenantTestCase
 from hact.tests.factories import HactHistoryFactory
 from partners.models import PartnerOrganization, PartnerType
 

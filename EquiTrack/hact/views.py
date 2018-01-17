@@ -3,12 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import json
 
 from django_filters.rest_framework import DjangoFilterBackend
-from hact.models import AggregateHact, HactHistory
-from hact.renderers import HactHistoryCSVRenderer
-from hact.serializers import AggregateHactSerializer, HactHistoryExportSerializer, HactHistorySerializer
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework_csv.renderers import JSONRenderer
+
+from hact.models import AggregateHact, HactHistory
+from hact.renderers import HactHistoryCSVRenderer
+from hact.serializers import AggregateHactSerializer, HactHistoryExportSerializer, HactHistorySerializer
 
 
 class HactHistoryAPIView(ListAPIView):

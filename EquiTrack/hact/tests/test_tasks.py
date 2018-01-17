@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from EquiTrack.tests.mixins import FastTenantTestCase
 from hact.models import AggregateHact
 from hact.tasks import update_aggregate_hact_values
