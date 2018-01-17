@@ -18,7 +18,6 @@ from EquiTrack.factories import (
     DonorFactory,
     FileTypeFactory,
     FundsReservationHeaderFactory,
-    GovernmentInterventionFactory,
     GrantFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
@@ -41,7 +40,6 @@ from EquiTrack.factories import (
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from partners import models
 from partners.tests.factories import (
-    GovernmentInterventionResultFactory,
     WorkspaceFileTypeFactory,
     )
 from t2f.models import Travel, TravelType
@@ -1609,23 +1607,3 @@ class TestStrUnicode(TestCase):
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
         self.assertTrue(str(instance).startswith(b'tv\xc3\xa5'))
         self.assertTrue(unicode(instance).startswith(u'tv\xe5'))
-
-    def test_government_intervention(self):
-        instance = GovernmentInterventionFactory.build(number=b'two')
-        self.assertIn(b'two', str(instance))
-        self.assertIn(u'two', unicode(instance))
-
-        instance = GovernmentInterventionFactory.build(number=u'tv\xe5')
-        self.assertIn(b'tv\xc3\xa5', str(instance))
-        self.assertIn(u'tv\xe5', unicode(instance))
-
-    def test_government_intervention_result(self):
-        government_intervention = GovernmentInterventionFactory.build(number=b'two')
-        instance = GovernmentInterventionResultFactory.build(intervention=government_intervention)
-        self.assertIn(b'two', str(instance))
-        self.assertIn(u'two', unicode(instance))
-
-        government_intervention = GovernmentInterventionFactory.build(number=u'tv\xe5')
-        instance = GovernmentInterventionResultFactory.build(intervention=government_intervention)
-        self.assertIn(b'tv\xc3\xa5', str(instance))
-        self.assertIn(u'tv\xe5', unicode(instance))

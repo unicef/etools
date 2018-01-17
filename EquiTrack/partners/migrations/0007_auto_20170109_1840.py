@@ -9,22 +9,7 @@ def reverse(apps, schema_editor):
     pass
 
 def gov_int_copy_rs_to_cp(apps, schema_editor):
-    GovernmentIntervention = apps.get_model('partners', 'GovernmentIntervention')
-    CountryProgramme = apps.get_model('reports', 'CountryProgramme')
-    for gi in GovernmentIntervention.objects.all():
-        try:
-            gi.country_programme = CountryProgramme.objects.get(wbs__contains='/A0/',
-                                                                from_date__lte=gi.result_structure.from_date,
-                                                                to_date__gte=gi.result_structure.to_date)
-            gi.save()
-            print 'saved gi {}'.format(gi.number)
-        except CountryProgramme.DoesNotExist:
-            print 'Mismatch in the schema. Country Programme does not exist for all ResultStructures gi:'.format(gi.number)
-        except CountryProgramme.MultipleObjectsReturned:
-            gi.country_programme = CountryProgramme.objects.filter(wbs__contains='/A0/',
-                                                                from_date__lte=gi.result_structure.from_date,
-                                                                to_date__gte=gi.result_structure.to_date).first()
-            gi.save()
+    pass
 
 class Migration(migrations.Migration):
 
