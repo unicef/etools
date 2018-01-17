@@ -32,6 +32,7 @@ from EquiTrack.factories import (
     PartnerFactory,
     PartnerStaffFactory,
     ResultFactory,
+    ResultTypeFactory,
     SectorFactory,
     UserFactory,
 )
@@ -760,7 +761,7 @@ class TestPartnershipViews(APITenantTestCase):
                                      partner_manager=self.partner_staff_member)
         self.intervention = InterventionFactory(agreement=agreement)
 
-        self.result_type = ResultType.objects.get(id=1)
+        self.result_type = ResultTypeFactory()
         self.result = ResultFactory(result_type=self.result_type,)
         self.partnership_budget = InterventionBudget.objects.create(
             intervention=self.intervention,
