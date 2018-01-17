@@ -587,11 +587,17 @@ class DetailedFindingInfo(models.Model):
 
 @python_2_unicode_compatible
 class Audit(Engagement):
+
+    OPTION_UNQUALIFIED = "unqualified"
+    OPTION_QUALIFIED = "qualified"
+    OPTION_DENIAL = "disclaimer_opinion"
+    OPTION_ADVERSE = "adverse_opinion"
+
     OPTIONS = Choices(
-        ("unqualified", _("Unqualified")),
-        ("qualified", _("Qualified")),
-        ("disclaimer_opinion", _("Disclaimer opinion")),
-        ("adverse_opinion", _("Adverse opinion")),
+        (OPTION_UNQUALIFIED, _("Unqualified")),
+        (OPTION_QUALIFIED, _("Qualified")),
+        (OPTION_DENIAL, _("Disclaimer opinion")),
+        (OPTION_ADVERSE, _("Adverse opinion")),
     )
 
     audited_expenditure = models.DecimalField(verbose_name=_('Audited Expenditure $'), null=True, blank=True,
