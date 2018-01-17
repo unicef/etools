@@ -147,7 +147,7 @@ urlpatterns = (
         view=InterventionResultLinkDeleteView.as_view(http_method_names=['delete', ]),
         name='intervention-results-del'),
     url(r'^interventions/amendments/$',
-        view=InterventionAmendmentListAPIView.as_view(http_method_names=['get', ]),
+        view=InterventionAmendmentListAPIView.as_view(http_method_names=['get', 'post']),
         name='intervention-amendments'),
     url(r'^interventions/amendments/(?P<pk>\d+)/$',
         view=InterventionAmendmentDeleteView.as_view(http_method_names=['delete', ]),

@@ -1751,11 +1751,8 @@ class Intervention(TimeStampedModel):
 
         # update reference number if needed
         amendment_number = kwargs.get('amendment_number', None)
-        in_amendment = kwargs.get('in_amendment', None)
         if amendment_number:
             self.update_reference_number(amendment_number)
-        if in_amendment is not None:
-            self.in_amendment = in_amendment
         if not oldself:
             # to create a reference number we need a pk
             super(Intervention, self).save()
@@ -1835,7 +1832,8 @@ class InterventionAmendment(TimeStampedModel):
         # set
         if self.pk is None:
             self.amendment_number = self.compute_reference_number()
-            self.intervention.save(amendment_number=self.amendment_number, in_amendment=True)
+            self.intervention.in_amendment = True
+            self.intervention.save(amendment_number=self.amendment_number)
         return super(InterventionAmendment, self).save(**kwargs)
 
     def __str__(self):
