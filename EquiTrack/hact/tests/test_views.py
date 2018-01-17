@@ -19,7 +19,7 @@ class TestHactHistoryAPIView(APITenantTestCase):
             partner_type=PartnerType.UN_AGENCY,
             shared_partner="with UNFPA",
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UN],
-            rating="High",
+            rating=PartnerOrganization.RATING_HIGH,
             total_ct_cp=200.0,
             total_ct_cy=150.0
         )
