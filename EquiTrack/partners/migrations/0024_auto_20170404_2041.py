@@ -40,6 +40,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='governmentintervention',
             name='number',
-            field=models.CharField(blank=True, max_length=45L, unique=True, verbose_name=b'Reference Number'),
+            field=models.CharField(blank=True, max_length=45, unique=True, verbose_name='Reference Number'),
         ),
     ]
