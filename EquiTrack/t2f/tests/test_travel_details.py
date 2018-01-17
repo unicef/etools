@@ -2,15 +2,17 @@ from __future__ import unicode_literals
 
 import json
 from datetime import datetime
-from StringIO import StringIO
 
 from django.core.urlresolvers import reverse
+from django.utils import six
+from django.utils.six import StringIO
 import factory
 from freezegun import freeze_time
 from pytz import UTC
 
 from EquiTrack.factories import InterventionFactory, LocationFactory, PartnerFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+
 from partners.models import PartnerType
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
@@ -58,7 +60,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
             response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                            kwargs={'travel_pk': self.travel.id}),
                                             user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertKeysIn(['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
                            'completed_at', 'certification_note', 'misc_expenses', 'traveler', 'id', 'additional_note',
@@ -82,7 +84,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                 reverse('t2f:travels:details:index', args=[self.travel.pk]),
                 user=self.unicef_staff
             )
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertKeysIn(
             ['cancellation_note', 'supervisor', 'attachments', 'office', 'expenses', 'ta_required',
@@ -105,7 +107,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
             reverse('t2f:travels:details:attachments', args=[self.travel.pk]),
             user=self.unicef_staff
         )
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 1)
         self.assertKeysIn(
             ['id', 'name', 'type', 'url', 'file'],
@@ -125,7 +127,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
             reverse('t2f:travels:details:attachments', args=[self.travel.pk]),
             user=self.unicef_staff
         )
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 1)
         self.assertKeysIn(
             ['id', 'name', 'type', 'url', 'file'],
@@ -145,7 +147,8 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                                      name='test_attachment',
                                                      type='document')
         attachment.file.save('fake.txt', fakefile)
-        self.assertGreater(fakefile.len, 0)
+        # QUESTION: What was this supposed to do? StringIO has no ``len`` attribute:
+        # self.assertGreater(fakefile.len, 0)
         fakefile.seek(0)
 
         data = {'name': 'second',
@@ -154,7 +157,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:attachments',
                                                         kwargs={'travel_pk': travel.id}),
                                         data=data, user=self.unicef_staff, request_format='multipart')
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         expected_keys = ['file', 'id', 'name', 'type', 'url']
         self.assertKeysIn(expected_keys, response_json)
@@ -182,7 +185,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                               'type': expense_type.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['expenses'][0]['currency'], response_json['expenses'][0]['document_currency'])
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
@@ -196,7 +199,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                          kwargs={'travel_pk': travel_id}),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['deductions']), 1)
 
     def test_duplication(self):
@@ -204,7 +207,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:clone_for_driver',
                                                         kwargs={'travel_pk': self.travel.id}),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertIn('id', response_json)
 
         cloned_travel = Travel.objects.get(id=response_json['id'])
@@ -214,7 +217,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:details:clone_for_secondary_traveler',
                                                         kwargs={'travel_pk': self.travel.id}),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertIn('id', response_json)
 
     def test_airlines(self):
@@ -238,7 +241,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                 'ta_required': True,
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']
@@ -248,7 +251,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                          kwargs={'travel_pk': travel_id}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['itinerary'][0]['airlines'], [airlines_1.id, airlines_3.id])
 
     def test_preserved_expenses(self):
@@ -286,7 +289,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                               'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']
@@ -295,14 +298,14 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -310,7 +313,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                                                 'transition_name': 'send_for_payment'}),
                                         data=data, user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.00')
 
     def test_detailed_expenses(self):
@@ -345,7 +348,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                               'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['cost_summary']['expenses'],
                          [{'amount': '120.00',
                            'currency': currency.id,
@@ -383,7 +386,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
                                                         kwargs={'transition_name': 'save_and_submit'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, {'cost_assignments': ['Shares should add up to 100%']})
 
         data = {'cost_assignments': [{'wbs': wbs.id,
@@ -413,7 +416,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
                                                         kwargs={'transition_name': 'save_and_submit'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertKeysIn(['wbs', 'fund', 'grant', 'share', 'business_area', 'delegate'],
                           response_json['cost_assignments'][0])
 
@@ -428,7 +431,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                 'traveler': self.traveler.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         data = response_json
         data['activities'].append({'locations': [location_3.id],
@@ -436,9 +439,9 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                          kwargs={'travel_pk': response_json['id']}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
-        self.assertItemsEqual(response_json['activities'][0]['locations'], [location.id, location_2.id])
+        six.assertCountEqual(self, response_json['activities'][0]['locations'], [location.id, location_2.id])
         self.assertEqual(response_json['activities'][1]['locations'], [location_3.id])
 
     def test_activity_results(self):
@@ -457,7 +460,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                         user=self.traveler)
 
         self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, {u'activities': [{u'result': [u'This field is required.']}]})
 
     def test_itinerary_dates(self):
@@ -487,7 +490,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                 'ta_required': True}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})
 
     def test_itinerary_submit_fail(self):
@@ -498,13 +501,13 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                 'activities': []}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': response_json['id'],
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, {'non_field_errors': ['Travel must have at least two itinerary item']})
 
     def test_itinerary_origin_destination(self):
@@ -535,7 +538,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                 'ta_required': True}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, {'itinerary': ['Origin should match with the previous destination']})
 
     def test_itinerary_dsa_regions(self):
@@ -565,14 +568,14 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                 'ta_required': True}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         travel_id = response_json['id']
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, {'non_field_errors': ['All itinerary items has to have DSA region assigned']})
 
         # Non ta trip
@@ -600,7 +603,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                 'ta_required': False}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         travel_id = response_json['id']
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -619,14 +622,14 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff, expected_status_code=None)
         self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
 
     def test_action_points(self):
         response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                        kwargs={'travel_pk': self.travel.id}),
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(len(response_json['action_points']), 1)
 
@@ -645,7 +648,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                                          kwargs={'travel_pk': self.travel.id}),
                                         data=data,
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(len(response_json['action_points']), 2)
 
@@ -678,7 +681,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         itinerary_origin_destination_expectation = [('a', 'b'), ('b', 'c')]
         extracted_origin_destination = [(i['origin'], i['destination']) for i in response_json['itinerary']]
         self.assertEqual(extracted_origin_destination, itinerary_origin_destination_expectation)
@@ -724,7 +727,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         itinerary_origin_destination_expectation = [u'Origin should match with the previous destination']
         self.assertEqual(response_json['itinerary'], itinerary_origin_destination_expectation)
 
@@ -761,7 +764,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
 
         data = {'itinerary': [],
@@ -872,7 +875,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                                         kwargs={'travel_pk': extra_travel.id,
                                                                 'transition_name': 'submit_for_approval'}),
                                         user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(response_json, {'non_field_errors': ['Maximum 3 open travels are allowed.']})
 
@@ -894,7 +897,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                                         kwargs={'travel_pk': extra_travel.id,
                                                                 'transition_name': 'submit_for_approval'}),
                                         user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(response_json,
                          {'non_field_errors': ['Another of your trips ended more than 15 days ago, but was not '
@@ -917,7 +920,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         travel = Travel.objects.get(id=response_json['id'])
         travel.clearances.delete()
@@ -947,7 +950,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         activity = response_json['activities'][0]
 
         self.assertEqual(activity['partnership'], partnership.id)
@@ -971,7 +974,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                 'ta_required': True,
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         travel_id = response_json['id']
 
         airline.delete()
@@ -979,7 +982,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                        kwargs={'travel_pk': travel_id}),
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['itinerary'][0]['airlines'], [airline.id])
 
     def test_save_with_ghost_data(self):
@@ -1001,7 +1004,7 @@ class TravelDetails(URLAssertionMixin, APITenantTestCase):
                 'ta_required': True,
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         travel_id = response_json['id']
 
         airline.delete()

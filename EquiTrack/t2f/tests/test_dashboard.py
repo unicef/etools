@@ -37,7 +37,7 @@ class TravelActivityList(APITenantTestCase):
                                                            kwargs={'partner_organization_pk': partner_id}),
                                             user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         expected_keys = ['primary_traveler', 'travel_type', 'date', 'locations', 'status', 'reference_number',
                          'trip_id']
 
@@ -59,7 +59,7 @@ class TravelActivityList(APITenantTestCase):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:activities',
                                                            kwargs={'partner_organization_pk': partner_id}),
                                             user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 2)
 
     def test_completed_counts(self):
@@ -124,7 +124,7 @@ class TravelActivityList(APITenantTestCase):
                                                                 'transition_name': 'mark_as_completed'}),
                                         user=traveler, data=data)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         partner_programmatic_visits_after_complete = PartnerOrganization.objects.get(id=act1.partner.id)
         partner_spot_checks_after_complete = PartnerOrganization.objects.get(id=act2.partner.id)
         self.assertEqual(response_json['status'], Travel.COMPLETED)

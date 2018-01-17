@@ -10,6 +10,7 @@ from rest_framework import status
 
 from EquiTrack.factories import LocationFactory, ResultFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+
 from publics.models import DSARegion
 from publics.tests.factories import WBSFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
@@ -60,7 +61,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
         with self.assertNumQueries(5):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:index'), user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         expected_keys = ['data', 'page_count', 'total_count']
         self.assertKeysIn(expected_keys, response_json)
 
@@ -78,7 +79,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
             user=self.unicef_staff
         )
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         expected_keys = ['data', 'page_count', 'total_count']
         self.assertKeysIn(expected_keys, response_json)
         self.assertEqual(len(response_json['data']), 1)
@@ -98,7 +99,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
                 }
             )
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expected_keys = ['travels_by_section', 'completed', 'planned', 'approved']
@@ -128,7 +129,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
                 }
             )
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expected_keys = ['travels_by_section', 'completed', 'planned', 'approved']
@@ -146,7 +147,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
                 data={"office_id": self.travel.office.id}
             )
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expected_keys = ['action_points_by_section']
@@ -162,7 +163,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
                 user=self.unicef_staff,
             )
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expected_keys = ['action_points_by_section']
@@ -176,7 +177,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
 
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'page': 1, 'page_size': 2},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertIn('data', response_json)
         self.assertEqual(len(response_json['data']), 2)
         self.assertIn('page_count', response_json)
@@ -184,7 +185,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
 
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'page': 2, 'page_size': 2},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertIn('data', response_json)
         self.assertEqual(len(response_json['data']), 1)
 
@@ -204,7 +205,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'sort_by': 'reference_number',
                                                                                         'reverse': False},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertIn('data', response_json)
         reference_numbers = [e['reference_number'] for e in response_json['data']]
         self.assertEqual(reference_numbers, ['2016/1', '2016/2', '2016/3'])
@@ -212,7 +213,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'sort_by': 'reference_number',
                                                                                         'reverse': True},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertIn('data', response_json)
         reference_numbers = [e['reference_number'] for e in response_json['data']]
         self.assertEqual(reference_numbers, ['2016/3', '2016/2', '2016/1'])
@@ -238,7 +239,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),
                                         data={'f_travel_type': TravelType.MEETING},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertIn('data', response_json)
         self.assertEqual(len(response_json['data']), 1)
 
@@ -264,7 +265,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertIn('data', response_json)
         self.assertEqual(len(response_json['data']), 1)
         self.assertEqual(response_json['data'][0]['id'], t2.id)
@@ -275,7 +276,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),
                                         data={'search': travel.reference_number},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['data']), 1)
 
     def test_show_hidden(self):
@@ -283,12 +284,12 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
 
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'show_hidden': True},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['data']), 2)
 
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'show_hidden': False},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['data']), 1)
 
     def test_travel_creation(self):
@@ -354,5 +355,5 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['itinerary']), 1)
