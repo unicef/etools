@@ -1,12 +1,12 @@
 from __future__ import unicode_literals
 
 import csv
-import json
 from datetime import datetime, timedelta
-from StringIO import StringIO
+import json
 
 from django.core import mail
 from django.core.urlresolvers import reverse
+from django.utils.six import string_types, StringIO
 from freezegun import freeze_time
 from pytz import UTC
 
@@ -44,7 +44,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
         with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('t2f:action_points:list'), user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         expected_keys = ['data', 'page_count', 'total_count']
         self.assertKeysIn(expected_keys, response_json)
 
@@ -73,7 +73,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:action_points:details',
                                                        kwargs={'action_point_pk': action_point_pk}),
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(set(response_json.keys()),
                          {'status',
@@ -99,19 +99,19 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
         ap_2 = ActionPointFactory(travel=self.travel)
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'), user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['data']), 3)
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
                                         data={'search': 'search_in_desc'},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['data']), 1)
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
                                         data={'search': ap_2.action_point_number},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['data']), 1)
 
     def test_filtering(self):
@@ -123,27 +123,27 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
                            assigned_by=self.traveler, status='ongoing')
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'), user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['data']), 5)
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
                                         data={'f_assigned_by': self.unicef_staff.id},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(len(response_json['data']), 1)
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
                                         data={'f_person_responsible': self.traveler.id},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['data']), 3)
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
                                         data={'f_person_responsible': self.traveler.id,
                                               'mf_status': 'open,completed'},
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json['data']), 2)
 
     def test_saving(self):
@@ -161,7 +161,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
                                         data=data,
                                         user=self.unicef_staff)
 
-        action_points = json.loads(response.rendered_content)['action_points']
+        action_points = json.loads(response.rendered_content.decode('utf-8'))['action_points']
         self.assertEqual(len(action_points), 1)
 
         self.assertEqual(len(mail.outbox), 1)
@@ -181,7 +181,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
                                         data=data,
                                         user=self.unicef_staff)
 
-        action_points = json.loads(response.rendered_content)['action_points']
+        action_points = json.loads(response.rendered_content.decode('utf-8'))['action_points']
         self.assertEqual(len(action_points), 1)
 
         data = {'action_points': [{'description': 'Something',
@@ -198,7 +198,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
                                         data=data,
                                         user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)['action_points']
+        response_json = json.loads(response.rendered_content.decode('utf-8'))['action_points']
         self.assertEqual(response_json,
                          [{'completed_at': ['This field is required.'],
                            'actions_taken': ['This field is required.']}])
@@ -218,7 +218,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
                                         data=data,
                                         user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)['action_points']
+        response_json = json.loads(response.rendered_content.decode('utf-8'))['action_points']
         self.assertEqual(response_json,
                          [{'actions_taken': ['This field is required.']}])
 
@@ -239,7 +239,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
                                         data=data,
                                         user=self.unicef_staff)
 
-        action_point_json = json.loads(response.rendered_content)['action_points']
+        action_point_json = json.loads(response.rendered_content.decode('utf-8'))['action_points']
         self.assertEqual(action_point_json[0]['status'], ActionPoint.ONGOING)
 
         # Check switch to completed
@@ -258,7 +258,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
                                         data=data,
                                         user=self.unicef_staff)
 
-        action_point_json = json.loads(response.rendered_content)['action_points']
+        action_point_json = json.loads(response.rendered_content.decode('utf-8'))['action_points']
         self.assertEqual(action_point_json[0]['status'], ActionPoint.COMPLETED)
 
     def test_invalid_status(self):
@@ -276,14 +276,14 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
                                         data=data,
                                         user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)['action_points']
+        response_json = json.loads(response.rendered_content.decode('utf-8'))['action_points']
         self.assertEqual(response_json,
-                         [{'status': ['Invalid status. Possible choices: cancelled, ongoing, completed, open']}])
+                         [{'status': ['Invalid status. Possible choices: cancelled, completed, ongoing, open']}])
 
     def test_export(self):
         response = self.forced_auth_req('get', reverse('t2f:action_points:export'),
                                         data={'format': 'csv'}, user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
+        export_csv = csv.reader(StringIO(response.content.decode('utf-8')))
         rows = [r for r in export_csv]
         self.assertEqual(len(rows), 2)
 
@@ -301,9 +301,9 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
                           'Assigned By',
                           'URL'])
 
-        self.assertTrue(isinstance(rows[1][4], (str, unicode)))
+        self.assertTrue(isinstance(rows[1][4], string_types))
         self.assertFalse(rows[1][4].isdigit())
-        self.assertTrue(isinstance(rows[1][9], (str, unicode)))
+        self.assertTrue(isinstance(rows[1][9], string_types))
         self.assertFalse(rows[1][9].isdigit())
 
     def test_mail_on_first_save(self):
