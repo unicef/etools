@@ -1,11 +1,13 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from datetime import datetime
 
 from django.db import connection
 
 from celery.utils.log import get_task_logger
-from hact.models import AggregateHact
 
 from EquiTrack.celery import app
+from hact.models import AggregateHact
 from users.models import Country
 
 logger = get_task_logger(__name__)
