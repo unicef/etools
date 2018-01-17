@@ -10,6 +10,7 @@ from EquiTrack.factories import PartnerFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from management.models import FlaggedIssue
 from management.tests.factories import FlaggedIssueFactory
+from django.utils.six import binary_type, text_type
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
@@ -21,16 +22,16 @@ class TestStrUnicode(FastTenantTestCase):
             issue_id="321",
             message='test message'
         )
-        self.assertEqual(str(issue), b"test message")
-        self.assertEqual(unicode(issue), u"test message")
+        self.assertEqual(binary_type(issue), b"test message")
+        self.assertEqual(text_type(issue), u"test message")
 
         issue = FlaggedIssueFactory(
             content_object=partner,
             issue_id="321",
             message=u"R\xe4dda Barnen"
         )
-        self.assertEqual(str(issue), b"R\xc3\xa4dda Barnen")
-        self.assertEqual(unicode(issue), u"R\xe4dda Barnen")
+        self.assertEqual(binary_type(issue), b"R\xc3\xa4dda Barnen")
+        self.assertEqual(text_type(issue), u"R\xe4dda Barnen")
 
 
 class FlaggedIssueTest(FastTenantTestCase):
