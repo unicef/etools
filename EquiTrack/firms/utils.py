@@ -6,7 +6,7 @@ import uuid
 
 def generate_username():
     base = 32
-    ABC = (string.digits + string.lowercase)[:base]
+    ABC = (string.digits + string.ascii_lowercase)[:base]
 
     uid = uuid.uuid4().int
     digits = []
