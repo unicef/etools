@@ -27,7 +27,7 @@ class TestLocationViews(APITenantTestCase):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
         self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(
             self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
 
@@ -109,7 +109,7 @@ class TestLocationViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 5)
-        self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
         self.assertIn("Loc", response.data[0]["name"])
 
 
