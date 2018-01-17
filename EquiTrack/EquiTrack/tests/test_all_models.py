@@ -23,14 +23,9 @@ EXCLUDED_PACKAGES = (
     'post_office',
 
     # These are the eTools packages that aren't yet using @python_2_unicode_compatible and therefore aren't yet
-    # Python 3-compatible. As they're fixed one by one, they'll be removed from this list.
-    'audit',
-    'partners',
-    't2f',
+    # Python 3-compatible. As they're fixed one by one, they'll be removed from this list
     'users',
-    'vision',
-    'workplan',
-    )
+)
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")

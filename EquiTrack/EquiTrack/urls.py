@@ -1,59 +1,26 @@
 from __future__ import absolute_import
 
-# Django imports
 from django.conf import settings
 from django.conf.urls import include, url
-from django.views.generic import TemplateView
 from django.contrib import admin
+from django.views.generic import TemplateView
 
-# 3rd party imports
-from rest_framework_swagger.views import get_swagger_view
-from rest_framework_swagger.renderers import OpenAPIRenderer
-from rest_framework.schemas import get_schema_view
-import rest_framework_jwt.views
-from rest_framework_nested import routers
 import djangosaml2.views
+import rest_framework_jwt.views
+from rest_framework.schemas import get_schema_view
+from rest_framework_nested import routers
+from rest_framework_swagger.renderers import OpenAPIRenderer
+from rest_framework_swagger.views import get_swagger_view
 
-# Project imports
-from EquiTrack.views import (
-    MainView,
-    OutdatedBrowserView,
-    IssueJWTRedirectView)
-from locations.views import (
-    LocationTypesViewSet,
-    LocationsViewSet,
-    LocationsLightViewSet,
-)
+from EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
+from locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
 from management.urls import urlpatterns as management_urls
-from partners.views.v1 import (
-    FileTypeViewSet,
-)
+from partners.views.v1 import FileTypeViewSet
 from publics import urls as publics_patterns
 from publics.views import StaticDataView
-from reports.views.v1 import (
-    ResultTypeViewSet,
-    SectorViewSet,
-    IndicatorViewSet,
-    ResultViewSet,
-    UnitViewSet
-)
+from reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, SectorViewSet, UnitViewSet
 from t2f.urls import urlpatterns as t2f_patterns
-from users.views import (
-    CountriesViewSet,
-    GroupViewSet,
-    ModuleRedirectView,
-    OfficeViewSet,
-    SectionViewSet,
-    UserViewSet,
-    )
-from workplan.views import (
-    CommentViewSet,
-    WorkplanViewSet,
-    WorkplanProjectViewSet,
-    LabelViewSet,
-    MilestoneViewSet
-)
-
+from users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
@@ -84,12 +51,6 @@ api.register(r'locations', LocationsViewSet, base_name='locations')
 api.register(r'locations-light', LocationsLightViewSet, base_name='locations-light')
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
-api.register(r'comments', CommentViewSet, base_name='comments')
-api.register(r'workplans', WorkplanViewSet, base_name='workplans')
-api.register(r'workplans/milestones', MilestoneViewSet, base_name='milestones')
-api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_projects')
-api.register(r'labels', LabelViewSet, base_name='labels')
-
 urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
@@ -113,16 +74,18 @@ urlpatterns = [
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
     url(r'^api/prp/v1/', include('partners.prp_urls', namespace='prp_api_v1')),
-    url(r'^api/v2/users/', include('users.urls_v2')),
+    url(r'^api/v2/hact/', include('hact.urls', namespace='hact_api')),
+    url(r'^api/v2/users/', include('users.urls_v2', namespace='users_v2')),
     url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
     url(
         r'^api/v2/activity/',
         include('snapshot.urls', namespace='snapshot_api')
     ),
+    url(r'^api/v2/environment/', include('environment.urls_v2', namespace='environment')),
 
 
     # ***************  API version 3  ******************
-    url(r'^api/v3/users/', include('users.urls_v3')),
+    url(r'^api/v3/users/', include('users.urls_v3', namespace='users_v3')),
 
 
     url(r'^api/docs/', schema_view),

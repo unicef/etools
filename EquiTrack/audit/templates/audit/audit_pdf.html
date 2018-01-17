@@ -1,0 +1,135 @@
+{% extends "audit/engagement_pdf.html" %}
+
+{% block extra_content %}
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Summary of audit findings</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td colspan="2">Partner Name</td>
+          <td>Audited Expenditure $</td>
+          <td>Financial Findings $</td>
+          <td>% of Audited Expenditure</td>
+          <td>Audit Opinion</td>
+          <td>No. of Financial Findings</td>
+          <td colspan="3" style="padding: 0">
+            <table>
+              <tr style="border-bottom: none;">
+                <td colspan="3">No. of Key Control Weaknesses</td>
+              </tr>
+              <tr style="border-bottom: none;">
+                <td>High risk</td>
+                <td>Medium risk</td>
+                <td>Low risk</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">{{ engagement.partner.name }}</td>
+          <td>{{ engagement.audited_expenditure|default_if_none:"0.00" }}</td>
+          <td>{{ engagement.financial_findings|default_if_none:"0.00" }}</td>
+          <td>{{ engagement.percent_of_audited_expenditure|default_if_none:"0.00" }}</td>
+          <td>{{ engagement.audit_opinion|default:"-"|title }}</td>
+          <td>{{ engagement.financial_finding_set|length }}</td>
+          <td>{{ engagement.key_internal_weakness.high_risk_count }}</td>
+          <td>{{ engagement.key_internal_weakness.medium_risk_count }}</td>
+          <td>{{ engagement.key_internal_weakness.low_risk_count }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Assessment of Key Internal Controls</div>
+    </div>
+    <table class="content-section__wrapper">
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Recommendation</div>
+          <div class="input-container__value">{{ engagement.recommendation|default:"-" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Audit observation</div>
+          <div class="input-container__value">{{ engagement.audit_observation|default:"-" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">IP Response</div>
+          <div class="input-container__value">{{ engagement.ip_response|default:"-" }}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <pdf:nextpage></pdf:nextpage>
+
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Financial Findings</div>
+    </div>
+    <table class="content-section__wrapper">
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Audit Opinion</div>
+          <div class="input-container__value">
+            {{ engagement.audit_opinion|default:"-"|title }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Audited Expenditure $</div>
+          <div class="input-container__value">
+            $ {{ engagement.audited_expenditure|default:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">Financial Findings $</div>
+          <div class="input-container__value">
+            $ {{ engagement.financial_findings|default_if_none:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">Amount refunded</div>
+          <div class="input-container__value">
+            $ {{ engagement.amount_refunded|default:"0.00" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Additional supporting documentation provided</div>
+          <div class="input-container__value">
+            $ {{ engagement.additional_supporting_documentation_provided|default:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">Justification provided and accepted</div>
+          <div class="input-container__value">
+            $ {{ engagement.justification_provided_and_accepted|default:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">Impairment</div>
+          <div class="input-container__value">
+            $ {{ engagement.write_off_required|default:"0.00" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Pending unsupported Amount</div>
+          <div class="input-container__value">
+            $ {{ engagement.pending_unsupported_amount|default:"0.00" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container" colspan="3">
+          <div class="input-container__label">Provide explanation for additional information received from the IP or add attachments</div>
+          <div class="input-container__value">
+            {{ engagement.explanation_for_additional_information|default:"-" }}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+{% endblock %}

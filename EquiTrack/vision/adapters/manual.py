@@ -1,11 +1,14 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import json
 import logging
 from collections import OrderedDict
 
 from django.db import connection
 
+from vision.exceptions import VisionException
 from vision.utils import wcf_json_date_as_datetime
-from vision.vision_data_synchronizer import VisionDataLoader, VisionException, VisionDataSynchronizer
+from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer
 
 logger = logging.getLogger(__name__)
 
@@ -70,19 +73,27 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                         [(field_name, value) for field_name, value in mapped_item.items()
                          if model._meta.get_field(field_name).unique]
                     )
+
+                    if not kwargs:
+                        for fields in model._meta.unique_together:
+                            if all(field in mapped_item.keys() for field in fields):
+                                unique_fields = fields
+                                break
+
+                        kwargs = {
+                            field: mapped_item[field] for field in unique_fields
+                        }
+
                     defaults = dict(
                         [(field_name, value) for field_name, value in mapped_item.items()
                          if field_name not in kwargs.keys()]
                     )
-                    obj, created = model.objects.update_or_create(
+                    model.objects.update_or_create(
                         defaults=defaults, **kwargs
                     )
             except Exception as exp:
-                    print ("Exception message: {} ")
-                    print ("Exception type: {} ")
-                    print ("Exception args: {} ".format(
-                            exp.message, type(exp).__name__, exp.args
-                        ))
+                logger.warning("Exception message: {}".format(exp.message))
+                logger.warning("Exception type: {}".format(type(exp)))
 
         for record in filtered_records:
             _process_record(record)
@@ -104,11 +115,6 @@ class ManualVisionSynchronizer(MultiModelDataSynchronizer):
                 raise VisionException(message='You must set the ENDPOINT name')
 
             self.country = country
-            self.url = '{}/{}/{}'.format(
-                self.URL,
-                self.ENDPOINT,
-                object_number
-            )
 
-            logger.info("Vision sync url:%s" % self.url)
             connection.set_tenant(country)
+            logger.info('Country is {}'.format(country.name))

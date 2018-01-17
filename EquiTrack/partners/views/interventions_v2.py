@@ -22,6 +22,7 @@ from rest_framework.generics import (
 from EquiTrack.mixins import ExportModelMixin
 from EquiTrack.renderers import CSVFlatRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
+from environment.helpers import tenant_switch_is_active
 from partners.models import (
     Intervention,
     InterventionPlannedVisits,
@@ -178,7 +179,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
                     result_links__ll_results__applied_indicators__cluster_indicator_title__icontains=query_params
                     .get("cluster")))
             if "status" in query_params.keys():
-                queries.append(Q(status=query_params.get("status")))
+                queries.append(Q(status__in=query_params.get("status").split(',')))
             if "unicef_focal_points" in query_params.keys():
                 queries.append(Q(unicef_focal_points__in=[query_params.get("unicef_focal_points")]))
             if "start" in query_params.keys():
@@ -558,7 +559,11 @@ class InterventionListMapView(ListCreateAPIView):
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "section" in query_params.keys():
-                queries.append(Q(sections__pk=query_params.get("section")))
+                if tenant_switch_is_active("prp_mode_off"):
+                    sq = Q(sections__pk=query_params.get("section"))
+                else:
+                    sq = Q(result_links__ll_results__applied_indicators__section__pk=query_params.get("section"))
+                queries.append(sq)
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "partner" in query_params.keys():

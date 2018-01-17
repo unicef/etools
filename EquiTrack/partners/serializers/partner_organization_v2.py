@@ -3,7 +3,7 @@ import json
 
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -28,6 +28,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
         data = super(PartnerStaffMemberCreateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
+        User = get_user_model()
         existing_user = None
 
         # user should be active first time it's created
@@ -90,6 +91,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         data = super(PartnerStaffMemberCreateUpdateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
+        User = get_user_model()
 
         try:
             existing_user = User.objects.get(email=email)
@@ -215,6 +217,13 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
+        extra_kwargs = {
+            "partner_type": {
+                "error_messages": {
+                    "null": u'Vendor record must belong to PRG2 account group (start from 2500 series)'
+                }
+            }
+        }
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
@@ -231,13 +240,17 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "short_name",
+            "type_of_assessment",
             "partner_type",
+            "partner_type_slug",
             "cso_type",
             "rating",
             "shared_partner",
             "shared_with",
             "total_ct_cp",
             "total_ct_cy",
-            "hact_min_requirements",
             "hact_values",
+            "hact_min_requirements",
+            "flags",
+            "outstanding_findings"
         )

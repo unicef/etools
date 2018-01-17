@@ -1,11 +1,12 @@
-from django.db import connection
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
+from django.db import connection
 
 from rest_framework import status
+from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.factories import UserFactory, LocationFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.factories import LocationFactory, UserFactory
+from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
 from locations.models import Location
 
 
@@ -110,3 +111,34 @@ class TestLocationViews(APITenantTestCase):
         self.assertEqual(len(response.data), 5)
         self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
         self.assertIn("Loc", response.data[0]["name"])
+
+
+class TestLocationAutocompleteView(FastTenantTestCase):
+    def setUp(self):
+        super(TestLocationAutocompleteView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.client = TenantClient(self.tenant)
+
+    def test_non_auth(self):
+        LocationFactory()
+        response = self.client.get(reverse("locations-autocomplete-light"))
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+    def test_get(self):
+        LocationFactory()
+        self.client.force_login(self.unicef_staff)
+        response = self.client.get(reverse("locations-autocomplete-light"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data["results"]), 1)
+
+    def test_get_filter(self):
+        LocationFactory(name="Test")
+        LocationFactory(name="Other")
+        self.client.force_login(self.unicef_staff)
+        response = self.client.get("{}?q=te".format(
+            reverse("locations-autocomplete-light")
+        ))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data["results"]), 1)

@@ -8,6 +8,18 @@ from t2f.serializers.user_data import T2FUserDataSerializer
 from users.models import Country, UserProfile
 
 
+# temporary list of Countries that will use the Auditor Portal Module.
+# Logic be removed once feature gating is in place
+AP_ALLOWED_COUNTRIES = [
+    'UAT',
+    'Lebanon',
+    'Syria',
+    'Indonesia',
+    'Sudan',
+    'Syria Cross Border',
+]
+
+
 # used for user list view
 class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
@@ -43,6 +55,27 @@ class CountrySerializer(serializers.ModelSerializer):
         )
 
 
+class CountryDetailSerializer(serializers.ModelSerializer):
+    local_currency = serializers.CharField(source='local_currency.name', read_only=True)
+    local_currency_id = serializers.IntegerField(source='local_currency.id', read_only=True)
+    local_currency_code = serializers.CharField(source='local_currency.code', read_only=True)
+
+    class Meta:
+        model = Country
+        fields = (
+            'id',
+            'name',
+            'latitude',
+            'longitude',
+            'initial_zoom',
+            'local_currency',
+            'local_currency_id',
+            'local_currency_code',
+            'business_area_code',
+            'country_short_code',
+        )
+
+
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
     supervisor = serializers.CharField(read_only=True)
@@ -59,10 +92,20 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     is_staff = serializers.CharField(source='user.is_staff', read_only=True)
     is_active = serializers.CharField(source='user.is_active', read_only=True)
     country = CountrySerializer(read_only=True)
+    show_ap = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
         exclude = ('id',)
+
+    # TODO remove once feature gating is in place.
+    def get_show_ap(self, obj):
+        """If user is within one of the allowed countries then
+        show_ap is True, otherwise False
+        """
+        if obj.country.name in AP_ALLOWED_COUNTRIES:
+            return True
+        return False
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):

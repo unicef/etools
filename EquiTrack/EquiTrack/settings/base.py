@@ -14,12 +14,12 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 from __future__ import absolute_import
 
+import datetime
 import os
 from os.path import abspath, basename, dirname, join, normpath
-import datetime
 
-import djcelery
 import dj_database_url
+import djcelery
 import saml2
 from saml2 import saml
 
@@ -103,6 +103,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
+    'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
 )
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 
@@ -156,7 +157,6 @@ SHARED_APPS = (
     'djcelery',
     'djcelery_email',
     'leaflet',
-    'paintstore',
     'corsheaders',
     'djangosaml2',
     'allauth',
@@ -181,6 +181,7 @@ SHARED_APPS = (
     'utils.mail',
     'utils.writable_serializers',
     'utils.permissions',
+    'waffle',
 )
 TENANT_APPS = (
     'django_fsm',
@@ -189,6 +190,7 @@ TENANT_APPS = (
     'locations',
     'reports',
     'partners',
+    'hact',
     'trips',
     'supplies',
     't2f',
@@ -320,6 +322,9 @@ CELERYD_PREFETCH_MULTIPLIER = 1
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
 CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+CELERY_ROUTES = {
+    'vision.tasks.sync_handler': {'queue': 'vision_queue'}
+}
 
 # djangorestframework: http://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
@@ -341,6 +346,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework_csv.renderers.CSVRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
+        'rest_framework.renderers.MultiPartRenderer',
     )
 }
 
@@ -378,7 +384,7 @@ MPTT_ADMIN_LEVEL_INDENT = 20
 
 # django-leaflet: django-leaflet
 LEAFLET_CONFIG = {
-    'TILES':  'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    'TILES': 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
     'ATTRIBUTION_PREFIX': 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',  # noqa
     'MIN_ZOOM': 3,
     'MAX_ZOOM': 18,
@@ -470,36 +476,36 @@ SAML_SIGNED_LOGOUT = True
 
 # django-rest-framework-jwt: http://getblimp.github.io/django-rest-framework-jwt/
 JWT_AUTH = {
-   'JWT_ENCODE_HANDLER':
-   'rest_framework_jwt.utils.jwt_encode_handler',
+    'JWT_ENCODE_HANDLER':
+    'rest_framework_jwt.utils.jwt_encode_handler',
 
-   'JWT_DECODE_HANDLER':
-   'rest_framework_jwt.utils.jwt_decode_handler',
+    'JWT_DECODE_HANDLER':
+    'rest_framework_jwt.utils.jwt_decode_handler',
 
-   'JWT_PAYLOAD_HANDLER':
-   'rest_framework_jwt.utils.jwt_payload_handler',
+    'JWT_PAYLOAD_HANDLER':
+    'rest_framework_jwt.utils.jwt_payload_handler',
 
-   'JWT_PAYLOAD_GET_USER_ID_HANDLER':
-   'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
+    'JWT_PAYLOAD_GET_USER_ID_HANDLER':
+    'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
 
-   'JWT_PAYLOAD_GET_USERNAME_HANDLER':
-   'rest_framework_jwt.utils.jwt_get_username_from_payload_handler',
+    'JWT_PAYLOAD_GET_USERNAME_HANDLER':
+    'rest_framework_jwt.utils.jwt_get_username_from_payload_handler',
 
-   'JWT_RESPONSE_PAYLOAD_HANDLER':
-   'rest_framework_jwt.utils.jwt_response_payload_handler',
+    'JWT_RESPONSE_PAYLOAD_HANDLER':
+    'rest_framework_jwt.utils.jwt_response_payload_handler',
 
-   'JWT_ALGORITHM': 'HS256',
-   'JWT_VERIFY': True,
-   'JWT_VERIFY_EXPIRATION': True,
-   'JWT_LEEWAY': 30,
-   'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=30000),
-   'JWT_AUDIENCE': None,
-   'JWT_ISSUER': None,
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_VERIFY': True,
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_LEEWAY': 30,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=30000),
+    'JWT_AUDIENCE': None,
+    'JWT_ISSUER': None,
 
-   'JWT_ALLOW_REFRESH': False,
-   'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
+    'JWT_ALLOW_REFRESH': False,
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
 
-   'JWT_AUTH_HEADER_PREFIX': 'JWT',
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
 
 
@@ -542,5 +548,5 @@ ISSUE_CHECKS = [
 ]
 
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
-    'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@un.org'
+    'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )

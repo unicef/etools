@@ -4,6 +4,7 @@ from django.utils.lru_cache import lru_cache
 
 from EquiTrack.utils import HashableDict
 from EquiTrack.validation_mixins import check_rigid_related
+from environment.helpers import tenant_switch_is_active
 from utils.common.utils import get_all_field_names
 
 # READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
@@ -22,6 +23,9 @@ def _is_user_in_groups(user, group_names):
 
 
 class PMPPermissions(object):
+    # this property specifies an array of model properties in order to check against the permission matrix. The fields
+    # declared under this property need to be both property on the model and delcared in the permission matrix
+    EXTRA_FIELDS = []
     actions_default_permissions = {
         'edit': True,
         'view': True,
@@ -37,6 +41,7 @@ class PMPPermissions(object):
         self.condition_group_valid = lru_cache(maxsize=16)(self.condition_group_valid)
         self.permission_structure = permission_structure
         self.all_model_fields = get_all_field_names(self.MODEL)
+        self.all_model_fields += self.EXTRA_FIELDS
 
     def condition_group_valid(self, condition_group):
         if condition_group['status'] and condition_group['status'] != '*':
@@ -88,6 +93,7 @@ class PMPPermissions(object):
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
+    EXTRA_FIELDS = ['sections_present']
 
     def __init__(self, **kwargs):
         '''
@@ -101,18 +107,28 @@ class InterventionPermissions(PMPPermissions):
         super(InterventionPermissions, self).__init__(**kwargs)
         inbound_check = kwargs.get('inbound_check', False)
 
+        # TODO: fix this after "in amendment" flag is turned on for interventions
         def user_added_amendment(instance):
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
             # check_rigid_related checks if there were any changes from the previous
             # amendments if there were changes it returns False
             return not check_rigid_related(instance, 'amendments')
 
+        def prp_mode_off():
+            return tenant_switch_is_active("prp_mode_off")
+
+        def inbound_amendment_check(instance):
+            return False if not inbound_check else user_added_amendment(instance)
+
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
             # this condition can only be checked on data save
-            'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)
+            'user_adds_amendment': inbound_amendment_check(self.instance),
+            'prp_mode_on': not prp_mode_off(),
+            'prp_mode_off': prp_mode_off(),
+            'user_adds_amendment+prp_mode_on': inbound_amendment_check(self.instance) and not prp_mode_off()
         }
 
 

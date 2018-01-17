@@ -8,8 +8,11 @@ from django.contrib.auth.models import Group, User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models, transaction
 from django.db.models.signals import post_save, pre_delete
+from django.utils.encoding import python_2_unicode_compatible
+
 from djangosaml2.signals import pre_user_save
 from tenant_schemas.models import TenantMixin
+
 
 if sys.version_info.major == 3:
     User.__str__ = lambda user: user.get_full_name()
@@ -20,6 +23,7 @@ User._meta.ordering = ['first_name']
 logger = logging.getLogger(__name__)
 
 
+@python_2_unicode_compatible
 class Country(TenantMixin):
     """
     Tenant Schema
@@ -66,10 +70,14 @@ class Country(TenantMixin):
     threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
     threshold_tae_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['name']
 
+
+@python_2_unicode_compatible
 class WorkspaceCounter(models.Model):
     TRAVEL_REFERENCE = 'travel_reference_number_counter'
     TRAVEL_INVOICE_REFERENCE = 'travel_invoice_reference_number_counter'
@@ -103,7 +111,7 @@ class WorkspaceCounter(models.Model):
         if created:
             cls.objects.create(workspace=instance)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.workspace.name
 
 
@@ -121,6 +129,7 @@ class CountryOfficeManager(models.Manager):
             return super(CountryOfficeManager, self).get_queryset()
 
 
+@python_2_unicode_compatible
 class Office(models.Model):
     """
     Represents an office for the country
@@ -138,7 +147,7 @@ class Office(models.Model):
 
     objects = CountryOfficeManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -153,6 +162,7 @@ class CountrySectionManager(models.Manager):
             return super(CountrySectionManager, self).get_queryset()
 
 
+@python_2_unicode_compatible
 class Section(models.Model):
     """
     Represents a section for the country
@@ -163,7 +173,7 @@ class Section(models.Model):
 
     objects = CountrySectionManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -172,6 +182,7 @@ class UserProfileManager(models.Manager):
         return super(UserProfileManager, self).get_queryset().select_related('country')
 
 
+@python_2_unicode_compatible
 class UserProfile(models.Model):
     """
     Represents a user profile that can have access to many Countries but to one active Country at a time
@@ -197,9 +208,6 @@ class UserProfile(models.Model):
     office = models.ForeignKey(Office, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
-
-    # TODO: remove this
-    installation_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='Device ID')
 
     staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True)
     org_unit_code = models.CharField(max_length=32, null=True, blank=True)
@@ -231,7 +239,7 @@ class UserProfile(models.Model):
     def last_name(self):
         return self.user.last_name
 
-    def __unicode__(self):
+    def __str__(self):
         return u'User profile for {}'.format(
             self.user.get_full_name()
         )
@@ -255,9 +263,10 @@ class UserProfile(models.Model):
         if not sender.is_staff:
             try:
                 g = Group.objects.get(name='UNICEF User')
-                g.user_set.add(sender)
             except Group.DoesNotExist:
                 logger.error(u'Can not find main group UNICEF User')
+            else:
+                g.user_set.add(sender)
 
             sender.is_staff = True
             sender.save()

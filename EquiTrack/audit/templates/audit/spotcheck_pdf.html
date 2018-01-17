@@ -1,0 +1,192 @@
+{% extends "audit/engagement_pdf.html" %}
+
+{% block extra_content %}
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Overview</div>
+    </div>
+    <table class="content-section__wrapper">
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">FACE Forms(s) Start Date</div>
+          <div class="input-container__value">
+            {{ engagement.start_date|default:"-" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">FACE Forms(s) End Date</div>
+          <div class="input-container__value">
+            {{ engagement.end_date|default:"-" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">Total Value of selected FACE form(s)</div>
+          <div class="input-container__value">
+            $ {{ engagement.total_value|default_if_none:"0.00" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Total amount tested</div>
+          <div class="input-container__value">
+            $ {{ engagement.total_amount_tested|default_if_none:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">Total amount of ineligible expedinture</div>
+          <div class="input-container__value">
+            $ {{ engagement.total_amount_of_ineligible_expenditure|default_if_none:"0.00" }}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <pdf:nextpage></pdf:nextpage>
+  <div class="content-section">
+    <div class="content-section__header content-section__header--orange">
+      <div class="content-section__header__title">Summary of High Priority Findings and Recommendations</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td>Finding Number</td>
+          <td colspan="3">Category of observation</td>
+          <td colspan="2">Deadline of action</td>
+          <td colspan="4">Recommendation</td>
+          <td colspan="4">Agreed action by IP</td>
+        </tr>
+        {% for finding in engagement.high_priority_findings %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td colspan="3">{{ finding.category_of_observation }}</td>
+            <td colspan="2">{{ finding.deadline_of_action }}</td>
+            <td colspan="4">{{ finding.recommendation }}</td>
+            <td colspan="4">{{ finding.agreed_action_by_ip }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td>-</td>
+            <td colspan="3">-</td>
+            <td colspan="2">-</td>
+            <td colspan="4">-</td>
+            <td colspan="4">-</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Summary of Low Priority Findings and Recommendations</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td>Finding Number</td>
+          <td colspan="3">Category of observation</td>
+          <td colspan="2">Deadline of action</td>
+          <td colspan="4">Recommendation</td>
+          <td colspan="4">Agreed action by IP</td>
+        </tr>
+        {% for finding in engagement.low_priority_findings %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td colspan="3">{{ finding.category_of_observation }}</td>
+            <td colspan="2">{{ finding.deadline_of_action }}</td>
+            <td colspan="4">{{ finding.recommendation }}</td>
+            <td colspan="4">{{ finding.agreed_action_by_ip }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td>-</td>
+            <td colspan="3">-</td>
+            <td colspan="2">-</td>
+            <td colspan="4">-</td>
+            <td colspan="4">-</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Internal controls</div>
+    </div>
+    <table class="content-section__wrapper">
+      <tr>
+        <td class="input-container">
+          <div class="internal-control-message">
+            Inquire of IP management whether there have been any changes to internal controls since the prior micro
+            assessment from the current programme cycle. <br/>
+            Inquire whether the high priority recommendations from the micro assessment and previous assurance activities
+            have been implemented. Document any changes identified
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Document any changes identified</div>
+          <div class="input-container__value">
+            {{ engagement.internal_controls|default:"-" }}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <pdf:nextpage></pdf:nextpage>
+
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Financial Findings</div>
+    </div>
+    <table class="content-section__wrapper">
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Total amount tested</div>
+          <div class="input-container__value">
+            $ {{ engagement.total_amount_tested|default:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">Total amount of ineligible expenditure</div>
+          <div class="input-container__value">
+            $ {{ engagement.total_amount_of_ineligible_expenditure|default:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">Amount refunded</div>
+          <div class="input-container__value">
+            $ {{ engagement.amount_refunded|default:"0.00" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Additional supporting documentation provided</div>
+          <div class="input-container__value">
+            $ {{ engagement.additional_supporting_documentation_provided|default:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">Justification provided and accepted</div>
+          <div class="input-container__value">
+            $ {{ engagement.justification_provided_and_accepted|default:"0.00" }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">Impairment</div>
+          <div class="input-container__value">
+            $ {{ engagement.write_off_required|default:"0.00" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">Pending unsupported Amount</div>
+          <div class="input-container__value">
+            $ {{ engagement.pending_unsupported_amount|default:"0.00" }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container" colspan="3">
+          <div class="input-container__label">Provide explanation for additional information received from the IP or add attachments</div>
+          <div class="input-container__value">
+            {{ engagement.explanation_for_additional_information|default:"-" }}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+{% endblock %}

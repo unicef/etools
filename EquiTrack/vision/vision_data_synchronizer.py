@@ -1,35 +1,36 @@
 import sys
-
-from django.db import connection
-from django.conf import settings
-
 from abc import ABCMeta, abstractmethod
+
+from django.conf import settings
+from django.db import connection
 
 import requests
 from celery.utils.log import get_task_logger
 
+from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
 
 logger = get_task_logger('vision.synchronize')
 
-
-class VisionException(Exception):
-    def __init__(self, message=''):
-        super(VisionException, self).__init__(message)
+# VISION_NO_DATA_MESSAGE is what the remote vision system returns when it has no data
+VISION_NO_DATA_MESSAGE = 'No Data Available'
 
 
 class VisionDataLoader(object):
-    URL = settings.VISION_URL
-    EMPTY_RESPONSE_VISION_MESSAGE = u'No Data Available'
+    # Caveat - this loader probably doesn't construct a correct URL when the synchronizer's GLOBAL_CALL = True).
+    # See https://github.com/unicef/etools/issues/1098
+    URL = ''
 
     def __init__(self, country=None, endpoint=None):
+        if not self.URL:
+            self.URL = settings.VISION_URL
+
         if endpoint is None:
             raise VisionException(message='You must set the ENDPOINT name')
 
-        self.url = '{}/{}'.format(
-            self.URL,
-            endpoint
-        )
+        separator = '' if self.URL.endswith('/') else '/'
+
+        self.url = '{}{}{}'.format(self.URL, separator, endpoint)
         if country:
             self.url += '/{}'.format(country.business_area_code)
 
@@ -46,19 +47,17 @@ class VisionDataLoader(object):
                 message=('Load data failed! Http code: {}'.format(response.status_code))
             )
         json_response = response.json()
-        if json_response == self.EMPTY_RESPONSE_VISION_MESSAGE:
+        if json_response == VISION_NO_DATA_MESSAGE:
             return []
 
         return json_response
 
 
-class VisionDataSynchronizer:
+class VisionDataSynchronizer(object):
 
     __metaclass__ = ABCMeta
 
     ENDPOINT = None
-    URL = settings.VISION_URL
-    NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS = {}
     GLOBAL_CALL = False
     LOADER_CLASS = VisionDataLoader
@@ -70,15 +69,10 @@ class VisionDataSynchronizer:
         if self.ENDPOINT is None:
             raise VisionException(message='You must set the ENDPOINT name')
 
-        self.country = country
-        self.url = '{}/{}'.format(
-            self.URL,
-            self.ENDPOINT
-        )
-        if not self.GLOBAL_CALL:
-            self.url += '/{}'.format(country.business_area_code)
+        logger.info('Synchronizer is {}'.format(self.__class__.__name__))
 
-        logger.info("Vision sync url:%s" % self.url)
+        self.country = country
+
         connection.set_tenant(country)
         logger.info('Country is {}'.format(country.name))
 
@@ -118,11 +112,13 @@ class VisionDataSynchronizer:
                 for kwarg_name in self.LOADER_EXTRA_KWARGS
             })
             data_getter = self.LOADER_CLASS(**loader_kwargs)
+            logger.info('About to get data from {}'.format(data_getter.url))
             original_records = data_getter.get()
+            logger.info('{} records returned from get'.format(len(original_records)))
 
             converted_records = self._convert_records(original_records)
             log.total_records = len(converted_records)
-            logger.info('Processing {} records'.format(len(converted_records)))
+            logger.info('{} records returned from conversion'.format(len(converted_records)))
 
             totals = self._save_records(converted_records)
 
@@ -132,10 +128,11 @@ class VisionDataSynchronizer:
                 log.total_records = totals.get('total_records', log.total_records)
             else:
                 log.total_processed = totals
-
-            log.successful = True
         except Exception as e:
+            logger.info('sync caught {} with message "{}"'.format(type(e).__name__, e.message))
             log.exception_message = e.message
             raise VisionException(message=e.message), None, sys.exc_info()[2]
+        else:
+            log.successful = True
         finally:
             log.save()

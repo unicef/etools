@@ -1,38 +1,41 @@
 """
 Model factories used for generating models dynamically for tests
 """
-from datetime import datetime, timedelta, date
 import json
+from datetime import date, datetime, timedelta
 
-from django.db.models.signals import post_save
-from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
+from django.db.models.signals import post_save
+from django.contrib.auth import get_user_model
+from django.contrib.gis.geos import GEOSGeometry
+
 import factory
 from factory import fuzzy
+from snapshot import models as snapshot_models
 
-from users import models as user_models
-from reports import models as report_models
+from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
+from funds import models as funds_models
 from locations import models as location_models
+from notification import models as notification_models
 from partners import models as partner_models
 from publics import models as publics_models
-from funds import models as funds_models
-from notification import models as notification_models
-from snapshot import models as snapshot_models
+from reports import models as report_models
+from reports.models import Sector
 from t2f import models as t2f_models
-from workplan import models as workplan_models
-from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
+from users import models as user_models
+from users.models import Office, Section
 
 
 class OfficeFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = user_models.Office
+        model = Office
 
     name = 'An Office'
 
 
 class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = user_models.Section
+        model = Section
 
     name = factory.Sequence(lambda n: "section_%d" % n)
 
@@ -43,8 +46,8 @@ class CountryFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('schema_name',)
 
     name = "Test Country"
-    schema_name = 'test'
-    domain_url = 'tenant.test.com'
+    schema_name = SCHEMA_NAME
+    domain_url = TENANT_DOMAIN
 
 
 class GroupFactory(factory.django.DjangoModelFactory):
@@ -77,10 +80,10 @@ class ProfileFactory(factory.django.DjangoModelFactory):
 
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = user_models.User
+        model = get_user_model()
 
     username = factory.Sequence(lambda n: "user_%d" % n)
-    email = factory.Sequence(lambda n: "user{}@notanemail.com".format(n))
+    email = factory.Sequence(lambda n: "user{}@example.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
     # We pass in 'user' to link the generated Profile to our just-generated User
@@ -92,9 +95,9 @@ class UserFactory(factory.django.DjangoModelFactory):
         """Override the default _generate() to disable the post-save signal."""
 
         # Note: If the signal was defined with a dispatch_uid, include that in both calls.
-        post_save.disconnect(user_models.UserProfile.create_user_profile, user_models.User)
+        post_save.disconnect(user_models.UserProfile.create_user_profile, get_user_model())
         user = super(UserFactory, cls)._generate(create, attrs)
-        post_save.connect(user_models.UserProfile.create_user_profile, user_models.User)
+        post_save.connect(user_models.UserProfile.create_user_profile, get_user_model())
         return user
 
     @factory.post_generation
@@ -136,10 +139,11 @@ class PartnerStaffFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PartnerStaffMember
 
+    partner = factory.SubFactory('EquiTrack.factories.PartnerFactory')
     title = 'Jedi Master'
     first_name = 'Mace'
     last_name = 'Windu'
-    email = factory.Sequence(lambda n: "mace{}@theforce.org".format(n))
+    email = factory.Sequence(lambda n: "mace{}@example.com".format(n))
 
 
 class PartnerFactory(factory.django.DjangoModelFactory):
@@ -296,7 +300,7 @@ class ResultTypeFactory(factory.django.DjangoModelFactory):
 
 class SectorFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = report_models.Sector
+        model = Sector
 
     name = factory.Sequence(lambda n: 'Sector {}'.format(n))
 
@@ -365,138 +369,6 @@ class GovernmentInterventionFactory(factory.DjangoModelFactory):
     number = 'RefNumber'
 
 
-class WorkplanFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = workplan_models.Workplan
-
-    country_programme = factory.SubFactory(CountryProgrammeFactory)
-
-
-class CommentFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = workplan_models.Comment
-
-    text = factory.Sequence(lambda n: 'Comment body {}'.format(n))
-    workplan = factory.SubFactory(WorkplanFactory)
-
-
-class LabelFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = workplan_models.Label
-
-    name = factory.Sequence(lambda n: 'Label {}'.format(n))
-
-
-class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = workplan_models.ResultWorkplanProperty
-
-    workplan = factory.SubFactory(WorkplanFactory)
-    result = factory.SubFactory(ResultFactory)
-    assumptions = fuzzy.FuzzyText(length=50)
-    status = fuzzy.FuzzyChoice(["On Track", "Constrained", "No Progress", "Target Met"])
-    prioritized = fuzzy.FuzzyChoice([False, True])
-    metadata = {"metadata1": "foo"}
-    other_partners = factory.Sequence(lambda n: 'Other Partners {}'.format(n))
-    rr_funds = fuzzy.FuzzyInteger(1000)
-    or_funds = fuzzy.FuzzyInteger(1000)
-    ore_funds = fuzzy.FuzzyInteger(1000)
-    sections = [factory.SubFactory(SectionFactory)]
-    geotag = [factory.SubFactory(LocationFactory)]
-    partners = [factory.SubFactory(PartnerFactory)]
-    responsible_persons = [factory.SubFactory(UserFactory)]
-    labels = [factory.SubFactory(LabelFactory)]
-
-    @factory.post_generation
-    def sections(self, create, extracted, **kwargs):
-        # Handle M2M relationships
-        if not create:
-            return
-        if extracted:
-            for section in extracted:
-                self.sections.add(section)
-
-    @factory.post_generation
-    def geotag(self, create, extracted, **kwargs):
-        # Handle M2M relationships
-        if not create:
-            return
-        if extracted:
-            for geotag in extracted:
-                self.geotag.add(geotag)
-
-    @factory.post_generation
-    def partners(self, create, extracted, **kwargs):
-        # Handle M2M relationships
-        if not create:
-            return
-        if extracted:
-            for partner in extracted:
-                self.partners.add(partner)
-
-    @factory.post_generation
-    def responsible_persons(self, create, extracted, **kwargs):
-        # Handle M2M relationships
-        if not create:
-            return
-        if extracted:
-            for responsible_person in extracted:
-                self.responsible_persons.add(responsible_person)
-
-    @factory.post_generation
-    def labels(self, create, extracted, **kwargs):
-        # Handle M2M relationships
-        if not create:
-            return
-        if extracted:
-            for label in extracted:
-                self.labels.add(label)
-
-
-class MilestoneFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = workplan_models.Milestone
-
-    result_wp_property = factory.SubFactory(ResultWorkplanPropertyFactory)
-    description = factory.Sequence(lambda n: 'Description {}'.format(n))
-    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
-
-
-class CoverPageBudgetFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = CoverPageBudget
-
-    from_date = factory.LazyAttribute(lambda o: date.today())
-    to_date = factory.LazyAttribute(lambda o: date.today() + timedelta(days=3))
-    total_amount = fuzzy.FuzzyText(length=50)
-    funded_amount = fuzzy.FuzzyText(length=50)
-    unfunded_amount = fuzzy.FuzzyText(length=50)
-
-
-class CoverPageFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = CoverPage
-
-    national_priority = fuzzy.FuzzyText(length=50)
-    responsible_government_entity = fuzzy.FuzzyText(length=255)
-    planning_assumptions = fuzzy.FuzzyText(length=255)
-    budgets = [factory.SubFactory(CoverPageBudgetFactory),
-               factory.SubFactory(CoverPageBudgetFactory)]
-
-    @factory.post_generation
-    def budgets(self, create, extracted, **kwargs):
-        if create and extracted:
-            self.budgets.add(*extracted)
-
-
-class WorkplanProjectFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = WorkplanProject
-
-    workplan = factory.SubFactory(WorkplanFactory)
-    cover_page = factory.RelatedFactory(CoverPageFactory, 'workplan_project')
-
-
 class DonorFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=45)
 
@@ -536,10 +408,10 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     actual_amt = fuzzy.FuzzyDecimal(1, 300)
     outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
 
-    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1)-timedelta(days=10),
+    start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1) - timedelta(days=10),
                                  date(date.today().year, 1, 1))
     end_date = fuzzy.FuzzyDate(date(date.today().year + 1, 1, 1),
-                               date(date.today().year + 1, 1, 1)+timedelta(days=10))
+                               date(date.today().year + 1, 1, 1) + timedelta(days=10))
 
     class Meta:
         model = funds_models.FundsReservationHeader

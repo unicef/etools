@@ -9,13 +9,15 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q
 
 import requests
+from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
 from users.models import Country, Section, User, UserProfile
+from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
-from vision.vision_data_synchronizer import VisionException
+from vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE
 
-logger = logging.getLogger(__name__)
+logger = get_task_logger(__name__)
 
 
 class UserMapper(object):
@@ -67,8 +69,8 @@ class UserMapper(object):
         return self.countries[business_area_code] or self.countries['UAT']
 
     def _get_section(self, section_name, section_code):
-        if not self.sections[section_name]:
-            self.sections[section_name] = Section.objects.get_or_create(name=section_name, code=section_code)
+        if not self.sections.get(section_name):
+            self.sections[section_name], _ = Section.objects.get_or_create(name=section_name, code=section_code)
         return self.sections[section_name]
 
     def _set_simple_attr(self, obj, attr, cleaned_value):
@@ -120,9 +122,9 @@ class UserMapper(object):
 
     @transaction.atomic
     def create_or_update_user(self, ad_user):
-        logger.debug(ad_user['sn'], ad_user['givenName'])
+        logger.debug(ad_user.get('sn'), ad_user.get('givenName'))
         for field in self.REQUIRED_USER_FIELDS:
-            if not ad_user[field]:
+            if not ad_user.get(field, False):
                 logger.info("User doesn't have the required fields {}".format(ad_user))
                 return
 
@@ -286,7 +288,6 @@ def sync_users_local(n=20):
 
 class UserSynchronizer(object):
 
-    NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS_MAP = {
         'GetOrgChartUnitsInfo_JSON': (
             "ORG_UNIT_NAME",  # VARCHAR2	Vendor Name
@@ -307,7 +308,7 @@ class UserSynchronizer(object):
         self.required_keys = self.REQUIRED_KEYS_MAP[endpoint_name]
 
     def _get_json(self, data):
-        return '{}' if data == self.NO_DATA_MESSAGE else data
+        return '{}' if data == VISION_NO_DATA_MESSAGE else data
 
     def _filter_records(self, records):
         def is_valid_record(record):

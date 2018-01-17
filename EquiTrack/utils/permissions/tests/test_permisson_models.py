@@ -1,4 +1,7 @@
-from django.contrib.auth.models import Group, User
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 from django.test import override_settings, TestCase
 
 from utils.permissions.models.models import BasePermission
@@ -14,6 +17,8 @@ from utils.permissions.models.models import BasePermission
 class BasePermissionTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
+        User = get_user_model()
+
         group1 = Group.objects.create(name='Group1')
         group2 = Group.objects.create(name='Group2')
 

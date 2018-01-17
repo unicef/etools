@@ -6,11 +6,11 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.models import make_travel_reference_number, Travel, TravelType, ModeOfTravel
-from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
-
-from .factories import TravelFactory, TravelActivityFactory, CurrencyFactory, ExpenseTypeFactory
 from partners.models import PartnerOrganization
+from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
+from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
+
+from .factories import CurrencyFactory, ExpenseTypeFactory, TravelActivityFactory, TravelFactory
 
 
 class TravelActivityList(APITenantTestCase):
@@ -128,7 +128,8 @@ class TravelActivityList(APITenantTestCase):
         partner_programmatic_visits_after_complete = PartnerOrganization.objects.get(id=act1.partner.id)
         partner_spot_checks_after_complete = PartnerOrganization.objects.get(id=act2.partner.id)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
-        self.assertEqual(partner_programmatic_visits.hact_values['programmatic_visits']+1,
-                         partner_programmatic_visits_after_complete.hact_values['programmatic_visits'])
-        self.assertEqual(partner_spot_checks.hact_values['spot_checks']+1,
-                         partner_spot_checks_after_complete.hact_values['spot_checks'])
+        self.assertEqual(partner_programmatic_visits.hact_values['programmatic_visits']['completed']['total'] + 1,
+                         partner_programmatic_visits_after_complete.hact_values[
+                             'programmatic_visits']['completed']['total'])
+        self.assertEqual(partner_spot_checks.hact_values['spot_checks']['completed']['total'] + 1,
+                         partner_spot_checks_after_complete.hact_values['spot_checks']['completed']['total'])

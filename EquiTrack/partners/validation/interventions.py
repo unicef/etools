@@ -14,7 +14,7 @@ logger = logging.getLogger('partners.interventions.validation')
 
 
 def partnership_manager_only(i, user):
-    # Transition cannot happen by a user that';s not a Partnership Manager
+    # Transition cannot happen by a user that's not a Partnership Manager
     if not user.groups.filter(name__in=['Partnership Manager']).count():
         raise TransitionError(['Only Partnership Managers can execute this transition'])
     return True
@@ -59,7 +59,7 @@ def transition_to_closed(i):
 
     if i.total_frs['total_intervention_amt'] != i.total_frs['total_actual_amt'] or \
             i.total_frs['total_outstanding_amt'] != 0:
-        raise TransitionError([_('Total FR amount needs to equal total actual amount, and'
+        raise TransitionError([_('Total FR amount needs to equal total actual amount, and '
                                  'Total Outstanding DCTs need to equal to 0')])
 
     # If total_actual_amt >100,000 then attachments has to include
@@ -74,7 +74,7 @@ def transition_to_closed(i):
     return True
 
 
-def transtion_to_signed(i):
+def transition_to_signed(i):
     from partners.models import Agreement
     if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
         raise TransitionError([_('The PCA related to this record is Suspended or Terminated. '

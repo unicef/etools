@@ -1,4 +1,5 @@
 from django.views.generic import TemplateView
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler

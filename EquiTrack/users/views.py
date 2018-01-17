@@ -1,8 +1,11 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
 from django.shortcuts import get_object_or_404
 from django.views.generic import FormView, RedirectView
+
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
@@ -26,6 +29,8 @@ from .serializers import (
     ProfileRetrieveUpdateSerializer,
     CountrySerializer
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UserAuthAPIView(RetrieveAPIView):
@@ -75,6 +80,7 @@ class UsersView(ListAPIView):
     """
     model = UserProfile
     serializer_class = SimpleProfileSerializer
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         user = self.request.user
@@ -106,6 +112,9 @@ class CountryView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        if not user.profile.country:
+            logger.warning('{} has not an assigned country'.format(user))
+            return self.model.objects.none()
         return self.model.objects.filter(
             name=user.profile.country.name,
         )
@@ -152,18 +161,19 @@ class UsersDetailAPIView(RetrieveAPIView):
     """
     queryset = UserProfile.objects.all()
     serializer_class = SimpleProfileSerializer
+    permission_classes = (IsAuthenticated, )
 
     def retrieve(self, request, pk=None):
         """
         Returns a UserProfile object for this PK
         """
-        data = None
         try:
             queryset = self.queryset.get(user__id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
         except UserProfile.DoesNotExist:
             data = {}
+        else:
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
         return Response(
             data,
             status=status.HTTP_200_OK
@@ -230,11 +240,11 @@ class GroupViewSet(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        permissions = request.data['permissions']
         serializer.instance = serializer.save()
         data = serializer.data
 
         try:
+            permissions = request.data['permissions']
             for perm in permissions:
                 serializer.instance.permissions.add(perm)
             serializer.save()
@@ -309,12 +319,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        groups = request.data['groups']
-
         serializer.instance = serializer.save()
         data = serializer.data
 
         try:
+            groups = request.data['groups']
             for grp in groups:
                 serializer.instance.groups.add(grp)
 

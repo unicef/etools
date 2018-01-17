@@ -1,15 +1,14 @@
-import logging
-
 from django.db import IntegrityError
 
 from carto.auth import APIKeyAuthClient
 from carto.exceptions import CartoException
 from carto.sql import SQLClient
+from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
-from .models import Location
+from locations.models import CartoDBTable, Location
 
-logger = logging.getLogger(__name__)
+logger = get_task_logger(__name__)
 
 
 def create_location(pcode, carto_table, parent, parent_instance,
@@ -85,12 +84,17 @@ def create_location(pcode, carto_table, parent, parent_instance,
 
 
 @app.task
-def update_sites_from_cartodb(carto_table):
+def update_sites_from_cartodb(carto_table_pk):
+
+    try:
+        carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
+    except CartoDBTable.DoesNotExist:
+        logger.exception('Cannot retrieve CartoDBTable with pk: {}'.format(carto_table_pk))
+        return
 
     auth_client = APIKeyAuthClient(api_key=carto_table.api_key,
                                    base_url="https://{}.carto.com/".format(carto_table.domain))
     sql_client = SQLClient(auth_client)
-
     sites_created = sites_updated = sites_not_added = 0
     try:
         # query for cartodb
@@ -109,7 +113,7 @@ def update_sites_from_cartodb(carto_table):
 
         sites = sql_client.send(qry)
     except CartoException as exc:
-        logging.exception("CartoDB exception occured {}".format(exc))
+        logger.exception("CartoDB exception occured {}".format(exc))
     else:
 
         for row in sites['rows']:
@@ -129,19 +133,23 @@ def update_sites_from_cartodb(carto_table):
 
             # attempt to reference the parent of this location
             if carto_table.parent_code_col and carto_table.parent:
+                msg = None
                 try:
                     parent = carto_table.parent.__class__
                     parent_code = row[carto_table.parent_code_col]
                     parent_instance = Location.objects.get(p_code=parent_code)
+                except Location.MultipleObjectsReturned:
+                    msg = u"Multiple locations found for parent code: {}".format(
+                        parent_code
+                    )
+                except Location.DoesNotExist:
+                    msg = u"No locations found for parent code: {}".format(
+                        parent_code
+                    )
                 except Exception as exp:
-                    msg = " "
-                    if exp is parent.MultipleObjectsReturned:
-                        msg = "{} locations found for parent code: {}".format(
-                            'Multiple' if exp is parent.MultipleObjectsReturned else 'No',
-                            parent_code
-                        )
-                    else:
-                        msg = exp.message
+                    msg = exp.message
+
+                if msg is not None:
                     logger.warning(msg)
                     sites_not_added += 1
                     continue
@@ -155,5 +163,4 @@ def update_sites_from_cartodb(carto_table):
                 sites_updated)
 
     return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
-                carto_table.table_name, sites_created, sites_updated, sites_not_added
-            )
+        carto_table.table_name, sites_created, sites_updated, sites_not_added)

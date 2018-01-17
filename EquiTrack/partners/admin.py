@@ -35,7 +35,6 @@ from partners.models import (
 from partners.mixins import HiddenPartnerMixin
 from partners.forms import (
     PartnersAdminForm,
-    AgreementForm,
     PartnerStaffMemberForm,
     # TODO intervention sector locations cleanup
     SectorLocationForm,
@@ -361,7 +360,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'last_assessment_date',
         u'core_values_assessment_date',
         u'deleted_flag',
-        u'blocked'
+        u'blocked',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -387,6 +386,11 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'blocked',
                  )
         }),
+        (_('Hact'), {
+            'fields': (
+                u'hact_values',
+            )
+        })
     )
     actions = (
         'hide_partners',
@@ -449,7 +453,7 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
 
 
 class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, SnapshotModelAdmin):
-    form = AgreementForm
+
     list_filter = (
         u'partner',
         u'agreement_type',

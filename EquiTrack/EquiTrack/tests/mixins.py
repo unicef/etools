@@ -1,12 +1,16 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
-from django.core.urlresolvers import resolve, reverse, NoReverseMatch
+from django.core.urlresolvers import NoReverseMatch, resolve, reverse
 from django.db import connection
-from rest_framework.test import APIClient, force_authenticate, APIRequestFactory
+
+from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 from tenant_schemas.test.cases import TenantTestCase
 from tenant_schemas.utils import get_tenant_model
 
 from users.models import WorkspaceCounter
+
+TENANT_DOMAIN = 'tenant.test.com'
+SCHEMA_NAME = 'test'
 
 
 def _delimit_namespace(namespace):
@@ -101,13 +105,12 @@ class FastTenantTestCase(TenantTestCase):
     @classmethod
     def setUpClass(cls):
         cls.sync_shared()
-        tenant_domain = 'tenant.test.com'
 
         TenantModel = get_tenant_model()
         try:
-            cls.tenant = TenantModel.objects.get(domain_url=tenant_domain, schema_name='test')
-        except TenantModel.DoesNotExist:
-            cls.tenant = TenantModel(domain_url=tenant_domain, schema_name='test')
+            cls.tenant = TenantModel.objects.get(domain_url=TENANT_DOMAIN, schema_name=SCHEMA_NAME)
+        except:
+            cls.tenant = TenantModel(domain_url=TENANT_DOMAIN, schema_name=SCHEMA_NAME)
             cls.tenant.save(verbosity=0)
 
         cls.tenant.business_area_code = 'ZZZ'

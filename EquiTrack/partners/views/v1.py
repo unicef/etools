@@ -70,8 +70,9 @@ class PCAPDFView(PDFTemplateView):
         Bank = namedtuple('Bank', ' '.join([i[0] for i in bank_key_values]))
         bank_objects = []
         for b in banks_records:
-            b["BANK_ADDRESS"] = '{}, {}'.format(b['STREET'], b['CITY'])
-            bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
+            if isinstance(b, dict):
+                b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b)
+                bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
         officers_list = []
         for officer in agreement.authorized_officers.all():
