@@ -49,4 +49,4 @@ class TestHactHistorySerializer(FastTenantTestCase):
             'modified': datetime.today(),
             'partner_values': hact_default()
         })
-        self.assertTrue(valid_serializer.is_valid())
+        self.assertFalse(valid_serializer.is_valid())
