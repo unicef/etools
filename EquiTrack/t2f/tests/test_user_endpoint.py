@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
+
 from .factories import TravelFactory
 
 
@@ -20,7 +21,7 @@ class UserT2FData(APITenantTestCase):
     def get_user_t2f_data(self):
         response = self.forced_auth_req('get', '/users/api/profile/',
                                         user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         return response_json
 
     def test_travel_count(self):

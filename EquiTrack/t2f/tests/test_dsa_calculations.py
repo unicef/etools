@@ -353,7 +353,7 @@ class TestDSACalculator(APITenantTestCase):
     def test_get_by_day_grouping_60plus(self):
         """If itinerary count greater than 2,
         then collate list of dsa dto with amounts ordered by date
-        if days grater than 60 then dsa daily amount changes
+        if days greater than 60 then dsa daily amount changes
         """
         ItineraryItemFactory(
             travel=self.travel,

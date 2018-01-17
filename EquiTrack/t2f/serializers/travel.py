@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.fields.related import ManyToManyField
 from django.db.models.query_utils import Q
+from django.utils import six
 from django.utils.functional import cached_property
 from django.utils.itercompat import is_iterable
 from django.utils.translation import ugettext
@@ -119,7 +120,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_status(self, value):
-        statuses = dict(ActionPoint.STATUS).keys()
+        statuses = sorted(dict(ActionPoint.STATUS).keys())  # sort for consistent error message for testing
         if value not in statuses:
             raise ValidationError('Invalid status. Possible choices: {}'.format(', '.join(statuses)))
         return value
@@ -221,7 +222,7 @@ class TravelAttachmentSerializer(serializers.ModelSerializer):
         return super(TravelAttachmentSerializer, self).create(validated_data)
 
     def get_url(self, obj):
-        return obj.file.url.decode("utf8")
+        return obj.file.url
 
 
 class TravelDetailsSerializer(PermissionBasedModelSerializer):
@@ -293,7 +294,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         # Check date integrity
         dates_iterator = chain.from_iterable((i['departure_date'], i['arrival_date']) for i in value)
 
-        current_date = dates_iterator.next()
+        current_date = six.next(dates_iterator)
         for date in dates_iterator:
             if date is None:
                 continue
@@ -410,7 +411,8 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         new_models = []
         for data in related_data:
             data = dict(data)
-            m2m_fields = {k: data.pop(k, []) for k in data.keys()
+            # Need to work with copy of keys since loop modifies dictionary during iteration
+            m2m_fields = {k: data.pop(k, []) for k in list(data.keys())
                           if isinstance(model._meta.get_field(k), ManyToManyField)}
             data.update(kwargs)
 
@@ -451,7 +453,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return instance
 
     def update_object(self, obj, data):
-        m2m_fields = {k: data.pop(k, []) for k in data.keys()
+        m2m_fields = {k: data.pop(k, []) for k in data
                       if isinstance(obj._meta.get_field(k), ManyToManyField)}
         for attr, value in data.items():
             setattr(obj, attr, value)
