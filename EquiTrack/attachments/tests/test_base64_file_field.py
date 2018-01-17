@@ -11,7 +11,7 @@ from attachments.serializers_fields import Base64FileField
 
 class TestBase64FileField(FastTenantTestCase):
     def setUp(self):
-        self.test_file_content = 'these are the file contents!'
+        self.test_file_content = b'these are the file contents!'
 
     def test_valid(self):
         valid_base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(self.test_file_content))
