@@ -16,6 +16,7 @@ from EquiTrack.factories import (
 )
 from EquiTrack.tests.mixins import FastTenantTestCase
 from funds.models import FundsReservationItem, FundsCommitmentItem
+from django.utils import six
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
@@ -24,43 +25,43 @@ class TestStrUnicode(FastTenantTestCase):
     def test_donor(self):
         donor = DonorFactory.build(name=u'R\xe4dda Barnen')
         self.assertEqual(str(donor), b'R\xc3\xa4dda Barnen')
-        self.assertEqual(unicode(donor), u'R\xe4dda Barnen')
+        self.assertEqual(six.text_type(donor), u'R\xe4dda Barnen')
 
     def test_grant(self):
         donor = DonorFactory.build(name=b'xyz')
         grant = GrantFactory.build(donor=donor, name=u'R\xe4dda Barnen')
         self.assertEqual(str(grant), b'xyz: R\xc3\xa4dda Barnen')
-        self.assertEqual(unicode(grant), u'xyz: R\xe4dda Barnen')
+        self.assertEqual(six.text_type(grant), u'xyz: R\xe4dda Barnen')
 
         donor = DonorFactory.build(name=u'xyz')
         grant = GrantFactory.build(donor=donor, name=u'R\xe4dda Barnen')
         self.assertEqual(str(grant), b'xyz: R\xc3\xa4dda Barnen')
-        self.assertEqual(unicode(grant), u'xyz: R\xe4dda Barnen')
+        self.assertEqual(six.text_type(grant), u'xyz: R\xe4dda Barnen')
 
         donor = DonorFactory.build(name=u'R\xe4dda Barnen')
         grant = GrantFactory.build(donor=donor, name=b'xyz')
         self.assertEqual(str(grant), b'R\xc3\xa4dda Barnen: xyz')
-        self.assertEqual(unicode(grant), u'R\xe4dda Barnen: xyz')
+        self.assertEqual(six.text_type(grant), u'R\xe4dda Barnen: xyz')
 
     def test_funds_reservation_header(self):
         funds_reservation_header = FundsReservationHeaderFactory.build(fr_number=u'R\xe4dda Barnen')
         self.assertEqual(str(funds_reservation_header), b'R\xc3\xa4dda Barnen')
-        self.assertEqual(unicode(funds_reservation_header), u'R\xe4dda Barnen')
+        self.assertEqual(six.text_type(funds_reservation_header), u'R\xe4dda Barnen')
 
     def test_funds_reservation_item(self):
         funds_reservation_item = FundsReservationItemFactory.build(fr_ref_number=u'R\xe4dda Barnen')
         self.assertEqual(str(funds_reservation_item), b'R\xc3\xa4dda Barnen')
-        self.assertEqual(unicode(funds_reservation_item), u'R\xe4dda Barnen')
+        self.assertEqual(six.text_type(funds_reservation_item), u'R\xe4dda Barnen')
 
     def test_funds_commitment_header(self):
         funds_commitment_header = FundsCommitmentHeaderFactory.build(fc_number=u'R\xe4dda Barnen')
         self.assertEqual(str(funds_commitment_header), b'R\xc3\xa4dda Barnen')
-        self.assertEqual(unicode(funds_commitment_header), u'R\xe4dda Barnen')
+        self.assertEqual(six.text_type(funds_commitment_header), u'R\xe4dda Barnen')
 
     def test_funds_commitment_item(self):
         funds_commitment_item = FundsCommitmentItemFactory.build(fc_ref_number=u'R\xe4dda Barnen')
         self.assertEqual(str(funds_commitment_item), b'R\xc3\xa4dda Barnen')
-        self.assertEqual(unicode(funds_commitment_item), u'R\xe4dda Barnen')
+        self.assertEqual(six.text_type(funds_commitment_item), u'R\xe4dda Barnen')
 
 
 class TestFundsReservationItem(FastTenantTestCase):
