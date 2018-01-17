@@ -8,7 +8,6 @@ from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
-
 class StaticDataEndpointTest(APITenantTestCase):
 
     def setUp(self):
