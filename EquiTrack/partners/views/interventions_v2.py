@@ -473,7 +473,6 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
     def create(self, request, *args, **kwargs):
         raw_data = copy.deepcopy(request.data)
         raw_data['intervention'] = kwargs.get('intervention_pk', None)
-
         serializer = self.get_serializer(data=raw_data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
