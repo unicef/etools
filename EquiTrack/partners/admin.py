@@ -3,10 +3,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from django.db import models
 from django.contrib import admin
-from django.utils.translation import ugettext_lazy as _
+from django.db import models
 from django.forms import SelectMultiple
+from django.utils.translation import ugettext_lazy as _
+from django.utils import six
 
 from import_export.admin import ExportMixin
 
@@ -291,7 +292,7 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
     # 'short_description' attribute.
     # https://docs.djangoproject.com/en/1.11/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_display
     def display_staff_member_name(instance):
-        return unicode(instance)
+        return six.text_type(instance)
     display_staff_member_name.short_description = 'Partner Staff Member'
 
     list_display = (

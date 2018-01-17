@@ -69,7 +69,7 @@ class TestPartnerStaffMemberForm(FastTenantTestCase):
         self.data["active"] = False
         form = forms.PartnerStaffMemberForm(self.data)
         self.assertFalse(form.is_valid())
-        self.assertIn("active", form.errors.keys())
+        self.assertIn("active", list(form.errors.keys()))
         self.assertEqual(
             form.errors["active"],
             ["New Staff Member needs to be active at the moment of creation"]

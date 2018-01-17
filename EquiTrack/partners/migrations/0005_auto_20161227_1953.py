@@ -6,8 +6,6 @@ from django.conf import settings
 import django.contrib.postgres.fields
 from django.db import migrations, models
 from django.db.models import Count
-import django.db.models.deletion
-import django.db.models.manager
 import django.utils.timezone
 import django_fsm
 import model_utils.fields
@@ -78,7 +76,7 @@ class Migration(migrations.Migration):
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('number', models.CharField(max_length=5, unique=True)),
-                ('type', models.CharField(choices=[(b'Change IP name', b'Change in Legal Name of Implementing Partner'), (b'CP extension', b'Extension of Country Programme Cycle'), (b'Change authorized officer', b'Change Authorized Officer'), (b'Change banking info', b'Banking Information'), (b'Additional clause', b'Additional Clause'), (b'Amend existing clause', b'Amend Existing Clause')], max_length=64)),
+                ('type', models.CharField(choices=[('Change IP name', 'Change in Legal Name of Implementing Partner'), ('CP extension', 'Extension of Country Programme Cycle'), ('Change authorized officer', 'Change Authorized Officer'), ('Change banking info', 'Banking Information'), ('Additional clause', 'Additional Clause'), ('Amend existing clause', 'Amend Existing Clause')], max_length=64)),
                 ('signed_amendment', models.FileField(blank=True, max_length=255, null=True, upload_to=partners.models.get_agreement_amd_file_path)),
                 ('signed_date', models.DateField(blank=True, null=True)),
             ],
@@ -117,7 +115,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('type', models.CharField(choices=[(b'Change in Programme Result', b'Change in Programme Result'), (b'Change in Population Focus', b'Change in Population Focus'), (b'Change in Georgraphical Coverage', b'Change in Georgraphical Coverage'), (b'Change in Total Budget >20%', b'Change in Total Budget >20%'), (b'Change in Total Budget <=20%', b'Change in Total Budget <=20%'), (b'Changes in Activity Budget <=20% - No Change in Total Budget', b'Changes in Activity Budget <=20% - No Change in Total Budget'), (b'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE', b'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE'), (b'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE', b'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE')], max_length=50)),
+                ('type', models.CharField(choices=[('Change in Programme Result', 'Change in Programme Result'), ('Change in Population Focus', 'Change in Population Focus'), ('Change in Georgraphical Coverage', 'Change in Georgraphical Coverage'), ('Change in Total Budget >20%', 'Change in Total Budget >20%'), ('Change in Total Budget <=20%', 'Change in Total Budget <=20%'), ('Changes in Activity Budget <=20% - No Change in Total Budget', 'Changes in Activity Budget <=20% - No Change in Total Budget'), ('Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE', 'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE'), ('Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE', 'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE')], max_length=50)),
                 ('signed_date', models.DateField(null=True)),
                 ('amendment_number', models.IntegerField(default=0)),
                 ('signed_amendment', models.FileField(max_length=255, upload_to=partners.models.get_intervention_amendment_file_path)),
@@ -143,10 +141,10 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('partner_contribution', models.DecimalField(decimal_places=2, max_digits=20)),
                 ('unicef_cash', models.DecimalField(decimal_places=2, max_digits=20)),
-                ('in_kind_amount', models.DecimalField(decimal_places=2, default=0, max_digits=20, verbose_name=b'UNICEF Supplies')),
+                ('in_kind_amount', models.DecimalField(decimal_places=2, default=0, max_digits=20, verbose_name='UNICEF Supplies')),
                 ('partner_contribution_local', models.DecimalField(decimal_places=2, max_digits=20)),
                 ('unicef_cash_local', models.DecimalField(decimal_places=2, max_digits=20)),
-                ('in_kind_amount_local', models.DecimalField(decimal_places=2, max_digits=20, verbose_name=b'UNICEF Supplies Local')),
+                ('in_kind_amount_local', models.DecimalField(decimal_places=2, max_digits=20, verbose_name='UNICEF Supplies Local')),
                 ('year', models.CharField(blank=True, max_length=5, null=True)),
                 ('total', models.DecimalField(decimal_places=2, max_digits=20)),
                 ('intervention', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='planned_budget', to='partners.Intervention')),
@@ -185,7 +183,7 @@ class Migration(migrations.Migration):
             name='WorkspaceFileType',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=64L, unique=True)),
+                ('name', models.CharField(max_length=64, unique=True)),
             ],
         ),
         migrations.AlterModelManagers(
@@ -202,7 +200,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='agreement',
             name='status',
-            field=django_fsm.FSMField(blank=True, choices=[(b'draft', b'Draft'), (b'draft', b'Cancelled'), (b'active', b'Active'), (b'ended', b'Ended'), (b'suspended', b'Suspended'), (b'terminated', b'Terminated')], default=b'draft', max_length=32),
+            field=django_fsm.FSMField(blank=True, choices=[('draft', 'Draft'), ('draft', 'Cancelled'), ('active', 'Active'), ('ended', 'Ended'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], default='draft', max_length=32),
         ),
         migrations.AddField(
             model_name='agreementamendmentlog',
@@ -222,32 +220,32 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='partnerorganization',
             name='city',
-            field=models.CharField(blank=True, max_length=32L, null=True),
+            field=models.CharField(blank=True, max_length=32, null=True),
         ),
         migrations.AddField(
             model_name='partnerorganization',
             name='country',
-            field=models.CharField(blank=True, max_length=32L, null=True),
+            field=models.CharField(blank=True, max_length=32, null=True),
         ),
         migrations.AddField(
             model_name='partnerorganization',
             name='postal_code',
-            field=models.CharField(blank=True, max_length=32L, null=True),
+            field=models.CharField(blank=True, max_length=32, null=True),
         ),
         migrations.AddField(
             model_name='partnerorganization',
             name='shared_with',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, choices=[(b'DPKO', b'DPKO'), (b'ECA', b'ECA'), (b'ECLAC', b'ECLAC'), (b'ESCWA', b'ESCWA'), (b'FAO', b'FAO'), (b'ILO', b'ILO'), (b'IOM', b'IOM'), (b'OHCHR', b'OHCHR'), (b'UN', b'UN'), (b'Women', b'Women'), (b'UNAIDS', b'UNAIDS'), (b'UNDP', b'UNDP'), (b'UNESCO', b'UNESCO'), (b'UNFPA', b'UNFPA'), (b'UN - Habitat', b'UN - Habitat'), (b'UNHCR', b'UNHCR'), (b'UNODC', b'UNODC'), (b'UNOPS', b'UNOPS'), (b'UNRWA', b'UNRWA'), (b'UNSC', b'UNSC'), (b'UNU', b'UNU'), (b'WB', b'WB'), (b'WFP', b'WFP'), (b'WHO', b'WHO')], max_length=20), blank=True, null=True, size=None),
+            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, choices=[('DPKO', 'DPKO'), ('ECA', 'ECA'), ('ECLAC', 'ECLAC'), ('ESCWA', 'ESCWA'), ('FAO', 'FAO'), ('ILO', 'ILO'), ('IOM', 'IOM'), ('OHCHR', 'OHCHR'), ('UN', 'UN'), ('Women', 'Women'), ('UNAIDS', 'UNAIDS'), ('UNDP', 'UNDP'), ('UNESCO', 'UNESCO'), ('UNFPA', 'UNFPA'), ('UN - Habitat', 'UN - Habitat'), ('UNHCR', 'UNHCR'), ('UNODC', 'UNODC'), ('UNOPS', 'UNOPS'), ('UNRWA', 'UNRWA'), ('UNSC', 'UNSC'), ('UNU', 'UNU'), ('WB', 'WB'), ('WFP', 'WFP'), ('WHO', 'WHO')], max_length=20), blank=True, null=True, size=None),
         ),
         migrations.AddField(
             model_name='partnerorganization',
             name='street_address',
-            field=models.CharField(blank=True, max_length=500L, null=True),
+            field=models.CharField(blank=True, max_length=500, null=True),
         ),
         migrations.AlterField(
             model_name='agreement',
             name='agreement_number',
-            field=models.CharField(blank=True, max_length=45L, unique=True, verbose_name='Reference Number'),
+            field=models.CharField(blank=True, max_length=45, unique=True, verbose_name='Reference Number'),
         ),
         migrations.AlterField(
             model_name='agreement',
@@ -257,7 +255,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='agreement',
             name='partner_manager',
-            field=smart_selects.db_fields.ChainedForeignKey(blank=True, chained_field=b'partner', chained_model_field=b'partner', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='agreements_signed', to='partners.PartnerStaffMember', verbose_name='Signed by partner'),
+            field=smart_selects.db_fields.ChainedForeignKey(blank=True, chained_field='partner', chained_model_field='partner', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='agreements_signed', to='partners.PartnerStaffMember', verbose_name='Signed by partner'),
         ),
         migrations.AlterField(
             model_name='agreement',
@@ -267,12 +265,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='agreementamendmentlog',
             name='status',
-            field=models.CharField(blank=True, choices=[('in_process', 'In Process'), ('active', 'Active'), ('implemented', 'Implemented'), ('cancelled', 'Cancelled'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], max_length=32L),
+            field=models.CharField(blank=True, choices=[('in_process', 'In Process'), ('active', 'Active'), ('implemented', 'Implemented'), ('cancelled', 'Cancelled'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], max_length=32),
         ),
         migrations.AlterField(
             model_name='amendmentlog',
             name='status',
-            field=models.CharField(blank=True, choices=[('in_process', 'In Process'), ('active', 'Active'), ('implemented', 'Implemented'), ('cancelled', 'Cancelled'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], max_length=32L),
+            field=models.CharField(blank=True, choices=[('in_process', 'In Process'), ('active', 'Active'), ('implemented', 'Implemented'), ('cancelled', 'Cancelled'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], max_length=32),
         ),
         migrations.AlterField(
             model_name='assessment',
@@ -297,7 +295,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='pca',
             name='agreement',
-            field=smart_selects.db_fields.ChainedForeignKey(auto_choose=True, blank=True, chained_field=b'partner', chained_model_field=b'partner', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pca_interventions', to='partners.Agreement'),
+            field=smart_selects.db_fields.ChainedForeignKey(auto_choose=True, blank=True, chained_field='partner', chained_model_field='partner', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pca_interventions', to='partners.Agreement'),
         ),
         migrations.AlterField(
             model_name='pca',

@@ -51,6 +51,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='partnerorganization',
             name='core_values_assessment',
-            field=models.FileField(blank=True, help_text='Only required for CSO partners', max_length=1024, null=True, upload_to=b'partners/core_values/'),
+            field=models.FileField(blank=True, help_text='Only required for CSO partners', max_length=1024, null=True, upload_to='partners/core_values/'),
         ),
     ]

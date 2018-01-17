@@ -4,6 +4,7 @@ import datetime
 
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse, resolve
+from django.utils.six.moves import range
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
@@ -16,6 +17,7 @@ from EquiTrack.factories import (
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMixIn
+
 from partners.models import InterventionResultLink
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.tests.test_utils import setup_intervention_test_data
@@ -36,7 +38,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
             user=user or self.unicef_staff,
             data=data,
         )
-        return response.status_code, json.loads(response.rendered_content)
+        return response.status_code, json.loads(response.rendered_content.decode('utf-8'))
 
     def test_prp_api(self):
         status_code, response = self.run_prp_v1(
