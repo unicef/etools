@@ -4,6 +4,7 @@ from collections import OrderedDict
 from datetime import timedelta
 from decimal import Decimal
 from itertools import chain
+from operator import attrgetter
 
 
 class ExpenseDTO(object):
@@ -223,7 +224,7 @@ class DSACalculator(object):
 
         itinerary_item_list = list(self.travel.itinerary.order_by('arrival_date'))
 
-        # To few elements, cannot calculate properly
+        # Too few elements, cannot calculate properly
         if len(itinerary_item_list) < 2:
             return []
 
@@ -245,14 +246,15 @@ class DSACalculator(object):
 
         dsa_dto_list = []
         counter = 1
-        for date, itinerary in mapping.items():
+        for date in sorted(mapping.keys()):  # Algorithm requires processing these in date order
+            itinerary = mapping[date]
             dto = DSAdto(date, itinerary)
             over_60 = counter > 60
             dto.daily_rate = self.get_dsa_amount(dto.region, over_60)
             dsa_dto_list.append(dto)
             counter += 1
 
-        return sorted(dsa_dto_list, cmp=lambda x, y: cmp(x.date, y.date))
+        return sorted(dsa_dto_list, key=attrgetter('date'))
 
     def check_one_day_long_trip(self, dsa_dto_list):
         # If it's a day long trip and only one less than 8 hour travel was made, no dsa applied

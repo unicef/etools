@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from collections import OrderedDict
 
+from django.utils.six.moves import filter
+
 from audit.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
 from funds.models import Donor, Grant
 from vision.adapters.manual import ManualVisionSynchronizer
@@ -61,4 +63,4 @@ class POSynchronizer(ManualVisionSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return list(filter(bad_record, records))

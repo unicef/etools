@@ -13,7 +13,7 @@ def remove_llresults_without_resultlink(apps, schema_editor):
     # use the save method to mark invalid fields
     deleted = LowerResult.objects.filter(result_link__isnull=True).delete()
     if deleted[0]:
-        print "Deleted lower results: {}".format(deleted[0])
+        print("Deleted lower results: {}".format(deleted[0]))
 
 class Migration(migrations.Migration):
 

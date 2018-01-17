@@ -7,6 +7,7 @@ from tenant_schemas.test.client import TenantClient
 
 from EquiTrack.factories import LocationFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
+from EquiTrack.utils import as_json
 from locations.models import Location
 
 
@@ -27,7 +28,7 @@ class TestLocationViews(APITenantTestCase):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
         self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(
             self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
 
@@ -109,7 +110,7 @@ class TestLocationViews(APITenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 5)
-        self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "name", "p_code"])
         self.assertIn("Loc", response.data[0]["name"])
 
 
@@ -129,7 +130,7 @@ class TestLocationAutocompleteView(FastTenantTestCase):
         self.client.force_login(self.unicef_staff)
         response = self.client.get(reverse("locations-autocomplete-light"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
+        data = as_json(response)
         self.assertEqual(len(data["results"]), 1)
 
     def test_get_filter(self):
@@ -140,5 +141,5 @@ class TestLocationAutocompleteView(FastTenantTestCase):
             reverse("locations-autocomplete-light")
         ))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
+        data = as_json(response)
         self.assertEqual(len(data["results"]), 1)

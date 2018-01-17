@@ -6,24 +6,25 @@ from __future__ import unicode_literals
 from django.forms import model_to_dict
 
 from snapshot.models import Activity
+from django.utils import six
 
 
 def jsonify(data):
     """Convert data into a dictionary that can be json encoded"""
     allowed_types = (
-        basestring,
+        six.string_types,
         bool,
         dict,
         float,
         int,
-        long,
+        int,
         list,
         set,
         tuple,
     )
     for key, value in data.items():
         if not isinstance(value, allowed_types):
-            data[key] = unicode(data[key])
+            data[key] = six.text_type(data[key])
     return data
 
 

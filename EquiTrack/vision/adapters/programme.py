@@ -3,6 +3,8 @@ import json
 import logging
 
 from django.db import transaction
+from django.utils.six.moves import filter
+from django.utils import six
 
 from reports.models import CountryProgramme, Indicator, Result, ResultType
 from vision.utils import wcf_json_date_as_date
@@ -271,7 +273,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                 return True
             return False
 
-        return filter(in_time_range, records)
+        return list(filter(in_time_range, records))
 
     def _clean_records(self, records):
         records = self._filter_by_time_range(records)
@@ -348,7 +350,7 @@ class RAMSynchronizer(VisionDataSynchronizer):
         mapped_records = {}
         for r in records:
             a = r['WBS_ELEMENT_CODE']
-            code = unicode(r['INDICATOR_CODE'])
+            code = six.text_type(r['INDICATOR_CODE'])
             mapped_records[code] = {
                 'name': r['INDICATOR_DESCRIPTION'][:1024],
                 'baseline': r['BASELINE'][:255],
@@ -372,7 +374,7 @@ class RAMSynchronizer(VisionDataSynchronizer):
         results = Result.objects.filter(result_type__name='Output', wbs__in=wbss).all()
         result_map = dict([(r.wbs, r) for r in results])
 
-        existing_records = Indicator.objects.filter(code__in=records.keys()).prefetch_related('result').all()
+        existing_records = Indicator.objects.filter(code__in=list(records.keys())).prefetch_related('result').all()
 
         for er in existing_records:
             # remote record:
@@ -422,10 +424,10 @@ class RAMSynchronizer(VisionDataSynchronizer):
 
         created = Indicator.objects.bulk_create([Indicator(**r) for r in records_to_create])
 
-        indicators_activated = Indicator.objects.filter(code__in=records.keys()).filter(active=False).update(
+        indicators_activated = Indicator.objects.filter(code__in=list(records.keys())).filter(active=False).update(
             active=True)
 
-        indicators_deactivated = Indicator.objects.exclude(code__in=records.keys()).exclude(active=False).update(
+        indicators_deactivated = Indicator.objects.exclude(code__in=list(records.keys())).exclude(active=False).update(
             active=False)
 
         return {

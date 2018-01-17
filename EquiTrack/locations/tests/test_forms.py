@@ -38,7 +38,7 @@ class TestCartoDBTableForm(FastTenantTestCase):
         errors = form.errors.as_data()
         self.assertEqual(len(errors["__all__"]), 1)
         self.assertEqual(
-            errors["__all__"][0].message,
+            errors["__all__"][0].args[0],
             "Couldn't connect to CartoDB table: test"
         )
 
@@ -53,7 +53,7 @@ class TestCartoDBTableForm(FastTenantTestCase):
         errors = form.errors.as_data()
         self.assertEqual(len(errors["__all__"]), 1)
         self.assertEqual(
-            errors["__all__"][0].message,
+            errors["__all__"][0].args[0],
             "The Name column (name) is not in table: test"
         )
 
@@ -68,7 +68,7 @@ class TestCartoDBTableForm(FastTenantTestCase):
         errors = form.errors.as_data()
         self.assertEqual(len(errors["__all__"]), 1)
         self.assertEqual(
-            errors["__all__"][0].message,
+            errors["__all__"][0].args[0],
             "The PCode column (pcode) is not in table: test"
         )
 
@@ -83,7 +83,7 @@ class TestCartoDBTableForm(FastTenantTestCase):
         errors = form.errors.as_data()
         self.assertEqual(len(errors["__all__"]), 1)
         self.assertEqual(
-            errors["__all__"][0].message,
+            errors["__all__"][0].args[0],
             "The Parent Code column (parent) is not in table: test"
         )
 

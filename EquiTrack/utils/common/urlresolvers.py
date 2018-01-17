@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from EquiTrack.utils import get_current_site
+from django.utils.six.moves import map
 
 
 def site_url():

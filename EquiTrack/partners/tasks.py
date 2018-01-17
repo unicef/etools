@@ -14,6 +14,7 @@ from partners.validation.agreements import AgreementValid
 from partners.validation.interventions import InterventionValid
 from users.models import Country, User
 from notification.models import Notification
+from django.utils import six
 
 logger = get_task_logger(__name__)
 
@@ -28,7 +29,7 @@ def get_intervention_context(intervention):
     Helper function for some of the notification tasks in this file.
     '''
     return {
-        'number': unicode(intervention),
+        'number': six.text_type(intervention),
         'partner': intervention.agreement.partner.name,
         'start_date': str(intervention.start),
         'url': 'https://{}/pmp/interventions/{}/details'.format(settings.HOST, intervention.id),

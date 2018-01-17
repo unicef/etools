@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 from datetime import timedelta, datetime
-import json
 
 from django.core.urlresolvers import reverse
 from django.utils import timezone
@@ -9,6 +8,7 @@ from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from EquiTrack.factories import FundsReservationHeaderFactory, UserFactory, InterventionFactory
+from EquiTrack.utils import as_json
 
 
 class TestFRHeaderView(APITenantTestCase):
@@ -27,7 +27,7 @@ class TestFRHeaderView(APITenantTestCase):
             user=self.unicef_staff,
             data=data
         )
-        return response.status_code, json.loads(response.rendered_content)
+        return response.status_code, as_json(response)
 
     def test_get_one_fr(self):
 

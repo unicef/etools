@@ -385,7 +385,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join([x.fr_number for x in obj.frs.all()]) if obj.frs.all().count() > 0 else ""
 
     def get_migration_error_msg(self, obj):
-        return ', '.join([a for a in obj.metadata['error_msg']]) if 'error_msg' in obj.metadata.keys() else ''
+        return ', '.join([a for a in obj.metadata['error_msg']]) if 'error_msg' in list(obj.metadata.keys()) else ''
 
 
 class InterventionExportFlatSerializer(InterventionExportSerializer):

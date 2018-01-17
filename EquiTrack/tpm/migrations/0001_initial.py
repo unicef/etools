@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name='TPMVisit',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('status', models.CharField(default='planned', max_length=32L, choices=[('planned', 'Planned'), ('completed', 'Completed'), ('rescheduled', 'Rescheduled'), ('no-activity', 'No-Activity'), ('discontinued', 'Discontinued')])),
+                ('status', models.CharField(default='planned', max_length=32, choices=[('planned', 'Planned'), ('completed', 'Completed'), ('rescheduled', 'Rescheduled'), ('no-activity', 'No-Activity'), ('discontinued', 'Discontinued')])),
                 ('cycle_number', models.PositiveIntegerField(null=True, blank=True)),
                 ('tentative_date', models.DateField(null=True, blank=True)),
                 ('completed_date', models.DateField(null=True, blank=True)),

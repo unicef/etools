@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import datetime
 import tempfile
+from django.utils import six
 from rest_framework import status
 from tablib.core import Dataset
 
@@ -91,7 +92,7 @@ class TestModelExport(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(), [
             'Status',
@@ -135,13 +136,13 @@ class TestModelExport(APITenantTestCase):
 
         self.assertEqual(dataset[0], (
             self.intervention.status,
-            unicode(self.intervention.agreement.partner.name),
+            six.text_type(self.intervention.agreement.partner.name),
             self.intervention.agreement.partner.partner_type,
             self.intervention.agreement.agreement_number,
-            unicode(self.intervention.agreement.country_programme.name),
+            six.text_type(self.intervention.agreement.country_programme.name),
             self.intervention.document_type,
             self.intervention.reference_number,
-            unicode(self.intervention.title),
+            six.text_type(self.intervention.title),
             '{}'.format(self.intervention.start),
             '{}'.format(self.intervention.end),
             u'',
@@ -183,7 +184,7 @@ class TestModelExport(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [
             'Reference Number',
@@ -205,8 +206,8 @@ class TestModelExport(APITenantTestCase):
         exported_agreement = dataset[-1]
         self.assertEqual(exported_agreement, (
             self.agreement.agreement_number,
-            unicode(self.agreement.status),
-            unicode(self.agreement.partner.name),
+            six.text_type(self.agreement.status),
+            six.text_type(self.agreement.partner.name),
             self.agreement.agreement_type,
             '{}'.format(self.agreement.start),
             '{}'.format(self.agreement.end),
@@ -229,7 +230,7 @@ class TestModelExport(APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content, 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [
             'Vendor Number',
@@ -256,10 +257,10 @@ class TestModelExport(APITenantTestCase):
         deleted_flag = "Yes" if self.partner.deleted_flag else "No"
         blocked = "Yes" if self.partner.blocked else "No"
 
-        test_option = filter(lambda e: e[0] == self.partner.vendor_number, dataset)[0]
+        test_option = [e for e in dataset if e[0] == self.partner.vendor_number][0]
         self.assertEqual(test_option, (
             self.partner.vendor_number,
-            unicode(self.partner.name),
+            six.text_type(self.partner.name),
             self.partner.short_name,
             self.partner.alternate_name,
             "{}".format(self.partner.partner_type),

@@ -196,7 +196,7 @@ class PartnershipDashboardAPIView(APIView):
 
         def total_value_for_parternships(partnerships):
             sum_cash = sum(
-                map(lambda pd: pd.total_unicef_cash, partnerships))
+                [pd.total_unicef_cash for pd in partnerships])
             return sum_cash
 
         result = {'partners': {}}

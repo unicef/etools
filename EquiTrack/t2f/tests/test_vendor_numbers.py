@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-import json
-
 from django.core.urlresolvers import reverse
 from factory.fuzzy import FuzzyText
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.utils import as_json
 from publics.tests.factories import TravelAgentFactory
 
 
@@ -34,5 +33,5 @@ class VendorNumbers(APITenantTestCase):
 
         with self.assertNumQueries(2):
             response = self.forced_auth_req('get', reverse('t2f:vendor_numbers'), user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertEqual(len(response_json), 6)

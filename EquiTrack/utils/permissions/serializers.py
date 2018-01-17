@@ -35,12 +35,12 @@ class PermissionsBasedSerializerMixin(UserContextSerializerMixin):
             if isinstance(node, RecursiveField):
                 node_fields = []
             else:
-                node_fields = node.fields.values()
+                node_fields = list(node.fields.values())
 
             for field in node_fields:
                 if isinstance(node, PermissionsBasedSerializerMixin):
                     related_models = collect_parent_models(node.Meta.model)
-                    targets.extend(map(lambda model: model + '.' + field.field_name, related_models))
+                    targets.extend([model + '.' + field.field_name for model in related_models])
 
                 if isinstance(field, SeparatedReadWriteField):
                     if isinstance(field.read_field, serializers.BaseSerializer):
@@ -59,7 +59,7 @@ class PermissionsBasedSerializerMixin(UserContextSerializerMixin):
         :param targets:
         :return:
         """
-        wildcards = list(set(map(lambda x: '.'.join((x.split('.')[:-1])) + '.*', targets)))
+        wildcards = list(set(['.'.join((x.split('.')[:-1])) + '.*' for x in targets]))
         return targets + wildcards
 
     def _collect_permissions(self):
@@ -82,6 +82,18 @@ class PermissionsBasedSerializerMixin(UserContextSerializerMixin):
         permissions = self.Meta.permission_class.objects.filter(targets_query)
         return permissions
 
+    def get_permissions(self, permission_type, only):
+        """
+        Return a list of the items in self.permissions that are of type
+        'permission_type' (e.g. self.Meta.permission_class.TYPES.allow or
+        self.Meta.permission_class.TYPES.disallow) and where .permission
+        is in ``only`` (e.g. a list containing
+        self.Meta.permission_class.PERMISSIONS.edit)
+        """
+        result = [p for p in self.permissions if p.permission_type == permission_type]
+        result = [p for p in result if p.permission in only]
+        return result
+
     @property
     def permissions(self):
         """
@@ -92,30 +104,27 @@ class PermissionsBasedSerializerMixin(UserContextSerializerMixin):
             self.root._permissions = list(self._collect_permissions())
 
         permissions = self.root._permissions
-        related_models = tuple(map(lambda x: x + '.', collect_parent_models(self.Meta.model)))
-        permissions = filter(lambda p: p.target.startswith(related_models), permissions)
+        related_models = tuple([x + '.' for x in collect_parent_models(self.Meta.model)])
+        permissions = [p for p in permissions if p.target.startswith(related_models)]
         return permissions
 
     @property
     def _writable_fields(self):
         fields = super(PermissionsBasedSerializerMixin, self)._writable_fields
-
-        allowed_permissions = filter(
-            lambda p:
-            p.permission == self.Meta.permission_class.PERMISSIONS.edit and
-            p.permission_type == self.Meta.permission_class.TYPES.allow,
-            self.permissions
+        allowed_permissions = self.get_permissions(
+            self.Meta.permission_class.TYPES.allow,
+            [self.Meta.permission_class.PERMISSIONS.edit]
         )
-        disallowed_permissions = filter(
-            lambda p:
-            p.permission in [self.Meta.permission_class.PERMISSIONS.edit,
-                             self.Meta.permission_class.PERMISSIONS.view] and
-            p.permission_type == self.Meta.permission_class.TYPES.disallow,
-            self.permissions
+        disallowed_permissions = self.get_permissions(
+            self.Meta.permission_class.TYPES.disallow,
+            [
+                self.Meta.permission_class.PERMISSIONS.edit,
+                self.Meta.permission_class.PERMISSIONS.view
+            ]
         )
 
-        allowed_fields_names = map(lambda p: p.target.split('.')[-1], allowed_permissions)
-        disallowed_fields_names = map(lambda p: p.target.split('.')[-1], disallowed_permissions)
+        allowed_fields_names = [p.target.split('.')[-1] for p in allowed_permissions]
+        disallowed_fields_names = [p.target.split('.')[-1] for p in disallowed_permissions]
 
         # PK allowed be default
         if allowed_fields_names:
@@ -126,9 +135,9 @@ class PermissionsBasedSerializerMixin(UserContextSerializerMixin):
         if '*' in allowed_fields_names:
             filtered_fields = fields
         else:
-            filtered_fields = filter(lambda f: f.field_name in allowed_fields_names, fields)
+            filtered_fields = [f for f in fields if f.field_name in allowed_fields_names]
 
-        filtered_fields = filter(lambda f: f.field_name not in disallowed_fields_names, filtered_fields)
+        filtered_fields = [f for f in filtered_fields if f.field_name not in disallowed_fields_names]
 
         return filtered_fields
 
@@ -136,22 +145,18 @@ class PermissionsBasedSerializerMixin(UserContextSerializerMixin):
     def _readable_fields(self):
         fields = super(PermissionsBasedSerializerMixin, self)._readable_fields
 
-        allowed_permissions = filter(
-            lambda p:
-            p.permission in [self.Meta.permission_class.PERMISSIONS.edit,
-                             self.Meta.permission_class.PERMISSIONS.view] and
-            p.permission_type == self.Meta.permission_class.TYPES.allow,
-            self.permissions
+        allowed_permissions = self.get_permissions(
+            self.Meta.permission_class.TYPES.allow,
+            [
+                self.Meta.permission_class.PERMISSIONS.edit,
+                self.Meta.permission_class.PERMISSIONS.view
+            ]
         )
-        disallowed_permissions = filter(
-            lambda p:
-            p.permission == self.Meta.permission_class.PERMISSIONS.view and
-            p.permission_type == self.Meta.permission_class.TYPES.disallow,
-            self.permissions
-        )
+        disallowed_permissions = self.get_permissions(
+            self.Meta.permission_class.TYPES.disallow, [self.Meta.permission_class.PERMISSIONS.view])
 
-        allowed_fields_names = map(lambda p: p.target.split('.')[-1], allowed_permissions)
-        disallowed_fields_names = map(lambda p: p.target.split('.')[-1], disallowed_permissions)
+        allowed_fields_names = [p.target.split('.')[-1] for p in allowed_permissions]
+        disallowed_fields_names = [p.target.split('.')[-1] for p in disallowed_permissions]
 
         # PK allowed be default
         if allowed_fields_names:
@@ -162,9 +167,9 @@ class PermissionsBasedSerializerMixin(UserContextSerializerMixin):
         if '*' in allowed_fields_names:
             filtered_fields = fields
         else:
-            filtered_fields = filter(lambda f: f.field_name in allowed_fields_names, fields)
+            filtered_fields = [f for f in fields if f.field_name in allowed_fields_names]
 
-        filtered_fields = filter(lambda f: f.field_name not in disallowed_fields_names, filtered_fields)
+        filtered_fields = [f for f in filtered_fields if f.field_name not in disallowed_fields_names]
 
         return filtered_fields
 
@@ -184,7 +189,7 @@ class StatusPermissionsBasedSerializerMixin(PermissionsBasedSerializerMixin):
 
         instance = self.context.get('instance')
         instance_status = instance.status if instance else self.Meta.permission_class.STATUSES.new
-        permissions = filter(lambda p: p.instance_status == instance_status, permissions)
+        permissions = [p for p in permissions if p.instance_status == instance_status]
 
         return permissions
 

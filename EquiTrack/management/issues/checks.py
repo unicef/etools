@@ -6,20 +6,22 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Model
 from django.utils.module_loading import import_string
+from django.utils.six import add_metaclass
 
 from environment.models import IssueCheckConfig
 from management.issues.exceptions import IssueCheckNotFoundException, IssueFoundException
 from management.models import FlaggedIssue, ISSUE_STATUS_RESOLVED
 from utils.common.utils import run_on_all_tenants
+from django.utils import six
 
 ModelCheckData = namedtuple('ModelCheckData', 'object metadata')
 
 
+@add_metaclass(ABCMeta)
 class BaseIssueCheck(object):
     """
     Base class for all Issue Checks
     """
-    __metaclass__ = ABCMeta
     model = None  # the model class that this check runs against.
     check_id = None  # a unique id for the issue check type.
 
@@ -39,7 +41,7 @@ class BaseIssueCheck(object):
                     self.run_check(model_instance, metadata)
                 except IssueFoundException as e:
                     issue = FlaggedIssue.get_or_new(content_object=model_instance, issue_id=self.check_id)
-                    issue.message = unicode(e)
+                    issue.message = six.text_type(e)
                     issue.save()
         # todo: is it always valid to run all checks against all tenants?
         run_on_all_tenants(_inner)
@@ -140,7 +142,7 @@ def recheck_all_open_issues():
                 issue.recheck()
             except IssueCheckNotFoundException as e:
                 # todo: should this fail hard?
-                logging.error(unicode(e))
+                logging.error(six.text_type(e))
 
     # todo: is it always valid to run all checks against all tenants?
     run_on_all_tenants(_check)

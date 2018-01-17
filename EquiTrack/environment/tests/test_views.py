@@ -3,13 +3,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import json
-
 from django.db import connection
 
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
+from EquiTrack.utils import as_json
 from environment.tests.factories import TenantFlagFactory, TenantSwitchFactory
 from EquiTrack.factories import UserFactory, CountryFactory
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -27,13 +26,13 @@ class TestActiveFlagAPIView(APITenantTestCase):
     def test_requires_auth(self):
         rsp = self.client.get(self.url)
         self.assertEqual(rsp.status_code, status.HTTP_403_FORBIDDEN)
-        rsp_json = json.loads(rsp.content)
+        rsp_json = as_json(rsp)
         self.assertEqual(rsp_json['detail'], 'Authentication credentials were not provided.')
 
     def test_list_empty(self):
         rsp = self.forced_auth_req('get', self.url)
         self.assertEqual(rsp.status_code, status.HTTP_200_OK)
-        active_flags = json.loads(rsp.content)['active_flags']
+        active_flags = as_json(rsp)['active_flags']
         self.assertEqual(active_flags, [])
 
     def test_list_flags_only(self):
@@ -41,7 +40,7 @@ class TestActiveFlagAPIView(APITenantTestCase):
         nobody_flag = TenantFlagFactory(everyone=False)
         rsp = self.forced_auth_req('get', self.url)
         self.assertEqual(rsp.status_code, status.HTTP_200_OK)
-        active_flags = json.loads(rsp.content)['active_flags']
+        active_flags = as_json(rsp)['active_flags']
         self.assertIn(everyone_flag.name, active_flags)
         self.assertNotIn(nobody_flag.name, active_flags)
 
@@ -52,7 +51,7 @@ class TestActiveFlagAPIView(APITenantTestCase):
         nontenant_switch = TenantSwitchFactory(countries=[])
         rsp = self.forced_auth_req('get', self.url)
         self.assertEqual(rsp.status_code, status.HTTP_200_OK)
-        active_flags = json.loads(rsp.content)['active_flags']
+        active_flags = as_json(rsp)['active_flags']
         self.assertIn(tenant_switch.name, active_flags)
         self.assertNotIn(nontenant_switch.name, active_flags)
 
@@ -64,7 +63,7 @@ class TestActiveFlagAPIView(APITenantTestCase):
         everyone_flag = TenantFlagFactory(everyone=True)
         rsp = self.forced_auth_req('get', self.url)
         self.assertEqual(rsp.status_code, status.HTTP_200_OK)
-        active_flags = json.loads(rsp.content)['active_flags']
+        active_flags = as_json(rsp)['active_flags']
         self.assertIn(everyone_flag.name, active_flags)
         self.assertIn(tenant_switch.name, active_flags)
         self.assertNotIn(nontenant_switch.name, active_flags)
@@ -77,6 +76,6 @@ class TestActiveFlagAPIView(APITenantTestCase):
         TenantFlagFactory(everyone=True, name=same_name)
         rsp = self.forced_auth_req('get', self.url)
         self.assertEqual(rsp.status_code, status.HTTP_200_OK)
-        active_flags = json.loads(rsp.content)['active_flags']
+        active_flags = as_json(rsp)['active_flags']
         self.assertEqual(len(active_flags), 1)
         self.assertIn(same_name, active_flags)

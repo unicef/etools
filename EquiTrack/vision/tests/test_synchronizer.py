@@ -43,7 +43,7 @@ class TestVisionDataLoader(FastTenantTestCase):
         self.assertEqual(mock_requests.get.call_args[1], {'headers': {'Content-Type': 'application/json'},
                                                           'auth': (FAUX_VISION_USER, FAUX_VISION_PASSWORD),
                                                           'verify': False})
-        # Ensure response.json() was called as expected
+        # Ensure as_json(response) was called as expected
         self.assertEqual(mock_get_response.json.call_count, 1)
         self.assertEqual(mock_get_response.json.call_args[0], tuple())
         self.assertEqual(mock_get_response.json.call_args[1], {})
@@ -364,7 +364,8 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
                                                         'POTRZEBIE': 2.2})
 
     @mock.patch('vision.vision_data_synchronizer.logger.info')
-    def test_sync_exception_handling(self, mock_logger_info):
+    @mock.patch('vision.vision_data_synchronizer.logger.exception')
+    def test_sync_exception_handling(self, mock_logger_exception, mock_logger_info):
         '''Test sync() exception handling behavior.'''
         synchronizer = _MySynchronizer(country=self.test_country)
 
@@ -394,12 +395,13 @@ class TestVisionDataSynchronizerSync(FastTenantTestCase):
 
         # The first two calls to logger.info()  are part of the instantiation of VisionDataLoader so I don't need to
         # test them here.
-        self.assertEqual(mock_logger_info.call_count, 4)
+        self.assertEqual(mock_logger_info.call_count, 3)
+        self.assertEqual(mock_logger_exception.call_count, 1)
         expected_msg = 'About to get data from http://example.com'
         self.assertEqual(mock_logger_info.call_args_list[2][0], (expected_msg, ))
         self.assertEqual(mock_logger_info.call_args_list[2][1], {})
         expected_msg = 'sync caught ValueError with message "Wrong!"'
-        self.assertEqual(mock_logger_info.call_args_list[3][0], (expected_msg, ))
-        self.assertEqual(mock_logger_info.call_args_list[3][1], {})
+        self.assertEqual(mock_logger_exception.call_args_list[0][0], (expected_msg, ))
+        self.assertEqual(mock_logger_exception.call_args_list[0][1], {})
 
         self._assertVisionSyncLogFundamentals(0, 0, exception_message='Wrong!', successful=False)

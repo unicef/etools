@@ -5,6 +5,7 @@ import logging
 from collections import OrderedDict
 
 from django.db import connection
+from django.utils.six.moves import zip
 
 from vision.exceptions import VisionException
 from vision.utils import wcf_json_date_as_datetime
@@ -53,10 +54,12 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
         def _get_field_value(field_name, field_json_code, json_item, model):
             if field_json_code in self.DATE_FIELDS:
                 return wcf_json_date_as_datetime(json_item[field_json_code])
-            elif field_name in self.MODEL_MAPPING.keys():
+            elif field_name in list(self.MODEL_MAPPING.keys()):
                 related_model = self.MODEL_MAPPING[field_name]
 
-                reversed_dict = dict(zip(self.MAPPING[field_name].values(), self.MAPPING[field_name].keys()))
+                values = list(self.MAPPING[field_name].values())
+                keys = list(self.MAPPING[field_name].keys())
+                reversed_dict = dict(list(zip(values, keys)))
                 return related_model.objects.get(**{
                     reversed_dict[field_json_code]: json_item.get(field_json_code, None)
                 })
@@ -76,7 +79,7 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
 
                     if not kwargs:
                         for fields in model._meta.unique_together:
-                            if all(field in mapped_item.keys() for field in fields):
+                            if all(field in list(mapped_item.keys()) for field in fields):
                                 unique_fields = fields
                                 break
 
@@ -86,7 +89,7 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
 
                     defaults = dict(
                         [(field_name, value) for field_name, value in mapped_item.items()
-                         if field_name not in kwargs.keys()]
+                         if field_name not in list(kwargs.keys())]
                     )
                     model.objects.update_or_create(
                         defaults=defaults, **kwargs

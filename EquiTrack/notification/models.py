@@ -11,8 +11,8 @@ from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import models
 from django.template.base import Template, VariableNode
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils import six
 
-import six
 from model_utils import Choices
 from post_office import mail
 from post_office.models import EmailTemplate

@@ -1,6 +1,7 @@
 """
 Project wide base classes and utility functions for apps
 """
+import codecs
 import csv
 import json
 import uuid
@@ -14,6 +15,7 @@ from django.db import connection
 from django.utils.cache import patch_cache_control
 
 import requests
+from django.utils.six import string_types
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -47,7 +49,7 @@ def get_data_from_insight(endpoint, data={}):
     if response.status_code != 200:
         return False, 'Loading data from Vision Failed, status {}'.format(response.status_code)
     try:
-        result = json.loads(response.json())
+        result = as_json(response)
     except ValueError:
         return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
     return True, result
@@ -59,7 +61,7 @@ def etag_cached(cache_key, public_cache=False):
     match the one sent along with the request.
     Otherwise it returns 304 NOT MODIFIED.
     """
-    assert isinstance(cache_key, (str, unicode)), 'Cache key has to be a string'
+    assert isinstance(cache_key, string_types), 'Cache key has to be a string'
 
     def make_cache_key():
         if public_cache:
@@ -106,7 +108,7 @@ class Vividict(dict):
 
 class HashableDict(dict):
     def __hash__(self):
-        return hash(frozenset(self.items()))
+        return hash(frozenset(list(self.items())))
 
 
 def proccess_permissions(permission_dict):
@@ -154,9 +156,10 @@ def proccess_permissions(permission_dict):
             result[field][action][allowed] = []
 
         # this action should not have been defined with any other allowed param
-        assert result[field][action].keys() == [allowed], 'There cannot be two types of "allowed" defined on the same '\
-                                                          'field with the same action as the system will not  be able' \
-                                                          ' to have a default behaviour'
+        assert list(result[field][action].keys()) == [allowed], \
+            'There cannot be two types of "allowed" defined on the same ' \
+            'field with the same action as the system will not  be able' \
+            ' to have a default behaviour'
 
         result[field][action][allowed].append({
             'group': row['Group'],
@@ -173,7 +176,8 @@ def import_permissions(model_name):
     }
 
     def process_file():
-        with open(permission_file_map[model_name], 'rb') as csvfile:
+        # csvfile expects text input not binary
+        with codecs.open(permission_file_map[model_name], 'rb', 'utf-8') as csvfile:
             sheet = csv.DictReader(csvfile, delimiter=',', quotechar='|')
             result = proccess_permissions(sheet)
         return result
@@ -200,3 +204,14 @@ def get_current_quarter():
     else:
         quarter = 'q4'
     return quarter
+
+
+def as_json(response):
+    """
+    Given a response with a binary .content attribute,
+    decode it (assuming UTF-8), parse as JSON, and
+    return the resulting data.
+    """
+    if hasattr(response, 'render'):
+        response = response.render()
+    return json.loads(response.content.decode('utf-8'))

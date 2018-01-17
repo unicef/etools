@@ -1,13 +1,12 @@
 from __future__ import unicode_literals
 
-import json
 import datetime
 from unittest import skip, TestCase
 
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
-from django.utils import timezone
+from django.utils import timezone, six
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
@@ -30,6 +29,7 @@ from EquiTrack.factories import (
     ResultFactory,
     SectorFactory,
     UserFactory)
+from EquiTrack.utils import as_json
 from environment.helpers import tenant_switch_is_active
 from environment.models import TenantSwitch
 from environment.tests.factories import TenantSwitchFactory
@@ -103,7 +103,7 @@ class TestInterventionsAPI(APITenantTestCase):
             user=user or self.unicef_staff,
             data=data
         )
-        return response.status_code, json.loads(response.rendered_content)
+        return response.status_code, as_json(response)
 
     def run_request_list_dash_ep(self, data={}, user=None, method='get'):
         response = self.forced_auth_req(
@@ -111,7 +111,7 @@ class TestInterventionsAPI(APITenantTestCase):
             reverse('partners_api:intervention-list-dash'),
             user=user or self.unicef_staff,
         )
-        return response.status_code, json.loads(response.rendered_content)
+        return response.status_code, as_json(response)
 
     def run_request(self, intervention_id, data=None, method='get', user=None):
         user = user or self.partnership_manager_user
@@ -121,7 +121,7 @@ class TestInterventionsAPI(APITenantTestCase):
             user=user,
             data=data or {}
         )
-        return response.status_code, json.loads(response.rendered_content)
+        return response.status_code, as_json(response)
 
     def test_api_pd_output_not_populated(self):
         self.assertFalse(Activity.objects.exists())
@@ -143,7 +143,7 @@ class TestInterventionsAPI(APITenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        result = json.loads(response.rendered_content)
+        result = as_json(response)
         self.assertEqual(result.get('result_links'), {'name': ['This field may not be null.']})
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
@@ -193,7 +193,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
@@ -213,7 +213,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
@@ -233,7 +233,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_201_CREATED)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(response['frs_details']['total_actual_amt'],
                          float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
         self.assertEqual(response['frs_details']['total_outstanding_amt'],
@@ -256,7 +256,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(response['frs_details']['total_actual_amt'],
                          float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
         self.assertEqual(response['frs_details']['total_outstanding_amt'],
@@ -272,7 +272,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertIn("frs", activity.change)
         frs = activity.change["frs"]
         self.assertEqual(frs["before"], [])
-        self.assertItemsEqual(frs["after"], [self.fr_1.pk, self.fr_2.pk])
+        six.assertCountEqual(self, frs["after"], [self.fr_1.pk, self.fr_2.pk])
         self.assertEqual(activity.by_user, self.partnership_manager_user)
 
     def test_remove_an_fr_from_pd(self):
@@ -284,7 +284,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             1
@@ -298,7 +298,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             2
@@ -317,7 +317,7 @@ class TestInterventionsAPI(APITenantTestCase):
                                                  user=self.partnership_manager_user)
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertTrue(Activity.objects.exists())
 
     def test_fail_add_used_fr_on_pd(self):
@@ -345,12 +345,12 @@ class TestInterventionsAPI(APITenantTestCase):
         }
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertTrue(Activity.objects.exists())
 
         status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(response['frs'], frs_data)
+        six.assertCountEqual(self, response['frs'], frs_data)
         self.assertEqual(Activity.objects.all().count(), 2)
 
     def test_patch_title_fail_as_unicef_user(self):
@@ -374,7 +374,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
 
         # all fields are there
-        self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
+        six.assertCountEqual(self, self.ALL_FIELDS, list(response['permissions']['edit'].keys()))
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
 
@@ -383,10 +383,10 @@ class TestInterventionsAPI(APITenantTestCase):
         del edit_permissions["sector_locations"]
         del required_permissions["sector_locations"]
 
-        self.assertItemsEqual(self.EDITABLE_FIELDS['draft'],
-                              [perm for perm in edit_permissions if edit_permissions[perm]])
-        self.assertItemsEqual(self.REQUIRED_FIELDS['draft'],
-                              [perm for perm in required_permissions if required_permissions[perm]])
+        six.assertCountEqual(self, self.EDITABLE_FIELDS['draft'],
+                             [perm for perm in edit_permissions if edit_permissions[perm]])
+        six.assertCountEqual(self, self.REQUIRED_FIELDS['draft'],
+                             [perm for perm in required_permissions if required_permissions[perm]])
 
     @skip('add test after permissions file is ready')
     def test_permissions_for_intervention_status_active(self):
@@ -398,13 +398,13 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
 
         # all fields are there
-        self.assertItemsEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
+        six.assertCountEqual(self, self.ALL_FIELDS, list(response['permissions']['edit'].keys()))
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-        self.assertItemsEqual(self.EDITABLE_FIELDS['signed'],
-                              [perm for perm in edit_permissions if edit_permissions[perm]])
-        self.assertItemsEqual(self.REQUIRED_FIELDS['signed'],
-                              [perm for perm in required_permissions if required_permissions[perm]])
+        six.assertCountEqual(self, self.EDITABLE_FIELDS['signed'],
+                             [perm for perm in edit_permissions if edit_permissions[perm]])
+        six.assertCountEqual(self, self.REQUIRED_FIELDS['signed'],
+                             [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
         EXPECTED_QUERIES = 11
@@ -506,7 +506,7 @@ class TestAPIInterventionResultLinkListView(APITenantTestCase):
             expected_keys = self.expected_field_names
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 2)
         for obj in response_json:
@@ -571,9 +571,9 @@ class TestAPIInterventionResultLinkCreateView(APITenantTestCase):
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, dict)
-        self.assertIn('id', response_json.keys())
+        self.assertIn('id', list(response_json.keys()))
 
     def test_no_permission_user_forbidden(self):
         '''Ensure a non-staff user gets the 403 smackdown'''
@@ -627,7 +627,7 @@ class TestAPIInterventionResultLinkRetrieveView(APITenantTestCase):
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, dict)
         self.assertEqual(self.expected_keys, sorted(response_json.keys()))
 
@@ -793,7 +793,7 @@ class TestAPIInterventionLowerResultListView(APITenantTestCase):
             expected_keys = self.expected_field_names
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 2)
         for obj in response_json:
@@ -860,9 +860,9 @@ class TestAPIInterventionLowerResultCreateView(APITenantTestCase):
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, dict)
-        self.assertIn('id', response_json.keys())
+        self.assertIn('id', list(response_json.keys()))
         # The id of the newly-created lower result should be associated with my result link, and it should be
         # the only one associated with that result link.
         self.assertEqual([response_json['id']],
@@ -947,7 +947,7 @@ class TestAPIInterventionIndicatorsListView(APITenantTestCase):
             expected_keys = self.expected_field_names
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 2)
         for obj in response_json:
@@ -1024,9 +1024,9 @@ class TestAPInterventionIndicatorsCreateView(APITenantTestCase):
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, dict)
-        self.assertIn('id', response_json.keys())
+        self.assertIn('id', list(response_json.keys()))
         # The id of the newly-created indicator should be associated with my lower result, and it should be
         # the only one associated with that result.
         self.assertEqual([response_json['id']],
@@ -1075,8 +1075,8 @@ class TestAPInterventionIndicatorsCreateView(APITenantTestCase):
         response = self._make_request(user, data)
         # Adding the same indicator again should fail.
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json.keys(), ['non_field_errors'])
+        response_json = as_json(response)
+        self.assertEqual(list(response_json.keys()), ['non_field_errors'])
         self.assertIsInstance(response_json['non_field_errors'], list)
         self.assertEqual(response_json['non_field_errors'],
                          ['This indicator is already being monitored for this Result'])
@@ -1184,11 +1184,11 @@ class TestInterventionResultListAPIView(APITenantTestCase):
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
         first = response_json[0]
-        self.assertIn('id', first.keys())
+        self.assertIn('id', list(first.keys()))
         return response_json, first
 
     def test_search_empty(self):
@@ -1199,7 +1199,7 @@ class TestInterventionResultListAPIView(APITenantTestCase):
             data={"search": "random"}
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertFalse(response_json)
 
@@ -1250,11 +1250,11 @@ class TestInterventionIndicatorListAPIView(APITenantTestCase):
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
         first = response_json[0]
-        self.assertIn('intervention', first.keys())
+        self.assertIn('intervention', list(first.keys()))
         return response_json, first
 
     def test_search(self):
@@ -1275,7 +1275,7 @@ class TestInterventionIndicatorListAPIView(APITenantTestCase):
             data={"search": "random"}
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertFalse(response_json)
 
@@ -1337,11 +1337,11 @@ class TestInterventionAmendmentListAPIView(APITenantTestCase):
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
         first = response_json[0]
-        self.assertIn('id', first.keys())
+        self.assertIn('id', list(first.keys()))
         return response_json, first
 
     def test_search_intervention_number(self):
@@ -1373,7 +1373,7 @@ class TestInterventionAmendmentListAPIView(APITenantTestCase):
             data={"search": "random"}
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertFalse(response_json)
 
@@ -1438,11 +1438,11 @@ class TestInterventionSectorLocationLinkListAPIView(APITenantTestCase):
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
         first = response_json[0]
-        self.assertIn('id', first.keys())
+        self.assertIn('id', list(first.keys()))
         return response_json, first
 
     def test_search_intervention_number(self):
@@ -1473,7 +1473,7 @@ class TestInterventionSectorLocationLinkListAPIView(APITenantTestCase):
             data={"search": "random"}
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertFalse(response_json)
 
@@ -1488,11 +1488,11 @@ class TestInterventionListMapView(APITenantTestCase):
     def assertResponseFundamentals(self, response):
         '''Assert common fundamentals about the response.'''
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = as_json(response)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
         first = response_json[0]
-        self.assertIn('id', first.keys())
+        self.assertIn('id', list(first.keys()))
         return response_json, first
 
     def test_get(self):
