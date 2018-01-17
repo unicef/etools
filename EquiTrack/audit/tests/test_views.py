@@ -4,6 +4,7 @@ import datetime
 import random
 
 from django.core.management import call_command
+from django.utils import six
 from rest_framework import status
 from mock import patch, Mock
 
@@ -433,7 +434,8 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenant
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(
+        six.assertCountEqual(
+            self,
             map(lambda pd: pd['id'], response.data['active_pd']),
             map(lambda i: i.id, partner.agreements.first().interventions.all())
         )
@@ -458,7 +460,8 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, APITenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertItemsEqual(
+        six.assertCountEqual(
+            self,
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_firms)
         )
