@@ -121,7 +121,7 @@ class ResultIndicatorListAPIView(ListAPIView):
         """
         Return All Indicators for Result
         """
-        indicators = Indicator.objects.filter(result_id=pk)
+        indicators = Indicator.objects.filter(result__pk=pk)
         serializer = self.get_serializer(indicators, many=True)
         return Response(
             serializer.data,
