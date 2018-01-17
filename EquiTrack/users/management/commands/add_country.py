@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import six
 
 from users.models import Country
 from publics.models import Currency
@@ -8,7 +9,7 @@ class Command(BaseCommand):
     help = 'Create a new country and related schema'
 
     def add_arguments(self, parser):
-        parser.add_argument('country_name', type=unicode)
+        parser.add_argument('country_name', type=six.text_type)
 
     def handle(self, *args, **options):
         try:
@@ -22,4 +23,4 @@ class Command(BaseCommand):
                 local_currency=usd,
             )
         except Exception as exp:
-            raise CommandError(exp.message)
+            raise CommandError(exp.args[0])
