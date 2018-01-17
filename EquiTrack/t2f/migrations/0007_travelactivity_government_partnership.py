@@ -14,9 +14,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='travelactivity',
-            name='government_partnership',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='partners.GovernmentIntervention'),
-        ),
     ]

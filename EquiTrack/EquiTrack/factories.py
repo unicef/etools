@@ -360,15 +360,6 @@ class IndicatorFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Indicator {}'.format(n))
 
 
-class GovernmentInterventionFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = partner_models.GovernmentIntervention
-
-    partner = factory.SubFactory(PartnerFactory)
-    country_programme = factory.SubFactory(CountryProgrammeFactory)
-    number = 'RefNumber'
-
-
 class DonorFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=45)
 

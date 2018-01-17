@@ -12,8 +12,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='travelactivity',
-            name='government_partnership',
-        ),
     ]
