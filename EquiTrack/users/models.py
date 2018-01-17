@@ -331,7 +331,7 @@ def create_partner_user(sender, instance, created, **kwargs):
                 # TODO: check for user not being already associated with another partnership (can be done on the form)
         except Exception as exp:
             # we dont need do anything special except log the error, we have enough information to create the user later
-            logger.exception(u'Exception occurred whilst creating partner user: {}'.format(exp.message))
+            logger.exception(u'Exception occurred whilst creating partner user: {}'.format(exp.args[0]))
         else:
             # TODO: here we have a decision.. either we update the user with the info just received from
             # TODO: or we update the instance with the user we already have. this might have implications on login.
@@ -361,7 +361,7 @@ def delete_partner_relationship(sender, instance, **kwargs):
             profile.user.is_active = False
             profile.user.save()
     except Exception as exp:
-        logger.exception(u'Exception occurred whilst de-linking partner user: {}'.format(exp.message))
+        logger.exception(u'Exception occurred whilst de-linking partner user: {}'.format(exp.args[0]))
 
 
 pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')
