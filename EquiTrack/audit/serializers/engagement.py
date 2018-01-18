@@ -348,7 +348,7 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
 
 
 class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
-    financial_finding_set = FinancialFindingSerializer(many=True, required=False)
+    financial_finding_set = FinancialFindingSerializer(many=True, required=False, label=_('Financial Findings'))
     key_internal_weakness = KeyInternalWeaknessSerializer(
         code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses')
     )
