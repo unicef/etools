@@ -86,7 +86,7 @@ class OverlappingTravelsTest(APITenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         travel_id = response_json['id']
 
@@ -95,7 +95,7 @@ class OverlappingTravelsTest(APITenantTestCase):
                                                             kwargs={'travel_pk': travel_id,
                                                                     'transition_name': 'submit_for_approval'}),
                                             data=response_json, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json,
                          {'non_field_errors': ['You have an existing trip with overlapping dates. '
                                                'Please adjust your trip accordingly.']})
@@ -145,7 +145,7 @@ class OverlappingTravelsTest(APITenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
             response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -153,9 +153,9 @@ class OverlappingTravelsTest(APITenantTestCase):
                                                                     'transition_name': 'submit_for_approval'}),
                                             data=response_json, user=self.traveler)
         # No error should appear, expected 200
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response.status_code, 200, response_json)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         travel = Travel.objects.get(id=response_json['id'])
         travel.approve()
@@ -206,14 +206,14 @@ class OverlappingTravelsTest(APITenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
             response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                             kwargs={'travel_pk': response_json['id'],
                                                                     'transition_name': 'submit_for_approval'}),
                                             data=response_json, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response.status_code, 200, response_json)
 
         travel = Travel.objects.get(id=response_json['id'])
@@ -249,7 +249,7 @@ class OverlappingTravelsTest(APITenantTestCase):
                                                          kwargs={'travel_pk': response_json['id'],
                                                                  'transition_name': 'submit_for_approval'}),
                                         data=response_json, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json,
                          {'non_field_errors': ['You have an existing trip with overlapping dates. '
                                                'Please adjust your trip accordingly.']})
