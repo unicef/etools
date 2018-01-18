@@ -24,7 +24,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
-from EquiTrack.utils import import_permissions, get_current_quarter, get_current_year
+from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from funds.models import Grant
 from reports.models import (
@@ -250,7 +250,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     CT_MR_AUDIT_TRIGGER_LEVEL2 = decimal.Decimal('100000.00')
     CT_MR_AUDIT_TRIGGER_LEVEL3 = decimal.Decimal('500000.00')
 
-    # TODO rating to be converted in choice after prp-refactoring
+    # TODO 1.1.5 rating to be converted in choice after prp-refactoring
     RATING_HIGH = 'High'
     RATING_SIGNIFICANT = 'Significant'
     RATING_MODERATE = 'Moderate'
@@ -312,7 +312,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     shared_with = ArrayField(models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES), blank=True, null=True)
 
     # TODO remove this after migration to shared_with + add calculation to
-    # hact_field
     shared_partner = models.CharField(
         help_text='Partner shared with UNDP or UNFPA?',
         choices=Choices(
@@ -410,6 +409,15 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     hact_values = JSONField(blank=True, null=True, default=hact_default)
 
+    # TODO these property will be replaced with correct field coming from vision
+    @cached_property
+    def cash_transfer(self):
+        return self.total_ct_cy
+
+    @cached_property
+    def liquidation(self):
+        return self.total_ct_cy
+
     tracker = FieldTracker()
 
     class Meta:
@@ -466,8 +474,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @cached_property
     def approaching_threshold_flag(self):
+        # TODO 1.1.6b change total_ct_cy when the vision API is ready
         return self.rating == PartnerOrganization.RATING_NON_ASSESSED and \
-               self.total_ct_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+               self.cash_transfer > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
 
     @cached_property
     def flags(self):
@@ -503,9 +512,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @cached_property
     def min_req_spot_checks(self):
-        # TODO add condition when is implemented 1.1.10a
-        ct = self.total_ct_cy
-        return 1 if ct > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        # TODO 1.1.9b add condition when is implemented 1.1.10a
+        return 1 if self.liquidation > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
     @cached_property
     def hact_min_requirements(self):
@@ -519,7 +527,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def outstanding_findings(self):
         # pending_unsupported_amount property
         from audit.models import Audit, Engagement
-        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL)
+        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL,
+                                      date_of_draft_report_to_unicef__year=datetime.datetime.now().year)
         ff = audits.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
         ar = audits.filter(amount_refunded__isnull=False).aggregate(
@@ -554,10 +563,10 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @classmethod
     def programmatic_visits(cls, partner, update_one=False):
-        '''
+        """
         :return: all completed programmatic visits
-        '''
-        quarter_name = get_current_quarter()
+        """
+        quarter_name = get_quarter()
         pv = partner.hact_values['programmatic_visits']['completed']['total']
         pvq = partner.hact_values['programmatic_visits']['completed'][quarter_name]
 
@@ -589,23 +598,77 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.save()
 
     @classmethod
-    def spot_checks(cls, partner, update_one=False):
-        '''
+    def spot_checks(cls, partner, event_date=None, update_one=False):
+        """
         :return: all completed spot checks
-        '''
+        """
+        from audit.models import Engagement, SpotCheck
+        if not event_date:
+            event_date = datetime.datetime.today()
+        quarter_name = get_quarter(event_date)
         sc = partner.hact_values['spot_checks']['completed']['total']
+        scq = partner.hact_values['spot_checks']['completed'][quarter_name]
+
         if update_one:
             sc += 1
+            scq += 1
+            partner.hact_values['spot_checks']['completed'][quarter_name] = scq
         else:
-            sc = TravelActivity.objects.filter(
+            trip = TravelActivity.objects.filter(
                 travel_type=TravelType.SPOT_CHECK,
                 travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
                 travels__completed_at__year=datetime.datetime.now().year,
                 partner=partner,
-            ).count()
+            )
+
+            trq1 = trip.filter(travels__completed_at__month__in=[1, 2, 3]).count()
+            trq2 = trip.filter(travels__completed_at__month__in=[4, 5, 6]).count()
+            trq3 = trip.filter(travels__completed_at__month__in=[7, 8, 9]).count()
+            trq4 = trip.filter(travels__completed_at__month__in=[10, 11, 12]).count()
+
+            audit_spot_check = SpotCheck.objects.filter(
+                partner=partner, status=Engagement.FINAL,
+                date_of_draft_report_to_unicef__year=datetime.datetime.now().year
+            )
+
+            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[1, 2, 3]).count()
+            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[4, 5, 6]).count()
+            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
+            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
+
+            partner.hact_values['spot_checks']['completed']['q1'] = trq1 + asc1
+            partner.hact_values['spot_checks']['completed']['q2'] = trq2 + asc2
+            partner.hact_values['spot_checks']['completed']['q3'] = trq3 + asc3
+            partner.hact_values['spot_checks']['completed']['q4'] = trq4 + asc4
+
+            sc = trip.count() + audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
 
         partner.hact_values['spot_checks']['completed']['total'] = sc
+        partner.save()
+
+    @classmethod
+    def audits_completed(cls, partner, update_one=False):
+        """
+        :param partner: Partner Organization
+        :param update_one: if True will increase by one the value, if False would recalculate the value
+        :return: all completed audit (including special audit)
+        """
+        from audit.models import Audit, Engagement, SpecialAudit
+        completed_audit = partner.hact_values['audits']['completed']
+        if update_one:
+            completed_audit += 1
+        else:
+            audits = Audit.objects.filter(
+                partner=partner,
+                status=Engagement.FINAL,
+                date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
+            s_audits = SpecialAudit.objects.filter(
+                partner=partner,
+                status=Engagement.FINAL,
+                date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
+            completed_audit = audits + s_audits
+        partner.hact_values['audits']['completed'] = completed_audit
         partner.save()
 
 
