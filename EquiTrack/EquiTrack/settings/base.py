@@ -455,6 +455,10 @@ SAML_CONFIG = {
     # certificate
     'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
     'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),  # public part
+    'encryption_keypairs': [{
+        'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),
+        'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),
+    }],
 
     # own metadata settings
     'contact_person': [
