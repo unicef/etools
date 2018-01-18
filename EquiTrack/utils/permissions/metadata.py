@@ -19,11 +19,12 @@ class PermissionsBasedMetadataMixin(object):
     def get_serializer_info(self, serializer):
         info = super(PermissionsBasedMetadataMixin, self).get_serializer_info(serializer)
         if serializer.context['request'].method == 'GET':
-            filtered_fields = map(lambda f: f.field_name, serializer._readable_fields)
+            filtered_fields = [f.field_name for f in serializer._readable_fields]
         else:
-            filtered_fields = map(lambda f: f.field_name, serializer._writable_fields)
+            filtered_fields = [f.field_name for f in serializer._writable_fields]
 
-        for field_name in info.keys():
+        # Need to work with copy of keys since dictionary changes during iteration
+        for field_name in list(info.keys()):
             if field_name not in filtered_fields:
                 del info[field_name]
 

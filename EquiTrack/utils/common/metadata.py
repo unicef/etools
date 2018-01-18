@@ -62,7 +62,7 @@ class FSMTransitionActionMetadataMixin(object):
             if meta.has_transition(current_state) and meta.has_transition_perm(im_self, current_state, request.user):
                 model_transitions.append(action)
 
-        actions["allowed_FSM_transitions"] = map(lambda t: t.__name__, model_transitions)
+        actions["allowed_FSM_transitions"] = [t.__name__ for t in model_transitions]
         # Move cancel to the end.
         actions["allowed_FSM_transitions"].sort(key=lambda action: action == 'cancel')
         return actions
