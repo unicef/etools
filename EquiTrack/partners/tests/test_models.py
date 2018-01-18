@@ -515,6 +515,20 @@ class TestPartnerOrganizationModel(TenantTestCase):
             1
         )
 
+    @freeze_time("2013-12-26")
+    def test_spot_checks_update_one_with_date(self):
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
+        PartnerOrganization.spot_checks(
+            self.partner_organization,
+            update_one=True,
+            event_date=datetime.datetime(2013, 05, 12)
+        )
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
+
     def test_spot_checks_update_travel_activity(self):
         self.assertEqual(
             self.partner_organization.hact_values['spot_checks']['completed']['total'],

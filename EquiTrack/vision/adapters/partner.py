@@ -73,8 +73,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         'last_assessment_date': 'DATE_OF_ASSESSMENT',
         'core_values_assessment_date': 'CORE_VALUE_ASSESSMENT_DT',
         'partner_type': 'PARTNER_TYPE_DESC',
-        'xxx': 'LIQUIDATION',  # TODO add mapping when available in vision
-        'yyy': 'CASH_TRANSFER',  # TODO add mapping when available in vision
+        'liquidation': 'LIQUIDATION',  # TODO add mapping when available in vision
+        'cash_transfer': 'CASH_TRANSFER',  # TODO add mapping when available in vision
     }
 
     def _convert_records(self, records):
