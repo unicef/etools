@@ -32,14 +32,14 @@ class TestActivityListView(TenantTestCase):
     def test_empty(self):
         response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, [])
 
     def test_list(self):
         activity = ActivityFactory()
         response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 1)
         self.assert_data(activity, response_json[0])
 
@@ -50,7 +50,7 @@ class TestActivityListView(TenantTestCase):
             "user": activity.by_user.email
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 1)
         self.assert_data(activity, response_json[0])
 
@@ -62,7 +62,7 @@ class TestActivityListView(TenantTestCase):
             "target": user.__class__.__name__
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 1)
         self.assert_data(activity, response_json[0])
 
@@ -73,7 +73,7 @@ class TestActivityListView(TenantTestCase):
             "action": Activity.UPDATE
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 1)
         self.assert_data(activity, response_json[0])
 
@@ -86,7 +86,7 @@ class TestActivityListView(TenantTestCase):
             "date_from": "2100-01-01"
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 1)
         self.assert_data(activity, response_json[0])
 
@@ -99,7 +99,7 @@ class TestActivityListView(TenantTestCase):
             "date_from": "00-01-01"
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, [])
 
     def test_filter_date_to(self):
@@ -111,7 +111,7 @@ class TestActivityListView(TenantTestCase):
             "date_to": "2001-02-01"
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 1)
         self.assert_data(activity, response_json[0])
 
@@ -124,5 +124,5 @@ class TestActivityListView(TenantTestCase):
             "date_to": "01-02-01"
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, [])
