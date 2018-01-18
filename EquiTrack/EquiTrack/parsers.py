@@ -32,7 +32,7 @@ def _create_lists_from_dict_keys(data):
     keys.sort(key=_natural_keys)
     for k in keys:
         key_in_list_format = k.replace('[', ' ').replace(']', '').split(' ')
-        key_in_list_format = map(_int_or_str, key_in_list_format)
+        key_in_list_format = [_int_or_str(k) for k in key_in_list_format]
         list_of_keys_in_list_format.append(key_in_list_format)
     return list_of_keys_in_list_format
 
