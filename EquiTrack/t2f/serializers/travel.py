@@ -453,7 +453,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         return instance
 
     def update_object(self, obj, data):
-        m2m_fields = {k: data.pop(k, []) for k in data
+        m2m_fields = {k: data.pop(k, []) for k in list(data.keys())
                       if isinstance(obj._meta.get_field(k), ManyToManyField)}
         for attr, value in data.items():
             setattr(obj, attr, value)
