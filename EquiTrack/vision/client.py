@@ -5,7 +5,8 @@ import argparse
 import json
 import logging
 import os
-from urlparse import urljoin
+
+from django.utils.six.moves.urllib.parse import urljoin
 
 import requests
 from requests.auth import HTTPDigestAuth
