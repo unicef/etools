@@ -491,7 +491,7 @@ class TestAmendmentsInvalid(FastTenantTestCase):
         #         "partners.validation.interventions.check_rigid_related",
         #         mock_check
         # ):
-            #self.assertFalse(amendments_valid(self.intervention))
+        #    self.assertFalse(amendments_valid(self.intervention))
 
     @skip("update teste with new amendment style")
     def test_change_active_valid(self):
