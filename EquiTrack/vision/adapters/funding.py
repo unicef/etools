@@ -5,7 +5,6 @@ import logging
 from decimal import Decimal
 
 from django.utils import six
-from django.utils.six.moves import filter
 
 from funds.models import FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 from vision.utils import comp_decimals
