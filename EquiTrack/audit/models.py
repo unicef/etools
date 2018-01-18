@@ -470,7 +470,7 @@ class SpotCheck(Engagement):
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=_has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
-        PartnerOrganization.spot_checks(self.partner, update_one=True)
+        PartnerOrganization.spot_checks(self.partner, update_one=True, event_date=self.date_of_draft_report_to_unicef)
         return super(SpotCheck, self).finalize(*args, **kwargs)
 
     def __str__(self):

@@ -598,12 +598,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.save()
 
     @classmethod
-    def spot_checks(cls, partner, update_one=False):
+    def spot_checks(cls, partner, event_date=None, update_one=False):
         """
         :return: all completed spot checks
         """
         from audit.models import Engagement, SpotCheck
-        quarter_name = get_quarter()
+        if not event_date:
+            event_date = datetime.datetime.today()
+        quarter_name = get_quarter(event_date)
         sc = partner.hact_values['spot_checks']['completed']['total']
         scq = partner.hact_values['spot_checks']['completed'][quarter_name]
 
