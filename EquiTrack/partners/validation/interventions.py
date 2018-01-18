@@ -4,8 +4,7 @@ import logging
 
 from django.utils.translation import ugettext as _
 
-
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, check_rigid_related, \
+from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, \
     BasicValidationError, check_rigid_fields, check_required_fields
 
 from partners.permissions import InterventionPermissions

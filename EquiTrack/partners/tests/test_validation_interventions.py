@@ -479,14 +479,14 @@ class TestAmendmentsInvalid(FastTenantTestCase):
     @skip("update teste with new amendment style")
     def test_valid(self):
         pass
-        #self.assertTrue(amendments_valid(self.intervention))
+        # self.assertTrue(amendments_valid(self.intervention))
 
     @skip("update testes with new amendment style")
     def test_change_invalid(self):
         """If not active/signed and amendment changes then invalid"""
         self.amendment.signed_date = datetime.date.today()
         self.amendment.save()
-        mock_check = Mock(return_value=False)
+        # mock_check = Mock(return_value=False)
         # with patch(
         #         "partners.validation.interventions.check_rigid_related",
         #         mock_check
@@ -499,14 +499,14 @@ class TestAmendmentsInvalid(FastTenantTestCase):
         self.intervention.status = Intervention.ACTIVE
         self.amendment.signed_date = datetime.date.today()
         self.amendment.save()
-        #self.assertTrue(amendments_valid(self.intervention))
+        # self.assertTrue(amendments_valid(self.intervention))
 
     @skip("update tests with new amendment style")
     def test_change_signed_valid(self):
         """If signed and amendment changes then valid"""
         self.intervention.status = Intervention.SIGNED
         self.amendment.signed_date = datetime.date.today()
-        #self.assertTrue(amendments_valid(self.intervention))
+        # self.assertTrue(amendments_valid(self.intervention))
 
     @skip("update tests with new amendment style")
     def test_other_no_description(self):
@@ -515,7 +515,7 @@ class TestAmendmentsInvalid(FastTenantTestCase):
         self.amendment.other_description = None
         self.amendment.save()
         self.assertIsNone(self.amendment.other_description)
-        #self.assertFalse(amendments_valid(self.intervention))
+        # self.assertFalse(amendments_valid(self.intervention))
 
     @skip("update tests with new amendment style")
     def test_other_with_description(self):
