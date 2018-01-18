@@ -1,10 +1,9 @@
 # Python imports
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-# Don't enable unicode_literals in this module until Python 3. Tests in this module rely on being able to create
-# both str and unicode literals.
-# from __future__ import unicode_literals
 from unittest import TestCase
+
+from django.utils import six
 
 from EquiTrack.validation_mixins import _BaseStateError, BasicValidationError, StateValidError, TransitionError
 
@@ -16,14 +15,14 @@ class TestExceptions(TestCase):
     def test_basic_validation_error(self):
         '''Exercise converting BasicValidationError to string'''
         e = BasicValidationError()
-        self.assertEqual(str(e), '')
+        self.assertEqual(six.text_type(e), '')
 
         e = BasicValidationError('hello world')
-        self.assertEqual(str(e), 'hello world')
+        self.assertEqual(six.binary_type(e), b'hello world')
 
         # The param goes in as unicode, comes out as str.
-        e = BasicValidationError(u'hello world')
-        self.assertEqual(str(e), 'hello world')
+        e = BasicValidationError('hello world')
+        self.assertEqual(six.text_type(e), 'hello world')
 
     def test_state_valid_error(self):
         '''Ensure StateValidError inherits from _BaseStateError'''
@@ -36,18 +35,18 @@ class TestExceptions(TestCase):
     def test_base_state_error_stringification(self):
         '''Exercise converting _BaseStateError to a string'''
         e = _BaseStateError()
-        self.assertEqual(str(e), '')
+        self.assertEqual(six.text_type(e), '')
 
         e = _BaseStateError(['hello world'])
-        self.assertEqual(str(e), 'hello world')
+        self.assertEqual(six.text_type(e), 'hello world')
 
         # Test mix of str and unicode in the params
-        e = _BaseStateError(['hello world', u'goodbye world'])
-        self.assertEqual(str(e), 'hello world\ngoodbye world')
+        e = _BaseStateError(['hello world', 'goodbye world'])
+        self.assertEqual(six.text_type(e), 'hello world\ngoodbye world')
 
         # Test mix of str and non-ASCII unicode in the params
-        e = _BaseStateError(['hello world', 'goodbye world', u'l\xf6rem ipsum', u'l\xf6rem ipsum'.encode('utf-8')])
-        self.assertEqual(str(e), u'hello world\ngoodbye world\nl\xf6rem ipsum\nl\xf6rem ipsum'.encode('utf-8'))
+        e = _BaseStateError(['hello world', 'goodbye world', 'l\xf6rem ipsum', u'l\xf6rem ipsum'.encode('utf-8')])
+        self.assertEqual(six.text_type(e), 'hello world\ngoodbye world\nl\xf6rem ipsum\nl\xf6rem ipsum')
 
     def test_base_state_error_creation(self):
         '''Exercise _BaseStateError creation. _BaseStateError accepts only one param, and it must be a list.'''
