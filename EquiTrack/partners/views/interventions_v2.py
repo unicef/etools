@@ -92,7 +92,6 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
-        'amendments': InterventionAmendmentCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -124,7 +123,6 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
             'planned_budget',
             'planned_visits',
             'attachments',
-            'amendments',
             'result_links'
         ]
         nested_related_names = ['ll_results']
@@ -246,7 +244,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
-        'amendments': InterventionAmendmentCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -261,7 +258,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['planned_budget', 'planned_visits',
-                          'attachments', 'amendments',
+                          'attachments',
                           'result_links']
         nested_related_names = ['ll_results']
         instance, old_instance, serializer = self.my_update(

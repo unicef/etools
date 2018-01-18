@@ -140,21 +140,6 @@ def document_type_pca_valid(i):
     return True
 
 
-def amendments_valid(i):
-    if i.status not in [i.ACTIVE, i.SIGNED] and i.amendments.exists():
-        # this prevents any changes in amendments if the status is not in Signed or Active
-        if not check_rigid_related(i, 'amendments'):
-            return False
-    for a in i.amendments.all():
-        if a.OTHER in a.types and a.other_description is None:
-            return False
-        if not a.signed_date:
-            return False
-        if not getattr(a.signed_amendment, 'name'):
-            return False
-    return True
-
-
 # validation id 2
 def ssfa_agreement_has_no_other_intervention(i):
     '''
@@ -178,7 +163,6 @@ class InterventionValid(CompleteValidation):
         start_date_signed_valid,
         start_date_related_agreement_valid,
         document_type_pca_valid,
-        amendments_valid,
     ]
 
     VALID_ERRORS = {
@@ -188,8 +172,6 @@ class InterventionValid(CompleteValidation):
         'signed_date_valid': 'Unicef signatory and partner signatory as well as dates required, '
                              'signatures cannot be dated in the future',
         'document_type_pca_valid': 'Document type PD or SHPD can only be associated with a PCA agreement.',
-        'amendments_valid': 'Type, signed date, and signed amendment are required in Amendments. '
-                            'If you seleced Other as an amendment type, please add the description',
         'ssfa_agreement_has_no_other_intervention': 'The agreement selected has at least one '
                                                     'other SSFA Document connected',
         'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',

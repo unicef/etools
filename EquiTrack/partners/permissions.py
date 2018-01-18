@@ -107,12 +107,9 @@ class InterventionPermissions(PMPPermissions):
         super(InterventionPermissions, self).__init__(**kwargs)
         inbound_check = kwargs.get('inbound_check', False)
 
-        # TODO: fix this after "in amendment" flag is turned on for interventions
         def user_added_amendment(instance):
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
-            # check_rigid_related checks if there were any changes from the previous
-            # amendments if there were changes it returns False
-            return not check_rigid_related(instance, 'amendments')
+            return instance.in_amendment is True
 
         def prp_mode_off():
             return tenant_switch_is_active("prp_mode_off")
