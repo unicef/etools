@@ -12,7 +12,7 @@ def remove_all_indicators(apps, schema_editor):
    # use the save method to mark invalid fields
    deleted = IndicatorBlueprint.objects.all().delete()
    if deleted[0]:
-       print(("Deleted Indicators: {}".format(deleted[0])))
+       print("Deleted Indicators: {}".format(deleted[0]))
 
 
 class Migration(migrations.Migration):
