@@ -104,7 +104,7 @@ class GroupSerializer(serializers.ModelSerializer):
             group = Group.objects.create(**validated_data)
 
         except Exception as ex:
-            raise serializers.ValidationError({'group': ex.message})
+            raise serializers.ValidationError({'group': ex.args[0]})
 
         return group
 
@@ -192,7 +192,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
             user.profile.save()
 
         except Exception as ex:
-            raise serializers.ValidationError({'user': ex.message})
+            raise serializers.ValidationError({'user': ex.args[0]})
 
         return user
 

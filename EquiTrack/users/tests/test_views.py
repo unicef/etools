@@ -210,12 +210,12 @@ class TestUserViews(APITenantTestCase):
 
     def test_minimal_verbosity(self):
         response = self.forced_auth_req('get', '/api/users/', data={'verbosity': 'minimal'}, user=self.unicef_superuser)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 1)
 
     def test_workspace_api(self):
         response = self.forced_auth_req('get', reverse('list-workspaces'), user=self.unicef_superuser)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 1)
         result = response_json[0]
         self.assertEqual(result['id'], self.tenant.id)
@@ -234,7 +234,7 @@ class TestUserViews(APITenantTestCase):
 
         # Check if no country set
         response = self.forced_auth_req('get', '/users/api/profile/', user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(response_json['t2f']['business_area'], None)
 
@@ -242,7 +242,7 @@ class TestUserViews(APITenantTestCase):
         profile.country = workspace
         profile.save()
         response = self.forced_auth_req('get', '/users/api/profile/', user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(response_json['t2f']['business_area'], business_area_0001.id)
 
@@ -250,7 +250,7 @@ class TestUserViews(APITenantTestCase):
         profile.country_override = workspace_override
         profile.save()
         response = self.forced_auth_req('get', '/users/api/profile/', user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(response_json['t2f']['business_area'], business_area_0002.id)
 
@@ -258,7 +258,7 @@ class TestUserViews(APITenantTestCase):
         profile.country_override = workspace_invalid_business_area
         profile.save()
         response = self.forced_auth_req('get', '/users/api/profile/', user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         self.assertEqual(response_json['t2f']['business_area'], None)
 
@@ -352,7 +352,7 @@ class TestUserViewsV3(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/v3/users/',
                                         data={'verbosity': 'minimal'}, user=self.unicef_superuser)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(len(response_json), 2)
 
     def test_retrieve_user_countries(self):
