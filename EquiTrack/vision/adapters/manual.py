@@ -5,6 +5,7 @@ import logging
 from collections import OrderedDict
 
 from django.db import connection
+from django.utils import six
 
 from vision.exceptions import VisionException
 from vision.utils import wcf_json_date_as_datetime
@@ -53,10 +54,9 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
         def _get_field_value(field_name, field_json_code, json_item, model):
             if field_json_code in self.DATE_FIELDS:
                 return wcf_json_date_as_datetime(json_item[field_json_code])
-            elif field_name in self.MODEL_MAPPING.keys():
+            elif field_name in self.MODEL_MAPPING:
                 related_model = self.MODEL_MAPPING[field_name]
-
-                reversed_dict = dict(zip(self.MAPPING[field_name].values(), self.MAPPING[field_name].keys()))
+                reversed_dict = {v: k for k, v in six.iteritems(self.MAPPING[field_name])}
                 return related_model.objects.get(**{
                     reversed_dict[field_json_code]: json_item.get(field_json_code, None)
                 })
@@ -64,19 +64,20 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
 
         def _process_record(json_item):
             try:
-                for model_name, model in self.MODEL_MAPPING.items():
-                    mapped_item = dict(
-                        [(field_name, _get_field_value(field_name, field_json_code, json_item, model))
-                         for field_name, field_json_code in self.MAPPING[model_name].items()]
-                    )
-                    kwargs = dict(
-                        [(field_name, value) for field_name, value in mapped_item.items()
-                         if model._meta.get_field(field_name).unique]
-                    )
+                for model_name, model in six.iteritems(self.MODEL_MAPPING):
+                    mapped_item = {
+                        field_name: _get_field_value(field_name, field_json_code, json_item, model)
+                        for field_name, field_json_code in six.iteritems(self.MAPPING[model_name])
+                    }
+                    kwargs = {
+                        field_name: value
+                        for field_name, value in six.iteritems(mapped_item)
+                        if model._meta.get_field(field_name).unique
+                    }
 
                     if not kwargs:
                         for fields in model._meta.unique_together:
-                            if all(field in mapped_item.keys() for field in fields):
+                            if all(field in mapped_item for field in fields):
                                 unique_fields = fields
                                 break
 
@@ -84,16 +85,16 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                             field: mapped_item[field] for field in unique_fields
                         }
 
-                    defaults = dict(
-                        [(field_name, value) for field_name, value in mapped_item.items()
-                         if field_name not in kwargs.keys()]
-                    )
+                    defaults = {
+                        field_name: value
+                        for field_name, value in six.iteritems(mapped_item)
+                        if field_name not in kwargs
+                    }
                     model.objects.update_or_create(
                         defaults=defaults, **kwargs
                     )
-            except Exception as exp:
-                logger.warning("Exception message: {}".format(exp.message))
-                logger.warning("Exception type: {}".format(type(exp)))
+            except Exception:
+                logger.warning("Exception processing record", exc_info=True)
 
         for record in filtered_records:
             _process_record(record)
@@ -112,7 +113,7 @@ class ManualVisionSynchronizer(MultiModelDataSynchronizer):
             super(MultiModelDataSynchronizer, self).__init__(country=country)
         else:
             if self.ENDPOINT is None:
-                raise VisionException(message='You must set the ENDPOINT name')
+                raise VisionException('You must set the ENDPOINT name')
 
             self.country = country
 

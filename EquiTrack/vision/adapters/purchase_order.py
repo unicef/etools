@@ -61,4 +61,4 @@ class POSynchronizer(ManualVisionSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [r for r in records if bad_record(r)]

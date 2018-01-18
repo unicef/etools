@@ -69,7 +69,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 return False
             return True
 
-        return filter(bad_record, records)
+        return [r for r in records if bad_record(r)]
 
     def _get_json(self, data):
         return [] if data == VISION_NO_DATA_MESSAGE else data
@@ -198,8 +198,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
                 processed += 1
 
-            except Exception as exp:
-                logger.exception(u'Exception occurred during Partner Sync: {}'.format(exp.message))
+            except Exception:
+                logger.exception(u'Exception occurred during Partner Sync')
             return processed
 
         processed = 0

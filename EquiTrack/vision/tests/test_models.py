@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 from unittest import skipIf, TestCase
 
+from django.utils import six
+
 from EquiTrack.factories import CountryFactory
 from vision.models import VisionSyncLog
 
@@ -14,4 +16,4 @@ class TestStrUnicode(TestCase):
         country = CountryFactory.build(name='M\xe9xico', schema_name='Mexico', domain_url='mexico.example.com')
         instance = VisionSyncLog(country=country)
         self.assertTrue(str(instance).startswith(b'M\xc3\xa9xico'))
-        self.assertTrue(unicode(instance).startswith(u'M\xe9xico'))
+        self.assertTrue(six.text_type(instance).startswith(u'M\xe9xico'))
