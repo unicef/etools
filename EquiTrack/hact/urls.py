@@ -6,6 +6,6 @@ from hact.views import GraphHactView, HactHistoryAPIView
 
 urlpatterns = (
     url(r'^history/$', view=HactHistoryAPIView.as_view(http_method_names=['get', ]), name='hact-history'),
-    url(r'^global_history/$', view=GraphHactView.as_view(), name='global-hact-history'),
+    url(r'^graph/(?P<year>[0-9]+)/$$', view=GraphHactView.as_view(), name='hact-graph'),
 
 )
