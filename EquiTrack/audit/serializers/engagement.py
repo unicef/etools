@@ -364,6 +364,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
     number_of_financial_findings = serializers.SerializerMethodField(label=_('No. of Financial Findings'))
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+    percent_of_audited_expenditure = serializers.IntegerField(label=_('% Of Audited Expenditure'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
         model = Audit
@@ -384,13 +385,6 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             'recommendation': {'required': True},
             'audit_observation': {'required': True},
             'ip_response': {'required': True},
-            'percent_of_audited_expenditure': {
-                'error_messages': {
-                    'min_value': _('Value can\'t be less than {min_value}.'),
-                    'max_value': _('Value can\'t be greater than {max_value}.'),
-                    'max_whole_digits': _('No more than {max_whole_digits} digits allowed.'),
-                }
-            },
         })
 
     def get_number_of_financial_findings(self, obj):

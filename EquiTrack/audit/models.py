@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from decimal import InvalidOperation
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -521,13 +523,6 @@ class Audit(Engagement):
                                               decimal_places=2, max_digits=20)
     financial_findings = models.DecimalField(verbose_name=_('Financial Findings $'), null=True, blank=True,
                                              decimal_places=2, max_digits=20)
-    percent_of_audited_expenditure = models.DecimalField(
-        verbose_name=_('% Of Audited Expenditure'), null=True, blank=True, max_digits=5, decimal_places=2,
-        validators=[
-            MinValueValidator(0.0),
-            MaxValueValidator(100.0)
-        ],
-    )
     audit_opinion = models.CharField(
         verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, null=True, blank=True,
     )
@@ -552,6 +547,13 @@ class Audit(Engagement):
                 - self.justification_provided_and_accepted - self.write_off_required
         except TypeError:
             return None
+
+    @property
+    def percent_of_audited_expenditure(self):
+        try:
+            return 100 * self.financial_findings / self.audited_expenditure
+        except (TypeError, InvalidOperation):
+            return 0
 
     @transition(
         'status',

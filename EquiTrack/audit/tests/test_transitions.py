@@ -53,7 +53,6 @@ class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     def _fill_audit_specified_fields(self):
         self.engagement.audited_expenditure = random.randint(1, 22)
         self.engagement.financial_findings = random.randint(1, 22)
-        self.engagement.percent_of_audited_expenditure = random.randint(1, 100)
         self.engagement.audit_opinion = fuzzy.FuzzyText(length=20).fuzz()
         self.engagement.recommendation = fuzzy.FuzzyText(length=50).fuzz()
         self.engagement.audit_observation = fuzzy.FuzzyText(length=50).fuzz()
@@ -204,7 +203,7 @@ class TestSCTransitionsTestCase(
 
     def test_cancel_submitted_focal_point(self):
         self._init_submitted_engagement()
-        self._test_cancel(self.unicef_focal_point, status.HTTP_200_OK, data={'cancel_comment': 'cancel_comment'})
+        self._test_cancel(self.unicef_focal_point, status.HTTP_403_FORBIDDEN)
 
     def test_cancel_finalized_focal_point(self):
         self._init_finalized_engagement()
