@@ -29,8 +29,8 @@ class Migration(migrations.Migration):
             name='Goal',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=512L, unique=True)),
-                ('description', models.CharField(blank=True, max_length=512L)),
+                ('name', models.CharField(max_length=512, unique=True)),
+                ('description', models.CharField(blank=True, max_length=512)),
             ],
             options={
                 'ordering': ['name'],
@@ -120,8 +120,8 @@ class Migration(migrations.Migration):
             name='Sector',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=45L, unique=True)),
-                ('description', models.CharField(blank=True, max_length=256L, null=True)),
+                ('name', models.CharField(max_length=45, unique=True)),
+                ('description', models.CharField(blank=True, max_length=256, null=True)),
                 ('alternate_id', models.IntegerField(blank=True, null=True)),
                 ('alternate_name', models.CharField(blank=True, max_length=255, null=True)),
                 ('dashboard', models.BooleanField(default=False)),
@@ -135,7 +135,7 @@ class Migration(migrations.Migration):
             name='Unit',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(max_length=45L, unique=True)),
+                ('type', models.CharField(max_length=45, unique=True)),
             ],
             options={
                 'ordering': ['type'],
