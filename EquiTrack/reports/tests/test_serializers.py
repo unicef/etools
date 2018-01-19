@@ -218,7 +218,7 @@ class TestLowerResultCUSerializer(FastTenantTestCase):
         self.assertTrue(serializer.is_valid())
         msg = "Indicator has an ID but could not be found in the db"
         with self.assertRaisesRegexp(ValidationError, msg):
-           serializer.create(serializer.validated_data)
+            serializer.create(serializer.validated_data)
 
     def test_update(self):
         lower_result = LowerResultFactory(
