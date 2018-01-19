@@ -354,6 +354,7 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
             'authorized_officers': self.engagement.authorized_officers.values_list('id', flat=True),
             'staff_members': self.engagement.staff_members.values_list('id', flat=True),
             'active_pd': self.engagement.active_pd.values_list('id', flat=True),
+            'shared_ip_with': self.engagement.shared_ip_with,
         }
 
     def _do_create(self, user, data):

@@ -30,6 +30,7 @@ from EquiTrack.factories import (
     PartnerFactory,
 )
 from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
+from partners.models import PartnerOrganization
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
@@ -85,6 +86,7 @@ class EngagementFactory(factory.DjangoModelFactory):
 
     agreement = factory.SubFactory(PurchaseOrderFactory)
     partner = factory.SubFactory(PartnerWithAgreementsFactory)
+    shared_ip_with = list(map(lambda c: c[0], PartnerOrganization.AGENCY_CHOICES))
 
     @factory.post_generation
     def active_pd(self, create, extracted, **kwargs):

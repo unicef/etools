@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -147,9 +147,9 @@ class Engagement(TimeStampedModel, models.Model):
     )
 
     joint_audit = models.BooleanField(verbose_name=_('Joint Audit'), default=False, blank=True)
-    shared_ip_with = models.CharField(
-        verbose_name=_('Shared IP with'), max_length=20, choices=PartnerOrganization.AGENCY_CHOICES, blank=True
-    )
+    shared_ip_with = ArrayField(models.CharField(
+        max_length=20, choices=PartnerOrganization.AGENCY_CHOICES
+    ), blank=True, default=[], verbose_name=_('Shared IP with'))
 
     staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
 
@@ -191,6 +191,9 @@ class Engagement(TimeStampedModel, models.Model):
     @property
     def displayed_status_date(self):
         return getattr(self, self.DISPLAY_STATUSES_DATES[self.displayed_status])
+
+    def get_shared_ip_with_display(self):
+        return list(map(lambda po: dict(PartnerOrganization.AGENCY_CHOICES).get(po, 'Unknown'), self.shared_ip_with))
 
     @property
     def unique_id(self):
