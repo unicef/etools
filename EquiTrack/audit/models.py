@@ -574,9 +574,28 @@ class Audit(Engagement):
 
 
 class FinancialFinding(models.Model):
+    TITLE_CHOICES = Choices(
+        ('no-supporting-documentation', 'No supporting documentation'),
+        ('insufficient-supporting-documentation', 'Insufficient supporting documentation'),
+        ('cut-off-error', 'Cut-off error'),
+        ('expenditure-not-for-project-purposes', 'Expenditure not for project purposes'),
+        ('no-proof-of-payment', 'No proof of payment'),
+        ('no-proof-of-goods-services-received', 'No proof of goods / services received'),
+        ('vat-incorrectly-claimed', 'VAT incorrectly claimed'),
+        ('dsa-rates-exceeded', 'DSA rates exceeded'),
+        ('unreasonable-price', 'Unreasonable price'),
+        ('bank-interest-not-reported', 'Bank interest not reported'),
+        ('support-costs-incorrectly-calculated', 'Support costs incorrectly calculated'),
+        ('expenditure-claimed-but-activities-not-undertaken', 'Expenditure claimed but activities not undertaken'),
+        ('advance-claimed-as-expenditure', 'Advance claimed as expenditure'),
+        ('commitments-treated-as-expenditure', 'Commitments treated as expenditure'),
+        ('ineligible-salary-costs', 'Ineligible salary costs'),
+        ('ineligible-costs-other', 'Ineligible costs (other)'),
+    )
+
     audit = models.ForeignKey(Audit, verbose_name=_('Audit'), related_name='financial_finding_set')
 
-    title = models.CharField(verbose_name=_('Title (Category)'), max_length=255)
+    title = models.CharField(verbose_name=_('Title (Category)'), max_length=255, choices=TITLE_CHOICES)
     local_amount = models.DecimalField(verbose_name=_('Amount (local)'), decimal_places=2, max_digits=20)
     amount = models.DecimalField(verbose_name=_('Amount (USD)'), decimal_places=2, max_digits=20)
     description = models.TextField(verbose_name=_('Description'))
