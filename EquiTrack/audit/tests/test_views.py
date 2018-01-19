@@ -394,7 +394,8 @@ class TestEngagementCreateActivePDViewSet(object):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
 
-class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet, APITenantTestCase):
+class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
+                                       APITenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
 
@@ -402,7 +403,8 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
     engagement_factory = AuditFactory
 
 
-class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet, APITenantTestCase):
+class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
+                                 APITenantTestCase):
     engagement_factory = SpotCheckFactory
 
 
