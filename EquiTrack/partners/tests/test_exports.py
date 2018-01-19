@@ -7,11 +7,10 @@ from tablib.core import Dataset
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import PublicsCurrencyFactory
-from partners.models import GovernmentInterventionResult, PartnerOrganization
+from partners.models import PartnerOrganization
 from partners.tests.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
-    GovernmentInterventionFactory,
     InterventionBudgetFactory,
     InterventionFactory,
     PartnerFactory,
@@ -76,19 +75,9 @@ class TestModelExport(APITenantTestCase):
             partner_authorized_officer_signatory=cls.partnerstaff,
         )
         cls.ib = InterventionBudgetFactory(intervention=cls.intervention, currency=PublicsCurrencyFactory())
-        cls.government_intervention = GovernmentInterventionFactory(
-            partner=cls.partner,
-            country_programme=cls.agreement.country_programme
-        )
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
         cls.result = ResultFactory(result_type=output_res_type)
-        cls.govint_result = GovernmentInterventionResult.objects.create(
-            intervention=cls.government_intervention,
-            result=cls.result,
-            year=datetime.date.today().year,
-            planned_amount=100,
-        )
 
     def test_intervention_export_api(self):
         response = self.forced_auth_req(

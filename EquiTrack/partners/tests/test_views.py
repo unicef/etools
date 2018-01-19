@@ -26,7 +26,6 @@ from partners.models import (
     AgreementAmendment,
     Assessment,
     FileType,
-    GovernmentInterventionResult,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
@@ -42,7 +41,6 @@ from partners.serializers.exports.partner_organization import PartnerOrganizatio
 from partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
-    GovernmentInterventionFactory,
     InterventionFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
@@ -430,17 +428,6 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
         cls.cp = CountryProgrammeFactory(__sequence=10)
         cls.cp_output = ResultFactory(result_type=cls.output_res_type)
-        cls.govint = GovernmentInterventionFactory(
-            partner=cls.partner_gov,
-            country_programme=cls.cp
-        )
-        cls.result = ResultFactory()
-        cls.govint_result = GovernmentInterventionResult.objects.create(
-            intervention=cls.govint,
-            result=cls.result,
-            year=datetime.date.today().year,
-            planned_amount=100,
-        )
 
     def test_api_partners_delete_asssessment_valid(self):
         response = self.forced_auth_req(

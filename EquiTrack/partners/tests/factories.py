@@ -177,25 +177,6 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
     audit = 3
 
 
-class GovernmentInterventionFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = models.GovernmentIntervention
-
-    partner = factory.SubFactory(PartnerFactory)
-    country_programme = factory.SubFactory(CountryProgrammeFactory)
-    number = 'RefNumber'
-
-
-class GovernmentInterventionResultFactory(factory.django.DjangoModelFactory):
-
-    class Meta:
-        model = models.GovernmentInterventionResult
-
-    intervention = factory.SubFactory(GovernmentInterventionFactory)
-    result = factory.SubFactory(ResultFactory)
-    year = '2017'
-
-
 class AgreementAmendmentFactory(factory.django.DjangoModelFactory):
 
     class Meta:

@@ -23,6 +23,9 @@ def _is_user_in_groups(user, group_names):
 
 
 class PMPPermissions(object):
+    # this property specifies an array of model properties in order to check against the permission matrix. The fields
+    # declared under this property need to be both property on the model and delcared in the permission matrix
+    EXTRA_FIELDS = []
     actions_default_permissions = {
         'edit': True,
         'view': True,
@@ -38,6 +41,7 @@ class PMPPermissions(object):
         self.condition_group_valid = lru_cache(maxsize=16)(self.condition_group_valid)
         self.permission_structure = permission_structure
         self.all_model_fields = get_all_field_names(self.MODEL)
+        self.all_model_fields += self.EXTRA_FIELDS
 
     def condition_group_valid(self, condition_group):
         if condition_group['status'] and condition_group['status'] != '*':
@@ -89,6 +93,7 @@ class PMPPermissions(object):
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
+    EXTRA_FIELDS = ['sections_present']
 
     def __init__(self, **kwargs):
         '''
