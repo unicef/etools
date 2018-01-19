@@ -227,6 +227,22 @@ class EngagementSerializer(EngagementDatesValidation,
         validated_data.pop('related_agreement', None)
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
 
+        if staff_members and agreement and agreement.auditor_firm:
+            existed_staff_members = agreement.auditor_firm.staff_members.all()
+            unexisted = set(staff_members) - set(existed_staff_members)
+            if unexisted:
+                msg = self.fields['staff_members'].write_field.child_relation.error_messages['does_not_exist']
+                raise serializers.ValidationError({
+                    'staff_members': [msg.format(pk_value=staff_member.pk) for staff_member in unexisted],
+                })
+
+        return validated_data
+
+
+class ActivePDValidationMixin(object):
+    def validate(self, data):
+        validated_data = super(ActivePDValidationMixin, self).validate(data)
+
         partner = validated_data.get('partner', None)
         if not partner:
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
@@ -244,16 +260,8 @@ class EngagementSerializer(EngagementDatesValidation,
 
         status = 'new' if not self.instance else self.instance.status
 
-        if staff_members and agreement and agreement.auditor_firm:
-            existed_staff_members = agreement.auditor_firm.staff_members.all()
-            unexisted = set(staff_members) - set(existed_staff_members)
-            if unexisted:
-                msg = self.fields['staff_members'].write_field.child_relation.error_messages['does_not_exist']
-                raise serializers.ValidationError({
-                    'staff_members': [msg.format(pk_value=staff_member.pk) for staff_member in unexisted],
-                })
-
-        if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0 and status == 'new':
+        if partner and partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] and \
+           len(active_pd) == 0 and status == 'new':
             raise serializers.ValidationError({
                 'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
             })
@@ -269,7 +277,7 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
         ]
 
 
-class SpotCheckSerializer(EngagementSerializer):
+class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     findings = FindingSerializer(many=True, required=False)
 
     face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', read_only=True, source='start_date')
@@ -309,7 +317,7 @@ class DetailedFindingInfoSerializer(WritableNestedSerializerMixin, serializers.M
         )
 
 
-class MicroAssessmentSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
+class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, EngagementSerializer):
     questionnaire = AggregatedRiskRootSerializer(code='ma_questionnaire', required=False)
     test_subject_areas = RiskRootSerializer(
         code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
@@ -347,7 +355,7 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
         ]
 
 
-class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
+class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, EngagementSerializer):
     financial_finding_set = FinancialFindingSerializer(many=True, required=False, label=_('Financial Findings'))
     key_internal_weakness = KeyInternalWeaknessSerializer(
         code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses')

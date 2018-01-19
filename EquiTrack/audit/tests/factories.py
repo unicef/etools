@@ -22,7 +22,7 @@ from audit.models import (
     RiskCategory,
     SpecialAudit,
     SpotCheck,
-)
+    SpecificProcedure)
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from EquiTrack.factories import (
     AgreementFactory,
@@ -156,6 +156,15 @@ class DetailedFindingInfoFactory(factory.DjangoModelFactory):
     micro_assesment = factory.SubFactory(MicroAssessmentFactory)
     finding = fuzzy.FuzzyText(length=100)
     recommendation = fuzzy.FuzzyText(length=100)
+
+
+class SpecificProcedureFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = SpecificProcedure
+
+    audit = factory.SubFactory(SpecialAuditFactory)
+    description = fuzzy.FuzzyText(length=100)
+    finding = fuzzy.FuzzyText(length=100)
 
 
 class EngagementActionPointFactory(factory.DjangoModelFactory):

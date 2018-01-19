@@ -377,9 +377,9 @@ class SpotCheck(Engagement):
         except TypeError:
             return None
 
-    def save(self, *args, **kwars):
+    def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
-        return super(SpotCheck, self).save(*args, **kwars)
+        return super(SpotCheck, self).save(*args, **kwargs)
 
     @transition(
         'status',
@@ -467,9 +467,9 @@ class MicroAssessment(Engagement):
         verbose_name = _('Micro Assessment')
         verbose_name_plural = _('Micro Assessments')
 
-    def save(self, *args, **kwars):
+    def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.ma
-        return super(MicroAssessment, self).save(*args, **kwars)
+        return super(MicroAssessment, self).save(*args, **kwargs)
 
     @transition(
         'status',
@@ -537,9 +537,9 @@ class Audit(Engagement):
         verbose_name = _('Audit')
         verbose_name_plural = _('Audits')
 
-    def save(self, *args, **kwars):
+    def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.audit
-        return super(Audit, self).save(*args, **kwars)
+        return super(Audit, self).save(*args, **kwargs)
 
     @property
     def pending_unsupported_amount(self):
@@ -583,6 +583,10 @@ class FinancialFinding(models.Model):
 
 @python_2_unicode_compatible
 class SpecialAudit(Engagement):
+    def save(self, *args, **kwargs):
+        self.engagement_type = Engagement.TYPES.sa
+        return super(SpecialAudit, self).save(*args, **kwargs)
+
     @transition(
         'status',
         source=Engagement.STATUSES.partner_contacted, target=Engagement.STATUSES.report_submitted,

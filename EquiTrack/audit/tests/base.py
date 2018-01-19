@@ -99,10 +99,13 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
         self.engagement.cancel('cancel_comment')
         self.engagement.save()
 
-    def _engagement_url(self, postfix=None):
+    def engagements_url(self):
+        return '/api/audit/{0}/'.format(self.endpoint)
+
+    def engagement_url(self, postfix=None):
         if postfix and not postfix.endswith('/'):
             postfix += '/'
-        return '/api/audit/{0}/{1}/{2}'.format(self.endpoint, self.engagement.id, postfix or '')
+        return '{0}{1}/{2}'.format(self.engagements_url(), self.engagement.id, postfix or '')
 
     def setUp(self):
         super(EngagementTransitionsTestCaseMixin, self).setUp()
