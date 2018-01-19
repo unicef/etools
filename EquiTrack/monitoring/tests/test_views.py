@@ -10,8 +10,8 @@ from django.core.urlresolvers import reverse
 from django.test import Client
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
+from users.tests.factories import UserFactory
 
 
 class TestCheckView(FastTenantTestCase):
