@@ -168,7 +168,7 @@ class TestCountryProgramme(FastTenantTestCase):
         )
 
     def test_all_active_and_future(self):
-        """Check that all future and actuve country programmes have
+        """Check that all future and active country programmes have
         to date in the future
         """
         self.assertItemsEqual(
@@ -177,8 +177,8 @@ class TestCountryProgramme(FastTenantTestCase):
         )
 
     def test_expired(self):
-        """Check that future country programmes have
-        from date in the future
+        """Check that expired country programmes have
+        to date in the past
         """
         self.assertTrue(self.programme_past.expired)
         self.assertFalse(self.programme_active.expired)
@@ -193,7 +193,7 @@ class TestCountryProgramme(FastTenantTestCase):
         self.assertTrue(programme.invalid)
 
     def test_save_to_date(self):
-        """If to_date changes for country programme agreement
+        """If to_date changes for country programme, agreement
         to date needs to be updated as well
         """
         programme = CountryProgrammeFactory(
