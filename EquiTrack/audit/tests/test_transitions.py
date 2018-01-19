@@ -236,7 +236,7 @@ class TestSCTransitionsMetadataTestCase(
 
     def test_submitted_focal_point(self):
         self._init_submitted_engagement()
-        self._test_allowed_actions(self.unicef_focal_point, ['finalize', 'cancel'])
+        self._test_allowed_actions(self.unicef_focal_point, ['finalize'])
 
     def test_finalized_auditor(self):
         self._init_finalized_engagement()
