@@ -1,9 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.views.generic import FormView
-from post_office import mail
 
 from email_auth.forms import LoginForm
 from email_auth.utils import update_url_with_token
