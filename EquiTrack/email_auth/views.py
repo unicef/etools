@@ -29,6 +29,3 @@ class TokenAuthView(FormView):
         )
 
         return self.render_to_response(self.get_context_data())
-
-
-login = TokenAuthView.as_view()
