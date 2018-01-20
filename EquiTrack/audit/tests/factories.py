@@ -173,6 +173,7 @@ class EngagementActionPointFactory(factory.DjangoModelFactory):
     class Meta:
         model = EngagementActionPoint
 
+    category = fuzzy.FuzzyChoice(EngagementActionPoint.CATEGORY_CHOICES)
     description = fuzzy.FuzzyText(length=100)
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
 

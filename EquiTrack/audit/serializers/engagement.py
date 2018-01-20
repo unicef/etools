@@ -68,7 +68,8 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
     class Meta(WritableNestedSerializerMixin.Meta):
         model = EngagementActionPoint
         fields = [
-            'id', 'description', 'due_date', 'person_responsible', 'comments',
+            'id', 'category', 'description', 'due_date', 'person_responsible', 'action_taken',
+            'status', 'high_priority',
         ]
 
     def validate(self, attrs):
