@@ -7,6 +7,7 @@ from post_office import mail
 
 from email_auth.forms import LoginForm
 from email_auth.utils import update_url_with_token
+from notification.models import Notification
 from utils.common.urlresolvers import site_url
 
 
@@ -21,12 +22,12 @@ class TokenAuthView(FormView):
             'login_link': update_url_with_token(site_url(), form.get_user()),
         }
 
-        mail.send(
-            [form.get_user().email, ],
-            settings.DEFAULT_FROM_EMAIL,
-            template='email_auth/token/login',
-            context=context,
+        notification = Notification.objects.create(
+            sender=self,
+            recipients=[form.get_user().email, ], template_name='email_auth/token/login',
+            template_data=context
         )
+        notification.send_notification()
 
         return self.render_to_response(self.get_context_data())
 

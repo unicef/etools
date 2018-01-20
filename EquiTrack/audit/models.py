@@ -27,6 +27,7 @@ from audit.transitions.conditions import (
     EngagementSubmitReportRequiredFieldsCheck, SpecialAuditSubmitRelatedModelsCheck, SPSubmitReportRequiredFieldsCheck,
     ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra, )
 from audit.transitions.serializers import EngagementCancelSerializer
+from notification.models import Notification
 from partners.models import PartnerStaffMember, PartnerOrganization
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
@@ -217,13 +218,12 @@ class Engagement(TimeStampedModel, models.Model):
         # assert recipients
 
         if recipients:
-            mail.send(
-                recipients,
-                settings.DEFAULT_FROM_EMAIL,
-                template=template_name,
-                context=context,
-                **kwargs
+            notification = Notification.objects.create(
+                sender=self,
+                recipients=recipients, template_name=template_name,
+                template_data=context
             )
+            notification.send_notification()
 
     def _notify_auditors(self, template_name, context=None, **kwargs):
         self._send_email(
@@ -660,13 +660,12 @@ class EngagementActionPoint(models.Model):
             'action_point': self,
         }
 
-        mail.send(
-            self.person_responsible.email,
-            settings.DEFAULT_FROM_EMAIL,
-            cc=[self.author.email],
-            template=template_name,
-            context=context,
+        notification = Notification.objects.create(
+            sender=self,
+            recipients=[self.person_responsible.email], template_name=template_name,
+            template_data=context
         )
+        notification.send_notification()
 
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',

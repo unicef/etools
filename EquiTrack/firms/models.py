@@ -10,6 +10,7 @@ from post_office import mail
 
 from EquiTrack.utils import get_environment
 from email_auth.utils import update_url_with_token
+from notification.models import Notification
 from utils.common.urlresolvers import site_url
 
 
@@ -107,9 +108,9 @@ class BaseStaffMember(models.Model):
             'login_link': update_url_with_token(site_url(), self.user)
         }
 
-        mail.send(
-            self.user.email,
-            settings.DEFAULT_FROM_EMAIL,
-            template='organisations/staff_member/invite',
-            context=context,
+        notification = Notification.objects.create(
+            sender=self,
+            recipients=[self.user.email], template_name='organisations/staff_member/invite',
+            template_data=context
         )
+        notification.send_notification()
