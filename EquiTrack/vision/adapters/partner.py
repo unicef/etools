@@ -9,17 +9,17 @@ from vision.vision_data_synchronizer import VisionDataSynchronizer, VISION_NO_DA
 logger = logging.getLogger(__name__)
 
 type_mapping = {
-    "BILATERAL / MULTILATERAL": u'Bilateral / Multilateral',
-    "CIVIL SOCIETY ORGANIZATION": u'Civil Society Organization',
-    "GOVERNMENT": u'Government',
-    "UN AGENCY": u'UN Agency',
+    'BILATERAL / MULTILATERAL': u'Bilateral / Multilateral',
+    'CIVIL SOCIETY ORGANIZATION': u'Civil Society Organization',
+    'GOVERNMENT': u'Government',
+    'UN AGENCY': u'UN Agency',
 }
 
 cso_type_mapping = {
-    "International NGO": u'International',
-    "National NGO": u'National',
-    "Community based organization": u'Community Based Organization',
-    "Academic Institution": u'Academic Institution'
+    'International NGO': u'International',
+    'National NGO': u'National',
+    'Community based organization': u'Community Based Organization',
+    'Academic Institution': u'Academic Institution'
 }
 
 
@@ -27,12 +27,29 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
     ENDPOINT = 'GetPartnerDetailsInfo_json'
     REQUIRED_KEYS = (
-        "PARTNER_TYPE_DESC",
-        "VENDOR_NAME",
-        "VENDOR_CODE",
-        "COUNTRY",
-        "TOTAL_CASH_TRANSFERRED_CP",
-        "TOTAL_CASH_TRANSFERRED_CY",
+        'PARTNER_TYPE_DESC',
+        'VENDOR_NAME',
+        'VENDOR_CODE',
+        'COUNTRY',
+        'TOTAL_CASH_TRANSFERRED_CP',
+        'TOTAL_CASH_TRANSFERRED_CY',
+    )
+    OTHER_KEYS = (
+        'DATE_OF_ASSESSMENT',
+        'CORE_VALUE_ASSESSMENT_DT',
+        'CSO_TYPE',
+        'RISK_RATING',
+        'TYPE_OF_ASSESSMENT',
+        'STREET',
+        'CITY',
+        'PHONE_NUMBER',
+        'POSTAL_CODE',
+        'EMAIL',
+        'MARKED_FOR_DELETION',
+        'POSTING_BLOCK',
+        'PARTNER_TYPE_DESC',
+        'LIQUIDATION',
+        'CASH_TRANSFER',
     )
 
     DATE_FIELDS = (
@@ -41,21 +58,23 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     )
 
     MAPPING = {
-        'name': "VENDOR_NAME",
+        'name': 'VENDOR_NAME',
         'cso_type': 'CSO_TYPE',
         'rating': 'RISK_RATING',
-        'type_of_assessment': "TYPE_OF_ASSESSMENT",
-        'address': "STREET",
-        'city': "CITY",
-        'country': "COUNTRY",
+        'type_of_assessment': 'TYPE_OF_ASSESSMENT',
+        'address': 'STREET',
+        'city': 'CITY',
+        'country': 'COUNTRY',
         'phone_number': 'PHONE_NUMBER',
         'postal_code': 'POSTAL_CODE',
-        'email': "EMAIL",
-        'deleted_flag': "MARKED_FOR_DELETION",
-        'blocked': "POSTING_BLOCK",
-        'last_assessment_date': "DATE_OF_ASSESSMENT",
-        'core_values_assessment_date': "CORE_VALUE_ASSESSMENT_DT",
-        'partner_type': "PARTNER_TYPE_DESC",
+        'email': 'EMAIL',
+        'deleted_flag': 'MARKED_FOR_DELETION',
+        'blocked': 'POSTING_BLOCK',
+        'last_assessment_date': 'DATE_OF_ASSESSMENT',
+        'core_values_assessment_date': 'CORE_VALUE_ASSESSMENT_DT',
+        'partner_type': 'PARTNER_TYPE_DESC',
+        'liquidation': 'LIQUIDATION',  # TODO add mapping when available in vision
+        'cash_transfer': 'CASH_TRANSFER',  # TODO add mapping when available in vision
     }
 
     def _convert_records(self, records):
@@ -88,7 +107,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 if mapped_key in self.DATE_FIELDS:
                     apiobj_field = None
                     if mapped_key in api_obj:
-                        datetime.strptime(api_obj[mapped_key], "%d-%b-%y")
+                        datetime.strptime(api_obj[mapped_key], '%d-%b-%y')
 
                 if field == 'partner_type':
                     apiobj_field = type_mapping[api_obj[mapped_key]]
@@ -100,7 +119,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     apiobj_field = mapped_key in api_obj
 
                 if getattr(local_obj, field) != apiobj_field:
-                    logger.debug("field changed", field)
+                    logger.debug('field changed', field)
                     return True
             return False
 
@@ -109,43 +128,39 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 _pos.append(po_api)
                 _vendors.append(po_api['VENDOR_CODE'])
 
-            if not po_api["TOTAL_CASH_TRANSFERRED_CP"]:
-                po_api["TOTAL_CASH_TRANSFERRED_CP"] = 0
-            if not po_api["TOTAL_CASH_TRANSFERRED_CY"]:
-                po_api["TOTAL_CASH_TRANSFERRED_CY"] = 0
+            if not po_api['TOTAL_CASH_TRANSFERRED_CP']:
+                po_api['TOTAL_CASH_TRANSFERRED_CP'] = 0
+            if not po_api['TOTAL_CASH_TRANSFERRED_CY']:
+                po_api['TOTAL_CASH_TRANSFERRED_CY'] = 0
 
             if not _totals_cp.get(po_api['VENDOR_CODE']):
-                _totals_cp[po_api['VENDOR_CODE']] = po_api["TOTAL_CASH_TRANSFERRED_CP"]
+                _totals_cp[po_api['VENDOR_CODE']] = po_api['TOTAL_CASH_TRANSFERRED_CP']
             else:
-                _totals_cp[po_api['VENDOR_CODE']] += po_api["TOTAL_CASH_TRANSFERRED_CP"]
+                _totals_cp[po_api['VENDOR_CODE']] += po_api['TOTAL_CASH_TRANSFERRED_CP']
 
             if not _totals_cy.get(po_api['VENDOR_CODE']):
-                _totals_cy[po_api['VENDOR_CODE']] = po_api["TOTAL_CASH_TRANSFERRED_CY"]
+                _totals_cy[po_api['VENDOR_CODE']] = po_api['TOTAL_CASH_TRANSFERRED_CY']
             else:
-                _totals_cy[po_api['VENDOR_CODE']] += po_api["TOTAL_CASH_TRANSFERRED_CY"]
+                _totals_cy[po_api['VENDOR_CODE']] += po_api['TOTAL_CASH_TRANSFERRED_CY']
 
         def _partner_save(processed, partner):
 
             try:
-                new = False
                 saving = False
-                try:
-                    partner_org = PartnerOrganization.objects.get(vendor_number=partner["VENDOR_CODE"])
-                except PartnerOrganization.DoesNotExist:
-                    partner_org = PartnerOrganization(vendor_number=partner["VENDOR_CODE"])
-                    new = True
+                partner_org, new = PartnerOrganization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
 
                 # TODO: quick and dirty fix for cso_type mapping... this entire synchronizer needs updating
                 partner['CSO_TYPE'] = cso_type_mapping.get(partner['CSO_TYPE'], None) if 'CSO_TYPE' in partner else None
+
                 try:
-                    type_mapping[partner["PARTNER_TYPE_DESC"]]
+                    type_mapping[partner['PARTNER_TYPE_DESC']]
                 except KeyError as exp:
-                    logger.info("Partner {} skipped, because PartnerType ={}".format(
+                    logger.info('Partner {} skipped, because PartnerType ={}'.format(
                         partner['VENDOR_NAME'], exp
                     ))
                     # if partner organization exists in etools db (these are nameless)
                     if partner_org.id:
-                        partner_org.name = ""  # leaving the name blank on purpose (invalid record)
+                        partner_org.name = ''  # leaving the name blank on purpose (invalid record)
                         partner_org.deleted_flag = True if 'MARKED_FOR_DELETION' in partner else False
                         partner_org.blocked = True if 'POSTING_BLOCK' in partner else False
                         partner_org.hidden = True
@@ -156,22 +171,25 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                                            'address', 'phone_number', 'email', 'deleted_flag', 'postal_code',
                                            'last_assessment_date', 'core_values_assessment_date', 'city', 'country'],
                                           partner_org, partner):
-                    partner_org.name = partner["VENDOR_NAME"]
-                    partner_org.cso_type = partner["CSO_TYPE"]
-                    partner_org.rating = partner.get("RISK_RATING", None)
-                    partner_org.type_of_assessment = partner.get("TYPE_OF_ASSESSMENT", None)
-                    partner_org.address = partner.get("STREET", None)
-                    partner_org.city = partner.get("CITY", None)
-                    partner_org.postal_code = partner.get("POSTAL_CODE", None)
-                    partner_org.country = partner["COUNTRY"]
-                    partner_org.phone_number = partner.get("PHONE_NUMBER", None)
-                    partner_org.email = partner.get("EMAIL", None)
+                    partner_org.name = partner['VENDOR_NAME']
+                    partner_org.cso_type = partner['CSO_TYPE']
+                    partner_org.rating = partner.get('RISK_RATING', None)  # TODO add mapping to choices
+                    partner_org.type_of_assessment = partner.get('TYPE_OF_ASSESSMENT', None)
+                    partner_org.address = partner.get('STREET', None)
+                    partner_org.city = partner.get('CITY', None)
+                    partner_org.postal_code = partner.get('POSTAL_CODE', None)
+                    partner_org.country = partner['COUNTRY']
+                    partner_org.phone_number = partner.get('PHONE_NUMBER', None)
+                    partner_org.email = partner.get('EMAIL', None)
+                    partner_org.phone_number = partner.get('PHONE_NUMBER', None)
+                    # partner_org.liquidation = partner.get('LIQUIDATION', None)
+                    # partner_org.cash_transfer = partner.get('CASH_TRANSFER', None)
                     partner_org.core_values_assessment_date = datetime.strptime(
-                        partner["CORE_VALUE_ASSESSMENT_DT"],
-                        "%d-%b-%y") if 'CORE_VALUE_ASSESSMENT_DT' in partner else None
+                        partner['CORE_VALUE_ASSESSMENT_DT'],
+                        '%d-%b-%y') if 'CORE_VALUE_ASSESSMENT_DT' in partner else None
                     partner_org.last_assessment_date = datetime.strptime(
-                        partner["DATE_OF_ASSESSMENT"], "%d-%b-%y") if 'DATE_OF_ASSESSMENT' in partner else None
-                    partner_org.partner_type = type_mapping[partner["PARTNER_TYPE_DESC"]]
+                        partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if 'DATE_OF_ASSESSMENT' in partner else None
+                    partner_org.partner_type = type_mapping[partner['PARTNER_TYPE_DESC']]
                     partner_org.deleted_flag = True if 'MARKED_FOR_DELETION' in partner else False
                     partner_org.blocked = True if 'POSTING_BLOCK' in partner else False
                     if not partner_org.hidden:
@@ -179,22 +197,21 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org.vision_synced = True
                     saving = True
 
-                # we want total_ct_cp and total_ct_cy frozen at 30 September [HACT year]
                 if partner_org.total_ct_cp is None or partner_org.total_ct_cy is None or \
-                        not comp_decimals(partner_org.total_ct_cp, _totals_cp[partner["VENDOR_CODE"]]) or \
-                        not comp_decimals(partner_org.total_ct_cy, _totals_cy[partner["VENDOR_CODE"]]):
+                        not comp_decimals(partner_org.total_ct_cp, _totals_cp[partner['VENDOR_CODE']]) or \
+                        not comp_decimals(partner_org.total_ct_cy, _totals_cy[partner['VENDOR_CODE']]):
 
-                    partner_org.total_ct_cy = _totals_cy[partner["VENDOR_CODE"]]
-                    partner_org.total_ct_cp = _totals_cp[partner["VENDOR_CODE"]]
+                    partner_org.total_ct_cy = _totals_cy[partner['VENDOR_CODE']]
+                    partner_org.total_ct_cp = _totals_cp[partner['VENDOR_CODE']]
 
                     saving = True
-                    logger.debug("sums changed", partner_org)
+                    logger.debug('sums changed', partner_org)
 
                 if saving:
-                    logger.debug("Updating Partner", partner_org)
+                    logger.debug('Updating Partner', partner_org)
                     partner_org.save()
-                del _totals_cy[partner["VENDOR_CODE"]]
-                del _totals_cp[partner["VENDOR_CODE"]]
+                del _totals_cy[partner['VENDOR_CODE']]
+                del _totals_cp[partner['VENDOR_CODE']]
 
                 processed += 1
 
@@ -218,7 +235,5 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         return processed
 
     def _save_records(self, records):
-
         processed = self.update_stuff(records)
-
         return processed
