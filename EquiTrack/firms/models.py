@@ -6,7 +6,6 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
-from post_office import mail
 
 from EquiTrack.utils import get_environment
 from email_auth.utils import update_url_with_token
