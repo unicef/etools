@@ -18,7 +18,7 @@ class TokenAuthView(FormView):
 
     def form_valid(self, form):
         context = {
-            'recipient': form.get_user(),
+            'recipient': form.get_user().get_full_name(),
             'login_link': update_url_with_token(site_url(), form.get_user()),
         }
 

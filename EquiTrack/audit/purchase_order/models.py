@@ -25,10 +25,9 @@ class AuditorStaffMember(BaseStaffMember):
 
     def send_user_appointed_email(self, engagement):
         context = {
-            'engagement_url': engagement.get_object_url(),
             'environment': get_environment(),
-            'engagement': engagement,
-            'staff_member': self,
+            'engagement': engagement.get_mail_context(),
+            'staff_member': self.user.get_full_name(),
         }
 
         notification = Notification.objects.create(
