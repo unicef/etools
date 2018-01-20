@@ -10,7 +10,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.transaction import atomic
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
+from django.utils.encoding import python_2_unicode_compatible, force_text
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
@@ -203,12 +203,20 @@ class Engagement(TimeStampedModel, models.Model):
             self.id
         )
 
+    def get_mail_context(self):
+        return {
+            'unique_id': self.unique_id,
+            'engagement_type': self.get_engagement_type_display(),
+            'object_url': self.get_object_url(),
+            'partner': force_text(self.partner),
+            'auditor_firm': force_text(self.agreement.auditor_firm),
+        }
+
     def _send_email(self, recipients, template_name, context=None, **kwargs):
         context = context or {}
 
         base_context = {
-            'engagement': self,
-            'url': self.get_object_url(),
+            'engagement': self.get_mail_context(),
             'environment': get_environment(),
         }
         base_context.update(context)
@@ -652,12 +660,19 @@ class EngagementActionPoint(models.Model):
     def __str__(self):
         return '{} on {}'.format(self.get_description_display(), self.engagement)
 
+    def get_mail_context(self):
+        return {
+            'person_responsible': self.person_responsible.get_full_name(),
+            'author': self.author.get_full_name(),
+            'description': self.get_description_display(),
+            'due_date': self.due_date,
+        }
+
     def notify_person_responsible(self, template_name):
         context = {
-            'engagement_url': self.engagement.get_object_url(),
             'environment': get_environment(),
             'engagement': Engagement.objects.get_subclass(action_points__id=self.id),
-            'action_point': self,
+            'action_point': self.get_mail_context(),
         }
 
         notification = Notification.objects.create(

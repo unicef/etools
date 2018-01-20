@@ -104,7 +104,6 @@ class BaseStaffMember(models.Model):
     def send_invite_email(self):
         context = {
             'environment': get_environment(),
-            'staff_member': self,
             'login_link': update_url_with_token(site_url(), self.user)
         }
 
