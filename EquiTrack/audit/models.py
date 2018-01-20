@@ -248,7 +248,7 @@ class Engagement(TimeStampedModel, models.Model):
     def _notify_focal_points(self, template_name, context=None, **kwargs):
         for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
             ctx = {
-                'focal_point': focal_point,
+                'focal_point': focal_point.get_full_name(),
             }
             if context:
                 ctx.update(context)
