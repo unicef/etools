@@ -63,8 +63,8 @@
             "created": "2017-07-19T10:08:23.360Z",
             "last_updated": "2017-07-19T10:40:35.831Z",
             "subject": "[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}",
-            "content": "Dear {{ action_point.person_responsible }},\r\n\r\n{{ action_point.author }} has assigned you an action point. \r\n\r\nEngagement ID: {{ engagement.unique_id }}\r\nDescription: {{ action_point.description }}\r\nDue Date: {{ action_point.due_date}}\r\nLink: {{ engagement.object_url }} \r\n\r\nThank you.",
-            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ action_point.person_responsible }},<br/><br/>\r\n\r\n{{ action_point.author }} has assigned you an action point. <br/><br/>\r\n\r\nEngagement ID: {{ engagement.unique_id }}<br/>\r\nDescription: {{ action_point.description }}<br/>\r\nDue Date: {{ action_point.due_date}}<br/>\r\nLink: {{ engagement.object_url }} <br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
+            "content": "Dear {{ action_point.person_responsible }},\r\n\r\n{{ action_point.author }} has assigned you an action point. \r\n\r\nEngagement ID: {{ engagement.unique_id }}\r\nCategory: {{ action_point.category }}\r\nDue Date: {{ action_point.due_date}}\r\nLink: {{ engagement.object_url }} \r\n\r\nThank you.",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block content %}\r\nDear {{ action_point.person_responsible }},<br/><br/>\r\n\r\n{{ action_point.author }} has assigned you an action point. <br/><br/>\r\n\r\nEngagement ID: {{ engagement.unique_id }}<br/>\r\nCategory: {{ action_point.category }}<br/>\r\nDue Date: {{ action_point.due_date}}<br/>\r\nLink: {{ engagement.object_url }} <br/><br/>\r\n\r\nThank you.\r\n{% endblock %}",
             "language": "",
             "default_template": null
         }

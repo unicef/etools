@@ -702,7 +702,7 @@ class EngagementActionPoint(models.Model):
         return {
             'person_responsible': self.person_responsible.get_full_name(),
             'author': self.author.get_full_name(),
-            'description': self.get_description_display(),
+            'category': self.get_category_display(),
             'due_date': self.due_date,
         }
 
