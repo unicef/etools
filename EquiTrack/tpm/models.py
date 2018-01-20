@@ -11,7 +11,6 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
-from post_office import mail
 
 from activities.models import Activity
 from attachments.models import Attachment
@@ -23,7 +22,7 @@ from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejec
 from tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck, TPMVisitReportValidations, ValidateTPMVisitActivities,)
 from utils.common.models.fields import CodedGenericRelation
-from utils.common.urlresolvers import build_frontend_url, site_url
+from utils.common.urlresolvers import build_frontend_url
 from utils.groups.wrappers import GroupWrapper
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
