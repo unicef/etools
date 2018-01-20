@@ -48,6 +48,14 @@ class Notification(models.Model):
         ('audit/engagement/reported_by_auditor', 'audit/engagement/reported_by_auditor',),
         ('audit/engagement/action_point_assigned', 'audit/engagement/action_point_assigned',),
         ('email_auth/token/login', 'email_auth/token/login'),
+        ('tpm/visit/assign', 'tpm/visit/assign'),
+        ('tpm/visit/reject', 'tpm/visit/reject'),
+        ('tpm/visit/accept', 'tpm/visit/accept'),
+        ('tpm/visit/report', 'tpm/visit/report'),
+        ('tpm/visit/report_rejected', 'tpm/visit/report_rejected'),
+        ('tpm/visit/approve_report_tpm', 'tpm/visit/approve_report_tpm'),
+        ('tpm/visit/approve_report', 'tpm/visit/approve_report'),
+        ('tpm/visit/action_point_assigned', 'tpm/visit/action_point_assigned'),
     )
 
     type = models.CharField(max_length=255, default='Email')
