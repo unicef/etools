@@ -10,7 +10,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.transaction import atomic
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
+from django.utils.encoding import python_2_unicode_compatible, force_text
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
@@ -27,6 +27,7 @@ from audit.transitions.conditions import (
     EngagementSubmitReportRequiredFieldsCheck, SpecialAuditSubmitRelatedModelsCheck, SPSubmitReportRequiredFieldsCheck,
     ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra, )
 from audit.transitions.serializers import EngagementCancelSerializer
+from notification.models import Notification
 from partners.models import PartnerStaffMember, PartnerOrganization
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
@@ -202,12 +203,20 @@ class Engagement(TimeStampedModel, models.Model):
             self.id
         )
 
+    def get_mail_context(self):
+        return {
+            'unique_id': self.unique_id,
+            'engagement_type': self.get_engagement_type_display(),
+            'object_url': self.get_object_url(),
+            'partner': force_text(self.partner),
+            'auditor_firm': force_text(self.agreement.auditor_firm),
+        }
+
     def _send_email(self, recipients, template_name, context=None, **kwargs):
         context = context or {}
 
         base_context = {
-            'engagement': self,
-            'url': self.get_object_url(),
+            'engagement': self.get_mail_context(),
             'environment': get_environment(),
         }
         base_context.update(context)
@@ -217,13 +226,12 @@ class Engagement(TimeStampedModel, models.Model):
         # assert recipients
 
         if recipients:
-            mail.send(
-                recipients,
-                settings.DEFAULT_FROM_EMAIL,
-                template=template_name,
-                context=context,
-                **kwargs
+            notification = Notification.objects.create(
+                sender=self,
+                recipients=recipients, template_name=template_name,
+                template_data=context
             )
+            notification.send_notification()
 
     def _notify_auditors(self, template_name, context=None, **kwargs):
         self._send_email(
@@ -236,7 +244,7 @@ class Engagement(TimeStampedModel, models.Model):
     def _notify_focal_points(self, template_name, context=None, **kwargs):
         for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
             ctx = {
-                'focal_point': focal_point,
+                'focal_point': focal_point.get_full_name(),
             }
             if context:
                 ctx.update(context)
@@ -676,21 +684,27 @@ class EngagementActionPoint(models.Model):
     def __str__(self):
         return '{} on {}'.format(self.get_description_display(), self.engagement)
 
-    def notify_person_responsible(self, template_name):
-        context = {
-            'engagement_url': self.engagement.get_object_url(),
-            'environment': get_environment(),
-            'engagement': Engagement.objects.get_subclass(action_points__id=self.id),
-            'action_point': self,
+    def get_mail_context(self):
+        return {
+            'person_responsible': self.person_responsible.get_full_name(),
+            'author': self.author.get_full_name(),
+            'description': self.get_description_display(),
+            'due_date': self.due_date,
         }
 
-        mail.send(
-            self.person_responsible.email,
-            settings.DEFAULT_FROM_EMAIL,
-            cc=[self.author.email],
-            template=template_name,
-            context=context,
+    def notify_person_responsible(self, template_name):
+        context = {
+            'environment': get_environment(),
+            'engagement': Engagement.objects.get_subclass(action_points__id=self.id),
+            'action_point': self.get_mail_context(),
+        }
+
+        notification = Notification.objects.create(
+            sender=self,
+            recipients=[self.person_responsible.email], template_name=template_name,
+            template_data=context
         )
+        notification.send_notification()
 
 
 UNICEFAuditFocalPoint = GroupWrapper(code='unicef_audit_focal_point',

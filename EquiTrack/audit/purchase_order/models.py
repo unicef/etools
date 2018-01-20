@@ -7,6 +7,7 @@ from post_office import mail
 
 from EquiTrack.utils import get_environment
 from firms.models import BaseFirm, BaseStaffMember
+from notification.models import Notification
 
 
 class AuditorFirm(BaseFirm):
@@ -23,18 +24,17 @@ class AuditorStaffMember(BaseStaffMember):
 
     def send_user_appointed_email(self, engagement):
         context = {
-            'engagement_url': engagement.get_object_url(),
             'environment': get_environment(),
-            'engagement': engagement,
-            'staff_member': self,
+            'engagement': engagement.get_mail_context(),
+            'staff_member': self.user.get_full_name(),
         }
 
-        mail.send(
-            self.user.email,
-            settings.DEFAULT_FROM_EMAIL,
-            template='audit/engagement/submit_to_auditor',
-            context=context,
+        notification = Notification.objects.create(
+            sender=self,
+            recipients=[self.user.email], template_name='audit/engagement/submit_to_auditor',
+            template_data=context
         )
+        notification.send_notification()
 
 
 class PurchaseOrderManager(models.Manager):
