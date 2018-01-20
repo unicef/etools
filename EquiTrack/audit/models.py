@@ -18,7 +18,6 @@ from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
-from post_office import mail
 
 from EquiTrack.utils import get_environment
 from attachments.models import Attachment
