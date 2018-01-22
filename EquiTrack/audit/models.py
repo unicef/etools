@@ -638,6 +638,7 @@ class EngagementActionPoint(models.Model):
         _('Escalate to Chief of Operations, Dep Rep, or Rep'),
         _('Escalate to Investigation'),
         _('Capacity building / Discussion with partner'),
+        _('Change IP risk rating'),
         _('Other'),
     )
 
