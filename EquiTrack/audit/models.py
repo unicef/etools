@@ -668,6 +668,7 @@ class EngagementActionPoint(models.Model):
         ("Escalate to Chief of Operations, Dep Rep, or Rep", _("Escalate to Chief of Operations, Dep Rep, or Rep")),
         ("Escalate to Investigation", _("Escalate to Investigation")),
         ("Capacity building / Discussion with partner", _("Capacity building / Discussion with partner")),
+        ("Change IP risk rating", _("Change IP risk rating")),
         ("Other", _("Other")),
     )
     STATUS_CHOICES = Choices(
