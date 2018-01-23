@@ -1586,11 +1586,11 @@ class Intervention(TimeStampedModel):
     @cached_property
     def intervention_clusters(self):
         # return intervention clusters as an array of strings
-        clusters = []
+        clusters = set()
         for lower_result in self.all_lower_results:
             for applied_indicator in lower_result.applied_indicators.all():
-                if applied_indicator.cluster_name and applied_indicator.cluster_name not in clusters:
-                    clusters.append(applied_indicator.cluster_name)
+                if applied_indicator.cluster_name:
+                    clusters.add(applied_indicator.cluster_name)
 
         return clusters
 
