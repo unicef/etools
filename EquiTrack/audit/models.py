@@ -703,13 +703,13 @@ class EngagementActionPoint(models.Model):
             'person_responsible': self.person_responsible.get_full_name(),
             'author': self.author.get_full_name(),
             'category': self.get_category_display(),
-            'due_date': self.due_date,
+            'due_date': self.due_date.strftime('%d %b %Y'),
         }
 
     def notify_person_responsible(self, template_name):
         context = {
             'environment': get_environment(),
-            'engagement': Engagement.objects.get_subclass(action_points__id=self.id),
+            'engagement': Engagement.objects.get_subclass(action_points__id=self.id).get_mail_context(),
             'action_point': self.get_mail_context(),
         }
 
