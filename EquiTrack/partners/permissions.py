@@ -105,7 +105,9 @@ class InterventionPermissions(PMPPermissions):
         need access to the old amendments, new amendments in order to check this.
         '''
         super(InterventionPermissions, self).__init__(**kwargs)
-        inbound_check = kwargs.get('inbound_check', False)
+
+        # Inbound check flag is available here:
+        # inbound_check = kwargs.get('inbound_check', False)
 
         def user_added_amendment(instance):
             return instance.in_amendment is True
