@@ -263,7 +263,7 @@ class CountryAdmin(admin.ModelAdmin):
     @staticmethod
     def execute_sync(country_pk, synchronizer):
         country = Country.objects.get(pk=country_pk)
-        sync_handler(country.name, synchronizer)
+        sync_handler.delay(country.name, synchronizer)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 
