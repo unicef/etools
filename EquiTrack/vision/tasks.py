@@ -206,6 +206,7 @@ def update_all_partners(country_name=None):
 def update_purchase_orders(country_name=None):
     logger.info(u'Starting update values for purchase order')
     countries = Country.objects.filter(vision_sync_enabled=True)
+    processed = []
     if country_name is not None:
         countries = countries.filter(name=country_name)
     for country in countries:
@@ -215,8 +216,10 @@ def update_purchase_orders(country_name=None):
                 country.name
             ))
             POSynchronizer(country).sync()
+            processed.append(country.name)
             logger.info(u"Update finished successfully for {}".format(country.name))
         except VisionException as e:
                 logger.error(u"{} sync failed, Reason: {}".format(
                     POSynchronizer.__name__, e.message
                 ))
+    logger.info(u'Purchase orders synced successfully for {}.'.format(u', '.join(processed)))
