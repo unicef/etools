@@ -108,24 +108,19 @@ class InterventionPermissions(PMPPermissions):
         inbound_check = kwargs.get('inbound_check', False)
 
         def user_added_amendment(instance):
-            assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
             return instance.in_amendment is True
 
         def prp_mode_off():
             return tenant_switch_is_active("prp_mode_off")
 
-        def inbound_amendment_check(instance):
-            return False if not inbound_check else user_added_amendment(instance)
-
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
-            # this condition can only be checked on data save
-            'user_adds_amendment': inbound_amendment_check(self.instance),
+            'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_off': prp_mode_off(),
-            'user_adds_amendment+prp_mode_on': inbound_amendment_check(self.instance) and not prp_mode_off()
+            'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off()
         }
 
 
