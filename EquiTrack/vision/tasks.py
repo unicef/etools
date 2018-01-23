@@ -229,14 +229,15 @@ def update_purchase_orders(country_name=None):
 
 @app.task
 def update_tpm_partners(country_name=None):
-    logger.info('Starting update values for TPM partners')
+    logger.info(u'Starting update values for TPM partners')
     countries = Country.objects.filter(vision_sync_enabled=True)
+    processed = []
     if country_name is not None:
         countries = countries.filter(name=country_name)
     for country in countries:
         connection.set_tenant(country)
         try:
-            logger.info('Starting TPM partners update for country {}'.format(
+            logger.info(u'Starting TPM partners update for country {}'.format(
                 country.name
             ))
             for partner in TPMPartner.objects.all():
@@ -244,8 +245,10 @@ def update_tpm_partners(country_name=None):
                     country=country,
                     object_number=partner.vendor_number
                 ).sync()
-            logger.info("Update finished successfully for {}".format(country.name))
+            processed.append(country.name)
+            logger.info(u"Update finished successfully for {}".format(country.name))
         except VisionException as e:
-                logger.error("{} sync failed, Reason: {}".format(
+                logger.error(u"{} sync failed, Reason: {}".format(
                     TPMPartnerSynchronizer.__name__, e.message
                 ))
+    logger.info(u'TPM Partners synced successfully for {}.'.format(u', '.join(processed)))
