@@ -42,12 +42,15 @@ class Migration(migrations.Migration):
             model_name='indicatorreport',
             name='result_chain',
         ),
-        migrations.AlterField(
-            model_name='indicatorreport',
-            name='indicator',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reports',
-                                    to='reports.AppliedIndicator'),
-        ),
+        # Can't yet refer to reports.AppliedIndicator because it's created in reports
+        # migration 0003, which depends on this migration. Moved this AlterField
+        # to partners migration 0004.
+        # migrations.AlterField(
+        #     model_name='indicatorreport',
+        #     name='indicator',
+        #     field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reports',
+        #                             to='reports.AppliedIndicator'),
+        # ),
         #migrations.RunPython(forwards, reverse_code=backwards),
 
     ]

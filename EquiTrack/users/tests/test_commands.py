@@ -7,11 +7,11 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from EquiTrack.factories import CurrencyFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase
 from users.models import Country
 
 
-class TestAddCountry(FastTenantTestCase):
+class TestAddCountry(EToolsTenantTestCase):
     def test_command(self):
         # Not able to actually create a tenant, so checking
         # the raises exception that this is where the command

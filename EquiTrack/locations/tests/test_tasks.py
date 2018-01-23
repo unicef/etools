@@ -6,13 +6,13 @@ from __future__ import unicode_literals
 from carto.exceptions import CartoException
 from mock import patch, Mock
 
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase
 from EquiTrack.factories import CartoDBTableFactory, LocationFactory
 from locations import tasks
 from locations.models import CartoDBTable, Location
 
 
-class TestCreateLocations(FastTenantTestCase):
+class TestCreateLocations(EToolsTenantTestCase):
     def test_multiple_objects(self):
         """Multiple objects match the pcode,
         just 'no added' should increment by 1
@@ -233,7 +233,7 @@ class TestCreateLocations(FastTenantTestCase):
         self.assertEqual(location.parent, parent)
 
 
-class TestUpdateSitesFromCartoDB(FastTenantTestCase):
+class TestUpdateSitesFromCartoDB(EToolsTenantTestCase):
     def setUp(self):
         super(TestUpdateSitesFromCartoDB, self).setUp()
         self.mock_sql = Mock()

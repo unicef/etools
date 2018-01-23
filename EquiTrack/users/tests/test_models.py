@@ -11,7 +11,7 @@ from EquiTrack.factories import (
     SectionFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase as TenantTestCase
 from users import models
 
 

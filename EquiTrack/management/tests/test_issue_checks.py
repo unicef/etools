@@ -2,7 +2,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings
 
 from EquiTrack.factories import PartnerFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase
 from environment.models import IssueCheckConfig
 from management.issues import checks
 from management.issues.exceptions import IssueFoundException, IssueCheckNotFoundException
@@ -67,7 +67,7 @@ class TestInvalidSubClass(object):
     """Invalid subclassing"""
 
 
-class IssueCheckTest(FastTenantTestCase):
+class IssueCheckTest(EToolsTenantTestCase):
 
     def tearDown(self):
         FlaggedIssue.objects.all().delete()

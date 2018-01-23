@@ -8,7 +8,7 @@ from EquiTrack.factories import (
     InterventionFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase as TenantTestCase
 from snapshot.models import Activity
 from partners.models import WorkspaceFileType
 

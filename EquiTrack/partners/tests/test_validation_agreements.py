@@ -8,7 +8,7 @@ from EquiTrack.factories import (
     PartnerStaffFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase as TenantTestCase
 from EquiTrack.validation_mixins import BasicValidationError, TransitionError
 from partners.models import Agreement
 from partners.validation import agreements

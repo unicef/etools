@@ -15,7 +15,7 @@ from EquiTrack.factories import (
     ResultFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase
 from management.issues import checks
 from management.models import FlaggedIssue
 from management.tests.factories import InterventionAmendmentFactory
@@ -23,7 +23,7 @@ from partners.models import Agreement, Intervention, InterventionResultLink
 from partners.validation.interventions import InterventionValid
 
 
-class TestActivePCANoSignedDocCheck(FastTenantTestCase):
+class TestActivePCANoSignedDocCheck(EToolsTenantTestCase):
     def setUp(self):
         super(TestActivePCANoSignedDocCheck, self).setUp()
         UserFactory(username="etools_task_admin")
@@ -60,7 +60,7 @@ class TestActivePCANoSignedDocCheck(FastTenantTestCase):
         self.assertFalse(qs_issue.exists())
 
 
-class TestPdOutputsWrongCheck(FastTenantTestCase):
+class TestPdOutputsWrongCheck(EToolsTenantTestCase):
     def setUp(self):
         super(TestPdOutputsWrongCheck, self).setUp()
         UserFactory(username="etools_task_admin")
@@ -189,7 +189,7 @@ class TestPdOutputsWrongCheck(FastTenantTestCase):
         self.assertFalse(qs_issue.exists())
 
 
-class TestInterventionsAssociatedSSFACheck(FastTenantTestCase):
+class TestInterventionsAssociatedSSFACheck(EToolsTenantTestCase):
     def setUp(self):
         super(TestInterventionsAssociatedSSFACheck, self).setUp()
         self.qs_issue = FlaggedIssue.objects.filter(
@@ -261,7 +261,7 @@ class TestInterventionsAssociatedSSFACheck(FastTenantTestCase):
         self.assertFalse(self.qs_issue.exists())
 
 
-class TestInterventionsAreValidCheck(FastTenantTestCase):
+class TestInterventionsAreValidCheck(EToolsTenantTestCase):
     def setUp(self):
         super(TestInterventionsAreValidCheck, self).setUp()
         self.master_user = UserFactory(username="etools_task_admin")
@@ -297,7 +297,7 @@ class TestInterventionsAreValidCheck(FastTenantTestCase):
         self.assertFalse(self.qs_issue.exists())
 
 
-class TestPDAmendmentsMissingFilesCheck(FastTenantTestCase):
+class TestPDAmendmentsMissingFilesCheck(EToolsTenantTestCase):
     def setUp(self):
         super(TestPDAmendmentsMissingFilesCheck, self).setUp()
         self.master_user = UserFactory(username="etools_task_admin")
@@ -326,7 +326,7 @@ class TestPDAmendmentsMissingFilesCheck(FastTenantTestCase):
         self.assertFalse(self.qs_issue.exists())
 
 
-class TestPCAAmendmentsMissingFilesCheck(FastTenantTestCase):
+class TestPCAAmendmentsMissingFilesCheck(EToolsTenantTestCase):
     def setUp(self):
         super(TestPCAAmendmentsMissingFilesCheck, self).setUp()
         self.master_user = UserFactory(username="etools_task_admin")

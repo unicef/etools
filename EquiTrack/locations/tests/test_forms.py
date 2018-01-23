@@ -7,11 +7,11 @@ from carto.exceptions import CartoException
 from mock import patch, Mock
 
 from EquiTrack.factories import GatewayTypeFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase
 from locations import forms
 
 
-class TestCartoDBTableForm(FastTenantTestCase):
+class TestCartoDBTableForm(EToolsTenantTestCase):
     def setUp(self):
         super(TestCartoDBTableForm, self).setUp()
         self.mock_sql = Mock()

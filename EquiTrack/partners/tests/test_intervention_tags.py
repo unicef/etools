@@ -8,7 +8,7 @@ from EquiTrack.factories import (
     InterventionFactory,
     PartnerFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase as TenantTestCase
 
 from partners.templatetags import intervention_tags as tags
 

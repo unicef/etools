@@ -86,10 +86,29 @@ class URLAssertionMixin(object):
                     raise AssertionError(fail_msg)
 
 
-class FastTenantTestCase(TenantTestCase):
+# Not really a mixin - should this be in mixins.py?
+class EToolsTenantTestCase(TenantTestCase):
+    """
+    Faster version of TenantTestCase.  (There's also a FastTenantTestCase
+    provided by django-tenant-schemas.  This one is somewhat different, but
+    I haven't analyzed why/how.)
+    """
+
+    def _should_check_constraints(self, connection):
+        # We have some tests that fail the constraint checking added in Django 1.10
+        # after each test. Disable that for now.
+        return False
+
     @classmethod
     def _load_fixtures(cls):
-        '''Load fixtures for current connection (shared/public or tenant)'''
+        '''
+        Load fixtures for current connection (shared/public or tenant)
+
+        This works the same as the code in TestCase.setUpClass(), but is
+        broken out here so we can call it twice, once for the public schema
+        and once for the tenant schema.
+
+        '''
         if cls.fixtures:
             for db_name in cls._databases_names(include_mirrors=False):
                 try:
@@ -104,6 +123,9 @@ class FastTenantTestCase(TenantTestCase):
 
     @classmethod
     def setUpClass(cls):
+        # This replaces TestCase.setUpClass so that we can do some setup in
+        # different schemas.
+        # It also drops the check whether the database supports transactions.
         cls.sync_shared()
 
         TenantModel = get_tenant_model()
@@ -154,7 +176,7 @@ class FastTenantTestCase(TenantTestCase):
             self.fail('{} != {}'.format(', '.join(key_set), ', '.join(container_set)))
 
 
-class APITenantTestCase(FastTenantTestCase):
+class APITenantTestCase(EToolsTenantTestCase):
     """
     Base test case for testing APIs
     """

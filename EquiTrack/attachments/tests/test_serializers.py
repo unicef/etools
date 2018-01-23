@@ -7,10 +7,10 @@ from django.utils.translation import ugettext as _
 
 from attachments.serializers import Base64AttachmentSerializer
 from attachments.tests.factories import FileTypeFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase
 
 
-class TestAttachmentsModels(FastTenantTestCase):
+class TestAttachmentsModels(EToolsTenantTestCase):
     def setUp(self):
         self.file_type = FileTypeFactory()
         self.file_name = 'simple_file.txt'

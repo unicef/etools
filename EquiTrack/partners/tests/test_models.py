@@ -37,7 +37,7 @@ from EquiTrack.factories import (
     TravelActivityFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase as TenantTestCase
 from partners import models
 from partners.tests.factories import (
     WorkspaceFileTypeFactory,

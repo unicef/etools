@@ -33,16 +33,13 @@ from audit.tests.factories import (
     SpecialAuditFactory,
     SpotCheckFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase
 from firms.factories import UserFactory
 
 
-class AuditorStaffMemberTestCase(FastTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.firm = AuditPartnerFactory()
-
+class AuditorStaffMemberTestCase(EToolsTenantTestCase):
     def test_signal(self):
+        self.firm = AuditPartnerFactory()
         user = UserFactory()
         Auditor.invalidate_cache()
 
@@ -50,7 +47,7 @@ class AuditorStaffMemberTestCase(FastTenantTestCase):
 
         self.assertIn(Auditor.name, staff_member.user.groups.values_list('name', flat=True))
 
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
@@ -213,7 +210,7 @@ class TestStrUnicode(TestCase):
         self.assertIn('tv\xe5', unicode(instance))
 
 
-class TestPurchaseOrder(FastTenantTestCase):
+class TestPurchaseOrder(EToolsTenantTestCase):
     def test_natural_key(self):
         po = PurchaseOrder(order_number="123")
         self.assertEqual(po.natural_key(), ("123", ))
@@ -223,7 +220,7 @@ class TestPurchaseOrder(FastTenantTestCase):
         self.assertEqual(PurchaseOrder.objects.get_by_natural_key("123"), po)
 
 
-class TestPurchaseOrderItem(FastTenantTestCase):
+class TestPurchaseOrderItem(EToolsTenantTestCase):
     def test_natural_key(self):
         po = PurchaseOrderFactory(order_number="123")
         item = PurchaseOrderItem(number="321", purchase_order=po)
@@ -236,7 +233,7 @@ class TestPurchaseOrderItem(FastTenantTestCase):
         self.assertEqual(item_get, item)
 
 
-class TestEngagement(FastTenantTestCase):
+class TestEngagement(EToolsTenantTestCase):
     def test_displayed_status_partner_not_contacted(self):
         e = Engagement(status=Engagement.STATUSES.final)
         self.assertEqual(e.displayed_status, e.status)
@@ -298,7 +295,7 @@ class TestEngagement(FastTenantTestCase):
         self.assertIn(str(engagement.pk), url)
 
 
-class TestRiskCategory(FastTenantTestCase):
+class TestRiskCategory(EToolsTenantTestCase):
     def test_str_with_parent(self):
         parent = RiskCategoryFactory(header="Parent")
         r = RiskCategoryFactory(header="Header", parent=parent)

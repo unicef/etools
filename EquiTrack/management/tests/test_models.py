@@ -7,13 +7,13 @@ import sys
 from unittest import skipIf
 
 from EquiTrack.factories import PartnerFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase
 from management.models import FlaggedIssue
 from management.tests.factories import FlaggedIssueFactory
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicode(FastTenantTestCase):
+class TestStrUnicode(EToolsTenantTestCase):
     def test_flagged_issue(self):
         partner = PartnerFactory()
         issue = FlaggedIssueFactory(
@@ -33,7 +33,7 @@ class TestStrUnicode(FastTenantTestCase):
         self.assertEqual(unicode(issue), u"R\xe4dda Barnen")
 
 
-class FlaggedIssueTest(FastTenantTestCase):
+class FlaggedIssueTest(EToolsTenantTestCase):
 
     @classmethod
     def tearDownClass(cls):

@@ -6,11 +6,11 @@ from mock import patch
 from post_office.models import Email, EmailTemplate
 
 from EquiTrack.factories import NotificationFactory, UserFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import EToolsTenantTestCase
 from notification.models import Notification
 
 
-class TestEmailNotification(FastTenantTestCase):
+class TestEmailNotification(EToolsTenantTestCase):
 
     def setUp(self):
         self.tenant.country_short_code = 'LEBA'
@@ -46,7 +46,7 @@ class TestEmailNotification(FastTenantTestCase):
         self.assertEqual(Email.objects.count(), old_email_count + 1)
 
 
-class TestSendNotification(FastTenantTestCase):
+class TestSendNotification(EToolsTenantTestCase):
     """
     Test General Notification sending. We currently only have email set up, so
     this only tests that if a non-email type is created, we don't do anything
@@ -63,7 +63,7 @@ class TestSendNotification(FastTenantTestCase):
 
 
 @patch('notification.models.mail')
-class TestSendEmail(FastTenantTestCase):
+class TestSendEmail(EToolsTenantTestCase):
 
     def test_success(self, mock_mail):
         "On successful notification, sent_recipients should be populated."
