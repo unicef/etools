@@ -5,6 +5,7 @@ import datetime
 from unittest import skip, TestCase
 
 from django.contrib.auth.models import Group
+from django.core.cache import cache
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
 from django.utils import timezone
@@ -95,6 +96,9 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def setUp(self):
         setup_intervention_test_data(self)
+
+    def tearDown(self):
+        cache.delete("public-intervention-permissions")
 
     def run_request_list_ep(self, data={}, user=None, method='post'):
         response = self.forced_auth_req(
@@ -407,7 +411,7 @@ class TestInterventionsAPI(APITenantTestCase):
                               [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
-        EXPECTED_QUERIES = 11
+        EXPECTED_QUERIES = 10
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -440,7 +444,7 @@ class TestInterventionsAPI(APITenantTestCase):
         ts = TenantSwitchFactory(name="prp_mode_off", countries=[connection.tenant])
         self.assertTrue(tenant_switch_is_active(ts.name))
 
-        EXPECTED_QUERIES = 11
+        EXPECTED_QUERIES = 13
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -463,6 +467,7 @@ class TestInterventionsAPI(APITenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
 
+        EXPECTED_QUERIES = 14
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 

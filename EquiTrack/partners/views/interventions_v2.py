@@ -4,7 +4,7 @@ import logging
 import copy
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Max, Min, Sum
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -74,7 +74,36 @@ from reports.models import LowerResult, AppliedIndicator
 from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicatorSerializer
 
 
-class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
+class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
+    def get_queryset(self):
+        return Intervention.objects.prefetch_related(
+            'agreement__partner',
+            'planned_budget',
+            'offices',
+            'sections',
+            'result_links__cp_output',
+            'result_links__ll_results__applied_indicators__indicator',
+            'result_links__ll_results__applied_indicators__locations',
+            'result_links__ll_results__applied_indicators__locations__gateway',
+            # disabled flat_locations prefetch, as this has a large impact on
+            # performance, and with the tenants moving away from using
+            # flat_locations, let the performance hit happen only for those
+            # tenant still using flat_locations, which will hopefully be a
+            # list that is constantly being reduced
+            # over time.
+            # 'flat_locations',
+            'unicef_focal_points',
+        ).annotate(
+            Max("frs__end_date"),
+            Min("frs__start_date"),
+            Sum("frs__total_amt"),
+            Sum("frs__intervention_amt"),
+            Sum("frs__outstanding_amt"),
+            Sum("frs__actual_amt"),
+        )
+
+
+class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -152,7 +181,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
         )
 
     def get_queryset(self, format=None):
-        q = Intervention.objects.detail_qs().all()
+        q = super(InterventionListAPIView, self).get_queryset()
         query_params = self.request.query_params
 
         if query_params:
@@ -164,7 +193,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
                 except ValueError:
                     raise ValidationError("ID values must be integers")
                 else:
-                    return Intervention.objects.detail_qs().filter(id__in=ids)
+                    return q.filter(id__in=ids)
             if query_params.get("my_partnerships", "").lower() == "true":
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
@@ -200,6 +229,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
+
         return q
 
     def list(self, request):
@@ -216,7 +246,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
         return response
 
 
-class InterventionListDashView(ValidatorViewMixin, ListCreateAPIView):
+class InterventionListDashView(InterventionListBaseView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -226,12 +256,15 @@ class InterventionListDashView(ValidatorViewMixin, ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
 
     def get_queryset(self):
+        q = super(InterventionListDashView, self).get_queryset()
         # if Partnership Manager get all
         if self.request.user.groups.filter(name='Partnership Manager').exists():
-            return Intervention.objects.detail_qs().all()
+            return q.all()
 
-        return Intervention.objects.detail_qs().filter(unicef_focal_points__in=[self.request.user],
-                                                       status__in=[Intervention.ACTIVE])
+        return q.filter(
+            unicef_focal_points__in=[self.request.user],
+            status__in=[Intervention.ACTIVE]
+        )
 
 
 class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
