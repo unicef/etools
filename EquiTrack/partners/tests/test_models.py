@@ -362,6 +362,9 @@ class TestPartnerOrganizationModel(TenantTestCase):
             year=year - 1,
             programmatic=2
         )
+        PartnerOrganization.planned_visits(
+            self.partner_organization
+        )
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
 
     def test_planned_visits_non_gov_no_pv_intervention(self):
@@ -388,37 +391,6 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
         PartnerOrganization.planned_visits(
             self.partner_organization
-        )
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            3
-        )
-
-    def test_planned_visits_non_gov_with_pv_intervention(self):
-        self.partner_organization.partner_type = PartnerType.UN_AGENCY
-        self.partner_organization.save()
-        intervention1 = InterventionFactory(
-            agreement=self.pca_signed1,
-            status=Intervention.ACTIVE
-        )
-        intervention2 = InterventionFactory(
-            agreement=self.pca_signed1,
-            status=Intervention.ACTIVE
-        )
-        year = datetime.date.today().year
-        pv = InterventionPlannedVisitsFactory(
-            intervention=intervention1,
-            year=year,
-            programmatic=3
-        )
-        InterventionPlannedVisitsFactory(
-            intervention=intervention2,
-            year=year - 1,
-            programmatic=2
-        )
-        PartnerOrganization.planned_visits(
-            self.partner_organization,
-            pv
         )
         self.assertEqual(
             self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
