@@ -473,6 +473,16 @@ class TestInterventionsAPI(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 4)
+
+        data["title"] = "My new test intervention"
+        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+
+        with self.assertNumQueries(EXPECTED_QUERIES):
+            status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response), 5)
         ts.delete()
 
 
