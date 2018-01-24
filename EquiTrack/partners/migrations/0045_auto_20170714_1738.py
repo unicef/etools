@@ -191,7 +191,6 @@ def migrate_cps(apps, schema_editor):
     InterventionAttachment = apps.get_model('partners', 'InterventionAttachment')
     Workspace = apps.get_model('users', 'Country')
     tenant = Workspace.objects.get(schema_name=connection.schema_name)
-    print("schema = %s" % connection.schema_name)
     country_ft_map = MAPPER.get(tenant.name, None)
     skipped = 0
     migrated = 0
