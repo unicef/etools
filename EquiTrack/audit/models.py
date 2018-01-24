@@ -533,10 +533,6 @@ class Audit(Engagement):
         verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, null=True, blank=True,
     )
 
-    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
-    audit_observation = models.TextField(verbose_name=_('Audit Observation'), blank=True)
-    ip_response = models.TextField(verbose_name=_('IP response'), blank=True)
-
     class Meta:
         verbose_name = _('Audit')
         verbose_name_plural = _('Audits')
@@ -609,6 +605,26 @@ class FinancialFinding(models.Model):
     description = models.TextField(verbose_name=_('Description'))
     recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
     ip_comments = models.TextField(verbose_name=_('IP Comments'), blank=True)
+
+    class Meta:
+        ordering = ('id', )
+
+    def __str__(self):
+        return '{}: {}'.format(self.audit.unique_id, self.get_title_display())
+
+
+class KeyInternalControl(models.Model):
+    audit = models.ForeignKey(Audit, verbose_name=_('Audit'), related_name='key_internal_controls')
+
+    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
+    audit_observation = models.TextField(verbose_name=_('Audit Observation'), blank=True)
+    ip_response = models.TextField(verbose_name=_('IP response'), blank=True)
+
+    class Meta:
+        ordering = ('id', )
+
+    def __str__(self):
+        return '{}: {}'.format(self.audit.unique_id, self.audit_observation)
 
 
 @python_2_unicode_compatible

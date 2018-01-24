@@ -42,30 +42,27 @@
     </div>
   </div>
 
+
   <div class="content-section">
     <div class="content-section__header">
-      <div class="content-section__header__title">Assessment of Key Internal Controls</div>
+      <div class="content-section__header__title">{{ serializer.fields.key_internal_controls.label }}</div>
     </div>
-    <table class="content-section__wrapper">
-      <tr>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.recommendation.label }}</div>
-          <div class="input-container__value">{{ engagement.recommendation|default:"-" }}</div>
-        </td>
-      </tr>
-      <tr>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.audit_observation.label }}</div>
-          <div class="input-container__value">{{ engagement.audit_observation|default:"-" }}</div>
-        </td>
-      </tr>
-      <tr>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.ip_response.label }}</div>
-          <div class="input-container__value">{{ engagement.ip_response|default:"-" }}</div>
-        </td>
-      </tr>
-    </table>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td>{{ serializer.fields.key_internal_controls.recommendation.label }}</td>
+          <td>{{ serializer.fields.key_internal_controls.audit_observation.label }}</td>
+          <td>{{ serializer.fields.key_internal_controls.ip_response.label }}</td>
+        </tr>
+        {% for control in engagement.key_internal_controls %}
+          <tr>
+            <td>{{ control.recommendation|default:"-" }}</td>
+            <td>{{ control.audit_observation|default:"-" }}</td>
+            <td>{{ control.ip_response|default:"-" }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
   </div>
 
   <pdf:nextpage></pdf:nextpage>

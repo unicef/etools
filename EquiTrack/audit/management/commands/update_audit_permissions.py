@@ -38,6 +38,7 @@ class Command(BaseCommand):
         'profile.*',
         'user.*',
         'specificprocedure.*',
+        'keyinternalcontrol.*'
     ]
 
     engagement_overview_block = [
@@ -152,6 +153,7 @@ class Command(BaseCommand):
             'finding.*',
             'riskblueprint.*',
             'riskcategory.*',
+            'keyinternalcontrol.*'
         ])
         self.revoke_permissions(self.partner_contacted, self.auditor, 'edit',
                                 self.engagement_overview_block + self.partner_block)

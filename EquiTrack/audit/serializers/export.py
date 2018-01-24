@@ -12,7 +12,7 @@ from audit.models import (
     Audit, Engagement, EngagementActionPoint, MicroAssessment, SpotCheck, Finding, SpecificProcedure,
     SpecialAuditRecommendation)
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
-from audit.serializers.engagement import DetailedFindingInfoSerializer
+from audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
 from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from partners.models import PartnerOrganization
 from utils.common.urlresolvers import site_url
@@ -169,12 +169,14 @@ class AuditPDFSerializer(EngagementPDFSerializer):
     key_internal_weakness = KeyInternalWeaknessSerializer(
         code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses')
     )
+    key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
+                                                         label=_('Assessment of Key Internal Controls'))
 
     class Meta(EngagementPDFSerializer.Meta):
         model = Audit
         fields = EngagementPDFSerializer.Meta.fields + [
             'audited_expenditure', 'financial_findings', 'financial_finding_set', 'percent_of_audited_expenditure',
-            'audit_opinion', 'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness',
+            'audit_opinion',  'key_internal_weakness', 'key_internal_controls',
 
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',

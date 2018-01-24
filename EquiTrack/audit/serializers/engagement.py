@@ -11,7 +11,7 @@ from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
 from audit.models import (
     Audit, DetailedFindingInfo, Engagement, EngagementActionPoint, FinancialFinding, Finding, MicroAssessment,
-    SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck,)
+    SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, KeyInternalControl)
 from audit.serializers.auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer, PurchaseOrderItemSerializer
 from audit.serializers.mixins import (
     AuditPermissionsBasedRootSerializerMixin, AuditPermissionsBasedSerializerMixin, EngagementDatesValidation,
@@ -356,11 +356,21 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
         ]
 
 
+class KeyInternalControlSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = KeyInternalControl
+        fields = [
+            'id', 'recommendation', 'audit_observation', 'ip_response',
+        ]
+
+
 class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, EngagementSerializer):
     financial_finding_set = FinancialFindingSerializer(many=True, required=False, label=_('Financial Findings'))
     key_internal_weakness = KeyInternalWeaknessSerializer(
         code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses')
     )
+    key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
+                                                         label=_('Assessment of Key Internal Controls'))
 
     number_of_financial_findings = serializers.SerializerMethodField(label=_('No. of Financial Findings'))
 
@@ -373,7 +383,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
         fields = EngagementSerializer.Meta.fields + [
             'audited_expenditure', 'financial_findings', 'financial_finding_set', 'percent_of_audited_expenditure',
             'audit_opinion', 'number_of_financial_findings',
-            'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness',
+            'key_internal_weakness', 'key_internal_controls',
 
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
@@ -383,9 +393,6 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
-            'recommendation': {'required': True},
-            'audit_observation': {'required': True},
-            'ip_response': {'required': True},
         })
 
     def get_number_of_financial_findings(self, obj):
