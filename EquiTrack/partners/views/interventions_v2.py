@@ -76,7 +76,7 @@ from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicat
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
     def get_queryset(self):
-        return Intervention.objects.prefetch_related(
+        qs = Intervention.objects.prefetch_related(
             'agreement__partner',
             'planned_budget',
             'offices',
@@ -85,15 +85,17 @@ class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
             'result_links__ll_results__applied_indicators__indicator',
             'result_links__ll_results__applied_indicators__locations',
             'result_links__ll_results__applied_indicators__locations__gateway',
-            # disabled flat_locations prefetch, as this has a large impact on
-            # performance, and with the tenants moving away from using
-            # flat_locations, let the performance hit happen only for those
-            # tenant still using flat_locations, which will hopefully be a
-            # list that is constantly being reduced
-            # over time.
-            # 'flat_locations',
             'unicef_focal_points',
-        ).annotate(
+        )
+
+        if tenant_switch_is_active("prp_mode_off"):
+            qs = qs.prefetch_related(
+                # only prefetch flat_locations when needed, as this has an
+                # impact on performance. Only needed when prp not enabled
+                'flat_locations',
+            )
+
+        qs = qs.annotate(
             Max("frs__end_date"),
             Min("frs__start_date"),
             Sum("frs__total_amt"),
@@ -101,6 +103,8 @@ class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
             Sum("frs__outstanding_amt"),
             Sum("frs__actual_amt"),
         )
+
+        return qs
 
 
 class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
