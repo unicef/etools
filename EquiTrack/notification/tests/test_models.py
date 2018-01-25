@@ -4,11 +4,11 @@ import sys
 from unittest import skipIf
 
 from EquiTrack.factories import AgreementFactory, NotificationFactory, PartnerFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicode(FastTenantTestCase):
+class TestStrUnicode(TenantTestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
     def test_notification(self):
         agreement = AgreementFactory(partner=PartnerFactory(name=b'xyz'))
