@@ -9,7 +9,7 @@ from freezegun import freeze_time
 from rest_framework import status
 
 from EquiTrack.factories import LocationFactory, ResultFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.mixins import TenantTestCase, URLAssertionMixin
 from publics.models import DSARegion
 from publics.tests.factories import WBSFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
@@ -20,7 +20,7 @@ from .factories import TravelFactory
 log = logging.getLogger('__name__')
 
 
-class TravelList(URLAssertionMixin, APITenantTestCase):
+class TravelList(URLAssertionMixin, TenantTestCase):
     def setUp(self):
         super(TravelList, self).setUp()
         self.traveler = UserFactory()

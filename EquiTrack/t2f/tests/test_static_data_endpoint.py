@@ -5,10 +5,10 @@ import json
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 
 
-class StaticDataEndpointTest(APITenantTestCase):
+class StaticDataEndpointTest(TenantTestCase):
 
     def setUp(self):
         super(StaticDataEndpointTest, self).setUp()

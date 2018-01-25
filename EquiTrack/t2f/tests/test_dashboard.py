@@ -5,7 +5,7 @@ import json
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from partners.models import PartnerOrganization
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
@@ -13,7 +13,7 @@ from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, Trave
 from .factories import CurrencyFactory, ExpenseTypeFactory, TravelActivityFactory, TravelFactory
 
 
-class TravelActivityList(APITenantTestCase):
+class TravelActivityList(TenantTestCase):
 
     def setUp(self):
         super(TravelActivityList, self).setUp()

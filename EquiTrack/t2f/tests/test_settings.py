@@ -6,10 +6,10 @@ from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 
 
-class SettingsView(APITenantTestCase):
+class SettingsView(TenantTestCase):
     def setUp(self):
         super(SettingsView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

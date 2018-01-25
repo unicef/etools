@@ -6,10 +6,10 @@ from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 
 
-class TestReferenceNumber(APITenantTestCase):
+class TestReferenceNumber(TenantTestCase):
     def setUp(self):
         super(TestReferenceNumber, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

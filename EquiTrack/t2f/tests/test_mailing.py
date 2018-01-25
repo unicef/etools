@@ -4,7 +4,7 @@ from django.core import mail
 from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.tests.factories import BusinessAreaFactory
 from t2f.models import Invoice
 from t2f.serializers.mailing import TravelMailSerializer
@@ -13,7 +13,7 @@ from t2f.tests.factories import ItineraryItemFactory
 from .factories import TravelFactory
 
 
-class MailingTest(APITenantTestCase):
+class MailingTest(TenantTestCase):
     def setUp(self):
         super(MailingTest, self).setUp()
         self.traveler = UserFactory(first_name='Jane',

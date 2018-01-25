@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.mixins import TenantTestCase, URLAssertionMixin
 from publics.models import TravelExpenseType
 from publics.tests.factories import DSARateFactory, DSARegionFactory
 from t2f.helpers.invoice_maker import InvoiceMaker
@@ -21,7 +21,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 
-class VisionXML(URLAssertionMixin, APITenantTestCase):
+class VisionXML(URLAssertionMixin, TenantTestCase):
     def setUp(self):
         super(VisionXML, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

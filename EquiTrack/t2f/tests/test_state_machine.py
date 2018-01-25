@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
 from t2f.models import Invoice, ModeOfTravel, Travel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
@@ -18,7 +18,7 @@ from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
 from .factories import TravelFactory
 
 
-class StateMachineTest(APITenantTestCase):
+class StateMachineTest(TenantTestCase):
     def setUp(self):
         super(StateMachineTest, self).setUp()
         self.traveler = UserFactory(is_staff=True)
