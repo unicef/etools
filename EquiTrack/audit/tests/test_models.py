@@ -33,11 +33,11 @@ from audit.tests.factories import (
     SpecialAuditFactory,
     SpotCheckFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from firms.factories import UserFactory
 
 
-class AuditorStaffMemberTestCase(FastTenantTestCase):
+class AuditorStaffMemberTestCase(TenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.firm = AuditPartnerFactory()
@@ -213,7 +213,7 @@ class TestStrUnicode(TestCase):
         self.assertIn('tv\xe5', unicode(instance))
 
 
-class TestPurchaseOrder(FastTenantTestCase):
+class TestPurchaseOrder(TenantTestCase):
     def test_natural_key(self):
         po = PurchaseOrder(order_number="123")
         self.assertEqual(po.natural_key(), ("123", ))
@@ -223,7 +223,7 @@ class TestPurchaseOrder(FastTenantTestCase):
         self.assertEqual(PurchaseOrder.objects.get_by_natural_key("123"), po)
 
 
-class TestPurchaseOrderItem(FastTenantTestCase):
+class TestPurchaseOrderItem(TenantTestCase):
     def test_natural_key(self):
         po = PurchaseOrderFactory(order_number="123")
         item = PurchaseOrderItem(number="321", purchase_order=po)
@@ -236,7 +236,7 @@ class TestPurchaseOrderItem(FastTenantTestCase):
         self.assertEqual(item_get, item)
 
 
-class TestEngagement(FastTenantTestCase):
+class TestEngagement(TenantTestCase):
     def test_displayed_status_partner_not_contacted(self):
         e = Engagement(status=Engagement.STATUSES.final)
         self.assertEqual(e.displayed_status, e.status)
@@ -298,7 +298,7 @@ class TestEngagement(FastTenantTestCase):
         self.assertIn(str(engagement.pk), url)
 
 
-class TestRiskCategory(FastTenantTestCase):
+class TestRiskCategory(TenantTestCase):
     def test_str_with_parent(self):
         parent = RiskCategoryFactory(header="Parent")
         r = RiskCategoryFactory(header="Header", parent=parent)
