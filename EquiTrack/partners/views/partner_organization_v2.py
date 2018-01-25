@@ -77,12 +77,12 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
         Use restriceted field set for listing
         """
         query_params = self.request.query_params
-        if "format" in query_params.keys():
+        if "format" in query_params:
             if query_params.get("format") == 'csv':
                 return PartnerOrganizationExportSerializer
             if query_params.get("format") == 'csv_flat':
                 return PartnerOrganizationExportFlatSerializer
-        if "verbosity" in query_params.keys():
+        if "verbosity" in query_params:
             if query_params.get("verbosity") == 'minimal':
                 return MinimalPartnerOrganizationListSerializer
         return super(PartnerOrganizationListAPIView, self).get_serializer_class()
@@ -97,7 +97,7 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
         if query_params:
             queries = []
 
-            if "values" in query_params.keys():
+            if "values" in query_params:
                 # Used for ghost data - filter in all(), and return straight away.
                 try:
                     ids = [int(x) for x in query_params.get("values").split(",")]
@@ -105,11 +105,11 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
                     raise ValidationError("ID values must be integers")
                 else:
                     return PartnerOrganization.objects.filter(id__in=ids)
-            if "partner_type" in query_params.keys():
+            if "partner_type" in query_params:
                 queries.append(Q(partner_type=query_params.get("partner_type")))
-            if "cso_type" in query_params.keys():
+            if "cso_type" in query_params:
                 queries.append(Q(cso_type=query_params.get("cso_type")))
-            if "hidden" in query_params.keys():
+            if "hidden" in query_params:
                 hidden = None
                 if query_params.get("hidden").lower() == "true":
                     hidden = True
@@ -120,7 +120,7 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
                     hidden = False
                 if hidden is not None:
                     queries.append(Q(hidden=hidden))
-            if "search" in query_params.keys():
+            if "search" in query_params:
                 queries.append(
                     Q(name__icontains=query_params.get("search")) |
                     Q(vendor_number__icontains=query_params.get("search")) |
@@ -138,7 +138,7 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
         """
         query_params = self.request.query_params
         response = super(PartnerOrganizationListAPIView, self).list(request)
-        if "format" in query_params.keys():
+        if "format" in query_params:
             if query_params.get("format") in ['csv', 'csv_flat']:
                 response['Content-Disposition'] = "attachment;filename=partner.csv"
 
@@ -200,7 +200,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         """
         query_params = self.request.query_params
         response = super(PartnerOrganizationHactAPIView, self).list(request)
-        if "format" in query_params.keys():
+        if "format" in query_params:
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = "attachment;filename=hact_dashboard.csv"
         return response
@@ -225,7 +225,7 @@ class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):
         Use restriceted field set for listing
         """
         query_params = self.request.query_params
-        if "format" in query_params.keys():
+        if "format" in query_params:
             if query_params.get("format") == 'csv':
                 return PartnerStaffMemberExportSerializer
             if query_params.get("format") == 'csv_flat':
@@ -252,7 +252,7 @@ class PartnerOrganizationAssessmentListView(ExportModelMixin, ListAPIView):
         Use restriceted field set for listing
         """
         query_params = self.request.query_params
-        if "format" in query_params.keys():
+        if "format" in query_params:
             if query_params.get("format") == 'csv':
                 return AssessmentExportSerializer
             if query_params.get("format") == 'csv_flat':
@@ -352,11 +352,11 @@ class PartnerOrganizationAddView(CreateAPIView):
             partner_org = {
                 k: self.get_value_for_field(
                     k,
-                    partner_resp[v]) if v in partner_resp.keys() else None for k,
+                    partner_resp[v]) if v in list(partner_resp.keys()) else None for k,
                 v in self.MAPPING.items()}
             partner_org['vision_synced'] = True
-            partner_org['deleted_flag'] = True if self.MAPPING['deleted_flag'] in partner_resp.keys() else False
-            partner_org['blocked'] = True if self.MAPPING['blocked'] in partner_resp.keys() else False
+            partner_org['deleted_flag'] = True if self.MAPPING['deleted_flag'] in list(partner_resp.keys()) else False
+            partner_org['blocked'] = True if self.MAPPING['blocked'] in list(partner_resp.keys()) else False
             po_serializer = self.get_serializer(data=partner_org)
             po_serializer.is_valid(raise_exception=True)
             po_serializer.save()
@@ -378,7 +378,7 @@ class PartnerOrganizationDeleteView(DestroyAPIView):
                                   "against this partner. The Partner record cannot be deleted")
         elif TravelActivity.objects.filter(partner=partner).count() > 0:
             raise ValidationError("This partner has trips associated to it")
-        elif partner.total_ct_cp > 0:
+        elif partner.total_ct_cp is not None and partner.total_ct_cp > 0:
             raise ValidationError("This partner has cash transactions associated to it")
         else:
             partner.delete()

@@ -77,7 +77,7 @@ class TestTransitionToClosed(FastTenantTestCase):
         }
 
     def assertFundamentals(self, data):
-        assert data.keys() == self.expected.keys()
+        assert sorted(data.keys()) == sorted(self.expected.keys())
         for k, v in data.items():
             self.assertEqual(v, self.expected[k])
 

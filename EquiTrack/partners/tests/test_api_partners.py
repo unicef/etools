@@ -49,10 +49,10 @@ class TestPartnerOrganizationHactAPIView(APITenantTestCase):
             user=self.unicef_staff
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
-        self.assertIn('id', response_json[0].keys())
+        self.assertIn('id', list(response_json[0].keys()))
         self.assertEqual(response_json[0]['id'], self.partner.pk)
 
 
