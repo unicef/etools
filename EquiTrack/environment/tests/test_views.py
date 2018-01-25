@@ -12,10 +12,10 @@ from rest_framework import status
 
 from environment.tests.factories import TenantFlagFactory, FlagFactory, TenantSwitchFactory
 from EquiTrack.factories import UserFactory, CountryFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 
 
-class TestActiveFlagAPIView(APITenantTestCase):
+class TestActiveFlagAPIView(TenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
