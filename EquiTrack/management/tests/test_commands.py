@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from django.core.management import call_command
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from management.issues import checks
 from management.models import (
     FlaggedIssue,

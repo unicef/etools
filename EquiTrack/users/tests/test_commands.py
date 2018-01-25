@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from EquiTrack.factories import CurrencyFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from users.models import Country
 
 

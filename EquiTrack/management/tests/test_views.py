@@ -7,7 +7,8 @@ from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
 from EquiTrack.factories import CountryFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, EToolsTenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 
 
 class InvalidateCacheTest(APITenantTestCase):

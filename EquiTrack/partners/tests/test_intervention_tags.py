@@ -8,12 +8,12 @@ from EquiTrack.factories import (
     InterventionFactory,
     PartnerFactory,
 )
-from EquiTrack.tests.mixins import EToolsTenantTestCase as TenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 
 from partners.templatetags import intervention_tags as tags
 
 
-class TestGetInterventions(TenantTestCase):
+class TestGetInterventions(EToolsTenantTestCase):
     def test_get(self):
         partner = PartnerFactory()
         agreement = AgreementFactory(partner=partner)

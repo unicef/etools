@@ -14,7 +14,7 @@ from EquiTrack.factories import (
     FundsReservationItemFactory,
     GrantFactory,
 )
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from funds.models import FundsReservationItem, FundsCommitmentItem
 
 

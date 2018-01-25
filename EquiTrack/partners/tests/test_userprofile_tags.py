@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from mock import Mock
 
 from EquiTrack.factories import CountryFactory, ProfileFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.templatetags import userprofile_tags as tags
 
 

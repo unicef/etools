@@ -8,7 +8,7 @@ from mock import Mock
 from unittest import skip
 
 from EquiTrack.factories import ProfileFactory, UserFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from users.admin import (
     CountryAdmin,
     ProfileAdmin,

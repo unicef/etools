@@ -13,7 +13,7 @@ import factory
 from factory import fuzzy
 from snapshot import models as snapshot_models
 
-from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
+from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
 from funds import models as funds_models
 from locations import models as location_models
 from notification import models as notification_models

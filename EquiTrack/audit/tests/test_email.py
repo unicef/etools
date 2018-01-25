@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from post_office.models import EmailTemplate
 
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 
 
 class TestEmail(EToolsTenantTestCase):

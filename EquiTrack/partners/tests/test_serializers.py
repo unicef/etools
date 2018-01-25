@@ -22,7 +22,7 @@ from EquiTrack.factories import (
     PartnerStaffFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 

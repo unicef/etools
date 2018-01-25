@@ -12,7 +12,7 @@ import mock
 import partners.tasks
 from EquiTrack.factories import (
     AgreementFactory, CountryFactory, FundsReservationHeaderFactory, InterventionFactory, UserFactory,)
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.models import Agreement, Intervention
 from users.models import User
 

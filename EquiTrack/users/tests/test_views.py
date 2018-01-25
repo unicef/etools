@@ -9,7 +9,8 @@ from tenant_schemas.test.client import TenantClient
 from unittest import skip
 
 from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, SectionFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, EToolsTenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from publics.tests.factories import BusinessAreaFactory
 from users.models import Group, User, UserProfile
 from users.serializers_v3 import AP_ALLOWED_COUNTRIES

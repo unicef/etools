@@ -2,7 +2,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings
 
 from EquiTrack.factories import PartnerFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from environment.models import IssueCheckConfig
 from management.issues import checks
 from management.issues.exceptions import IssueFoundException, IssueCheckNotFoundException

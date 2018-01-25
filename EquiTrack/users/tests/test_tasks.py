@@ -18,7 +18,7 @@ from EquiTrack.factories import (
     ProfileFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import SCHEMA_NAME, EToolsTenantTestCase
+from EquiTrack.tests.cases import SCHEMA_NAME, EToolsTenantTestCase
 from users import tasks
 from users.models import Section, User, UserProfile
 from vision.vision_data_synchronizer import VisionException, VISION_NO_DATA_MESSAGE

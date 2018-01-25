@@ -4,7 +4,7 @@ import base64
 
 from rest_framework import serializers
 
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 
 from attachments.serializers_fields import Base64FileField
 

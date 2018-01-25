@@ -17,7 +17,7 @@ from EquiTrack.factories import (
     PartnerStaffFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from EquiTrack.validation_mixins import (
     BasicValidationError,
     StateValidError,

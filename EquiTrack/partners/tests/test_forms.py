@@ -9,7 +9,7 @@ from EquiTrack.factories import (
     ProfileFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners import forms
 from partners.models import PartnerType
 

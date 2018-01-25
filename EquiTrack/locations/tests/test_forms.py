@@ -7,7 +7,7 @@ from carto.exceptions import CartoException
 from mock import patch, Mock
 
 from EquiTrack.factories import GatewayTypeFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from locations import forms
 
 

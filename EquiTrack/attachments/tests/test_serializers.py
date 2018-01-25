@@ -7,7 +7,7 @@ from django.utils.translation import ugettext as _
 
 from attachments.serializers import Base64AttachmentSerializer
 from attachments.tests.factories import FileTypeFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 
 
 class TestAttachmentsModels(EToolsTenantTestCase):

@@ -33,7 +33,7 @@ from audit.tests.factories import (
     SpecialAuditFactory,
     SpotCheckFactory,
 )
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from firms.factories import UserFactory
 
 

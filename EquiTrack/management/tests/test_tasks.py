@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from management import tasks
 from management.issues import checks
 from management.models import (

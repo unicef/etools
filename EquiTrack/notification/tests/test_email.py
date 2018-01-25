@@ -6,7 +6,7 @@ from mock import patch
 from post_office.models import Email, EmailTemplate
 
 from EquiTrack.factories import NotificationFactory, UserFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from notification.models import Notification
 
 

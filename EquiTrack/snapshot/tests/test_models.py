@@ -8,12 +8,12 @@ from EquiTrack.factories import (
     InterventionFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import EToolsTenantTestCase as TenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from snapshot.models import Activity
 from partners.models import WorkspaceFileType
 
 
-class TestActivity(TenantTestCase):
+class TestActivity(EToolsTenantTestCase):
     def test_str(self):
         user = UserFactory()
         intervention = InterventionFactory()

@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from django.contrib.admin.sites import AdminSite
 
-from EquiTrack.tests.mixins import EToolsTenantTestCase as TenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from EquiTrack.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
@@ -35,7 +35,7 @@ class MockRequest:
     pass
 
 
-class TestAdminCase(TenantTestCase):
+class TestAdminCase(EToolsTenantTestCase):
     def setUp(self):
         self.site = AdminSite()
         self.user = UserFactory()

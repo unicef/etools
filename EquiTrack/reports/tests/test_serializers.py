@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from EquiTrack.factories import DisaggregationFactory, DisaggregationValueFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from reports.serializers.v2 import DisaggregationSerializer
 
 

@@ -11,7 +11,7 @@ from django.test import Client
 from rest_framework import status
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 
 
 class TestCheckView(EToolsTenantTestCase):

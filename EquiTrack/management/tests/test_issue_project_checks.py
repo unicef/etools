@@ -15,7 +15,7 @@ from EquiTrack.factories import (
     ResultFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from management.issues import checks
 from management.models import FlaggedIssue
 from management.tests.factories import InterventionAmendmentFactory

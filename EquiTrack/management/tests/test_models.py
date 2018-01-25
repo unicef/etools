@@ -7,7 +7,7 @@ import sys
 from unittest import skipIf
 
 from EquiTrack.factories import PartnerFactory
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from management.models import FlaggedIssue
 from management.tests.factories import FlaggedIssueFactory
 

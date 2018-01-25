@@ -129,8 +129,9 @@ class UserMapper(object):
                 return
 
         # TODO: MODIFY THIS TO USER THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
-        user, created = User.objects.get_or_create(email=ad_user['internetaddress'],
-                                                   username=ad_user['internetaddress'][:30])
+        user, created = User.objects.get_or_create(
+            email=ad_user['internetaddress'],
+            username=ad_user['internetaddress'][:User._meta.get_field('username').max_length])
         if created:
             user.set_unusable_password()
 

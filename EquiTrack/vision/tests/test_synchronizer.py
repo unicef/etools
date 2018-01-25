@@ -6,7 +6,7 @@ from django.utils.timezone import now as django_now
 
 import mock
 
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from users.models import Country
 from vision.exceptions import VisionException
 from vision.models import VisionSyncLog

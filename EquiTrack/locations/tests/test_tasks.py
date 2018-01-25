@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from carto.exceptions import CartoException
 from mock import patch, Mock
 
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from EquiTrack.factories import CartoDBTableFactory, LocationFactory
 from locations import tasks
 from locations.models import CartoDBTable, Location

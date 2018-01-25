@@ -6,8 +6,7 @@ from __future__ import unicode_literals
 import sys
 from unittest import skipIf
 
-
-from EquiTrack.tests.mixins import EToolsTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from t2f.tests.factories import (
     InvoiceFactory,
     ItineraryItemFactory,
