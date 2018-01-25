@@ -7,10 +7,10 @@ from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
 from EquiTrack.factories import CountryFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 
 
-class InvalidateCacheTest(APITenantTestCase):
+class InvalidateCacheTest(TenantTestCase):
 
     def setUp(self):
         self.staff_user = UserFactory(is_staff=True)
@@ -48,7 +48,7 @@ class InvalidateCacheTest(APITenantTestCase):
         mock_cache.delete.assert_called_with(cache_key_to_delete)
 
 
-class LoadResultStructureTest(APITenantTestCase):
+class LoadResultStructureTest(TenantTestCase):
 
     def setUp(self):
         self.staff_user = UserFactory(is_staff=True)
@@ -110,7 +110,7 @@ class LoadResultStructureTest(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class TestActiveUserSection(APITenantTestCase):
+class TestActiveUserSection(TenantTestCase):
     def setUp(self):
         super(TestActiveUserSection, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -128,7 +128,7 @@ class TestActiveUserSection(APITenantTestCase):
         }])
 
 
-class TestAgreementsStatisticsView(APITenantTestCase):
+class TestAgreementsStatisticsView(TenantTestCase):
     def setUp(self):
         super(TestAgreementsStatisticsView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -146,7 +146,7 @@ class TestAgreementsStatisticsView(APITenantTestCase):
         }])
 
 
-class TestPortalDashView(FastTenantTestCase):
+class TestPortalDashView(TenantTestCase):
     def test_get(self):
         self.client = TenantClient(self.tenant)
         response = self.client.get(reverse("management:dashboard"))
