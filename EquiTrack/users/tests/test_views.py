@@ -9,13 +9,13 @@ from tenant_schemas.test.client import TenantClient
 from unittest import skip
 
 from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, SectionFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.tests.factories import BusinessAreaFactory
 from users.models import Group, User, UserProfile
 from users.serializers_v3 import AP_ALLOWED_COUNTRIES
 
 
-class TestUserAuthAPIView(APITenantTestCase):
+class TestUserAuthAPIView(TenantTestCase):
     def test_get(self):
         self.user = UserFactory()
         response = self.forced_auth_req(
@@ -27,7 +27,7 @@ class TestUserAuthAPIView(APITenantTestCase):
         self.assertEqual(response.data["id"], self.user.pk)
 
 
-class TestChangeUserCountry(APITenantTestCase):
+class TestChangeUserCountry(TenantTestCase):
     def setUp(self):
         super(TestChangeUserCountry, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -65,7 +65,7 @@ class TestChangeUserCountry(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TestSectionViews(APITenantTestCase):
+class TestSectionViews(TenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
 
@@ -82,7 +82,7 @@ class TestSectionViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class TestOfficeViews(APITenantTestCase):
+class TestOfficeViews(TenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
 
@@ -99,7 +99,7 @@ class TestOfficeViews(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class TestUserViews(APITenantTestCase):
+class TestUserViews(TenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
@@ -255,7 +255,7 @@ class TestUserViews(APITenantTestCase):
         self.assertEqual(response_json['t2f']['business_area'], None)
 
 
-class TestUserViewsV3(APITenantTestCase):
+class TestUserViewsV3(TenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
@@ -342,7 +342,7 @@ class TestUserViewsV3(APITenantTestCase):
         self.assertEqual(len(response_json), 2)
 
 
-class TestCountryView(APITenantTestCase):
+class TestCountryView(TenantTestCase):
     def test_get(self):
         user = UserFactory(is_staff=True)
         response = self.forced_auth_req(
@@ -354,7 +354,7 @@ class TestCountryView(APITenantTestCase):
         self.assertEqual(response.data[0]["name"], user.profile.country.name)
 
 
-class TestUsersDetailAPIView(APITenantTestCase):
+class TestUsersDetailAPIView(TenantTestCase):
     def setUp(self):
         super(TestUsersDetailAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -389,7 +389,7 @@ class TestUsersDetailAPIView(APITenantTestCase):
         self.assertEqual(response.data, {})
 
 
-class TestProfileEdit(FastTenantTestCase):
+class TestProfileEdit(TenantTestCase):
     def setUp(self):
         super(TestProfileEdit, self).setUp()
         self.client = TenantClient(self.tenant)
@@ -434,7 +434,7 @@ class TestProfileEdit(FastTenantTestCase):
         self.assertEqual(profile.phone_number, "123-546-7890")
 
 
-class TestGroupViewSet(APITenantTestCase):
+class TestGroupViewSet(TenantTestCase):
     def setUp(self):
         super(TestGroupViewSet, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -484,7 +484,7 @@ class TestGroupViewSet(APITenantTestCase):
         self.assertIn(permission, group.permissions.all())
 
 
-class TestUserViewSet(APITenantTestCase):
+class TestUserViewSet(TenantTestCase):
     def setUp(self):
         super(TestUserViewSet, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
