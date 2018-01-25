@@ -6,12 +6,12 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from EquiTrack.factories import PartnerFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from hact.tests.factories import HactHistoryFactory
 from partners.models import PartnerOrganization, PartnerType
 
 
-class TestHactHistoryAPIView(APITenantTestCase):
+class TestHactHistoryAPIView(TenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_user = UserFactory(is_staff=True)
