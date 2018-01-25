@@ -6,10 +6,12 @@ from django.utils import timezone
 from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app, send_to_slack
+from partners.models import PartnerOrganization
 from users.models import Country
 from vision.adapters.funding import FundCommitmentSynchronizer, FundReservationsSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
+from vision.adapters.purchase_order import POSynchronizer
 from vision.exceptions import VisionException
 
 PUBLIC_SYNC_HANDLERS = []
@@ -27,14 +29,15 @@ SYNC_HANDLERS = [
 logger = get_task_logger(__name__)
 
 
+@app.task
 def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
     """
     Do the vision sync for all countries that have vision_sync_enabled=True,
     or just the named country.  Defaults to SYNC_HANDLERS but a
     different iterable of handlers can be passed in.
     """
-    # Only invoked from management command and tests, not scheduled, as far as I can see,
-    # so it's not really a task as far as Celery is concerned.
+    # Not invoked as a task from code in this repo, but it is scheduled
+    # by other means, so it's really a Celery task.
 
     global_synchronizers = [handler for handler in synchronizers if handler.GLOBAL_CALL]
     tenant_synchronizers = [handler for handler in synchronizers if not handler.GLOBAL_CALL]
@@ -94,3 +97,47 @@ def sync_handler(self, country_name, handler):
                 # We must have exceeded retries and Celery raised the original exception again.
                 # We've already logged it.
                 pass
+
+
+# Not scheduled by any code in this repo, but by other means, so keep it around.
+# TODO: Write some tests for it!
+@app.task
+def update_all_partners(country_name=None):
+    logger.info(u'Starting update HACT values for partners')
+    countries = Country.objects.filter(vision_sync_enabled=True)
+    if country_name is not None:
+        countries = countries.filter(name=country_name)
+    for country in countries:
+        connection.set_tenant(country)
+        logger.info(u'Updating '.format(country.name))
+        partners = PartnerOrganization.objects.all()
+        for partner in partners:
+            try:
+                PartnerOrganization.planned_visits(partner)
+                PartnerOrganization.programmatic_visits(partner)
+                PartnerOrganization.spot_checks(partner)
+
+            except Exception:
+                logger.exception(u'Exception {} {}'.format(partner.name, partner.hact_values))
+
+
+# Not scheduled by any code in this repo, but by other means, so keep it around.
+# TODO: Write some tests for it!
+@app.task
+def update_purchase_orders(country_name=None):
+    logger.info(u'Starting update values for purchase order')
+    countries = Country.objects.filter(vision_sync_enabled=True)
+    if country_name is not None:
+        countries = countries.filter(name=country_name)
+    for country in countries:
+        connection.set_tenant(country)
+        try:
+            logger.info(u'Starting purchase order update for country {}'.format(
+                country.name
+            ))
+            POSynchronizer(country).sync()
+            logger.info(u"Update finished successfully for {}".format(country.name))
+        except VisionException as e:
+                logger.error(u"{} sync failed, Reason: {}".format(
+                    POSynchronizer.__name__, e.message
+                ))
