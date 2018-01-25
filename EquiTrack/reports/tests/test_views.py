@@ -3,11 +3,11 @@ import datetime
 from rest_framework import status
 
 from EquiTrack.factories import CountryProgrammeFactory, LocationFactory, ResultFactory, SectionFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from reports.models import CountryProgramme, ResultType
 
 
-class TestReportViews(APITenantTestCase):
+class TestReportViews(TenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):

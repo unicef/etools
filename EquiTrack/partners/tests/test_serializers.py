@@ -22,14 +22,14 @@ from EquiTrack.factories import (
     PartnerStaffFactory,
     UserFactory,
     )
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
 
-class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
+class AgreementCreateUpdateSerializerBase(TenantTestCase):
     '''Base class for testing AgreementCreateUpdateSerializer'''
     def setUp(self):
         self.user = UserFactory()

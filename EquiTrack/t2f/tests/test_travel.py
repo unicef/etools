@@ -1,13 +1,13 @@
 from __future__ import unicode_literals
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.models import TravelExpenseType
 from t2f.models import Expense, Travel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
 
 
-class TravelMethods(APITenantTestCase):
+class TravelMethods(TenantTestCase):
     def setUp(self):
         super(TravelMethods, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

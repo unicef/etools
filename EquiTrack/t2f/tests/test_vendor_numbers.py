@@ -6,11 +6,11 @@ from django.core.urlresolvers import reverse
 from factory.fuzzy import FuzzyText
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.tests.factories import TravelAgentFactory
 
 
-class VendorNumbers(APITenantTestCase):
+class VendorNumbers(TenantTestCase):
     def setUp(self):
         super(VendorNumbers, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

@@ -7,11 +7,11 @@ from django.core.urlresolvers import reverse
 from django.utils import timezone
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from EquiTrack.factories import FundsReservationHeaderFactory, UserFactory, InterventionFactory
 
 
-class TestFRHeaderView(APITenantTestCase):
+class TestFRHeaderView(TenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):

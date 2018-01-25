@@ -8,7 +8,7 @@ from mock import Mock
 from unittest import skip
 
 from EquiTrack.factories import ProfileFactory, UserFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from users.admin import (
     CountryAdmin,
     ProfileAdmin,
@@ -22,7 +22,7 @@ class MockRequest:
     pass
 
 
-class TestProfileInline(FastTenantTestCase):
+class TestProfileInline(TenantTestCase):
     def setUp(self):
         super(TestProfileInline, self).setUp()
         site = AdminSite()
@@ -46,7 +46,7 @@ class TestProfileInline(FastTenantTestCase):
         self.assertIn("country_override", fields)
 
 
-class TestProfileAdmin(FastTenantTestCase):
+class TestProfileAdmin(TenantTestCase):
     def setUp(self):
         super(TestProfileAdmin, self).setUp()
         site = AdminSite()
@@ -104,7 +104,7 @@ class TestProfileAdmin(FastTenantTestCase):
         self.assertEqual(profile_updated.oic, self.superuser)
 
 
-class TestUserAdminPlus(FastTenantTestCase):
+class TestUserAdminPlus(TenantTestCase):
     def setUp(self):
         super(TestUserAdminPlus, self).setUp()
         site = AdminSite()
@@ -139,7 +139,7 @@ class TestUserAdminPlus(FastTenantTestCase):
         self.assertNotIn("is_superuser", readonly_fields)
 
 
-class TestCountryAdmin(FastTenantTestCase):
+class TestCountryAdmin(TenantTestCase):
     def setUp(self):
         super(TestCountryAdmin, self).setUp()
         site = AdminSite()

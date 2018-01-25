@@ -11,7 +11,7 @@ from pytz import UTC
 
 from EquiTrack.factories import (
     InterventionFactory, LocationFactory, OfficeFactory, ResultFactory, SectorFactory, UserFactory,)
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.tests.factories import (
     AirlineCompanyFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, FundFactory, GrantFactory, WBSFactory,)
 from t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType
@@ -23,7 +23,7 @@ from .factories import TravelFactory
 log = logging.getLogger('__name__')
 
 
-class TravelExports(APITenantTestCase):
+class TravelExports(TenantTestCase):
     def setUp(self):
         super(TravelExports, self).setUp()
         self.traveler = UserFactory(first_name='John', last_name='Doe')

@@ -19,7 +19,7 @@ from audit.tests.factories import (
     RiskBluePrintFactory,
     RiskCategoryFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from partners.models import PartnerType
 
 
@@ -174,7 +174,7 @@ class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
         self.assertEqual(new_risk_ids, old_risk_ids)
 
 
-class TestMARisksViewSet(BaseTestCategoryRisksViewSet, APITenantTestCase):
+class TestMARisksViewSet(BaseTestCategoryRisksViewSet, TenantTestCase):
     engagement_factory = MicroAssessmentFactory
     endpoint = 'micro-assessments'
 
@@ -209,7 +209,7 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, APITenantTestCase):
         )
 
 
-class TestAuditRisksViewSet(BaseTestCategoryRisksViewSet, APITenantTestCase):
+class TestAuditRisksViewSet(BaseTestCategoryRisksViewSet, TenantTestCase):
     engagement_factory = AuditFactory
     endpoint = 'audits'
 
@@ -232,7 +232,7 @@ class TestAuditRisksViewSet(BaseTestCategoryRisksViewSet, APITenantTestCase):
         )
 
 
-class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
+class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, TenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
     def setUp(self):
@@ -335,7 +335,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTe
         self._test_list(self.auditor, [self.third_engagement], params=status)
 
 
-class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
+class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, TenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
     def setUp(self):
@@ -389,7 +389,7 @@ class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenant
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
 
-class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
+class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, TenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
     def _do_update(self, user, data):
@@ -445,7 +445,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, APITenant
         self.assertEqual(response.data['active_pd'], [])
 
 
-class TestAuditorFirmViewSet(AuditTestCaseMixin, APITenantTestCase):
+class TestAuditorFirmViewSet(AuditTestCaseMixin, TenantTestCase):
     def setUp(self):
         super(TestAuditorFirmViewSet, self).setUp()
         self.second_auditor_firm = AuditPartnerFactory()
@@ -473,7 +473,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, APITenantTestCase):
         self._test_list_view(self.usual_user, [])
 
 
-class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
+class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, TenantTestCase):
     def test_list_view(self):
         response = self.forced_auth_req(
             'get',
@@ -579,7 +579,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
+class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, TenantTestCase):
     engagement_factory = AuditFactory
 
     def _test_pdf_view(self, user, status_code=status.HTTP_200_OK):
@@ -610,7 +610,7 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, APITena
         self._test_pdf_view(self.unicef_focal_point)
 
 
-class TestPurchaseOrderView(AuditTestCaseMixin, APITenantTestCase):
+class TestPurchaseOrderView(AuditTestCaseMixin, TenantTestCase):
     def setUp(self):
         super(TestPurchaseOrderView, self).setUp()
         call_command('update_audit_permissions', verbosity=0)
@@ -639,7 +639,7 @@ class TestPurchaseOrderView(AuditTestCaseMixin, APITenantTestCase):
         self.assertEqual(response.data["id"], po.pk)
 
 
-class TestEngagementPartnerView(AuditTestCaseMixin, APITenantTestCase):
+class TestEngagementPartnerView(AuditTestCaseMixin, TenantTestCase):
     def test_get(self):
         engagement = EngagementFactory()
         response = self.forced_auth_req(

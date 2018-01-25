@@ -5,7 +5,7 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from EquiTrack.factories import (
     AgreementFactory,
     AgreementAmendmentFactory,

@@ -11,12 +11,12 @@ from freezegun import freeze_time
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.mixins import TenantTestCase, URLAssertionMixin
 from t2f.models import ActionPoint
 from t2f.tests.factories import ActionPointFactory, TravelFactory
 
 
-class ActionPoints(URLAssertionMixin, APITenantTestCase):
+class ActionPoints(URLAssertionMixin, TenantTestCase):
     def setUp(self):
         super(ActionPoints, self).setUp()
         self.traveler = UserFactory(first_name='John',

@@ -11,12 +11,12 @@ from freezegun import freeze_time
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.models import DSARate
 from publics.tests.factories import BusinessAreaFactory, CountryFactory, DSARateFactory, DSARegionFactory
 
 
-class DSARateTest(APITenantTestCase):
+class DSARateTest(TenantTestCase):
 
     def setUp(self):
         super(DSARateTest, self).setUp()

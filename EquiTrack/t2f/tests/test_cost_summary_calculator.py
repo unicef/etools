@@ -6,7 +6,7 @@ from decimal import Decimal
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import (
     CountryFactory,
@@ -23,7 +23,7 @@ from t2f.helpers.cost_summary_calculator import (
 from t2f.tests.factories import ExpenseFactory, ItineraryItemFactory, TravelFactory
 
 
-class TestExpenseDTO(APITenantTestCase):
+class TestExpenseDTO(TenantTestCase):
     def test_init(self):
         currency_usd = CurrencyFactory(code='USD')
         travel = TravelFactory(currency=currency_usd)
@@ -44,7 +44,7 @@ class TestExpenseDTO(APITenantTestCase):
         self.assertEqual(dto.amount, 100)
 
 
-class CostSummaryTest(APITenantTestCase):
+class CostSummaryTest(TenantTestCase):
     def setUp(self):
         super(CostSummaryTest, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

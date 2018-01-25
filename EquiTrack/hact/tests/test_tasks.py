@@ -1,12 +1,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from hact.models import AggregateHact
 from hact.tasks import update_aggregate_hact_values
 from hact.tests.factories import AggregateHactFactory
 
 
-class TestUpdateHactAggregateHactValues(FastTenantTestCase):
+class TestUpdateHactAggregateHactValues(TenantTestCase):
     """
     Test task which freeze global aggregated values for hact dashboard
     """

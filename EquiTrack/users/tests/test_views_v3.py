@@ -7,10 +7,10 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 
 
-class TestCountryView(APITenantTestCase):
+class TestCountryView(TenantTestCase):
     def test_get(self):
         user = UserFactory(is_staff=True)
         response = self.forced_auth_req(
@@ -32,7 +32,7 @@ class TestCountryView(APITenantTestCase):
         self.assertEqual(len(response.data), 0)
 
 
-class TestUsersDetailAPIView(APITenantTestCase):
+class TestUsersDetailAPIView(TenantTestCase):
     def setUp(self):
         super(TestUsersDetailAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

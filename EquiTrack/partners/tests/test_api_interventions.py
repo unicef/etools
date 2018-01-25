@@ -16,7 +16,7 @@ from EquiTrack.factories import (
     InterventionFactory,
     FundsReservationHeaderFactory,
     GroupFactory)
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.mixins import TenantTestCase, URLAssertionMixin
 from reports.models import ResultType, Sector
 from partners.models import (
     InterventionSectorLocationLink,
@@ -45,7 +45,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestInterventionsAPI(APITenantTestCase):
+class TestInterventionsAPI(TenantTestCase):
     fixtures = ['initial_data.json']
     EDITABLE_FIELDS = {
         'draft': ["status", "sector_locations", "attachments", "prc_review_document", 'travel_activities',

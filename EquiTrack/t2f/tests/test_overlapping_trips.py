@@ -10,7 +10,7 @@ from freezegun import freeze_time
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.tests.factories import BusinessAreaFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel
 from t2f.tests.factories import CurrencyFactory, ItineraryItemFactory
@@ -20,7 +20,7 @@ from .factories import TravelFactory
 log = logging.getLogger('__name__')
 
 
-class OverlappingTravelsTest(APITenantTestCase):
+class OverlappingTravelsTest(TenantTestCase):
     def setUp(self):
         super(OverlappingTravelsTest, self).setUp()
         business_area = BusinessAreaFactory()

@@ -6,13 +6,13 @@ from decimal import getcontext
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.models import Invoice
 from t2f.tests.factories import TravelFactory
 
 
-class InvoiceEndpoints(APITenantTestCase):
+class InvoiceEndpoints(TenantTestCase):
     def setUp(self):
         super(InvoiceEndpoints, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

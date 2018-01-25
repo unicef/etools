@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.models import TravelExpenseType
 from publics.tests.factories import DSARateFactory, DSARegionFactory
 from t2f.helpers.invoice_maker import InvoiceMaker
@@ -21,7 +21,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 
-class InvoiceMaking(APITenantTestCase):
+class InvoiceMaking(TenantTestCase):
     def setUp(self):
         super(InvoiceMaking, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

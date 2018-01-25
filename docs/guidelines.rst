@@ -70,6 +70,18 @@ the behavior of your code (particularly the default use of unicode literals).
 Testing
 -------
 
+Base Test Classes
+~~~~~~~~~~~~~~~~~
+
+If making use of any factories you will want to make use of the `EquiTrack.tests.mixins.TenantTestCase` as this base test class will handle tenant schemas correctly. This base test class also includes the method `forced_auth_req` which makes use of `DjangoRestFramework` request factory to make a request.
+
+    self.url = reverse('partners_api:partner-list')
+    self.user = UserFactory(is_staff=True)
+    # forced_auth_req accepts a user parameter, otherwise if looks for a `user` attribute
+    self.forced_auth_req('get', self.url)
+
+If you don't need/want any of the above, you can make use of the default `django.test.TestCase`
+
 
 Coverage
 ~~~~~~~~
