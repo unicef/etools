@@ -102,17 +102,18 @@ class VisionDataSynchronizer(object):
             country=self.country,
             handler_name=self.__class__.__name__
         )
+
+        loader_kwargs = {
+            'country': self.country,
+            'endpoint': self.ENDPOINT,
+        }
+        loader_kwargs.update({
+            kwarg_name: getattr(self, kwarg_name)
+            for kwarg_name in self.LOADER_EXTRA_KWARGS
+        })
+        data_getter = self.LOADER_CLASS(**loader_kwargs)
+        logger.info('About to get data from {}'.format(data_getter.url))
         try:
-            loader_kwargs = {
-                'country': self.country,
-                'endpoint': self.ENDPOINT,
-            }
-            loader_kwargs.update({
-                kwarg_name: getattr(self, kwarg_name)
-                for kwarg_name in self.LOADER_EXTRA_KWARGS
-            })
-            data_getter = self.LOADER_CLASS(**loader_kwargs)
-            logger.info('About to get data from {}'.format(data_getter.url))
             original_records = data_getter.get()
             logger.info('{} records returned from get'.format(len(original_records)))
 
@@ -122,17 +123,17 @@ class VisionDataSynchronizer(object):
 
             totals = self._save_records(converted_records)
 
+        except Exception as e:
+            logger.info('sync caught {} with message "{}"'.format(type(e).__name__, e.message))
+            log.exception_message = e.message
+            raise VisionException(message=e.message), None, sys.exc_info()[2]
+        else:
             if isinstance(totals, dict):
                 log.total_processed = totals.get('processed', 0)
                 log.details = totals.get('details', None)
                 log.total_records = totals.get('total_records', log.total_records)
             else:
                 log.total_processed = totals
-        except Exception as e:
-            logger.info('sync caught {} with message "{}"'.format(type(e).__name__, e.message))
-            log.exception_message = e.message
-            raise VisionException(message=e.message), None, sys.exc_info()[2]
-        else:
             log.successful = True
         finally:
             log.save()
