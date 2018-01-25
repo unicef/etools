@@ -6,12 +6,12 @@ from django.core.cache import cache
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 from publics.tests.factories import BusinessAreaFactory, WBSFactory
 from publics.views import WBSGrantFundView
 
 
-class WBSGrantFundEndpoint(APITenantTestCase):
+class WBSGrantFundEndpoint(TenantTestCase):
     def setUp(self):
         super(WBSGrantFundEndpoint, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
