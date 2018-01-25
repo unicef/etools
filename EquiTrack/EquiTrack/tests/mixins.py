@@ -3,7 +3,7 @@ from django.core.management import call_command
 from django.core.urlresolvers import resolve, reverse, NoReverseMatch
 from django.db import connection
 from rest_framework.test import APIClient, force_authenticate, APIRequestFactory
-from tenant_schemas.test.cases import TenantTestCase
+from tenant_schemas.test.cases import TenantTestCase as BaseTenantTestCase
 from tenant_schemas.utils import get_tenant_model
 
 from users.models import WorkspaceCounter
@@ -85,7 +85,12 @@ class URLAssertionMixin(object):
                     raise AssertionError(fail_msg)
 
 
-class FastTenantTestCase(TenantTestCase):
+class TenantTestCase(BaseTenantTestCase):
+    """Base test case for testing when schemas are involved,
+    pretty much whenever factories are used
+    """
+    client_class = APIClient
+    maxDiff = None
 
     @classmethod
     def setUpClass(cls):
@@ -139,14 +144,6 @@ class FastTenantTestCase(TenantTestCase):
 
         if exact and len(key_set) != len(container_set):
             self.fail('{} != {}'.format(', '.join(key_set), ', '.join(container_set)))
-
-
-class APITenantTestCase(FastTenantTestCase):
-    """
-    Base test case for testing APIs
-    """
-    client_class = APIClient
-    maxDiff = None
 
     def forced_auth_req(self, method, url, user=None, data=None, request_format='json', **kwargs):
         """
