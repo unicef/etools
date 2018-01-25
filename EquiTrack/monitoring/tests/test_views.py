@@ -11,10 +11,10 @@ from django.test import Client
 from rest_framework import status
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.mixins import TenantTestCase
 
 
-class TestCheckView(FastTenantTestCase):
+class TestCheckView(TenantTestCase):
     def setUp(self):
         super(TestCheckView, self).setUp()
         self.client = Client()
