@@ -12,9 +12,12 @@ def collect_parent_models(model):
 def has_action_permission(permission_class, instance=None, user=None, action=None):
     if instance and user and action:
         return permission_class.objects.filter(
-            user=user, permission=permission_class.PERMISSIONS.action, target__in=map(
-                lambda related_model: related_model + '.' + action, collect_parent_models(instance._meta.model)
-            ), instance=instance).exists()
+            user=user,
+            permission=permission_class.PERMISSIONS.action,
+            target__in=[
+                related_model + '.' + action
+                for related_model in collect_parent_models(instance._meta.model)
+            ], instance=instance).exists()
 
     if action and not instance and not user:
         return lambda instance, user: has_action_permission(instance, user, action)

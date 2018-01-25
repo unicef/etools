@@ -29,43 +29,43 @@ class StateMachineTest(APITenantTestCase):
 
     def test_possible_transitions(self):
         travel = TravelFactory()
-        transition_mapping = defaultdict(list)
+        transition_mapping = defaultdict(set)
         for transition in list(travel._meta.get_field('status').get_all_transitions(travel.__class__)):
-            transition_mapping[transition.source].append(transition.target)
+            transition_mapping[transition.source].add(transition.target)
 
         # mapping == {source: [target list]}
         self.assertEqual(dict(transition_mapping),
-                         {'*': ['planned'],
-                          'approved': ['sent_for_payment',
+                         {'*': {'planned'},
+                          'approved': {'sent_for_payment',
                                        'cancelled',
-                                       'completed'],
-                          'cancelled': ['submitted',
+                                       'completed'},
+                          'cancelled': {'submitted',
                                         'planned',
-                                        'completed'],
-                          'certification_approved': ['certification_rejected',
-                                                     'certified'],
-                          'certification_rejected': ['certification_submitted'],
-                          'certification_submitted': ['certification_rejected',
-                                                      'certification_approved'],
-                          'certified': ['sent_for_payment',
+                                        'completed'},
+                          'certification_approved': {'certification_rejected',
+                                                     'certified'},
+                          'certification_rejected': {'certification_submitted'},
+                          'certification_submitted': {'certification_rejected',
+                                                      'certification_approved'},
+                          'certified': {'sent_for_payment',
                                         'certification_submitted',
                                         'cancelled',
-                                        'completed'],
-                          'planned': ['submitted',
+                                        'completed'},
+                          'planned': {'submitted',
                                       'cancelled',
-                                      'completed'],
-                          'rejected': ['submitted',
+                                      'completed'},
+                          'rejected': {'submitted',
                                        'planned',
-                                       'cancelled'],
-                          'sent_for_payment': ['sent_for_payment',
+                                       'cancelled'},
+                          'sent_for_payment': {'sent_for_payment',
                                                'submitted',
                                                'certified',
                                                'certification_submitted',
-                                               'cancelled'],
-                          'submitted': ['rejected',
+                                               'cancelled'},
+                          'submitted': {'rejected',
                                         'cancelled',
                                         'approved',
-                                        'completed']})
+                                        'completed'}})
 
     def test_state_machine_flow(self):
         currency = CurrencyFactory()
@@ -115,7 +115,7 @@ class StateMachineTest(APITenantTestCase):
                               'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']
@@ -124,7 +124,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         travel = Travel.objects.get(id=travel_id)
         self.assertIsNotNone(travel.submitted_at)
@@ -134,20 +134,20 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
                                         data=response_json, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
                                         data=response_json, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_certified'}),
                                         data=response_json, user=self.traveler)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['non_field_errors'], ['Your TA has pending payments to be processed through '
                                                              'VISION. Until payments are completed, you can not certify'
                                                              ' your TA. Please check with your Finance focal point on '
@@ -160,14 +160,14 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_certified'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['status'], Travel.CERTIFIED)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
         self.assertEqual(travel.report_note, '')
         # None should be handled as empty string
@@ -176,7 +176,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
         self.assertEqual(travel.report_note, None)
 
@@ -186,7 +186,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
     @override_settings(DISABLE_INVOICING=True)
@@ -238,7 +238,7 @@ class StateMachineTest(APITenantTestCase):
                               'currency': currency.id,
                               'document_currency': currency.id}]}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']
@@ -247,7 +247,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         travel = Travel.objects.get(id=travel_id)
         self.assertIsNotNone(travel.submitted_at)
@@ -257,7 +257,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
                                         data=response_json, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         # Go straight to sent for payment when invoicing is disabled.
         self.assertEqual(response_json['status'], Travel.SENT_FOR_PAYMENT)
 
@@ -270,7 +270,7 @@ class StateMachineTest(APITenantTestCase):
                                                                 'transition_name': 'mark_as_certified'}),
                                         data=response_json, user=self.traveler)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         # No pending invoice check when invoicing is disabled.
         self.assertEqual(response_json['status'], Travel.CERTIFIED)
 
@@ -278,7 +278,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
         self.assertEqual(travel.report_note, '')
 
@@ -288,7 +288,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
         self.assertEqual(travel.report_note, None)
 
@@ -298,7 +298,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.traveler)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
     def test_ta_not_required_flow_instant_complete(self):
@@ -313,7 +313,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
         self.assertEqual(len(mail.outbox), 1)
@@ -330,7 +330,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'transition_name': 'save_and_submit'}),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['status'], Travel.SUBMITTED)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -338,21 +338,21 @@ class StateMachineTest(APITenantTestCase):
                                                                 'transition_name': 'reject'}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': response_json['id'],
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': response_json['id'],
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
     def test_international_travel(self):
@@ -365,7 +365,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'transition_name': 'save_and_submit'}),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['status'], Travel.SUBMITTED)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -373,7 +373,7 @@ class StateMachineTest(APITenantTestCase):
                                                                 'transition_name': 'mark_as_completed'}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
         # Try to complete an international travel instantly
@@ -386,7 +386,7 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'transition_name': 'mark_as_completed'}),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json,
                          {'non_field_errors': ["Transition conditions have not been met "
                                                "for method 'mark_as_completed'"]})
@@ -435,7 +435,7 @@ class StateMachineTest(APITenantTestCase):
                 'expenses': [],
                 'currency': currency.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']
@@ -444,19 +444,19 @@ class StateMachineTest(APITenantTestCase):
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
                                         data=response_json, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
                                         data=response_json, user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Decimal(response_json['cost_summary']['preserved_expenses']),
                          Decimal('0.00'))

@@ -20,18 +20,18 @@ class SettingsView(APITenantTestCase):
 
     def test_settings_view(self):
         response = self.forced_auth_req('get', reverse('t2f:settings'), user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
 
         expected_keys = ['disable_invoicing']
         self.assertKeysIn(expected_keys, response_json)
 
     def test_disable_invoicing(self):
         response = self.forced_auth_req('get', reverse('t2f:settings'), user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, {'disable_invoicing': False})
 
         with override_settings(DISABLE_INVOICING=True):
             response = self.forced_auth_req('get', reverse('t2f:settings'), user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
+        response_json = json.loads(response.rendered_content.decode('utf-8'))
         self.assertEqual(response_json, {'disable_invoicing': True})

@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             name='Notification',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(default=b'Email', max_length=255)),
+                ('type', models.CharField(default='Email', max_length=255)),
                 ('object_id', models.PositiveIntegerField(null=True)),
                 ('recipients', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=255), size=None)),
                 ('sent_recipients', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=255), default=list, size=None)),

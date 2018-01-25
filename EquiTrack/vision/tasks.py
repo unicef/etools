@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import datetime
 import time
 
@@ -74,10 +76,8 @@ def cost_assignment_sync(country_name=None):
             CostAssignmentSynch(country).sync()
             logger.info(u"{} sync successfully".format(CostAssignmentSynch.__name__))
 
-        except VisionException as e:
-            logger.error(u"{} sync failed, Reason: {}".format(
-                CostAssignmentSynch.__name__, e.message
-            ))
+        except VisionException:
+            logger.exception(u"{} sync failed".format(CostAssignmentSynch.__name__))
         processed.append(country)
 
 
@@ -126,10 +126,8 @@ def sync_handler(country_name, handler):
             handler(country).sync()
             logger.info(u"{} sync successfully for {}".format(handler.__name__, country.name))
 
-        except VisionException as e:
-            logger.error(u"{} sync failed, Reason: {}, Country: {}".format(
-                handler.__name__, e.message, country_name
-            ))
+        except VisionException:
+            logger.exception("{} sync failed, Country: {}".format(handler.__name__, country_name))
 
 
 @app.task
@@ -152,10 +150,8 @@ def sync(country_name=None, synchronizers=None):
             handler(public_tenant).sync()
             logger.info(u"{} sync successfully".format(handler.__name__))
 
-        except VisionException as e:
-            logger.error(u"{} sync failed, Reason: {}".format(
-                handler.__name__, e.message
-            ))
+        except VisionException:
+            logger.exception("{} sync failed".format(handler.__name__))
 
     for country in countries:
         connection.set_tenant(country)
@@ -167,10 +163,8 @@ def sync(country_name=None, synchronizers=None):
                 handler(country).sync()
                 logger.info(u"{} sync successfully".format(handler.__name__))
 
-            except VisionException as e:
-                logger.error(u"{} sync failed, Reason: {}".format(
-                    handler.__name__, e.message
-                ))
+            except VisionException:
+                logger.exception("{} sync failed".format(handler.__name__))
         country.vision_last_synced = datetime.datetime.now()
         country.save()
         processed.append(country)
@@ -216,7 +210,5 @@ def update_purchase_orders(country_name=None):
             ))
             POSynchronizer(country).sync()
             logger.info(u"Update finished successfully for {}".format(country.name))
-        except VisionException as e:
-                logger.error(u"{} sync failed, Reason: {}".format(
-                    POSynchronizer.__name__, e.message
-                ))
+        except VisionException:
+                logger.exception(u"{} sync failed".format(POSynchronizer.__name__))

@@ -9,6 +9,7 @@ from django.db import models
 from django.test import TestCase
 
 from utils.common.utils import get_all_field_names
+from django.utils.six.moves import range
 
 
 class CommonUtilsTest(TestCase):

@@ -18,13 +18,15 @@ from reports.models import CountryProgramme, Indicator, Result, ResultType
 from t2f.models import TravelActivity
 from users.models import Country, UserProfile
 from utils.common.utils import every_country
+from django.utils import six
+from django.utils.six.moves import range
 
 logger = logging.getLogger(__name__)
 
 
 def printtf(*args):
     file_name = 'mylogs.txt'
-    args_list = [unicode(arg) for arg in args]
+    args_list = [six.text_type(arg) for arg in args]
     logger.info(args_list)
     with open(file_name, 'ab') as f:
         f.write(', '.join(args_list))

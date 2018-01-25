@@ -5,6 +5,7 @@ import datetime
 from unittest import TestCase
 
 from django.utils import timezone
+from django.utils.six.moves import range, zip
 
 import mock
 
@@ -257,11 +258,11 @@ class TestSyncHandlerTask(TestCase):
         self.assertEqual(mock_logger_info.call_args[1], {})
 
         self.assertEqual(mock_logger_error.call_count, 1)
-        expected_msg = '{} sync failed, Reason: {}, Country: {}'.format(
-            'ProgrammeSynchronizer', 'banana', 'Country My'
+        expected_msg = '{} sync failed, Country: {}'.format(
+            'ProgrammeSynchronizer', 'Country My'
         )
         self.assertEqual(mock_logger_error.call_args[0], (expected_msg,))
-        self.assertEqual(mock_logger_error.call_args[1], {})
+        self.assertEqual(mock_logger_error.call_args[1], {'exc_info': True})
 
     @mock.patch('vision.tasks.logger.error')
     def test_sync_country_does_not_exist(self, mock_logger):

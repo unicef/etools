@@ -1,7 +1,7 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from datetime import timedelta, datetime
 import json
+from datetime import timedelta, datetime
 
 from django.core.urlresolvers import reverse
 from django.utils import timezone
@@ -27,7 +27,7 @@ class TestFRHeaderView(APITenantTestCase):
             user=self.unicef_staff,
             data=data
         )
-        return response.status_code, json.loads(response.rendered_content)
+        return response.status_code, json.loads(response.rendered_content.decode('utf-8'))
 
     def test_get_one_fr(self):
 

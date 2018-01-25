@@ -20,11 +20,11 @@ class Migration(migrations.Migration):
             name='AppliedIndicator',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('context_code', models.CharField(blank=True, max_length=50, null=True, verbose_name=b'Code in current context')),
+                ('context_code', models.CharField(blank=True, max_length=50, null=True, verbose_name='Code in current context')),
                 ('target', models.CharField(blank=True, max_length=255, null=True)),
                 ('baseline', models.CharField(blank=True, max_length=255, null=True)),
                 ('assumptions', models.TextField(blank=True, null=True)),
-                ('total', models.IntegerField(blank=True, default=0, null=True, verbose_name=b'Current Total')),
+                ('total', models.IntegerField(blank=True, default=0, null=True, verbose_name='Current Total')),
                 ('disaggregation_logic', django.contrib.postgres.fields.jsonb.JSONField(null=True)),
             ],
         ),
@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
             name='Quarter',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(choices=[(b'Q1', b'Quarter 1'), (b'Q2', b'Quarter 2'), (b'Q3', b'Quarter 3'), (b'Q4', b'Quarter 4')], max_length=64)),
+                ('name', models.CharField(choices=[('Q1', 'Quarter 1'), ('Q2', 'Quarter 2'), ('Q3', 'Quarter 3'), ('Q4', 'Quarter 4')], max_length=64)),
                 ('year', models.CharField(max_length=4)),
                 ('start_date', models.DateTimeField()),
                 ('end_date', models.DateTimeField()),
