@@ -30,7 +30,7 @@ from EquiTrack.factories import (
     InterventionFactory,
     GovernmentInterventionFactory,
     FundsReservationHeaderFactory)
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.mixins import TenantTestCase, URLAssertionMixin
 from reports.models import ResultType, Sector
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
 from partners.models import (
@@ -70,7 +70,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestPartnerOrganizationListView(APITenantTestCase):
+class TestPartnerOrganizationListView(TenantTestCase):
     '''Exercise the list view for PartnerOrganization'''
     def setUp(self):
         self.user = UserFactory(is_staff=True)
@@ -206,7 +206,7 @@ class TestPartnerOrganizationListView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
+class TestPartnerOrganizationListViewForCSV(TenantTestCase):
     '''Exercise the CSV-generating portion of the list view for PartnerOrganization.
 
     This is a separate test case from TestPartnerOrganizationListView because it does some monkey patching in
@@ -268,7 +268,7 @@ class TestPartnerOrganizationListViewForCSV(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestPartnerOrganizationCreateView(APITenantTestCase):
+class TestPartnerOrganizationCreateView(TenantTestCase):
     '''Exercise the create view for PartnerOrganization'''
     def setUp(self):
         self.user = UserFactory(is_staff=True)
@@ -317,7 +317,7 @@ class TestPartnerOrganizationCreateView(APITenantTestCase):
         self.assertEqual(staff_members[0].email, 'a@example.com')
 
 
-class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
+class TestPartnerOrganizationRetrieveUpdateDeleteViews(TenantTestCase):
     '''Exercise the retrieve, update, and delete views for PartnerOrganization'''
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
@@ -696,7 +696,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertEqual(response.data["hidden"], False)
 
 
-class TestPartnershipViews(APITenantTestCase):
+class TestPartnershipViews(TenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -752,7 +752,7 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertIn("PCA", response.data[0]["agreement_type"])
 
 
-class TestAgreementCreateAPIView(APITenantTestCase):
+class TestAgreementCreateAPIView(TenantTestCase):
     '''Exercise the create portion of the API.'''
     def setUp(self):
         self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
@@ -806,7 +806,7 @@ class TestAgreementCreateAPIView(APITenantTestCase):
         self.assertEqual(len(model_stream(Agreement)), 0)
 
 
-class TestAgreementAPIFileAttachments(APITenantTestCase):
+class TestAgreementAPIFileAttachments(TenantTestCase):
     '''Test retrieving attachments to agreements and agreement amendments. The file-specific fields are read-only
     on the relevant serializers, so they can't be edited through the API.
     '''
@@ -914,7 +914,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         self.assertEqual(expected_path_components, url.path.split('/')[:-1])
 
 
-class TestAgreementAPIView(APITenantTestCase):
+class TestAgreementAPIView(TenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
@@ -1247,7 +1247,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(len(response.data["amendments"][1]["types"]), 2)
 
 
-class TestPartnerStaffMemberAPIView(APITenantTestCase):
+class TestPartnerStaffMemberAPIView(TenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
@@ -1409,7 +1409,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class TestInterventionViews(APITenantTestCase):
+class TestInterventionViews(TenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
@@ -1957,7 +1957,7 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEqual(response.data[0]["id"], self.intervention["id"])
 
 
-class TestPartnershipDashboardView(APITenantTestCase):
+class TestPartnershipDashboardView(TenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)

@@ -11,7 +11,7 @@ from EquiTrack.factories import (
     AgreementFactory,
     InterventionFactory,
     CountryProgrammeFactory, GroupFactory)
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.mixins import TenantTestCase, URLAssertionMixin
 from partners.models import (
     PartnerType,
     Agreement,
@@ -34,7 +34,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
 
 
-class TestAgreementsAPI(APITenantTestCase):
+class TestAgreementsAPI(TenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
