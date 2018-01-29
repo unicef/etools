@@ -2,6 +2,7 @@
 from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import load_pem_x509_certificate
 from cryptography.hazmat.backends import default_backend
+import os
 
 from base import *  # noqa: F403
 

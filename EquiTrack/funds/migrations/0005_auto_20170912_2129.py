@@ -15,21 +15,21 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='fundsreservationheader',
             name='actual_amt',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=12, verbose_name=b'Actual Cash Transfer'),
+            field=models.DecimalField(decimal_places=2, default=0, max_digits=12, verbose_name='Actual Cash Transfer'),
         ),
         migrations.AlterField(
             model_name='fundsreservationheader',
             name='intervention_amt',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=12, verbose_name=b'Current FR Amount'),
+            field=models.DecimalField(decimal_places=2, default=0, max_digits=12, verbose_name='Current FR Amount'),
         ),
         migrations.AlterField(
             model_name='fundsreservationheader',
             name='outstanding_amt',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=12, verbose_name=b'Outstanding DCT'),
+            field=models.DecimalField(decimal_places=2, default=0, max_digits=12, verbose_name='Outstanding DCT'),
         ),
         migrations.AlterField(
             model_name='fundsreservationheader',
             name='total_amt',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=12, verbose_name=b'FR Overall Amount'),
+            field=models.DecimalField(decimal_places=2, default=0, max_digits=12, verbose_name='FR Overall Amount'),
         ),
     ]

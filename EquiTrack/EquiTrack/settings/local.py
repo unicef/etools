@@ -16,6 +16,7 @@ POST_OFFICE = {
 
 
 # change config to remove CSRF verification in localhost in order to enable testing from postman.
+REST_FRAMEWORK = REST_FRAMEWORK  # noqa: F405 (defined in wildcard import from base)
 REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
     # this setting fixes the bug where user can be logged in as AnonymousUser
     'EquiTrack.mixins.CsrfExemptSessionAuthentication',

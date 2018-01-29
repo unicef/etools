@@ -15,16 +15,16 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='flaggedissue',
             name='issue_category',
-            field=models.CharField(choices=[(b'data', b'Data Issue'), (b'compliance', b'Compliance Issue')], db_index=True, default=b'data', max_length=32),
+            field=models.CharField(choices=[('data', 'Data Issue'), ('compliance', 'Compliance Issue')], db_index=True, default='data', max_length=32),
         ),
         migrations.AlterField(
             model_name='flaggedissue',
             name='issue_id',
-            field=models.CharField(db_index=True, help_text=b'A readable ID associated with the specific issue, e.g. "pca-no-attachment"', max_length=100),
+            field=models.CharField(db_index=True, help_text='A readable ID associated with the specific issue, e.g. "pca-no-attachment"', max_length=100),
         ),
         migrations.AlterField(
             model_name='flaggedissue',
             name='issue_status',
-            field=models.CharField(choices=[(b'new', b'New (untriaged)'), (b'pending', b'Pending (triaged, not resolved)'), (b'reactivated', b'Reactivated (was resolved but not fixed)'), (b'resolved', b'Resolved')], db_index=True, default=b'new', max_length=32),
+            field=models.CharField(choices=[('new', 'New (untriaged)'), ('pending', 'Pending (triaged, not resolved)'), ('reactivated', 'Reactivated (was resolved but not fixed)'), ('resolved', 'Resolved')], db_index=True, default='new', max_length=32),
         ),
     ]

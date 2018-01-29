@@ -1,4 +1,6 @@
-FROM python:2.7
+FROM python:3.6.4-stretch
+# the 3.6.4-stretch image has python 2.7, 3.5, and 3.6 installed
+# there are not packages available to apt-get install python 3.4, though.
 
 # Install dependencies
 RUN apt-get update
@@ -12,8 +14,6 @@ RUN apt-get install -y --no-install-recommends \
 RUN apt-get install -y --no-install-recommends \
     git-core
 RUN apt-get install -y --no-install-recommends \
-    python-dev \
-    python-software-properties \
     python-setuptools
 RUN apt-get install -y --no-install-recommends \
     postgresql-client \
@@ -23,8 +23,6 @@ RUN apt-get install -y --no-install-recommends \
     python-gdal \
     gdal-bin \
     libgdal-dev \
-    libgdal1h \
-    libgdal1-dev \
     libxml2-dev \
     libxslt-dev \
     xmlsec1
