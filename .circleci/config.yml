@@ -6,7 +6,7 @@ jobs:
     docker:
 #      - image: unicef/etools:test-base
       # FOR TESTING ONLY:
-      - image: dpoirier/dan-etools
+      - image: dpoirier/dan-etools:latest
         environment:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
@@ -22,7 +22,7 @@ jobs:
           key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum "EquiTrack/requirements/local.txt" }}
       - run:
           command: |
-            virtualenv env1
+            python3 -m venv env1
             # Just need to run tox
             env1/bin/pip --quiet install tox
       - save_cache:

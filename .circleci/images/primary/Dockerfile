@@ -14,8 +14,7 @@ RUN apt-get install -y --no-install-recommends \
 RUN apt-get install -y --no-install-recommends \
     git-core
 RUN apt-get install -y --no-install-recommends \
-    python-setuptools \
-    python-virtualenv
+    python-setuptools
 RUN apt-get install -y --no-install-recommends \
     postgresql-client \
     libpq-dev \
