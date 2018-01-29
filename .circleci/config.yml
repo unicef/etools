@@ -21,6 +21,7 @@ jobs:
       - restore_cache:
           key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum "EquiTrack/requirements/local.txt" }}-{{ checksum ".circleci/config.yml" }}
       - run:
+          name: create main virtualenv and install tox
           command: |
             test -d env1 || python3 -m venv env1
             env1/bin/pip --quiet install tox

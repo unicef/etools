@@ -27,7 +27,8 @@ RUN apt-get install -y --no-install-recommends \
     libgdal-dev \
     libxml2-dev \
     libxslt-dev \
-    xmlsec1
+    xmlsec1 \
+    libgdal20
 
 RUN pip install --upgrade \
     setuptools \
