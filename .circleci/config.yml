@@ -29,6 +29,7 @@ jobs:
           paths:
             - "env1"
             - "EquiTrack/.tox"
+            - /root/.cache/pip/wheels
       - run:
           name: Postgres Extensions
           command: |

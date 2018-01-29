@@ -34,7 +34,8 @@ djangorestframework-recursive==0.1.1
 # Other Python packages
 psycopg2==2.6.2
 celery==3.1.25
-GDAL==1.10.0           # DO NOT USE GDAL <= 2.1.0
+#GDAL==1.10.0           # DO NOT USE GDAL <= 2.1.0  (DAN: I DO NOT UNDERSTAND THIS LINE)
+GDAL==2.2.3
 carto==1.0.1
 gunicorn==19.6.0
 tenant-schemas-celery==0.1.5
