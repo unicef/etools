@@ -10,15 +10,13 @@ RUN apt-get install -y --no-install-recommends \
     libjpeg-dev \
     vim \
     ntp \
-    libpq-dev
-RUN apt-get install -y --no-install-recommends \
     git-core
 RUN apt-get install -y --no-install-recommends \
-    python-setuptools
-RUN apt-get install -y --no-install-recommends \
+    python-pip \
     postgresql-client \
     libpq-dev \
-    python-psycopg2 \
+    python-dev \
+    python3-dev \
     python2.7-dev \
     python3.4-dev
 RUN apt-get install -y --no-install-recommends \
@@ -31,32 +29,15 @@ RUN apt-get install -y --no-install-recommends \
     libxslt-dev \
     xmlsec1
 
-RUN pip install --upgrade \
-    setuptools \
-    pip \
-    wheel
-
-# Make sure we have what we need when it comes time to build python-gdal in our venvs
-
-# THIS: is way overkill - debian installs everything it would need to build all of GDAL,
-# over 100 packages
-#COPY jessie-src.list /etc/apt/sources.list.d/jessie-src.list
-#RUN apt-get updaqte -qq && apt-get build-dep python-gdal python3-gdal -y
-
-# So, hand-curate the list of things we actually need
-RUN apt-get install -qy  \
-    libogdi3.2-dev \
-    python-dev \
-    python3-dev
+# We need a newer virtualenv than what Debian jessie would give us
+# if we used the distribution package. Installing using pip will
+# get the latest, which will in turn include recent pip itself,
+# and setuptools.  Using pip2 means that when the older code
+# invokes 'virtualenv' it'll end up with a Python 2 virtualenv
+# by default, which is what it needs.
+RUN pip2 install virtualenv
 
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 ENV REQUIREMENTS_FILE production.txt
-
-# Warm the pip cache
-RUN python3 -m venv /tmpvenv && /tmpvenv/bin/pip install GDAL==1.10.0 && rm -rf /tmpvenv
-
-# Prebuild wheels for requirements for testing?
-#RUN pip install
-#RUN mkdir /wheels && pip wheel --wheel-dir=/wheels GDAL==1.10.0
