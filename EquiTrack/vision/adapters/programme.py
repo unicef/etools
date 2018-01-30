@@ -327,15 +327,6 @@ class RAMSynchronizer(VisionDataSynchronizer):
     def _convert_records(self, records):
         return json.loads(records)
 
-    def _changed_fields(self, fields, local_obj, api_obj):
-        for field in fields:
-            obj_value = api_obj[self.MAPPING[field]][:255]
-            if field in ['name']:
-                obj_value = api_obj[self.MAPPING[field]][:1024]
-            if getattr(local_obj, field) != obj_value:
-                return True
-        return False
-
     def _save_records(self, records):
 
         processed = self.process_indicators(records)
