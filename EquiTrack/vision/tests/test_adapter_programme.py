@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
+import json
 
 from EquiTrack.tests.mixins import FastTenantTestCase
 from EquiTrack.factories import (
@@ -9,6 +10,7 @@ from EquiTrack.factories import (
     ResultTypeFactory,
 )
 from reports.models import CountryProgramme, Result, ResultType
+from users.models import Country
 from vision.adapters import programme as adapter
 
 
@@ -342,3 +344,264 @@ class TestResultStructureSynchronizer(FastTenantTestCase):
         )
         self.assertEqual(result["total_records"], 4)
         self.assertEqual(result["processed"], 0)
+
+
+class TestProgrammeSynchronizer(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.country = Country.objects.all()[0]
+
+    def setUp(self):
+        self.data = {
+            "COUNTRY_PROGRAMME_NAME": "",
+            "COUNTRY_PROGRAMME_WBS": "",
+            "CP_START_DATE": "",
+            "CP_END_DATE": "",
+            "OUTCOME_AREA_CODE": "",
+            "OUTCOME_AREA_NAME": "",
+            "OUTCOME_AREA_NAME_LONG": "",
+            "OUTCOME_WBS": "",
+            "OUTCOME_DESCRIPTION": "",
+            "OUTCOME_START_DATE": "",
+            "OUTCOME_END_DATE": "",
+            "OUTPUT_WBS": "",
+            "OUTPUT_DESCRIPTION": "",
+            "OUTPUT_START_DATE": "",
+            "OUTPUT_END_DATE": "",
+            "ACTIVITY_WBS": "",
+            "ACTIVITY_DESCRIPTION": "",
+            "ACTIVITY_START_DATE": "",
+            "ACTIVITY_END_DATE": "",
+            "SIC_CODE": "",
+            "SIC_NAME": "",
+            "GIC_CODE": "",
+            "GIC_NAME": "",
+            "ACTIVITY_FOCUS_CODE": "",
+            "ACTIVITY_FOCUS_NAME": "",
+            "GENDER_MARKER_CODE": "",
+            "GENDER_MARKER_NAME": "",
+            "HUMANITARIAN_TAG": "",
+            "HUMANITARIAN_MARKER_CODE": "",
+            "HUMANITARIAN_MARKER_NAME": "",
+            "PROGRAMME_AREA_CODE": "",
+            "PROGRAMME_AREA_NAME": "",
+        }
+        self.adapter = adapter.ProgrammeSynchronizer(self.country)
+
+    def test_get_json(self):
+        data = {"test": "123"}
+        self.assertEqual(self.adapter._get_json(data), data)
+        self.assertEqual(
+            self.adapter._get_json(adapter.VISION_NO_DATA_MESSAGE),
+            []
+        )
+
+    def test_filter_by_time_range(self):
+        """Check that records that have outcome end date record greater
+        than last year are NOT filtered out
+        """
+        self.data["OUTCOME_END_DATE"] = datetime.date.today()
+        records = [self.data]
+        result = self.adapter._filter_by_time_range(records)
+        self.assertEqual(result, records)
+
+    def test_filter_by_time_invalid(self):
+        """Check that records that are missing required key record
+        are ignored
+        """
+        del self.data["OUTCOME_END_DATE"]
+        records = [self.data]
+        result = self.adapter._filter_by_time_range(records)
+        self.assertEqual(result, [])
+
+    def test_filter_by_time_range_old(self):
+        """Check that records that have outcome end date less than last year
+        are filtered out
+        """
+        self.data["OUTCOME_END_DATE"] = datetime.date(
+            datetime.date.today().year - 2,
+            1,
+            1
+        )
+        records = [self.data]
+        self.assertEqual(self.adapter._filter_by_time_range(records), [])
+
+    def test_clean_records_cps(self):
+        """Need just cp wbs value"""
+        self.data["COUNTRY_PROGRAMME_WBS"] = "CP_WBS"
+        self.data["COUNTRY_PROGRAMME_NAME"] = "CP_NAME"
+        self.data["OUTCOME_WBS"] = "OC_WBS"
+        self.data["OUTPUT_WBS"] = "OP_WBS"
+        self.data["ACTIVITY_WBS"] = "A_WBS"
+        records = [self.data]
+        result = self.adapter._clean_records(records)
+        self.assertEqual(result, {
+            "cps": {"CP_WBS": {
+                "name": "CP_NAME",
+                "wbs": "CP_WBS",
+                "from_date": "",
+                "to_date": "",
+            }},
+            "outcomes": {},
+            "outputs": {},
+            "activities": {}
+         })
+
+    def test_clean_records_outcomes(self):
+        """Need all outcome map values set, otherwise ignore"""
+        self.data["OUTCOME_WBS"] = "OC_WBS"
+        self.data["OUTCOME_AREA_CODE"] = "OC_CODE"
+        self.data["OUTCOME_DESCRIPTION"] = "OC_NAME"
+        self.data["OUTCOME_START_DATE"] = datetime.date.today()
+        self.data["OUTCOME_END_DATE"] = datetime.date.today()
+        records = [self.data]
+        result = self.adapter._clean_records(records)
+        self.assertEqual(result, {
+            "cps": {"": {
+                "name": "",
+                "wbs": "",
+                "from_date": "",
+                "to_date": "",
+            }},
+            "outcomes": {"OC_WBS": {
+                "code": "OC_CODE",
+                "wbs": "OC_WBS",
+                "name": "OC_NAME",
+                "from_date": datetime.date.today(),
+                "to_date": datetime.date.today(),
+            }},
+            "outputs": {},
+            "activities": {}
+        })
+
+    def test_clean_records_outputs(self):
+        """Need all output map values set, otherwise ignore"""
+        self.data["OUTPUT_WBS"] = "OP_WBS"
+        self.data["OUTPUT_DESCRIPTION"] = "OP_NAME"
+        self.data["OUTPUT_START_DATE"] = "OP_START"
+        self.data["OUTPUT_END_DATE"] = "OP_END"
+        records = [self.data]
+        result = self.adapter._clean_records(records)
+        self.assertEqual(result, {
+            "cps": {"": {
+                "name": "",
+                "wbs": "",
+                "from_date": "",
+                "to_date": "",
+            }},
+            "outcomes": {},
+            "outputs": {"OP_WBS": {
+                "wbs": "OP_WBS",
+                "name": "OP_NAME",
+                "from_date": "OP_START",
+                "to_date": "OP_END",
+            }},
+            "activities": {}
+        })
+
+    def test_clean_records_activities(self):
+        """Need all activity map values set, otherwise ignore"""
+        self.data["ACTIVITY_WBS"] = "A_WBS"
+        self.data["ACTIVITY_DESCRIPTION"] = "A_NAME"
+        self.data["ACTIVITY_START_DATE"] = "A_START"
+        self.data["ACTIVITY_END_DATE"] = "A_END"
+        self.data["SIC_CODE"] = "S_CODE"
+        self.data["SIC_NAME"] = "S_NAME"
+        self.data["GIC_CODE"] = "G_CODE"
+        self.data["GIC_NAME"] = "G_NAME"
+        self.data["ACTIVITY_FOCUS_CODE"] = "A_FCODE"
+        self.data["ACTIVITY_FOCUS_NAME"] = "A_FNAME"
+        self.data["HUMANITARIAN_TAG"] = "H_TAG"
+        records = [self.data]
+        result = self.adapter._clean_records(records)
+        self.assertEqual(result, {
+            "cps": {"": {
+                "name": "",
+                "wbs": "",
+                "from_date": "",
+                "to_date": "",
+            }},
+            "outcomes": {},
+            "outputs": {},
+            "activities": {"A_WBS": {
+                "wbs": "A_WBS",
+                "name": "A_NAME",
+                "from_date": "A_START",
+                "to_date": "A_END",
+                "sic_code": "S_CODE",
+                "sic_name": "S_NAME",
+                "gic_code": "G_CODE",
+                "gic_name": "G_NAME",
+                "activity_focus_code": "A_FCODE",
+                "activity_focus_name": "A_FNAME",
+                "humanitarian_tag": "H_TAG",
+            }}
+        })
+
+    def test_convert_records(self):
+        self.data["CP_START_DATE"] = "/Date(1361336400000)/"
+        self.data["CP_END_DATE"] = "/Date(1361336400000)/"
+        self.data["OUTCOME_WBS"] = "OC_WBS"
+        self.data["OUTCOME_AREA_CODE"] = "OC_CODE"
+        self.data["OUTCOME_DESCRIPTION"] = "OC_NAME"
+        self.data["OUTCOME_START_DATE"] = "/Date(2361336400000)/"
+        self.data["OUTCOME_END_DATE"] = "/Date(2361336400000)/"
+        self.data["OUTPUT_START_DATE"] = "/Date(2361336400000)/"
+        self.data["OUTPUT_END_DATE"] = "/Date(2361336400000)/"
+        self.data["ACTIVITY_START_DATE"] = "/Date(2361336400000)/"
+        self.data["ACTIVITY_END_DATE"] = "/Date(2361336400000)/"
+        records = {
+            "GetProgrammeStructureList_JSONResult": json.dumps([self.data])
+        }
+        result = self.adapter._convert_records(records)
+        self.assertEqual(result, {
+            "cps": {"": {
+                "name": "",
+                "wbs": "",
+                "from_date": datetime.date(2013, 2, 20),
+                "to_date": datetime.date(2013, 2, 20),
+            }},
+            "outcomes": {"OC_WBS": {
+                "code": "OC_CODE",
+                "wbs": "OC_WBS",
+                "name": "OC_NAME",
+                "from_date": datetime.date(2044, 10, 29),
+                "to_date": datetime.date(2044, 10, 29),
+            }},
+            "outputs": {},
+            "activities": {}
+        })
+
+
+class TestRAMSynchronizer(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.country = Country.objects.all()[0]
+
+    def setUp(self):
+        self.data = {
+            "INDICATOR_DESCRIPTION": "NAME",
+            "INDICATOR_CODE": "",
+            "WBS_ELEMENT_CODE": "",
+            "BASELINE": "BLINE",
+            "TARGET": "Target",
+        }
+        self.adapter = adapter.RAMSynchronizer(self.country)
+
+    def test_convert_records(self):
+        records = json.dumps([self.data])
+        self.assertEqual(self.adapter._convert_records(records), [self.data])
+
+    def test_clean_records(self):
+        self.data["WBS_ELEMENT_CODE"] = "1234567890ABCDE"
+        self.data["INDICATOR_CODE"] = "WBS"
+        records, wbss = self.adapter._clean_records([self.data])
+        self.assertEqual(records, {"WBS": {
+            "name": "NAME",
+            "baseline": "BLINE",
+            "code": "WBS",
+            "target": "Target",
+            "ram_indicator": True,
+            "result__wbs": "1234/56/78/90A/BCD"
+        }})
+        self.assertEqual(wbss, ["1234/56/78/90A/BCD"])
