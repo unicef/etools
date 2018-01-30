@@ -49,7 +49,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "fund": "FUND",
         "overall_amount": "OVERALL_AMOUNT",
         "overall_amount_dc": "OVERALL_AMOUNT_DC",
-        "line_item_text": "FC_LINE_ITEM_TEXT",
+        "line_item_text": "FR_LINE_ITEM_TEXT",
         "due_date": "DUE_DATE",
         "intervention_amt": "CURRENT_FR_AMOUNT",
         "total_amt": "FR_OVERALL_AMOUNT",
@@ -62,7 +62,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
-                        'DUE_DATE', 'FC_LINE_ITEM_TEXT']
+                        'DUE_DATE', 'FR_LINE_ITEM_TEXT']
 
     def __init__(self, *args, **kwargs):
         self.header_records = {}
