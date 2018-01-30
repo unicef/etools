@@ -540,7 +540,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         return ff - ar - asdp - wor
 
     @classmethod
-    def planned_visits(cls, partner, pv_intervention=None):
+    def planned_visits(cls, partner):
         """For current year sum all programmatic values of planned visits
         records for partner
 
@@ -557,6 +557,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 models.Sum('programmatic'))['programmatic__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+        hact['programmatic_visits']['planned']['q1'] = pv
         hact['programmatic_visits']['planned']['total'] = pv
         partner.hact_values = hact
         partner.save()
@@ -1567,6 +1568,9 @@ class Intervention(TimeStampedModel):
 
         super(Intervention, self).save()
 
+        if self.status == Intervention.ACTIVE:
+            PartnerOrganization.planned_visits(partner=self.agreement.partner)
+
 
 class InterventionAmendment(TimeStampedModel):
     """
@@ -1652,11 +1656,6 @@ class InterventionPlannedVisits(models.Model):
     audit = models.IntegerField(default=0)
 
     tracker = FieldTracker()
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        super(InterventionPlannedVisits, self).save(**kwargs)
-        PartnerOrganization.planned_visits(self.intervention.agreement.partner, self)
 
     class Meta:
         unique_together = ('intervention', 'year')
@@ -1894,9 +1893,9 @@ class GovernmentInterventionResult(models.Model):
         if self.pk:
             prev_result = GovernmentInterventionResult.objects.get(id=self.id)
             if prev_result.planned_visits != self.planned_visits:
-                PartnerOrganization.planned_visits(self.intervention.partner, self)
+                PartnerOrganization.planned_visits(self.intervention.partner)
         else:
-            PartnerOrganization.planned_visits(self.intervention.partner, self)
+            PartnerOrganization.planned_visits(self.intervention.partner)
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 

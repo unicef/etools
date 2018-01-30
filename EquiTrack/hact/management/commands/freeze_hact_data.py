@@ -58,7 +58,7 @@ class Command(BaseCommand):
             set_country(country.name)
             self.stdout.write('Freezing data for {}'.format(country.name))
             for partner in PartnerOrganization.objects.all():
-                if partner.total_ct_cp > 0 or partner.total_ct_cy__gt > 0:
+                if partner.total_ct_cp > 0 or partner.total_ct_cy > 0:
                     hact_history, created = HactHistory.objects.get_or_create(partner=partner, year=year)
                     self.freeze_data(hact_history)
                 partner.hact_values = hact_default()

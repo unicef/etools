@@ -1,5 +1,4 @@
-import datetime
-import time
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.db import connection
 from django.utils import timezone
@@ -13,11 +12,9 @@ from users.models import Country
 from vision.adapters.funding import FundCommitmentSynchronizer, FundReservationsSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
-from vision.adapters.publics_adapter import CostAssignmentSynch
 from vision.adapters.purchase_order import POSynchronizer
 from vision.adapters.tpm_adapter import TPMPartnerSynchronizer
 from vision.exceptions import VisionException
-from vision.models import VisionSyncLog
 
 PUBLIC_SYNC_HANDLERS = []
 
@@ -35,56 +32,14 @@ logger = get_task_logger(__name__)
 
 
 @app.task
-def fake_task_delay():
-    country = Country.objects.get(name="UAT")
-    log = VisionSyncLog(
-        country=country,
-        handler_name="Fake Task Delay 300"
-    )
-    log.save()
-    time.sleep(300)
-    log.successful = True
-    log.save()
-
-
-@app.task
-def fake_task_no_delay():
-    country = Country.objects.get(name="UAT")
-    log = VisionSyncLog(
-        country=country,
-        handler_name="Fake Task NoDelay 2"
-    )
-    time.sleep(2)
-    log.successful = True
-    log.save()
-
-
-@app.task
-def cost_assignment_sync(country_name=None):
-    processed = []
-    countries = Country.objects.filter(vision_sync_enabled=True)
-    if country_name is not None:
-        countries = countries.filter(name=country_name)
-
-    for country in countries:
-        connection.set_tenant(country)
-
-        try:
-            logger.info(u'Starting vision sync handler {} for country {}'.format(
-                CostAssignmentSynch.__name__, country.name
-            ))
-            CostAssignmentSynch(country).sync()
-            logger.info(u"{} sync successfully".format(CostAssignmentSynch.__name__))
-
-        except VisionException as e:
-            logger.error(u"{} sync failed, Reason: {}".format(
-                CostAssignmentSynch.__name__, e.message
-            ))
-        processed.append(country)
-
-
-@app.task
 def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
+    """
+    Do the vision sync for all countries that have vision_sync_enabled=True,
+    or just the named country.  Defaults to SYNC_HANDLERS but a
+    different iterable of handlers can be passed in.
+    """
+    # Not invoked as a task from code in this repo, but it is scheduled
+    # by other means, so it's really a Celery task.
 
     global_synchronizers = [handler for handler in synchronizers if handler.GLOBAL_CALL]
     tenant_synchronizers = [handler for handler in synchronizers if not handler.GLOBAL_CALL]
@@ -114,8 +69,12 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
     logger.info(text)
 
 
-@app.task
-def sync_handler(country_name, handler):
+@app.task(bind=True)
+def sync_handler(self, country_name, handler):
+    """
+    Run .sync() on one handler for one country.
+    """
+    # Scheduled from vision_sync_task() (above).
     logger.info(u'Starting vision sync handler {} for country {}'.format(handler.__name__, country_name))
     try:
         country = Country.objects.get(name=country_name)
@@ -123,6 +82,7 @@ def sync_handler(country_name, handler):
         logger.error(u"{} sync failed, Could not find a Country with this name: {}".format(
             handler.__name__, country_name
         ))
+        # No point in retrying if there's no such country
     else:
         try:
             handler(country).sync()
@@ -132,58 +92,17 @@ def sync_handler(country_name, handler):
             logger.error(u"{} sync failed, Reason: {}, Country: {}".format(
                 handler.__name__, e.message, country_name
             ))
-
-
-@app.task
-def sync(country_name=None, synchronizers=None):
-    synchronizers = synchronizers or SYNC_HANDLERS
-    processed = []
-    countries = Country.objects.filter(vision_sync_enabled=True)
-    if country_name is not None:
-        countries = countries.filter(name=country_name)
-
-    global_handlers = [handler for handler in synchronizers if handler.GLOBAL_CALL]
-    tenant_handlers = [handler for handler in synchronizers if not handler.GLOBAL_CALL]
-
-    public_tenant = Country.objects.get(schema_name='public')
-    for handler in global_handlers:
-        try:
-            logger.info(u'Starting vision sync handler {} for country {}'.format(
-                handler.__name__, public_tenant.name
-            ))
-            handler(public_tenant).sync()
-            logger.info(u"{} sync successfully".format(handler.__name__))
-
-        except VisionException as e:
-            logger.error(u"{} sync failed, Reason: {}".format(
-                handler.__name__, e.message
-            ))
-
-    for country in countries:
-        connection.set_tenant(country)
-        for handler in tenant_handlers:
+            # This might be worth retrying.
             try:
-                logger.info(u'Starting vision sync handler {} for country {}'.format(
-                    handler.__name__, country.name
-                ))
-                handler(country).sync()
-                logger.info(u"{} sync successfully".format(handler.__name__))
-
-            except VisionException as e:
-                logger.error(u"{} sync failed, Reason: {}".format(
-                    handler.__name__, e.message
-                ))
-        country.vision_last_synced = datetime.datetime.now()
-        country.save()
-        processed.append(country)
-
-    text = u'Processed the following countries during sync: {}'.format(
-        ',\n '.join([country.name for country in processed])
-    )
-    send_to_slack(text)
-    logger.info(text)
+                raise self.retry(exc=e)
+            except VisionException:
+                # We must have exceeded retries and Celery raised the original exception again.
+                # We've already logged it.
+                pass
 
 
+# Not scheduled by any code in this repo, but by other means, so keep it around.
+# TODO: Write some tests for it!
 @app.task
 def update_all_partners(country_name=None):
     logger.info(u'Starting update HACT values for partners')
@@ -204,6 +123,8 @@ def update_all_partners(country_name=None):
                 logger.exception(u'Exception {} {}'.format(partner.name, partner.hact_values))
 
 
+# Not scheduled by any code in this repo, but by other means, so keep it around.
+# TODO: Write some tests for it!
 @app.task
 def update_purchase_orders(country_name=None):
     logger.info(u'Starting update values for purchase order')
