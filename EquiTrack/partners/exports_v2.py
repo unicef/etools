@@ -48,7 +48,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'expiring_assessment_flag',
         'approaching_threshold_flag',
         # TODO change with q1 after prp-refactoring
-        'hact_values.programmatic_visits.planned.total',
+        'hact_values.programmatic_visits.planned.q1',
         'hact_values.programmatic_visits.planned.q2',
         'hact_values.programmatic_visits.planned.q3',
         'hact_values.programmatic_visits.planned.q4',
