@@ -6,10 +6,11 @@ import json
 from EquiTrack.tests.mixins import FastTenantTestCase
 from EquiTrack.factories import (
     CountryProgrammeFactory,
+    IndicatorFactory,
     ResultFactory,
     ResultTypeFactory,
 )
-from reports.models import CountryProgramme, Result, ResultType
+from reports.models import CountryProgramme, Indicator, Result, ResultType
 from users.models import Country
 from vision.adapters import programme as adapter
 
@@ -577,12 +578,13 @@ class TestRAMSynchronizer(FastTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.all()[0]
+        cls.result_type_output = ResultTypeFactory(name=ResultType.OUTPUT)
 
     def setUp(self):
         self.data = {
             "INDICATOR_DESCRIPTION": "NAME",
-            "INDICATOR_CODE": "",
-            "WBS_ELEMENT_CODE": "",
+            "INDICATOR_CODE": "WBS",
+            "WBS_ELEMENT_CODE": "1234567890ABCDE",
             "BASELINE": "BLINE",
             "TARGET": "Target",
         }
@@ -593,8 +595,6 @@ class TestRAMSynchronizer(FastTenantTestCase):
         self.assertEqual(self.adapter._convert_records(records), [self.data])
 
     def test_clean_records(self):
-        self.data["WBS_ELEMENT_CODE"] = "1234567890ABCDE"
-        self.data["INDICATOR_CODE"] = "WBS"
         records, wbss = self.adapter._clean_records([self.data])
         self.assertEqual(records, {"WBS": {
             "name": "NAME",
@@ -605,3 +605,194 @@ class TestRAMSynchronizer(FastTenantTestCase):
             "result__wbs": "1234/56/78/90A/BCD"
         }})
         self.assertEqual(wbss, ["1234/56/78/90A/BCD"])
+
+    def test_process_indicators_update(self):
+        """Check that update happens if field name changed"""
+        result = ResultFactory(
+            result_type=self.result_type_output,
+            wbs="1234/56/78/90A/BCD"
+        )
+        indicator = IndicatorFactory(
+            code="WBS",
+            name="New",
+            baseline="BLINE",
+            target="Target",
+            result=result
+        )
+        response = self.adapter.process_indicators([self.data])
+        self.assertEqual(response, {
+            "details": "Created Skipped 0\n"
+            "Updated Skipped 0\n"
+            "Created 0\n"
+            "Indicators Updated to Active 0\n"
+            "Indicators Updated to Inactive 0\n"
+            "Updated 1",
+            "total_records": 1,
+            "processed": 1
+        })
+        indicator_updated = Indicator.objects.get(pk=indicator.pk)
+        self.assertEqual(indicator_updated.name, "NAME")
+
+    def test_process_indicators_wbs_not_found(self):
+        """Check that NO update happens if result wbs differs and NOT found
+        update is skipped
+        """
+        result = ResultFactory(
+            result_type=self.result_type_output,
+            wbs="1234/56/78/90A/EFG"
+        )
+        IndicatorFactory(
+            code="WBS",
+            name="NAME",
+            baseline="BLINE",
+            target="Target",
+            result=result
+        )
+        response = self.adapter.process_indicators([self.data])
+        self.assertEqual(response, {
+            "details": "Created Skipped 0\n"
+            "Updated Skipped 1\n"
+            "Created 0\n"
+            "Indicators Updated to Active 0\n"
+            "Indicators Updated to Inactive 0\n"
+            "Updated 0",
+            "total_records": 1,
+            "processed": 0
+        })
+        result_updated = Result.objects.get(pk=result.pk)
+        self.assertEqual(result_updated.wbs, result.wbs)
+
+    def test_process_indicators_result_not_found(self):
+        """Check that NO update happens if no result and result wbs NOT found
+        update is skipped
+        """
+        indicator = IndicatorFactory(
+            code="WBS",
+            name="NAME",
+            baseline="BLINE",
+            target="Target",
+        )
+        response = self.adapter.process_indicators([self.data])
+        self.assertEqual(response, {
+            "details": "Created Skipped 0\n"
+            "Updated Skipped 0\n"
+            "Created 0\n"
+            "Indicators Updated to Active 0\n"
+            "Indicators Updated to Inactive 0\n"
+            "Updated 0",
+            "total_records": 1,
+            "processed": 0
+        })
+        indicator_updated = Indicator.objects.get(pk=indicator.pk)
+        self.assertIsNone(indicator_updated.result)
+
+    def test_process_indicators_wbs_found(self):
+        """Check that update happens if result wbs differs and found"""
+        result_old = ResultFactory(
+            result_type=self.result_type_output,
+            wbs="1234/56/78/90A/EFG"
+        )
+        result_new = ResultFactory(
+            result_type=self.result_type_output,
+            wbs="1234/56/78/90A/BCD"
+        )
+        indicator = IndicatorFactory(
+            code="WBS",
+            name="NAME",
+            baseline="BLINE",
+            target="Target",
+            result=result_old
+        )
+        response = self.adapter.process_indicators([self.data])
+        self.assertEqual(response, {
+            "details": "Created Skipped 0\n"
+            "Updated Skipped 0\n"
+            "Created 0\n"
+            "Indicators Updated to Active 0\n"
+            "Indicators Updated to Inactive 0\n"
+            "Updated 1",
+            "total_records": 1,
+            "processed": 1
+        })
+        indicator_updated = Indicator.objects.get(pk=indicator.pk)
+        self.assertEqual(indicator_updated.result, result_new)
+
+    def test_process_indicators_add_result(self):
+        """Check that result is added to indicator, if found"""
+        result = ResultFactory(
+            result_type=self.result_type_output,
+            wbs="1234/56/78/90A/BCD"
+        )
+        indicator = IndicatorFactory(
+            code="WBS",
+            name="NAME",
+            baseline="BLINE",
+            target="Target",
+        )
+        response = self.adapter.process_indicators([self.data])
+        self.assertEqual(response, {
+            "details": "Created Skipped 0\n"
+            "Updated Skipped 0\n"
+            "Created 0\n"
+            "Indicators Updated to Active 0\n"
+            "Indicators Updated to Inactive 0\n"
+            "Updated 1",
+            "total_records": 1,
+            "processed": 1
+        })
+        indicator_updated = Indicator.objects.get(pk=indicator.pk)
+        self.assertEqual(indicator_updated.result, result)
+
+    def test_process_indicators_create(self):
+        """Check that indicator is created"""
+        ResultFactory(
+            result_type=self.result_type_output,
+            wbs="1234/56/78/90A/BCD"
+        )
+        indicator_qs = Indicator.objects.filter(name="NAME")
+        self.assertFalse(indicator_qs.exists())
+        response = self.adapter.process_indicators([self.data])
+        self.assertEqual(response, {
+            "details": "Created Skipped 0\n"
+            "Updated Skipped 0\n"
+            "Created 1\n"
+            "Indicators Updated to Active 0\n"
+            "Indicators Updated to Inactive 0\n"
+            "Updated 0",
+            "total_records": 1,
+            "processed": 1
+        })
+        self.assertTrue(indicator_qs.exists())
+
+    def test_process_indicators_create_no_result(self):
+        """Check that if result not found NO indicator is created"""
+        indicator_qs = Indicator.objects.filter(name="NAME")
+        self.assertFalse(indicator_qs.exists())
+        response = self.adapter.process_indicators([self.data])
+        self.assertEqual(response, {
+            "details": "Created Skipped 1\n"
+            "Updated Skipped 0\n"
+            "Created 0\n"
+            "Indicators Updated to Active 0\n"
+            "Indicators Updated to Inactive 0\n"
+            "Updated 0",
+            "total_records": 1,
+            "processed": 0
+        })
+        self.assertFalse(indicator_qs.exists())
+
+    def test_save_records(self):
+        indicator_qs = Indicator.objects.filter(name="NAME")
+        self.assertFalse(indicator_qs.exists())
+        response = self.adapter._save_records([self.data])
+        self.assertEqual(response, {
+            "details": "Created Skipped 1\n"
+            "Updated Skipped 0\n"
+            "Created 0\n"
+            "Indicators Updated to Active 0\n"
+            "Indicators Updated to Inactive 0\n"
+            "Updated 0",
+            "total_records": 1,
+            "processed": 0
+        })
+        self.assertFalse(indicator_qs.exists())
