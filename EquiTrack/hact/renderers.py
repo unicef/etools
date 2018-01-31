@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from rest_framework_csv.renderers import CSVRenderer
+from six.moves import range
 
 
 class HactHistoryCSVRenderer(CSVRenderer):
@@ -15,7 +16,7 @@ class HactHistoryCSVRenderer(CSVRenderer):
         )
 
     def set_header(self, header):
-        return range(0, len(header))
+        return list(range(0, len(header)))
 
     def set_labels(self, header):
         labels = {}
