@@ -53,7 +53,11 @@ git+https://github.com/xhtml2pdf/xhtml2pdf@d2ca1d3b054a6e3faf89ce13116da5cacf5e1
 html5lib==1.0b8 #must be added after xhtml2pdf
 reportlab==3.3.0
 flower==0.9.1
+
+# Helpful to developers when running locally:
 django-debug-toolbar==1.6 # add debug-toolbar to be able to test in dev while we have the current docker build
+django-extensions
+
 pyyaml==3.12
 django-ordered-model==1.3.0
 django-filter==1.0.2

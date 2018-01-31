@@ -1,5 +1,4 @@
 -r base.txt
-django-extensions
 
 # For docs
 sphinx==1.6.2
