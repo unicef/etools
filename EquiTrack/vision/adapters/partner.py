@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime
+from decimal import Decimal
 
 from partners.models import PartnerOrganization
 from vision.utils import comp_decimals
@@ -94,10 +95,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         return [] if data == VISION_NO_DATA_MESSAGE else data
 
     def update_stuff(self, records):
-        _pos = []
-        _vendors = []
-        _totals_cy = {}
-        _totals_cp = {}
 
         def _changed_fields(fields, local_obj, api_obj):
             for field in fields:
@@ -122,26 +119,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     logger.debug('field changed', field)
                     return True
             return False
-
-        def _process_po(po_api):
-            if po_api['VENDOR_CODE'] not in _vendors:
-                _pos.append(po_api)
-                _vendors.append(po_api['VENDOR_CODE'])
-
-            if not po_api['TOTAL_CASH_TRANSFERRED_CP']:
-                po_api['TOTAL_CASH_TRANSFERRED_CP'] = 0
-            if not po_api['TOTAL_CASH_TRANSFERRED_CY']:
-                po_api['TOTAL_CASH_TRANSFERRED_CY'] = 0
-
-            if not _totals_cp.get(po_api['VENDOR_CODE']):
-                _totals_cp[po_api['VENDOR_CODE']] = po_api['TOTAL_CASH_TRANSFERRED_CP']
-            else:
-                _totals_cp[po_api['VENDOR_CODE']] += po_api['TOTAL_CASH_TRANSFERRED_CP']
-
-            if not _totals_cy.get(po_api['VENDOR_CODE']):
-                _totals_cy[po_api['VENDOR_CODE']] = po_api['TOTAL_CASH_TRANSFERRED_CY']
-            else:
-                _totals_cy[po_api['VENDOR_CODE']] += po_api['TOTAL_CASH_TRANSFERRED_CY']
 
         def _partner_save(processed, partner):
 
@@ -198,11 +175,11 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     saving = True
 
                 if partner_org.total_ct_cp is None or partner_org.total_ct_cy is None or \
-                        not comp_decimals(partner_org.total_ct_cp, _totals_cp[partner['VENDOR_CODE']]) or \
-                        not comp_decimals(partner_org.total_ct_cy, _totals_cy[partner['VENDOR_CODE']]):
+                        not comp_decimals(partner_org.total_ct_cp, Decimal(partner['TOTAL_CASH_TRANSFERRED_CP'])) or \
+                        not comp_decimals(partner_org.total_ct_cy, Decimal(partner['TOTAL_CASH_TRANSFERRED_CY'])):
 
-                    partner_org.total_ct_cy = _totals_cy[partner['VENDOR_CODE']]
-                    partner_org.total_ct_cp = _totals_cp[partner['VENDOR_CODE']]
+                    partner_org.total_ct_cy = partner['TOTAL_CASH_TRANSFERRED_CY']
+                    partner_org.total_ct_cp = partner['TOTAL_CASH_TRANSFERRED_CP']
 
                     saving = True
                     logger.debug('sums changed', partner_org)
@@ -210,8 +187,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 if saving:
                     logger.debug('Updating Partner', partner_org)
                     partner_org.save()
-                del _totals_cy[partner['VENDOR_CODE']]
-                del _totals_cp[partner['VENDOR_CODE']]
 
                 processed += 1
 
@@ -223,15 +198,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         filtered_records = self._filter_records(records)
 
         for partner in filtered_records:
-            _process_po(partner)
-
-        for partner in _pos:
             processed = _partner_save(processed, partner)
 
-        self._pos = []
-        self._vendors = []
-        self._totals_cy = {}
-        self._totals_cp = {}
         return processed
 
     def _save_records(self, records):
