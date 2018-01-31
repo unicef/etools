@@ -116,6 +116,7 @@ def update_all_partners(country_name=None):
                 PartnerOrganization.planned_visits(partner)
                 PartnerOrganization.programmatic_visits(partner)
                 PartnerOrganization.spot_checks(partner)
+                PartnerOrganization.audits_completed(partner)
 
             except Exception:
                 logger.exception(u'Exception {} {}'.format(partner.name, partner.hact_values))
