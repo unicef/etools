@@ -44,18 +44,35 @@ def check_fields(apps, schema_editor):
             int(aind.target)
             if aind.baseline is not None:
                 int(aind.baseline)
+
+            assert int(aind.target) >= 0
         except:
             myprint('bad indicator: ',
                     ' '.join(unicode(i) for i in ['id', aind.id, 'target', aind.target, 'baseline', aind.baseline,
                                                   'interventionid', aind.lower_result.result_link.intervention.id]))
+
             if not aind.target:
                 aind.target = 0
                 aind.save()
                 myprint('FIXED TARGET')
+
+            else:
+                aind.target = aind.target.replace(',', '')
+                if int(aind.target) < 0:
+                    aind.target = 0
+                aind.save()
+                myprint('FIXED TARGET')
+
             if aind.baseline == '':
                 aind.baseline = None
                 myprint('FIXED BASELINE')
                 aind.save()
+            else:
+                aind.baseline = aind.baseline.replace(',', '')
+                if int(aind.baseline) < 0:
+                    aind.baseline = 0
+                aind.save()
+                myprint('FIXED BASELINE')
 
 def reverse_unit(apps, schema_editor):
     pass
