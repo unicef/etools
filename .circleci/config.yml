@@ -19,7 +19,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum "EquiTrack/requirements/local.txt" }}-{{ checksum ".circleci/config.yml" }}
+          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum ".circleci/config.yml" }}
       - run:
           name: create main virtualenv, install tox, generate test envs
           command: |
@@ -28,11 +28,11 @@ jobs:
             pip --quiet install tox
             cd EquiTrack && tox --notest
       - save_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum "EquiTrack/requirements/local.txt" }}-{{ checksum ".circleci/config.yml" }}
+          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
             - "EquiTrack/.tox"
-            - /root/.cache/pip/wheels
+            - /root/.cache/pip
       - run:
           name: Postgres Extensions
           command: |
