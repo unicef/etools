@@ -1433,6 +1433,11 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
+    in_amendment = models.BooleanField(
+        verbose_name=_("Amendment Open"),
+        default=False,
+    )
+
     # Flag if this has been migrated to a status that is not correct
     # previous status
     metadata = JSONField(
@@ -1657,7 +1662,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE],
                 target=[ENDED],
-                conditions=[intervention_validation.transition_ok])
+                conditions=[intervention_validation.transition_to_ended])
     def transition_to_ended(self):
         # From active, ended, suspended and terminated you cannot move to draft or cancelled because yo'll
         # mess up the reference numbers.
@@ -1673,7 +1678,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE],
                 target=[SUSPENDED],
-                conditions=[intervention_validation.transition_ok],
+                conditions=[intervention_validation.transition_to_suspended],
                 permission=intervention_validation.partnership_manager_only)
     def transition_to_suspended(self):
         pass
@@ -1681,7 +1686,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE, SUSPENDED],
                 target=[TERMINATED],
-                conditions=[intervention_validation.transition_ok],
+                conditions=[intervention_validation.transition_to_terminated],
                 permission=intervention_validation.partnership_manager_only)
     def transition_to_terminated(self):
         pass
@@ -1827,8 +1832,8 @@ class InterventionAmendment(TimeStampedModel):
         # set
         if self.pk is None:
             self.amendment_number = self.compute_reference_number()
+            self.intervention.in_amendment = True
             self.intervention.save(amendment_number=self.amendment_number)
-
         return super(InterventionAmendment, self).save(**kwargs)
 
     def __str__(self):

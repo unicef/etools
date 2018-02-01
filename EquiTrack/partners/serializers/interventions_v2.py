@@ -415,7 +415,6 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
@@ -506,7 +505,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
-            "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names"
+            "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
+            "in_amendment"
         )
 
 

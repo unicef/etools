@@ -125,7 +125,6 @@ class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
-        'amendments': InterventionAmendmentCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -157,7 +156,6 @@ class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
             'planned_budget',
             'planned_visits',
             'attachments',
-            'amendments',
             'result_links'
         ]
         nested_related_names = ['ll_results']
@@ -283,7 +281,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
-        'amendments': InterventionAmendmentCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -298,7 +295,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['planned_budget', 'planned_visits',
-                          'attachments', 'amendments',
+                          'attachments',
                           'result_links']
         nested_related_names = ['ll_results']
         instance, old_instance, serializer = self.my_update(
@@ -466,7 +463,7 @@ class InterventionResultLinkDeleteView(DestroyAPIView):
             raise ValidationError("You do not have permissions to delete a result")
 
 
-class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListAPIView):
+class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
     """
     Returns a list of InterventionAmendments.
     """
@@ -506,6 +503,15 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
         return q
+
+    def create(self, request, *args, **kwargs):
+        raw_data = copy.deepcopy(request.data)
+        raw_data['intervention'] = kwargs.get('intervention_pk', None)
+        serializer = self.get_serializer(data=raw_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class InterventionAmendmentDeleteView(DestroyAPIView):
