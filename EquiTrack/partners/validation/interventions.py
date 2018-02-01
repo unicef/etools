@@ -181,7 +181,7 @@ def ssfa_agreement_has_no_other_intervention(i):
 
 
 def rigid_in_amendment_flag(i):
-    if i.in_amendment is True and i.old_instance.in_amendment is False:
+    if i.old_instance and i.in_amendment is True and i.old_instance.in_amendment is False:
         return False
     return True
 
