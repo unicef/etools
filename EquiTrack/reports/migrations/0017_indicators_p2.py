@@ -19,6 +19,9 @@ def myprint(*args):
 
 
 def finalize_migrations(apps, schema_editor):
+    # no need for this in the test db
+    if connection.schema_name == 'test':
+        return
     # AppliedIndicator = apps.get_model('reports', 'AppliedIndicator')
     # Location = apps.get_model('locations', 'Location')
     # GatewayType = apps.get_model('locations', 'GatewayType')
