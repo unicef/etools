@@ -70,15 +70,43 @@ def transition_to_closed(i):
 
     # TODO: figure out Action Point Validation once the spec is completed
 
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
     return True
 
 
+def transition_to_terminated(i):
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
+    return True
+
+
+def transition_to_ended(i):
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
+    return True
+
+
+def transition_to_suspended(i):
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
+    return True
+
 def transition_to_signed(i):
     from partners.models import Agreement
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
     if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
         raise TransitionError([_('The PCA related to this record is Suspended or Terminated. '
                                  'This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
+
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
     return True
 
 
@@ -152,6 +180,12 @@ def ssfa_agreement_has_no_other_intervention(i):
     return True
 
 
+def rigid_in_amendment_flag(i):
+    if i.in_amendment is True and i.old_instance.in_amendment is False:
+        return False
+    return True
+
+
 class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
@@ -162,6 +196,7 @@ class InterventionValid(CompleteValidation):
         start_date_signed_valid,
         start_date_related_agreement_valid,
         document_type_pca_valid,
+        rigid_in_amendment_flag,
     ]
 
     VALID_ERRORS = {
@@ -174,7 +209,8 @@ class InterventionValid(CompleteValidation):
         'ssfa_agreement_has_no_other_intervention': 'The agreement selected has at least one '
                                                     'other SSFA Document connected',
         'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
-        'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA'
+        'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA',
+        'rigid_in_amendment_flag': 'Amendment Flag cannot be turned on without adding an amendment'
     }
 
     PERMISSIONS_CLASS = InterventionPermissions
