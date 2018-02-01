@@ -2,12 +2,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime
 
-from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save
-
 import factory
 
-from firms.utils import generate_username
+from EquiTrack.factories import UserFactory
 from users.models import UserProfile
 
 
@@ -17,18 +14,6 @@ class UserProfileFactory(factory.DjangoModelFactory):
 
     phone_number = factory.Faker('phone_number')
     job_title = 'Tester'
-
-
-@factory.django.mute_signals(post_save)
-class UserFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = get_user_model()
-
-    username = factory.LazyFunction(generate_username)
-    first_name = factory.Faker('first_name')
-    last_name = factory.Faker('last_name')
-    email = factory.Faker('email')
-    profile = factory.RelatedFactory(UserProfileFactory, 'user')
 
 
 class BaseStaffMemberFactory(factory.DjangoModelFactory):

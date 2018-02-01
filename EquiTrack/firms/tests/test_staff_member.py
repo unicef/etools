@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from rest_framework import serializers
 
-from firms.factories import UserFactory
+from EquiTrack.factories import UserFactory
 from firms.serializers import BaseStaffMemberSerializer
 from firms.tests.models import StaffMember
 

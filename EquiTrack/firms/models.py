@@ -9,9 +9,9 @@ from django.utils.translation import ugettext_lazy as _
 
 from allauth.account.utils import user_pk_to_url_str
 from model_utils.models import TimeStampedModel
-from post_office import mail
 
 from EquiTrack.utils import get_current_site, get_environment
+from notification.utils import send_notification
 
 
 class BaseFirmManager(models.Manager):
@@ -113,10 +113,9 @@ class BaseStaffMember(models.Model):
             'staff_member': self,
             'set_password_url': 'https://{}{}'.format(get_current_site().domain, set_password_url),
         }
-
-        mail.send(
-            self.user.email,
-            settings.DEFAULT_FROM_EMAIL,
+        send_notification(
+            type='Email',
+            recipients=[self.user.email],
             template='organisations/staff_member/set_password',
             context=context,
         )

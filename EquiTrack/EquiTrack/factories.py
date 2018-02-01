@@ -77,11 +77,14 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory('EquiTrack.factories.UserFactory', profile=None)
 
 
+@factory.django.mute_signals(post_save)
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = get_user_model()
 
     username = factory.Sequence(lambda n: "user_%d" % n)
+    first_name = factory.Faker('first_name')
+    last_name = factory.Faker('last_name')
     email = factory.Sequence(lambda n: "user{}@example.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
@@ -89,20 +92,11 @@ class UserFactory(factory.django.DjangoModelFactory):
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
     profile = factory.RelatedFactory(ProfileFactory, 'user')
 
-    @classmethod
-    def _generate(cls, create, attrs):
-        """Override the default _generate() to disable the post-save signal."""
-
-        # Note: If the signal was defined with a dispatch_uid, include that in both calls.
-        post_save.disconnect(user_models.UserProfile.create_user_profile, get_user_model())
-        user = super(UserFactory, cls)._generate(create, attrs)
-        post_save.connect(user_models.UserProfile.create_user_profile, get_user_model())
-        return user
-
     @factory.post_generation
     def groups(self, create, extracted, **kwargs):
-        group, created = Group.objects.get_or_create(name='UNICEF User')
-        self.groups.add(group)
+        if self.pk:
+            group, created = Group.objects.get_or_create(name='UNICEF User')
+            self.groups.add(group)
 
 
 class GatewayTypeFactory(factory.django.DjangoModelFactory):

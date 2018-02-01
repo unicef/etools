@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime
 from decimal import Decimal
+from pprint import pformat
 
 from django.conf import settings
 from django.utils import timezone
@@ -13,6 +14,7 @@ import partners.tasks
 from EquiTrack.factories import (
     AgreementFactory, CountryFactory, FundsReservationHeaderFactory, InterventionFactory, UserFactory,)
 from EquiTrack.tests.mixins import FastTenantTestCase
+from notification.models import Notification
 from partners.models import Agreement, Intervention
 from users.models import User
 
@@ -90,9 +92,19 @@ class PartnersTestBaseClass(FastTenantTestCase):
         https://docs.python.org/3/library/unittest.mock.html#unittest.mock.Mock.call_args
         '''
         self.assertEqual(mocked_function.call_count, len(all_expected_call_args))
-
+        i = 0
         for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
+            if actual_call_args != expected_call_args:
+                s = """In call #%d, call args not as expected.
+Expected:
+%s
+
+Actual:
+%s
+                """ % (i, pformat(expected_call_args, indent=4), pformat(actual_call_args, indent=4))
+                self.fail(s)
             self.assertEqual(actual_call_args, expected_call_args)
+            i += 1
 
     def _configure_mock_country(self, MockCountry):
         '''helper to perform common configuration of the MockCountry that every task test uses.'''
@@ -511,10 +523,10 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
             ]
         self._assertCalls(mock_logger.info, expected_call_args)
 
-    @mock.patch('partners.tasks.Notification.objects', spec=['create'])
+    @mock.patch('notification.utils.Notification')
     def test_notify_of_signed_interventions_with_some_interventions(
             self,
-            mock_notification_objects,
+            mock_notification_model,
             mock_db_connection,
             mock_logger):
         '''Exercise _notify_of_signed_interventions_with_no_frs() when it has some interventions to work on'''
@@ -538,20 +550,27 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
         # Mock Notifications.objects.create() to return a Mock. In order to *truly* mimic create(), my
         # mock_notification_objects.create() should return a new (mock) object every time, but this lazy way of
         # returning the same object is good enough and still allows me to count calls to .send_notification().
-        mock_notification = mock.Mock(spec=['send_notification'])
-        mock_notification_objects.create = mock.Mock(return_value=mock_notification)
+        mock_notification = mock.Mock(spec=['send_notification', 'save', 'full_clean'])
+        mock_notification_model.return_value = mock_notification
 
         # I'm done mocking, it's time to call the function.
         partners.tasks._notify_of_signed_interventions_with_no_frs(self.country_name)
 
         # Verify that Notification.objects.create() was called as expected.
-        expected_call_args = [((), {'sender': intervention_,
-                                    'recipients': [],
-                                    'template_name': 'partners/partnership/signed/frs',
-                                    'template_data': partners.tasks.get_intervention_context(intervention_)
-                                    })
+        expected_call_args = [((), {
+            'type': 'Email',
+            'sender': intervention_,
+            'recipients': [],
+            'cc': [],
+            'from_address': '',
+            'template_name': 'partners/partnership/signed/frs',
+            'template_data': partners.tasks.get_intervention_context(intervention_),
+            'subject': '',
+            'text_message': '',
+            'html_message': '',
+        })
                               for intervention_ in interventions]
-        self._assertCalls(mock_notification_objects.create, expected_call_args)
+        self._assertCalls(mock_notification_model, expected_call_args)
 
         # Verify that each notification object that was created had send_notification() called.
         expected_call_args = [((), {})] * len(interventions)
@@ -592,10 +611,10 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
         expected_call_args = [((template.format(self.country_name), ), {})]
         self._assertCalls(mock_logger.info, expected_call_args)
 
-    @mock.patch('partners.tasks.Notification.objects', spec=['create'])
+    @mock.patch('notification.utils.Notification')
     def test_notify_of_ended_interventions_with_some_interventions(
             self,
-            mock_notification_objects,
+            mock_notification_model,
             mock_db_connection,
             mock_logger):
         '''Exercise _notify_of_ended_interventions_with_mismatched_frs() when it has some interventions to work on'''
@@ -627,20 +646,27 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
         # Mock Notifications.objects.create() to return a Mock. In order to *truly* mimic create(), my
         # mock_notification_objects.create() should return a new (mock) object every time, but the lazy way or
         # returning the same object is good enough and still allows me to count calls to .send_notification().
-        mock_notification = mock.Mock(spec=['send_notification'])
-        mock_notification_objects.create = mock.Mock(return_value=mock_notification)
+        mock_notification = mock.Mock(spec=['send_notification', 'save', 'full_clean'])
+        mock_notification_model.return_value = mock_notification
 
         # I'm done mocking, it's time to call the function.
         partners.tasks._notify_of_ended_interventions_with_mismatched_frs(self.country_name)
 
         # Verify that Notification.objects.create() was called as expected.
-        expected_call_args = [((), {'sender': intervention_,
-                                    'recipients': [],
-                                    'template_name': 'partners/partnership/ended/frs/outstanding',
-                                    'template_data': partners.tasks.get_intervention_context(intervention_)
-                                    })
+        expected_call_args = [((), {
+            'type': 'Email',
+            'sender': intervention_,
+            'recipients': [],
+            'cc': [],
+            'from_address': '',
+            'template_name': 'partners/partnership/ended/frs/outstanding',
+            'template_data': partners.tasks.get_intervention_context(intervention_),
+            'subject': '',
+            'text_message': '',
+            'html_message': '',
+        })
                               for intervention_ in interventions]
-        self._assertCalls(mock_notification_objects.create, expected_call_args)
+        self._assertCalls(mock_notification_model, expected_call_args)
 
         # Verify that each created notification object had send_notification() called.
         expected_call_args = [((), {})] * len(interventions)
@@ -680,10 +706,10 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
         expected_call_args = [((template.format(self.country_name), ), {})]
         self._assertCalls(mock_logger.info, expected_call_args)
 
-    @mock.patch('partners.tasks.Notification.objects', spec=['create'])
+    @mock.patch('notification.utils.Notification')
     def test_notify_interventions_ending_soon_with_some_interventions(
             self,
-            mock_notification_objects,
+            mock_notification_model,
             mock_db_connection,
             mock_logger):
         '''Exercise _notify_interventions_ending_soon() when there are interventions for it to work on.
@@ -713,9 +739,10 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
 
         # Mock Notifications.objects.create() to return a Mock. In order to *truly* mimic create(), my
         # mock_notification_objects.create() should return a new (mock) object every time, but the lazy way or
-        # returning the same object is good enough and still allows me to count calls to .send_notification().
-        mock_notification = mock.Mock(spec=['send_notification'])
-        mock_notification_objects.create = mock.Mock(return_value=mock_notification)
+        # returning the same object is good enough and still allows me to count calls to .send_notification()
+        # on this single object.
+        mock_notification = mock.Mock(spec=['send_notification', 'full_clean', 'save'])
+        mock_notification_model.return_value = mock_notification
 
         # I'm done mocking, it's time to call the function.
         partners.tasks._notify_interventions_ending_soon(self.country_name)
@@ -725,12 +752,19 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
         for intervention in interventions:
             template_data = partners.tasks.get_intervention_context(intervention)
             template_data['days'] = str((intervention.end - today).days)
-            expected_call_args.append(((), {'sender': intervention,
-                                            'recipients': [],
-                                            'template_name': 'partners/partnership/ending',
-                                            'template_data': template_data
-                                            }))
-        self._assertCalls(mock_notification_objects.create, expected_call_args)
+            expected_call_args.append(((), {
+                'type': 'Email',
+                'sender': intervention,
+                'recipients': [],
+                'cc': [],
+                'from_address': '',
+                'template_name': 'partners/partnership/ending',
+                'template_data': template_data,
+                'subject': '',
+                'text_message': '',
+                'html_message': '',
+            }))
+        self._assertCalls(mock_notification_model, expected_call_args)
 
         # Verify that each created notification object had send_notification() called.
         expected_call_args = [((), {}) for intervention in interventions]

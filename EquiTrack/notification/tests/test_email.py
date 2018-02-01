@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 
-from mock import patch
+from mock import patch, mock
 from post_office.models import Email, EmailTemplate
 
 from EquiTrack.factories import NotificationFactory, UserFactory
@@ -18,24 +18,6 @@ class TestEmailNotification(FastTenantTestCase):
 
         if EmailTemplate.objects.count() == 0:
             self.fail("No EmailTemplate instances found. Is the migration run?")
-
-    def test_email_template_html_content_lookup(self):
-        non_existing_template_content = Notification.get_template_html_content('random/template/name')
-
-        self.assertEqual(non_existing_template_content, '')
-
-        valid_template_content = Notification.get_template_html_content('trips/trip/created/updated')
-
-        self.assertNotEqual(valid_template_content, '')
-
-    def test_email_template_context_entry_lookup(self):
-        non_existing_template_context_entries = Notification.get_template_context_entries('random/template/name')
-
-        self.assertEqual(non_existing_template_context_entries, [])
-
-        valid_template_context_entries = Notification.get_template_context_entries('trips/trip/created/updated')
-
-        self.assertNotEqual(valid_template_context_entries, [])
 
     def test_send_notification(self):
         old_email_count = Email.objects.count()
@@ -67,23 +49,35 @@ class TestSendEmail(FastTenantTestCase):
 
     def test_success(self, mock_mail):
         "On successful notification, sent_recipients should be populated."
-        notification = NotificationFactory(template_data={'foo': 'bar'})
-        notification.send_mail()
+        cc = ['joe@example.com']
+        notification = NotificationFactory(
+            template_data={'foo': 'bar'},
+            cc=cc
+        )
+        mock_mail.send.return_value = Email()
+        with mock.patch.object(Notification, 'save'):  # Don't actually try to save it
+            notification.send_mail()
         # we called send with all the proper args
         mock_mail.send.assert_called_with(
             recipients=notification.recipients,
+            cc=cc,
             sender=settings.DEFAULT_FROM_EMAIL,
             template=notification.template_name,
             context=notification.template_data,
+            html_message='',
+            message='',
+            subject='',
         )
         # we marked the recipients as sent
-        self.assertEqual(notification.recipients, notification.sent_recipients)
+        self.assertEqual(notification.recipients + cc, notification.sent_recipients)
 
     def test_sender_is_user(self, mock_mail):
         "If sender is a User, send from their email address"
         sender = UserFactory()
         notification = NotificationFactory(sender=sender)
-        notification.send_mail()
+        mock_mail.send.return_value = Email()
+        with mock.patch.object(Notification, 'save'):  # Don't actually try to save it
+            notification.send_mail()
         # we called send ...
         mock_mail.send.assert_called()
         call_kwargs = mock_mail.send.call_args[1]
@@ -92,8 +86,10 @@ class TestSendEmail(FastTenantTestCase):
 
     def test_sender_is_not_a_user(self, mock_mail):
         "If sender is not a User, send DEFAULT_FROM_EMAIL"
+        mock_mail.send.return_value = Email()
         notification = NotificationFactory()
-        notification.send_mail()
+        with mock.patch.object(Notification, 'save'):  # Don't actually try to save it
+            notification.send_mail()
         # we called send ...
         mock_mail.send.assert_called()
         call_kwargs = mock_mail.send.call_args[1]
@@ -104,7 +100,9 @@ class TestSendEmail(FastTenantTestCase):
         "We accept a dictionary for the template context."
         template_data = {'foo': 'bar'}
         notification = NotificationFactory(template_data=template_data)
-        notification.send_mail()
+        mock_mail.send.return_value = Email()
+        with mock.patch.object(Notification, 'save'):  # Don't actually try to save it
+            notification.send_mail()
         # we called send ...
         mock_mail.send.assert_called()
         call_kwargs = mock_mail.send.call_args[1]
@@ -115,7 +113,9 @@ class TestSendEmail(FastTenantTestCase):
         "We accept string data for the template context."
         template_data = '{"foo": "bar"}'
         notification = NotificationFactory(template_data=template_data)
-        notification.send_mail()
+        mock_mail.send.return_value = Email()
+        with mock.patch.object(Notification, 'save'):  # Don't actually try to save it
+            notification.send_mail()
         # we called send ...
         mock_mail.send.assert_called()
         call_kwargs = mock_mail.send.call_args[1]
@@ -126,8 +126,10 @@ class TestSendEmail(FastTenantTestCase):
         "If sending throws an error, we log and continue."
         mock_mail.send.side_effect = Exception()
         notification = NotificationFactory()
-        with patch('notification.models.logger') as mock_logger:
-            notification.send_mail()
+        mock_mail.send.return_value = Email()
+        with mock.patch.object(Notification, 'save'):  # Don't actually try to save it
+            with patch('notification.models.logger') as mock_logger:
+                notification.send_mail()
         mock_logger.exception.assert_called_with('Failed to send mail.')
         # recipients weren't marked as successful
         self.assertEqual(notification.sent_recipients, [])

@@ -18,7 +18,6 @@ from model_utils import Choices, FieldTracker
 from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
-from post_office import mail
 
 from attachments.models import Attachment
 from audit.transitions.conditions import (
@@ -28,6 +27,7 @@ from audit.transitions.conditions import (
 from audit.transitions.serializers import EngagementCancelSerializer
 from EquiTrack.utils import get_environment
 from firms.models import BaseFirm, BaseStaffMember
+from notification.utils import send_notification
 from partners.models import PartnerStaffMember, PartnerOrganization
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
@@ -57,9 +57,9 @@ class AuditorStaffMember(BaseStaffMember):
             'staff_member': self,
         }
 
-        mail.send(
-            self.user.email,
-            settings.DEFAULT_FROM_EMAIL,
+        send_notification(
+            type='Email',
+            recipients=[self.user.email],
             template='audit/engagement/submit_to_auditor',
             context=context,
         )
@@ -276,49 +276,21 @@ class Engagement(TimeStampedModel, models.Model):
             self.id
         )
 
-    def _send_email(self, recipients, template_name, context=None, **kwargs):
-        context = context or {}
-
-        base_context = {
-            'engagement': self,
-            'url': self.get_object_url(),
-            'environment': get_environment(),
-        }
-        base_context.update(context)
-        context = base_context
-
-        recipients = list(recipients)
-        # assert recipients
-
-        if recipients:
-            mail.send(
-                recipients,
-                settings.DEFAULT_FROM_EMAIL,
-                template=template_name,
-                context=context,
-                **kwargs
-            )
-
-    def _notify_auditors(self, template_name, context=None, **kwargs):
-        self._send_email(
-            self.staff_members.values_list('user__email', flat=True),
-            template_name,
-            context,
-            **kwargs
-        )
-
-    def _notify_focal_points(self, template_name, context=None, **kwargs):
+    def _notify_focal_points(self, template_name, context=None):
         for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
             ctx = {
+                'engagement': self,
+                'url': self.get_object_url(),
+                'environment': get_environment(),
                 'focal_point': focal_point,
             }
             if context:
                 ctx.update(context)
-            self._send_email(
-                [focal_point.email],
-                template_name,
-                ctx,
-                **kwargs
+            send_notification(
+                type='Email',
+                recipients=[focal_point.email],
+                template=template_name,
+                context=ctx,
             )
 
     @transition(status, source=STATUSES.partner_contacted, target=STATUSES.report_submitted,
@@ -758,9 +730,9 @@ class EngagementActionPoint(models.Model):
             'action_point': self,
         }
 
-        mail.send(
-            self.person_responsible.email,
-            settings.DEFAULT_FROM_EMAIL,
+        send_notification(
+            type='Email',
+            recipients=[self.person_responsible.email],
             cc=[self.author.email],
             template=template_name,
             context=context,

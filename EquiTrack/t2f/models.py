@@ -7,8 +7,6 @@ from functools import wraps
 
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
-from django.core.exceptions import ValidationError
-from django.core.mail.message import EmailMultiAlternatives
 from django.db import connection, models
 from django.template.loader import render_to_string
 from django.utils.encoding import python_2_unicode_compatible
@@ -16,6 +14,7 @@ from django.utils.timezone import now as timezone_now
 from django.utils.translation import ugettext, ugettext_lazy
 from django_fsm import FSMField, transition
 
+from notification.utils import send_notification
 from publics.models import TravelExpenseType
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from t2f.helpers.invoice_maker import InvoiceMaker
@@ -423,16 +422,14 @@ class Travel(models.Model):
 
         html_content = render_to_string(template_name, {'travel': serializer.data, 'url': url})
 
-        # TODO what should be used?
-        sender = settings.DEFAULT_FROM_EMAIL
-        msg = EmailMultiAlternatives(subject, '',
-                                     sender, [recipient])
-        msg.attach_alternative(html_content, 'text/html')
-
-        try:
-            msg.send(fail_silently=False)
-        except ValidationError as exc:
-            log.error(u'Was not able to send the email. Exception: %s', exc.message)
+        send_notification(
+            type='Email',
+            recipients=[recipient],
+            subject=subject,
+            from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
+            text_message='',
+            html_message=html_content,
+        )
 
     def generate_invoices(self):
         maker = InvoiceMaker(self)
@@ -647,17 +644,15 @@ class ActionPoint(models.Model):
         html_content = render_to_string('emails/action_point_assigned.html',
                                         {'action_point': serializer.data, 'url': url, 'trip_url': trip_url})
 
-        # TODO what should be used?
-        sender = settings.DEFAULT_FROM_EMAIL
-        msg = EmailMultiAlternatives(subject, '',
-                                     sender, [recipient],
-                                     cc=[cc])
-        msg.attach_alternative(html_content, 'text/html')
-
-        try:
-            msg.send(fail_silently=False)
-        except ValidationError as exc:
-            log.error(u'Was not able to send the email. Exception: %s', exc.message)
+        send_notification(
+            type='Email',
+            recipients=[recipient],
+            cc=[cc],
+            from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
+            subject=subject,
+            text_message='',
+            html_message=html_content,
+        )
 
 
 @python_2_unicode_compatible

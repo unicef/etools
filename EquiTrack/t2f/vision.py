@@ -5,15 +5,16 @@ from collections import defaultdict
 from decimal import Decimal
 from functools import wraps
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.core.mail.message import EmailMultiAlternatives
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.models.query_utils import Q
 from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDict
 
+from notification.utils import send_notification
 from t2f.models import Invoice
 from users.models import Country as Workspace
 
@@ -203,14 +204,11 @@ class InvoiceUpdater(object):
         recipients = User.objects.filter(profile__country=workspace,
                                          groups__name='Finance Focal Point').values_list('email', flat=True)
 
-        # TODO what should it be?
-        sender = ''
-        msg = EmailMultiAlternatives('[Travel2Field VISION Error] {}'.format(invoice.reference_number),
-                                     '',
-                                     sender, recipients)
-        msg.attach_alternative(html_content, 'text/html')
-
-        try:
-            msg.send(fail_silently=False)
-        except ValidationError as exc:
-            log.error('Was not able to send the email. Exception: %s', exc.message)
+        # TODO what should sender be?
+        send_notification(
+            type='Email',
+            recipients=[u.email for u in recipients],
+            from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
+            subject='[Travel2Field VISION Error] {}'.format(invoice.reference_number),
+            html_message=html_content,
+        )

@@ -7,6 +7,7 @@ from unittest import skipIf, TestCase
 from django.core import mail
 from django.core.exceptions import ValidationError
 
+from EquiTrack.factories import UserFactory
 from audit.models import (
     Auditor,
     AuditorStaffMember,
@@ -34,7 +35,6 @@ from audit.tests.factories import (
     SpotCheckFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase
-from firms.factories import UserFactory
 
 
 class AuditorStaffMemberTestCase(FastTenantTestCase):
