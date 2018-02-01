@@ -58,6 +58,7 @@ def check_fields(apps, schema_editor):
 
             else:
                 aind.target = aind.target.replace(',', '')
+                aind.target = aind.target.replace('.', '')
                 if int(aind.target) < 0:
                     aind.target = 0
                 aind.save()
@@ -67,8 +68,9 @@ def check_fields(apps, schema_editor):
                 aind.baseline = None
                 myprint('FIXED BASELINE')
                 aind.save()
-            else:
+            elif aind.baseline:
                 aind.baseline = aind.baseline.replace(',', '')
+                aind.baseline = aind.baseline.replace('.', '')
                 if int(aind.baseline) < 0:
                     aind.baseline = 0
                 aind.save()
