@@ -1591,11 +1591,11 @@ class Intervention(TimeStampedModel):
     @cached_property
     def intervention_clusters(self):
         # return intervention clusters as an array of strings
-        clusters = []
+        clusters = set()
         for lower_result in self.all_lower_results:
             for applied_indicator in lower_result.applied_indicators.all():
-                if applied_indicator.cluster_name and applied_indicator.cluster_name not in clusters:
-                    clusters.append(applied_indicator.cluster_name)
+                if applied_indicator.cluster_name:
+                    clusters.add(applied_indicator.cluster_name)
 
         return clusters
 
@@ -1662,7 +1662,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE],
                 target=[ENDED],
-                conditions=[intervention_validation.transition_ok])
+                conditions=[intervention_validation.transition_to_ended])
     def transition_to_ended(self):
         # From active, ended, suspended and terminated you cannot move to draft or cancelled because yo'll
         # mess up the reference numbers.
@@ -1678,7 +1678,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE],
                 target=[SUSPENDED],
-                conditions=[intervention_validation.transition_ok],
+                conditions=[intervention_validation.transition_to_suspended],
                 permission=intervention_validation.partnership_manager_only)
     def transition_to_suspended(self):
         pass
@@ -1686,7 +1686,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE, SUSPENDED],
                 target=[TERMINATED],
-                conditions=[intervention_validation.transition_ok],
+                conditions=[intervention_validation.transition_to_terminated],
                 permission=intervention_validation.partnership_manager_only)
     def transition_to_terminated(self):
         pass

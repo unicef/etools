@@ -5,6 +5,7 @@ import datetime
 from unittest import skip, TestCase
 
 from django.contrib.auth.models import Group
+from django.core.cache import cache
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
 from django.utils import timezone
@@ -82,7 +83,8 @@ class TestInterventionsAPI(APITenantTestCase):
                   "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
-                  "offices", "population_focus", "country_programme_id", "engagement", "sections", "reporting_periods"],
+                  "offices", "population_focus", "country_programme_id", "engagement", "sections", "reporting_periods",
+                  "sections_present", "flat_locations"],
         'signed': [],
         'active': ['']
     }
@@ -95,6 +97,11 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def setUp(self):
         setup_intervention_test_data(self)
+
+    def tearDown(self):
+        cache.delete("public-intervention-permissions")
+        if hasattr(self, "ts"):
+            self.ts.delete()
 
     def run_request_list_ep(self, data={}, user=None, method='post'):
         response = self.forced_auth_req(
@@ -407,7 +414,7 @@ class TestInterventionsAPI(APITenantTestCase):
                               [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
-        EXPECTED_QUERIES = 11
+        EXPECTED_QUERIES = 10
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -437,8 +444,8 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(len(response), 4)
 
     def test_list_interventions_w_flag(self):
-        ts = TenantSwitchFactory(name="prp_mode_off", countries=[connection.tenant])
-        self.assertTrue(tenant_switch_is_active(ts.name))
+        self.ts = TenantSwitchFactory(name="prp_mode_off", countries=[connection.tenant])
+        self.assertTrue(tenant_switch_is_active(self.ts.name))
 
         EXPECTED_QUERIES = 11
         with self.assertNumQueries(EXPECTED_QUERIES):
@@ -449,26 +456,24 @@ class TestInterventionsAPI(APITenantTestCase):
 
         section1 = SectorFactory()
         section2 = SectorFactory()
+        EXTRA_INTERVENTIONS = 15
+        for i in range(0, EXTRA_INTERVENTIONS + 1):
+            intervention = InterventionFactory(
+                document_type=Intervention.PD,
+                start=(timezone.now().date()).isoformat(),
+                end=(timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
+                agreement=self.agreement,
+            )
+            intervention.sections.add(section1.pk)
+            intervention.sections.add(section2.pk)
 
-        # add another intervention to make sure that the queries are constant
-        data = {
-            "document_type": Intervention.PD,
-            "title": "My test intervention",
-            "start": (timezone.now().date()).isoformat(),
-            "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
-            "agreement": self.agreement.id,
-            "sections": [section1.id, section2.id],
-        }
-
-        status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
-        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Intervention.objects.count(), 4 + EXTRA_INTERVENTIONS)
 
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response), 4)
-        ts.delete()
+        self.assertEqual(len(response), 4 + EXTRA_INTERVENTIONS)
 
 
 class TestAPIInterventionResultLinkListView(APITenantTestCase):
