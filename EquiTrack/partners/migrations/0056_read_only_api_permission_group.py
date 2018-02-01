@@ -21,7 +21,7 @@ def add_permission_group(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0054_auto_20171013_2147'),
+        ('partners', '0055_auto_20180129_1921'),
     ]
 
     operations = [
