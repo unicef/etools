@@ -249,6 +249,8 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "shared_with",
             "total_ct_cp",
             "total_ct_cy",
+            "cash_transfer",
+            "liquidation",
             "hact_values",
             "hact_min_requirements",
             "flags",

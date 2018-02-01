@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}{% load i18n %}
+{% block object-tools-items %}
+    {{ block.super }}
+    <li><a href="{% url 'admin:users_country_fund_commitment' original.id %}" class=''>{% trans "Sync Fund Commitment" %}</a>
+    <li><a href="{% url 'admin:users_country_fund_reservation' original.id %}" class=''>{% trans "Sync Fund Reservation" %}</a>
+    <li><a href="{% url 'admin:users_country_partners' original.id %}" class=''>{% trans "Sync Partners" %}</a>
+    <li><a href="{% url 'admin:users_country_programme' original.id %}" class=''>{% trans "Sync Programme" %}</a>
+    <li><a href="{% url 'admin:users_country_ram' original.id %}" class=''>{% trans "Sync RAM" %}</a>
+
+{% endblock object-tools-items %}
