@@ -95,6 +95,7 @@ def transition_to_suspended(i):
 
     return True
 
+
 def transition_to_signed(i):
     from partners.models import Agreement
     if i.in_amendment is True:
