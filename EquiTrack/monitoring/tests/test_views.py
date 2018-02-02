@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from mock import patch, Mock
 
-from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import Client
 from rest_framework import status
@@ -40,8 +39,7 @@ class TestCheckView(FastTenantTestCase):
             response.status_code,
             status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-        self.assertEqual(
-            response.content,
-            "Problems with the following services:\ncelery: "
-            "No running Celery workers were found."
+        self.assertIn(
+            "No running Celery workers were found.",
+            response.content
         )
