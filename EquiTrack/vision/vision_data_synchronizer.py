@@ -19,11 +19,9 @@ VISION_NO_DATA_MESSAGE = 'No Data Available'
 class VisionDataLoader(object):
     # Caveat - this loader probably doesn't construct a correct URL when the synchronizer's GLOBAL_CALL = True).
     # See https://github.com/unicef/etools/issues/1098
-    URL = ''
+    URL = settings.VISION_URL
 
     def __init__(self, country=None, endpoint=None):
-        self.URL = settings.VISION_URL
-
         if endpoint is None:
             raise VisionException(message='You must set the ENDPOINT name')
 

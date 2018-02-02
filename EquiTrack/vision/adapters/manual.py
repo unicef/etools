@@ -4,7 +4,6 @@ import json
 import logging
 from collections import OrderedDict
 
-from django.conf import settings
 from django.db import connection
 
 from vision.exceptions import VisionException
@@ -23,7 +22,6 @@ class ManualDataLoader(VisionDataLoader):
     /endpoint/object_number else
     """
     def __init__(self, country=None, endpoint=None, object_number=None):
-        self.URL = settings.VISION_URL
         if not object_number:
             super(ManualDataLoader, self).__init__(country=country, endpoint=endpoint)
         else:
