@@ -399,7 +399,7 @@ class BusinessRegionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = publics_models.BusinessRegion
 
-    name = factory.Sequence(lambda n: 'Business Region {}'.format(n))
+    name = factory.Sequence(lambda n: 'Bus. Region {}'.format(n))
     code = fuzzy.FuzzyText(length=2, chars='ABCDEFGHIJKLMNOPQRSTUVWYXZ')
 
 
