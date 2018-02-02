@@ -52,7 +52,7 @@ class TestPartnerSynchronizer(FastTenantTestCase):
         response = self.adapter._get_json(adapter.VISION_NO_DATA_MESSAGE)
         self.assertEqual(response, [])
 
-    def test_update_stuff_no_type(self):
+    def test_save_records_no_type(self):
         """Check that partner organization record is created,
         no type mapping
         """
@@ -62,12 +62,12 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             vendor_number=self.data["VENDOR_CODE"]
         )
         self.assertFalse(partner_qs.exists())
-        self.adapter.update_stuff([self.data])
+        self.adapter._save_records([self.data])
         self.assertTrue(partner_qs.exists())
         partner = partner_qs.first()
         self.assertEqual(partner.name, "")
 
-    def test_update_stuff(self):
+    def test_save_records(self):
         """Check that partner organization record is created,
         type mapping matches
         """
@@ -76,12 +76,12 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             vendor_number=self.data["VENDOR_CODE"]
         )
         self.assertFalse(partner_qs.exists())
-        self.adapter.update_stuff([self.data])
+        self.adapter._save_records([self.data])
         self.assertTrue(partner_qs.exists())
         partner = partner_qs.first()
         self.assertEqual(partner.name, self.data["VENDOR_NAME"])
 
-    def test_update_stuff_update_name(self):
+    def test_save_records_update_name(self):
         """Check that partner organization record is updated,
         name changed
         """
@@ -89,11 +89,11 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             name="New",
             vendor_number=self.data["VENDOR_CODE"]
         )
-        self.adapter.update_stuff([self.data])
+        self.adapter._save_records([self.data])
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertEqual(partner_updated.name, self.data["VENDOR_NAME"])
 
-    def test_update_stuff_update_partner_type(self):
+    def test_save_records_update_partner_type(self):
         """Check that partner organization record is updated,
         partner type changed
         """
@@ -103,11 +103,11 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             country=self.data["COUNTRY"],
             partner_type="Government",
         )
-        self.adapter.update_stuff([self.data])
+        self.adapter._save_records([self.data])
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertEqual(partner_updated.partner_type, "UN Agency")
 
-    def test_update_stuff_update_deleted_flag(self):
+    def test_save_records_update_deleted_flag(self):
         """Check that partner organization record is updated,
         deleted_flag changed
         """
@@ -117,11 +117,11 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             vendor_number=self.data["VENDOR_CODE"],
             deleted_flag=False
         )
-        self.adapter.update_stuff([self.data])
+        self.adapter._save_records([self.data])
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertTrue(partner_updated.deleted_flag)
 
-    def test_update_stuff_update_blocked(self):
+    def test_save_records_update_blocked(self):
         """Check that partner organization record is updated,
         blocked changed
         """
@@ -132,11 +132,11 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             country=self.data["COUNTRY"],
             blocked=False
         )
-        self.adapter.update_stuff([self.data])
+        self.adapter._save_records([self.data])
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertTrue(partner_updated.blocked)
 
-    def test_update_stuff_update_date(self):
+    def test_save_records_update_date(self):
         """Check that partner organization record is updated,
         last assessment date changed
         """
@@ -147,23 +147,10 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             country=self.data["COUNTRY"],
             last_assessment_date=datetime.date(2017, 4, 5),
         )
-        self.adapter.update_stuff([self.data])
+        print(partner.cso_type)
+        self.adapter._save_records([self.data])
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertEqual(
             partner_updated.last_assessment_date,
             datetime.date(2017, 4, 4)
         )
-
-    def test_save_records(self):
-        """Check that partner organization record is created,
-        type mapping matches
-        """
-        self.data["VENDOR_CODE"] = "125"
-        partner_qs = PartnerOrganization.objects.filter(
-            vendor_number=self.data["VENDOR_CODE"]
-        )
-        self.assertFalse(partner_qs.exists())
-        self.adapter._save_records([self.data])
-        self.assertTrue(partner_qs.exists())
-        partner = partner_qs.first()
-        self.assertEqual(partner.name, self.data["VENDOR_NAME"])
