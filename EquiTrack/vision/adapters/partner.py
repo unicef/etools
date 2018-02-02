@@ -97,6 +97,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     def _changed_fields(self, local_obj, api_obj):
         fields = [
             'address',
+            'blocked',
             'city',
             'core_values_assessment_date',
             'country',
@@ -105,6 +106,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             'email',
             'last_assessment_date',
             'name',
+            'partner_type',
             'phone_number',
             'postal_code',
             'rating',

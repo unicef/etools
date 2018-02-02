@@ -147,7 +147,6 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             country=self.data["COUNTRY"],
             last_assessment_date=datetime.date(2017, 4, 5),
         )
-        print(partner.cso_type)
         self.adapter._save_records([self.data])
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertEqual(
