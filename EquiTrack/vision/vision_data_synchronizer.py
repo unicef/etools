@@ -22,8 +22,7 @@ class VisionDataLoader(object):
     URL = ''
 
     def __init__(self, country=None, endpoint=None):
-        if not self.URL:
-            self.URL = settings.VISION_URL
+        self.URL = settings.VISION_URL
 
         if endpoint is None:
             raise VisionException(message='You must set the ENDPOINT name')
