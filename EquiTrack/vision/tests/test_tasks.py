@@ -10,7 +10,9 @@ from django.utils import timezone
 import mock
 
 import vision.tasks
-from EquiTrack.factories import CountryFactory
+from EquiTrack.factories import CountryFactory, PartnerFactory
+from EquiTrack.tests.mixins import FastTenantTestCase
+from users.models import Country
 from vision.adapters.programme import ProgrammeSynchronizer
 from vision.exceptions import VisionException
 
@@ -282,3 +284,48 @@ class TestSyncHandlerTask(TestCase):
         )
         self.assertEqual(mock_logger.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger.call_args[1], {})
+
+
+class TestUpdateAllPartners(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.country = Country.objects.first()
+
+    @mock.patch('vision.tasks.logger.exception')
+    def test_update_no_partners(self, mock_logger_exception):
+        """Ensure no exceptions if no partners exist"""
+        vision.tasks.update_all_partners()
+        self.assertEqual(mock_logger_exception.call_count, 0)
+
+    @mock.patch('vision.tasks.logger.exception')
+    def test_update_country_name(self, mock_logger_exception):
+        """Ensure no exceptions if country name provided"""
+        vision.tasks.update_all_partners(self.country.name)
+        self.assertEqual(mock_logger_exception.call_count, 0)
+
+    @mock.patch('vision.tasks.logger.exception')
+    def test_update(self, mock_logger_exception):
+        """Ensure no exceptions if partners exist"""
+        PartnerFactory()
+        vision.tasks.update_all_partners(self.country.name)
+        self.assertEqual(mock_logger_exception.call_count, 0)
+
+
+class TestUpdatePurchaseOrders(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.country = Country.objects.first()
+
+    @mock.patch("vision.tasks.logger.exception")
+    def test_update_purchase_orders_no_country(self, mock_logger_exception):
+        """Ensure no exceptions if no countries"""
+        vision.tasks.update_purchase_orders(country_name="Wrong")
+        self.assertEqual(mock_logger_exception.call_count, 0)
+
+    @mock.patch("vision.tasks.logger.exception")
+    @mock.patch("vision.tasks.POSynchronizer")
+    def test_update_purchase_orders(self, synchronizer, mock_logger_exception):
+        """Ensure no exceptions if no countries"""
+        vision.tasks.update_purchase_orders()
+        self.assertEqual(mock_logger_exception.call_count, 0)
+        self.assertEqual(synchronizer.call_count, 1)

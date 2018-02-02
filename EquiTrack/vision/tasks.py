@@ -100,7 +100,6 @@ def sync_handler(self, country_name, handler):
 
 
 # Not scheduled by any code in this repo, but by other means, so keep it around.
-# TODO: Write some tests for it!
 @app.task
 def update_all_partners(country_name=None):
     logger.info(u'Starting update HACT values for partners')
@@ -122,7 +121,6 @@ def update_all_partners(country_name=None):
 
 
 # Not scheduled by any code in this repo, but by other means, so keep it around.
-# TODO: Write some tests for it!
 @app.task
 def update_purchase_orders(country_name=None):
     logger.info(u'Starting update values for purchase order')
