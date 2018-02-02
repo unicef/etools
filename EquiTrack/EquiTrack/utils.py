@@ -189,13 +189,15 @@ def get_current_year():
     return datetime.today().year
 
 
-def get_current_quarter():
-    current_month = datetime.today().month
-    if 0 < current_month <= 3:
+def get_quarter(retrieve_date=None):
+    if not retrieve_date:
+        retrieve_date = datetime.today()
+    month = retrieve_date.month
+    if 0 < month <= 3:
         quarter = 'q1'
-    elif 3 < current_month <= 6:
+    elif 3 < month <= 6:
         quarter = 'q2'
-    elif 6 < current_month <= 9:
+    elif 6 < month <= 9:
         quarter = 'q3'
     else:
         quarter = 'q4'

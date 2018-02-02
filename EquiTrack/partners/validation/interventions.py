@@ -4,8 +4,7 @@ import logging
 
 from django.utils.translation import ugettext as _
 
-
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, check_rigid_related, \
+from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, \
     BasicValidationError, check_rigid_fields, check_required_fields
 
 from partners.permissions import InterventionPermissions
@@ -71,15 +70,44 @@ def transition_to_closed(i):
 
     # TODO: figure out Action Point Validation once the spec is completed
 
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+    return True
+
+
+def transition_to_terminated(i):
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
+    return True
+
+
+def transition_to_ended(i):
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
+    return True
+
+
+def transition_to_suspended(i):
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
     return True
 
 
 def transition_to_signed(i):
     from partners.models import Agreement
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
     if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
         raise TransitionError([_('The PCA related to this record is Suspended or Terminated. '
                                  'This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
+
+    if i.in_amendment is True:
+        raise TransitionError([_('Cannot Transition status while adding an amendment')])
+
     return True
 
 
@@ -140,21 +168,6 @@ def document_type_pca_valid(i):
     return True
 
 
-def amendments_valid(i):
-    if i.status not in [i.ACTIVE, i.SIGNED] and i.amendments.exists():
-        # this prevents any changes in amendments if the status is not in Signed or Active
-        if not check_rigid_related(i, 'amendments'):
-            return False
-    for a in i.amendments.all():
-        if a.OTHER in a.types and a.other_description is None:
-            return False
-        if not a.signed_date:
-            return False
-        if not getattr(a.signed_amendment, 'name'):
-            return False
-    return True
-
-
 # validation id 2
 def ssfa_agreement_has_no_other_intervention(i):
     '''
@@ -168,6 +181,12 @@ def ssfa_agreement_has_no_other_intervention(i):
     return True
 
 
+def rigid_in_amendment_flag(i):
+    if i.old_instance and i.in_amendment is True and i.old_instance.in_amendment is False:
+        return False
+    return True
+
+
 class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
@@ -178,7 +197,7 @@ class InterventionValid(CompleteValidation):
         start_date_signed_valid,
         start_date_related_agreement_valid,
         document_type_pca_valid,
-        amendments_valid,
+        rigid_in_amendment_flag,
     ]
 
     VALID_ERRORS = {
@@ -188,12 +207,11 @@ class InterventionValid(CompleteValidation):
         'signed_date_valid': 'Unicef signatory and partner signatory as well as dates required, '
                              'signatures cannot be dated in the future',
         'document_type_pca_valid': 'Document type PD or SHPD can only be associated with a PCA agreement.',
-        'amendments_valid': 'Type, signed date, and signed amendment are required in Amendments. '
-                            'If you seleced Other as an amendment type, please add the description',
         'ssfa_agreement_has_no_other_intervention': 'The agreement selected has at least one '
                                                     'other SSFA Document connected',
         'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
-        'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA'
+        'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA',
+        'rigid_in_amendment_flag': 'Amendment Flag cannot be turned on without adding an amendment'
     }
 
     PERMISSIONS_CLASS = InterventionPermissions
