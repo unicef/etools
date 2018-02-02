@@ -595,6 +595,7 @@ class Audit(Engagement):
         return build_frontend_url('ap', 'audits', self.id, 'overview')
 
 
+@python_2_unicode_compatible
 class FinancialFinding(models.Model):
     TITLE_CHOICES = Choices(
         ('no-supporting-documentation', _('No supporting documentation')),

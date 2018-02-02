@@ -563,3 +563,14 @@ ISSUE_CHECKS = [
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
+
+
+# drfpaswordless: https://github.com/aaronn/django-rest-framework-passwordless
+
+PASSWORDLESS_AUTH = {
+    # we can't use email here, because to_alias field length is 40, while email can be up to 254 symbols length.
+    # with custom user model we can avoid this a bit tricky with custom property like cropped_email,
+    # but for contrib user there is nothing better than use field having appropriate max length.
+    # username is better choice as it can be only 30 symbols max and unique.
+    'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
+}
