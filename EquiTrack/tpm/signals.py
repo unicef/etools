@@ -4,6 +4,7 @@ from django.db import connection
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
+from firms.utils import send_invite_email
 from users.models import Country
 from tpm.models import ThirdPartyMonitor, TPMActionPoint, TPMVisit
 from tpm.tpmpartners.models import TPMPartnerStaffMember
@@ -14,7 +15,7 @@ def create_user_receiver(instance, created, **kwargs):
     if created:
         instance.user.groups.add(ThirdPartyMonitor.as_group())
 
-        instance.send_invite_email()
+        send_invite_email(instance)
 
 
 @receiver(post_delete, sender=TPMPartnerStaffMember)
