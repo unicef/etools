@@ -62,7 +62,8 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             vendor_number=self.data["VENDOR_CODE"]
         )
         self.assertFalse(partner_qs.exists())
-        self.adapter._save_records([self.data])
+        response = self.adapter._save_records([self.data])
+        self.assertEqual(response, 0)
         self.assertTrue(partner_qs.exists())
         partner = partner_qs.first()
         self.assertEqual(partner.name, "")
@@ -76,7 +77,8 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             vendor_number=self.data["VENDOR_CODE"]
         )
         self.assertFalse(partner_qs.exists())
-        self.adapter._save_records([self.data])
+        response = self.adapter._save_records([self.data])
+        self.assertEqual(response, 1)
         self.assertTrue(partner_qs.exists())
         partner = partner_qs.first()
         self.assertEqual(partner.name, self.data["VENDOR_NAME"])
@@ -89,7 +91,8 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             name="New",
             vendor_number=self.data["VENDOR_CODE"]
         )
-        self.adapter._save_records([self.data])
+        response = self.adapter._save_records([self.data])
+        self.assertEqual(response, 1)
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertEqual(partner_updated.name, self.data["VENDOR_NAME"])
 
@@ -103,7 +106,8 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             country=self.data["COUNTRY"],
             partner_type="Government",
         )
-        self.adapter._save_records([self.data])
+        response = self.adapter._save_records([self.data])
+        self.assertEqual(response, 1)
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertEqual(partner_updated.partner_type, "UN Agency")
 
@@ -117,7 +121,8 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             vendor_number=self.data["VENDOR_CODE"],
             deleted_flag=False
         )
-        self.adapter._save_records([self.data])
+        response = self.adapter._save_records([self.data])
+        self.assertEqual(response, 1)
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertTrue(partner_updated.deleted_flag)
 
@@ -132,7 +137,8 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             country=self.data["COUNTRY"],
             blocked=False
         )
-        self.adapter._save_records([self.data])
+        response = self.adapter._save_records([self.data])
+        self.assertEqual(response, 1)
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertTrue(partner_updated.blocked)
 
@@ -147,9 +153,25 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             country=self.data["COUNTRY"],
             last_assessment_date=datetime.date(2017, 4, 5),
         )
-        self.adapter._save_records([self.data])
+        response = self.adapter._save_records([self.data])
+        self.assertEqual(response, 1)
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertEqual(
             partner_updated.last_assessment_date,
             datetime.date(2017, 4, 4)
         )
+
+    def test_save_records_update(self):
+        """Check that partner organization record is NOT updated,
+        if no change
+        """
+        PartnerFactory(
+            name=self.data["VENDOR_NAME"],
+            vendor_number=self.data["VENDOR_CODE"],
+            country=self.data["COUNTRY"],
+            partner_type="UN Agency",
+            total_ct_cp=self.data["TOTAL_CASH_TRANSFERRED_CP"],
+            total_ct_cy=self.data["TOTAL_CASH_TRANSFERRED_CY"],
+        )
+        response = self.adapter._save_records([self.data])
+        self.assertEqual(response, 1)
