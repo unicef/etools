@@ -6,6 +6,7 @@ from django.dispatch import receiver
 
 from audit.models import Auditor, Engagement, EngagementActionPoint
 from audit.purchase_order.models import AuditorStaffMember
+from firms.utils import send_invite_email
 from users.models import Country
 
 
@@ -14,7 +15,7 @@ def create_user_receiver(instance, created, **kwargs):
     if created:
         instance.user.groups.add(Auditor.as_group())
 
-        instance.send_invite_email()
+        send_invite_email(instance)
 
 
 @receiver(m2m_changed, sender=Engagement.staff_members.through)

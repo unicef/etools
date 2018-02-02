@@ -83,7 +83,7 @@
     </div>
     <div class="card-content">
       <h3>Sign in with Email</h3>
-      <form id="form" method="POST">
+      <form id="form" method="POST" action="{% url "email_auth:login" %}">
         {% csrf_token %}
         {% for error in form.non_field_errors %}
           {% if error %}
@@ -118,7 +118,7 @@
 
         {% if form.is_valid %}
           <span class="status-success">
-            <iron-icon icon="check-circle"></iron-icon> <span>email with login info was sent to {{ form.email.value }}.</span>
+            <iron-icon icon="check-circle"></iron-icon> <span>{% blocktrans %}Email with login info was sent to {{ email }}.{% endblocktrans %}</span>
           </span>
         {% endif %}
         <br>
