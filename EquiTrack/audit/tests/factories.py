@@ -120,22 +120,6 @@ class SpotCheckFactory(EngagementFactory):
         model = SpotCheck
 
 
-class RiskFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = Risk
-
-    value = fuzzy.FuzzyChoice(choices=dict(Risk.VALUES).keys())
-
-
-class RiskBluePrintFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = RiskBluePrint
-
-    weight = fuzzy.FuzzyInteger(1, 5)
-    is_key = FuzzyBooleanField()
-    description = fuzzy.FuzzyText(length=30)
-
-
 class RiskCategoryFactory(factory.DjangoModelFactory):
     class Meta:
         model = RiskCategory
@@ -143,6 +127,26 @@ class RiskCategoryFactory(factory.DjangoModelFactory):
     header = factory.Sequence(lambda n: 'category_%d' % n)
     category_type = fuzzy.FuzzyChoice(choices=dict(RiskCategory.TYPES).keys())
     code = fuzzy.FuzzyText(length=20)
+
+
+class RiskBluePrintFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = RiskBluePrint
+
+    category = factory.SubFactory(RiskCategoryFactory)
+    weight = fuzzy.FuzzyInteger(1, 5)
+    is_key = FuzzyBooleanField()
+    description = fuzzy.FuzzyText(length=30)
+
+
+class RiskFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Risk
+
+    blueprint = factory.SubFactory(RiskBluePrintFactory)
+    engagement = factory.SubFactory(EngagementFactory)
+
+    value = fuzzy.FuzzyChoice(choices=dict(Risk.VALUES).keys())
 
 
 class FindingFactory(factory.DjangoModelFactory):
