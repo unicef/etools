@@ -563,7 +563,8 @@ EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
 )
 
 
-# drfpaswordless settings
+# drfpaswordless: https://github.com/aaronn/django-rest-framework-passwordless
+
 PASSWORDLESS_AUTH = {
     # we can't use email here, because to_alias field length is 40, while email can be up to 254 symbols length.
     # with custom user model we can avoid this a bit tricky with custom property like cropped_email,
