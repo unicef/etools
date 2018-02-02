@@ -8,8 +8,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from activities.serializers import ActivitySerializer
-from partners.models import InterventionResultLink, PartnerOrganization, PartnerType
+from partners.models import InterventionResultLink, PartnerType
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
+from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from tpm.models import (
     TPMActionPoint, TPMActivity, TPMPermission, TPMVisit, TPMVisitReportRejectComment,)
 from tpm.tpmpartners.models import TPMPartnerStaffMember
@@ -35,14 +36,6 @@ class InterventionResultLinkVisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterventionResultLink
-        fields = [
-            'id', 'name'
-        ]
-
-
-class PartnerOrganizationLightSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PartnerOrganization
         fields = [
             'id', 'name'
         ]
@@ -86,7 +79,7 @@ class TPMActionPointSerializer(TPMPermissionsBasedSerializerMixin,
 class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             ActivitySerializer):
     partner = SeparatedReadWriteField(
-        read_field=PartnerOrganizationLightSerializer(read_only=True, label=_('Implementing Partner')),
+        read_field=MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Implementing Partner')),
     )
     intervention = SeparatedReadWriteField(
         read_field=InterventionCreateUpdateSerializer(read_only=True, label=_('PD/SSFA')),
@@ -172,7 +165,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
     sections = serializers.SerializerMethodField(label=_('Sections'))
 
     def get_implementing_partners(self, obj):
-        return PartnerOrganizationLightSerializer(
+        return MinimalPartnerOrganizationListSerializer(
             set(map(
                 lambda a: a.partner,
                 obj.tpm_activities.all()
