@@ -18,7 +18,7 @@ class EngagementCheckTransitionsTestCaseMixin(object):
 
     def _test_transition(self, user, action, expected_response, errors=None, data=None):
         response = self.forced_auth_req(
-            'post', self._engagement_url(action), user=user, data=data
+            'post', self.engagement_url(action), user=user, data=data
         )
 
         self.assertEqual(response.status_code, expected_response)
@@ -53,7 +53,6 @@ class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     def _fill_audit_specified_fields(self):
         self.engagement.audited_expenditure = random.randint(1, 22)
         self.engagement.financial_findings = random.randint(1, 22)
-        self.engagement.percent_of_audited_expenditure = random.randint(1, 100)
         self.engagement.audit_opinion = fuzzy.FuzzyText(length=20).fuzz()
         self.engagement.recommendation = fuzzy.FuzzyText(length=50).fuzz()
         self.engagement.audit_observation = fuzzy.FuzzyText(length=50).fuzz()
@@ -204,7 +203,7 @@ class TestSCTransitionsTestCase(
 
     def test_cancel_submitted_focal_point(self):
         self._init_submitted_engagement()
-        self._test_cancel(self.unicef_focal_point, status.HTTP_200_OK, data={'cancel_comment': 'cancel_comment'})
+        self._test_cancel(self.unicef_focal_point, status.HTTP_403_FORBIDDEN)
 
     def test_cancel_finalized_focal_point(self):
         self._init_finalized_engagement()
@@ -214,7 +213,7 @@ class TestSCTransitionsTestCase(
 class EngagementCheckTransitionsMetadataTestCaseMixin(object):
     def _test_allowed_actions(self, user, actions):
         response = self.forced_auth_req(
-            'options', self._engagement_url(), user=user
+            'options', self.engagement_url(), user=user
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -237,7 +236,7 @@ class TestSCTransitionsMetadataTestCase(
 
     def test_submitted_focal_point(self):
         self._init_submitted_engagement()
-        self._test_allowed_actions(self.unicef_focal_point, ['finalize', 'cancel'])
+        self._test_allowed_actions(self.unicef_focal_point, ['finalize'])
 
     def test_finalized_auditor(self):
         self._init_finalized_engagement()

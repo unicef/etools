@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
 
-class LoginForm(forms.Form):
+class EmailLoginForm(forms.Form):
     email = forms.EmailField(label=_("Your Email"))
 
     error_messages = {
@@ -16,7 +16,7 @@ class LoginForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
         self.user_cache = None
-        super(LoginForm, self).__init__(*args, **kwargs)
+        super(EmailLoginForm, self).__init__(*args, **kwargs)
 
     def clean(self):
         if self.errors:

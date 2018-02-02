@@ -22,7 +22,7 @@ from audit.models import (
     RiskCategory,
     SpecialAudit,
     SpotCheck,
-)
+    SpecificProcedure)
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from EquiTrack.factories import (
     AgreementFactory,
@@ -30,6 +30,7 @@ from EquiTrack.factories import (
     PartnerFactory,
 )
 from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
+from partners.models import PartnerOrganization
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
@@ -85,6 +86,7 @@ class EngagementFactory(factory.DjangoModelFactory):
 
     agreement = factory.SubFactory(PurchaseOrderFactory)
     partner = factory.SubFactory(PartnerWithAgreementsFactory)
+    shared_ip_with = list(map(lambda c: c[0], PartnerOrganization.AGENCY_CHOICES))
 
     @factory.post_generation
     def active_pd(self, create, extracted, **kwargs):
@@ -162,10 +164,20 @@ class DetailedFindingInfoFactory(factory.DjangoModelFactory):
     recommendation = fuzzy.FuzzyText(length=100)
 
 
+class SpecificProcedureFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = SpecificProcedure
+
+    audit = factory.SubFactory(SpecialAuditFactory)
+    description = fuzzy.FuzzyText(length=100)
+    finding = fuzzy.FuzzyText(length=100)
+
+
 class EngagementActionPointFactory(factory.DjangoModelFactory):
     class Meta:
         model = EngagementActionPoint
 
+    category = fuzzy.FuzzyChoice(EngagementActionPoint.CATEGORY_CHOICES)
     description = fuzzy.FuzzyText(length=100)
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
 

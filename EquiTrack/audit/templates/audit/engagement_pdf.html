@@ -119,92 +119,105 @@
           <table class="content-section__wrapper">
             <tr>
               <td class="input-container">
-                <div class="input-container__label">Purchase order number</div>
+                <div class="input-container__label">{{ serializer.fields.agreement.read_field.fields.order_number.label }}</div>
                 <div class="input-container__value">{{ engagement.agreement.order_number }}</div>
               </td>
               <td class="input-container">
-                <div class="input-container__label">Vendor Name</div>
-                <div class="input-container__value">{{ engagement.partner.name }}</div>
+                <div class="input-container__label">{{ serializer.fields.agreement.read_field.fields.auditor_firm.read_field.fields.name.label }}</div>
+                <div class="input-container__value">{{ engagement.agreement.auditor_firm.name }}</div>
               </td>
               <td class="input-container">
-                <div class="input-container__label">PO Item</div>
+                <div class="input-container__label">{{ serializer.fields.po_item.read_field.fields.number.label }}</div>
                 <div class="input-container__value">{{ engagement.po_item.number|default_if_none:"-" }}</div>
               </td>
             </tr>
             <tr>
               <td class="input-container">
-                <div class="input-container__label">PO Date</div>
+                <div class="input-container__label">{{ serializer.fields.agreement.read_field.fields.contract_start_date.label }}</div>
                 <div class="input-container__value">{{ engagement.agreement.contract_start_date|default:"-" }}</div>
               </td>
               <td class="input-container">
-                <div class="input-container__label">Contract Expiry Date</div>
+                <div class="input-container__label">{{ serializer.fields.agreement.read_field.fields.contract_end_date.label }}</div>
                 <div class="input-container__value">{{ engagement.agreement.contract_end_date|default:"-" }}</div>
               </td>
               <td class="input-container">
-                <div class="input-container__label">Date IP was contacted</div>
+                <div class="input-container__label">{{ serializer.fields.partner_contacted_at.label }}</div>
                 <div class="input-container__value">{{ engagement.partner_contacted_at|default:"-" }}</div>
               </td>
             </tr>
             <tr>
               <td class="input-container">
-                <div class="input-container__label">Engagement Type</div>
+                <div class="input-container__label">{{ serializer.fields.engagement_type.label }}</div>
                 <div class="input-container__value">{{ engagement.engagement_type_display }}</div>
               </td>
               {% if engagement.engagement_type == 'audit' or engagement.engagement_type == 'sc' or engagement.engagement_type == 'sa' %}
                 <td class="input-container">
-                  <div class="input-container__label">Period start date</div>
+                  <div class="input-container__label">{{ serializer.fields.start_date.label }}</div>
                   <div class="input-container__value">{{ engagement.start_date }}</div>
                 </td>
                 <td class="input-container">
-                  <div class="input-container__label">Period end date</div>
+                  <div class="input-container__label">{{ serializer.fields.end_date.label }}</div>
                   <div class="input-container__value">{{ engagement.end_date }}</div>
                 </td>
               {% else %}
                 <td class="input-container">
-                  <div class="input-container__label">Shared IP with</div>
-                  <div class="input-container__value">{{ engagement.get_shared_ip_with_display }}</div>
+                  <div class="input-container__label">{{ serializer.fields.shared_ip_with.label }}</div>
+                  <div class="input-container__value">{{ engagement.shared_ip_with }}</div>
                 </td>
                 <td class="input-container">
-                  <div class="input-container__label">Joint Audit</div>
+                  <div class="input-container__label">{{ serializer.fields.joint_audit.label }}</div>
                   <div class="input-container__value">{% if engagement.joint_audit %}Y{% else %}N{% endif %}</div>
                 </td>
               {% endif %}
             </tr>
-            {% if engagement.engagement_type == 'audit' or engagement.engagement_type == 'sc' or engagement.engagement_type == 'sa' %}
+            {% if engagement.engagement_type == 'audit' or engagement.engagement_type == 'sa' %}
               <tr>
                 <td class="input-container">
-                  <div class="input-container__label">Total value of selected FACE form(s)</div>
+                  <div class="input-container__label">{{ serializer.fields.total_value.label }}</div>
                   <div class="input-container__value">$ {{ engagement.total_value|default_if_none:"0.00" }}</div>
                 </td>
                 <td class="input-container">
-                  <div class="input-container__label">Shared IP with</div>
-                  <div class="input-container__value">{{ engagement.get_shared_ip_with_display|default:"-" }}</div>
+                  <div class="input-container__label">{{ serializer.fields.shared_ip_with.label }}</div>
+                  <div class="input-container__value">{{ engagement.shared_ip_with|default:"-" }}</div>
                 </td>
                 <td class="input-container">
-                  <div class="input-container__label">Joint Audit</div>
+                  <div class="input-container__label">{{ serializer.fields.joint_audit.label }}</div>
                   <div class="input-container__value">{% if engagement.joint_audit %}Y{% else %}N{% endif %}</div>
                 </td>
               </tr>
-            {% endif %}
-            <tr>
+            {% elif engagement.engagement_type == 'sc' %}
+              <tr>
                 <td class="input-container">
-                  <div class="input-container__label">Status</div>
+                  <div class="input-container__label">{{ serializer.fields.total_value.label }}</div>
+                  <div class="input-container__value">$ {{ engagement.total_value|default_if_none:"0.00" }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.status.label }}</div>
                   <div class="input-container__value">{{ engagement.status_display }}</div>
                 </td>
-            </tr>
+              </tr>
+            {% endif %}
+            {% if engagement.engagement_type != 'sc' %}
+              <tr>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.status.label }}</div>
+                  <div class="input-container__value">{{ engagement.status_display }}</div>
+                </td>
+              </tr>
+            {% endif %}
           </table>
         </div>
         {% if engagement.engagement_type == 'sa' %}
           <pdf:nextpage></pdf:nextpage>
           <div class="content-section">
             <div class="content-section__header">
-              <div class="content-section__header__title">Specific Procedure To Be Performed</div>
+              <div class="content-section__header__title">{{ serializer.fields.specific_procedures.label }}</div>
             </div>
             <div class="content-section__wrapper">
               <table class="content-section__table">
                 <tr class="content-section__table__header">
-                  <td colspan="2">Finding Number</td>
-                  <td colspan="6">Description</td>
+                  <td colspan="2">Procedure</td>
+                  <td colspan="6">{{ serializer.fields.specific_procedures.child.fields.description.label }}</td>
                 </tr>
                 {% if engagement.specific_procedures %}
                   {% for specific_procedure in engagement.specific_procedures %}
@@ -229,7 +242,7 @@
           <table class="content-section__wrapper">
             <tr>
               <td class="input-container">
-                <div class="input-container__label">Partner</div>
+                <div class="input-container__label">{{ serializer.fields.partner.read_field.label }}</div>
                 <div class="input-container__value">{{ engagement.partner.name }}</div>
               </td>
               <td class="input-container">
@@ -239,21 +252,21 @@
             </tr>
             <tr>
               <td class="input-container">
-                <div class="input-container__label">Phone number</div>
+                <div class="input-container__label">{{ serializer.fields.partner.read_field.fields.phone_number.label }}</div>
                 <div class="input-container__value">{{ engagement.partner.phone_number|default:"-" }}</div>
               </td>
               <td class="input-container">
-                <div class="input-container__label">Email</div>
+                <div class="input-container__label">{{ serializer.fields.partner.read_field.fields.email.label }}</div>
                 <div class="input-container__value">{{ engagement.partner.email|default:"-" }}</div>
               </td>
               <td class="input-container">
-                <div class="input-container__label">Authorized Officers</div>
+                <div class="input-container__label">{{ serializer.fields.authorized_officers.read_field.label }}</div>
                 <div class="input-container__value">{{ engagement.authorized_officers|default:"-" }}</div>
               </td>
             </tr>
             <tr>
               <td class="input-container">
-                <div class="input-container__label">Programme Document(s) or SSFA(s)</div>
+                <div class="input-container__label">{{ serializer.fields.active_pd.read_field.label }}</div>
                 <div class="input-container__value">{{ engagement.active_pd|default:"-" }}</div>
               </td>
             </tr>
@@ -267,11 +280,11 @@
           <div class="content-section__wrapper">
             <table class="content-section__table">
               <tr class="content-section__table__header">
-                <td>Position</td>
-                <td>First Name</td>
-                <td>Last Name</td>
-                <td>Phone Number</td>
-                <td colspan="2">E-mail Address</td>
+                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.profile.fields.job_title.label }}</td>
+                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.first_name.label }}</td>
+                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.last_name.label }}</td>
+                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.profile.fields.phone_number.label }}</td>
+                <td colspan="2">{{ serializer.fields.staff_members.read_field.child.fields.user.fields.email.label }}</td>
               </tr>
               {% if engagement.staff_members %}
                 {% for staff_member in engagement.staff_members %}
@@ -301,25 +314,25 @@
             <table class="content-section__wrapper">
               <tr>
                 <td class="input-container">
-                  <div class="input-container__label">Date of field visit</div>
+                  <div class="input-container__label">{{ serializer.fields.date_of_field_visit.label }}</div>
                   <div class="input-container__value">{{ engagement.date_of_field_visit|default:"-" }}</div>
                 </td>
                 <td class="input-container">
-                  <div class="input-container__label">Date draft report issued to IP</div>
+                  <div class="input-container__label">{{ serializer.fields.date_of_draft_report_to_ip.label }}</div>
                   <div class="input-container__value">{{ engagement.date_of_draft_report_to_ip|default:"-" }}</div>
                 </td>
                 <td class="input-container">
-                  <div class="input-container__label">Date comments received from IP</div>
+                  <div class="input-container__label">{{ serializer.fields.date_of_comments_by_ip.label }}</div>
                   <div class="input-container__value">{{ engagement.date_of_comments_by_ip|default:"-" }}</div>
                 </td>
               </tr>
               <tr>
                 <td class="input-container">
-                  <div class="input-container__label">Date draft report issued to UNICEF</div>
+                  <div class="input-container__label">{{ serializer.fields.date_of_draft_report_to_unicef.label }}</div>
                   <div class="input-container__value">{{ engagement.date_of_draft_report_to_unicef|default:"-" }}</div>
                 </td>
                 <td class="input-container">
-                  <div class="input-container__label">Date comments received from UNICEF</div>
+                  <div class="input-container__label">{{ serializer.fields.date_of_comments_by_unicef.label }}</div>
                   <div class="input-container__value">{{ engagement.date_of_comments_by_unicef|default:"-" }}</div>
                 </td>
               </tr>
@@ -336,18 +349,24 @@
             <div class="content-section__wrapper">
               <table class="content-section__table">
                 <tr class="content-section__table__header">
-                  <td colspan="2">Description</td>
-                  <td>Due date</td>
-                  <td>Person responsible</td>
-                  <td colspan="2">Comments</td>
+                  <td colspan="2">{{ serializer.fields.action_points.child.fields.category.label }}</td>
+                  <td>{{ serializer.fields.action_points.child.fields.due_date.label }}</td>
+                  <td>{{ serializer.fields.action_points.child.fields.person_responsible.label }}</td>
+                  <td colspan="2">{{ serializer.fields.action_points.child.description.label }}</td>
+                  <td>{{ serializer.fields.action_points.child.status.label }}</td>
+                  <td>{{ serializer.fields.action_points.child.high_priority.label }}</td>
+                  <td colspan="2">{{ serializer.fields.action_points.child.action_taken.label }}</td>
                 </tr>
                 {% if engagement.action_points %}
                   {% for action_point in engagement.action_points %}
                     <tr>
-                      <td colspan="2"><span>{{ action_point.description }}</span></td>
+                      <td colspan="2"><span>{{ action_point.category }}</span></td>
                       <td>{{ action_point.due_date }}</td>
                       <td>{{ action_point.person_responsible }}</td>
-                      <td colspan="2">{{ action_point.comments }}</td>
+                      <td colspan="2">{{ action_point.description|default:"-" }}</td>
+                      <td>{{ action_point.status }}</td>
+                      <td>{{ action_point.high_priority|yesno:"Y,N" }}</td>
+                      <td colspan="2">{{ action_point.action_taken|default:"-" }}</td>
                     </tr>
                   {% endfor %}
                 {% else %}
@@ -365,13 +384,13 @@
         <pdf:nextpage></pdf:nextpage>
         <div class="content-section">
           <div class="content-section__header">
-            <div class="content-section__header__title">Related Documents</div>
+            <div class="content-section__header__title">{{ serializer.fields.engagement_attachments.label }}</div>
           </div>
           <div class="content-section__wrapper">
             <table class="content-section__table">
               <tr class="content-section__table__header">
-                <td>Date Uploaded</td>
-                <td>Document Type</td>
+                <td>{{ serializer.fields.engagement_attachments.child.fields.created.label }}</td>
+                <td>{{ serializer.fields.engagement_attachments.child.fields.file_type.label }}</td>
                 <td colspan="5">File Attachment</td>
               </tr>
               {% if engagement.engagement_attachments %}
@@ -394,13 +413,13 @@
         </div>
         <div class="content-section">
           <div class="content-section__header">
-            <div class="content-section__header__title">Report Attachments</div>
+            <div class="content-section__header__title">{{ serializer.fields.report_attachments.label }}</div>
           </div>
           <div class="content-section__wrapper">
             <table class="content-section__table">
               <tr class="content-section__table__header">
-                <td>Date Uploaded</td>
-                <td>Document Type</td>
+                <td>{{ serializer.fields.report_attachments.child.fields.created.label }}</td>
+                <td>{{ serializer.fields.report_attachments.child.fields.file_type.label }}</td>
                 <td colspan="5">File Attachment</td>
               </tr>
               {% if engagement.report_attachments %}

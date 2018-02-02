@@ -225,9 +225,12 @@ class EngagementViewSet(
         if not serializer_class or not template:
             raise NotImplementedError
 
+        main_serializer = engagement_params.get('serializer_class', None)(obj, context=self.get_serializer_context())
+
         return render_to_pdf_response(
             request, template,
-            context={'engagement': serializer_class(obj).data},
+            context={'engagement': serializer_class(obj).data,
+                     'serializer': main_serializer},
             filename='engagement_{}.pdf'.format(obj.unique_id),
         )
 

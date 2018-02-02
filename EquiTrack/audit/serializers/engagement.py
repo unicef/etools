@@ -11,7 +11,7 @@ from attachments.serializers import Base64AttachmentSerializer
 from attachments.serializers_fields import FileTypeModelChoiceField
 from audit.models import (
     Audit, DetailedFindingInfo, Engagement, EngagementActionPoint, FinancialFinding, Finding, MicroAssessment,
-    SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck,)
+    SpecialAudit, SpecialAuditRecommendation, SpecificProcedure, SpotCheck, KeyInternalControl)
 from audit.serializers.auditor import AuditorStaffMemberSerializer, PurchaseOrderSerializer, PurchaseOrderItemSerializer
 from audit.serializers.mixins import (
     AuditPermissionsBasedRootSerializerMixin, AuditPermissionsBasedSerializerMixin, EngagementDatesValidation,
@@ -68,7 +68,8 @@ class EngagementActionPointSerializer(UserContextSerializerMixin,
     class Meta(WritableNestedSerializerMixin.Meta):
         model = EngagementActionPoint
         fields = [
-            'id', 'description', 'due_date', 'person_responsible', 'comments',
+            'id', 'category', 'description', 'due_date', 'person_responsible', 'action_taken',
+            'status', 'high_priority',
         ]
 
     def validate(self, attrs):
@@ -227,6 +228,22 @@ class EngagementSerializer(EngagementDatesValidation,
         validated_data.pop('related_agreement', None)
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
 
+        if staff_members and agreement and agreement.auditor_firm:
+            existed_staff_members = agreement.auditor_firm.staff_members.all()
+            unexisted = set(staff_members) - set(existed_staff_members)
+            if unexisted:
+                msg = self.fields['staff_members'].write_field.child_relation.error_messages['does_not_exist']
+                raise serializers.ValidationError({
+                    'staff_members': [msg.format(pk_value=staff_member.pk) for staff_member in unexisted],
+                })
+
+        return validated_data
+
+
+class ActivePDValidationMixin(object):
+    def validate(self, data):
+        validated_data = super(ActivePDValidationMixin, self).validate(data)
+
         partner = validated_data.get('partner', None)
         if not partner:
             partner = self.instance.partner if self.instance else validated_data.get('partner', None)
@@ -244,16 +261,8 @@ class EngagementSerializer(EngagementDatesValidation,
 
         status = 'new' if not self.instance else self.instance.status
 
-        if staff_members and agreement and agreement.auditor_firm:
-            existed_staff_members = agreement.auditor_firm.staff_members.all()
-            unexisted = set(staff_members) - set(existed_staff_members)
-            if unexisted:
-                msg = self.fields['staff_members'].write_field.child_relation.error_messages['does_not_exist']
-                raise serializers.ValidationError({
-                    'staff_members': [msg.format(pk_value=staff_member.pk) for staff_member in unexisted],
-                })
-
-        if partner and partner.partner_type != PartnerType.GOVERNMENT and len(active_pd) == 0 and status == 'new':
+        if partner and partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] and \
+           len(active_pd) == 0 and status == 'new':
             raise serializers.ValidationError({
                 'active_pd': [self.fields['active_pd'].write_field.error_messages['required'], ],
             })
@@ -269,7 +278,7 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
         ]
 
 
-class SpotCheckSerializer(EngagementSerializer):
+class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     findings = FindingSerializer(many=True, required=False)
 
     face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', read_only=True, source='start_date')
@@ -309,7 +318,7 @@ class DetailedFindingInfoSerializer(WritableNestedSerializerMixin, serializers.M
         )
 
 
-class MicroAssessmentSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
+class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, EngagementSerializer):
     questionnaire = AggregatedRiskRootSerializer(code='ma_questionnaire', required=False)
     test_subject_areas = RiskRootSerializer(
         code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
@@ -347,15 +356,26 @@ class FinancialFindingSerializer(WritableNestedSerializerMixin, serializers.Mode
         ]
 
 
-class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
-    financial_finding_set = FinancialFindingSerializer(many=True, required=False)
+class KeyInternalControlSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = KeyInternalControl
+        fields = [
+            'id', 'recommendation', 'audit_observation', 'ip_response',
+        ]
+
+
+class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, EngagementSerializer):
+    financial_finding_set = FinancialFindingSerializer(many=True, required=False, label=_('Financial Findings'))
     key_internal_weakness = KeyInternalWeaknessSerializer(
         code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses')
     )
+    key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
+                                                         label=_('Assessment of Key Internal Controls'))
 
     number_of_financial_findings = serializers.SerializerMethodField(label=_('No. of Financial Findings'))
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+    percent_of_audited_expenditure = serializers.IntegerField(label=_('% Of Audited Expenditure'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
         model = Audit
@@ -363,7 +383,7 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
         fields = EngagementSerializer.Meta.fields + [
             'audited_expenditure', 'financial_findings', 'financial_finding_set', 'percent_of_audited_expenditure',
             'audit_opinion', 'number_of_financial_findings',
-            'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness',
+            'key_internal_weakness', 'key_internal_controls',
 
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
@@ -373,16 +393,6 @@ class AuditSerializer(RiskCategoriesUpdateMixin, EngagementSerializer):
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
-            'recommendation': {'required': True},
-            'audit_observation': {'required': True},
-            'ip_response': {'required': True},
-            'percent_of_audited_expenditure': {
-                'error_messages': {
-                    'min_value': _('Value can\'t be less than {min_value}.'),
-                    'max_value': _('Value can\'t be greater than {max_value}.'),
-                    'max_whole_digits': _('No more than {max_whole_digits} digits allowed.'),
-                }
-            },
         })
 
     def get_number_of_financial_findings(self, obj):

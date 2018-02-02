@@ -12,7 +12,7 @@ from audit.models import (
     Audit, Engagement, EngagementActionPoint, MicroAssessment, SpotCheck, Finding, SpecificProcedure,
     SpecialAuditRecommendation)
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
-from audit.serializers.engagement import DetailedFindingInfoSerializer
+from audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
 from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from partners.models import PartnerOrganization
 from utils.common.urlresolvers import site_url
@@ -66,14 +66,17 @@ class StaffMemberPDFSerializer(serializers.ModelSerializer):
 
 
 class EngagementActionPointPDFSerializer(serializers.ModelSerializer):
-    description = serializers.CharField(source='get_description_display')
+    category = serializers.CharField(source='get_category_display')
     due_date = serializers.DateField(format='%d %b %Y')
     person_responsible = serializers.CharField(source='person_responsible.get_full_name')
+    status = serializers.CharField(source='get_status_display')
 
     class Meta:
         model = EngagementActionPoint
         fields = [
-            'id', 'description', 'due_date', 'person_responsible', 'comments',
+
+            'id', 'category', 'description', 'due_date', 'person_responsible', 'action_taken',
+            'status', 'high_priority',
         ]
 
 
@@ -103,6 +106,8 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
     authorized_officers = serializers.SerializerMethodField()
     active_pd = serializers.SerializerMethodField()
     staff_members = StaffMemberPDFSerializer(many=True)
+
+    shared_ip_with = serializers.CharField(source='get_shared_ip_with_display')
 
     start_date = serializers.DateField(label='Start Date', format='%d %b %Y')
     end_date = serializers.DateField(label='End Date', format='%d %b %Y')
@@ -164,12 +169,14 @@ class AuditPDFSerializer(EngagementPDFSerializer):
     key_internal_weakness = KeyInternalWeaknessSerializer(
         code='audit_key_weakness', required=False, label=_('Key Internal Control Weaknesses')
     )
+    key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
+                                                         label=_('Assessment of Key Internal Controls'))
 
     class Meta(EngagementPDFSerializer.Meta):
         model = Audit
         fields = EngagementPDFSerializer.Meta.fields + [
             'audited_expenditure', 'financial_findings', 'financial_finding_set', 'percent_of_audited_expenditure',
-            'audit_opinion', 'recommendation', 'audit_observation', 'ip_response', 'key_internal_weakness',
+            'audit_opinion',  'key_internal_weakness', 'key_internal_controls',
 
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',

@@ -7,10 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
-from EquiTrack.utils import get_environment
-from email_auth.utils import update_url_with_token
 from notification.models import Notification
-from utils.common.urlresolvers import site_url
 
 
 class BaseFirmManager(models.Manager):
@@ -101,16 +98,3 @@ class BaseStaffMember(models.Model):
 
     def __str__(self):
         return self.get_full_name()
-
-    def send_invite_email(self):
-        context = {
-            'environment': get_environment(),
-            'login_link': update_url_with_token(site_url(), self.user)
-        }
-
-        notification = Notification.objects.create(
-            sender=self,
-            recipients=[self.user.email], template_name='organisations/staff_member/invite',
-            template_data=context
-        )
-        notification.send_notification()

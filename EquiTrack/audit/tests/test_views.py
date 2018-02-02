@@ -18,6 +18,8 @@ from audit.tests.factories import (
     PurchaseOrderFactory,
     RiskBluePrintFactory,
     RiskCategoryFactory,
+    SpotCheckFactory,
+    SpecialAuditFactory
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerType
@@ -335,11 +337,11 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, APITenantTe
         self._test_list(self.auditor, [self.third_engagement], params=status)
 
 
-class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenantTestCase):
-    engagement_factory = MicroAssessmentFactory
+class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
+    endpoint = 'engagements'
 
     def setUp(self):
-        super(TestEngagementsCreateViewSet, self).setUp()
+        super(BaseTestEngagementsCreateViewSet, self).setUp()
         self.create_data = {
             'end_date': self.engagement.end_date,
             'start_date': self.engagement.start_date,
@@ -352,17 +354,20 @@ class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenant
             'authorized_officers': self.engagement.authorized_officers.values_list('id', flat=True),
             'staff_members': self.engagement.staff_members.values_list('id', flat=True),
             'active_pd': self.engagement.active_pd.values_list('id', flat=True),
+            'shared_ip_with': self.engagement.shared_ip_with,
         }
 
     def _do_create(self, user, data):
         data = data or {}
         response = self.forced_auth_req(
             'post',
-            '/api/audit/engagements/',
+            self.engagements_url(),
             user=user, data=data
         )
         return response
 
+
+class TestEngagementCreateActivePDViewSet(object):
     def test_partner_without_active_pd(self):
         del self.create_data['active_pd']
 
@@ -382,6 +387,45 @@ class TestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin, APITenant
     def test_government_partner_without_active_pd(self):
         self.engagement.partner.partner_type = PartnerType.GOVERNMENT
         self.engagement.partner.save()
+        del self.create_data['active_pd']
+
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+
+class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
+                                       APITenantTestCase):
+    engagement_factory = MicroAssessmentFactory
+
+
+class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet, APITenantTestCase):
+    engagement_factory = AuditFactory
+
+
+class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
+                                 APITenantTestCase):
+    engagement_factory = SpotCheckFactory
+
+
+class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, APITenantTestCase):
+    engagement_factory = SpecialAuditFactory
+
+    def setUp(self):
+        super(SpecialAuditCreateViewSet, self).setUp()
+        self.create_data['specific_procedures'] = [
+            {
+                'description': sp.description,
+                'finding': sp.finding,
+            } for sp in self.engagement.specific_procedures.all()
+        ]
+
+    def test_engagement_with_active_pd(self):
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_engagement_without_active_pd(self):
         del self.create_data['active_pd']
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
