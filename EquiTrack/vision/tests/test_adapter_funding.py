@@ -24,7 +24,7 @@ from vision.adapters import funding as adapter
 class TestFundReservationsSynchronizer(FastTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.country = Country.objects.all()[0]
+        cls.country = Country.objects.first()
 
     def setUp(self):
         self.data = {
@@ -282,7 +282,7 @@ class TestFundReservationsSynchronizer(FastTenantTestCase):
 class TestFundCommitmentSynchronizer(FastTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.country = Country.objects.all()[0]
+        cls.country = Country.objects.first()
 
     def setUp(self):
         self.data = {

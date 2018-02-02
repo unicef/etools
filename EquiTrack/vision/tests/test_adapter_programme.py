@@ -350,7 +350,7 @@ class TestResultStructureSynchronizer(FastTenantTestCase):
 class TestProgrammeSynchronizer(FastTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.country = Country.objects.all()[0]
+        cls.country = Country.objects.first()
 
     def setUp(self):
         self.data = {
@@ -577,7 +577,7 @@ class TestProgrammeSynchronizer(FastTenantTestCase):
 class TestRAMSynchronizer(FastTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.country = Country.objects.all()[0]
+        cls.country = Country.objects.first()
         cls.result_type_output = ResultTypeFactory(name=ResultType.OUTPUT)
 
     def setUp(self):
