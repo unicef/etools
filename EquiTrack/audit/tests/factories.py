@@ -22,7 +22,8 @@ from audit.models import (
     RiskCategory,
     SpecialAudit,
     SpotCheck,
-    SpecificProcedure)
+    SpecificProcedure,
+    KeyInternalControl)
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from EquiTrack.factories import (
     AgreementFactory,
@@ -153,6 +154,16 @@ class FindingFactory(factory.DjangoModelFactory):
         model = Finding
 
     spot_check = factory.SubFactory(SpotCheckFactory)
+
+
+class KeyInternalControlFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = KeyInternalControl
+
+    audit = factory.SubFactory(SpotCheckFactory)
+    recommendation = fuzzy.FuzzyText(length=50).fuzz()
+    audit_observation = fuzzy.FuzzyText(length=50).fuzz()
+    ip_response = fuzzy.FuzzyText(length=50).fuzz()
 
 
 class DetailedFindingInfoFactory(factory.DjangoModelFactory):

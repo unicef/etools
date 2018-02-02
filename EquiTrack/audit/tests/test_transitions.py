@@ -7,7 +7,8 @@ from rest_framework import status
 
 from audit.models import SpecificProcedure
 from audit.tests.base import EngagementTransitionsTestCaseMixin
-from audit.tests.factories import AuditFactory, MicroAssessmentFactory, SpecialAuditFactory, SpotCheckFactory
+from audit.tests.factories import AuditFactory, MicroAssessmentFactory, SpecialAuditFactory, SpotCheckFactory, \
+    KeyInternalControlFactory
 from audit.transitions.conditions import (
     AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck,)
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -54,9 +55,7 @@ class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self.engagement.audited_expenditure = random.randint(1, 22)
         self.engagement.financial_findings = random.randint(1, 22)
         self.engagement.audit_opinion = fuzzy.FuzzyText(length=20).fuzz()
-        self.engagement.recommendation = fuzzy.FuzzyText(length=50).fuzz()
-        self.engagement.audit_observation = fuzzy.FuzzyText(length=50).fuzz()
-        self.engagement.ip_response = fuzzy.FuzzyText(length=50).fuzz()
+        self.engagement.key_internal_controls.add(*[KeyInternalControlFactory(audit=self.engagement) for _ in range(3)])
         self.engagement.save()
 
     def _init_filled_engagement(self):

@@ -7,8 +7,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
-from notification.models import Notification
-
 
 class BaseFirmManager(models.Manager):
     def get_by_natural_key(self, vendor_number):
