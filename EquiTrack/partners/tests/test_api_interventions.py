@@ -1013,9 +1013,14 @@ class TestAPInterventionIndicatorsCreateView(APITenantTestCase):
                           kwargs={'lower_result_pk': cls.lower_result.id})
 
         location = LocationFactory()
+        section = SectorFactory()
+
+        cls.result_link.intervention.flat_locations.add(location)
+        cls.result_link.intervention.sections.add(section)
 
         cls.data = {'assumptions': 'lorem ipsum',
                     'locations': [location.id],
+                    'section': section.id,
                     # indicator (blueprint) is required because the AppliedIndicator model has a unique_together
                     # constraint of (indicator, lower_result).
                     'indicator': {'title': 'my indicator blueprint'},
