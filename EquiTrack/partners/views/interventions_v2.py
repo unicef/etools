@@ -3,7 +3,7 @@ import functools
 import logging
 import copy
 
-from django.db import transaction
+from django.db import transaction, connection
 from django.db.models import Q, Max, Min, Sum
 
 from rest_framework import status
@@ -81,19 +81,11 @@ class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
             'planned_budget',
             'offices',
             'sections',
+            # TODO: Figure out a way in which to add locations that is more performant
+            # 'flat_locations',
             'result_links__cp_output',
-            'result_links__ll_results__applied_indicators__indicator',
-            'result_links__ll_results__applied_indicators__locations',
-            'result_links__ll_results__applied_indicators__locations__gateway',
             'unicef_focal_points',
         )
-
-        if tenant_switch_is_active("prp_mode_off"):
-            qs = qs.prefetch_related(
-                # only prefetch flat_locations when needed, as this has an
-                # impact on performance. Only needed when prp not enabled
-                'flat_locations',
-            )
 
         qs = qs.annotate(
             Max("frs__end_date"),
