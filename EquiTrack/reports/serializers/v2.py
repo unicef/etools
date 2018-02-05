@@ -1,9 +1,9 @@
-from django.db import transaction
+from django.db import transaction, connection
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, Result
+from reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, Result, CountryProgramme
 
 
 class OutputListSerializer(serializers.ModelSerializer):
@@ -122,3 +122,17 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
         self.update_applied_indicators(instance, applied_indicators)
 
         return super(LowerResultCUSerializer, self).update(instance, validated_data)
+
+
+class CountryProgrammeSerializer(serializers.ModelSerializer):
+    expired = serializers.ReadOnlyField()
+    active = serializers.ReadOnlyField()
+    special = serializers.SerializerMethodField()
+    future = serializers.ReadOnlyField()
+
+    class Meta:
+        model = CountryProgramme
+        fields = '__all__'
+
+    def get_special(self, cp):
+        return False if connection.schema_name in ['palestine'] else cp.special

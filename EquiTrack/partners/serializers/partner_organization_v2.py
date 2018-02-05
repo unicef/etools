@@ -7,9 +7,12 @@ from django.db.models import Q
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from reports.serializers.v2 import CountryProgrammeSerializer
+
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
 
 from partners.models import (
+    Agreement,
     Assessment,
     Intervention,
     PartnerOrganization,
@@ -309,4 +312,32 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_min_requirements",
             "flags",
             "outstanding_findings"
+        )
+
+
+class PartnerStaffMemberSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = '__all__'
+
+
+class PartnerOrganizationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerOrganization
+        fields = ('id', 'name', 'address', 'city', 'country')
+
+
+class AgreementNestedSerializer(serializers.ModelSerializer):
+
+    authorized_officers = PartnerStaffMemberSerializer(many=True, read_only=True)
+    country_programme = CountryProgrammeSerializer(read_only=True)
+    partner = PartnerOrganizationSerializer(read_only=True)
+
+    class Meta:
+        model = Agreement
+        fields = (
+            "agreement_number", "agreement_type", "attached_agreement", "authorized_officers",
+            "country_programme", "end", "id", "partner", "start", "status",
         )

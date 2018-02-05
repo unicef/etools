@@ -14,7 +14,8 @@ from partners.models import (
     Agreement,
     FileType,
 )
-from partners.serializers.v1 import FileTypeSerializer, AgreementNestedSerializer
+from partners.serializers.v1 import FileTypeSerializer
+from partners.serializers.partner_organization_v2 import AgreementNestedSerializer
 from EquiTrack.utils import get_data_from_insight, load_internal_pdf_template
 
 
@@ -35,7 +36,7 @@ class PCAPDFView(RetrieveAPIView):
             if pdf_response.status_code == status.HTTP_200_OK:
                 return HttpResponse(pdf_response, content_type='application/pdf')
             else:
-                return HttpResponse('PDF generation service returned an invalid response.')
+                return HttpResponse(pdf_response)
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
