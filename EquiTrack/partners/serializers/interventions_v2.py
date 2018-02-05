@@ -96,9 +96,9 @@ class InterventionListSerializer(serializers.ModelSerializer):
 
     section_names = serializers.SerializerMethodField()
     flagged_sections = serializers.SerializerMethodField()
-    locations = serializers.SerializerMethodField()
-    location_names = serializers.SerializerMethodField()
-    cluster_names = serializers.SerializerMethodField()
+    # locations = serializers.SerializerMethodField()
+    # location_names = serializers.SerializerMethodField()
+    # cluster_names = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
     frs_earliest_start_date = serializers.DateField(source='frs__start_date__min', read_only=True)
@@ -135,22 +135,22 @@ class InterventionListSerializer(serializers.ModelSerializer):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.flagged_sections]
+        return [l.name for l in obj.sections.all()]
 
     def get_flagged_sections(self, obj):
-        return [l.pk for l in obj.flagged_sections]
+        return [l.pk for l in obj.sections.all()]
 
-    def get_locations(self, obj):
-        return [l.pk for l in obj.intervention_locations]
+    # def get_locations(self, obj):
+    #     return [l.pk for l in obj.flat_locations.all()]
 
-    def get_location_names(self, obj):
-        return [
-            '{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code)
-            for l in obj.intervention_locations
-        ]
+    # def get_location_names(self, obj):
+    #     return [
+    #         '{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code)
+    #         for l in obj.flat_locations.all()
+    #     ]
 
-    def get_cluster_names(self, obj):
-        return [c for c in obj.intervention_clusters]
+    # def get_cluster_names(self, obj):
+    #     return [c for c in obj.intervention_clusters]
 
     class Meta:
         model = Intervention
@@ -181,9 +181,6 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'total_unicef_budget',
             'total_budget',
             'metadata',
-            'locations',
-            'location_names',
-            'cluster_names',
             'flagged_sections'
         )
 
