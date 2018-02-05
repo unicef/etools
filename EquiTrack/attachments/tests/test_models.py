@@ -26,7 +26,7 @@ class TestGenerateFilePath(FastTenantTestCase):
         cls.agreement = AgreementFactory(partner=cls.partner)
         cls.intervention = InterventionFactory(agreement=cls.agreement)
 
-    def assert_file_path(self, file_path, file_path_list, path_type):
+    def assert_file_path(self, file_path, file_path_list, path_type=None):
         if path_type == "partners":
             file_path_list = [
                 connection.schema_name,
@@ -157,15 +157,67 @@ class TestGenerateFilePath(FastTenantTestCase):
         )
         self.assertEqual(file_path, file_path_old)
 
+    def test_default(self):
+        file_type = FileTypeFactory()
+        attachment = AttachmentFactory(content_object=file_type)
+        file_path = models.generate_file_path(attachment, "test.pdf")
+        self.assert_file_path(file_path, [
+            "files",
+            "attachments",
+            "filetype",
+            str(file_type.pk),
+            "test.pdf"
+        ])
+
     def test_exception(self):
         attachment = AttachmentFactory(content_object=self.partner)
         with self.assertRaisesRegexp(Exception, "Unknown file path"):
             models.generate_file_path(attachment, "test.pdf")
 
 
-class TestAttachmentsModels(FastTenantTestCase):
+class TestFileType(FastTenantTestCase):
+    def test_str(self):
+        instance = FileTypeFactory(name=b'xyz')
+        self.assertIn(b'xyz', str(instance))
+        self.assertIn(u'xyz', unicode(instance))
+
+        instance = FileTypeFactory(name=u'R\xe4dda Barnen')
+        self.assertIn(b'R\xc3\xa4dda Barnen', str(instance))
+        self.assertIn(u'R\xe4dda Barnen', unicode(instance))
+
+
+class TestAttachment(FastTenantTestCase):
     def setUp(self):
         self.simple_object = FileTypeFactory()
+
+    def test_str(self):
+        instance = AttachmentFactory(
+            file=b'these are the file contents!',
+            content_object=self.simple_object
+        )
+        self.assertIn(b'these are the file contents!', str(instance))
+        self.assertIn(u'these are the file contents!', unicode(instance))
+
+        instance = AttachmentFactory(
+            file=u'R\xe4dda Barnen',
+            content_object=self.simple_object
+        )
+        self.assertIn(b'R\xc3\xa4dda Barnen', str(instance))
+        self.assertIn(u'R\xe4dda Barnen', unicode(instance))
+
+    def test_filename(self):
+        instance = AttachmentFactory(
+            file="test.pdf",
+            content_object=self.simple_object
+        )
+        self.assertEqual(instance.filename, "test.pdf")
+
+    def test_filename_hyperlink(self):
+        instance = AttachmentFactory(
+            hyperlink="http://example.com/test_file.txt",
+            content_object=self.simple_object
+        )
+        self.assertEqual(instance.filename, "test_file.txt")
 
     def test_valid_file(self):
         valid_file_attachment = AttachmentFactory(
