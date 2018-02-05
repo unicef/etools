@@ -678,17 +678,25 @@ class SpecialAudit(Engagement):
         return build_frontend_url('ap', 'special-audits', self.id, 'overview')
 
 
+@python_2_unicode_compatible
 class SpecificProcedure(models.Model):
     audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='specific_procedures')
 
     description = models.TextField()
     finding = models.TextField(blank=True)
 
+    def __str__(self):
+        return '{}: {}'.format(self.audit.unique_id, self.description)
 
+
+@python_2_unicode_compatible
 class SpecialAuditRecommendation(models.Model):
     audit = models.ForeignKey(SpecialAudit, verbose_name=_('Special Audit'), related_name='other_recommendations')
 
     description = models.TextField()
+
+    def __str__(self):
+        return '{}: {}'.format(self.audit.unique_id, self.description)
 
 
 @python_2_unicode_compatible
