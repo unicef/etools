@@ -447,7 +447,7 @@ class TestInterventionsAPI(APITenantTestCase):
         self.ts = TenantSwitchFactory(name="prp_mode_off", countries=[connection.tenant])
         self.assertTrue(tenant_switch_is_active(self.ts.name))
 
-        EXPECTED_QUERIES = 11
+        EXPECTED_QUERIES = 10
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
