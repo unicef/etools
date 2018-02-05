@@ -632,6 +632,7 @@ class FinancialFinding(models.Model):
         return '{}: {}'.format(self.audit.unique_id, self.get_title_display())
 
 
+@python_2_unicode_compatible
 class KeyInternalControl(models.Model):
     audit = models.ForeignKey(Audit, verbose_name=_('Audit'), related_name='key_internal_controls')
 
