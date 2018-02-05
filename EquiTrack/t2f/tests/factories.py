@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-from datetime import timedelta
-
 import factory
 from django.utils import timezone
 from factory import fuzzy
@@ -28,8 +26,8 @@ from t2f.models import (
     TravelType,
 )
 
-_FUZZY_START_DATE = timezone.now() - timedelta(days=5)
-_FUZZY_END_DATE = timezone.now() + timedelta(days=5)
+_FUZZY_START_DATE = timezone.datetime(timezone.now().year, 1, 1, tzinfo=timezone.now().tzinfo)
+_FUZZY_END_DATE = timezone.datetime(timezone.now().year, 12, 31, tzinfo=timezone.now().tzinfo)
 
 
 class TravelActivityFactory(factory.django.DjangoModelFactory):

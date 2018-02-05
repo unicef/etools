@@ -358,8 +358,10 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'type_of_assessment',
         u'last_assessment_date',
         u'core_values_assessment_date',
+        u'total_ct_cy',
+        u'total_ct_cp',
         u'deleted_flag',
-        u'blocked'
+        u'blocked',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -385,6 +387,11 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'blocked',
                  )
         }),
+        (_('Hact'), {
+            'fields': (
+                u'hact_values',
+            )
+        })
     )
     actions = (
         'hide_partners',

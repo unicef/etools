@@ -9,7 +9,7 @@ from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, \
     InterventionBudgetFactory, PartnerStaffFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory
-from partners.models import GovernmentInterventionResult
+from partners.models import GovernmentInterventionResult, PartnerOrganization
 from reports.models import ResultType
 
 
@@ -26,7 +26,7 @@ class TestModelExport(APITenantTestCase):
             address="Address 123",
             phone_number="Phone no 1234567",
             email="email@address.com",
-            rating="High",
+            rating=PartnerOrganization.RATING_HIGH,
             core_values_assessment_date=datetime.date.today(),
             total_ct_cp=10000,
             total_ct_cy=20000,
