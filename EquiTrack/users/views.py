@@ -1,15 +1,13 @@
 import logging
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.utils import six
-from django.utils.decorators import method_decorator
-from django.views.generic import FormView, RedirectView, View
+from django.views.generic import FormView, RedirectView
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
@@ -39,7 +37,11 @@ class UserAuthAPIView(RetrieveAPIView):
         return user
 
 
-class ChangeUserCountryView(View):
+class ChangeUserCountryView(APIView):
+    """
+    Allows a user to switch country context if they have access to more than one
+    """
+
     ERROR_MESSAGES = {
         'country_does_not_exist': 'The Country that you are attempting to switch to does not exist',
         'access_to_country_denied': 'You do not have access to the country you are trying to switch to'
@@ -47,8 +49,10 @@ class ChangeUserCountryView(View):
 
     next_param = 'next'
 
+    permission_classes = (IsAuthenticated, )
+
     def get_country_id(self):
-        return self.request.GET.get('country', None)
+        return self.request.data.get('country', None) or self.request.query_params.get('country', None)
 
     def get_country(self):
         country_id = self.get_country_id()
@@ -74,7 +78,6 @@ class ChangeUserCountryView(View):
     def get_redirect_url(self):
         return self.request.GET.get(self.next_param, '/')
 
-    @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         try:
             self.change_country()
@@ -82,16 +85,6 @@ class ChangeUserCountryView(View):
             return HttpResponseForbidden(six.text_type(err))
 
         return HttpResponseRedirect(self.get_redirect_url())
-
-
-class ChangeUserCountryAPIView(APIView, ChangeUserCountryView):
-    """
-    Allows a user to switch country context if they have access to more than one
-    """
-    permission_classes = (IsAuthenticated, )
-
-    def get_country_id(self):
-        return self.request.data.get('country')
 
     def post(self, request, format=None):
         try:
