@@ -3,7 +3,7 @@ import functools
 import logging
 import copy
 
-from django.db import transaction, connection
+from django.db import transaction
 from django.db.models import Q, Max, Min, Sum
 
 from rest_framework import status
