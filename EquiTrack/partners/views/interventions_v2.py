@@ -734,5 +734,8 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
     queryset = AppliedIndicator.objects.all()
 
     def delete(self, request, *args, **kwargs):
-        # make sure there are no indicators added to this LLO
-        raise ValidationError(u'Deleting an indicator is temporarily disabled..')
+        ai = self.get_object()
+        intervention = ai.lower_result.result_link.intervention
+        if not intervention.status == Intervention.DRAFT:
+            raise ValidationError(u'Deleting an indicator is only possible in status Draft.')
+        return super(InterventionIndicatorsUpdateView, self).delete(request, *args, **kwargs)
