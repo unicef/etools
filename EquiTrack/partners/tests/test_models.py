@@ -1,4 +1,3 @@
-import copy
 import datetime
 import sys
 from unittest import skipIf, TestCase
@@ -39,7 +38,10 @@ from EquiTrack.factories import (
     UserFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from audit.models import Engagement
+from audit.tests.factories import SpecialAuditFactory
 from partners import models
+from partners.models import PartnerOrganization
 from partners.tests.factories import (
     WorkspaceFileTypeFactory,
     )
@@ -240,7 +242,8 @@ class TestPartnerOrganizationModel(TenantTestCase):
     def setUp(self):
         self.partner_organization = PartnerFactory(
             name="Partner Org 1",
-            total_ct_cy=PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1,
+            total_ct_ytd=models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1,
+            reported_cy=models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1,
             last_assessment_date=datetime.date(2000, 5, 14),
         )
         year = datetime.date.today().year
@@ -320,20 +323,21 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertFalse(self.partner_organization.expiring_assessment_flag)
 
     def test_approaching_threshold_flag_true(self):
-        self.partner_organization.rating = PartnerOrganization.RATING_NON_ASSESSED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_NON_ASSESSED
         self.assertTrue(self.partner_organization.approaching_threshold_flag)
 
     def test_approaching_threshold_flag_false(self):
-        self.partner_organization.rating = PartnerOrganization.RATING_NON_ASSESSED
-        self.partner_organization.total_ct_cy = PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL - 1
+        self.partner_organization.rating = models.PartnerOrganization.RATING_NON_ASSESSED
+        self.partner_organization.total_ct_ytd = models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL - 1
         self.assertFalse(self.partner_organization.approaching_threshold_flag)
 
     def test_approaching_threshold_flag_false_moderate(self):
-        self.partner_organization.rating = PartnerOrganization.RATING_MODERATE
+        self.partner_organization.rating =models. PartnerOrganization.RATING_MODERATE
         self.assertFalse(self.partner_organization.approaching_threshold_flag)
 
     def test_hact_min_requirements_ct_under_25k(self):
-        self.partner_organization.total_ct_cy = 0
+        self.partner_organization.net_ct_cy = 0
+        self.partner_organization.reported_cy = 0
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 0,
@@ -342,50 +346,60 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(hact_min_req, data)
 
     def test_hact_min_requirements_ct_between_25k_and_50k(self):
-        self.partner_organization.total_ct_cy = 44000.00
+        self.partner_organization.net_ct_cy = 44000.00
+        self.partner_organization.reported_cy = 44000.00
         self.assert_min_requirements(1, 0)
 
     def test_hact_min_requirements_ct_between_25k_and_100k(self):
-        self.partner_organization.total_ct_cy = 99000.00
+        self.partner_organization.net_ct_cy = 99000.00
+        self.partner_organization.reported_cy = 99000.00
         self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_high(self):
-        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.net_ct_cy = 490000.00
+        self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_significant(self):
-        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.net_ct_cy = 490000.00
+        self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_moderate(self):
-        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.net_ct_cy = 490000.00
+        self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_MODERATE
         self.assert_min_requirements(2, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_low(self):
-        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.net_ct_cy = 490000.00
+        self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_over_500k_high(self):
-        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.net_ct_cy = 510000.00
+        self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
         self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_significant(self):
-        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.net_ct_cy = 510000.00
+        self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
         self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_moderate(self):
-        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.net_ct_cy = 510000.00
+        self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_MODERATE
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_over_500k_low(self):
-        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.net_ct_cy = 510000.00
+        self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.assert_min_requirements(2, 1)
 
@@ -427,7 +441,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             year=year - 1,
             programmatic=2
         )
-        PartnerOrganization.planned_visits(
+        models.PartnerOrganization.planned_visits(
             self.partner_organization
         )
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
@@ -523,6 +537,20 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 0)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
 
+    @freeze_time("2013-12-26")
+    def test_spot_checks_update_one_with_date(self):
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
+        models.PartnerOrganization.spot_checks(
+            self.partner_organization,
+            update_one=True,
+            event_date=datetime.datetime(2013, 05, 12)
+        )
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
+
     def test_spot_checks_update_travel_activity(self):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
         traveller = UserFactory()
@@ -565,6 +593,11 @@ class TestPartnerOrganizationModel(TenantTestCase):
             partner=self.partner_organization,
             status=Engagement.FINAL,
             date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
+        )
+        SpecialAuditFactory(
+            partner=self.partner_organization,
+            status=Engagement.FINAL,
+            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 8, 1)
         )
         SpecialAuditFactory(
             partner=self.partner_organization,

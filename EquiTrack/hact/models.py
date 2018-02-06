@@ -56,7 +56,7 @@ class AggregateHact(TimeStampedModel):
         self.save()
 
     def get_queryset(self):
-        return PartnerOrganization.objects.filter(Q(total_ct_cp__gt=0) | Q(total_ct_cy__gt=0))
+        return PartnerOrganization.objects.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0))
 
     def _sum_json_values(self, filters, filter_dict={}):
         partners = self.get_queryset().filter(**filter_dict)
@@ -78,84 +78,84 @@ class AggregateHact(TimeStampedModel):
         THIRD_LEVEL = Decimal(350000.00)
         FOURTH_LEVEL = Decimal(500000.00)
 
-        ct_amount_first = self.get_queryset().filter(total_ct_cy__lte=FIRST_LEVEL)
+        ct_amount_first = self.get_queryset().filter(total_ct_ytd__lte=FIRST_LEVEL)
         cash_transfers_amounts_first = [
             '$0-50,0000',
             ct_amount_first.filter(rating=PartnerOrganization.RATING_NON_ASSESSED).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_first.filter(rating=PartnerOrganization.RATING_LOW).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_first.filter(rating=PartnerOrganization.RATING_MODERATE).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_first.filter(rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_first.filter(rating=PartnerOrganization.RATING_HIGH).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
-            ct_amount_first.aggregate(count=Count('total_ct_cy'))['count'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_first.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
-        ct_amount_second = self.get_queryset().filter(total_ct_cy__gte=FIRST_LEVEL, total_ct_cy__lte=SECOND_LEVEL)
+        ct_amount_second = self.get_queryset().filter(total_ct_ytd__gte=FIRST_LEVEL, total_ct_ytd__lte=SECOND_LEVEL)
         cash_transfers_amounts_second = [
             '$50,0001-100,0000',
             ct_amount_second.filter(rating=PartnerOrganization.RATING_NON_ASSESSED).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_second.filter(rating=PartnerOrganization.RATING_LOW).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_second.filter(rating=PartnerOrganization.RATING_MODERATE).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_second.filter(rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_second.filter(rating=PartnerOrganization.RATING_HIGH).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
-            ct_amount_second.aggregate(count=Count('total_ct_cy'))['count'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_second.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
-        ct_amount_third = self.get_queryset().filter(total_ct_cy__gte=SECOND_LEVEL, total_ct_cy__lte=THIRD_LEVEL)
+        ct_amount_third = self.get_queryset().filter(total_ct_ytd__gte=SECOND_LEVEL, total_ct_ytd__lte=THIRD_LEVEL)
         cash_transfers_amounts_third = [
             '$100,0001-350,0000',
             ct_amount_third.filter(rating=PartnerOrganization.RATING_NON_ASSESSED).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_third.filter(rating=PartnerOrganization.RATING_LOW).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_third.filter(rating=PartnerOrganization.RATING_MODERATE).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_third.filter(rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_third.filter(rating=PartnerOrganization.RATING_HIGH).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
-            ct_amount_third.aggregate(count=Count('total_ct_cy'))['count'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_third.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
-        ct_amount_fourth = self.get_queryset().filter(total_ct_cy__gte=THIRD_LEVEL, total_ct_cy__lte=FOURTH_LEVEL)
+        ct_amount_fourth = self.get_queryset().filter(total_ct_ytd__gte=THIRD_LEVEL, total_ct_ytd__lte=FOURTH_LEVEL)
         cash_transfers_amounts_fourth = [
             '$350,0001-500,0000',
             ct_amount_fourth.filter(rating=PartnerOrganization.RATING_NON_ASSESSED).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_fourth.filter(rating=PartnerOrganization.RATING_LOW).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_fourth.filter(rating=PartnerOrganization.RATING_MODERATE).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_fourth.filter(rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_fourth.filter(rating=PartnerOrganization.RATING_HIGH).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
-            ct_amount_fourth.aggregate(count=Count('total_ct_cy'))['count'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_fourth.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
-        ct_amount_fifth = self.get_queryset().filter(total_ct_cy__gte=FOURTH_LEVEL)
+        ct_amount_fifth = self.get_queryset().filter(total_ct_ytd__gte=FOURTH_LEVEL)
         cash_transfers_amounts_fifth = [
             '>$500,0000',
             ct_amount_fifth.filter(rating=PartnerOrganization.RATING_NON_ASSESSED).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_fifth.filter(rating=PartnerOrganization.RATING_LOW).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_fifth.filter(rating=PartnerOrganization.RATING_MODERATE).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_fifth.filter(rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_fifth.filter(rating=PartnerOrganization.RATING_HIGH).aggregate(
-                total=Coalesce(Sum('total_ct_cy'), 0))['total'],
-            ct_amount_fifth.aggregate(count=Count('total_ct_cy'))['count'],
+                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_fifth.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
         return [
@@ -169,8 +169,8 @@ class AggregateHact(TimeStampedModel):
 
     def get_cash_transfer_risk_rating(self):
         total_ct_dict = {
-            'total': Sum('total_ct_cy'),
-            'count': Count('total_ct_cy')
+            'total': Sum('total_ct_ytd'),
+            'count': Count('total_ct_ytd')
         }
 
         high = self.get_queryset().filter(rating=PartnerOrganization.RATING_HIGH).aggregate(**total_ct_dict)
@@ -192,8 +192,8 @@ class AggregateHact(TimeStampedModel):
 
     def get_cash_transfer_partner_type(self):
         total_ct_dict = {
-            'total': Sum('total_ct_cy'),
-            'count': Count('total_ct_cy')
+            'total': Sum('total_ct_ytd'),
+            'count': Count('total_ct_ytd')
         }
 
         gov = self.get_queryset().filter(partner_type=PartnerType.GOVERNMENT).aggregate(**total_ct_dict)
@@ -216,7 +216,7 @@ class AggregateHact(TimeStampedModel):
 
     def get_assurance_activities(self):
         today = date.today()
-        deadline = today - timedelta(PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_DAYS)
+        deadline = today - timedelta(365 * PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR)
         return {
             'programmatic_visits': {
                 'completed': self._sum_json_values('hact_values__programmatic_visits__completed__total'),

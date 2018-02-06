@@ -223,7 +223,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     """
     # When cash transferred to a country programme exceeds CT_CP_AUDIT_TRIGGER_LEVEL, an audit is triggered.
-    EXPIRING_ASSESSMENT_LIMIT_DAYS = 1460
+    EXPIRING_ASSESSMENT_LIMIT_YEAR = 4
     CT_CP_AUDIT_TRIGGER_LEVEL = decimal.Decimal('50000.00')
 
     CT_MR_AUDIT_TRIGGER_LEVEL = decimal.Decimal('25000.00')
@@ -439,6 +439,21 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         help_text='Total Cash Transferred per Current Year'
     )
 
+    net_ct_cy = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True,
+        help_text='Net Cash Transferred per Current Year'
+    )
+
+    reported_cy = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True,
+        help_text='Liquidations 1 Oct - 30 Sep'
+    )
+
+    total_ct_ytd = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True,
+        help_text='Cash Transfers Jan - Dec'
+    )
+
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
 
     # TODO these property will be replaced with correct field coming from vision
@@ -500,15 +515,14 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     @cached_property
     def expiring_assessment_flag(self):
         if self.last_assessment_date:
-            last_assessment_age = (datetime.date.today() - self.last_assessment_date).days
-            return last_assessment_age > PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_DAYS
+            last_assessment_age = datetime.date.today().year - self.last_assessment_date.year
+            return last_assessment_age >= PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR
         return False
 
     @cached_property
     def approaching_threshold_flag(self):
-        # TODO 1.1.6b change total_ct_cy when the vision API is ready
         return self.rating == PartnerOrganization.RATING_NON_ASSESSED and \
-               self.cash_transfer > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+               self.total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
 
     @cached_property
     def flags(self):
@@ -520,7 +534,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     @cached_property
     def min_req_programme_visits(self):
         programme_visits = 0
-        ct = self.total_ct_cy
+        ct = self.net_ct_cy
 
         if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
@@ -544,8 +558,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     @cached_property
     def min_req_spot_checks(self):
-        # TODO 1.1.9b add condition when is implemented 1.1.10a
-        return 1 if self.liquidation > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        return 1 if self.reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
     @cached_property
     def hact_min_requirements(self):
