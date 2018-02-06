@@ -32,7 +32,9 @@ def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwa
 
 @receiver(post_delete, sender=AuditorStaffMember)
 def delete_user_receiver(instance, **kwargs):
-    instance.user.delete()
+    user = instance.user
+    user.is_active = False
+    user.save()
 
 
 @receiver(post_save, sender=EngagementActionPoint)
