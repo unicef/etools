@@ -1554,7 +1554,7 @@ class TestInterventionViews(APITenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @skip('TODO: update test when new validation requirement is built')
+    # @skip('TODO: update test when new validation requirement is built')
     def test_intervention_active_update_planned_budget(self):
         InterventionBudget.objects.filter(intervention=self.intervention_data.get("id")).delete()
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1577,7 +1577,7 @@ class TestInterventionViews(APITenantTestCase):
             response.data,
             ["Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED."])
 
-    @skip('Add test back after reintroducing active validations')
+    # @skip('TODO: Add test back after reintroducing active validations')
     def test_intervention_active_update_planned_budget_rigid(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         intervention_obj.status = Intervention.ACTIVE
