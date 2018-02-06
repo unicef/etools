@@ -11,19 +11,25 @@ def copy_attached_agreement(apps, schema_editor):
     FileType = apps.get_model("attachments", "filetype")
     Attachment = apps.get_model("attachments", "attachment")
     Agreement = apps.get_model("partners", "agreement")
+    ContentType = apps.get_model("contenttypes", "ContentType")
+
     file_type, _ = FileType.objects.get_or_create(
         code="partners_agreement",
         defaults={
             "name": "Attached Agreement",
-            "label": "attached_agreement"
+            "label": "attached_agreement",
+            "order": 0,
         }
     )
 
-    for agreement in Agreement.objects.filter(
-            attached_agreement__isnull=False
+    content_type = ContentType.objects.get_for_model(Agreement)
+
+    for agreement in Agreement.view_objects.filter(
+        attached_agreement__isnull=False
     ).all():
         Attachment.objects.create(
-            content_object=agreement,
+            content_type=content_type,
+            object_id=agreement.pk,
             file=agreement.attached_agreement,
             file_type=file_type,
             code=file_type.code,
@@ -34,6 +40,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('partners', '0058_intervention_locations'),
+        ('attachments', '0005_auto_20180206_1700'),
     ]
 
     operations = [
