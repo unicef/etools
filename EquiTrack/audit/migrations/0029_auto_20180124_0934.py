@@ -12,6 +12,7 @@ def migrate_keyinternalcontrols(apps, schema_editor):
 
     for audit in Audit.objects.filter(~models.Q(recommendation='') | ~models.Q(audit_observation='') | ~models.Q(ip_response='')):
         KeyInternalControl.objects.create(
+            audit=audit,
             recommendation=audit.recommendation,
             audit_observation=audit.audit_observation,
             ip_response=audit.ip_response,
@@ -41,6 +42,11 @@ class Migration(migrations.Migration):
             name='financialfinding',
             options={'ordering': ('id',)},
         ),
+        migrations.AddField(
+            model_name='keyinternalcontrol',
+            name='audit',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='key_internal_controls', to='audit.Audit', verbose_name='Audit'),
+        ),
         migrations.RunPython(migrate_keyinternalcontrols, migrations.RunPython.noop),
         migrations.RemoveField(
             model_name='audit',
@@ -53,10 +59,5 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='audit',
             name='recommendation',
-        ),
-        migrations.AddField(
-            model_name='keyinternalcontrol',
-            name='audit',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='key_internal_controls', to='audit.Audit', verbose_name='Audit'),
         ),
     ]
