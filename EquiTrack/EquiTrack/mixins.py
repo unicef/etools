@@ -24,6 +24,7 @@ from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.utils import jwt_payload_handler
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
+from social_core.backends.azuread_b2c import AzureADB2COAuth2
 
 from EquiTrack.utils import set_country
 
@@ -277,3 +278,10 @@ def custom_jwt_payload_handler(user):
     payload = jwt_payload_handler(user)
     payload['groups'] = list(user.groups.values_list('name', flat=True))
     return payload
+
+
+class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
+
+    def __init__(self, *args, **kwargs):
+        super(CustomAzureADBBCOAuth2, self).__init__(*args, **kwargs)
+        self.redirect_uri = 'http://localhost:8082/social/complete/azuread-b2c-oauth2/'

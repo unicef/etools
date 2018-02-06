@@ -240,6 +240,9 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
+
             ],
         },
     },
@@ -554,3 +557,13 @@ ISSUE_CHECKS = [
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
+
+# Django Contrib Settings ################################
+KEY = "key here"
+SECRET = "secret here"
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+SOCIAL_AUTH_SANITIZE_REDIRECTS = False
+POLICY = "b2c_1A_signup_signinUNICEF"
+TENANT_ID = 'vnb2cpoc.onmicrosoft.com'
+SCOPE = ['openid']
+IGNORE_DEFAULT_SCOPE = True

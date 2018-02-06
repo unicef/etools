@@ -32,6 +32,10 @@ django-rest-swagger==2.1.0
 djangorestframework-recursive==0.1.1
 
 # Other Python packages
+
+git+https://github.com/python-social-auth/social-core.git@228a350a09fa4985c94bc9f0c4333cc944a95484#egg=social-auth-core
+social-auth-app-django==2.1.0
+
 psycopg2==2.6.2
 celery==3.1.25
 GDAL==1.10.0           # DO NOT USE GDAL <= 2.1.0

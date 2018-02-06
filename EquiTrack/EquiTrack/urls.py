@@ -108,6 +108,7 @@ urlpatterns = [
     url(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
 
     url('^monitoring/', include('monitoring.urls')),
+    url('^social/', include('social_django.urls', namespace='social'))
 ]
 
 

@@ -24,6 +24,8 @@ REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
 
 # No SAML for local dev
 AUTHENTICATION_BACKENDS = (
+    # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
+    'EquiTrack.mixins.CustomAzureADBBCOAuth2',
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 )
@@ -68,6 +70,7 @@ else:
     INSTALLED_APPS += (  # noqa
         'debug_toolbar',
         'django_extensions',
+        'social_django',
     )
     INTERNAL_IPS = ('127.0.0.1',)
     MIDDLEWARE_CLASSES += (  # noqa
