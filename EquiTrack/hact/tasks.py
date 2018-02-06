@@ -23,5 +23,3 @@ def update_aggregate_hact_values():
             aggregate_hact.update()
         except Exception as e:
             logger.error(country, e.message)
-
-    logger.info('Hact Aggregator Task process finished')

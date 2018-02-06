@@ -35,7 +35,7 @@ from reports.models import (
 )
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
-from users.models import Section, Office
+from users.models import Office
 from partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreements_illegal_transition,
@@ -455,6 +455,15 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     )
 
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+
+    # TODO these property will be replaced with correct field coming from vision
+    @cached_property
+    def cash_transfer(self):
+        return self.total_ct_cy
+
+    @cached_property
+    def liquidation(self):
+        return self.total_ct_cy
 
     tracker = FieldTracker()
 
@@ -1501,6 +1510,11 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
+    in_amendment = models.BooleanField(
+        verbose_name=_("Amendment Open"),
+        default=False,
+    )
+
     # Flag if this has been migrated to a status that is not correct
     # previous status
     metadata = JSONField(
@@ -1561,6 +1575,12 @@ class Intervention(TimeStampedModel):
                 if applied_indicator.section:
                     sections.add(applied_indicator.section)
         return sections
+
+    @property
+    def sections_present(self):
+        # for permissions validation. the name of this def needs to remain the same as defined in the permission matrix.
+        # /assets/partner/intervention_permission.csv
+        return True if len(self.combined_sections) > 0 else None
 
     @cached_property
     def total_partner_contribution(self):
@@ -1648,11 +1668,11 @@ class Intervention(TimeStampedModel):
     @cached_property
     def intervention_clusters(self):
         # return intervention clusters as an array of strings
-        clusters = []
+        clusters = set()
         for lower_result in self.all_lower_results:
             for applied_indicator in lower_result.applied_indicators.all():
-                if applied_indicator.cluster_name and applied_indicator.cluster_name not in clusters:
-                    clusters.append(applied_indicator.cluster_name)
+                if applied_indicator.cluster_name:
+                    clusters.add(applied_indicator.cluster_name)
 
         return clusters
 
@@ -1719,7 +1739,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE],
                 target=[ENDED],
-                conditions=[intervention_validation.transition_ok])
+                conditions=[intervention_validation.transition_to_ended])
     def transition_to_ended(self):
         # From active, ended, suspended and terminated you cannot move to draft or cancelled because yo'll
         # mess up the reference numbers.
@@ -1735,7 +1755,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE],
                 target=[SUSPENDED],
-                conditions=[intervention_validation.transition_ok],
+                conditions=[intervention_validation.transition_to_suspended],
                 permission=intervention_validation.partnership_manager_only)
     def transition_to_suspended(self):
         pass
@@ -1743,7 +1763,7 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE, SUSPENDED],
                 target=[TERMINATED],
-                conditions=[intervention_validation.transition_ok],
+                conditions=[intervention_validation.transition_to_terminated],
                 permission=intervention_validation.partnership_manager_only)
     def transition_to_terminated(self):
         pass
@@ -1892,8 +1912,8 @@ class InterventionAmendment(TimeStampedModel):
         # set
         if self.pk is None:
             self.amendment_number = self.compute_reference_number()
+            self.intervention.in_amendment = True
             self.intervention.save(amendment_number=self.amendment_number)
-
         return super(InterventionAmendment, self).save(**kwargs)
 
     def __str__(self):
@@ -1914,11 +1934,6 @@ class InterventionPlannedVisits(TimeStampedModel):
     audit = models.IntegerField(default=0)
 
     tracker = FieldTracker()
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        super(InterventionPlannedVisits, self).save(**kwargs)
-        PartnerOrganization.planned_visits(self.intervention.agreement.partner, self)
 
     class Meta:
         unique_together = ('intervention', 'year')
@@ -2068,139 +2083,6 @@ class InterventionSectorLocationLink(TimeStampedModel):
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
 
     tracker = FieldTracker()
-
-
-class GovernmentInterventionManager(models.Manager):
-    def get_queryset(self):
-        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results', 'results__sectors',
-                                                                                          'results__unicef_managers')
-
-
-# TODO: check this for sanity
-@python_2_unicode_compatible
-class GovernmentIntervention(models.Model):
-    """
-    Represents a government intervention.
-
-    Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`reports.CountryProgramme`
-    """
-    objects = GovernmentInterventionManager()
-
-    partner = models.ForeignKey(
-        PartnerOrganization,
-        related_name='work_plans',
-    )
-    country_programme = models.ForeignKey(
-        CountryProgramme, on_delete=models.DO_NOTHING, null=True, blank=True,
-        related_query_name='government_interventions'
-    )
-    number = models.CharField(
-        max_length=45,
-        blank=True,
-        verbose_name='Reference Number',
-        unique=True
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    tracker = FieldTracker()
-
-    def __str__(self):
-        return 'Number: {}'.format(self.number) if self.number else \
-            '{}: {}'.format(self.pk, self.reference_number)
-
-    # country/partner/year/#
-    @property
-    def reference_number(self):
-        if self.number:
-            number = self.number
-        else:
-            objects = list(GovernmentIntervention.objects.filter(
-                partner=self.partner,
-                country_programme=self.country_programme,
-            ).order_by('created_at').values_list('id', flat=True))
-            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-            number = '{code}/{partner}/{seq}'.format(
-                code=connection.tenant.country_short_code or '',
-                partner=self.partner.short_name,
-                seq=sequence
-            )
-        return number
-
-    def save(self, **kwargs):
-
-        # commit the reference number to the database once the agreement is
-        # signed
-        if not self.number:
-            self.number = self.reference_number
-
-        super(GovernmentIntervention, self).save(**kwargs)
-
-
-def activity_default():
-    return {}
-
-
-@python_2_unicode_compatible
-class GovernmentInterventionResult(models.Model):
-    """
-    Represents an result from government intervention.
-
-    Relates to :model:`partners.GovernmentIntervention`
-    Relates to :model:`auth.User`
-    Relates to :model:`reports.Sector`
-    Relates to :model:`users.Section`
-    Relates to :model:`reports.Result`
-    """
-
-    intervention = models.ForeignKey(
-        GovernmentIntervention,
-        related_name='results'
-    )
-    result = models.ForeignKey(
-        Result,
-    )
-    year = models.CharField(
-        max_length=4,
-    )
-    planned_amount = models.IntegerField(
-        default=0,
-        verbose_name='Planned Cash Transfers'
-    )
-    activity = JSONField(blank=True, null=True, default=activity_default)
-    unicef_managers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        verbose_name='Unicef focal points',
-        blank=True
-    )
-    sectors = models.ManyToManyField(
-        Sector, blank=True,
-        verbose_name='Programme/Sector', related_name='+')
-    sections = models.ManyToManyField(
-        Section, blank=True, related_name='+')
-    planned_visits = models.IntegerField(default=0)
-
-    tracker = FieldTracker()
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        if self.pk:
-            prev_result = GovernmentInterventionResult.objects.get(id=self.id)
-            if prev_result.planned_visits != self.planned_visits:
-                PartnerOrganization.planned_visits(self.intervention.partner, self)
-        else:
-            PartnerOrganization.planned_visits(self.intervention.partner, self)
-
-        super(GovernmentInterventionResult, self).save(**kwargs)
-
-    def __str__(self):
-        return '{}, {}'.format(self.intervention.number, self.result)
-
-
-class GovernmentInterventionResultActivity(models.Model):
-    intervention_result = models.ForeignKey(GovernmentInterventionResult, related_name='result_activities')
-    code = models.CharField(max_length=36)
-    description = models.CharField(max_length=1024)
 
 
 # TODO: Move to funds

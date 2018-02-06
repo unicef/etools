@@ -5,12 +5,11 @@ import tempfile
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, \
-    GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory, \
-    InterventionBudgetFactory, PartnerStaffFactory
+from EquiTrack.factories import (UserFactory, PartnerFactory, AgreementFactory, InterventionFactory,
+                                 CountryProgrammeFactory, ResultFactory, InterventionBudgetFactory, PartnerStaffFactory)
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory
-from partners.models import GovernmentInterventionResult, PartnerOrganization
+from partners.models import PartnerOrganization
 from reports.models import ResultType
 
 
@@ -71,19 +70,9 @@ class TestModelExport(APITenantTestCase):
             partner_authorized_officer_signatory=self.partnerstaff,
         )
         self.ib = InterventionBudgetFactory(intervention=self.intervention, currency=CurrencyFactory())
-        self.government_intervention = GovernmentInterventionFactory(
-            partner=self.partner,
-            country_programme=self.agreement.country_programme
-        )
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
         self.result = ResultFactory(result_type=output_res_type)
-        self.govint_result = GovernmentInterventionResult.objects.create(
-            intervention=self.government_intervention,
-            result=self.result,
-            year=datetime.date.today().year,
-            planned_amount=100,
-        )
 
     def test_intervention_export_api(self):
         response = self.forced_auth_req(

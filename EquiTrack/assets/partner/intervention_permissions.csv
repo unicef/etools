@@ -18,7 +18,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,end,Partnership Manager,,Draft,Edit,TRUE
 3.3.3,end,Partnership Manager,,Signed,Edit,TRUE
 3.3.5,sections,Partnership Manager,,Draft,Edit,TRUE
-3.4.1,result_links,Partnership Manager,prp_mode_off,Draft,Edit,TRUE
+3.3.5,sections_present,UNICEF User,,*,Edit,TRUE
+3.4.1,result_links,Partnership Manager,prp_mode_on,Draft,Edit,TRUE
 3.5,planned_budget,Partnership Manager,,Draft,Edit,TRUE
 3.5,planned_budget,Partnership Manager,,Signed,Edit,TRUE
 3.6,planned_visits,Partnership Manager,,Draft,Edit,TRUE
@@ -37,6 +38,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.12,amendments,Partnership Manager,,Draft,Edit,TRUE
 3.12,amendments,Partnership Manager,,Signed,Edit,TRUE
 3.12,amendments,Partnership Manager,,Active,Edit,TRUE
+3.12.6,in_amendment,Partnership Manager,,Signed,Edit,TRUE
+3.12.6,in_amendment,Partnership Manager,,Active,Edit,TRUE
 3.11,amendments,Partnership Manager,,Draft,Edit,TRUE
 3.11,amendments,Partnership Manager,,Signed,Edit,TRUE
 3.11,amendments,Partnership Manager,,Active,Edit,TRUE
@@ -46,11 +49,10 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.9,unicef_focal_points,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.3.1,country_programme,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.3.7,contingency_pd,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.3.2,start,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.3.3,end,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.3.5,sections,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.4.1,result_links,Partnership Manager,user_adds_amendment+prp_mode_off,*,Edit,TRUE
-3.4.2,result_links,UNICEF User,prp_mode_off,*,View,TRUE
+3.4.1,result_links,Partnership Manager,user_adds_amendment+prp_mode_on,*,Edit,TRUE
+3.4.2,result_links,UNICEF User,prp_mode_on,*,View,TRUE
 3.5,planned_budget,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.5,planned_budget,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.6,planned_visits,Partnership Manager,user_adds_amendment,*,Edit,TRUE
@@ -66,8 +68,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,end,UNICEF User,,Draft,Required,FALSE
 3.3.2,start,UNICEF User,contingency on,Signed,Required,FALSE
 3.3.3,end,UNICEF User,contingency on,Signed,Required,FALSE
-3.3.5,sections,UNICEF User,,Draft,Required,FALSE
-3.3.6,sections,UNICEF User,,Draft,Required,FALSE
+3.3.5,sections_present,UNICEF User,,Draft,Required,FALSE
 3.9.11,signed_pd_document,UNICEF User,,Draft,Required,FALSE
 3.9.5,partner_authorized_officer_signatory,UNICEF User,,Draft,Required,FALSE
 3.9.6,signed_by_partner_date,UNICEF User,,Draft,Required,FALSE
@@ -76,12 +77,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.10.1,frs,UNICEF User,,Draft,Required,FALSE
 3.10.1,frs,UNICEF User,,Signed,Required,FALSE
 3.10.1,frs,UNICEF User,,Suspended,Required,FALSE
-3.13.1,reporting_periods,Partnership Manager,prp_mode_off,Draft,Edit,TRUE
-3.13.1,reporting_periods,Partnership Manager,user_adds_amendment+prp_mode_off,*,Edit,TRUE
-3.13.1,reporting_periods,UNICEF User,prp_mode_off,*,View,TRUE
-3.13.1,reporting_periods,UNICEF User,prp_mode_off,Active,Required,TRUE
-3.13.1,reporting_periods,UNICEF User,prp_mode_off,Signed,Required,TRUE
-3.13.1,reporting_periods,UNICEF User,prp_mode_off,Suspended,Required,TRUE
-3.13.1,reporting_periods,UNICEF User,prp_mode_off,Terminated,Required,TRUE
-3.13.1,reporting_periods,UNICEF User,prp_mode_off,Ended,Required,TRUE
-3.13.1,reporting_periods,UNICEF User,prp_mode_off,Closed,Required,TRUE
+3.13.1,flat_locations,UNICEF User,,Draft,Edit,TRUE
+3.13.1,flat_locations,Partnership Manager,,Signed,Edit,TRUE
+3.13.1,_comment_reporting_periods,Partnership Manager,prp_mode_on,Draft,Edit,TRUE
+3.13.1,_comment_reporting_periods,Partnership Manager,user_adds_amendment+prp_mode_on,*,Edit,TRUE
+3.13.1,_comment_reporting_periods,UNICEF User,prp_mode_on,*,View,TRUE
+3.13.1,reporting_periods,UNICEF User,,*,Required,FALSE

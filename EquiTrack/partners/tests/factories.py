@@ -5,24 +5,7 @@ from __future__ import unicode_literals
 
 import factory
 
-from EquiTrack.factories import (
-    GovernmentInterventionFactory,
-    ResultFactory,
-    )
-from partners.models import (
-    GovernmentInterventionResult,
-    WorkspaceFileType,
-    )
-
-
-class GovernmentInterventionResultFactory(factory.django.DjangoModelFactory):
-
-    class Meta:
-        model = GovernmentInterventionResult
-
-    intervention = factory.SubFactory(GovernmentInterventionFactory)
-    result = factory.SubFactory(ResultFactory)
-    year = '2017'
+from partners.models import WorkspaceFileType
 
 
 class WorkspaceFileTypeFactory(factory.django.DjangoModelFactory):

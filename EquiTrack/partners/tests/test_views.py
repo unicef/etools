@@ -23,7 +23,6 @@ from EquiTrack.factories import (
     AgreementAmendmentFactory,
     CountryProgrammeFactory,
     FundsReservationHeaderFactory,
-    GovernmentInterventionFactory,
     GroupFactory,
     InterventionFactory,
     InterventionReportingPeriodFactory,
@@ -43,7 +42,6 @@ from partners.models import (
     AgreementAmendment,
     Assessment,
     FileType,
-    GovernmentInterventionResult,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
@@ -417,17 +415,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
 
         self.cp = CountryProgrammeFactory(__sequence=10)
         self.cp_output = ResultFactory(result_type=self.output_res_type)
-        self.govint = GovernmentInterventionFactory(
-            partner=self.partner_gov,
-            country_programme=self.cp
-        )
         self.result = ResultFactory()
-        self.govint_result = GovernmentInterventionResult.objects.create(
-            intervention=self.govint,
-            result=self.result,
-            year=datetime.date.today().year,
-            planned_amount=100,
-        )
 
     def test_api_partners_delete_asssessment_valid(self):
         response = self.forced_auth_req(
@@ -1335,14 +1323,16 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
 
 class TestInterventionViews(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.agreement = AgreementFactory()
+        cls.agreement2 = AgreementFactory(status="draft")
+        cls.partnerstaff = PartnerStaffFactory(partner=cls.agreement.partner)
 
     def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.partnership_manager_user.groups.add(GroupFactory())
-        self.agreement = AgreementFactory()
-        self.agreement2 = AgreementFactory(status="draft")
-        self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
         data = {
             "document_type": Intervention.SHPD,
             "status": Intervention.DRAFT,

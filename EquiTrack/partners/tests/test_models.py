@@ -18,7 +18,6 @@ from EquiTrack.factories import (
     DonorFactory,
     FileTypeFactory,
     FundsReservationHeaderFactory,
-    GovernmentInterventionFactory,
     GrantFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
@@ -44,9 +43,14 @@ from audit.tests.factories import SpecialAuditFactory
 from partners import models
 from partners.models import PartnerOrganization
 from partners.tests.factories import (
-    GovernmentInterventionResultFactory,
     WorkspaceFileTypeFactory,
     )
+from audit.models import Engagement
+from audit.tests.factories import SpotCheckFactory, AuditFactory, SpecialAuditFactory
+
+from partners.models import (
+    PartnerOrganization,
+)
 from t2f.models import Travel, TravelType
 
 
@@ -472,61 +476,26 @@ class TestPartnerOrganizationModel(TenantTestCase):
             3
         )
 
-    def test_planned_visits_non_gov_with_pv_intervention(self):
-        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
-        self.partner_organization.save()
-        intervention1 = InterventionFactory(
-            agreement=self.pca_signed1,
-            status=models.Intervention.ACTIVE
-        )
-        intervention2 = InterventionFactory(
-            agreement=self.pca_signed1,
-            status=models.Intervention.ACTIVE
-        )
-        year = datetime.date.today().year
-        pv = InterventionPlannedVisitsFactory(
-            intervention=intervention1,
-            year=year,
-            programmatic=3
-        )
-        InterventionPlannedVisitsFactory(
-            intervention=intervention2,
-            year=year - 1,
-            programmatic=2
-        )
-        models.PartnerOrganization.planned_visits(
-            self.partner_organization,
-            pv
-        )
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            3
-        )
-
+    @freeze_time("2013-05-26")
     def test_programmatic_visits_update_one(self):
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
-            0
-        )
-        models.PartnerOrganization.programmatic_visits(
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
+        PartnerOrganization.programmatic_visits(
             self.partner_organization,
             update_one=True
         )
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
-            1
-        )
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q2'], 1)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q3'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q4'], 0)
 
     def test_programmatic_visits_update_travel_activity(self):
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
-            0
-        )
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
         traveller = UserFactory()
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            completed_at=datetime.datetime.now()
+            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1)
         )
         TravelActivityFactory(
             travels=[travel],
@@ -534,27 +503,39 @@ class TestPartnerOrganizationModel(TenantTestCase):
             travel_type=TravelType.PROGRAMME_MONITORING,
             partner=self.partner_organization,
         )
-        models.PartnerOrganization.programmatic_visits(
-            self.partner_organization,
-        )
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
-            1
-        )
+        PartnerOrganization.programmatic_visits(self.partner_organization)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q2'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q3'], 1)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q4'], 0)
 
+    @freeze_time("2013-12-26")
     def test_spot_checks_update_one(self):
-        self.assertEqual(
-            self.partner_organization.hact_values['spot_checks']['completed']['total'],
-            0
-        )
-        models.PartnerOrganization.spot_checks(
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
+        PartnerOrganization.spot_checks(
             self.partner_organization,
             update_one=True,
         )
-        self.assertEqual(
-            self.partner_organization.hact_values['spot_checks']['completed']['total'],
-            1
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 1)
+
+    @freeze_time("2013-12-26")
+    def test_spot_checks_update_one_with_date(self):
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
+        PartnerOrganization.spot_checks(
+            self.partner_organization,
+            update_one=True,
+            event_date=datetime.datetime(2013, 05, 12)
         )
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
 
     @freeze_time("2013-12-26")
     def test_spot_checks_update_one_with_date(self):
@@ -571,15 +552,12 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
 
     def test_spot_checks_update_travel_activity(self):
-        self.assertEqual(
-            self.partner_organization.hact_values['spot_checks']['completed']['total'],
-            0
-        )
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
         traveller = UserFactory()
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            completed_at=datetime.datetime.now()
+            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1)
         )
         TravelActivityFactory(
             travels=[travel],
@@ -587,12 +565,39 @@ class TestPartnerOrganizationModel(TenantTestCase):
             travel_type=TravelType.SPOT_CHECK,
             partner=self.partner_organization,
         )
-        models.PartnerOrganization.spot_checks(
-            self.partner_organization,
+
+        SpotCheckFactory(
+            partner=self.partner_organization,
+            status=Engagement.FINAL,
+            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
         )
-        self.assertEqual(
-            self.partner_organization.hact_values['spot_checks']['completed']['total'],
-            1
+        PartnerOrganization.spot_checks(self.partner_organization)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 2)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
+
+    @freeze_time("2013-12-26")
+    def test_audits_completed_update_one(self):
+        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 0)
+        PartnerOrganization.audits_completed(
+            self.partner_organization,
+            update_one=True,
+        )
+        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 1)
+
+    def test_audits_completed_update_travel_activity(self):
+        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 0)
+        AuditFactory(
+            partner=self.partner_organization,
+            status=Engagement.FINAL,
+            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
+        )
+        SpecialAuditFactory(
+            partner=self.partner_organization,
+            status=Engagement.FINAL,
+            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 8, 1)
         )
         SpecialAuditFactory(
             partner=self.partner_organization,
@@ -1671,23 +1676,3 @@ class TestStrUnicode(TestCase):
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
         self.assertTrue(str(instance).startswith(b'tv\xc3\xa5'))
         self.assertTrue(unicode(instance).startswith(u'tv\xe5'))
-
-    def test_government_intervention(self):
-        instance = GovernmentInterventionFactory.build(number=b'two')
-        self.assertIn(b'two', str(instance))
-        self.assertIn(u'two', unicode(instance))
-
-        instance = GovernmentInterventionFactory.build(number=u'tv\xe5')
-        self.assertIn(b'tv\xc3\xa5', str(instance))
-        self.assertIn(u'tv\xe5', unicode(instance))
-
-    def test_government_intervention_result(self):
-        government_intervention = GovernmentInterventionFactory.build(number=b'two')
-        instance = GovernmentInterventionResultFactory.build(intervention=government_intervention)
-        self.assertIn(b'two', str(instance))
-        self.assertIn(u'two', unicode(instance))
-
-        government_intervention = GovernmentInterventionFactory.build(number=u'tv\xe5')
-        instance = GovernmentInterventionResultFactory.build(intervention=government_intervention)
-        self.assertIn(b'tv\xc3\xa5', str(instance))
-        self.assertIn(u'tv\xe5', unicode(instance))
