@@ -4,17 +4,15 @@ from audit.serializers.auditor import PurchaseOrderItemSerializer
 
 from django.utils.translation import ugettext_lazy as _
 
-from six.moves import urllib_parse
 from rest_framework import serializers
 
-from attachments.models import Attachment
+from attachments.serializers import AttachmentSerializer
 from audit.models import (
     Audit, AuditorFirm, AuditorStaffMember, Engagement, EngagementActionPoint, MicroAssessment, PurchaseOrder,
     SpotCheck, Finding, SpecificProcedure, SpecialAuditRecommendation)
 from audit.serializers.engagement import DetailedFindingInfoSerializer
 from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
 from partners.models import PartnerOrganization
-from utils.common.urlresolvers import site_url
 
 
 class AuditorPDFSerializer(serializers.ModelSerializer):
@@ -76,22 +74,6 @@ class EngagementActionPointPDFSerializer(serializers.ModelSerializer):
         ]
 
 
-class AttachmentPDFSerializer(serializers.ModelSerializer):
-    created = serializers.DateTimeField(format='%d %b %Y')
-    file_type = serializers.CharField(source='file_type.name')
-    url = serializers.SerializerMethodField()
-    filename = serializers.CharField()
-
-    class Meta:
-        model = Attachment
-        fields = [
-            'created', 'file_type', 'url', 'filename',
-        ]
-
-    def get_url(self, obj):
-        return urllib_parse.urljoin(site_url(), obj.url)
-
-
 class EngagementPDFSerializer(serializers.ModelSerializer):
     agreement = AgreementPDFSerializer()
     po_item = PurchaseOrderItemSerializer()
@@ -114,8 +96,8 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
 
     action_points = EngagementActionPointPDFSerializer(many=True)
 
-    engagement_attachments = AttachmentPDFSerializer(many=True)
-    report_attachments = AttachmentPDFSerializer(many=True)
+    engagement_attachments = AttachmentSerializer(many=True)
+    report_attachments = AttachmentSerializer(many=True)
 
     class Meta:
         model = Engagement

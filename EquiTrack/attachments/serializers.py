@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from six.moves import urllib_parse
+
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -7,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 
 from attachments.models import Attachment
 from attachments.serializers_fields import Base64FileField
+from utils.common.urlresolvers import site_url
 
 
 class BaseAttachmentsSerializer(serializers.ModelSerializer):
@@ -47,3 +50,18 @@ class Base64AttachmentSerializer(BaseAttachmentsSerializer):
 
     class Meta(BaseAttachmentsSerializer.Meta):
         fields = BaseAttachmentsSerializer.Meta.fields + ['file_name', ]
+
+
+class AttachmentSerializer(BaseAttachmentsSerializer):
+    created = serializers.DateTimeField(format='%d %b %Y')
+    file_type = serializers.CharField(source='file_type.name')
+    url = serializers.SerializerMethodField()
+    filename = serializers.CharField()
+
+    class Meta(BaseAttachmentsSerializer.Meta):
+        fields = [
+            'created', 'file_type', 'url', 'filename',
+        ]
+
+    def get_url(self, obj):
+        return urllib_parse.urljoin(site_url(), obj.url)
