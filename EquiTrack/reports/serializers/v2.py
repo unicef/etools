@@ -1,4 +1,6 @@
 from django.db import transaction
+from django.utils.translation import ugettext as _
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -134,6 +136,21 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         lower_result = attrs.get('lower_result')
         blueprint_data = attrs.get('indicator')
+
+        # make sure locations are in the intervention
+        locations = set(l.id for l in attrs.get('locations', []))
+        if not locations.issubset(l.id for l in lower_result.result_link.intervention.flat_locations.all()):
+            raise ValidationError(_('This indicator can only have locations that were '
+                                    'previously saved on the intervention'))
+
+        # make sure section are in the intervention
+        section = attrs.get('section', None)
+        if section is None:
+            raise ValidationError(_('Section is required'))
+        if section.id not in [s.id for s in lower_result.result_link.intervention.sections.all()]:
+            raise ValidationError(_('This indicator can only have a section that was '
+                                    'previously saved on the intervention'))
+
         if self.partial:
             if not isinstance(blueprint_data, IndicatorBlueprint):
                 raise ValidationError(

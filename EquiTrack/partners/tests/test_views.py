@@ -1324,14 +1324,16 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
 
 class TestInterventionViews(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.agreement = AgreementFactory()
+        cls.agreement2 = AgreementFactory(status="draft")
+        cls.partnerstaff = PartnerStaffFactory(partner=cls.agreement.partner)
 
     def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.partnership_manager_user.groups.add(GroupFactory())
-        self.agreement = AgreementFactory()
-        self.agreement2 = AgreementFactory(status="draft")
-        self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
         data = {
             "document_type": Intervention.SHPD,
             "status": Intervention.DRAFT,
