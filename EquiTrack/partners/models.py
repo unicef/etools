@@ -23,6 +23,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
+from attachments.models import Attachment
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
@@ -41,6 +42,7 @@ from partners.validation.agreements import (
     agreements_illegal_transition,
     agreement_transition_to_signed_valid)
 from partners.validation import interventions as intervention_validation
+from utils.common.models.fields import CodedGenericRelation
 
 
 def _get_partner_base_path(partner):
@@ -983,6 +985,12 @@ class Agreement(TimeStampedModel):
         upload_to=get_agreement_path,
         blank=True,
         max_length=1024
+    )
+    attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Attached Agreement'),
+        code='partner_agreement',
+        blank=True
     )
     start = models.DateField(
         verbose_name=_("Start Date"),
