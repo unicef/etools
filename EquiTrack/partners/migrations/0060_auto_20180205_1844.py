@@ -39,7 +39,7 @@ def copy_attached_agreement(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0058_intervention_locations'),
+        ('partners', '0059_auto_20180206_1548'),
         ('attachments', '0005_auto_20180206_1700'),
     ]
 
