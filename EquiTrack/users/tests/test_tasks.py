@@ -25,15 +25,17 @@ from vision.vision_data_synchronizer import VisionException, VISION_NO_DATA_MESS
 
 
 class TestUserMapper(EToolsTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.group = GroupFactory(name="UNICEF User")
     def setUp(self):
         super(TestUserMapper, self).setUp()
-        self.group = GroupFactory(name='UNICEF User')
         self.mapper = tasks.UserMapper()
 
     def test_init(self):
         self.assertEqual(self.mapper.countries, {})
         self.assertEqual(self.mapper.sections, {})
-        self.assertEqual(self.mapper.groups, {"UNICEF User": self.group})
+        self.assertEqual(self.mapper.groups, {self.group.name: self.group})
         self.assertEqual(self.mapper.section_users, {})
 
     @skip("UAT country not found?!?!")

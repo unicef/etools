@@ -26,7 +26,10 @@ class TestAggregateHact(EToolsTenantTestCase):
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UN],
             rating=PartnerOrganization.RATING_HIGH,
             total_ct_cp=200.0,
-            total_ct_cy=140000.0
+            total_ct_cy=400.0,
+            net_ct_cy=110000.0,
+            reported_cy=300.0,
+            total_ct_ytd=140000.0,
         )
         cls.partner2 = PartnerFactory(
             name="Partner Name",
@@ -34,7 +37,10 @@ class TestAggregateHact(EToolsTenantTestCase):
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UNHCR],
             rating=PartnerOrganization.RATING_LOW,
             total_ct_cp=200.0,
-            total_ct_cy=550000.0
+            total_ct_cy=2200.0,
+            net_ct_cy=510000.0,
+            reported_cy=52000.0,
+            total_ct_ytd=550000.0,
         )
 
         AuditFactory(
@@ -52,24 +58,24 @@ class TestAggregateHact(EToolsTenantTestCase):
     def test_cash_transfers_amounts(self):
         cash_transfers_amounts = self.aggregate_hact.cash_transfers_amounts()
         self.assertEqual(len(cash_transfers_amounts), 6)
-        self.assertEqual(cash_transfers_amounts[3][5], self.partner.total_ct_cy)
+        self.assertEqual(cash_transfers_amounts[3][5], self.partner.total_ct_ytd)
         self.assertEqual(cash_transfers_amounts[3][6], 1)
-        self.assertEqual(cash_transfers_amounts[5][2], self.partner2.total_ct_cy)
+        self.assertEqual(cash_transfers_amounts[5][2], self.partner2.total_ct_ytd)
         self.assertEqual(cash_transfers_amounts[5][6], 1)
 
     def test_get_cash_transfer_risk_rating(self):
         cash_transfer_risk_rating = self.aggregate_hact.get_cash_transfer_risk_rating()
         self.assertEqual(len(cash_transfer_risk_rating), 6)
-        self.assertEqual(cash_transfer_risk_rating[2][1], self.partner2.total_ct_cy)
+        self.assertEqual(cash_transfer_risk_rating[2][1], self.partner2.total_ct_ytd)
         self.assertEqual(cash_transfer_risk_rating[2][3], 1)
-        self.assertEqual(cash_transfer_risk_rating[5][1], self.partner.total_ct_cy)
+        self.assertEqual(cash_transfer_risk_rating[5][1], self.partner.total_ct_ytd)
         self.assertEqual(cash_transfer_risk_rating[5][3], 1)
 
     def test_get_cash_transfer_partner_type(self):
         cash_transfer_partner_type = self.aggregate_hact.get_cash_transfer_partner_type()
         self.assertEqual(len(cash_transfer_partner_type), 3)
-        self.assertEqual(cash_transfer_partner_type[1], ['CSO', self.partner.total_ct_cy, '#FECC02', 1])
-        self.assertEqual(cash_transfer_partner_type[2], ['GOV', self.partner2.total_ct_cy, '#F05656', 1])
+        self.assertEqual(cash_transfer_partner_type[1], ['CSO', self.partner.total_ct_ytd, '#FECC02', 1])
+        self.assertEqual(cash_transfer_partner_type[2], ['GOV', self.partner2.total_ct_ytd, '#F05656', 1])
 
     def test_get_spot_checks_completed(self):
         SpotCheckFactory(
@@ -99,7 +105,7 @@ class TestAggregateHact(EToolsTenantTestCase):
         self.assertEqual(assurance_activities['programmatic_visits']['completed'], 0)
         self.assertEqual(assurance_activities['programmatic_visits']['min_required'], 5)
         self.assertEqual(assurance_activities['spot_checks']['completed'], 0)
-        self.assertEqual(assurance_activities['spot_checks']['min_required'], 2)
+        self.assertEqual(assurance_activities['spot_checks']['min_required'], 1)
         self.assertEqual(assurance_activities['scheduled_audit'], 1)
         self.assertEqual(assurance_activities['special_audit'], 1)
         self.assertEqual(assurance_activities['micro_assessment'], 1)

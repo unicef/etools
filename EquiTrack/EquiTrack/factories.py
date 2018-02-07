@@ -45,23 +45,23 @@ class CountryFactory(factory.django.DjangoModelFactory):
         model = user_models.Country
         django_get_or_create = ('schema_name',)
 
-    name = "Test Country"
+    name = factory.Sequence(lambda n: "Test Country {}".format(n))
     schema_name = SCHEMA_NAME
     domain_url = TENANT_DOMAIN
 
 
-class GroupFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = Group
-
-    name = "Partnership Manager"
+def GroupFactory(name="Partnership Manager"):
+    group, _ = Group.objects.get_or_create(
+        name=name
+    )
+    return group
 
 
 class UnicefUserGroupFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Group
 
-    name = "UNICEF User"
+    name = factory.Sequence(lambda n: "UNICEF User {}".format(n))
 
 
 class ProfileFactory(factory.django.DjangoModelFactory):
