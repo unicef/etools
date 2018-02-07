@@ -1511,7 +1511,7 @@ class TestStrUnicodeSlow(EToolsTenantTestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.
 
     This is the same as TestStrUnicode below, except that it tests objects that need to be saved to the database
-    so it's based on FastTenantTestCase instead of TestCase.
+    so it's based on EToolsTenantTestCase instead of TestCase.
     '''
     def test_assessment(self):
         partner = PartnerFactory(name=b'xyz')
