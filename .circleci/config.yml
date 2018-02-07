@@ -4,9 +4,7 @@ jobs:
     working_directory: ~/code
     # The primary container is an instance of the first list image listed. Your build commands run in this container.
     docker:
-#      - image: unicef/etools:test-base
-      # FOR TESTING ONLY:
-      - image: dpoirier/dan-etools:latest
+      - image: unicef/etools:test-base
         environment:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
@@ -23,7 +21,7 @@ jobs:
       - run:
           name: create main virtualenv, install tox, generate test envs
           command: |
-            test -d env1 || python3 -m venv env1
+            virtualenv -p $(type -p python3) env1
             . env1/bin/activate
             pip --quiet install tox
             cd EquiTrack && tox --notest
