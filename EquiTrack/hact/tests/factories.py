@@ -14,3 +14,10 @@ class HactHistoryFactory(factory.django.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     year = datetime.date.today().year
+
+
+class AggregateHactFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.AggregateHact
+
+    year = datetime.date.today().year

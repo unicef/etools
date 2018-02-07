@@ -359,6 +359,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'type_of_assessment',
         u'last_assessment_date',
         u'core_values_assessment_date',
+        u'total_ct_cy',
+        u'total_ct_cp',
         u'deleted_flag',
         u'blocked',
     )
@@ -389,6 +391,11 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         (_('Hact'), {
             'fields': (
                 u'hact_values',
+                u'total_ct_cp',
+                u'total_ct_cy',
+                u'net_ct_cy',
+                u'reported_cy',
+                u'total_ct_ytd',
             )
         })
     )

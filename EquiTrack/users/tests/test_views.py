@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import json
 
 from django.core.urlresolvers import reverse
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
@@ -123,6 +124,12 @@ class TestStaffUsersView(APITenantTestCase):
         self.partnership_manager_user = UserFactory(is_staff=True)
         self.group = GroupFactory()
         self.partnership_manager_user.groups.add(self.group)
+
+    def test_api_users_list(self):
+        response = self.forced_auth_req('get', '/api/users/', user=self.unicef_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), get_user_model().objects.count())
 
     def test_users_api_list_values(self):
         response = self.forced_auth_req(
@@ -407,7 +414,7 @@ class TestUserViewSet(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data), User.objects.count())
 
     def test_api_users_list_managers(self):
         response = self.forced_auth_req(

@@ -4,7 +4,7 @@ import logging
 import copy
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Max, Min, Sum
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -74,7 +74,32 @@ from reports.models import LowerResult, AppliedIndicator
 from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicatorSerializer
 
 
-class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
+class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
+    def get_queryset(self):
+        qs = Intervention.objects.prefetch_related(
+            'agreement__partner',
+            'planned_budget',
+            'offices',
+            'sections',
+            # TODO: Figure out a way in which to add locations that is more performant
+            # 'flat_locations',
+            'result_links__cp_output',
+            'unicef_focal_points',
+        )
+
+        qs = qs.annotate(
+            Max("frs__end_date"),
+            Min("frs__start_date"),
+            Sum("frs__total_amt"),
+            Sum("frs__intervention_amt"),
+            Sum("frs__outstanding_amt"),
+            Sum("frs__actual_amt"),
+        )
+
+        return qs
+
+
+class InterventionListAPIView(ExportModelMixin, InterventionListBaseView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -92,7 +117,6 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
-        'amendments': InterventionAmendmentCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -124,7 +148,6 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
             'planned_budget',
             'planned_visits',
             'attachments',
-            'amendments',
             'result_links'
         ]
         nested_related_names = ['ll_results']
@@ -152,7 +175,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
         )
 
     def get_queryset(self, format=None):
-        q = Intervention.objects.detail_qs().all()
+        q = super(InterventionListAPIView, self).get_queryset()
         query_params = self.request.query_params
 
         if query_params:
@@ -164,7 +187,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
                 except ValueError:
                     raise ValidationError("ID values must be integers")
                 else:
-                    return Intervention.objects.detail_qs().filter(id__in=ids)
+                    return q.filter(id__in=ids)
             if query_params.get("my_partnerships", "").lower() == "true":
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
@@ -200,6 +223,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
+
         return q
 
     def list(self, request):
@@ -216,7 +240,7 @@ class InterventionListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAP
         return response
 
 
-class InterventionListDashView(ValidatorViewMixin, ListCreateAPIView):
+class InterventionListDashView(InterventionListBaseView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -226,12 +250,15 @@ class InterventionListDashView(ValidatorViewMixin, ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
 
     def get_queryset(self):
+        q = super(InterventionListDashView, self).get_queryset()
         # if Partnership Manager get all
         if self.request.user.groups.filter(name='Partnership Manager').exists():
-            return Intervention.objects.detail_qs().all()
+            return q.all()
 
-        return Intervention.objects.detail_qs().filter(unicef_focal_points__in=[self.request.user],
-                                                       status__in=[Intervention.ACTIVE])
+        return q.filter(
+            unicef_focal_points__in=[self.request.user],
+            status__in=[Intervention.ACTIVE]
+        )
 
 
 class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
@@ -246,7 +273,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
-        'amendments': InterventionAmendmentCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
 
@@ -261,7 +287,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['planned_budget', 'planned_visits',
-                          'attachments', 'amendments',
+                          'attachments',
                           'result_links']
         nested_related_names = ['ll_results']
         instance, old_instance, serializer = self.my_update(
@@ -429,7 +455,7 @@ class InterventionResultLinkDeleteView(DestroyAPIView):
             raise ValidationError("You do not have permissions to delete a result")
 
 
-class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListAPIView):
+class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
     """
     Returns a list of InterventionAmendments.
     """
@@ -469,6 +495,15 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
         return q
+
+    def create(self, request, *args, **kwargs):
+        raw_data = copy.deepcopy(request.data)
+        raw_data['intervention'] = kwargs.get('intervention_pk', None)
+        serializer = self.get_serializer(data=raw_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class InterventionAmendmentDeleteView(DestroyAPIView):
@@ -691,5 +726,8 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
     queryset = AppliedIndicator.objects.all()
 
     def delete(self, request, *args, **kwargs):
-        # make sure there are no indicators added to this LLO
-        raise ValidationError(u'Deleting an indicator is temporarily disabled..')
+        ai = self.get_object()
+        intervention = ai.lower_result.result_link.intervention
+        if not intervention.status == Intervention.DRAFT:
+            raise ValidationError(u'Deleting an indicator is only possible in status Draft.')
+        return super(InterventionIndicatorsUpdateView, self).delete(request, *args, **kwargs)
