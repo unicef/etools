@@ -372,6 +372,7 @@ class LowerResult(TimeStampedModel):
         ordering = ('-created',)
 
     def save(self, **kwargs):
+        # TODO: FIX THIS!
         if not self.code:
             try:
                 latest_ll_id = self.result_link.ll_results.latest('id').id
