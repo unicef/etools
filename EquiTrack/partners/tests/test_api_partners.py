@@ -38,7 +38,8 @@ class TestPartnerOrganizationHactAPIView(APITenantTestCase):
         cls.url = reverse("partners_api:partner-hact")
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            total_ct_cp=10.00
+            total_ct_cp=10.00,
+            total_ct_cy=8.00,
         )
 
     def test_get(self):

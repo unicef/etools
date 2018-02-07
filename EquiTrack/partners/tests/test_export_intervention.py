@@ -203,8 +203,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 52)
-        self.assertEqual(len(dataset[0]), 52)
+        self.assertEqual(len(dataset._get_headers()), 53)
+        self.assertEqual(len(dataset[0]), 53)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):

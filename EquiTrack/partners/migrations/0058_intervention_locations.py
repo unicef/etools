@@ -18,14 +18,9 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('locations', '0006_auto_20171024_1011'),
-        ('partners', '0061_auto_20171024_1011'),
+        ('partners', '0057_migrate_intervention_sectors_to_sections'),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='intervention',
-            name='flat_locations',
-            field=models.ManyToManyField(blank=True, related_name='intervention_flat_locations', to='locations.Location'),
-        ),
         migrations.RunPython(migrate_sector_location_links_to_intervention_locations, reverse_code=migrations.RunPython.noop)
     ]

@@ -7,6 +7,7 @@ from mock import patch, Mock
 from unittest import TestCase
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 
 from monitoring.service_checks import check_celery, check_db
 from users.tests.factories import UserFactory
@@ -14,17 +15,21 @@ from users.tests.factories import UserFactory
 
 class TestCheckDB(TestCase):
     def test_no_users(self):
-        check = check_db()
-        self.assertFalse(check.success)
-        self.assertEqual(
-            check.message,
-            "{}:OK No users found in postgres".format(
-                settings.DATABASES["default"]["NAME"]
+        # if --keepdb flag used Users probably exist in db
+        # so ignore this test if that is the case
+        if not get_user_model().objects.exists():
+            check = check_db()
+            self.assertFalse(check.success)
+            self.assertEqual(
+                check.message,
+                "{}:OK No users found in postgres".format(
+                    settings.DATABASES["default"]["NAME"]
+                )
             )
-        )
 
     def test_users(self):
-        UserFactory()
+        if not get_user_model().objects.exists():
+            UserFactory()
         check = check_db()
         self.assertTrue(check.success)
         self.assertEqual(

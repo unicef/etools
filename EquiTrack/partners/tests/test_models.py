@@ -5,9 +5,12 @@ from unittest import skipIf, TestCase
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
+from freezegun import freeze_time
 
 from mock import patch, Mock
 
+from audit.models import Engagement
+from audit.tests.factories import SpotCheckFactory, AuditFactory, SpecialAuditFactory
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from funds.tests.factories import (
     DonorFactory,
@@ -230,6 +233,9 @@ class TestPartnerOrganizationModel(TenantTestCase):
         super(TestPartnerOrganizationModel, self).setUp()
         self.partner_organization = PartnerFactory(
             name="Partner Org 1",
+            total_ct_ytd=models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1,
+            reported_cy=models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1,
+            last_assessment_date=datetime.date(2000, 5, 14),
         )
         year = datetime.date.today().year
         self.cp = CountryProgrammeFactory(
@@ -299,8 +305,30 @@ class TestPartnerOrganizationModel(TenantTestCase):
         pca = self.partner_organization.get_last_pca
         self.assertEqual(pca, self.pca_signed1)
 
+    @freeze_time('2013-08-13')
+    def test_expiring_assessment_flag_true(self):
+        self.assertTrue(self.partner_organization.expiring_assessment_flag)
+
+    @freeze_time('2000-05-14')
+    def test_expiring_assessment_flag_false(self):
+        self.assertFalse(self.partner_organization.expiring_assessment_flag)
+
+    def test_approaching_threshold_flag_true(self):
+        self.partner_organization.rating = models.PartnerOrganization.RATING_NON_ASSESSED
+        self.assertTrue(self.partner_organization.approaching_threshold_flag)
+
+    def test_approaching_threshold_flag_false(self):
+        self.partner_organization.rating = models.PartnerOrganization.RATING_NON_ASSESSED
+        self.partner_organization.total_ct_ytd = models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL - 1
+        self.assertFalse(self.partner_organization.approaching_threshold_flag)
+
+    def test_approaching_threshold_flag_false_moderate(self):
+        self.partner_organization.rating = models. PartnerOrganization.RATING_MODERATE
+        self.assertFalse(self.partner_organization.approaching_threshold_flag)
+
     def test_hact_min_requirements_ct_under_25k(self):
-        self.partner_organization.total_ct_cy = 0
+        self.partner_organization.net_ct_cy = 0
+        self.partner_organization.reported_cy = 0
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 0,
@@ -309,50 +337,60 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(hact_min_req, data)
 
     def test_hact_min_requirements_ct_between_25k_and_50k(self):
-        self.partner_organization.total_ct_cy = 44000.00
+        self.partner_organization.net_ct_cy = 44000.00
+        self.partner_organization.reported_cy = 44000.00
         self.assert_min_requirements(1, 0)
 
     def test_hact_min_requirements_ct_between_25k_and_100k(self):
-        self.partner_organization.total_ct_cy = 99000.00
+        self.partner_organization.net_ct_cy = 99000.00
+        self.partner_organization.reported_cy = 99000.00
         self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_high(self):
-        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.net_ct_cy = 490000.00
+        self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_significant(self):
-        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.net_ct_cy = 490000.00
+        self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_moderate(self):
-        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.net_ct_cy = 490000.00
+        self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_MODERATE
         self.assert_min_requirements(2, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_low(self):
-        self.partner_organization.total_ct_cy = 490000.00
+        self.partner_organization.net_ct_cy = 490000.00
+        self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_over_500k_high(self):
-        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.net_ct_cy = 510000.00
+        self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
         self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_significant(self):
-        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.net_ct_cy = 510000.00
+        self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
         self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_moderate(self):
-        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.net_ct_cy = 510000.00
+        self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_MODERATE
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_over_500k_low(self):
-        self.partner_organization.total_ct_cy = 510000.00
+        self.partner_organization.net_ct_cy = 510000.00
+        self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.assert_min_requirements(2, 1)
 
@@ -394,6 +432,9 @@ class TestPartnerOrganizationModel(TenantTestCase):
             year=year - 1,
             programmatic=2
         )
+        models.PartnerOrganization.planned_visits(
+            self.partner_organization
+        )
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
 
     def test_planned_visits_non_gov_no_pv_intervention(self):
@@ -426,61 +467,26 @@ class TestPartnerOrganizationModel(TenantTestCase):
             3
         )
 
-    def test_planned_visits_non_gov_with_pv_intervention(self):
-        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
-        self.partner_organization.save()
-        intervention1 = InterventionFactory(
-            agreement=self.pca_signed1,
-            status=models.Intervention.ACTIVE
-        )
-        intervention2 = InterventionFactory(
-            agreement=self.pca_signed1,
-            status=models.Intervention.ACTIVE
-        )
-        year = datetime.date.today().year
-        pv = InterventionPlannedVisitsFactory(
-            intervention=intervention1,
-            year=year,
-            programmatic=3
-        )
-        InterventionPlannedVisitsFactory(
-            intervention=intervention2,
-            year=year - 1,
-            programmatic=2
-        )
-        models.PartnerOrganization.planned_visits(
-            self.partner_organization,
-            pv
-        )
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            3
-        )
-
+    @freeze_time("2013-05-26")
     def test_programmatic_visits_update_one(self):
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
-            0
-        )
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
         models.PartnerOrganization.programmatic_visits(
             self.partner_organization,
             update_one=True
         )
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
-            1
-        )
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q2'], 1)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q3'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q4'], 0)
 
     def test_programmatic_visits_update_travel_activity(self):
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
-            0
-        )
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
         traveller = UserFactory()
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            completed_at=datetime.datetime.now()
+            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1)
         )
         TravelActivityFactory(
             travels=[travel],
@@ -488,38 +494,47 @@ class TestPartnerOrganizationModel(TenantTestCase):
             travel_type=TravelType.PROGRAMME_MONITORING,
             partner=self.partner_organization,
         )
-        models.PartnerOrganization.programmatic_visits(
-            self.partner_organization,
-        )
-        self.assertEqual(
-            self.partner_organization.hact_values['programmatic_visits']['completed']['total'],
-            1
-        )
+        models.PartnerOrganization.programmatic_visits(self.partner_organization)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q2'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q3'], 1)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q4'], 0)
 
+    @freeze_time("2013-12-26")
     def test_spot_checks_update_one(self):
-        self.assertEqual(
-            self.partner_organization.hact_values['spot_checks']['completed']['total'],
-            0
-        )
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
         models.PartnerOrganization.spot_checks(
             self.partner_organization,
             update_one=True,
         )
-        self.assertEqual(
-            self.partner_organization.hact_values['spot_checks']['completed']['total'],
-            1
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 1)
+
+    @freeze_time("2013-12-26")
+    def test_spot_checks_update_one_with_date(self):
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
+        models.PartnerOrganization.spot_checks(
+            self.partner_organization,
+            update_one=True,
+            event_date=datetime.datetime(2013, 5, 12)
         )
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
 
     def test_spot_checks_update_travel_activity(self):
-        self.assertEqual(
-            self.partner_organization.hact_values['spot_checks']['completed']['total'],
-            0
-        )
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
         traveller = UserFactory()
         travel = TravelFactory(
             traveler=traveller,
             status=Travel.COMPLETED,
-            completed_at=datetime.datetime.now()
+            completed_at=datetime.datetime(datetime.datetime.today().year, 9, 1)
         )
         TravelActivityFactory(
             travels=[travel],
@@ -527,13 +542,42 @@ class TestPartnerOrganizationModel(TenantTestCase):
             travel_type=TravelType.SPOT_CHECK,
             partner=self.partner_organization,
         )
-        models.PartnerOrganization.spot_checks(
+
+        SpotCheckFactory(
+            partner=self.partner_organization,
+            status=Engagement.FINAL,
+            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
+        )
+        models.PartnerOrganization.spot_checks(self.partner_organization)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 2)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 1)
+        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
+
+    @freeze_time("2013-12-26")
+    def test_audits_completed_update_one(self):
+        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 0)
+        models.PartnerOrganization.audits_completed(
             self.partner_organization,
+            update_one=True,
         )
-        self.assertEqual(
-            self.partner_organization.hact_values['spot_checks']['completed']['total'],
-            1
+        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 1)
+
+    def test_audits_completed_update_travel_activity(self):
+        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 0)
+        AuditFactory(
+            partner=self.partner_organization,
+            status=Engagement.FINAL,
+            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
         )
+        SpecialAuditFactory(
+            partner=self.partner_organization,
+            status=Engagement.FINAL,
+            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 8, 1)
+        )
+        models.PartnerOrganization.audits_completed(self.partner_organization)
+        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
 
 
 class TestAgreementModel(TenantTestCase):
@@ -993,10 +1037,10 @@ class TestInterventionModel(TenantTestCase):
         )
         self.validate_total_frs(
             intervention.total_frs,
-            10.00*3,
-            20.00*3,
-            30.00*3,
-            40.00*3,
+            10.00 * 3,
+            20.00 * 3,
+            30.00 * 3,
+            40.00 * 3,
             datetime.date(2001, 1, 1),
             datetime.date(2020, 1, 1),
         )
@@ -1323,10 +1367,10 @@ class TestAgreement(TenantTestCase):
         self.assertEqual(permissions["amendments"], {
             'edit': {
                 'true': [{
-                        'status': 'signed',
-                        'group': 'Partnership Manager',
-                        'condition': 'is type PCA or MOU'
-                    }]
+                    'status': 'signed',
+                    'group': 'Partnership Manager',
+                    'condition': 'is type PCA or MOU'
+                }]
             }
         })
 

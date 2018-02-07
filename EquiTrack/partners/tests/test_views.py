@@ -1346,7 +1346,6 @@ class TestInterventionViews(APITenantTestCase):
         cls.partnerstaff = PartnerStaffFactory(partner=cls.agreement.partner)
 
     def setUp(self):
-        super(TestInterventionViews, self).setUp()
         data = {
             "document_type": Intervention.SHPD,
             "status": Intervention.DRAFT,

@@ -105,30 +105,24 @@ class InterventionPermissions(PMPPermissions):
         need access to the old amendments, new amendments in order to check this.
         '''
         super(InterventionPermissions, self).__init__(**kwargs)
-        inbound_check = kwargs.get('inbound_check', False)
 
-        # TODO: fix this after "in amendment" flag is turned on for interventions
+        # Inbound check flag is available here:
+        # inbound_check = kwargs.get('inbound_check', False)
+
         def user_added_amendment(instance):
-            assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
-            # check_rigid_related checks if there were any changes from the previous
-            # amendments if there were changes it returns False
-            return not check_rigid_related(instance, 'amendments')
+            return instance.in_amendment is True
 
         def prp_mode_off():
             return tenant_switch_is_active("prp_mode_off")
-
-        def inbound_amendment_check(instance):
-            return False if not inbound_check else user_added_amendment(instance)
 
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
-            # this condition can only be checked on data save
-            'user_adds_amendment': inbound_amendment_check(self.instance),
+            'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_off': prp_mode_off(),
-            'user_adds_amendment+prp_mode_on': inbound_amendment_check(self.instance) and not prp_mode_off()
+            'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off()
         }
 
 

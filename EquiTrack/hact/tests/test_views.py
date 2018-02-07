@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.core.urlresolvers import reverse
+
 from rest_framework import status
 from tablib.core import Dataset
 
@@ -20,9 +21,12 @@ class TestHactHistoryAPIView(APITenantTestCase):
             partner_type=PartnerType.UN_AGENCY,
             shared_partner="with UNFPA",
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UN],
-            rating="High",
+            rating=PartnerOrganization.RATING_HIGH,
             total_ct_cp=200.0,
-            total_ct_cy=150.0
+            total_ct_cy=150.0,
+            net_ct_cy=100.0,
+            reported_cy=300.0,
+            total_ct_ytd=400.0,
         )
         cls.url = reverse("hact_api:hact-history")
 
@@ -37,6 +41,8 @@ class TestHactHistoryAPIView(APITenantTestCase):
             ['Current Year (1 Oct - 30 Sep)', "150.00"],
             ['Micro Assessment', "Yes"],
             ['Risk Rating', "High"],
+            ['Expiring Threshold', False],
+            ['Approach Threshold', False],
             ['Programmatic Visits Planned', 10],
             ['Programmatic Visits M.R', 8],
             ['Programmatic Visits Done', 5],
@@ -117,6 +123,8 @@ class TestHactHistoryAPIView(APITenantTestCase):
             "Current Year (1 Oct - 30 Sep)",
             "Micro Assessment",
             "Risk Rating",
+            "Expiring Threshold",
+            "Approach Threshold",
             "Programmatic Visits Planned",
             "Programmatic Visits M.R",
             "Programmatic Visits Done",
@@ -136,6 +144,8 @@ class TestHactHistoryAPIView(APITenantTestCase):
             "150.00",
             "Yes",
             "High",
+            "False",
+            "False",
             "10",  # programmatic visits
             "8",
             "5",
@@ -183,6 +193,8 @@ class TestHactHistoryAPIView(APITenantTestCase):
             "150.00",
             "Yes",
             "High",
+            "False",
+            "False",
             "10",  # programmatic visits
             "8",
             "5",

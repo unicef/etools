@@ -96,25 +96,37 @@ class InterventionListSerializer(serializers.ModelSerializer):
 
     section_names = serializers.SerializerMethodField()
     flagged_sections = serializers.SerializerMethodField()
-    locations = serializers.SerializerMethodField()
-    location_names = serializers.SerializerMethodField()
-    cluster_names = serializers.SerializerMethodField()
+    # locations = serializers.SerializerMethodField()
+    # location_names = serializers.SerializerMethodField()
+    # cluster_names = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
-    frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
-    frs_latest_end_date = serializers.DateField(source='total_frs.latest_end_date', read_only=True)
-    frs_total_frs_amt = serializers.DecimalField(source='total_frs.total_frs_amt', read_only=True,
-                                                 max_digits=20,
-                                                 decimal_places=2)
-    frs_total_intervention_amt = serializers.DecimalField(source='total_frs.total_intervention_amt', read_only=True,
-                                                          max_digits=20,
-                                                          decimal_places=2)
-    frs_total_outstanding_amt = serializers.DecimalField(source='total_frs.total_outstanding_amt', read_only=True,
-                                                         max_digits=20,
-                                                         decimal_places=2)
-    actual_amount = serializers.DecimalField(source='total_frs.total_actual_amt', read_only=True,
-                                                    max_digits=20,
-                                                    decimal_places=2)
+    frs_earliest_start_date = serializers.DateField(source='frs__start_date__min', read_only=True)
+    frs_latest_end_date = serializers.DateField(source='frs__end_date__max', read_only=True)
+    frs_total_frs_amt = serializers.DecimalField(
+        source='frs__total_amt__sum',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2
+    )
+    frs_total_intervention_amt = serializers.DecimalField(
+        source='frs__intervention_amt__sum',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2
+    )
+    frs_total_outstanding_amt = serializers.DecimalField(
+        source='frs__outstanding_amt__sum',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2
+    )
+    actual_amount = serializers.DecimalField(
+        source='frs__actual_amt__sum',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2
+    )
 
     def get_offices_names(self, obj):
         return [o.name for o in obj.offices.all()]
@@ -123,28 +135,53 @@ class InterventionListSerializer(serializers.ModelSerializer):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.flagged_sections]
+        return [l.name for l in obj.sections.all()]
 
     def get_flagged_sections(self, obj):
-        return [l.id for l in obj.flagged_sections]
+        return [l.pk for l in obj.sections.all()]
 
-    def get_locations(self, obj):
-        return [l.id for l in obj.intervention_locations]
+    # def get_locations(self, obj):
+    #     return [l.pk for l in obj.flat_locations.all()]
 
-    def get_location_names(self, obj):
-        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.intervention_locations]
+    # def get_location_names(self, obj):
+    #     return [
+    #         '{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code)
+    #         for l in obj.flat_locations.all()
+    #     ]
 
-    def get_cluster_names(self, obj):
-        return [c for c in obj.intervention_clusters]
+    # def get_cluster_names(self, obj):
+    #     return [c for c in obj.intervention_clusters]
 
     class Meta:
         model = Intervention
         fields = (
-            'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end', 'frs_total_frs_amt',
-            'unicef_cash', 'cso_contribution', 'country_programme', 'frs_earliest_start_date', 'frs_latest_end_date',
-            'sections', 'section_names', 'cp_outputs', 'unicef_focal_points', 'frs_total_intervention_amt',
-            'frs_total_outstanding_amt', 'offices', 'actual_amount', 'offices_names', 'total_unicef_budget',
-            'total_budget', 'metadata', 'locations', 'location_names', 'cluster_names', 'flagged_sections'
+            'id',
+            'number',
+            'document_type',
+            'partner_name',
+            'status',
+            'title',
+            'start',
+            'end',
+            'frs_total_frs_amt',
+            'unicef_cash',
+            'cso_contribution',
+            'country_programme',
+            'frs_earliest_start_date',
+            'frs_latest_end_date',
+            'sections',
+            'section_names',
+            'cp_outputs',
+            'unicef_focal_points',
+            'frs_total_intervention_amt',
+            'frs_total_outstanding_amt',
+            'offices',
+            'actual_amount',
+            'offices_names',
+            'total_unicef_budget',
+            'total_budget',
+            'metadata',
+            'flagged_sections'
         )
 
 
@@ -375,7 +412,6 @@ class InterventionCreateUpdateSerializer(SnapshotModelSerializer):
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
-    amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
@@ -466,7 +502,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
-            "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names"
+            "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
+            "in_amendment"
         )
 
 
