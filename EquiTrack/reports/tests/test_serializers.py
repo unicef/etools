@@ -7,9 +7,11 @@ from EquiTrack.factories import (
     DisaggregationFactory,
     DisaggregationValueFactory,
     IndicatorBlueprintFactory,
+    InterventionFactory,
     InterventionResultLinkFactory,
     LocationFactory,
     LowerResultFactory,
+    SectorFactory,
 )
 from EquiTrack.tests.mixins import FastTenantTestCase
 from reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult
@@ -94,7 +96,11 @@ class DisaggregationTest(FastTenantTestCase):
 class TestAppliedIndicatorSerializer(FastTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.result_link = InterventionResultLinkFactory()
+        cls.section = SectorFactory()
+        cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.intervention,
+        )
         cls.lower_result = LowerResultFactory(
             result_link=cls.result_link,
         )
@@ -105,17 +111,63 @@ class TestAppliedIndicatorSerializer(FastTenantTestCase):
         cls.indicator = IndicatorBlueprintFactory()
 
     def setUp(self):
+        self.intervention.flat_locations.add(self.location)
+        self.intervention.sections.add(self.section)
         self.data = {
             "indicator": {"title": self.indicator.title},
             "lower_result": self.lower_result.pk,
-            "locations": [self.location.pk]
+            "locations": [self.location.pk],
+            "section": self.section.pk,
         }
 
-    def test_validate(self):
+    def test_validate_invalid_location(self):
+        """If location is not related to intervention, then fail validation"""
+        self.intervention.flat_locations.remove(self.location)
+        serializer = AppliedIndicatorSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors, {"non_field_errors": [
+            'This indicator can only have locations that were '
+            'previously saved on the intervention'
+        ]})
+
+    def test_validate_no_section(self):
+        """If no section provided, then fail validation"""
+        del self.data["section"]
+        serializer = AppliedIndicatorSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors, {"non_field_errors": [
+            'Section is required'
+        ]})
+
+    def test_validate_invalid_section(self):
+        """If sector already set on applied indicator then fail validation"""
+        self.data["section"] = SectorFactory().pk
+        serializer = AppliedIndicatorSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors, {"non_field_errors": [
+            'This indicator can only have a section that was '
+            'previously saved on the intervention'
+        ]})
+
+    def test_validate_no_cluster_indicator(self):
+        """Check that validation passes when given no cluster indicator id"""
+        self.intervention.flat_locations.add(self.location)
         serializer = AppliedIndicatorSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
 
+    def test_validate_indicator_used(self):
+        """CHeck that is indicator already used we fail validation"""
+        self.applied_indicator.indicator = self.indicator
+        self.applied_indicator.save()
+        serializer = AppliedIndicatorSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors, {"non_field_errors": [
+            'This indicator is already being monitored for this Result'
+        ]})
+
     def test_validate_partial_exception(self):
+        """If partial validation, and indicator is not blueprint indicator
+        instance then fail"""
         self.data["indicator"] = {"title": "wrong"}
         serializer = AppliedIndicatorSerializer(data=self.data, partial=True)
         self.assertFalse(serializer.is_valid())
@@ -124,6 +176,13 @@ class TestAppliedIndicatorSerializer(FastTenantTestCase):
             'please remove this indicator and add another or contact the eTools Focal Point in '
             'your office for assistance'
         ]})
+
+    def test_validate(self):
+        """If cluster indicator provided, no check is happening that value"""
+        self.data["cluster_indicator_id"] = "404"
+        self.intervention.flat_locations.add(self.location)
+        serializer = AppliedIndicatorSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
 
     def test_create(self):
         applied_qs = AppliedIndicator.objects.filter(
