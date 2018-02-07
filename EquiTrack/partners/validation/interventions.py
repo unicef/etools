@@ -8,6 +8,7 @@ from EquiTrack.validation_mixins import TransitionError, CompleteValidation, Sta
     BasicValidationError, check_rigid_fields, check_required_fields
 
 from partners.permissions import InterventionPermissions
+from reports.models import AppliedIndicator
 
 logger = logging.getLogger('partners.interventions.validation')
 
@@ -187,6 +188,36 @@ def rigid_in_amendment_flag(i):
     return True
 
 
+def sections_valid(i):
+    ainds = AppliedIndicator.objects.filter(lower_result__result_link__intervention__pk=i.pk).all()
+    ind_sections = set()
+    for ind in ainds:
+        ind_sections.add(ind.section)
+    intervention_sections = set(s for s in i.sections.all())
+    if not ind_sections.issubset(intervention_sections):
+        draft_status_err = ' without deleting the indicators first' if i.status == i.DRAFT else ''
+        raise BasicValidationError(_('The following sections have been selected on '
+                                     'the PD/SSFA indicators and cannot be removed{}: '.format(draft_status_err)) +
+                                   ', '.join([s.name for s in ind_sections - intervention_sections]))
+        # return False
+    return True
+
+
+def locations_valid(i):
+    ainds = AppliedIndicator.objects.filter(lower_result__result_link__intervention__pk=i.pk).all()
+    ind_locations = set()
+    for ind in ainds:
+        for l in ind.locations.all():
+            ind_locations.add(l)
+    intervention_locations = set(i.flat_locations.all())
+    if not ind_locations.issubset(intervention_locations):
+        raise BasicValidationError(_('The following locations have been selected on '
+                                     'the PD/SSFA indicators and cannot be removed'
+                                     ' without removing them from the indicators first: ') +
+                                   ', '.join([str(l) for l in ind_locations - intervention_locations]))
+    return True
+
+
 class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
@@ -198,6 +229,8 @@ class InterventionValid(CompleteValidation):
         start_date_related_agreement_valid,
         document_type_pca_valid,
         rigid_in_amendment_flag,
+        sections_valid,
+        locations_valid
     ]
 
     VALID_ERRORS = {
@@ -211,7 +244,11 @@ class InterventionValid(CompleteValidation):
                                                     'other SSFA Document connected',
         'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
         'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA',
-        'rigid_in_amendment_flag': 'Amendment Flag cannot be turned on without adding an amendment'
+        'rigid_in_amendment_flag': 'Amendment Flag cannot be turned on without adding an amendment',
+        'sections_valid': "The sections selected on the PD/SSFA are not a subset of all sections selected "
+                          "for this PD/SSFA's indicators",
+        'locations_valid': "The locations selected on the PD/SSFA are not a subset of all locations selected "
+                          "for this PD/SSFA's indicators"
     }
 
     PERMISSIONS_CLASS = InterventionPermissions
