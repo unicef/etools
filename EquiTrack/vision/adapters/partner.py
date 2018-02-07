@@ -34,6 +34,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         'COUNTRY',
         'TOTAL_CASH_TRANSFERRED_CP',
         'TOTAL_CASH_TRANSFERRED_CY',
+        'NET_CASH_TRANSFERRED_CY',
+        'REPORTED_CY',
+        'TOTAL_CASH_TRANSFERRED_YTD'
     )
     OTHER_KEYS = (
         'DATE_OF_ASSESSMENT',
@@ -49,8 +52,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         'MARKED_FOR_DELETION',
         'POSTING_BLOCK',
         'PARTNER_TYPE_DESC',
-        'LIQUIDATION',
-        'CASH_TRANSFER',
     )
 
     DATE_FIELDS = (
@@ -74,8 +75,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         'last_assessment_date': 'DATE_OF_ASSESSMENT',
         'core_values_assessment_date': 'CORE_VALUE_ASSESSMENT_DT',
         'partner_type': 'PARTNER_TYPE_DESC',
-        'liquidation': 'LIQUIDATION',  # TODO add mapping when available in vision
-        'cash_transfer': 'CASH_TRANSFER',  # TODO add mapping when available in vision
+        'net_ct_cy': 'NET_CASH_TRANSFERRED_CY',
+        'reported_cy': 'REPORTED_CY',
+        'total_ct_ytd': 'TOTAL_CASH_TRANSFERRED_YTD'
     }
 
     def _convert_records(self, records):
@@ -159,8 +161,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org.phone_number = partner.get('PHONE_NUMBER', None)
                     partner_org.email = partner.get('EMAIL', None)
                     partner_org.phone_number = partner.get('PHONE_NUMBER', None)
-                    # partner_org.liquidation = partner.get('LIQUIDATION', None)
-                    # partner_org.cash_transfer = partner.get('CASH_TRANSFER', None)
+                    partner_org.net_ct_cy = partner.get('NET_CASH_TRANSFERRED_CY', None)
+                    partner_org.reported_cy = partner.get('REPORTED_CY', None)
+                    partner_org.total_ct_ytd = partner.get('TOTAL_CASH_TRANSFERRED_YTD', None)
                     partner_org.core_values_assessment_date = datetime.strptime(
                         partner['CORE_VALUE_ASSESSMENT_DT'],
                         '%d-%b-%y') if 'CORE_VALUE_ASSESSMENT_DT' in partner else None

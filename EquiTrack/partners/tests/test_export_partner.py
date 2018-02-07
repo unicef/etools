@@ -123,8 +123,8 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 43)
-        self.assertEqual(len(dataset[0]), 43)
+        self.assertEqual(len(dataset._get_headers()), 46)
+        self.assertEqual(len(dataset[0]), 46)
 
     def test_csv_flat_export_api_hidden(self):
         response = self.forced_auth_req(
@@ -137,8 +137,8 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 43)
-        self.assertEqual(len(dataset[0]), 43)
+        self.assertEqual(len(dataset._get_headers()), 46)
+        self.assertEqual(len(dataset[0]), 46)
 
 
 class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
@@ -234,7 +234,7 @@ class TestPartnerOrganizationHactExport(APITenantTestCase):
         self.url = reverse("partners_api:partner-hact")
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory(
-            total_ct_cp=10.00
+            total_ct_cy=10.00
         )
 
     def test_csv_export(self):
@@ -247,8 +247,8 @@ class TestPartnerOrganizationHactExport(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 31)
-        self.assertEqual(len(dataset[0]), 31)
+        self.assertEqual(len(dataset._get_headers()), 34)
+        self.assertEqual(len(dataset[0]), 34)
 
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
