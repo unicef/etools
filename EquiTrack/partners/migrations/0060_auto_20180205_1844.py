@@ -16,8 +16,8 @@ def copy_attached_agreement(apps, schema_editor):
     file_type, _ = FileType.objects.get_or_create(
         code="partners_agreement",
         defaults={
-            "name": "Attached Agreement",
-            "label": "attached_agreement",
+            "label": "Attached Agreement",
+            "name": "attached_agreement",
             "order": 0,
         }
     )
