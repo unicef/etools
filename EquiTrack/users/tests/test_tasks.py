@@ -28,6 +28,7 @@ class TestUserMapper(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.group = GroupFactory(name="UNICEF User")
+
     def setUp(self):
         super(TestUserMapper, self).setUp()
         self.mapper = tasks.UserMapper()
