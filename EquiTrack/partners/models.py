@@ -993,7 +993,7 @@ class Agreement(TimeStampedModel):
     attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Attached Agreement'),
-        code='partner_agreement',
+        code='partners_agreement',
         blank=True
     )
     start = models.DateField(
