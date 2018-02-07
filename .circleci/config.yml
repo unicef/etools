@@ -17,14 +17,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
+          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum ".circleci/config.yml" }}
       - run:
           command: |
             virtualenv env1
             . env1/bin/activate
             pip install -r requirements.txt
       - save_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
+          key: deps2-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
       - run:
