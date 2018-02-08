@@ -32,8 +32,12 @@ djangorestframework-recursive==0.1.1
 
 # Other Python packages
 psycopg2==2.6.2
-celery==4.1
-django-celery-beat==1.1.1
+celery==4.1.0
+amqp==2.2.2
+billiard==3.5.0.3
+kombu==4.1.0
+vine==1.1.4
+django-celery-beat==1.1
 django-celery-results==1.0.1
 GDAL==1.10.0           # DO NOT USE GDAL <= 2.1.0
 carto==1.0.1
