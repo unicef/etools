@@ -49,3 +49,12 @@ class Base64FileField(serializers.FileField):
             raise serializers.ValidationError(_('Incorrect base64 format.'))
 
         return content_file
+
+
+class AttachmentSingleFileField(serializers.FileField):
+    def get_attribute(self, instance):
+        if hasattr(instance, self.source):
+            attachment = getattr(instance, self.source)
+            if attachment and attachment.last():
+                return attachment.last().file
+        return None
