@@ -18,6 +18,7 @@ from model_utils import Choices
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.factories import (
     AgreementFactory,
     AgreementAmendmentFactory,
@@ -861,6 +862,7 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
             partner=self.partner,
             attached_agreement=None,
         )
+        self.file_type = FileTypeFactory(code="partners_agreement")
 
     def _get_and_assert_response(self):
         '''Helper method to get the agreement and verify some basic about the response JSON (which it returns).'''
@@ -882,17 +884,21 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
         '''
         # The agreement starts with no attachment.
         response_json = self._get_and_assert_response()
-        self.assertIsNone(response_json['attached_agreement_file'])
+        self.assertIsNone(response_json['attachment'])
 
         # Now add an attachment. Note that in Python 2, the content must be str, in Python 3 the content must be
         # bytes. I think the existing code is compatible with both.
-        self.agreement.attached_agreement = SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8'))
-        self.agreement.save()
+        AttachmentFactory(
+            file=SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            content_object=self.agreement,
+            file_type=self.file_type,
+            code="partners_agreement",
+        )
 
         response_json = self._get_and_assert_response()
-        self.assertIn('attached_agreement_file', response_json)
+        self.assertIn('attachment', response_json)
 
-        url = response_json['attached_agreement_file']
+        url = response_json['attachment']
 
         # url is a URL like this one --
         # http://testserver/media/test/file_attachments/partner_organization/934/agreements/PCA2017841/foo.txt
@@ -993,6 +999,14 @@ class TestAgreementAPIView(APITenantTestCase):
         )
         self.agreement.authorized_officers.add(self.partner_staff)
         self.agreement.save()
+
+        self.file_type = FileTypeFactory(code="partners_agreement")
+        AttachmentFactory(
+            file=attached_agreement,
+            content_object=self.agreement,
+            file_type=self.file_type,
+            code="partners_agreement",
+        )
 
         self.amendment1 = AgreementAmendment.objects.create(
             number="001",

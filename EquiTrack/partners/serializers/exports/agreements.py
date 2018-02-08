@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
+from attachments.serializers_fields import AttachmentSingleFileField
 from partners.serializers.fields import TypeArrayField
 from partners.models import (
     Agreement,
@@ -86,9 +87,8 @@ class AgreementExportSerializer(serializers.ModelSerializer):
 
 
 class AgreementExportFlatSerializer(AgreementExportSerializer):
-    attached_agreement_file = serializers.FileField(
+    attachment = AttachmentSingleFileField(
         label=_("Attached Agreement"),
-        source="attached_agreement",
         read_only=True
     )
     country_programme_name = serializers.CharField(

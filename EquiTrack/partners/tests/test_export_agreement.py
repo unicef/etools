@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -52,6 +53,13 @@ class BaseAgreementModelExportTestCase(APITenantTestCase):
         )
         self.agreement.authorized_officers.add(partnerstaff)
         self.agreement.save()
+        file_type = FileTypeFactory(code="partners_agreement")
+        AttachmentFactory(
+            file="fake_attachment.pdf",
+            content_object=self.agreement,
+            file_type=file_type,
+            code="partners_agreement",
+        )
 
 
 class TestAgreementModelExport(BaseAgreementModelExportTestCase):

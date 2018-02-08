@@ -700,7 +700,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
     def test_ensure_field_read_write_status(self):
         '''Ensure that the fields I expect to be read-only are read-only; also confirm the converse'''
         expected_read_only_fields = ('id', 'created', 'modified', 'partner_name', 'amendments', 'unicef_signatory',
-                                     'partner_signatory', 'agreement_number', 'attached_agreement_file')
+                                     'partner_signatory', 'agreement_number', 'attachment')
 
         serializer = AgreementCreateUpdateSerializer()
 

@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
+from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
 from partners.permissions import AgreementPermissions
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
@@ -60,8 +61,7 @@ class AgreementDetailSerializer(serializers.ModelSerializer):
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by')
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager')
-    attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
-
+    attachment = AttachmentSingleFileField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
 
     def get_permissions(self, obj):
@@ -85,7 +85,7 @@ class AgreementCreateUpdateSerializer(SnapshotModelSerializer):
     unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager', read_only=True)
     agreement_number = serializers.CharField(read_only=True)
-    attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
+    attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
         model = Agreement

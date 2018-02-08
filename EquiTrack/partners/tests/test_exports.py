@@ -5,8 +5,17 @@ import tempfile
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import (UserFactory, PartnerFactory, AgreementFactory, InterventionFactory,
-                                 CountryProgrammeFactory, ResultFactory, InterventionBudgetFactory, PartnerStaffFactory)
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
+from EquiTrack.factories import (
+    AgreementFactory,
+    CountryProgrammeFactory,
+    InterventionBudgetFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+    ResultFactory,
+    UserFactory,
+)
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory
 from partners.models import PartnerOrganization
@@ -52,6 +61,13 @@ class TestModelExport(APITenantTestCase):
         )
         self.agreement.authorized_officers.add(self.partnerstaff)
         self.agreement.save()
+        file_type = FileTypeFactory(code="partners_agreement")
+        AttachmentFactory(
+            file=attachment,
+            content_object=self.agreement,
+            file_type=file_type,
+            code="partners_agreement",
+        )
         # This is here to test partner scoping
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
         self.intervention = InterventionFactory(
