@@ -133,7 +133,7 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
 
 class AssessmentDetailSerializer(serializers.ModelSerializer):
 
-    report_file = serializers.FileField(source='report', read_only=True)
+    report_attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
         model = Assessment

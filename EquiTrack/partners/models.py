@@ -898,6 +898,13 @@ class Assessment(TimeStampedModel):
         max_length=1024,
         upload_to=get_assesment_path
     )
+    report_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Report'),
+        code='partners_assessment_report',
+        blank=True,
+        null=True
+    )
     # Basis for Risk Rating
     current = models.BooleanField(
         verbose_name=_('Basis for risk rating'),

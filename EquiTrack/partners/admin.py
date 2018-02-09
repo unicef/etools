@@ -264,6 +264,10 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         return request.user.is_superuser
 
 
+class AssessmentReportInline(AttachmentSingleInline):
+    verbose_name_plural = "Report"
+
+
 class AssessmentAdmin(admin.ModelAdmin):
     model = Assessment
     fields = (
@@ -271,12 +275,14 @@ class AssessmentAdmin(admin.ModelAdmin):
         u'type',
         u'completed_date',
         u'current',
-        u'report',
     )
     list_filter = (
         u'partner',
         u'type'
     )
+    inlines = [
+        AssessmentReportInline,
+    ]
     verbose_name = u'Assessment'
     verbose_name_plural = u'Assessments'
 

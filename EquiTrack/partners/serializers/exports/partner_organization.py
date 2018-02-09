@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
+from attachments.serializers_fields import AttachmentSingleFileField
 from partners.models import (
     Assessment,
     PartnerOrganization,
@@ -125,7 +126,7 @@ class AssessmentExportSerializer(serializers.ModelSerializer):
     requesting_officer = serializers.CharField(source="requesting_officer.email")
     approving_officer = serializers.CharField(source="approving_officer.email")
     current = serializers.SerializerMethodField()
-    report_file = serializers.FileField(source='report', read_only=True)
+    report_attachment = AttachmentSingleFileField(read_only=True)
 
     class Meta:
         model = Assessment
@@ -151,6 +152,6 @@ class AssessmentExportFlatSerializer(AssessmentExportSerializer):
             "planned_date",
             "completed_date",
             "rating",
-            "report_file",
+            "report_attachment",
             "current",
         )

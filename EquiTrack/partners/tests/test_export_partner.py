@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tablib.core import Dataset
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.factories import (
     AssessmentFactory,
     PartnerFactory,
@@ -182,11 +183,22 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
 
 
 class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.attachment_code = "partners_assessment_report"
+        cls.file_type = FileTypeFactory(code=cls.attachment_code)
+
     def setUp(self):
         super(TestPartnerOrganizationAssessmentModelExport, self).setUp()
         self.assessment = AssessmentFactory(
             partner=self.partner,
             report="fake_report.pdf"
+        )
+        AttachmentFactory(
+            file="fake_report.pdf",
+            content_object=self.assessment,
+            code=self.attachment_code,
+            file_type=self.file_type,
         )
 
     def test_invalid_format_export_api(self):
