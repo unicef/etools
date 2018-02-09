@@ -19,6 +19,13 @@ from EquiTrack.tests.mixins import APITenantTestCase
 
 
 class BaseAgreementModelExportTestCase(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.agreement_code = "partners_agreement"
+        cls.agreement_file_type = FileTypeFactory(code=cls.agreement_code)
+        cls.amendment_code = "partners_agreement_amendment"
+        cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
+
     def setUp(self):
         super(BaseAgreementModelExportTestCase, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
@@ -53,12 +60,11 @@ class BaseAgreementModelExportTestCase(APITenantTestCase):
         )
         self.agreement.authorized_officers.add(partnerstaff)
         self.agreement.save()
-        file_type = FileTypeFactory(code="partners_agreement")
         AttachmentFactory(
             file="fake_attachment.pdf",
             content_object=self.agreement,
-            file_type=file_type,
-            code="partners_agreement",
+            file_type=self.agreement_file_type,
+            code=self.agreement_code,
         )
 
 
@@ -138,8 +144,14 @@ class TestAgreementAmendmentModelExport(BaseAgreementModelExportTestCase):
         super(TestAgreementAmendmentModelExport, self).setUp()
         self.amendment = AgreementAmendmentFactory(
             agreement=self.agreement,
-            signed_amendment="fake_attachment.pdf",
+            signed_amendment=None,
             signed_date=datetime.date.today(),
+        )
+        AttachmentFactory(
+            file="fake_attachment.pdf",
+            file_type=self.amendment_file_type,
+            code=self.amendment_code,
+            content_object=self.amendment,
         )
 
     def test_invalid_format_export_api(self):

@@ -854,6 +854,11 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
     '''Test retrieving attachments to agreements and agreement amendments. The file-specific fields are read-only
     on the relevant serializers, so they can't be edited through the API.
     '''
+    @classmethod
+    def setUpTestData(cls):
+        cls.code = "partners_agreement_amendment"
+        cls.file_type = FileTypeFactory(code=cls.code)
+
     def setUp(self):
         self.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         self.partnership_manager_user = UserFactory(is_staff=True)
@@ -927,8 +932,13 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
 
         # Now add an amendment.
         amendment = AgreementAmendmentFactory(agreement=self.agreement, signed_amendment=None)
-        amendment.signed_amendment = SimpleUploadedFile('goodbye_world.txt', u'goodbye world!'.encode('utf-8'))
-        amendment.save()
+        signed_amendment = SimpleUploadedFile('goodbye_world.txt', u'goodbye world!'.encode('utf-8'))
+        AttachmentFactory(
+            file=signed_amendment,
+            file_type=self.file_type,
+            code=self.code,
+            content_object=amendment,
+        )
 
         response_json = self._get_and_assert_response()
         self.assertIn('amendments', response_json)
@@ -937,9 +947,9 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
 
         self.assertIsInstance(response_amendment, dict)
 
-        self.assertIn('signed_amendment_file', response_amendment)
+        self.assertIn('signed_amendment_attachment', response_amendment)
 
-        url = response_amendment['signed_amendment_file']
+        url = response_amendment['signed_amendment_attachment']
 
         # url looks something like this --
         # http://testserver/media/test/file_attachments/partner_org/1658/agreements/MOU20171421/amendments/tmp02/goodbye_world.txt
@@ -964,6 +974,12 @@ class TestAgreementAPIFileAttachments(APITenantTestCase):
 
 
 class TestAgreementAPIView(APITenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.agreement_code = "partners_agreement"
+        cls.agreement_file_type = FileTypeFactory(code=cls.agreement_code)
+        cls.amendment_code = "partners_agreement_amendment"
+        cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
@@ -1000,27 +1016,38 @@ class TestAgreementAPIView(APITenantTestCase):
         self.agreement.authorized_officers.add(self.partner_staff)
         self.agreement.save()
 
-        self.file_type = FileTypeFactory(code="partners_agreement")
         AttachmentFactory(
             file=attached_agreement,
             content_object=self.agreement,
-            file_type=self.file_type,
-            code="partners_agreement",
+            file_type=self.agreement_file_type,
+            code=self.agreement_code,
         )
 
         self.amendment1 = AgreementAmendment.objects.create(
             number="001",
             agreement=self.agreement,
-            signed_amendment="application/pdf",
+            signed_amendment=None,
             signed_date=datetime.date.today(),
             types=[AgreementAmendment.IP_NAME]
+        )
+        AttachmentFactory(
+            file="application/pdf",
+            file_type=self.amendment_file_type,
+            code=self.amendment_code,
+            content_object=self.amendment1
         )
         self.amendment2 = AgreementAmendment.objects.create(
             number="002",
             agreement=self.agreement,
-            signed_amendment="application/pdf",
+            signed_amendment=None,
             signed_date=datetime.date.today(),
             types=[AgreementAmendment.BANKING_INFO]
+        )
+        AttachmentFactory(
+            file="application/pdf",
+            file_type=self.amendment_file_type,
+            code=self.amendment_code,
+            content_object=self.amendment2
         )
         self.agreement2 = AgreementFactory(
             partner=self.partner,

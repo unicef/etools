@@ -5,6 +5,7 @@ import datetime
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.factories import (
     PartnerFactory,
     UserFactory,
@@ -38,6 +39,10 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 
 class TestAgreementsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
+    @classmethod
+    def setUpTestData(cls):
+        cls.amendment_code = "partners_agreement_amendment"
+        cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
@@ -53,8 +58,14 @@ class TestAgreementsAPI(APITenantTestCase):
                                                            types=[AgreementAmendment.IP_NAME,
                                                                   AgreementAmendment.CLAUSE],
                                                            number="001",
-                                                           signed_amendment="application/pdf",
+                                                           signed_amendment=None,
                                                            signed_date=datetime.date.today())
+        AttachmentFactory(
+            file="application/pdf",
+            file_type=self.amendment_file_type,
+            code=self.amendment_code,
+            content_object=self.amendment,
+        )
 
     def run_request_list_ep(self, data={}, user=None, method='post'):
         response = self.forced_auth_req(

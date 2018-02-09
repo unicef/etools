@@ -13,6 +13,7 @@ import datetime
 from rest_framework import serializers
 
 # Project imports
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -88,13 +89,18 @@ class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
         self.assertEqual(len(exception.detail['errors']), 1)
         the_error = exception.detail['errors'][0]
         self.assertIsInstance(the_error, dict)
-        self.assertEqual(the_error.keys(), ['signed_amendment'])
-        self.assertIsInstance(the_error['signed_amendment'], list)
-        self.assertEqual(the_error['signed_amendment'], [expected_message])
+        self.assertEqual(the_error.keys(), ['signed_amendment_attachment'])
+        self.assertIsInstance(the_error['signed_amendment_attachment'], list)
+        self.assertEqual(the_error['signed_amendment_attachment'], [expected_message])
 
 
 class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
     '''Exercise the AgreementCreateUpdateSerializer.'''
+    @classmethod
+    def setUpTestData(cls):
+        cls.amendment_code = "partners_agreement_amendment"
+        cls.amendment_file_type = FileTypeFactory(code=cls.amendment_code)
+
     def test_simple_create(self):
         data = {
             "agreement_type": Agreement.MOU,
@@ -544,9 +550,13 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
                                      signed_by_partner_date=None)
 
         amendment = AgreementAmendmentFactory(agreement=agreement)
-        # I need to give amendment.signed_amendment a name to exercise the date part of the amendment validator.
-        amendment.signed_amendment.name = 'fake_amendment.pdf'
-        amendment.save()
+        # I need to add attachment to exercise the date part of the amendment validator.
+        AttachmentFactory(
+            file='fake_amendment.pdf',
+            file_type=self.amendment_file_type,
+            code=self.amendment_code,
+            content_object=amendment,
+        )
         data = {
             'agreement': agreement,
             'amendments': [amendment],

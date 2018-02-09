@@ -253,7 +253,7 @@ class AgreementAmendmentDeleteView(DestroyAPIView):
             amendment = AgreementAmendment.objects.get(id=int(kwargs['pk']))
         except AgreementAmendment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        if amendment.signed_amendment or amendment.signed_date:
+        if amendment.signed_amendment_attachment.exists() or amendment.signed_date:
             raise ValidationError("Cannot delete a signed amendment")
         else:
             amendment.delete()

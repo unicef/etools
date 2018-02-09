@@ -1238,6 +1238,13 @@ class AgreementAmendment(TimeStampedModel):
         null=True, blank=True,
         upload_to=get_agreement_amd_file_path
     )
+    signed_amendment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Signed Amendment'),
+        code='partners_agreement_amendment',
+        blank=True,
+        null=True
+    )
     types = ArrayField(models.CharField(
         max_length=50,
         choices=AMENDMENT_TYPES))
@@ -1268,8 +1275,8 @@ class AgreementAmendment(TimeStampedModel):
     def save(self, **kwargs):
         update_agreement_number_needed = False
         oldself = AgreementAmendment.objects.get(id=self.pk) if self.pk else None
-        if self.signed_amendment:
-            if not oldself or not oldself.signed_amendment:
+        if self.signed_amendment_attachment.exists():
+            if not oldself or not oldself.signed_amendment_attachment.exists():
                 self.number = self.compute_reference_number()
                 update_agreement_number_needed = True
         else:

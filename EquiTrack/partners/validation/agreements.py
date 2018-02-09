@@ -63,7 +63,7 @@ def agreements_illegal_transition_permissions(agreement, user):
 def amendments_valid(agreement):
     today = date.today()
     for a in agreement.amendments.all():
-        if not getattr(a.signed_amendment, 'name'):
+        if not a.signed_amendment_attachment.exists():
             return False
         if not a.signed_date or a.signed_date > today:
             return False
@@ -152,8 +152,10 @@ class AgreementValid(CompleteValidation):
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
         'agreement_transition_to_active_invalid_PCA': "You cannot have more than 1 PCA active per Partner within 1 CP",
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
-        'amendments_valid': {'signed_amendment': ['Please check that the Document is attached and'
-                                                  ' signatures are not in the future']},
+        'amendments_valid': {'signed_amendment_attachment': [
+            'Please check that the Document is attached and'
+            ' signatures are not in the future'
+        ]},
     }
 
     PERMISSIONS_CLASS = AgreementPermissions

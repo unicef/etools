@@ -24,10 +24,7 @@ class AgreementAmendmentExportSerializer(serializers.ModelSerializer):
 
 
 class AgreementAmendmentExportFlatSerializer(AgreementAmendmentExportSerializer):
-    signed_amendment_file = serializers.FileField(
-        source="signed_amendment",
-        read_only=True
-    )
+    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
 
 
 class AgreementExportSerializer(serializers.ModelSerializer):

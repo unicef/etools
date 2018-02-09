@@ -439,11 +439,14 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         return request.user.is_superuser
 
 
+class SignedAmendmentInline(AttachmentSingleInline):
+    verbose_name_plural = "Signed Amendment"
+
+
 class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = u'Amendment'
     model = AgreementAmendment
     fields = (
-        'signed_amendment',
         'signed_date',
         'number',
         'types',
@@ -451,7 +454,6 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
     list_display = (
         u'agreement',
         u'number',
-        u'signed_amendment',
         u'signed_date',
     )
     list_filter = (
@@ -460,6 +462,9 @@ class AgreementAmendmentAdmin(admin.ModelAdmin):
     )
     readonly_fields = [
         'number',
+    ]
+    inlines = [
+        SignedAmendmentInline,
     ]
 
     def get_max_num(self, request, obj=None, **kwargs):
