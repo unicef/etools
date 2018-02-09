@@ -140,7 +140,7 @@ class Attachment(TimeStampedModel, models.Model):
     object_id = models.IntegerField()
     content_object = GenericForeignKey()
 
-    code = models.CharField(max_length=20, blank=True, verbose_name=_('Code'))
+    code = models.CharField(max_length=64, blank=True, verbose_name=_('Code'))
 
     class Meta:
         ordering = ['id', ]
