@@ -10,9 +10,9 @@ from django.forms import SelectMultiple
 
 from import_export.admin import ExportMixin
 
+from attachments.admin import AttachmentSingleInline
 from EquiTrack.admin import SnapshotModelAdmin, ActivityInline
 from EquiTrack.mixins import CountryUsersAdminMixin
-
 from partners.exports import PartnerExport
 from partners.models import (
     FileType,
@@ -496,6 +496,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, Sn
     )
     inlines = [
         ActivityInline,
+        AttachmentSingleInline,
     ]
 
     def has_module_permission(self, request):
