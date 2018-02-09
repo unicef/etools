@@ -332,6 +332,10 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
         return queryset.filter(hidden=False)
 
 
+class CoreValueAssessmentInline(AttachmentSingleInline):
+    verbose_name_plural = "Core Value Assessment Attachment"
+
+
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
     resource_class = PartnerExport
@@ -403,6 +407,9 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'hide_partners',
         'show_partners'
     )
+    inlines = [
+        CoreValueAssessmentInline,
+    ]
 
     def hide_partners(self, request, queryset):
 

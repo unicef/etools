@@ -413,6 +413,14 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         max_length=1024,
         help_text='Only required for CSO partners'
     )
+    core_values_assessment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Core Values Assessment'),
+        code='partners_partner_assessment',
+        blank=True,
+        null=True,
+        help_text='Only required for CSO partners'
+    )
     vision_synced = models.BooleanField(
         verbose_name=_("VISION Synced"),
         default=False,

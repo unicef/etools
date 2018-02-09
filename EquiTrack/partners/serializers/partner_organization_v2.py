@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
 
+from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
 
@@ -184,7 +185,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
-    core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
@@ -208,7 +209,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
-    core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
 
     def get_hact_values(self, obj):
