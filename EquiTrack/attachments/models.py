@@ -111,9 +111,11 @@ def generate_file_path(attachment, filename):
             raise Exception("Unknown file path")
     else:
         file_path = [
+            connection.schema_name,
             "files",
             app,
             slugify(model_name),
+            attachment.code,
             obj_pk,
         ]
 
