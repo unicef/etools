@@ -47,15 +47,16 @@ class TestGenerateFilePath(FastTenantTestCase):
         file_path = models.generate_file_path(attachment, "test.pdf")
         self.assert_file_path(file_path, [
             "agreements",
-            self.agreement.agreement_number,
+            self.agreement.agreement_number.strip("/"),
             "test.pdf"
         ], "partners")
         # check against old file path function
+        # except new paths do not have '//'
         file_path_old = partner_models.get_agreement_path(
             self.agreement,
             "test.pdf"
         )
-        self.assertEqual(file_path, file_path_old)
+        self.assertEqual(file_path, file_path_old.replace("//", "/"))
 
     def test_assessment(self):
         assessment = AssessmentFactory(partner=self.partner)
@@ -145,26 +146,29 @@ class TestGenerateFilePath(FastTenantTestCase):
         self.assert_file_path(file_path, [
             str(self.partner.pk),
             "agreements",
-            self.agreement.base_number,
+            self.agreement.base_number.strip("/"),
             "amendments",
             str(amendment.number),
             "test.pdf"
         ], "agreementamendment")
         # check against old file path function
+        # except new paths do not have '//'
         file_path_old = partner_models.get_agreement_amd_file_path(
             amendment,
             "test.pdf"
         )
-        self.assertEqual(file_path, file_path_old)
+        self.assertEqual(file_path, file_path_old.replace("//", "/"))
 
     def test_default(self):
         file_type = FileTypeFactory()
         attachment = AttachmentFactory(content_object=file_type)
         file_path = models.generate_file_path(attachment, "test.pdf")
         self.assert_file_path(file_path, [
+            connection.schema_name,
             "files",
             "attachments",
             "filetype",
+            attachment.code,
             str(file_type.pk),
             "test.pdf"
         ])

@@ -120,6 +120,8 @@ def generate_file_path(attachment, filename):
         ]
 
     file_path.append(os.path.split(filename)[-1])
+    # strip all '/'
+    file_path = [x.strip("/") for x in file_path]
     return '/'.join(file_path)
 
 
