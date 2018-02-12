@@ -16,8 +16,8 @@ jobs:
           POSTGRES_PASSWORD: postgres
     steps:
       - checkout
-      # - restore_cache:
-      #     key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
+      - restore_cache:
+          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
       - run:
           command: |
             virtualenv env1
