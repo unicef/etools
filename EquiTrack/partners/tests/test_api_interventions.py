@@ -13,6 +13,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from EquiTrack.factories import (
     AgreementFactory,
@@ -1397,7 +1398,14 @@ class TestInterventionAmendmentDeleteView(APITenantTestCase):
             intervention=self.intervention,
             types=[InterventionAmendment.RESULTS],
             signed_date=datetime.date.today(),
-            signed_amendment="random_amendment.pdf"
+            signed_amendment=None
+        )
+        code = "partners_intervention_amendment_signed"
+        AttachmentFactory(
+            file="random_amendment.pdf",
+            file_type=FileTypeFactory(code=code),
+            content_object=self.amendment,
+            code=code
         )
         self.url = reverse(
             "partners_api:intervention-amendments-del",

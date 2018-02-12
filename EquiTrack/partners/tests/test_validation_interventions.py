@@ -508,7 +508,14 @@ class TestAmendmentsInvalid(FastTenantTestCase):
         self.amendment = InterventionAmendmentFactory(
             intervention=self.intervention,
             signed_date=datetime.date(2001, 1, 1),
-            signed_amendment="random.pdf",
+            signed_amendment=None,
+        )
+        code = "partners_intervention_amendment_signed"
+        AttachmentFactory(
+            file="random.pdf",
+            file_type=FileTypeFactory(code=code),
+            content_object=self.amendment,
+            code=code
         )
 
     @skip("update teste with new amendment style")

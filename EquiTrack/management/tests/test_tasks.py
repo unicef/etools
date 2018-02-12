@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 from management import tasks
@@ -35,6 +36,13 @@ class TestRecheckAllOpenIssuesTask(FastTenantTestCase):
     def test_recheck_all_open_issues_task(self):
         UserFactory(username="etools_task_admin")
         amendment = InterventionAmendmentFactory()
+        code = "partners_intervention_amendment_signed"
+        AttachmentFactory(
+            file="test_file.pdf",
+            file_type=FileTypeFactory(code=code),
+            content_object=amendment,
+            code=code
+        )
         issue = FlaggedIssueFactory(
             content_object=amendment,
             issue_id='interventions_amendments_no_file',

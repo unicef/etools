@@ -1494,7 +1494,15 @@ class TestInterventionViews(APITenantTestCase):
             intervention=self.intervention_obj,
             types=[InterventionAmendment.RESULTS],
             signed_date=datetime.date.today(),
-            signed_amendment=amendment
+            signed_amendment=None
+        )
+        self.code = "partners_intervention_amendment_signed"
+        self.file_type = FileTypeFactory(code=self.code)
+        AttachmentFactory(
+            file=amendment,
+            file_type=self.file_type,
+            content_object=self.amendment,
+            code=self.code
         )
 
         self.intervention_obj.status = Intervention.DRAFT

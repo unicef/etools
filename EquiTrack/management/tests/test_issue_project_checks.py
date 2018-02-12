@@ -7,6 +7,7 @@ import datetime
 
 from django.test import override_settings
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -307,8 +308,8 @@ class TestPDAmendmentsMissingFilesCheck(FastTenantTestCase):
 
     def test_no_amendment_file(self):
         """Check that if no amendment file, then issue is raised"""
-        amendment = InterventionAmendmentFactory(signed_amendment=None)
-        self.assertFalse(amendment.signed_amendment)
+        amendment = InterventionAmendmentFactory()
+        self.assertFalse(amendment.signed_amendment_attachment.exists())
         self.assertFalse(self.qs_issue.exists())
         checks.bootstrap_checks(default_is_active=True)
         checks.run_all_checks()
@@ -319,7 +320,14 @@ class TestPDAmendmentsMissingFilesCheck(FastTenantTestCase):
     def test_no_issue(self):
         """Check that if amendment file, then issue is NOT raised"""
         amendment = InterventionAmendmentFactory()
-        self.assertTrue(amendment.signed_amendment)
+        code = "partners_intervention_amendment_signed"
+        AttachmentFactory(
+            file="test_file.pdf",
+            file_type=FileTypeFactory(code=code),
+            content_object=amendment,
+            code=code
+        )
+        self.assertTrue(amendment.signed_amendment_attachment.exists())
         self.assertFalse(self.qs_issue.exists())
         checks.bootstrap_checks(default_is_active=True)
         checks.run_all_checks()
@@ -353,8 +361,15 @@ class TestPCAAmendmentsMissingFilesCheck(FastTenantTestCase):
         """Check that if agreement has signed amendment
         then issue is NOT raised
         """
-        amendment = AgreementAmendmentFactory(signed_amendment="random.pdf")
-        self.assertTrue(amendment.signed_amendment)
+        amendment = AgreementAmendmentFactory(signed_amendment=None)
+        code = "partners_agreement_amendment"
+        AttachmentFactory(
+            file="random.pdf",
+            file_type=FileTypeFactory(code=code),
+            content_object=amendment,
+            code=code
+        )
+        self.assertTrue(amendment.signed_amendment_attachment.exists())
         self.assertFalse(self.qs_issue.exists())
         checks.bootstrap_checks(default_is_active=True)
         checks.run_all_checks()

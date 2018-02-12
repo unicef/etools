@@ -1928,6 +1928,12 @@ class InterventionAmendment(TimeStampedModel):
         max_length=1024,
         upload_to=get_intervention_amendment_file_path
     )
+    signed_amendment_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Amendment Document'),
+        code='partners_intervention_amendment_signed',
+        blank=True,
+    )
 
     tracker = FieldTracker()
 
