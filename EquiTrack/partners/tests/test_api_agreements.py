@@ -39,6 +39,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 
 class TestAgreementsAPI(APITenantTestCase):
     fixtures = ['initial_data.json']
+
     @classmethod
     def setUpTestData(cls):
         cls.amendment_code = "partners_agreement_amendment"
