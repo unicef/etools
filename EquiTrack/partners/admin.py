@@ -174,6 +174,14 @@ class InterventionSectorLocationAdmin(admin.ModelAdmin):
     )
 
 
+class PRCReviewAttachmentInline(AttachmentSingleInline):
+    verbose_name_plural = "Review Document by PRC"
+
+
+class SignedPDAttachmentInline(AttachmentSingleInline):
+    verbose_name_plural = "Signed PD Document"
+
+
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotModelAdmin):
     model = Intervention
 
@@ -228,8 +236,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
             'fields':
                 (('submission_date_prc',),
                  'review_date_prc',
-                 'prc_review_document',
-                 'signed_pd_document',
                  ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
@@ -248,6 +254,8 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, SnapshotMode
         # SectorLocationInline,
         InterventionAttachmentsInline,
         ActivityInline,
+        PRCReviewAttachmentInline,
+        SignedPDAttachmentInline,
     )
 
     def created_date(self, obj):

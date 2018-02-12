@@ -9,6 +9,10 @@ from freezegun import freeze_time
 
 from mock import patch, Mock
 
+from attachments.tests.factories import (
+    AttachmentFactory,
+    FileTypeFactory as AttachmentFileTypeFactory,
+)
 from EquiTrack.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -691,8 +695,14 @@ class TestInterventionModel(TenantTestCase):
         self.assertTrue(self.intervention.submitted_to_prc)
 
     def test_submitted_to_prc_review_document(self):
-        self.intervention.prc_review_document = "test.pdf"
-        self.intervention.save()
+        AttachmentFactory(
+            file="test.pdf",
+            file_type=AttachmentFileTypeFactory(
+                code="partners_intervention_prc_review"
+            ),
+            code="partners_intervention_prc_review",
+            content_object=self.intervention
+        )
         self.assertTrue(self.intervention.submitted_to_prc)
 
     def test_submitted_to_prc_false(self):

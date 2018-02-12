@@ -1457,12 +1457,26 @@ class Intervention(TimeStampedModel):
         blank=True,
         upload_to=get_prc_intervention_file_path
     )
+    prc_review_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Review Document by PRC'),
+        code='partners_intervention_prc_review',
+        blank=True,
+        null=True
+    )
     signed_pd_document = models.FileField(
         verbose_name=_("Signed PD Document"),
         max_length=1024,
         null=True,
         blank=True,
         upload_to=get_prc_intervention_file_path
+    )
+    signed_pd_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Signed PD Document'),
+        code='partners_intervention_signed_pd',
+        blank=True,
+        null=True
     )
     signed_by_unicef_date = models.DateField(
         verbose_name=_("Signed by UNICEF Date"),
@@ -1569,7 +1583,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def submitted_to_prc(self):
-        return True if any([self.submission_date_prc, self.review_date_prc, self.prc_review_document]) else False
+        return True if any([self.submission_date_prc, self.review_date_prc, self.prc_review_attachment.exists()]) else False
 
     @property
     def days_from_review_to_signed(self):

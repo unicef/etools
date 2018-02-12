@@ -8,6 +8,7 @@ from unittest import skip
 
 from mock import patch, Mock
 
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
@@ -308,13 +309,24 @@ class TestTransitionToActive(FastTenantTestCase):
 
 
 class TestStateDateSignedValid(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.signed_pd_code = "partners_intervention_signed_pd"
+        cls.signed_pd_file_type = FileTypeFactory(code=cls.signed_pd_code)
+
     def test_start_date_before_signed_date(self):
         """Start date before max signed date is invalid"""
         intervention = InterventionFactory(
             signed_by_unicef_date=datetime.date(2001, 2, 1),
             signed_by_partner_date=datetime.date(2001, 3, 1),
-            signed_pd_document="random.pdf",
+            signed_pd_document=None,
             start=datetime.date(2001, 1, 1)
+        )
+        AttachmentFactory(
+            file="random.pdf",
+            file_type=self.signed_pd_file_type,
+            code=self.signed_pd_code,
+            content_object=intervention
         )
         self.assertFalse(start_date_signed_valid(intervention))
 
@@ -323,13 +335,24 @@ class TestStateDateSignedValid(FastTenantTestCase):
         intervention = InterventionFactory(
             signed_by_unicef_date=datetime.date(2001, 2, 1),
             signed_by_partner_date=datetime.date(2001, 3, 1),
-            signed_pd_document="random.pdf",
+            signed_pd_document=None,
             start=datetime.date(2001, 4, 1)
+        )
+        AttachmentFactory(
+            file="random.pdf",
+            file_type=self.signed_pd_file_type,
+            code=self.signed_pd_code,
+            content_object=intervention
         )
         self.assertTrue(start_date_signed_valid(intervention))
 
 
 class TestStateDateRelatedAgreementValid(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.signed_pd_code = "partners_intervention_signed_pd"
+        cls.signed_pd_file_type = FileTypeFactory(code=cls.signed_pd_code)
+
     def test_start_date_before_agreement_start(self):
         """Start date before agreement start date is invalid
         If not contingency_pd, and certain document_type
@@ -340,10 +363,16 @@ class TestStateDateRelatedAgreementValid(FastTenantTestCase):
         for document_type in [Intervention.PD, Intervention.SHPD]:
             intervention = InterventionFactory(
                 agreement=agreement,
-                signed_pd_document="random.pdf",
+                signed_pd_document=None,
                 start=datetime.date(2001, 1, 1),
                 contingency_pd=False,
                 document_type=document_type,
+            )
+            AttachmentFactory(
+                file="random.pdf",
+                file_type=self.signed_pd_file_type,
+                code=self.signed_pd_code,
+                content_object=intervention
             )
             self.assertFalse(start_date_related_agreement_valid(intervention))
 
@@ -354,10 +383,16 @@ class TestStateDateRelatedAgreementValid(FastTenantTestCase):
         agreement = AgreementFactory()
         intervention = InterventionFactory(
             agreement=agreement,
-            signed_pd_document="random.pdf",
+            signed_pd_document=None,
             start=datetime.date.today() + datetime.timedelta(days=2),
             contingency_pd=False,
             document_type=Intervention.PD,
+        )
+        AttachmentFactory(
+            file="random.pdf",
+            file_type=self.signed_pd_file_type,
+            code=self.signed_pd_code,
+            content_object=intervention
         )
         self.assertTrue(start_date_related_agreement_valid(intervention))
 
@@ -536,6 +571,7 @@ class TestAmendmentsInvalid(FastTenantTestCase):
     @skip("update tests with new amendment style")
     def test_no_signed_amendment(self):
         """If amendment has no signed amendment then invalid"""
+        self.attachment.delete()
         self.amendment.signed_amendment = None
         self.amendment.save()
         # self.assertFalse(amendments_valid(self.intervention))

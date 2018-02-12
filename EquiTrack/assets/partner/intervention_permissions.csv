@@ -26,8 +26,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.1,submission_date,Partnership Manager,,Draft,Edit,TRUE
 3.9.2,submission_date_prc,Partnership Manager,,Draft,Edit,TRUE
 3.9.3,review_date_prc,Partnership Manager,,Draft,Edit,TRUE
-3.9.4,prc_review_document,Partnership Manager,,Draft,Edit,TRUE
-3.9.11,signed_pd_document,Partnership Manager,,Draft,Edit,TRUE
+3.9.4,prc_review_attachment,Partnership Manager,,Draft,Edit,TRUE
+3.9.11,signed_pd_attachment,Partnership Manager,,Draft,Edit,TRUE
 3.9.5,partner_authorized_officer_signatory,Partnership Manager,,Draft,Edit,TRUE
 3.9.6,signed_by_partner_date,Partnership Manager,,Draft,Edit,TRUE
 3.9.7,unicef_signatory,Partnership Manager,,Draft,Edit,TRUE
