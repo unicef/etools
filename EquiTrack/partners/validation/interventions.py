@@ -5,7 +5,7 @@ import logging
 from django.utils.translation import ugettext as _
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, \
-    BasicValidationError, check_rigid_fields, check_required_fields
+    BasicValidationError, check_rigid_fields, check_required_fields, check_rigid_related
 
 from partners.permissions import InterventionPermissions
 from reports.models import AppliedIndicator
@@ -120,6 +120,27 @@ def transition_to_active(i):
         raise TransitionError([
             _('PD cannot be activated if the associated Agreement is not active')
         ])
+    return True
+
+
+def amendments_valid(i):
+    if i.status == i.DRAFT:
+        # Drafts cannot have amendments
+        if i.amendments.exists():
+            return False
+
+    if i.status not in [i.ACTIVE, i.SIGNED]:
+        # this prevents any changes in amendments if the status is not in Draft, Signed or Active
+        if i.amendments.exists() and (not rigid_in_amendment_flag(i) or not check_rigid_related(i, 'amendments')):
+            return False
+
+    for a in i.amendments.all():
+        if a.OTHER in a.types and a.other_description is None:
+            return False
+        if not a.signed_date:
+            return False
+        if not getattr(a.signed_amendment, 'name'):
+            return False
     return True
 
 
