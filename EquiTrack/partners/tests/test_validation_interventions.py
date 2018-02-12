@@ -540,7 +540,7 @@ class TestAmendmentsInvalid(FastTenantTestCase):
             self.intervention.save()
             self.assertTrue(amendments_valid(self.intervention))
         '''
-        
+
     def test_change_invalid(self):
         """If not active/signed and amendment changes then invalid"""
         # TODO: try to fix "check_rigid_related"(does not see changes)
