@@ -5,7 +5,7 @@ import logging
 from django.utils.translation import ugettext as _
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError, \
-    BasicValidationError, check_rigid_fields, check_required_fields, check_rigid_related
+    BasicValidationError, check_rigid_fields, check_required_fields
 
 from partners.permissions import InterventionPermissions
 from reports.models import AppliedIndicator
@@ -130,8 +130,8 @@ def amendments_valid(i):
             return False
 
     if i.status not in [i.ACTIVE, i.SIGNED]:
-        # this prevents any changes in amendments if the status is not in Draft, Signed or Active
-        if i.amendments.exists() and (not rigid_in_amendment_flag(i) or not check_rigid_related(i, 'amendments')):
+        # this prevents any changes in amendments if the status is not in Signed or Active
+        if not rigid_in_amendment_flag(i):
             return False
 
     for a in i.amendments.all():

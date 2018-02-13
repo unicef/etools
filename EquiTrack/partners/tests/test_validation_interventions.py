@@ -519,44 +519,6 @@ class TestAmendmentsInvalid(FastTenantTestCase):
             self.intervention.save()
             self.assertTrue(amendments_valid(self.intervention))
 
-        # trying to simulate an amended intervention by adding a new amendment
-        # reset the old in_amendment flag so the validation will check the amendments instead
-        # TODO: try to get this working. The rigid check does not "see" the old instance's amendments.
-        '''
-        self.intervention.old_instance.in_amendment = True
-        self.amendment_new = InterventionAmendmentFactory(
-            intervention=self.intervention,
-            signed_date=datetime.date(2001, 1, 1),
-            signed_amendment="random.pdf",
-        )
-
-        for status in self.rigid_intervention_statuses:
-            self.intervention.status = status
-            self.intervention.save()
-            self.assertFalse(amendments_valid(self.intervention))
-
-        for status in self.amendable_intervention_statuses:
-            self.intervention.status = status
-            self.intervention.save()
-            self.assertTrue(amendments_valid(self.intervention))
-        '''
-
-    def test_change_invalid(self):
-        """If not active/signed and amendment changes then invalid"""
-        # TODO: try to fix "check_rigid_related"(does not see changes)
-
-        '''
-        for status in self.rigid_intervention_statuses:
-            self.amendment.signed_date = datetime.date.today()
-            self.amendment.save()
-            self.assertFalse(amendments_valid(self.intervention))
-
-        for status in self.amendable_intervention_statuses:
-            self.amendment.signed_date = datetime.date.today()
-            self.amendment.save()
-            self.assertTrue(amendments_valid(self.intervention))
-        '''
-
     def test_change_active_valid(self):
         """If active and amendment changes then valid"""
         self.amendment.signed_date = datetime.date.today()
