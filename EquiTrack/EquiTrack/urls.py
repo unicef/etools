@@ -82,6 +82,10 @@ urlpatterns = [
         include('snapshot.urls', namespace='snapshot_api')
     ),
     url(r'^api/v2/environment/', include('environment.urls_v2', namespace='environment')),
+    url(
+        r'^api/v2/attachments/',
+        include('attachments.urls', namespace='attachments')
+    ),
 
 
     # ***************  API version 3  ******************

@@ -3,10 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import base64
 import os
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils.translation import ugettext as _
 
-from attachments.serializers import Base64AttachmentSerializer
-from attachments.tests.factories import FileTypeFactory
+from attachments.models import Attachment
+from attachments.serializers import (
+    AttachmentFileUploadSerializer,
+    Base64AttachmentSerializer,
+)
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 
 
@@ -38,3 +43,33 @@ class TestAttachmentsModels(FastTenantTestCase):
                 os.path.splitext(self.file_name)[0]
             )
         )
+
+
+class TestAttachmentFileUploadSerializer(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.code = "test_code"
+        cls.file_type = FileTypeFactory(code=cls.code)
+
+    def setUp(self):
+        self.attachment = AttachmentFactory(
+            file_type=self.file_type,
+            code=self.code,
+            content_object=self.file_type
+        )
+        self.file_data = SimpleUploadedFile(
+            'hello_world.txt',
+            u'hello world!'.encode('utf-8')
+        )
+
+    def test_upload(self):
+        self.assertFalse(self.attachment.file)
+        serializer = AttachmentFileUploadSerializer(
+            instance=self.attachment,
+            data={"file": self.file_data}
+        )
+        self.assertTrue(serializer.is_valid())
+        instance = serializer.save()
+        self.assertTrue(instance.file)
+        attachment_update = Attachment.objects.get(pk=self.attachment.pk)
+        self.assertTrue(attachment_update.file)

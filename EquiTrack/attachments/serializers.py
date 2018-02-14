@@ -65,3 +65,9 @@ class AttachmentSerializer(BaseAttachmentsSerializer):
 
     def get_url(self, obj):
         return urllib_parse.urljoin(site_url(), obj.url)
+
+
+class AttachmentFileUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attachment
+        fields = ["file", ]
