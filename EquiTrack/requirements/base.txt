@@ -59,6 +59,8 @@ Faker==0.7.4 # A temporary fix for factory-boy library until there is a new rele
 freezegun==0.3.8
 flake8==3.3.0
 mock==2.0.0
+responses==0.8.1
+
 
 # Git python packages
 git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2

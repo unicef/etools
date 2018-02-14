@@ -12,6 +12,7 @@ from vision.adapters.funding import FundCommitmentSynchronizer, FundReservations
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.programme import RAMSynchronizer, ProgrammeSynchronizer
 from vision.tasks import sync_handler
+from azure_graph_api.tasks import azure_sync_users
 
 
 class ProfileInline(admin.StackedInline):
@@ -25,7 +26,9 @@ class ProfileInline(admin.StackedInline):
         'office',
         'section',
         'job_title',
+        'post_title',
         'phone_number',
+        'staff_id',
     ]
     filter_horizontal = (
         'countries_available',
@@ -160,6 +163,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
 class UserAdminPlus(UserAdmin):
 
+    change_form_template = 'admin/users/user/change_form.html'
     inlines = [ProfileInline]
 
     list_display = [
@@ -170,6 +174,24 @@ class UserAdminPlus(UserAdmin):
         'is_staff',
         'is_active',
     ]
+
+    def get_urls(self):
+        urls = super(UserAdminPlus, self).get_urls()
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        custom_urls = [
+            url(r'^(?P<pk>\d+)/sync_user/$', wrap(self.sync_user), name='users_sync_user'),
+        ]
+        return custom_urls + urls
+
+    def sync_user(self, request, pk):
+        user = get_user_model().objects.get(pk=pk)
+        azure_sync_users.delay(user.username)
+        return HttpResponseRedirect(reverse('admin:auth_user_change', args=[user.pk]))
 
     def office(self, obj):
         return obj.profile.office

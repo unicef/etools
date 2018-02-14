@@ -554,3 +554,10 @@ ISSUE_CHECKS = [
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
+
+AZURE_CLIENT_ID = os.getenv('AZURE_CLIENT_ID', 'invalid_azure_client_id')
+AZURE_CLIENT_SECRET = os.getenv('AZURE_CLIENT_SECRET', 'invalid_azure_client_secret')
+AZURE_TOKEN_URL = 'https://login.microsoftonline.com/unicef.org/oauth2/token'
+AZURE_GRAPH_API_BASE_URL = 'https://graph.microsoft.com'
+AZURE_GRAPH_API_VERSION = 'beta'
+AZURE_GRAPH_API_PAGE_SIZE = 250
