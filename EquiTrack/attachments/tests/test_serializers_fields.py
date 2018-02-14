@@ -1,19 +1,37 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.utils.translation import ugettext as _
+import base64
 
 from rest_framework import serializers
 from rest_framework.metadata import SimpleMetadata
 
+from attachments import serializers_fields as fields
 from attachments.metadata import ModelChoiceFieldMixin
 from attachments.models import FileType
-from attachments.serializers_fields import FileTypeModelChoiceField
 from attachments.tests.factories import FileTypeFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 
 
+class TestBase64FileField(FastTenantTestCase):
+    def setUp(self):
+        self.test_file_content = 'these are the file contents!'
+
+    def test_valid(self):
+        valid_base64_file = 'data:text/plain;base64,{}'.format(base64.b64encode(self.test_file_content))
+        self.assertIsNotNone(fields.Base64FileField().to_internal_value(valid_base64_file))
+
+    def test_invalid(self):
+        with self.assertRaises(serializers.ValidationError):
+            fields.Base64FileField().to_internal_value(42)
+
+    def test_corrupted(self):
+        corrupted_base64_file = 'data;base64,{}'.format(base64.b64encode(self.test_file_content))
+        with self.assertRaises(serializers.ValidationError):
+            fields.Base64FileField().to_internal_value(corrupted_base64_file)
+
+
 class TestSerializer(serializers.Serializer):
-    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='code1'))
+    file_type = fields.FileTypeModelChoiceField(queryset=FileType.objects.filter(code='code1'))
 
 
 class TestMetadata(ModelChoiceFieldMixin, SimpleMetadata):
@@ -34,7 +52,7 @@ class TestModelChoiceFileField(FastTenantTestCase):
         self.assertFalse(invalid_serializer.is_valid())
         self.assertIn('file_type', invalid_serializer.errors)
         self.assertIn(
-            _('Invalid option "{pk_value}" - option does not available.').format(pk_value=self.code2_obj.pk),
+            'Invalid option "{pk_value}" - option does not available.'.format(pk_value=self.code2_obj.pk),
             invalid_serializer.errors['file_type']
         )
 
