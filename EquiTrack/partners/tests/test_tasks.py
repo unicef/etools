@@ -106,10 +106,7 @@ class PartnersTestBaseClass(FastTenantTestCase):
         mock_country_objects_exclude_queryset.all = mock.Mock(return_value=self.tenant_countries)
 
     def setUp(self):
-        try:
-            self.admin_user = User.objects.get(username=settings.TASK_ADMIN_USER)
-        except User.DoesNotExist:
-            self.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
+        self.admin_user, _ = User.objects.get_or_create(username=settings.TASK_ADMIN_USER)
 
         # The global "country" should be excluded from processing. Create it to ensure it's ignored during this test.
         self.global_country = _build_country('Global')
