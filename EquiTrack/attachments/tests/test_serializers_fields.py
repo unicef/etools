@@ -2,13 +2,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import base64
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import serializers
 from rest_framework.metadata import SimpleMetadata
 
 from attachments import serializers_fields as fields
 from attachments.metadata import ModelChoiceFieldMixin
-from attachments.models import FileType
-from attachments.tests.factories import FileTypeFactory
+from attachments.models import Attachment, FileType
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
 from EquiTrack.tests.mixins import FastTenantTestCase
 
 
@@ -63,3 +64,50 @@ class TestModelChoiceFileField(FastTenantTestCase):
         )
         self.assertIn(self.code1_obj.pk, file_type_choices)
         self.assertNotIn(self.code2_obj.pk, file_type_choices)
+
+
+class TestAttachmentSingleFileField(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.code = "code1"
+        cls.file_type = FileTypeFactory(code=cls.code)
+        cls.file_data = SimpleUploadedFile(
+            'hello_world.txt',
+            u'hello world!'.encode('utf-8')
+        )
+
+    def test_no_attribute(self):
+        field = fields.AttachmentSingleFileField(source="wrong")
+        self.assertIsNone(field.get_attribute(self.file_type))
+
+    def test_no_attachment(self):
+        self.file_type.attachment = Attachment.objects.filter(code=self.code)
+        field = fields.AttachmentSingleFileField(source="attachment")
+        self.assertIsNone(field.get_attribute(self.file_type))
+
+    def test_attachment(self):
+        self.file_type.attachment = Attachment.objects.filter(code=self.code)
+        field = fields.AttachmentSingleFileField(source="attachment")
+        attachment = AttachmentFactory(
+            file_type=self.file_type,
+            content_object=self.file_type,
+            code=self.code,
+            file=self.file_data,
+        )
+        self.assertEqual(field.get_attribute(self.file_type), attachment.file)
+
+    def test_last_attachment(self):
+        self.file_type.attachment = Attachment.objects.filter(code=self.code)
+        field = fields.AttachmentSingleFileField(source="attachment")
+        AttachmentFactory(
+            file_type=self.file_type,
+            content_object=self.file_type,
+            code=self.code,
+        )
+        attachment = AttachmentFactory(
+            file_type=self.file_type,
+            content_object=self.file_type,
+            code=self.code,
+            file=self.file_data,
+        )
+        self.assertEqual(field.get_attribute(self.file_type), attachment.file)
