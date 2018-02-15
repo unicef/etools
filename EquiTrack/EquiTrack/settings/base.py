@@ -350,6 +350,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework_csv.renderers.CSVRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
+        'rest_framework.renderers.MultiPartRenderer',
     )
 }
 
@@ -466,6 +467,10 @@ SAML_CONFIG = {
     # certificate
     'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
     'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),  # public part
+    'encryption_keypairs': [{
+        'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),
+        'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),
+    }],
 
     # own metadata settings
     'contact_person': [

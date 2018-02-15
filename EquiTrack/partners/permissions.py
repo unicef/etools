@@ -132,7 +132,7 @@ class AgreementPermissions(PMPPermissions):
         }
 
 
-class PartneshipManagerPermission(permissions.BasePermission):
+class PartnershipManagerPermission(permissions.BasePermission):
     message = 'Accessing this item is not allowed.'
 
     def _has_access_permissions(self, user, object):
@@ -161,7 +161,7 @@ class PartneshipManagerPermission(permissions.BasePermission):
                 request.user.groups.filter(name='Partnership Manager').exists()
 
 
-class PartneshipManagerRepPermission(permissions.BasePermission):
+class PartnershipManagerRepPermission(permissions.BasePermission):
     message = 'Accessing this item is not allowed.'
 
     def _has_access_permissions(self, user, object):
