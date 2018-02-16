@@ -65,7 +65,7 @@ urlpatterns = (
         name='partner-hact'),
     url(r'^partners/engagements/$',
         view=PlannedEngagementAPIView.as_view(http_method_names=['get', ]),
-        name='partner-hact'),
+        name='partner-engagements'),
     url(r'^partners/(?P<pk>\d+)/$',
         view=PartnerOrganizationDetailAPIView.as_view(http_method_names=['get', 'patch']),
         name='partner-detail'),

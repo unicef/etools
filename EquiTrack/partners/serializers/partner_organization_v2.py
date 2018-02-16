@@ -48,7 +48,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
 
 class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
     """
-    A serilizer to be used for nested staff member handling. The 'partner' field
+    A serializer to be used for nested staff member handling. The 'partner' field
     is removed in this case to avoid validation errors for e.g. when creating
     the partner and the member at the same time.
     """

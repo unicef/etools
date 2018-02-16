@@ -66,6 +66,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         names_and_paths = (
             ('partner-list', '', {}),
             ('partner-hact', 'hact/', {}),
+            ('partner-engagements', 'engagements/', {}),
             ('partner-detail', '1/', {'pk': 1}),
             ('partner-delete', 'delete/1/', {'pk': 1}),
             ('partner-assessment-del', 'assessments/1/', {'pk': 1}),
