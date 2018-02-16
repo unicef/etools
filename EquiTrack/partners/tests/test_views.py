@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import base64
 import csv
 import datetime
 from decimal import Decimal
@@ -418,6 +419,11 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.cp_output = ResultFactory(result_type=self.output_res_type)
         self.result = ResultFactory()
 
+        file_content = 'these are the file contents!'
+        self.base64_file = 'data:text/plain;base64,{}'.format(
+            base64.b64encode(file_content)
+        )
+
     def test_api_partners_delete_asssessment_valid(self):
         response = self.forced_auth_req(
             'delete',
@@ -448,7 +454,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             'delete',
             reverse(
                 'partners_api:partner-assessment-del',
-                args=[404]
+                args=[4404]
             ),
             user=self.unicef_staff,
         )
@@ -732,6 +738,29 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             Activity.objects.filter(action=Activity.UPDATE).count(),
             1
         )
+
+    def test_api_partners_update_core_values_assessment(self):
+        self.assertFalse(
+            self.partner.core_values_assessment_attachment.exists()
+        )
+        data = {
+            "core_values_assessment_attachment": self.base64_file
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners_api:partner-detail', args=[self.partner.pk]),
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            self.partner.core_values_assessment_attachment.exists()
+        )
+        # attachment = self.partner.core_values_assessment_attachment.last()
+        # self.assertEqual(
+        #     response.data["core_values_assessment_upload_link"],
+        #     reverse("attachments:upload", args=[attachment.pk])
+        # )
 
 
 class TestPartnershipViews(APITenantTestCase):
