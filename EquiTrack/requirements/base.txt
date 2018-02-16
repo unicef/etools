@@ -43,11 +43,8 @@ azure-storage==0.20.2
 requests==2.11.1
 xlrd==1.0.0
 
-#xhtml2pdf==0.0.6  <--- Python 2 only
-# This is a work-in-progress:
-git+https://github.com/xhtml2pdf/xhtml2pdf@d2ca1d3b054a6e3faf89ce13116da5cacf5e1cf2#egg_info=xhtml2pdf
-# TODO: use a released version once Python 3 is supported that way.
-# TODO: or switch from xhtml2pdf to weasyprint, which seems to be the better-maintained replacement
+xhtml2pdf==0.2.1
+# TODO: Switch from xhtml2pdf to weasyprint, which seems to be the better-maintained replacement
 # http://weasyprint.readthedocs.io/en/latest/index.html
 
 html5lib==1.0b8 #must be added after xhtml2pdf
