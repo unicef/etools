@@ -7,8 +7,12 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from attachments.models import Attachment
-from attachments.serializers_fields import Base64FileField
+from attachments.models import Attachment, FileType
+from attachments.serializers_fields import (
+    AttachmentSingleFileField,
+    AttachmentUploadLinkField,
+    Base64FileField,
+)
 from utils.common.urlresolvers import site_url
 
 
@@ -71,3 +75,32 @@ class AttachmentFileUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
         fields = ["file", ]
+
+
+class AttachmentSerializerMixin(object):
+    def save(self, **kwargs):
+        super(AttachmentSerializerMixin, self).save(**kwargs)
+
+        # check if attachment field types exist
+        # if exists and field has value
+        # ensure attachment record exists for instance
+        # set upload link value
+        for field_name, field in self.fields.items():
+            if isinstance(field, AttachmentSingleFileField):
+                attachments = getattr(self.instance, field.source)
+                if not attachments.exists():
+                    file_type = FileType.objects.get(
+                        code=attachments.core_filters["code"]
+                    )
+                    Attachment.objects.create(
+                        file_type=file_type,
+                        file=None,
+                        code=attachments.core_filters["code"],
+                        content_object=self.instance
+                    )
+                upload_field_name = "{}_upload_link".format(field_name)
+                self.fields[upload_field_name] = AttachmentUploadLinkField(
+                    source=field.source
+                )
+
+        return self.instance
