@@ -6,6 +6,7 @@ import uuid
 from collections import OrderedDict
 
 from django.core.files.base import ContentFile
+from django.core.urlresolvers import reverse
 from django.utils import six
 from django.utils.translation import ugettext_lazy as _
 
@@ -51,10 +52,45 @@ class Base64FileField(serializers.FileField):
         return content_file
 
 
-class AttachmentSingleFileField(serializers.FileField):
-    def get_attribute(self, instance):
+class AttachmentSingleFileField(serializers.RelatedField):
+    def __init__(self, *args, **kwargs):
+        # force attachment field to be read only
+        # create/updates happen with separate api call request
+        # we return the create/update link as part of the response
+        kwargs["read_only"] = True
+        super(AttachmentSingleFileField, self).__init__(*args, **kwargs)
+
+    def get_attachment(self, instance):
         if hasattr(instance, self.source):
             attachment = getattr(instance, self.source)
             if attachment and attachment.last():
-                return attachment.last().file
+                return attachment.last()
+        return None
+
+    def get_attribute(self, instance):
+        attachment = self.get_attachment(instance)
+        return attachment.file if attachment is not None else None
+
+    def to_representation(self, value):
+        if not value:
+            return None
+
+        if not getattr(value, "url", None):
+            return None
+
+        url = value.url
+        request = self.context.get('request', None)
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
+
+
+class AttachmentUploadLinkField(AttachmentSingleFileField):
+    def to_representation(self, instance):
+        attachment = self.get_attachment(instance)
+        if attachment is not None:
+            return reverse(
+                "attachments:upload",
+                args=[attachment.last().pk]
+            )
         return None
