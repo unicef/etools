@@ -47,7 +47,7 @@ xhtml2pdf==0.2.1
 # TODO: Switch from xhtml2pdf to weasyprint, which seems to be the better-maintained replacement
 # http://weasyprint.readthedocs.io/en/latest/index.html
 
-html5lib==1.0b8 #must be added after xhtml2pdf
+html5lib==1.0b10 #must be added after xhtml2pdf
 reportlab==3.3.0
 flower==0.9.1
 
