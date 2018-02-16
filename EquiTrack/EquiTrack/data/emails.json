@@ -82,5 +82,19 @@
             "language": "",
             "default_template": null
         }
+    },
+    {
+        "model": "post_office.emailtemplate",
+        "fields": {
+            "name": "audit/staff_member/invite",
+            "description": "",
+            "created": "2018-02-16T13:15:45.507Z",
+            "last_updated": "2018-02-16T13:32:51.621Z",
+            "subject": "UNICEF Auditor Portal Access",
+            "content": "Dear {{ staff_member }},\r\n\r\nUNICEF has assingned a {{ engagement.engagement_type }} to you. Please click link to gain access to the UNICEF Auditor Portal.\r\n\r\n{{ login_link }}\r\n\r\neTools Team",
+            "html_content": "{% extends \"email-templates/base\" %}\r\n\r\n{% block title %}UNICEF Auditor Portal Access{% endblock %}\r\n\r\n{% block content %}\r\n\r\n<p>Dear {{ staff_member }},</p>\r\n\r\n<p>UNICEF has assingned a {{ engagement.engagement_type }} to you. Please click <a href=\"{{ login_link }}\">link</a> to gain access to the UNICEF Auditor Portal.</p>\r\n\r\n<p style=\"text-align:right\">eTools Team</p>\r\n{% endblock %}",
+            "language": "",
+            "default_template": null
+        }
     }
 ]

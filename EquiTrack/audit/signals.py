@@ -6,7 +6,7 @@ from django.dispatch import receiver
 
 from audit.models import Auditor, Engagement, EngagementActionPoint
 from audit.purchase_order.models import AuditorStaffMember
-from firms.utils import send_invite_email
+from audit.purchase_order.utils import send_invite_email
 from users.models import Country
 
 
@@ -15,15 +15,17 @@ def create_user_receiver(instance, created, **kwargs):
     if created:
         instance.user.groups.add(Auditor.as_group())
 
-        send_invite_email(instance)
-
 
 @receiver(m2m_changed, sender=Engagement.staff_members.through)
 def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwargs):
     if action == 'post_add':
         new_members = AuditorStaffMember.objects.filter(id__in=pk_set).select_related('user', 'user__profile')
         for member in new_members:
-            member.send_user_appointed_email(Engagement.objects.get_subclass(id=instance.id))
+            engagement = Engagement.objects.get_subclass(id=instance.id)
+            if member.engagement_set.count() == 1:
+                send_invite_email(member, engagement)
+
+            member.send_user_appointed_email(engagement)
 
         country = Country.objects.get(schema_name=connection.schema_name)
         for member in new_members:
