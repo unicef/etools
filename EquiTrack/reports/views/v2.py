@@ -25,6 +25,7 @@ from reports.serializers.exports import (
     AppliedIndicatorExportSerializer,
     LowerResultExportFlatSerializer,
     LowerResultExportSerializer,
+    AppliedIndicatorLocationExportSerializer
 )
 from reports.serializers.v2 import (
     AppliedIndicatorSerializer,
@@ -33,6 +34,7 @@ from reports.serializers.v2 import (
     MinimalOutputListSerializer,
     OutputListSerializer,
 )
+from reports.exports import AppliedIndicatorLocationCSVRenderer
 from reports.serializers.v1 import IndicatorSerializer
 from partners.filters import PartnerScopeFilter
 from partners.models import Intervention
@@ -242,3 +244,53 @@ class AppliedIndicatorListAPIView(ExportModelMixin, ListAPIView):
                 q = q.filter(expression)
 
         return q
+
+
+class AppliedIndicatorLoc(object):
+    def __init__(self, indicator, location, **kwargs):
+
+        def get_value(obj, filters):
+            filters = filters.split('__')
+            for filter in filters:
+                obj = getattr(obj, filter)
+            return obj
+
+        # for field in ('indicator', 'location'):
+        #     setattr(self, field, get_value(indicator, field))
+        setattr(self, 'indicator', indicator)
+        setattr(self, 'selected_location', location)
+
+
+class ExportAppliedIndicatorLocationListView(ListAPIView):
+    serializer_class = AppliedIndicatorLocationExportSerializer
+    renderer_classes = (
+        JSONRenderer,
+        AppliedIndicatorLocationCSVRenderer,
+        CSVFlatRenderer,
+    )
+
+    queryset = AppliedIndicator.objects.select_related("indicator",
+                                                       "section",
+                                                       "lower_result",
+                                                       "lower_result__result_link__intervention__agreement__partner",
+
+                                                       ).prefetch_related("locations",
+                                                                          "lower_result__result_link__cp_output",
+                                                                          "lower_result__result_link__ram_indicators")
+
+    def list(self, request, *args, **kwargs):
+        rows = {}
+        count = 1
+        for indicator in self.get_queryset():
+            for loc in indicator.locations.all():
+                rows[count] = AppliedIndicatorLoc(indicator=indicator, location=loc)
+                count += 1
+        serializer = AppliedIndicatorLocationExportSerializer(instance=rows.values(), many=True)
+        response = Response(serializer.data)
+
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") in ['csv']:
+                response['Content-Disposition'] = "attachment;filename=PD_Indicators_Location.csv"
+
+        return response
