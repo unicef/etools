@@ -4,7 +4,6 @@ import datetime
 import sys
 from unittest import skipIf, TestCase
 
-from django.core import mail
 from django.core.exceptions import ValidationError
 
 from audit.models import (
