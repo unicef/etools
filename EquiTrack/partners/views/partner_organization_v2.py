@@ -156,7 +156,8 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
 
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
-        'staff_members': PartnerStaffMemberCreateUpdateSerializer
+        'staff_members': PartnerStaffMemberCreateUpdateSerializer,
+        'planned_engagement': PlannedEngagementSerializer
     }
 
     def get_serializer_class(self, format=None):

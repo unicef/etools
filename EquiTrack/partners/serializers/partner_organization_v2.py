@@ -64,7 +64,7 @@ class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
 
 class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
     """
-    A serilizer to be used for nested staff member handling. The 'partner' field
+    A serializer to be used for nested staff member handling. The 'partner' field
     is removed in this case to avoid validation errors for e.g. when creating
     the partner and the member at the same time.
     """
@@ -184,10 +184,62 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
         )
 
 
+class PlannedEngagementSerializer(serializers.ModelSerializer):
+
+    partner = serializers.CharField(source='partner.name')
+    spot_check_mr = serializers.SerializerMethodField(read_only=True)
+
+    def get_spot_check_mr(self, obj):
+        spot_check_mr = {
+            'q1': 0,
+            'q2': 0,
+            'q3': 0,
+            'q4': 0,
+        }
+        if obj.spot_check_mr in spot_check_mr:
+            spot_check_mr[obj.spot_check_mr] += 1
+        return spot_check_mr
+
+    class Meta:
+        model = PlannedEngagement
+        fields = (
+            "id",
+            "partner",
+            "spot_check_mr",
+            "spot_check_follow_up_q1",
+            "spot_check_follow_up_q2",
+            "spot_check_follow_up_q3",
+            "spot_check_follow_up_q4",
+            "scheduled_audit",
+            "special_audit",
+        )
+
+
+class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
+    """
+    A serializer to be used for nested planned engagement handling. The 'partner' field
+    is removed in this case to avoid validation errors for e.g. when creating
+    the partner and the member at the same time.
+    """
+    class Meta:
+        model = PlannedEngagement
+        fields = (
+            "id",
+            "spot_check_mr",
+            "spot_check_follow_up_q1",
+            "spot_check_follow_up_q2",
+            "spot_check_follow_up_q3",
+            "spot_check_follow_up_q4",
+            "scheduled_audit",
+            "special_audit"
+        )
+
+
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
+    planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
@@ -212,6 +264,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     hidden = serializers.BooleanField(read_only=True)
@@ -262,35 +315,4 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_min_requirements",
             "flags",
             "outstanding_findings"
-        )
-
-
-class PlannedEngagementSerializer(serializers.ModelSerializer):
-
-    partner = serializers.CharField(source='partner.name')
-    spot_check_mr = serializers.SerializerMethodField(read_only=True)
-
-    def get_spot_check_mr(self, obj):
-        spot_check_mr = {
-            'q1': 0,
-            'q2': 0,
-            'q3': 0,
-            'q4': 0,
-        }
-        if obj.spot_check_mr in spot_check_mr:
-            spot_check_mr[obj.spot_check_mr] += 1
-        return spot_check_mr
-
-    class Meta:
-        model = PlannedEngagement
-        fields = (
-            "id",
-            "partner",
-            "spot_check_mr",
-            "spot_check_follow_up_q1",
-            "spot_check_follow_up_q2",
-            "spot_check_follow_up_q3",
-            "spot_check_follow_up_q4",
-            "scheduled_audit",
-            "special_audit",
         )
