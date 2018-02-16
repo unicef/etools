@@ -48,8 +48,6 @@ class AuditorStaffMemberTestCase(FastTenantTestCase):
 
         self.assertIn(Auditor.name, staff_member.user.groups.values_list('name', flat=True))
 
-        self.assertEqual(len(mail.outbox), 1)
-
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
 class TestStrUnicode(TestCase):
