@@ -366,12 +366,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_planned_visits(self, obj):
         return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
 
-    def get_spot_checks(self, obj):
-        return ', '.join(['{} ({})'.format(pv.spot_checks, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_audit(self, obj):
-        return ', '.join(['{} ({})'.format(pv.audit, pv.year) for pv in obj.planned_visits.all()])
-
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
