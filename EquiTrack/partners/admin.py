@@ -401,6 +401,14 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'hide_partners',
         'show_partners'
     )
+    readonly_fields = (
+        u'hact_values',
+        u'total_ct_cp',
+        u'total_ct_cy',
+        u'net_ct_cy',
+        u'reported_cy',
+        u'total_ct_ytd',
+    )
 
     def hide_partners(self, request, queryset):
 
@@ -446,6 +454,9 @@ class PlannedEngagementAdmin(admin.ModelAdmin):
         u'scheduled_audit',
         u'special_audit',
     )
+    readonly_fields = [
+        u'partner',
+    ]
 
 
 class AgreementAmendmentAdmin(admin.ModelAdmin):
