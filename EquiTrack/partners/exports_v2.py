@@ -36,6 +36,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
 
     header = [
         'name',
+        'vendor_number',
         'partner_type',
         'shared_partner',
         'shared_with',
@@ -74,6 +75,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
 
     labels = {
         'name': 'Implementing Partner',
+        'vendor_number': 'Vendor Number',
         'partner_type': 'Partner Type',
         'shared_partner': 'Shared',
         'shared_with': 'Shared IP',
