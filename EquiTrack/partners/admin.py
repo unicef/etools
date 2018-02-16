@@ -447,6 +447,7 @@ class PlannedEngagementAdmin(admin.ModelAdmin):
         u'special_audit',
     )
 
+
 class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = u'Amendment'
     model = AgreementAmendment

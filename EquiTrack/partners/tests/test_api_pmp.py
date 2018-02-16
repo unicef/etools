@@ -15,7 +15,8 @@ from EquiTrack.factories import (
     GatewayTypeFactory,
     PartnerFactory,
     UserFactory,
-    )
+)
+
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -24,7 +25,7 @@ from partners.models import (
     InterventionAmendment,
     PartnerOrganization,
     PartnerType,
-    )
+)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 
 
