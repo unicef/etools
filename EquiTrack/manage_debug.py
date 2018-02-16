@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     try:
         sys.path.append("/code/pycharm-debug.egg")
-    except:
+    except Exception:
         sys.stderr.write("Error: " +
                          "You must add pycharm-debug.egg to your main EquiTrack folder ")
         sys.exit(1)

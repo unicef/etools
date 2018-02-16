@@ -17,18 +17,20 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
+          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum ".circleci/config.yml" }}
       - run:
+          name: create main virtualenv, install tox, generate test envs
           command: |
-            virtualenv env1
+            virtualenv -p $(type -p python3) env1
             . env1/bin/activate
-            pip install -r requirements.txt
-            # for tests to run
-            pip install django-extensions
+            pip --quiet install tox
+            cd EquiTrack && tox --notest
       - save_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}
+          key: deps1-{{ .Branch }}-{{ checksum "EquiTrack/requirements/base.txt" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
+            - "EquiTrack/.tox"
+            - /root/.cache/pip
       - run:
           name: Postgres Extensions
           command: |
@@ -40,7 +42,7 @@ jobs:
             . env1/bin/activate
             cd EquiTrack
             mkdir media
-            bash runtests.sh;
+            tox
       - store_artifacts:
           path: test-reports/
           destination: tr1
@@ -109,7 +111,7 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH}
             HOSTIP=`/sbin/ip route|awk '/default/ { print $3 }'`
-            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG bash runtests.sh
+            docker run --network container:docker-postgres -it -e "DATABASE_URL=postgis://postgres:postgres@localhost:5432/circle_test" -e "DISABLE_JWT_LOGIN=1" -e SECRET_KEY unicef/etools:$TAG bash tox
       - run:
           name: Pushing to Docker Hub
           command: |

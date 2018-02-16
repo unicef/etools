@@ -17,7 +17,7 @@ class NestedComplexRouter(routers.NestedSimpleRouter):
         try:
             parent_registry = parent_registry[0]
             parent_prefix, parent_viewset, parent_basename = parent_registry
-        except:
+        except Exception:  # FIXME: make this more specific
             raise RuntimeError('parent registered resource not found')
 
         viewset.parent = parent_viewset

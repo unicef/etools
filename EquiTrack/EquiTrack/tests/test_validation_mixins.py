@@ -17,9 +17,6 @@ class TestExceptions(TestCase):
         e = BasicValidationError()
         self.assertEqual(six.text_type(e), '')
 
-        e = BasicValidationError('hello world')
-        self.assertEqual(six.binary_type(e), b'hello world')
-
         # The param goes in as unicode, comes out as str.
         e = BasicValidationError('hello world')
         self.assertEqual(six.text_type(e), 'hello world')
@@ -41,7 +38,7 @@ class TestExceptions(TestCase):
         self.assertEqual(six.text_type(e), 'hello world')
 
         # Test mix of str and unicode in the params
-        e = _BaseStateError(['hello world', 'goodbye world'])
+        e = _BaseStateError(['hello world', b'goodbye world'])
         self.assertEqual(six.text_type(e), 'hello world\ngoodbye world')
 
         # Test mix of str and non-ASCII unicode in the params
