@@ -30,6 +30,9 @@ class Command(BaseCommand):
             ('TOTAL for current CP cycle', partner.total_ct_cp),
             ('PLANNED for current year', partner.hact_values.get("planned_cash_transfer")),
             ('Current Year (1 Oct - 30 Sep)', partner.total_ct_cy),
+            ('Net Cash Transferred per Current Year', partner.net_ct_cy),
+            ('Liquidations 1 Oct - 30 Sep', partner.reported_cy),
+            ('Cash Transfers Jan - Dec', partner.total_ct_ytd),
             ('Micro Assessment', partner.hact_values.get("micro_assessment_needed")),
             ('Risk Rating', partner.rating),
             ('Programmatic Visits Planned', partner.hact_values.get("planned_visits")),
@@ -40,6 +43,14 @@ class Command(BaseCommand):
             ('Audits M.R', partner.hact_values.get("audits_mr")),
             ('Audits Done', partner.hact_values.get("audits_done")),
             ('Flag for Follow up', partner.hact_values.get("follow_up_flags")),
+
+            ('Planned Spot Checks M.R', partner.planned_engagement.spot_check_mr),
+            ('Planned Spot Check Follow Up Q1', partner.planned_engagement.spot_check_follow_up_q1),
+            ('Planned Spot Check Follow Up Q2', partner.planned_engagement.spot_check_follow_up_q2),
+            ('Planned Spot Check Follow Up Q3', partner.planned_engagement.spot_check_follow_up_q3),
+            ('Planned Spot Check Follow Up Q4', partner.planned_engagement.spot_check_follow_up_q4),
+            ('Required Scheduled Audit', partner.planned_engagement.scheduled_audit),
+            ('Required Special Audit', partner.planned_engagement.special_audit),
         ]
         hact_history.partner_values = json.dumps(partner_values, cls=HactEncoder)
         hact_history.save()
@@ -63,3 +74,7 @@ class Command(BaseCommand):
                     self.freeze_data(hact_history)
                 partner.hact_values = hact_default()
                 partner.save()
+
+                plan = partner.planned_engagement
+                if plan:
+                    plan.reset()

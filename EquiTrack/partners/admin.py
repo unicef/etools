@@ -30,7 +30,7 @@ from partners.models import (
     InterventionResultLink,
     InterventionBudget,
     InterventionAttachment,
-
+    PlannedEngagement
 )
 from partners.mixins import HiddenPartnerMixin
 from partners.forms import (
@@ -103,9 +103,8 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     fields = (
         'intervention',
         'year',
+        'quarter',
         'programmatic',
-        'spot_checks',
-        'audit'
     )
     search_fields = (
         'intervention__number',
@@ -113,9 +112,8 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     list_display = (
         'intervention',
         'year',
+        'quarter',
         'programmatic',
-        'spot_checks',
-        'audit'
     )
 
 
@@ -426,6 +424,29 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         return request.user.is_superuser
 
 
+class PlannedEngagementAdmin(admin.ModelAdmin):
+    model = PlannedEngagement
+    fields = (
+        u'partner',
+        u'spot_check_mr',
+        u'spot_check_follow_up_q1',
+        u'spot_check_follow_up_q2',
+        u'spot_check_follow_up_q3',
+        u'spot_check_follow_up_q4',
+        u'scheduled_audit',
+        u'special_audit',
+    )
+    list_display = (
+        u'partner',
+        u'spot_check_mr',
+        u'spot_check_follow_up_q1',
+        u'spot_check_follow_up_q2',
+        u'spot_check_follow_up_q3',
+        u'spot_check_follow_up_q4',
+        u'scheduled_audit',
+        u'special_audit',
+    )
+
 class AgreementAmendmentAdmin(admin.ModelAdmin):
     verbose_name = u'Amendment'
     model = AgreementAmendment
@@ -548,7 +569,7 @@ class FileTypeAdmin(admin.ModelAdmin):
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
-
+admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(AgreementAmendment, AgreementAmendmentAdmin)

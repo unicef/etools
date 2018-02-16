@@ -234,6 +234,7 @@ class Engagement(TimeStampedModel, models.Model):
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember, verbose_name=_('Authorized Officers'), blank=True, related_name="engagement_authorizations"
     )
+    basis_for_risk_rating = models.BooleanField(verbose_name=_('Basic for Risk Rating'), default=False)
 
     objects = InheritanceManager()
 

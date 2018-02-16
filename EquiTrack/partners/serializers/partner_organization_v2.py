@@ -15,6 +15,7 @@ from partners.models import (
     Intervention,
     PartnerOrganization,
     PartnerStaffMember,
+    PlannedEngagement
 )
 
 
@@ -146,6 +147,7 @@ class AssessmentDetailSerializer(serializers.ModelSerializer):
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
+    rating = serializers.CharField(source='get_rating_display')
 
     class Meta:
         model = PartnerOrganization
@@ -165,6 +167,9 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "phone_number",
             "total_ct_cp",
             "total_ct_cy",
+            "net_ct_cy",
+            "reported_cy",
+            "total_ct_ytd",
             "hidden"
         )
 
@@ -230,6 +235,7 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
 
     hact_values = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField()
+    rating = serializers.CharField(source='get_rating_display')
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -256,4 +262,35 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_min_requirements",
             "flags",
             "outstanding_findings"
+        )
+
+
+class PlannedEngagementSerializer(serializers.ModelSerializer):
+
+    partner = serializers.CharField(source='partner.name')
+    spot_check_mr = serializers.SerializerMethodField(read_only=True)
+
+    def get_spot_check_mr(self, obj):
+        spot_check_mr = {
+            'q1': 0,
+            'q2': 0,
+            'q3': 0,
+            'q4': 0,
+        }
+        if obj.spot_check_mr in spot_check_mr:
+            spot_check_mr[obj.spot_check_mr] += 1
+        return spot_check_mr
+
+    class Meta:
+        model = PlannedEngagement
+        fields = (
+            "id",
+            "partner",
+            "spot_check_mr",
+            "spot_check_follow_up_q1",
+            "spot_check_follow_up_q2",
+            "spot_check_follow_up_q3",
+            "spot_check_follow_up_q4",
+            "scheduled_audit",
+            "special_audit",
         )

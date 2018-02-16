@@ -12,7 +12,7 @@ from partners.views.partner_organization_v2 import (
     PartnerOrganizationHactAPIView,
     PartnerOrganizationListAPIView,
     PartnerStaffMemberListAPIVIew,
-)
+    PlannedEngagementAPIView)
 from partners.views.agreements_v2 import (
     AgreementAmendmentListAPIView,
     AgreementListAPIView,
@@ -62,6 +62,9 @@ urlpatterns = (
         name='partner-list'),
     url(r'^partners/hact/$',
         view=PartnerOrganizationHactAPIView.as_view(http_method_names=['get', ]),
+        name='partner-hact'),
+    url(r'^partners/engagements/$',
+        view=PlannedEngagementAPIView.as_view(http_method_names=['get', ]),
         name='partner-hact'),
     url(r'^partners/(?P<pk>\d+)/$',
         view=PartnerOrganizationDetailAPIView.as_view(http_method_names=['get', 'patch']),

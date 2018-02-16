@@ -23,6 +23,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
+from EquiTrack.fields import QuarterField
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
@@ -230,12 +231,19 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     CT_MR_AUDIT_TRIGGER_LEVEL2 = decimal.Decimal('100000.00')
     CT_MR_AUDIT_TRIGGER_LEVEL3 = decimal.Decimal('500000.00')
 
-    # TODO 1.1.5 rating to be converted in choice after prp-refactoring
     RATING_HIGH = 'High'
     RATING_SIGNIFICANT = 'Significant'
     RATING_MODERATE = 'Moderate'
     RATING_LOW = 'Low'
     RATING_NON_ASSESSED = 'Non-Assessed'
+
+    RISK_RATINGS = (
+        (RATING_HIGH, 'High'),
+        (RATING_SIGNIFICANT, 'Significant'),
+        (RATING_MODERATE, 'Medium'),
+        (RATING_LOW, 'Low'),
+        (RATING_NON_ASSESSED, 'Non Required'),
+    )
 
     AGENCY_CHOICES = Choices(
         ('DPKO', 'DPKO'),
@@ -386,8 +394,11 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     rating = models.CharField(
         verbose_name=_('Risk Rating'),
         max_length=50,
+        choices=RISK_RATINGS,
         null=True,
+        blank=True
     )
+
     type_of_assessment = models.CharField(
         verbose_name=_("Assessment Type"),
         max_length=50,
@@ -583,18 +594,28 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         If partner type is Government, then default to 0 planned visits
         """
         year = datetime.date.today().year
-        # planned visits
         if partner.partner_type == 'Government':
-            pv = 0
+            pvq1 = pvq2 = pvq3 = pvq4 = 0
         else:
             pv = InterventionPlannedVisits.objects.filter(
                 intervention__agreement__partner=partner, year=year,
                 intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]
-            ).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
+            )
+            pvq1 = pv.filter(quarter=QuarterField.Q1).aggregate(
+                models.Sum('programmatic'))['programmatic__sum'] or 0
+            pvq2 = pv.filter(quarter=QuarterField.Q2).aggregate(
+                models.Sum('programmatic'))['programmatic__sum'] or 0
+            pvq3 = pv.filter(quarter=QuarterField.Q3).aggregate(
+                models.Sum('programmatic'))['programmatic__sum'] or 0
+            pvq4 = pv.filter(quarter=QuarterField.Q4).aggregate(
+                models.Sum('programmatic'))['programmatic__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        hact['programmatic_visits']['planned']['q1'] = pv
-        hact['programmatic_visits']['planned']['total'] = pv
+        hact['programmatic_visits']['planned']['q1'] = pvq1
+        hact['programmatic_visits']['planned']['q2'] = pvq2
+        hact['programmatic_visits']['planned']['q3'] = pvq3
+        hact['programmatic_visits']['planned']['q4'] = pvq4
+        hact['programmatic_visits']['planned']['total'] = pvq1 + pvq2 + pvq3 + pvq4
         partner.hact_values = hact
         partner.save()
 
@@ -792,6 +813,32 @@ class PartnerStaffMember(TimeStampedModel):
                 self.reactivate_signal()
 
         return super(PartnerStaffMember, self).save(**kwargs)
+
+
+@python_2_unicode_compatible
+class PlannedEngagement(TimeStampedModel):
+    """ class to handle partner's engagement for current year """
+    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement')
+    spot_check_mr = QuarterField()
+    spot_check_follow_up_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
+    spot_check_follow_up_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
+    spot_check_follow_up_q3 = models.IntegerField(verbose_name=_("Spot Check Q3"), default=0)
+    spot_check_follow_up_q4 = models.IntegerField(verbose_name=_("Spot Check Q4"), default=0)
+    scheduled_audit = models.BooleanField(verbose_name=_("Scheduled Audit"), default=False)
+    special_audit = models.BooleanField(verbose_name=_("Special Audit"), default=False)
+
+    def reset(self):
+        self.spot_check_mr = None
+        self.spot_check_follow_up_q1 = 0
+        self.spot_check_follow_up_q2 = 0
+        self.spot_check_follow_up_q3 = 0
+        self.spot_check_follow_up_q4 = 0
+        self.scheduled_audit = False
+        self.special_audit = False
+        self.save()
+
+    def __str__(self):
+        return 'Engagement {}'.format(self.partner.name)
 
 
 @python_2_unicode_compatible
@@ -1918,11 +1965,11 @@ class InterventionPlannedVisits(TimeStampedModel):
     """
     Represents planned visits for the intervention
     """
+
     intervention = models.ForeignKey(Intervention, related_name='planned_visits')
     year = models.IntegerField(default=get_current_year)
     programmatic = models.IntegerField(default=0)
-    spot_checks = models.IntegerField(default=0)
-    audit = models.IntegerField(default=0)
+    quarter = QuarterField()
 
     tracker = FieldTracker()
 

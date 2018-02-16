@@ -3,25 +3,11 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 
-from partners.models import PartnerOrganization
+from partners.models import PartnerOrganization, PlannedEngagement
 from vision.utils import comp_decimals
 from vision.vision_data_synchronizer import VisionDataSynchronizer, VISION_NO_DATA_MESSAGE
 
 logger = logging.getLogger(__name__)
-
-type_mapping = {
-    'BILATERAL / MULTILATERAL': u'Bilateral / Multilateral',
-    'CIVIL SOCIETY ORGANIZATION': u'Civil Society Organization',
-    'GOVERNMENT': u'Government',
-    'UN AGENCY': u'UN Agency',
-}
-
-cso_type_mapping = {
-    'International NGO': u'International',
-    'National NGO': u'National',
-    'Community based organization': u'Community Based Organization',
-    'Academic Institution': u'Academic Institution'
-}
 
 
 class PartnerSynchronizer(VisionDataSynchronizer):
@@ -109,7 +95,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                         datetime.strptime(api_obj[mapped_key], '%d-%b-%y')
 
                 if field == 'partner_type':
-                    apiobj_field = type_mapping[api_obj[mapped_key]]
+                    apiobj_field = self.get_partner_type(api_obj)
 
                 if field == 'deleted_flag':
                     apiobj_field = mapped_key in api_obj
@@ -129,10 +115,11 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org, new = PartnerOrganization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
 
                 # TODO: quick and dirty fix for cso_type mapping... this entire synchronizer needs updating
-                partner['CSO_TYPE'] = cso_type_mapping.get(partner['CSO_TYPE'], None) if 'CSO_TYPE' in partner else None
+
+                partner['CSO_TYPE'] = self.get_cso_type(partner)
 
                 try:
-                    type_mapping[partner['PARTNER_TYPE_DESC']]
+                    self.get_partner_type(partner)
                 except KeyError as exp:
                     logger.info('Partner {} skipped, because PartnerType ={}'.format(
                         partner['VENDOR_NAME'], exp
@@ -152,7 +139,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                                           partner_org, partner):
                     partner_org.name = partner['VENDOR_NAME']
                     partner_org.cso_type = partner['CSO_TYPE']
-                    partner_org.rating = partner.get('RISK_RATING', None)  # TODO add mapping to choices
+                    partner_org.rating = self.get_partner_rating(partner)
                     partner_org.type_of_assessment = partner.get('TYPE_OF_ASSESSMENT', None)
                     partner_org.address = partner.get('STREET', None)
                     partner_org.city = partner.get('CITY', None)
@@ -169,7 +156,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                         '%d-%b-%y') if 'CORE_VALUE_ASSESSMENT_DT' in partner else None
                     partner_org.last_assessment_date = datetime.strptime(
                         partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if 'DATE_OF_ASSESSMENT' in partner else None
-                    partner_org.partner_type = type_mapping[partner['PARTNER_TYPE_DESC']]
+                    partner_org.partner_type = self.get_partner_type(partner)
                     partner_org.deleted_flag = True if 'MARKED_FOR_DELETION' in partner else False
                     partner_org.blocked = True if 'POSTING_BLOCK' in partner else False
                     if not partner_org.hidden:
@@ -191,6 +178,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     logger.debug('Updating Partner', partner_org)
                     partner_org.save()
 
+                if new:
+                    PlannedEngagement.objects.get_or_create(partner=partner)
+
                 processed += 1
 
             except Exception as exp:
@@ -208,3 +198,30 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     def _save_records(self, records):
         processed = self.update_stuff(records)
         return processed
+
+    @staticmethod
+    def get_cso_type(partner):
+        cso_type_mapping = {
+            'International NGO': u'International',
+            'National NGO': u'National',
+            'Community based organization': u'Community Based Organization',
+            'Academic Institution': u'Academic Institution'
+        }
+        if 'CSO_TYPE' in partner and partner['CSO_TYPE'] in cso_type_mapping:
+            return cso_type_mapping[partner['CSO_TYPE']]
+
+    @staticmethod
+    def get_partner_type(partner):
+        type_mapping = {
+            'BILATERAL / MULTILATERAL': u'Bilateral / Multilateral',
+            'CIVIL SOCIETY ORGANIZATION': u'Civil Society Organization',
+            'GOVERNMENT': u'Government',
+            'UN AGENCY': u'UN Agency',
+        }
+        return type_mapping.get(partner['PARTNER_TYPE_DESC'], None)
+
+    @staticmethod
+    def get_partner_rating(partner):
+        allowed_risk_rating = [rr[0] for rr in PartnerOrganization.RISK_RATINGS]
+        if partner['PARTNER_TYPE_DESC'] in allowed_risk_rating:
+            return partner['PARTNER_TYPE_DESC']
