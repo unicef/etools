@@ -135,8 +135,6 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             'Total CSO Budget (USD)',
             'Total CSO Budget (Local)',
             'Planned Programmatic Visits',
-            # 'Planned Spot Checks',
-            # 'Planned Audits',
             'Document Submission Date by CSO',
             'Submission Date to PRC',
             'Review Date by PRC',
@@ -201,8 +199,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 53)
-        self.assertEqual(len(dataset[0]), 53)
+        self.assertEqual(len(dataset._get_headers()), 51)
+        self.assertEqual(len(dataset[0]), 51)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):

@@ -20,7 +20,7 @@ class TestPartnersAdminForm(FastTenantTestCase):
         self.data = {
             "name": "Name",
             "partner_type": PartnerType.UN_AGENCY,
-            "rating": "Strong",
+            "rating": "High",
             "shared_partner": "No",
             "type_of_assessment": "Normal",
         }
