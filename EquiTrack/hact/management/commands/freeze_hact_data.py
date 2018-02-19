@@ -25,7 +25,6 @@ class Command(BaseCommand):
         partner_values = [
             ('Implementing Partner', partner.name),
             ('Partner Type', partner.partner_type),
-            ('Shared', partner.shared_partner),
             ('Shared IP', partner.shared_with),
             ('TOTAL for current CP cycle', partner.total_ct_cp),
             ('PLANNED for current year', partner.hact_values.get("planned_cash_transfer")),

@@ -21,7 +21,6 @@ class TestPartnersAdminForm(FastTenantTestCase):
             "name": "Name",
             "partner_type": PartnerType.UN_AGENCY,
             "rating": "High",
-            "shared_partner": "No",
             "type_of_assessment": "Normal",
         }
 

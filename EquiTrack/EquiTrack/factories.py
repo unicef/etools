@@ -156,6 +156,13 @@ class PartnerFactory(factory.django.DjangoModelFactory):
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
+class PlannedEngagementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.PlannedEngagement
+
+    partner = factory.SubFactory('EquiTrack.factories.PartnerFactory')
+
+
 class CountryProgrammeFactory(factory.DjangoModelFactory):
     class Meta:
         model = report_models.CountryProgramme

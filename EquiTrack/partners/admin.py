@@ -434,6 +434,9 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
 
 class PlannedEngagementAdmin(admin.ModelAdmin):
     model = PlannedEngagement
+    search_fields = (
+        u'partner__name',
+    )
     fields = (
         u'partner',
         u'spot_check_mr',

@@ -161,7 +161,6 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "partner_type",
             "cso_type",
             "rating",
-            "shared_partner",
             "shared_with",
             "email",
             "phone_number",
@@ -189,7 +188,8 @@ class PlannedEngagementSerializer(serializers.ModelSerializer):
     partner = serializers.CharField(source='partner.name')
     spot_check_mr = serializers.SerializerMethodField(read_only=True)
 
-    def get_spot_check_mr(self, obj):
+    @staticmethod
+    def get_spot_check_mr(obj):
         spot_check_mr = {
             'q1': 0,
             'q2': 0,
@@ -304,7 +304,6 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "partner_type_slug",
             "cso_type",
             "rating",
-            "shared_partner",
             "shared_with",
             "total_ct_cp",
             "total_ct_cy",

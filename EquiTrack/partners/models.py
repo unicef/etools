@@ -315,19 +315,6 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         null=True
     )
 
-    # TODO remove this after migration to shared_with + add calculation to
-    shared_partner = models.CharField(
-        verbose_name=_("Shared Partner (old)"),
-        help_text='Partner shared with UNDP or UNFPA?',
-        choices=Choices(
-            'No',
-            'with UNDP',
-            'with UNFPA',
-            'with UNDP & UNFPA',
-        ),
-        default='No',
-        max_length=50
-    )
     street_address = models.CharField(
         verbose_name=_("Street Address"),
         max_length=500,
