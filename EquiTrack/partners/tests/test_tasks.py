@@ -14,7 +14,6 @@ import partners.tasks
 from EquiTrack.factories import (
     AgreementFactory, CountryFactory, FundsReservationHeaderFactory, InterventionFactory, UserFactory,)
 from EquiTrack.tests.mixins import FastTenantTestCase
-from notification.models import Notification
 from partners.models import Agreement, Intervention
 from users.models import User
 
