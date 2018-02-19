@@ -4,7 +4,9 @@ import datetime
 import sys
 from unittest import skipIf, TestCase
 
+from django.core import mail
 from django.core.exceptions import ValidationError
+from django.db import connection
 
 from audit.models import (
     Auditor,
@@ -32,6 +34,7 @@ from audit.tests.factories import (
 )
 from EquiTrack.tests.mixins import FastTenantTestCase
 from firms.factories import UserFactory
+from users.models import Country
 
 
 class AuditorStaffMemberTestCase(FastTenantTestCase):
@@ -46,6 +49,27 @@ class AuditorStaffMemberTestCase(FastTenantTestCase):
         staff_member = AuditorStaffMember.objects.create(auditor_firm=self.firm, user=user)
 
         self.assertIn(Auditor.name, staff_member.user.groups.values_list('name', flat=True))
+
+
+class EngagementStaffMemberTestCase(FastTenantTestCase):
+    def test_signal(self):
+        auditor_firm = AuditPartnerFactory()
+        staff_member = auditor_firm.staff_members.first()
+        staff_member.user.profile.countries_available = []
+        engagement = EngagementFactory(staff_members=[], agreement__auditor_firm=auditor_firm)
+
+        engagement.staff_members.add(staff_member)
+
+        self.assertSequenceEqual(staff_member.user.profile.countries_available.all(),
+                                 [Country.objects.get(schema_name=connection.schema_name)])
+        self.assertEqual(len(mail.outbox), 2)
+        mail.outbox = []
+
+        engagement = EngagementFactory(staff_members=[], agreement__auditor_firm=auditor_firm)
+
+        engagement.staff_members.add(staff_member)
+        self.assertEqual(len(mail.outbox), 1)
+        mail.outbox = []
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
