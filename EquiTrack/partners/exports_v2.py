@@ -1,7 +1,7 @@
 from rest_framework_csv import renderers as r
 
 
-class PartnerOrganizationCsvRenderer(r.CSVRenderer):
+class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     header = ['vendor_number', 'organization_full_name',
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
               'phone_number', 'email_address', 'risk_rating', 'date_last_assessment_against_core_values',
@@ -42,12 +42,12 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'type_of_assessment',
         # 'total_ct_cp',
         'total_ct_cy',
-        # 'cash_transfer',
-        # 'liquidation',
+        'net_ct_cy',
+        'reported_cy',
+        'total_ct_ytd',
         'rating',
         'expiring_assessment_flag',
         'approaching_threshold_flag',
-        # TODO change with q1 after prp-refactoring
         'hact_values.programmatic_visits.planned.q1',
         'hact_values.programmatic_visits.planned.q2',
         'hact_values.programmatic_visits.planned.q3',
@@ -80,8 +80,9 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'type_of_assessment': 'Assessment Type',
         # 'total_ct_cp': 'TOTAL for current CP cycle',
         'total_ct_cy': 'Cash Transfer 1 OCT - 30 SEP',
-        # 'cash_transfer': 'Cash Transfer 1 JAN - 31 DEC',
-        # 'liquidation': 'Liquidations 1 OCT - 30 SEP',
+        'net_ct_cy': 'Net Cash Transferred per Current Year',
+        'reported_cy': 'Liquidations 1 OCT - 30 SEP',
+        'total_ct_ytd': 'Cash Transfers Jan - Dec',
         'rating': 'Risk Rating',
         'expiring_assessment_flag': 'Expiring Threshold',
         'approaching_threshold_flag': 'Approach Threshold',
@@ -111,7 +112,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
     }
 
 
-class AgreementCvsRenderer(r.CSVRenderer):
+class AgreementCSVRenderer(r.CSVRenderer):
     header = [
         "agreement_number",
         "status",
@@ -145,9 +146,9 @@ class AgreementCvsRenderer(r.CSVRenderer):
     }
 
 
-class InterventionCvsRenderer(r.CSVRenderer):
+class InterventionCSVRenderer(r.CSVRenderer):
     header = [
-        "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number",
+        "status", "partner_name", "partner_type", "agreement_number", "country_programme", "document_type", "number",
         "title", "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
         "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
         "planned_budget_local", "unicef_budget", "cso_contribution",
@@ -161,7 +162,7 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "status": "Status",
         "partner_name": "Partner",
         "partner_type": "Partner Type",
-        "agreement_name": "Agreement",
+        "agreement_number": "Agreement",
         "country_programme": "Country Programme",
         "document_type": "Document Type",
         "number": "Reference Number",
@@ -198,7 +199,7 @@ class InterventionCvsRenderer(r.CSVRenderer):
     }
 
 
-class PartnershipDashCsvRenderer(r.CSVRenderer):
+class PartnershipDashCSVRenderer(r.CSVRenderer):
     header = [
         'partner_name', 'number', 'status', 'start', 'end', 'sectors', 'offices_names', 'total_budget',
         'cso_contribution', 'unicef_cash', 'unicef_supplies', 'disbursement', 'disbursement_percent', 'days_last_pv'

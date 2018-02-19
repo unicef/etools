@@ -35,6 +35,7 @@ class LocationSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
     location_type = serializers.CharField(source='gateway.name')
+    location_type_admin_level = serializers.IntegerField(source='gateway.admin_level')
     geo_point = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
 
@@ -51,8 +52,9 @@ class LocationSerializer(serializers.ModelSerializer):
             'name',
             'p_code',
             'location_type',
+            'location_type_admin_level',
             'parent',
-            'geo_point'
+            'geo_point',
         )
 
 
@@ -71,3 +73,27 @@ class LocationLightSerializer(serializers.ModelSerializer):
             'name',
             'p_code',
         )
+
+
+class LocationExportSerializer(serializers.ModelSerializer):
+    location_type = serializers.CharField(source='gateway.name')
+    geo_point = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Location
+        fields = "__all__"
+
+    def get_geo_point(self, obj):
+        return "{}".format(obj.geo_point)
+
+
+class LocationExportFlatSerializer(serializers.ModelSerializer):
+    location_type = serializers.CharField(source='gateway.name')
+    geom = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Location
+        fields = "__all__"
+
+    def get_geom(self, obj):
+        return obj.geom.point_on_surface if obj.geom else ""
