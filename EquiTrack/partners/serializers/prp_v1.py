@@ -167,7 +167,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     unicef_budget = serializers.DecimalField(source='total_unicef_budget', read_only=True,
                                              max_digits=20, decimal_places=2)
     unicef_budget_currency = serializers.CharField(source='default_budget_currency', read_only=True)
-    # todo: is this the right field?
+    # TODO: update this after FR Validation changes, pending new Insight API changes.
     funds_received = serializers.SerializerMethodField(read_only=True)
     funds_received_currency = serializers.CharField(source='fr_currency', read_only=True)
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
