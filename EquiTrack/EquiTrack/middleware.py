@@ -1,7 +1,13 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
@@ -12,10 +18,27 @@ from EquiTrack.utils import set_country
 
 logger = logging.getLogger(__name__)
 
+ANONYMOUS_ALLOWED_URL_FRAGMENTS = [
+    'api',
+    'login',
+    'saml',
+    'accounts',
+    'monitoring',
+]
+
+INACTIVE_WORKSPACE_URL = reverse('workspace-inactive')
+
 
 class EToolsTenantMiddleware(TenantMiddleware):
     """
-    Routes user to their correct schema based on country
+    Sets request.tenant based on the users's country (Tenant) and sets the DB connection to use that tenant.
+
+    Allows the following types of requests to pass without trying to set the tenant:
+    * requests without a user
+    * requests by anonymous users to a URL with a fragment matching ANONYMOUS_ALLOWED_URL_FRAGMENTS.
+    * requests by superusers without a country
+
+    Other requests are either redirected to login, or to the INACTIVE_WORKSPACE_URL.
     """
     def process_request(self, request):
         # Connection needs first to be at the public schema, as this is where
@@ -23,21 +46,15 @@ class EToolsTenantMiddleware(TenantMiddleware):
         connection.set_schema_to_public()
 
         if not request.user:
-            return
+            return None
 
-        if any(x in request.path for x in [
-                u'workspace_inactive']):
+        if INACTIVE_WORKSPACE_URL in request.path:
             return None
 
         if request.user.is_anonymous():
             # check if user is trying to reach an authentication endpoint
-            if any(x in request.path for x in [
-                u'api',
-                u'login',
-                u'saml',
-                u'accounts',
-                u'monitoring',
-            ]):
+            if any(fragment in request.path
+                   for fragment in ANONYMOUS_ALLOWED_URL_FRAGMENTS):
                 return None  # let them pass
             else:
                 return HttpResponseRedirect(settings.LOGIN_URL)
@@ -49,9 +66,9 @@ class EToolsTenantMiddleware(TenantMiddleware):
                 (not request.user.profile.country or
                  request.user.profile.country.business_area_code in settings.INACTIVE_BUSINESS_AREAS):
             return HttpResponseRedirect("/workspace_inactive/")
+
         try:
             set_country(request.user, request)
-
         except Exception:
             logger.info('No country found for user {}'.format(request.user))
             return SimpleTemplateResponse('no_country_found.html', {'user': request.user})

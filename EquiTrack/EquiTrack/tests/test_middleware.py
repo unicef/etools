@@ -25,12 +25,15 @@ class EToolsTenantMiddlewareTest(TestCase):
         self.inactive_workspace_url = reverse('workspace-inactive')
 
     def test_no_user_return_none(self):
-        "If no user, middleware returns None."
+        "If no user, allow them to pass."
         self.request.user = None
         self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
 
     def test_inactive_workspace_return_none(self):
         "If trying to access an inactive workspace, middleware returns None."
+        # use an AnonymousUser because we know this user should be redirected to login, if this test
+        # were to fail
+        self.request.user = AnonymousUser()
         self.request.path = self.inactive_workspace_url
         self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
 
