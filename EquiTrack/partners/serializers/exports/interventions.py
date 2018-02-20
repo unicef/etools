@@ -270,10 +270,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     planned_visits = serializers.SerializerMethodField(
         label=_("Planned Programmatic Visits"),
     )
-    spot_checks = serializers.SerializerMethodField(
-        label=_("Planned Spot Checks"),
-    )
-    audit = serializers.SerializerMethodField(label=_("Planned Audits"))
     url = serializers.SerializerMethodField(label=_("URL"))
     days_from_submission_to_signed = serializers.SerializerMethodField(
         label=_("Days from Submission to Signed"),
@@ -313,8 +309,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "partner_authorized_officer_signatory",
             "partner_contribution_local",
             "planned_visits",
-            "spot_checks",
-            "audit",
             "submission_date",
             "submission_date_prc",
             "review_date_prc",
@@ -365,12 +359,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_planned_visits(self, obj):
         return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_spot_checks(self, obj):
-        return ', '.join(['{} ({})'.format(pv.spot_checks, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_audit(self, obj):
-        return ', '.join(['{} ({})'.format(pv.audit, pv.year) for pv in obj.planned_visits.all()])
 
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
@@ -438,11 +426,10 @@ class InterventionExportFlatSerializer(InterventionExportSerializer):
         planned_visits = []
         for planned_visit in obj.planned_visits.all():
             planned_visits.append(
-                "Year: {}, Programmatic: {}, Spot Checks: {}, Audit: {}".format(
+                "Year: {} {}, Programmatic: {}".format(
                     planned_visit.year,
+                    planned_visit.quarter,
                     planned_visit.programmatic,
-                    planned_visit.spot_checks,
-                    planned_visit.audit,
                 )
             )
         return "\n".join(planned_visits)

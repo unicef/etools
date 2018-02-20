@@ -11,6 +11,8 @@ from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
+
+from EquiTrack.fields import QuarterField
 from snapshot import models as snapshot_models
 
 from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
@@ -154,6 +156,13 @@ class PartnerFactory(factory.django.DjangoModelFactory):
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
+class PlannedEngagementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.PlannedEngagement
+
+    partner = factory.SubFactory('EquiTrack.factories.PartnerFactory')
+
+
 class CountryProgrammeFactory(factory.DjangoModelFactory):
     class Meta:
         model = report_models.CountryProgramme
@@ -287,8 +296,7 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
     intervention = factory.SubFactory(InterventionFactory)
     year = datetime.today().year
     programmatic = 1
-    spot_checks = 2
-    audit = 3
+    quarter = QuarterField.Q2
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):

@@ -27,6 +27,7 @@ from partners.models import (
     PartnerStaffMember,
     PartnerOrganization,
     Assessment,
+    PlannedEngagement
 )
 from partners.permissions import ListCreateAPIMixedPermission
 from partners.serializers.exports.partner_organization import (
@@ -46,6 +47,7 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
     MinimalPartnerOrganizationListSerializer,
+    PlannedEngagementSerializer
 )
 from partners.views.helpers import set_tenant_or_fail
 from t2f.models import TravelActivity
@@ -156,7 +158,8 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
 
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
-        'staff_members': PartnerStaffMemberCreateUpdateSerializer
+        'staff_members': PartnerStaffMemberCreateUpdateSerializer,
+        'planned_engagement': PlannedEngagementSerializer
     }
 
     def get_serializer_class(self, format=None):
@@ -167,7 +170,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['assessments', 'staff_members']
+        related_fields = ['assessments', 'staff_members', 'planned_engagement']
 
         instance, old_instance, serializer = self.my_update(
             request,
@@ -189,7 +192,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     Returns a list of Partners.
     """
     permission_classes = (IsAdminUser,)
-    queryset = PartnerOrganization.objects.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0)).all()
+    queryset = PartnerOrganization.objects.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0))
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
 
@@ -204,6 +207,16 @@ class PartnerOrganizationHactAPIView(ListAPIView):
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = "attachment;filename=hact_dashboard.csv"
         return response
+
+
+class PlannedEngagementAPIView(ListAPIView):
+
+    """
+    Returns a list of Planned Engagements.
+    """
+    permission_classes = (IsAdminUser,)
+    queryset = PlannedEngagement.objects.all()
+    serializer_class = PlannedEngagementSerializer
 
 
 class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):
