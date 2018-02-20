@@ -4,6 +4,7 @@ import sys
 from unittest import skipIf, TestCase
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.urlresolvers import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 
@@ -581,6 +582,12 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
         models.PartnerOrganization.audits_completed(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
+
+    def test_partner_organization_get_admin_url(self):
+        "Test that get_admin_url produces the URL we expect."
+        admin_url = self.partner_organization.get_admin_url()
+        expected = reverse('admin:partners_partnerorganization_change', args=[self.partner_organization.id])
+        self.assertEqual(admin_url, expected)
 
 
 class TestAgreementModel(TenantTestCase):
