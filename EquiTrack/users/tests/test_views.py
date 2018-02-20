@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import json
 
 from django.core.urlresolvers import reverse
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
@@ -112,7 +113,7 @@ class TestUserViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/users/', user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data), get_user_model().objects.count())
 
     def test_users_api_list_values(self):
         response = self.forced_auth_req(
@@ -213,6 +214,14 @@ class TestUserViews(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
 
+    def test_workspace_api(self):
+        response = self.forced_auth_req('get', reverse('list-workspaces'), user=self.unicef_superuser)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json), 1)
+        result = response_json[0]
+        self.assertEqual(result['id'], self.tenant.id)
+        self.assertEqual(result['business_area_code'], self.tenant.business_area_code)
+
     @skip('How to create new schemas?')
     def test_business_area_code(self):
         workspace = CountryFactory(schema_name='test1', business_area_code='0001')
@@ -257,6 +266,7 @@ class TestUserViews(APITenantTestCase):
 
 class TestUserViewsV3(APITenantTestCase):
     def setUp(self):
+        self.unicef_user = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
         self.partnership_manager_user = UserFactory(is_staff=True)
@@ -264,10 +274,14 @@ class TestUserViewsV3(APITenantTestCase):
         self.partnership_manager_user.groups.add(self.group)
 
     def test_api_users_list(self):
-        response = self.forced_auth_req('get', '/api/v3/users/', user=self.unicef_staff)
-
+        response = self.forced_auth_req('get', reverse('users_v3:users-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
+
+    def test_api_users_list_user_forbidden(self):
+        response = self.forced_auth_req('get', reverse('users_v3:users-list'), user=self.unicef_user)
+        # non-staff users should not be able to see this endpoint
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_users_api_list_values(self):
         response = self.forced_auth_req(
@@ -338,8 +352,16 @@ class TestUserViewsV3(APITenantTestCase):
     def test_minimal_verbosity(self):
         response = self.forced_auth_req('get', '/api/v3/users/',
                                         data={'verbosity': 'minimal'}, user=self.unicef_superuser)
+
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 2)
+
+    def test_retrieve_user_countries(self):
+        response = self.forced_auth_req('get', reverse('users_v3:country-detail'), user=self.unicef_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+        self.assertEqual(self.unicef_user.profile.country.name, response.data[0]['name'])
 
 
 class TestCountryView(APITenantTestCase):
