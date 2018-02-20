@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from decimal import InvalidOperation
+from decimal import InvalidOperation, DivisionByZero
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -566,7 +566,7 @@ class Audit(Engagement):
     def percent_of_audited_expenditure(self):
         try:
             return 100 * self.financial_findings / self.audited_expenditure
-        except (TypeError, InvalidOperation):
+        except (TypeError, DivisionByZero, InvalidOperation):
             return 0
 
     @transition(

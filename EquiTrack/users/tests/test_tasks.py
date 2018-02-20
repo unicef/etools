@@ -10,10 +10,10 @@ from mock import patch, Mock
 from tenant_schemas.utils import schema_context
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 
 from EquiTrack.factories import (
     CountryFactory,
-    GroupFactory,
     SectionFactory,
     ProfileFactory,
     UserFactory,
@@ -25,15 +25,18 @@ from vision.vision_data_synchronizer import VisionException, VISION_NO_DATA_MESS
 
 
 class TestUserMapper(FastTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.group, _ = Group.objects.get_or_create(name="UNICEF User")
+
     def setUp(self):
         super(TestUserMapper, self).setUp()
-        self.group = GroupFactory(name='UNICEF User')
         self.mapper = tasks.UserMapper()
 
     def test_init(self):
         self.assertEqual(self.mapper.countries, {})
         self.assertEqual(self.mapper.sections, {})
-        self.assertEqual(self.mapper.groups, {"UNICEF User": self.group})
+        self.assertEqual(self.mapper.groups, {self.group.name: self.group})
         self.assertEqual(self.mapper.section_users, {})
 
     @skip("UAT country not found?!?!")
