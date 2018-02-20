@@ -172,3 +172,23 @@ class TestFRHeaderView(APITenantTestCase):
         status_code, result = self.run_request(data)
 
         self.assertEqual(status_code, status.HTTP_200_OK)
+
+    def test_frs_currencies_match_ok(self):
+        data = {'values': ','.join([self.fr_1.fr_number, self.fr_2.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(result['currencies_match'], True)
+        self.assertNotEqual(result['total_intervention_amt'], 0)
+
+    def test_frs_currencies_mismatch_ok(self):
+        self.fr_2.currency = 'LBP'
+        self.fr_2.save()
+        data = {'values': ','.join([self.fr_1.fr_number, self.fr_2.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(result['currencies_match'], False)
+        self.assertEqual(result['total_intervention_amt'], 0)
