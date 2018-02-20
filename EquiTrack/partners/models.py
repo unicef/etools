@@ -26,7 +26,7 @@ from dateutil.relativedelta import relativedelta
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
-from funds.models import Grant
+from funds.models import Grant, FundsReservationHeader
 from reports.models import (
     Indicator,
     Sector,
@@ -1581,11 +1581,14 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def fr_currency(self):
-        # todo: implicit assumption here that there aren't conflicting currencies
-        # eventually, this should be checked/reconciled if there are conflicts
-        # also, this doesn't do filtering in the db so that it can be used efficiently with `prefetch_related`
+        # this doesn't do filtering in the db so that it can be used efficiently with `prefetch_related`
         if self.frs.exists():
-            return self.frs.all()[0].currency
+            fr_currencies = self.frs.values_list("currency", flat=True)
+            # checking for duplicate currency
+            if all(fr_currencies[0] == fr_currency for fr_currency in fr_currencies):
+                return fr_currencies[0]
+            else:
+                return "Mismatched Currencies"
 
     @cached_property
     def total_unicef_cash(self):
