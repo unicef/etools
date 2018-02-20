@@ -33,6 +33,6 @@ class Migration(migrations.Migration):
                 'verbose_name': 'TPM Visit',
                 'verbose_name_plural': 'TPM Visits',
             },
-            bases=(EquiTrack.mixins.AdminURLMixin, models.Model),
+            bases=(models.Model, ),
         ),
     ]

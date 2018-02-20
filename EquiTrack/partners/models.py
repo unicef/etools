@@ -6,6 +6,7 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
+from django.core.urlresolvers import reverse
 from django.db import models, connection, transaction
 from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
@@ -24,7 +25,6 @@ from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
-from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
 from funds.models import Grant
 from reports.models import (
@@ -212,7 +212,7 @@ def hact_default():
 
 
 @python_2_unicode_compatible
-class PartnerOrganization(AdminURLMixin, TimeStampedModel):
+class PartnerOrganization(TimeStampedModel):
     """
     Represents a partner organization
 
@@ -707,6 +707,10 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             completed_audit = audits + s_audits
         partner.hact_values['audits']['completed'] = completed_audit
         partner.save()
+
+    def get_admin_url(self):
+        admin_url_name = 'admin:partners_partnerorganization_change'
+        return reverse(admin_url_name, args=(self.id,))
 
 
 class PartnerStaffMemberManager(models.Manager):

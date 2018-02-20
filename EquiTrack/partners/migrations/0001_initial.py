@@ -273,7 +273,7 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['name'],
             },
-            bases=(EquiTrack.mixins.AdminURLMixin, models.Model),
+            bases=(models.Model, ),
         ),
         migrations.CreateModel(
             name='PartnershipBudget',
@@ -340,7 +340,7 @@ class Migration(migrations.Migration):
                 'verbose_name': 'Intervention',
                 'verbose_name_plural': 'Interventions',
             },
-            bases=(EquiTrack.mixins.AdminURLMixin, models.Model),
+            bases=(models.Model, ),
         ),
         migrations.CreateModel(
             name='PCAFile',

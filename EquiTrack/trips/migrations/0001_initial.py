@@ -140,7 +140,7 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['-created_date'],
             },
-            bases=(EquiTrack.mixins.AdminURLMixin, models.Model),
+            bases=(models.Model, ),
         ),
         migrations.CreateModel(
             name='TripFunds',
