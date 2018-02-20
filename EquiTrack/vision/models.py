@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
@@ -18,8 +19,8 @@ class VisionSyncLog(models.Model):
     total_records = models.IntegerField(default=0)
     total_processed = models.IntegerField(default=0)
     successful = models.BooleanField(default=False)
-    details = models.CharField(max_length=2048, blank=True, null=True)
-    exception_message = models.TextField(blank=True, null=True)
+    details = models.CharField(max_length=2048, blank=True, default='')
+    exception_message = models.TextField(blank=True, default='')
     date_processed = models.DateTimeField(auto_now=True)
 
     def __str__(self):

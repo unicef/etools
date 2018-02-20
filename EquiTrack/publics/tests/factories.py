@@ -42,6 +42,7 @@ class CountryFactory(factory.DjangoModelFactory):
     valid_from = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
     valid_to = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
     business_area = factory.SubFactory(BusinessAreaFactory)
+    vision_code = fuzzy.FuzzyText(length=3)
 
     class Meta:
         model = Country

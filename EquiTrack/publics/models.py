@@ -67,7 +67,7 @@ class SoftDeleteMixin(models.Model):
 class TravelAgent(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=128)
-    city = models.CharField(max_length=128, null=True)
+    city = models.CharField(max_length=128, default='')
     country = models.ForeignKey('publics.Country')
     expense_type = models.OneToOneField('TravelExpenseType', related_name='travel_agent')
 
@@ -181,9 +181,9 @@ class Country(SoftDeleteMixin, models.Model):
     long_name = models.CharField(max_length=128)
     business_area = models.ForeignKey('BusinessArea', related_name='countries', null=True)
     vision_code = models.CharField(max_length=3, null=True, unique=True)
-    iso_2 = models.CharField(max_length=2, null=True)
-    iso_3 = models.CharField(max_length=3, null=True)
-    dsa_code = models.CharField(max_length=3, null=True)
+    iso_2 = models.CharField(max_length=2, default='')
+    iso_3 = models.CharField(max_length=3, default='')
+    dsa_code = models.CharField(max_length=3, default='')
     currency = models.ForeignKey('Currency', null=True)
     valid_from = models.DateField(null=True)
     valid_to = models.DateField(null=True)
@@ -316,7 +316,7 @@ class DSARateUpload(models.Model):
     status = models.CharField(
         max_length=64,
         blank=True,
-        null=True,
+        default='',
         choices=STATUS
     )
     upload_date = models.DateTimeField(auto_now_add=True)

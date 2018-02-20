@@ -130,7 +130,7 @@ class VisionDataSynchronizer(object):
         else:
             if isinstance(totals, dict):
                 log.total_processed = totals.get('processed', 0)
-                log.details = totals.get('details', None)
+                log.details = totals.get('details', '')
                 log.total_records = totals.get('total_records', log.total_records)
             else:
                 log.total_processed = totals

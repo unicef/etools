@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import logging
 import sys
 from decimal import Decimal
@@ -36,12 +38,12 @@ class Country(TenantMixin):
     name = models.CharField(max_length=100)
     country_short_code = models.CharField(
         max_length=10,
-        null=True, blank=True
+        default='', blank=True
     )
-    long_name = models.CharField(max_length=255, null=True, blank=True)
+    long_name = models.CharField(max_length=255, default='', blank=True)
     business_area_code = models.CharField(
         max_length=10,
-        null=True, blank=True
+        default='', blank=True
     )
     latitude = models.DecimalField(
         null=True, blank=True,
@@ -169,7 +171,7 @@ class Section(models.Model):
     """
 
     name = models.CharField(max_length=64, unique=True)
-    code = models.CharField(max_length=32, null=True, unique=True, blank=True)
+    code = models.CharField(max_length=32, unique=True, blank=True, null=True)
 
     objects = CountrySectionManager()
 
@@ -206,14 +208,16 @@ class UserProfile(models.Model):
     countries_available = models.ManyToManyField(Country, blank=True, related_name="accessible_by")
     section = models.ForeignKey(Section, null=True, blank=True)
     office = models.ForeignKey(Office, null=True, blank=True)
-    job_title = models.CharField(max_length=255, null=True, blank=True)
-    phone_number = models.CharField(max_length=20, null=True, blank=True)
+    job_title = models.CharField(max_length=255, default='', blank=True)
+    phone_number = models.CharField(max_length=20, default='', blank=True)
 
+    # staff_id needs to be NULLable so we can make it unique while still making it optional
     staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True)
-    org_unit_code = models.CharField(max_length=32, null=True, blank=True)
-    org_unit_name = models.CharField(max_length=64, null=True, blank=True)
-    post_number = models.CharField(max_length=32, null=True, blank=True)
-    post_title = models.CharField(max_length=64, null=True, blank=True)
+    org_unit_code = models.CharField(max_length=32, default='', blank=True)
+    org_unit_name = models.CharField(max_length=64, default='', blank=True)
+    post_number = models.CharField(max_length=32, default='', blank=True)
+    post_title = models.CharField(max_length=64, default='', blank=True)
+    # vendor_number needs to be NULLable so we can make it unique while still making it optional
     vendor_number = models.CharField(max_length=32, null=True, blank=True, unique=True)
     supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='supervisee', on_delete=models.SET_NULL,
                                    blank=True, null=True)
@@ -221,7 +225,7 @@ class UserProfile(models.Model):
                             null=True, blank=True)  # related oic_set
 
     # TODO: refactor when sections are properly set
-    section_code = models.CharField(max_length=32, null=True, blank=True)
+    section_code = models.CharField(max_length=32, default='', blank=True)
 
     # TODO: figure this out when we need to autmatically map to groups
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),

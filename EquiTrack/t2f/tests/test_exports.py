@@ -89,7 +89,9 @@ class TravelExports(APITenantTestCase):
                                  start_date=datetime.strptime('08-Nov-2017', '%d-%b-%Y'),
                                  end_date=datetime.strptime('14-Nov-2017', '%d-%b-%Y')
                                  )
+        supervisor = UserFactory()
         travel_2 = TravelFactory(reference_number='2016/1211',
+                                 supervisor=supervisor,
                                  traveler=user_alice_carter,
                                  office=office,
                                  sector=section_education,

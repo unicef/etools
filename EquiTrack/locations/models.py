@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import logging
 import random
 
@@ -71,7 +74,7 @@ class Location(MPTTModel):
         verbose_name=_("P Code"),
         max_length=32,
         blank=True,
-        null=True,
+        default='',
     )
 
     parent = TreeForeignKey(
@@ -139,13 +142,13 @@ class CartoDBTable(MPTTModel):
     domain = models.CharField(max_length=254)
     api_key = models.CharField(max_length=254)
     table_name = models.CharField(max_length=254)
-    display_name = models.CharField(max_length=254, null=True, blank=True)
+    display_name = models.CharField(max_length=254, default='', blank=True)
     location_type = models.ForeignKey(GatewayType)
     name_col = models.CharField(max_length=254, default='name')
     pcode_col = models.CharField(max_length=254, default='pcode')
-    parent_code_col = models.CharField(max_length=254, null=True, blank=True)
+    parent_code_col = models.CharField(max_length=254, blank=True, default='')
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
-    color = models.CharField(null=True, blank=True, default=get_random_color, max_length=7)
+    color = models.CharField(blank=True, default=get_random_color, max_length=7)
 
     def __str__(self):
         return self.table_name

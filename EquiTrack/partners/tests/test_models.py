@@ -305,6 +305,9 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         self.assertEqual(hact_min_req, data)
 
     def test_get_last_pca(self):
+        print("PCAs:")
+        for pca in self.partner_organization.get_pcas():
+            print(pca)
         pca = self.partner_organization.get_last_pca
         self.assertEqual(pca, self.pca_signed1)
 
@@ -954,7 +957,7 @@ class TestInterventionModel(EToolsTenantTestCase):
         )
         AppliedIndicatorFactory(
             lower_result=lower_result_2,
-            cluster_name=None,
+            cluster_name='',
         )
         AppliedIndicatorFactory(lower_result=lower_result_2)
         self.assertItemsEqual(intervention.intervention_clusters, [

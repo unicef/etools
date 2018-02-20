@@ -45,7 +45,7 @@ class Attachment(TimeStampedModel, models.Model):
     file_type = models.ForeignKey(FileType, verbose_name=_('Document Type'))
 
     file = models.FileField(upload_to=generate_file_path, blank=True, null=True, verbose_name=_('File Attachment'))
-    hyperlink = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Hyperlink'))
+    hyperlink = models.CharField(max_length=255, blank=True, default='', verbose_name=_('Hyperlink'))
 
     content_type = models.ForeignKey(ContentType)
     object_id = models.IntegerField()

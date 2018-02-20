@@ -1,5 +1,6 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 import decimal
 import json
@@ -283,7 +284,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         max_length=50,
         choices=CSO_TYPES,
         blank=True,
-        null=True,
+        default='',
     )
     name = models.CharField(
         verbose_name=_('Name'),
@@ -324,25 +325,25 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         verbose_name=_("Street Address"),
         max_length=500,
         blank=True,
-        null=True,
+        default='',
     )
     city = models.CharField(
         verbose_name=_("City"),
         max_length=64,
         blank=True,
-        null=True,
+        default='',
     )
     postal_code = models.CharField(
         verbose_name=_("Postal Code"),
         max_length=32,
         blank=True,
-        null=True,
+        default='',
     )
     country = models.CharField(
         verbose_name=_("Country"),
         max_length=64,
         blank=True,
-        null=True,
+        default='',
     )
 
     # TODO: remove this when migration to the new fields is done. check for references
@@ -350,25 +351,26 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     address = models.TextField(
         verbose_name=_("Address"),
         blank=True,
-        null=True
+        default=''
     )
     # END REMOVE
 
     email = models.CharField(
         verbose_name=_("Email Address"),
         max_length=255,
-        blank=True, null=True
+        blank=True,
+        default='',
     )
     phone_number = models.CharField(
         verbose_name=_("Phone Number"),
         max_length=64,
         blank=True,
-        null=True,
+        default='',
     )
     vendor_number = models.CharField(
         verbose_name=_("Vendor Number"),
         blank=True,
-        null=True,
+        null=True,  # nullable so it can be optional and not interfere with uniqueness
         unique=True,
         max_length=30
     )
@@ -381,17 +383,17 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         verbose_name=_("Alternate Name"),
         max_length=255,
         blank=True,
-        null=True
+        default=''
     )
     rating = models.CharField(
         verbose_name=_('Risk Rating'),
         max_length=50,
-        null=True,
+        default='',
     )
     type_of_assessment = models.CharField(
         verbose_name=_("Assessment Type"),
         max_length=50,
-        null=True,
+        default='',
     )
     last_assessment_date = models.DateField(
         verbose_name=_("Last Assessment Date"),
@@ -491,6 +493,15 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             PartnerType.UN_AGENCY: 'UN',
         }
         return slugs.get(self.partner_type, self.partner_type)
+
+    def get_pcas(self):
+        return self.agreements.filter(
+            agreement_type=Agreement.PCA
+        ).exclude(
+            signed_by_unicef_date__isnull=True,
+            signed_by_partner_date__isnull=True,
+            status__in=[Agreement.DRAFT, Agreement.TERMINATED]
+        ).order_by('signed_by_unicef_date')
 
     @cached_property
     def get_last_pca(self):
@@ -736,7 +747,7 @@ class PartnerStaffMember(TimeStampedModel):
     title = models.CharField(
         verbose_name=_("Title"),
         max_length=64,
-        null=True,
+        default='',
         blank=True,
     )
     first_name = models.CharField(verbose_name=_("First Name"), max_length=64)
@@ -751,7 +762,7 @@ class PartnerStaffMember(TimeStampedModel):
         verbose_name=_("Phone Number"),
         max_length=64,
         blank=True,
-        null=True,
+        default='',
     )
     active = models.BooleanField(
         verbose_name=_("Active"),
@@ -834,8 +845,9 @@ class Assessment(TimeStampedModel):
     names_of_other_agencies = models.CharField(
         verbose_name=_("Other Agencies"),
         max_length=255,
-        blank=True, null=True,
-        help_text='List the names of the other agencies they have worked with'
+        blank=True,
+        default=True,
+        help_text='List the names of the other agencies they have worked with',
     )
     expected_budget = models.IntegerField(
         verbose_name=_('Planned amount'),
@@ -843,7 +855,8 @@ class Assessment(TimeStampedModel):
     )
     notes = models.CharField(
         max_length=255,
-        blank=True, null=True,
+        blank=True,
+        default='',
         verbose_name=_('Special requests'),
         help_text='Note any special requests to be considered during the assessment'
     )
@@ -1053,7 +1066,9 @@ class Agreement(TimeStampedModel):
             self.agreement_type,
             self.partner.name,
             self.start.strftime('%d-%m-%Y') if self.start else '',
-            self.end.strftime('%d-%m-%Y') if self.end else ''
+            self.end.strftime('%d-%m-%Y') if self.end else '',
+            self.signed_by_partner_date,
+            self.signed_by_unicef_date
         )
 
     @classmethod
@@ -1378,7 +1393,7 @@ class Intervention(TimeStampedModel):
         verbose_name=_('Reference Number'),
         max_length=64,
         blank=True,
-        null=True,
+        default='',
         unique=True,
     )
     title = models.CharField(verbose_name=_("Document Title"), max_length=256)
@@ -1498,7 +1513,7 @@ class Intervention(TimeStampedModel):
     population_focus = models.CharField(
         verbose_name=_("Population Focus"),
         max_length=130,
-        null=True,
+        default='',
         blank=True,
     )
     in_amendment = models.BooleanField(
@@ -1867,7 +1882,7 @@ class InterventionAmendment(TimeStampedModel):
     other_description = models.CharField(
         verbose_name=_("Description"),
         max_length=512,
-        null=True,
+        default='',
         blank=True,
     )
 
@@ -2095,7 +2110,7 @@ class FundingCommitment(TimeFramedModel):
     wbs = models.CharField(max_length=50)
     fc_type = models.CharField(max_length=50)
     fc_ref = models.CharField(
-        max_length=50, blank=True, null=True, unique=True)
+        max_length=50, blank=True, unique=True, default='')
     fr_item_amount_usd = models.DecimalField(
         decimal_places=2, max_digits=12, blank=True, null=True)
     agreement_amount = models.DecimalField(

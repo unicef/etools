@@ -16,7 +16,7 @@ from EquiTrack.factories import (
     UserFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMixIn
-from partners.models import InterventionResultLink
+from partners.models import InterventionResultLink, PartnerOrganization
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.tests.test_utils import setup_intervention_test_data
 from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
@@ -60,6 +60,8 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
                 del expected_intervention[dynamic_key]
                 del actual_intervention[dynamic_key]
 
+            partner_org = PartnerOrganization.objects.get(id=actual_intervention['partner_org']['id'])
+            expected_intervention['partner_org']['unicef_vendor_number'] = partner_org.vendor_number
             del actual_intervention['partner_org']['id']
             del actual_intervention['agreement']
             del expected_intervention['partner_org']['id']

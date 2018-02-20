@@ -193,7 +193,7 @@ class TestUserMapper(EToolsTenantTestCase):
     def test_set_attribute_section_code(self):
         """If section_code attribute, then set to last 4 chars of value"""
         profile = ProfileFactory()
-        self.assertIsNone(profile.section_code)
+        self.assertIsNotNone(profile.section_code)
         res = self.mapper._set_attribute(profile, "section_code", "12345678")
         self.assertTrue(res)
         self.assertEqual(profile.section_code, "5678")

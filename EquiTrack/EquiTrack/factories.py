@@ -38,6 +38,7 @@ class SectionFactory(factory.django.DjangoModelFactory):
         model = Section
 
     name = factory.Sequence(lambda n: "section_%d" % n)
+    code = factory.Sequence(lambda n: "section_%d code" % n)
 
 
 class CountryFactory(factory.django.DjangoModelFactory):
@@ -152,6 +153,7 @@ class PartnerFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    vendor_number = factory.fuzzy.FuzzyText(length=10)
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):
@@ -313,6 +315,7 @@ class ResultFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
+    wbs = factory.fuzzy.FuzzyText(length=10)
 
 
 class DisaggregationFactory(factory.django.DjangoModelFactory):
@@ -358,6 +361,7 @@ class IndicatorFactory(factory.django.DjangoModelFactory):
         model = report_models.Indicator
 
     name = factory.Sequence(lambda n: 'Indicator {}'.format(n))
+    code = factory.fuzzy.FuzzyText(length=20)  # up to 50
 
 
 class DonorFactory(factory.DjangoModelFactory):

@@ -89,7 +89,6 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
         '''Verify the cso_types portion of the response'''
         PartnerFactory(cso_type=PartnerOrganization.CSO_TYPES['International'])
         # These should be filtered out of the endpoint response (https://github.com/unicef/etools/issues/510)
-        PartnerFactory(cso_type=None)
         PartnerFactory(cso_type='')
 
         response = self.forced_auth_req('get', self.url)

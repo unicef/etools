@@ -150,11 +150,11 @@ class Travel(models.Model):
     rejected_at = models.DateTimeField(null=True, blank=True)
     approved_at = models.DateTimeField(null=True, blank=True)
 
-    rejection_note = models.TextField(null=True, blank=True)
-    cancellation_note = models.TextField(null=True, blank=True)
-    certification_note = models.TextField(null=True, blank=True)
-    report_note = models.TextField(null=True, blank=True)
-    misc_expenses = models.TextField(null=True, blank=True)
+    rejection_note = models.TextField(default='', blank=True)
+    cancellation_note = models.TextField(default='', blank=True)
+    certification_note = models.TextField(default='', blank=True)
+    report_note = models.TextField(default='', blank=True)
+    misc_expenses = models.TextField(default='', blank=True)
 
     status = FSMField(default=PLANNED, choices=CHOICES, protected=True)
     traveler = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='travels')
@@ -164,8 +164,8 @@ class Travel(models.Model):
     sector = models.ForeignKey('reports.Sector', null=True, blank=True, related_name='+')
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
-    purpose = models.CharField(max_length=500, null=True, blank=True)
-    additional_note = models.TextField(null=True, blank=True)
+    purpose = models.CharField(max_length=500, default='', blank=True)
+    additional_note = models.TextField(default='', blank=True)
     international_travel = models.NullBooleanField(default=False, null=True, blank=True)
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, default=make_travel_reference_number, unique=True)
@@ -441,7 +441,8 @@ class Travel(models.Model):
 
 class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities')
-    travel_type = models.CharField(max_length=64, choices=TravelType.CHOICES, null=True, blank=True)
+    travel_type = models.CharField(
+        max_length=64, choices=TravelType.CHOICES, default=TravelType.PROGRAMME_MONITORING, blank=True)
     partner = models.ForeignKey('partners.PartnerOrganization', null=True, blank=True, related_name='+')
     # Partnership has to be filtered based on partner
     # TODO: assert self.partnership.agreement.partner == self.partner
@@ -465,7 +466,7 @@ class ItineraryItem(models.Model):
     arrival_date = models.DateTimeField()
     dsa_region = models.ForeignKey('publics.DSARegion', related_name='+', null=True, blank=True)
     overnight_travel = models.BooleanField(default=False)
-    mode_of_travel = models.CharField(max_length=5, choices=ModeOfTravel.CHOICES, null=True, blank=True)
+    mode_of_travel = models.CharField(max_length=5, choices=ModeOfTravel.CHOICES, default='', blank=True)
     airlines = models.ManyToManyField('publics.AirlineCompany', related_name='+')
 
     class Meta:
@@ -612,11 +613,11 @@ class ActionPoint(models.Model):
     description = models.CharField(max_length=254)
     due_date = models.DateTimeField()
     person_responsible = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
-    status = models.CharField(choices=STATUS, max_length=254, null=True, blank=True, verbose_name='Status')
+    status = models.CharField(choices=STATUS, max_length=254, default='', blank=True, verbose_name='Status')
     completed_at = models.DateTimeField(blank=True, null=True)
-    actions_taken = models.TextField(blank=True, null=True)
+    actions_taken = models.TextField(blank=True, default='')
     follow_up = models.BooleanField(default=False)
-    comments = models.TextField(blank=True, null=True)
+    comments = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
 
@@ -681,8 +682,8 @@ class Invoice(models.Model):
     currency = models.ForeignKey('publics.Currency', related_name='+')
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
-    messages = ArrayField(models.TextField(null=True, blank=True), default=[])
-    vision_fi_id = models.CharField(max_length=16, null=True, blank=True)
+    messages = ArrayField(models.TextField(default='', blank=True), default=[])
+    vision_fi_id = models.CharField(max_length=16, default='', blank=True)
 
     def save(self, **kwargs):
         if self.pk is None:

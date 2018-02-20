@@ -1,4 +1,6 @@
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from datetime import date
 
 from django.db import models, transaction
@@ -143,7 +145,7 @@ class Sector(TimeStampedModel):
     description = models.CharField(
         max_length=256,
         blank=True,
-        null=True
+        default='',
     )
     alternate_id = models.IntegerField(
         blank=True,
@@ -152,12 +154,12 @@ class Sector(TimeStampedModel):
     alternate_name = models.CharField(
         max_length=255,
         blank=True,
-        null=True
+        default='',
     )
     dashboard = models.BooleanField(
         default=False
     )
-    color = models.CharField(max_length=7, null=True, blank=True)
+    color = models.CharField(max_length=7, blank=True, default='')
 
     class Meta:
         ordering = ['name']
@@ -207,7 +209,7 @@ class Result(MPTTModel):
     code = models.CharField(
         verbose_name=_("Code"),
         max_length=50,
-        null=True,
+        default='',
         blank=True,
     )
     from_date = models.DateField(
@@ -237,49 +239,49 @@ class Result(MPTTModel):
     wbs = models.CharField(
         verbose_name=_("WBS"),
         max_length=50,
-        null=True,
+        default='',
         blank=True,
     )
     vision_id = models.CharField(
         verbose_name=_("VISION ID"),
         max_length=10,
-        null=True,
+        default='',
         blank=True,
     )
     gic_code = models.CharField(
         verbose_name=_("GIC Code"),
         max_length=8,
-        null=True,
+        default='',
         blank=True,
     )
     gic_name = models.CharField(
         verbose_name=_("GIC Name"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
     sic_code = models.CharField(
         verbose_name=_("SIC Code"),
         max_length=8,
-        null=True,
+        default='',
         blank=True,
     )
     sic_name = models.CharField(
         verbose_name=_("SIC Name"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
     activity_focus_code = models.CharField(
         verbose_name=_("Activity Focus Code"),
         max_length=8,
-        null=True,
+        default='',
         blank=True,
     )
     activity_focus_name = models.CharField(
         verbose_name=_("Activity Focus Code"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
 
@@ -455,7 +457,7 @@ class IndicatorBlueprint(TimeStampedModel):
     description = models.CharField(
         verbose_name=_("Description"),
         max_length=3072,
-        null=True,
+        default='',
         blank=True,
     )
     code = models.CharField(
@@ -468,7 +470,7 @@ class IndicatorBlueprint(TimeStampedModel):
     subdomain = models.CharField(
         verbose_name=_("Subdomain"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
     disaggregatable = models.BooleanField(
@@ -572,19 +574,19 @@ class AppliedIndicator(TimeStampedModel):
         verbose_name=_("Response plan name"),
         max_length=1024,
         blank=True,
-        null=True,
+        default='',
     )
     cluster_name = models.CharField(
         verbose_name=_("Cluster Name"),
         max_length=512,
         blank=True,
-        null=True,
+        default='',
     )
     cluster_indicator_title = models.CharField(
         verbose_name=_("Cluster Indicator Title"),
         max_length=1024,
         blank=True,
-        null=True,
+        default='',
     )
 
     # the result this indicator is contributing to.
@@ -599,7 +601,7 @@ class AppliedIndicator(TimeStampedModel):
     context_code = models.CharField(
         verbose_name=_("Code in current context"),
         max_length=50,
-        null=True,
+        default='',
         blank=True,
     )
     target = models.PositiveIntegerField(verbose_name=_("Target"), default=0)
@@ -610,13 +612,13 @@ class AppliedIndicator(TimeStampedModel):
     )
     assumptions = models.TextField(
         verbose_name=_("Assumptions"),
-        null=True,
+        default='',
         blank=True,
     )
     means_of_verification = models.CharField(
         verbose_name=_("Means of Verification"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
 
@@ -672,7 +674,7 @@ class Indicator(TimeStampedModel):
     code = models.CharField(
         verbose_name=_("Code"),
         max_length=50,
-        null=True,
+        default='',
         blank=True,
     )
     unit = models.ForeignKey(
@@ -705,7 +707,7 @@ class Indicator(TimeStampedModel):
     )
     assumptions = models.TextField(
         verbose_name=_("Assumptions"),
-        null=True,
+        default='',
         blank=True,
     )
 
@@ -713,13 +715,13 @@ class Indicator(TimeStampedModel):
     target = models.CharField(
         verbose_name=_("Target"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
     baseline = models.CharField(
         verbose_name=_("Baseline"),
         max_length=255,
-        null=True,
+        default='',
         blank=True,
     )
     ram_indicator = models.BooleanField(

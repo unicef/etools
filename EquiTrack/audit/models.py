@@ -75,7 +75,7 @@ class PurchaseOrder(TimeStampedModel, models.Model):
     order_number = models.CharField(
         verbose_name=_('Purchase Order Number'),
         blank=True,
-        null=True,
+        default='',
         unique=True,
         max_length=30
     )
@@ -612,7 +612,7 @@ class Audit(Engagement):
         ],
     )
     audit_opinion = models.CharField(
-        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, null=True, blank=True,
+        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
     )
 
     recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)

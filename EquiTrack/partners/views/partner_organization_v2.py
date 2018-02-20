@@ -350,10 +350,10 @@ class PartnerOrganizationAddView(CreateAPIView):
                             status=status.HTTP_400_BAD_REQUEST)
         except PartnerOrganization.DoesNotExist:
             partner_org = {
-                k: self.get_value_for_field(
-                    k,
-                    partner_resp[v]) if v in partner_resp.keys() else None for k,
-                v in self.MAPPING.items()}
+                k: self.get_value_for_field(k, partner_resp[v])
+                for k, v in self.MAPPING.items()
+                if v in partner_resp
+            }
             partner_org['vision_synced'] = True
             partner_org['deleted_flag'] = True if self.MAPPING['deleted_flag'] in partner_resp.keys() else False
             partner_org['blocked'] = True if self.MAPPING['blocked'] in partner_resp.keys() else False
