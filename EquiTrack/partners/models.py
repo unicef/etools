@@ -1592,7 +1592,7 @@ class Intervention(TimeStampedModel):
             if all(fr_currencies[0] == fr_currency for fr_currency in fr_currencies):
                 return fr_currencies[0]
             else:
-                return "Mismatched Currencies"
+                return None
 
     @cached_property
     def total_unicef_cash(self):
