@@ -64,8 +64,6 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
 
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
-    spot_checks = serializers.IntegerField(read_only=True)
-    audit = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = InterventionPlannedVisits
@@ -80,8 +78,7 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
             "id",
             "year",
             "programmatic",
-            "spot_checks",
-            "audit",
+            "quarter"
         )
 
 
@@ -501,7 +498,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "planned_visits", "population_focus", "signed_by_partner_date", "created", "modified",
             "planned_budget", "result_links", 'country_programme', 'metadata', 'contingency_pd', "amendments",
-            "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
+            "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
             "in_amendment"
         )

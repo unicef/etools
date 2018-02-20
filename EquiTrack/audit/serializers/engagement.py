@@ -204,7 +204,7 @@ class EngagementSerializer(EngagementDatesValidation,
             'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
-            'cancel_comment', 'specific_procedures',
+            'cancel_comment', 'specific_procedures', 'basis_for_risk_rating'
         ]
         extra_kwargs = {
             field: {'required': True} for field in [

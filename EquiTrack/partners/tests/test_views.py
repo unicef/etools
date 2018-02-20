@@ -66,6 +66,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         names_and_paths = (
             ('partner-list', '', {}),
             ('partner-hact', 'hact/', {}),
+            ('partner-engagements', 'engagements/', {}),
             ('partner-detail', '1/', {'pk': 1}),
             ('partner-delete', 'delete/1/', {'pk': 1}),
             ('partner-assessment-del', 'assessments/1/', {'pk': 1}),
@@ -134,9 +135,9 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
         # serializer.
         self.normal_field_names = sorted(
             (
-                'blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name',
-                'partner_type', 'phone_number', 'rating', 'shared_partner', 'shared_with',
-                'short_name', 'total_ct_cp', 'total_ct_cy', 'vendor_number'
+                'blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name', 'net_ct_cy',
+                'partner_type', 'phone_number', 'rating', 'reported_cy', 'shared_with',
+                'short_name', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'vendor_number'
             )
         )
 
