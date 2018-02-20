@@ -7,7 +7,8 @@ from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
 from EquiTrack.factories import CountryFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 
 
 class InvalidateCacheTest(APITenantTestCase):
@@ -146,7 +147,7 @@ class TestAgreementsStatisticsView(APITenantTestCase):
         }])
 
 
-class TestPortalDashView(FastTenantTestCase):
+class TestPortalDashView(EToolsTenantTestCase):
     def test_get(self):
         self.client = TenantClient(self.tenant)
         response = self.client.get(reverse("management:dashboard"))

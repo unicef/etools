@@ -61,8 +61,8 @@ if 'test' in sys.argv:
 
     # Disable logging output during tests
     logging.disable(logging.CRITICAL)
-else:
-    # Settings which should NOT be active during automated tests
+elif 'runserver' in sys.argv:
+    # Settings which should only be active when running a local server
 
     # django-debug-toolbar: https://django-debug-toolbar.readthedocs.io/en/stable/configuration.html
     INSTALLED_APPS += (  # noqa

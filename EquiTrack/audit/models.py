@@ -375,7 +375,7 @@ class RiskCategory(OrderedModel, models.Model):
             if not self.code:
                 raise ValidationError({'code': _('Code is required for root nodes.')})
 
-            if self._default_manager.filter(parent__isnull=True, code=self.code).exists():
+            if type(self)._default_manager.filter(parent__isnull=True, code=self.code).exists():
                 raise ValidationError({'code': _('Code is already used.')})
 
     @atomic
@@ -384,7 +384,7 @@ class RiskCategory(OrderedModel, models.Model):
             self.code = self.parent.code
         else:
             if self.pk and self.code_tracker.has_changed('code'):
-                self._default_manager.filter(
+                type(self)._default_manager.filter(
                     code=self.code_tracker.previous('code')
                 ).update(code=self.code)
 
