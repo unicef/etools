@@ -17,8 +17,10 @@ class TestFRHeaderView(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.intervention = InterventionFactory()
-        self.fr_1 = FundsReservationHeaderFactory(intervention=None)
-        self.fr_2 = FundsReservationHeaderFactory(intervention=None)
+        vendor_code = self.intervention.agreement.partner.vendor_number
+        self.fr_1 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)
+        self.fr_2 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)
+        self.fr_3 = FundsReservationHeaderFactory(intervention=None, currency="RON")
 
     def run_request(self, data):
         response = self.forced_auth_req(
@@ -144,3 +146,29 @@ class TestFRHeaderView(APITenantTestCase):
                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
         self.assertEqual(result['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+
+    def test_frs_vendor_code_mismatch(self):
+        data = {'values': ','.join([self.fr_1.fr_number, self.fr_3.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('FRs selected relate to various partners', result['error'])
+
+    def test_frs_partner_vendor_code_mismatch(self):
+        data = {'values': ','.join([self.fr_3.fr_number]),
+                'intervention': self.intervention.pk}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('vendor number of the selected implementing partner in eTools does not '
+                      'match the vendor number entered in the FR in VISION', result['error'])
+
+    def test_frs_partner_vendor_code_ok(self):
+        data = {'values': ','.join([self.fr_1.fr_number]),
+                'intervention': self.intervention.pk}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)

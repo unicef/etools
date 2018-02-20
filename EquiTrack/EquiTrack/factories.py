@@ -152,6 +152,7 @@ class PartnerFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    vendor_number = fuzzy.FuzzyText(length=10)
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):
