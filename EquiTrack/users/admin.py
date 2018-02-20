@@ -6,13 +6,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 
 from users.models import Country, Office, Section, UserProfile, WorkspaceCounter
 from vision.adapters.funding import FundCommitmentSynchronizer, FundReservationsSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.programme import RAMSynchronizer, ProgrammeSynchronizer
 from vision.tasks import sync_handler
-from azure_graph_api.tasks import azure_sync_users
+from azure_graph_api.tasks import sync_user
 
 
 class ProfileInline(admin.StackedInline):
@@ -189,8 +190,8 @@ class UserAdminPlus(UserAdmin):
         return custom_urls + urls
 
     def sync_user(self, request, pk):
-        user = get_user_model().objects.get(pk=pk)
-        azure_sync_users.delay(user.username)
+        user = get_object_or_404(get_user_model(), pk=pk)
+        sync_user.delay(user.username)
         return HttpResponseRedirect(reverse('admin:auth_user_change', args=[user.pk]))
 
     def office(self, obj):
