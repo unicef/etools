@@ -2,13 +2,12 @@ from django.conf.urls import url
 from django.views.generic import TemplateView
 
 from users.views import (
-    ChangeUserCountryAPIView, MyProfileAPIView, ProfileEdit, UserAuthAPIView, UsersDetailAPIView, UsersView,
-    ChangeUserCountryView)
+    MyProfileAPIView, ProfileEdit, UserAuthAPIView, UsersDetailAPIView, UsersView, ChangeUserCountryView)
 
 urlpatterns = (
     # api
     url(r'^api/profile/$', UserAuthAPIView.as_view()),
-    url(r'^api/changecountry/$', ChangeUserCountryAPIView.as_view(http_method_names=['post']), name="country-change"),
+    url(r'^api/changecountry/$', ChangeUserCountryView.as_view(), name="country-change"),
     url(r'^api/$', UsersView.as_view()),  # TODO: staff required , partners should not be able to hit this
     url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
     url(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
@@ -20,5 +19,4 @@ urlpatterns = (
         TemplateView.as_view(
             template_name='users/profile_change_done.html'),
         name='profile_complete'),
-    url(r'change-country/$', ChangeUserCountryView.as_view(), name='change-country-view'),
 )
