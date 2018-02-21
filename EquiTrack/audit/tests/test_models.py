@@ -47,8 +47,6 @@ class AuditorStaffMemberTestCase(EToolsTenantTestCase):
 
         self.assertIn(Auditor.name, staff_member.user.groups.values_list('name', flat=True))
 
-        self.assertEqual(len(mail.outbox), 2)
-
 
 class EngagementStaffMemberTestCase(EToolsTenantTestCase):
     def test_signal(self):
