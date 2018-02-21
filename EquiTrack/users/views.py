@@ -16,13 +16,14 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from EquiTrack.permissions import IsSuperUserOrStaff
 from audit.models import Auditor
 from reports.models import Sector
 from reports.serializers.v1 import SectorSerializer
 from tpm.models import ThirdPartyMonitor
 from users.forms import ProfileForm
 from users.models import UserProfile, Country, Office
-from .serializers import (
+from users.serializers import (
     UserSerializer,
     GroupSerializer,
     OfficeSerializer,
@@ -31,7 +32,6 @@ from .serializers import (
     SimpleProfileSerializer,
     SimpleUserSerializer,
     ProfileRetrieveUpdateSerializer,
-    CountrySerializer
 )
 
 logger = logging.getLogger(__name__)
@@ -110,14 +110,14 @@ class ChangeUserCountryView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UsersView(ListAPIView):
+class StaffUsersView(ListAPIView):
     """
     Gets a list of Unicef Staff users in the current country.
     Country is determined by the currently logged in user.
     """
     model = UserProfile
     serializer_class = SimpleProfileSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsSuperUserOrStaff, )
 
     def get_queryset(self):
         user = self.request.user
@@ -137,35 +137,6 @@ class UsersView(ListAPIView):
             country=user.profile.country,
             user__is_staff=True
         ).order_by('user__first_name')
-
-
-class CountryView(ListAPIView):
-    """
-    Gets a list of Unicef Staff users in the current country.
-    Country is determined by the currently logged in user.
-    """
-    model = Country
-    serializer_class = CountrySerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user.profile.country:
-            logger.warning('{} has not an assigned country'.format(user))
-            return self.model.objects.none()
-        return self.model.objects.filter(
-            name=user.profile.country.name,
-        )
-
-
-class CountriesViewSet(ListAPIView):
-    """
-    Gets the list of countries
-    """
-    model = Country
-    serializer_class = CountrySerializer
-
-    def get_queryset(self):
-        return Country.objects.prefetch_related('local_currency').all()
 
 
 class MyProfileAPIView(RetrieveUpdateAPIView):
