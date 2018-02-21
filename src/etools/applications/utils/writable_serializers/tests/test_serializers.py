@@ -2,7 +2,7 @@
 from unittest import skip
 
 from django.apps import apps
-from django.contrib.contenttypes.management import update_contenttypes
+from django.contrib.contenttypes.management import create_contenttypes
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import TestCase
@@ -25,7 +25,7 @@ class BaseWritableSerializersTestCase(TestCase):
             for model in [Child1, Parent, Child2, GenericChild, Child3, CodedGenericChild]:
                 editor.create_model(model)
 
-        update_contenttypes(apps.get_app_config('writable_serializers'))
+        create_contenttypes(apps.get_app_config('writable_serializers'))
 
 
 class WritableSerializerSingleTestCase(BaseWritableSerializersTestCase):

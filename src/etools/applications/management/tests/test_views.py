@@ -248,7 +248,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         # only one of the two test locations have GEOM, so the response is expected to have 1 eleemnt
         self.assertEqual(len(response.json()), 1)
         self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
-        self.assertEqual(response.data[0]["geom"], self.location_with_geom.geom)
+        self.assertIn(response.data[0]["geom"], str(self.location_with_geom.geom))
 
     def test_intervention_locations_geom_by_pcode(self):
         self.client.force_login(self.unicef_staff)
@@ -261,7 +261,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(sorted(response.data.keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
         self.assertEqual(response.data["id"], str(self.location_with_geom.id))
-        self.assertEqual(response.data["geom"], self.location_with_geom.geom)
+        self.assertIn(response.data["geom"], str(self.location_with_geom.geom))
 
     def test_intervention_locations_geom_by_id(self):
         self.client.force_login(self.unicef_staff)
@@ -274,4 +274,4 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(sorted(response.data.keys()), ["gateway_id", "geom", "id", "level", "name", "p_code"])
         self.assertEqual(response.data["id"], str(self.location_with_geom.id))
-        self.assertEqual(response.data["geom"], self.location_with_geom.geom)
+        self.assertIn(response.data["geom"], str(self.location_with_geom.geom))
