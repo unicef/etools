@@ -6,7 +6,8 @@ from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
 from EquiTrack.factories import LocationFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from locations.models import Location
 
 
@@ -113,7 +114,7 @@ class TestLocationViews(APITenantTestCase):
         self.assertIn("Loc", response.data[0]["name"])
 
 
-class TestLocationAutocompleteView(FastTenantTestCase):
+class TestLocationAutocompleteView(EToolsTenantTestCase):
     def setUp(self):
         super(TestLocationAutocompleteView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
