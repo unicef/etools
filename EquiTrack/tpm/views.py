@@ -26,9 +26,9 @@ from tpm.models import TPMVisit, ThirdPartyMonitor, TPMPermission, TPMActivity
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from tpm.permissions import IsPMEorReadonlyPermission
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
-from tpm.serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
+from tpm.serializers.visit import (
+    SectionSerializer, TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer,)
 from users.models import Section
-from users.serializers import SectionSerializer
 from utils.common.pagination import DynamicPageNumberPagination
 from utils.common.views import (
     MultiSerializerViewSetMixin, FSMTransitionActionMixin, NestedViewSetMixin, SafeTenantViewSetMixin,)

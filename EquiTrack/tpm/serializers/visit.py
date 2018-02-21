@@ -16,14 +16,26 @@ from tpm.models import (
 from tpm.tpmpartners.models import TPMPartnerStaffMember
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, TPMReportSerializer
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
+from users.models import Section
 from utils.permissions.serializers import (
     StatusPermissionsBasedRootSerializerMixin, StatusPermissionsBasedSerializerMixin,)
 from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from users.serializers import MinimalUserSerializer, OfficeSerializer
-from users.serializers import SectionSerializer
 from locations.serializers import LocationLightSerializer
 from reports.serializers.v1 import ResultSerializer
+
+
+class SectionSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Section
+        fields = (
+            'id',
+            'name'
+        )
 
 
 class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
