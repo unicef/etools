@@ -50,8 +50,9 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
     )
 
     # set up two frs not connected to any interventions
-    test_case.fr_1 = FundsReservationHeaderFactory(intervention=None)
-    test_case.fr_2 = FundsReservationHeaderFactory(intervention=None)
+    test_case.fr_1 = FundsReservationHeaderFactory(intervention=None, currency='USD')
+    test_case.fr_2 = FundsReservationHeaderFactory(intervention=None, currency='USD')
+
     if include_results_and_indicators:
         # setup additional inicator/results
         test_case.result = ResultFactory(name='A Result')

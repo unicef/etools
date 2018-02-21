@@ -69,7 +69,7 @@ class TestModelExport(APITenantTestCase):
             population_focus="Population focus",
             partner_authorized_officer_signatory=self.partnerstaff,
         )
-        self.ib = InterventionBudgetFactory(intervention=self.intervention, currency=CurrencyFactory())
+        self.ib = InterventionBudgetFactory(intervention=self.intervention, currency='USD')
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
         self.result = ResultFactory(result_type=output_res_type)

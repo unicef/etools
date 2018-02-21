@@ -79,7 +79,7 @@ class BaseInterventionModelExportTestCase(APITenantTestCase):
         )
         self.ib = InterventionBudgetFactory(
             intervention=self.intervention,
-            currency=CurrencyFactory()
+            currency="USD"
         )
         self.planned_visit = InterventionPlannedVisitsFactory(
             intervention=self.intervention,

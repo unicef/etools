@@ -53,24 +53,6 @@ def get_date_from_prior_year():
     return datetime.date.today() - datetime.timedelta(days=700)
 
 
-class TestGetCurrencyNameOrDefault(EToolsTenantTestCase):
-    def test_none(self):
-        self.assertIsNone(models._get_currency_name_or_default(False))
-
-    def test_no_currency(self):
-        budget = InterventionBudgetFactory(
-            currency=None
-        )
-        self.assertIsNone(models._get_currency_name_or_default(budget))
-
-    def test_currency(self):
-        currency = CurrencyFactory(code="USD")
-        budget = InterventionBudgetFactory(
-            currency=currency
-        )
-        self.assertEqual(models._get_currency_name_or_default(budget), "USD")
-
-
 class TestAgreementNumberGeneration(EToolsTenantTestCase):
     '''Test that agreements have the expected base and reference numbers for all types of agreements'''
 
@@ -748,15 +730,6 @@ class TestInterventionModel(EToolsTenantTestCase):
 
     def test_sector_names_empty(self):
         self.assertEqual(self.intervention.sector_names, "")
-
-    def test_default_budget_currency(self):
-        currency = CurrencyFactory(code="USD")
-        intervention = InterventionFactory()
-        InterventionBudgetFactory(
-            currency=currency,
-            intervention=intervention
-        )
-        self.assertEqual(intervention.default_budget_currency, "USD")
 
     def test_fr_currency_empty(self):
         self.assertIsNone(self.intervention.fr_currency)
@@ -1477,9 +1450,9 @@ class TestInterventionBudget(EToolsTenantTestCase):
         intervention_str = str(intervention)
         budget = InterventionBudgetFactory(
             intervention=intervention,
-            unicef_cash=10.00,
-            in_kind_amount=5.00,
-            partner_contribution=20.00,
+            unicef_cash_local=10.00,
+            in_kind_amount_local=5.00,
+            partner_contribution_local=20.00,
         )
         self.assertEqual(str(budget), "{}: 35.00".format(intervention_str))
 

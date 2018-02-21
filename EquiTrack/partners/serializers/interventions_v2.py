@@ -30,10 +30,6 @@ from reports.serializers.v2 import (
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):
-    total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
-    partner_contribution = serializers.DecimalField(max_digits=20, decimal_places=2)
-    unicef_cash = serializers.DecimalField(max_digits=20, decimal_places=2)
-    in_kind_amount = serializers.DecimalField(max_digits=20, decimal_places=2)
     partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
@@ -43,13 +39,9 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "intervention",
-            "partner_contribution",
-            "unicef_cash",
-            "in_kind_amount",
             "partner_contribution_local",
             "unicef_cash_local",
             "in_kind_amount_local",
-            "total",
             'currency'
         )
 
