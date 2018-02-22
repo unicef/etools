@@ -769,11 +769,6 @@ class TestInterventionModel(EToolsTenantTestCase):
         )
         self.assertEqual(intervention.fr_currency, "USD")
 
-    def test_duration(self):
-        self.intervention.start_date = datetime.date(datetime.date.today().year - 1, 1, 1)
-        self.intervention.end_date = datetime.date(datetime.date.today().year + 1, 1, 1)
-        # self.assertEqual(self.intervention.duration, 24)
-
     def test_total_no_intervention(self):
         self.assertEqual(int(self.intervention.total_unicef_cash), 0)
         self.assertEqual(int(self.intervention.total_partner_contribution), 0)

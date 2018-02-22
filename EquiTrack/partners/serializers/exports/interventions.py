@@ -250,7 +250,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         max_digits=20,
         decimal_places=2,
     )
-    # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
     unicef_signatory = serializers.SerializerMethodField(
         label=_("Signed by UNICEF"),
     )

@@ -18,8 +18,6 @@ class ThresholdTest(APITenantTestCase):
         super(ThresholdTest, self).setUp()
         self.traveler = UserFactory(is_staff=True)
         self.unicef_staff = UserFactory(is_staff=True)
-        # self.travel = TravelFactory(traveler=self.traveler,
-        #                             supervisor=self.unicef_staff)
         workspace = self.unicef_staff.profile.country
         workspace.threshold_tae_usd = 100
         workspace.threshold_tre_usd = 100

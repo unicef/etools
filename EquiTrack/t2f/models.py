@@ -552,12 +552,6 @@ class Clearances(models.Model):
 
 def determine_file_upload_path(instance, filename):
     # TODO: add business area in there
-    # return '/'.join(
-    #         [connection.schema_name,
-    #          'travels',
-    #          instance.travel.id,
-    #          filename]
-    #     )
     country_name = connection.schema_name or 'Uncategorized'
     return 'travels/{}/{}/{}'.format(country_name, instance.travel.id, filename)
 

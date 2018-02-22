@@ -135,7 +135,6 @@ class TestInterventionsAPI(APITenantTestCase):
         data = {
             "result_links": [
                 {"cp_output": self.result.id,
-                 # "ram_indicators": [152],
                  "ll_results": [
                      {"id": None, "name": None, "applied_indicators": []}
                  ]}]

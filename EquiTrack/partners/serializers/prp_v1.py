@@ -80,7 +80,6 @@ class DisaggregationSerializer(serializers.ModelSerializer):
         model = Disaggregation
         fields = (
             'id',
-            # 'prp_id',
             'name',
             'disaggregation_values'
         )
@@ -100,12 +99,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'blueprint_id',
-            # 'is_cluster',
             'cluster_indicator_id',
-            # 'parent_id',
-            # 'type',
-            # 'pd_frequency',
-            # 'display_type',
             'means_of_verification',
             'baseline',
             'target',

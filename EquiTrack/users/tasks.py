@@ -276,7 +276,6 @@ def map_users():
 def sync_users_local(n=20):
     user_sync = UserMapper()
     with open('/code/etools.dat') as csvfile:
-        # with open('/Users/Rob/Downloads/users.dat') as csvfile:
         reader = csv.DictReader(csvfile, delimiter='|')
         i = 0
         for row in reader:
