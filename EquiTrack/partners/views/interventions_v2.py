@@ -4,7 +4,8 @@ import logging
 import copy
 
 from django.db import transaction
-from django.db.models import Q, Max, Min, Sum
+from django.db.models import Q, Max, Min, Sum, Count, ExpressionWrapper, Value, CharField, F
+from django.db.models.functions import Concat
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -94,6 +95,8 @@ class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
             Sum("frs__intervention_amt"),
             Sum("frs__outstanding_amt"),
             Sum("frs__actual_amt"),
+            Count("frs__currency", distinct=True),
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
         )
 
         return qs
