@@ -1619,8 +1619,12 @@ class Intervention(TimeStampedModel):
         return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
-    def total_budget_local(self):
+    def total_in_kind_amount_local(self):
         return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
+
+    @cached_property
+    def total_budget_local(self):
+        return self.total_unicef_cash_local + self.total_partner_contribution_local + self.total_in_kind_amount_local
 
     @cached_property
     def all_lower_results(self):
