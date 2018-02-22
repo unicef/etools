@@ -8,7 +8,6 @@ from tablib.core import Dataset
 from EquiTrack.factories import (UserFactory, PartnerFactory, AgreementFactory, InterventionFactory,
                                  CountryProgrammeFactory, ResultFactory, InterventionBudgetFactory, PartnerStaffFactory)
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import CurrencyFactory
 from partners.models import PartnerOrganization
 from reports.models import ResultType
 

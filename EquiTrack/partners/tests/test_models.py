@@ -15,7 +15,6 @@ from EquiTrack.factories import (
     AppliedIndicatorFactory,
     AssessmentFactory,
     CountryProgrammeFactory,
-    CurrencyFactory,
     DonorFactory,
     FileTypeFactory,
     FundsReservationHeaderFactory,

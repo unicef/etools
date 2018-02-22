@@ -298,7 +298,6 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         blank=True,
         null=True
     )
-
     # TODO remove this after migration to shared_with + add calculation to
     shared_partner = models.CharField(
         verbose_name=_("Shared Partner (old)"),
@@ -1946,7 +1945,6 @@ class InterventionBudget(TimeStampedModel):
         verbose_name=_('UNICEF Supplies')
     )
     total = models.DecimalField(max_digits=20, decimal_places=2)
-
 
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)

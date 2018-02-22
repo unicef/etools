@@ -4,8 +4,7 @@ import logging
 import copy
 
 from django.db import transaction
-from django.db.models import Q, Max, Min, Sum, Count, ExpressionWrapper, Value, CharField, F
-from django.db.models.functions import Concat
+from django.db.models import Q, Max, Min, Sum, Count, CharField
 
 from rest_framework import status
 from rest_framework.response import Response

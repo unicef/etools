@@ -13,7 +13,6 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 
 from EquiTrack.fields import CURRENCIES
-from publics.models import Currency
 
 from reports.models import (
     CountryProgramme,

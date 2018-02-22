@@ -9,7 +9,6 @@ from tablib.core import Dataset
 from EquiTrack.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
-    CurrencyFactory,
     IndicatorFactory,
     InterventionFactory,
     InterventionAmendmentFactory,
