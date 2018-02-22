@@ -77,8 +77,7 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionListSerializer(serializers.ModelSerializer):
-
+class BaseInterventionListSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
     cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
@@ -119,21 +118,6 @@ class InterventionListSerializer(serializers.ModelSerializer):
         max_digits=20,
         decimal_places=2
     )
-    fr_currencies_are_consistent = serializers.SerializerMethodField()
-    all_currencies_are_consistent = serializers.SerializerMethodField()
-    fr_currency = serializers.SerializerMethodField()
-
-    def fr_currencies_ok(self, obj):
-        return obj.frs__currency__count == 1 if obj.frs__currency__count else None
-
-    def get_fr_currencies_are_consistent(self, obj):
-        return self.fr_currencies_ok(obj)
-
-    def get_all_currencies_are_consistent(self, obj):
-        return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
-
-    def get_fr_currency(self, obj):
-        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
 
     def get_offices_names(self, obj):
         return [o.name for o in obj.offices.all()]
@@ -189,10 +173,33 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'total_budget',
             'metadata',
             'flagged_sections',
-            'fr_currencies_are_consistent',
-            'all_currencies_are_consistent',
-            'fr_currency'
         )
+
+
+class InterventionListSerializer(BaseInterventionListSerializer):
+    fr_currencies_are_consistent = serializers.SerializerMethodField()
+    all_currencies_are_consistent = serializers.SerializerMethodField()
+    fr_currency = serializers.SerializerMethodField()
+
+    def fr_currencies_ok(self, obj):
+        return obj.frs__currency__count == 1 if obj.frs__currency__count else None
+
+    def get_fr_currencies_are_consistent(self, obj):
+        return self.fr_currencies_ok(obj)
+
+    def get_all_currencies_are_consistent(self, obj):
+        if not hasattr(obj, 'planned_budget'):
+            return False
+        return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
+
+    def get_fr_currency(self, obj):
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+
+    class Meta(BaseInterventionListSerializer.Meta):
+        fields = BaseInterventionListSerializer.Meta.fields + \
+                 ('fr_currencies_are_consistent',
+                  'all_currencies_are_consistent',
+                  'fr_currency')
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
