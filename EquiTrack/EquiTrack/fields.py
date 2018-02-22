@@ -2,9 +2,7 @@ from django.db import models
 
 from model_utils import Choices
 
-
-class CurrencyField(models.CharField):
-    CURRENCY_LIST = [
+CURRENCY_LIST = [
      u'GIP', u'KPW', u'XEU', u'BHD', u'BIF', u'BMD', u'BSD', u'YER1', u'AFN', u'ALL', u'AMD', u'AUD', u'AZN', u'BAM',
      u'BBD', u'BDT', u'BZD', u'CUP1', u'BTN', u'ZWL', u'AWG', u'CUC', u'VEF01', u'BND', u'BRL', u'ARS', u'ETB', u'EUR',
      u'FJD', u'GBP', u'GEL', u'GHS', u'GNF', u'GTQ', u'GYD', u'HNL', u'CAD', u'CDF', u'CLP', u'CNY', u'COP', u'CRC',
@@ -18,11 +16,14 @@ class CurrencyField(models.CharField):
      u'AOA', u'YER', u'USD', u'UZS', u'OMR', u'SBD', u'TZS', u'SDG', u'WST', u'QAR', u'MOP', u'MRO', u'VEF', u'TRY',
      u'ZAR', u'HUF', u'MUR', u'PHP', u'BYN', u'KRW', u'TND', u'MNT', u'PEN']
 
-    CURRENCIES = Choices(*[(c, c) for c in CURRENCY_LIST])
+CURRENCIES = Choices(*[(c, c) for c in CURRENCY_LIST])
+
+
+class CurrencyField(models.CharField):
 
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = kwargs.get('max_length', 4)
-        kwargs['choices'] = self.CURRENCIES
+        kwargs['choices'] = CURRENCIES
         kwargs['null'] = kwargs.get('null', True)
         kwargs['blank'] = kwargs.get('blank', True)
         super(CurrencyField, self).__init__(*args, **kwargs)
