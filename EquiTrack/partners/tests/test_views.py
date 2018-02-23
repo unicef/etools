@@ -33,7 +33,7 @@ from EquiTrack.factories import (
     ResultFactory,
     SectorFactory,
     UserFactory,
-)
+    PlannedEngagementFactory)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from reports.models import ResultType
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
@@ -1332,6 +1332,7 @@ class TestInterventionViews(APITenantTestCase):
         cls.agreement = AgreementFactory()
         cls.agreement2 = AgreementFactory(status="draft")
         cls.partnerstaff = PartnerStaffFactory(partner=cls.agreement.partner)
+        cls.planned_engagement = PlannedEngagementFactory(partner=cls.agreement.partner)
 
     def setUp(self):
         data = {
