@@ -212,6 +212,9 @@ class PlannedEngagementSerializer(serializers.ModelSerializer):
             "spot_check_follow_up_q4",
             "scheduled_audit",
             "special_audit",
+            "spot_check_follow_up_required",
+            "spot_check_required",
+            "required_audit"
         )
 
 

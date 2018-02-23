@@ -697,7 +697,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
             self.assertEqual(field.read_only, expected_read_only)
 
 
-class TestPartnerOrganizationDetailSerializer(FastTenantTestCase):
+class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()

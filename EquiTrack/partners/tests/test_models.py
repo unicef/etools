@@ -37,6 +37,7 @@ from EquiTrack.factories import (
     TravelFactory,
     TravelActivityFactory,
     UserFactory,
+    PlannedEngagementFactory
 )
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from audit.models import Engagement
@@ -1651,3 +1652,24 @@ class TestStrUnicode(TestCase):
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
         self.assertTrue(str(instance).startswith(b'tv\xc3\xa5'))
         self.assertTrue(unicode(instance).startswith(u'tv\xe5'))
+
+
+class TestPlannedEngagement(EToolsTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+
+        cls.engagement = PlannedEngagementFactory(
+            spot_check_mr='q1',
+            spot_check_follow_up_q1=2,
+            spot_check_follow_up_q2=1,
+            spot_check_follow_up_q3=0,
+            spot_check_follow_up_q4=0,
+            scheduled_audit= True,
+            special_audit=False
+        )
+
+    def test_properties(self):
+        self.assertEquals(self.engagement.spot_check_follow_up_required, 3)
+        self.assertEquals(self.engagement.spot_check_required, 4)
+        self.assertEquals(self.engagement.required_audit, 1)

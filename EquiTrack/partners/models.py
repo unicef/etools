@@ -812,6 +812,21 @@ class PlannedEngagement(TimeStampedModel):
     scheduled_audit = models.BooleanField(verbose_name=_("Scheduled Audit"), default=False)
     special_audit = models.BooleanField(verbose_name=_("Special Audit"), default=False)
 
+    @property
+    def spot_check_follow_up_required(self):
+        return sum([
+            self.spot_check_follow_up_q1, self.spot_check_follow_up_q2,
+            self.spot_check_follow_up_q3, self.spot_check_follow_up_q4
+        ])
+
+    @property
+    def spot_check_required(self):
+        return self.spot_check_follow_up_required + (1 if self.spot_check_mr else 0)
+
+    @property
+    def required_audit(self):
+        return sum([self.scheduled_audit, self.special_audit])
+
     def reset(self):
         self.spot_check_mr = None
         self.spot_check_follow_up_q1 = 0
