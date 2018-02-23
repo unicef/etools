@@ -1665,7 +1665,7 @@ class TestPlannedEngagement(EToolsTenantTestCase):
             spot_check_follow_up_q2=1,
             spot_check_follow_up_q3=0,
             spot_check_follow_up_q4=0,
-            scheduled_audit= True,
+            scheduled_audit=True,
             special_audit=False
         )
 
