@@ -1408,7 +1408,8 @@ class TestInterventionViews(APITenantTestCase):
                     "year": 2016,
                     "programmatic": 2,
                     "spot_checks": 1,
-                    "audit": 1
+                    "audit": 1,
+                    "quarter": 'q1'
                 },
             ],
             "planned_budget": {
@@ -1700,7 +1701,8 @@ class TestInterventionViews(APITenantTestCase):
             "year": 2015,
             "programmatic": 2,
             "spot_checks": 1,
-            "audit": 1
+            "audit": 1,
+            "quarter": 'q3'
         })
         data = {
             "planned_visits": a,
