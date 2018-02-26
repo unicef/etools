@@ -6,17 +6,14 @@ from django.contrib.auth.models import Group
 from django.db import connection
 from django.utils import timezone, six
 
-import factory
 import factory.fuzzy
 from factory import fuzzy
 
 from attachments.tests.factories import AttachmentFactory
 from EquiTrack.factories import (
-    InterventionFactory, LocationFactory, OfficeFactory as SimpleOfficeFactory, ResultFactory,
-    SectionFactory as SimpleSectionFactory,)
+    InterventionFactory, LocationFactory, OfficeFactory as SimpleOfficeFactory, ResultFactory, SectorFactory)
 from firms.factories import BaseFirmFactory, BaseStaffMemberFactory, UserFactory as SimpleUserFactory
 from partners.models import InterventionResultLink, InterventionSectorLocationLink
-from reports.models import Sector
 from tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 
@@ -45,13 +42,6 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
     cp_output = factory.SubFactory(ResultFactory)
 
 
-class SectorFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = Sector
-
-    name = factory.Sequence(lambda n: 'Sector {}'.format(n))
-
-
 class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = InterventionSectorLocationLink
@@ -72,17 +62,6 @@ class FullInterventionFactory(InterventionFactory):
     sector_locations = factory.RelatedFactory(InterventionSectorLocationLinkFactory, 'intervention')
 
 
-class SectionFactory(SimpleSectionFactory):
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        obj = super(SectionFactory, cls)._create(model_class, *args, **kwargs)
-
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            connection.tenant.sections.add(obj)
-
-        return obj
-
-
 class TPMActivityFactory(factory.DjangoModelFactory):
     class Meta:
         model = TPMActivity
@@ -90,7 +69,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     intervention = factory.SubFactory(FullInterventionFactory)
     partner = factory.SelfAttribute('intervention.agreement.partner')
     date = fuzzy.FuzzyDate(_FUZZY_START_DATE, _FUZZY_END_DATE)
-    section = factory.SubFactory(SectionFactory)
+    section = factory.SubFactory(SectorFactory)
 
     attachments__count = 0
     report_attachments__count = 0

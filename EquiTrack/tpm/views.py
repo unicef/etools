@@ -12,8 +12,8 @@ from rest_framework.response import Response
 
 from partners.models import PartnerOrganization
 from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from reports.models import Result
-from reports.serializers.v1 import ResultLightSerializer
+from reports.models import Result, Sector
+from reports.serializers.v1 import ResultLightSerializer, SectorSerializer
 from tpm.export.renderers import (
     TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer, TPMPartnerContactsCSVRenderer,
     TPMVisitCSVRenderer,)
@@ -26,9 +26,7 @@ from tpm.models import TPMVisit, ThirdPartyMonitor, TPMPermission, TPMActivity
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from tpm.permissions import IsPMEorReadonlyPermission
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
-from tpm.serializers.visit import (
-    SectionSerializer, TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer,)
-from users.models import Section
+from tpm.serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
 from utils.common.pagination import DynamicPageNumberPagination
 from utils.common.views import (
     MultiSerializerViewSetMixin, FSMTransitionActionMixin, NestedViewSetMixin, SafeTenantViewSetMixin,)
@@ -163,8 +161,8 @@ class ImplementingPartnerView(generics.ListAPIView):
 
 
 class VisitsSectionView(generics.ListAPIView):
-    queryset = Section.objects.all()
-    serializer_class = SectionSerializer
+    queryset = Sector.objects.all()
+    serializer_class = SectorSerializer
     permission_classes = (IsAuthenticated,)
 
     filter_backends = (SearchFilter,)

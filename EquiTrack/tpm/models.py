@@ -335,7 +335,7 @@ class TPMVisitReportRejectComment(models.Model):
 class TPMActivity(Activity):
     tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('Visit'), related_name='tpm_activities')
 
-    section = models.ForeignKey('users.Section', related_name='tpm_activities', verbose_name=_('Section'))
+    section = models.ForeignKey('reports.Sector', related_name='tpm_activities', verbose_name=_('Section'))
 
     additional_information = models.TextField(verbose_name=_('Additional Information'), blank=True)
 

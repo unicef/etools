@@ -16,26 +16,13 @@ from tpm.models import (
 from tpm.tpmpartners.models import TPMPartnerStaffMember
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, TPMReportSerializer
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
-from users.models import Section
 from utils.permissions.serializers import (
     StatusPermissionsBasedRootSerializerMixin, StatusPermissionsBasedSerializerMixin,)
 from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from users.serializers import MinimalUserSerializer, OfficeSerializer
 from locations.serializers import LocationLightSerializer
-from reports.serializers.v1 import ResultSerializer
-
-
-class SectionSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Section
-        fields = (
-            'id',
-            'name'
-        )
+from reports.serializers.v1 import ResultSerializer, SectorSerializer
 
 
 class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):
@@ -108,7 +95,7 @@ class TPMActivitySerializer(TPMPermissionsBasedSerializerMixin, WritableNestedSe
     )
 
     section = SeparatedReadWriteField(
-        read_field=SectionSerializer(read_only=True, label=_('Section')),
+        read_field=SectorSerializer(read_only=True, label=_('Section')),
         required=True,
     )
 
@@ -195,7 +182,7 @@ class TPMVisitLightSerializer(StatusPermissionsBasedRootSerializerMixin, Writabl
         ).data
 
     def get_sections(self, obj):
-        return SectionSerializer(
+        return SectorSerializer(
             set(map(
                 lambda a: a.section,
                 obj.tpm_activities.all()
