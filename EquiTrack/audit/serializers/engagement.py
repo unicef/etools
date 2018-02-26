@@ -18,7 +18,7 @@ from audit.serializers.mixins import (
     RiskCategoriesUpdateMixin,)
 from audit.serializers.risks import RiskRootSerializer, AggregatedRiskRootSerializer, KeyInternalWeaknessSerializer
 from partners.models import PartnerType
-from partners.serializers.interventions_v2 import InterventionListSerializer
+from partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationListSerializer, PartnerStaffMemberNestedSerializer,)
 from users.serializers import MinimalUserSerializer
@@ -174,7 +174,8 @@ class EngagementSerializer(EngagementDatesValidation,
         read_field=AuditorStaffMemberSerializer(many=True, required=False, label=_('Audit Staff Team Members')),
     )
     active_pd = SeparatedReadWriteField(
-        read_field=InterventionListSerializer(many=True, required=False, label=_('Programme Document(s) or SSFA(s)')),
+        read_field=BaseInterventionListSerializer(many=True, required=False,
+                                                  label=_('Programme Document(s) or SSFA(s)')),
         required=False
     )
     authorized_officers = SeparatedReadWriteField(
