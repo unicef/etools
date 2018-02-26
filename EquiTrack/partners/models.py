@@ -1566,23 +1566,15 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution(self):
-        return self.planned_budget.partner_contribution if hasattr(self, 'planned_budget') else 0
-
-    @cached_property
-    def fr_currency(self):
-        # todo: implicit assumption here that there aren't conflicting currencies
-        # eventually, this should be checked/reconciled if there are conflicts
-        # also, this doesn't do filtering in the db so that it can be used efficiently with `prefetch_related`
-        if self.frs.exists():
-            return self.frs.all()[0].currency
+        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_unicef_cash(self):
-        return self.planned_budget.unicef_cash if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_in_kind_amount(self):
-        return self.planned_budget.in_kind_amount if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_budget(self):
@@ -1591,18 +1583,6 @@ class Intervention(TimeStampedModel):
     @cached_property
     def total_unicef_budget(self):
         return self.total_unicef_cash + self.total_in_kind_amount
-
-    @cached_property
-    def total_partner_contribution_local(self):
-        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
-
-    @cached_property
-    def total_unicef_cash_local(self):
-        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
-
-    @cached_property
-    def total_budget_local(self):
-        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def all_lower_results(self):

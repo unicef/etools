@@ -84,6 +84,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
                                                 decimal_places=2)
     total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
+    budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
 
     section_names = serializers.SerializerMethodField()
     flagged_sections = serializers.SerializerMethodField()
@@ -173,6 +174,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
             'total_budget',
             'metadata',
             'flagged_sections',
+            'budget_currency'
         )
 
 

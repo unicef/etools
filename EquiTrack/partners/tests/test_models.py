@@ -1,7 +1,7 @@
 import copy
 import datetime
 import sys
-from unittest import skipIf, TestCase
+from unittest import skipIf, TestCase, skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
@@ -730,9 +730,11 @@ class TestInterventionModel(EToolsTenantTestCase):
     def test_sector_names_empty(self):
         self.assertEqual(self.intervention.sector_names, "")
 
+    @skip("fr_currency property on intervention is being deprecated")
     def test_fr_currency_empty(self):
         self.assertIsNone(self.intervention.fr_currency)
 
+    @skip("fr_currency property on intervention is being deprecated")
     def test_fr_currency(self):
         intervention = InterventionFactory()
         FundsReservationHeaderFactory(
@@ -751,9 +753,6 @@ class TestInterventionModel(EToolsTenantTestCase):
         self.assertEqual(int(self.intervention.total_partner_contribution), 0)
         self.assertEqual(int(self.intervention.total_budget), 0)
         self.assertEqual(int(self.intervention.total_unicef_budget), 0)
-        self.assertEqual(int(self.intervention.total_partner_contribution_local), 0)
-        self.assertEqual(int(self.intervention.total_unicef_cash_local), 0)
-        self.assertEqual(int(self.intervention.total_budget_local), 0)
 
     def test_total_unicef_cash(self):
         InterventionBudgetFactory(
@@ -764,7 +763,7 @@ class TestInterventionModel(EToolsTenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_unicef_cash), 100000)
+        self.assertEqual(int(self.intervention.total_unicef_cash), 10)
 
     def test_total_partner_contribution(self):
         InterventionBudgetFactory(
@@ -786,7 +785,7 @@ class TestInterventionModel(EToolsTenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_budget), 100210)
+        self.assertEqual(int(self.intervention.total_budget), 40)
 
     def test_total_in_kind_amount(self):
         InterventionBudgetFactory(
@@ -797,7 +796,7 @@ class TestInterventionModel(EToolsTenantTestCase):
             in_kind_amount=3300,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_in_kind_amount), 3300)
+        self.assertEqual(int(self.intervention.total_in_kind_amount), 10)
 
     def test_total_unicef_budget(self):
         InterventionBudgetFactory(
@@ -808,40 +807,8 @@ class TestInterventionModel(EToolsTenantTestCase):
             in_kind_amount=2000,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_unicef_budget), 102000)
+        self.assertEqual(int(self.intervention.total_unicef_budget), 20)
 
-    def test_total_partner_contribution_local(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution_local=7000,
-            in_kind_amount=2000,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_partner_contribution_local), 7000)
-
-    def test_total_unicef_cash_local(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution_local=7000,
-            in_kind_amount=2000,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_unicef_cash_local), 10)
-
-    def test_total_budget_local(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution_local=7000,
-            in_kind_amount=2000,
-            in_kind_amount_local=3000,
-        )
-        self.assertEqual(int(self.intervention.total_budget_local), 3000)
 
     def test_year(self):
         '''Exercise the year property'''

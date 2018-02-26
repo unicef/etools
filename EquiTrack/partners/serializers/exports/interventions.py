@@ -222,13 +222,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     sectors = serializers.SerializerMethodField(label=_("Sectors"))
     locations = serializers.SerializerMethodField(label=_("Locations"))
     fr_numbers = serializers.SerializerMethodField(label=_("FR Number(s)"))
-    planned_budget_local = serializers.DecimalField(
-        label=_("Total UNICEF Budget (Local)"),
-        source='total_unicef_cash_local',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2,
-    )
     unicef_budget = serializers.DecimalField(
         label=_("Total UNICEF Budget (USD)"),
         source='total_unicef_budget',
@@ -239,13 +232,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     cso_contribution = serializers.DecimalField(
         label=_("Total CSO Budget (USD)"),
         source='total_partner_contribution',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2,
-    )
-    partner_contribution_local = serializers.DecimalField(
-        label=_("Total CSO Budget (Local)"),
-        source='total_partner_contribution_local',
         read_only=True,
         max_digits=20,
         decimal_places=2,
@@ -301,7 +287,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "offices",
             "sectors",
             "locations",
-            "planned_budget_local",
             "unicef_focal_points",
             "partner_focal_points",
             "population_focus",
@@ -311,7 +296,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "unicef_budget",
             "cso_contribution",
             "partner_authorized_officer_signatory",
-            "partner_contribution_local",
             "planned_visits",
             "spot_checks",
             "audit",

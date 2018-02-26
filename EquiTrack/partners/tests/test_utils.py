@@ -42,10 +42,10 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
 
     test_case.partnership_budget = InterventionBudget.objects.create(
         intervention=test_case.intervention,
-        unicef_cash=100,
-        unicef_cash_local=10,
-        partner_contribution=200,
-        partner_contribution_local=20,
+        unicef_cash=10,
+        unicef_cash_local=100,
+        partner_contribution=20,
+        partner_contribution_local=200,
         in_kind_amount_local=10,
     )
 
