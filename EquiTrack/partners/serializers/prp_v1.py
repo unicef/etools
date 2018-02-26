@@ -157,13 +157,12 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     end_date = serializers.DateField(source='end')
     cso_budget = serializers.DecimalField(source='total_partner_contribution', read_only=True,
                                           max_digits=20, decimal_places=2)
-    cso_budget_currency = serializers.CharField(source='default_budget_currency', read_only=True)
+    cso_budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
     unicef_budget = serializers.DecimalField(source='total_unicef_budget', read_only=True,
                                              max_digits=20, decimal_places=2)
-    unicef_budget_currency = serializers.CharField(source='default_budget_currency', read_only=True)
+    unicef_budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
     # TODO: update this after FR Validation changes, pending new Insight API changes.
-    funds_received = serializers.SerializerMethodField(read_only=True)
-    funds_received_currency = serializers.CharField(source='fr_currency', read_only=True)
+
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
     update_date = serializers.DateTimeField(source='modified')
     reporting_periods = ReportingPeriodsSerializer(many=True, read_only=True)
@@ -191,7 +190,6 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'start_date', 'end_date',
             'cso_budget', 'cso_budget_currency',
             'unicef_budget', 'unicef_budget_currency',
-            'funds_received', 'funds_received_currency',
             'reporting_periods',
             'expected_results',
             'update_date'
