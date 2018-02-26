@@ -1266,6 +1266,8 @@ class TestAgreementAPIView(APITenantTestCase):
         params = {
             "lang": "spanish",
         }
+        self.agreement.partner.vendor_number = None
+        self.agreement.partner.save()
         response = self.forced_auth_req(
             'get',
             reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
