@@ -721,8 +721,8 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
 
         self.assertItemsEqual(data['planned_engagement'].keys(), [
             'id', 'partner', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
-            'spot_check_follow_up_q3', 'spot_check_follow_up_q4', 'spot_check_mr', 'spot_check_follow_up_required',
-            'spot_check_required', 'required_audit'
+            'spot_check_follow_up_q3', 'spot_check_follow_up_q4', 'spot_check_mr',
+            'total_spot_check_follow_up_required', 'spot_check_required', 'required_audit'
         ])
 
         self.assertEquals(len(data['staff_members']), 1)
