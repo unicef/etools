@@ -29,7 +29,7 @@ SYNC_HANDLERS = [
 logger = get_task_logger(__name__)
 
 
-@app.task(autoretry_for=(VisionException,), retry_backoff=True)
+@app.task
 def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
     """
     Do the vision sync for all countries that have vision_sync_enabled=True,
@@ -67,7 +67,7 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
     logger.info(text)
 
 
-@app.task(bind=True, autoretry_for=(VisionException,), retry_backoff=True)
+@app.task(bind=True, autoretry_for=(VisionException,), retry_kwargs={'max_retries': 1})
 def sync_handler(self, country_name, handler):
     """
     Run .sync() on one handler for one country.
@@ -93,7 +93,8 @@ def sync_handler(self, country_name, handler):
             ))
             # The 'autoretry_for' in the task decorator tells Celery to
             # retry this a few times on VisionExceptions, so just re-raise it
-            raise
+            raise VisionException
+
 
 
 # Not scheduled by any code in this repo, but by other means, so keep it around.
