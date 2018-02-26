@@ -150,6 +150,7 @@ class AgreementPermissions(PMPPermissions):
 
         self.condition_map = {
             'is type PCA or MOU': self.instance.agreement_type in [self.instance.PCA, self.instance.MOU],
+            'is type PCA or SSFA': self.instance.agreement_type in [self.instance.PCA, self.instance.SSFA],
             'is type MOU': self.instance.agreement_type == self.instance.MOU,
             # this condition can only be checked on data save
             'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)
