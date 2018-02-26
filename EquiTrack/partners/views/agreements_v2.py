@@ -174,16 +174,6 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
         validator = AgreementValid(instance, old=old_instance, user=request.user)
 
-        from django_fsm import has_transition_perm
-        from partners.validation.agreements import (
-            agreement_transition_to_ended_valid,
-            agreements_illegal_transition,
-            agreement_transition_to_signed_valid)
-
-        #print has_transition_perm(instance.transition_to_signed, request.user)
-        #print has_transition_perm(instance.transition_to_ended, request.user)
-        #print agreement_transition_to_ended_valid(instance)
-
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
