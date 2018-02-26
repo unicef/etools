@@ -173,8 +173,6 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
             u'{:.2f}'.format(self.intervention.total_partner_contribution_local),
             u'{} ({})'.format(self.planned_visit.programmatic, self.planned_visit.year),
-            # u'{} ({})'.format(self.planned_visit.spot_checks, self.planned_visit.year),
-            # u'{} ({})'.format(self.planned_visit.audit, self.planned_visit.year),
             '{}'.format(self.intervention.submission_date),
             '{}'.format(self.intervention.submission_date_prc),
             '{}'.format(self.intervention.review_date_prc),

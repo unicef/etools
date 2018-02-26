@@ -47,8 +47,8 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
     MinimalPartnerOrganizationListSerializer,
-    PlannedEngagementSerializer
-)
+    PlannedEngagementNestedSerializer,
+    PlannedEngagementSerializer)
 from partners.views.helpers import set_tenant_or_fail
 from t2f.models import TravelActivity
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
@@ -159,7 +159,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
         'staff_members': PartnerStaffMemberCreateUpdateSerializer,
-        'planned_engagement': PlannedEngagementSerializer
+        'planned_engagement': PlannedEngagementNestedSerializer
     }
 
     def get_serializer_class(self, format=None):

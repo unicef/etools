@@ -185,7 +185,7 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 class PlannedEngagementSerializer(serializers.ModelSerializer):
 
-    partner = serializers.CharField(source='partner.name')
+    partner = serializers.CharField(source='partner.name', read_only=True)
     spot_check_mr = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
@@ -222,8 +222,16 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
     """
     A serializer to be used for nested planned engagement handling. The 'partner' field
     is removed in this case to avoid validation errors for e.g. when creating
-    the partner and the member at the same time.
+    the partner and the engagement at the same time.
     """
+    spot_check_mr = serializers.JSONField()
+
+    def validate_spot_check_mr(self, attrs):
+        for key, value in attrs.items():
+            if value:
+                return key
+        return None
+
     class Meta:
         model = PlannedEngagement
         fields = (
