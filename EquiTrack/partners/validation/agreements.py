@@ -31,7 +31,7 @@ def agreement_transition_to_signed_valid(agreement):
     if not agreement.start or agreement.start > today:
         raise TransitionError(['Agreement cannot transition to signed until '
                                'the start date is less than or equal to today'])
-    if agreement.agreement_type != agreement.MOU and (not agreement.end or agreement.end < today):
+    if not agreement.end or (agreement.agreement_type != agreement.MOU and agreement.end < today):
         raise TransitionError(['Agreement cannot transition to signed unless the end date is today or after'])
 
     return True
