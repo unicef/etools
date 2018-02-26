@@ -154,6 +154,7 @@ class PartnerFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    vendor_number = fuzzy.FuzzyText(length=10)
 
 
 class PlannedEngagementFactory(factory.django.DjangoModelFactory):
@@ -397,7 +398,7 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     fr_number = fuzzy.FuzzyText(length=20)
     document_date = date(date.today().year, 1, 1)
     fr_type = fuzzy.FuzzyText(length=20)
-    currency = fuzzy.FuzzyText(length=20)
+    currency = fuzzy.FuzzyText(length=4)
     document_text = fuzzy.FuzzyText(length=20)
 
     # this is the field required for validation

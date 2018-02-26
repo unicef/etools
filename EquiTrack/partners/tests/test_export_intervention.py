@@ -9,7 +9,6 @@ from tablib.core import Dataset
 from EquiTrack.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
-    CurrencyFactory,
     IndicatorFactory,
     InterventionFactory,
     InterventionAmendmentFactory,
@@ -79,7 +78,7 @@ class BaseInterventionModelExportTestCase(APITenantTestCase):
         )
         self.ib = InterventionBudgetFactory(
             intervention=self.intervention,
-            currency=CurrencyFactory()
+            currency="USD"
         )
         self.planned_visit = InterventionPlannedVisitsFactory(
             intervention=self.intervention,
@@ -130,10 +129,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             'CP Outputs',
             'RAM Indicators',
             'FR Number(s)',
-            'Total UNICEF Budget (Local)',
-            'Total UNICEF Budget (USD)',
-            'Total CSO Budget (USD)',
-            'Total CSO Budget (Local)',
+            'Total UNICEF Budget',
+            'Total CSO Budget',
             'Planned Programmatic Visits',
             'Document Submission Date by CSO',
             'Submission Date to PRC',
@@ -168,10 +165,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             u'',
             u'',
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
-            u'{:.2f}'.format(self.intervention.total_unicef_cash_local),
             u'{:.2f}'.format(self.intervention.total_unicef_budget),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
-            u'{:.2f}'.format(self.intervention.total_partner_contribution_local),
             u'{} ({})'.format(self.planned_visit.programmatic, self.planned_visit.year),
             '{}'.format(self.intervention.submission_date),
             '{}'.format(self.intervention.submission_date_prc),
