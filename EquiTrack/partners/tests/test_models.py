@@ -809,7 +809,6 @@ class TestInterventionModel(EToolsTenantTestCase):
         )
         self.assertEqual(int(self.intervention.total_unicef_budget), 20)
 
-
     def test_year(self):
         '''Exercise the year property'''
         self.assertIsNone(self.intervention.signed_by_unicef_date)
