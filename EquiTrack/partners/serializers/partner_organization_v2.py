@@ -297,6 +297,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
 
+    planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField()
     rating = serializers.CharField(source='get_rating_display')
@@ -324,5 +325,6 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_values",
             "hact_min_requirements",
             "flags",
-            "outstanding_findings"
+            "outstanding_findings",
+            "planned_engagement"
         )
