@@ -1608,6 +1608,6 @@ class TestPlannedEngagement(EToolsTenantTestCase):
         )
 
     def test_properties(self):
-        self.assertEquals(self.engagement.spot_check_follow_up_required, 3)
+        self.assertEquals(self.engagement.total_spot_check_follow_up_required, 3)
         self.assertEquals(self.engagement.spot_check_required, 4)
         self.assertEquals(self.engagement.required_audit, 1)

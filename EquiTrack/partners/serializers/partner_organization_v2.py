@@ -212,7 +212,7 @@ class PlannedEngagementSerializer(serializers.ModelSerializer):
             "spot_check_follow_up_q4",
             "scheduled_audit",
             "special_audit",
-            "spot_check_follow_up_required",
+            "total_spot_check_follow_up_required",
             "spot_check_required",
             "required_audit"
         )
@@ -226,24 +226,31 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
     """
     spot_check_mr = serializers.JSONField()
 
+    def validate(self, data):
+        data = super(PlannedEngagementNestedSerializer, self).validate(data)
+        spot_check_mr = data.get('spot_check_mr', 0)
+        partner = data.get('partner', None)
+
+        spot_check_mr_number = 1 if spot_check_mr else 0
+        if spot_check_mr_number > partner.min_req_spot_checks:
+            raise ValidationError("Based on Liquidation, you cannot set this value")
+        return data
+
     def validate_spot_check_mr(self, attrs):
+        quarters = []
         for key, value in attrs.items():
             if value:
-                return key
-        return None
+                quarters.append(key)
+        if len(quarters) > 1:
+            raise ValidationError("You can select only MR in one quarter")
+        elif len(quarters) == 1:
+            return quarters[0]
+        else:
+            return 0
 
     class Meta:
         model = PlannedEngagement
-        fields = (
-            "id",
-            "spot_check_mr",
-            "spot_check_follow_up_q1",
-            "spot_check_follow_up_q2",
-            "spot_check_follow_up_q3",
-            "spot_check_follow_up_q4",
-            "scheduled_audit",
-            "special_audit"
-        )
+        fields = '__all__'
 
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
