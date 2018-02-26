@@ -774,7 +774,7 @@ class TestInterventionModel(EToolsTenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_partner_contribution), 200)
+        self.assertEqual(int(self.intervention.total_partner_contribution), 20)
 
     def test_total_budget(self):
         InterventionBudgetFactory(

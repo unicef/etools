@@ -222,21 +222,22 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     sectors = serializers.SerializerMethodField(label=_("Sectors"))
     locations = serializers.SerializerMethodField(label=_("Locations"))
     fr_numbers = serializers.SerializerMethodField(label=_("FR Number(s)"))
+
     unicef_budget = serializers.DecimalField(
-        label=_("Total UNICEF Budget (USD)"),
+        label=_("Total UNICEF Budget"),
         source='total_unicef_budget',
         read_only=True,
         max_digits=20,
         decimal_places=2,
     )
+
     cso_contribution = serializers.DecimalField(
-        label=_("Total CSO Budget (USD)"),
+        label=_("Total CSO Budget"),
         source='total_partner_contribution',
         read_only=True,
         max_digits=20,
         decimal_places=2,
     )
-    # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
     unicef_signatory = serializers.SerializerMethodField(
         label=_("Signed by UNICEF"),
     )
@@ -383,26 +384,14 @@ class InterventionExportFlatSerializer(InterventionExportSerializer):
     )
     partner_contribution = serializers.CharField(
         label=_("CSO Contribution"),
-        source='planned_budget.partner_contribution',
+        source='planned_budget.partner_contribution_local',
     )
     unicef_cash = serializers.CharField(
         label=_("UNICEF Cash"),
-        source='planned_budget.unicef_cash',
+        source='planned_budget.unicef_cash_local',
     )
     in_kind_amount = serializers.CharField(
         label=_("In Kind Amount"),
-        source='planned_budget.in_kind_amount',
-    )
-    partner_contribution_local = serializers.CharField(
-        label=_("CSO Contribution (Local)"),
-        source='planned_budget.partner_contribution_local',
-    )
-    unicef_cash_local = serializers.CharField(
-        label=_("UNICEF Cash (Local)"),
-        source='planned_budget.unicef_cash_local',
-    )
-    in_kind_amount_local = serializers.CharField(
-        label=_("In Kind Amount (Local)"),
         source='planned_budget.in_kind_amount_local',
     )
     currency = serializers.CharField(
