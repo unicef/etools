@@ -12,6 +12,7 @@ from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.views import get_swagger_view
 
+from email_auth.urls import urlpatterns as email_auth_patterns
 from EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
 from locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
 from management.urls import urlpatterns as management_urls
@@ -20,7 +21,7 @@ from publics import urls as publics_patterns
 from publics.views import StaticDataView
 from reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, SectorViewSet, UnitViewSet
 from t2f.urls import urlpatterns as t2f_patterns
-from users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet
+from users.views import GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
@@ -55,6 +56,7 @@ urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
+    url(r'^email-auth/', include(email_auth_patterns, namespace='email_auth')),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
@@ -103,7 +105,6 @@ urlpatterns = [
     url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
     url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
         name='workspace-inactive'),
-    url(r'^api/v2/workspaces', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
 
     url(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
 

@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from collections import OrderedDict
 
-from audit.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
+from audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
 from funds.models import Donor, Grant
 from vision.adapters.manual import ManualVisionSynchronizer
 
