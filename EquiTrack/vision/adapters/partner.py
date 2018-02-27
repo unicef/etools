@@ -118,11 +118,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
                 partner['CSO_TYPE'] = self.get_cso_type(partner)
 
-                try:
-                    self.get_partner_type(partner)
-                except KeyError as exp:
+                if not self.get_partner_type(partner):
                     logger.info('Partner {} skipped, because PartnerType ={}'.format(
-                        partner['VENDOR_NAME'], exp
+                        partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
                     ))
                     # if partner organization exists in etools db (these are nameless)
                     if partner_org.id:
