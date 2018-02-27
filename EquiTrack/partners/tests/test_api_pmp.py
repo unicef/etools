@@ -16,6 +16,7 @@ from EquiTrack.factories import (
     PartnerFactory,
     UserFactory,
     )
+from EquiTrack.fields import CURRENCY_LIST
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -184,16 +185,10 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
 
     def test_currencies(self):
         '''Verify the currencies portion of the response'''
-        # Ensure having no currencies doesn't break anything.
-        response = self.forced_auth_req('get', self.url)
-        d = self._assertResponseFundamentals(response)
-        self.assertEqual(d['currencies'], [])
-
         # Add some currencies
         choices = []
-        for code in ('AAA', 'BBB', 'CCC'):
-            currency = CurrencyFactory(code=code)
-            choices.append((currency.id, code))
+        for code in CURRENCY_LIST:
+            choices.append((code, code))
 
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)

@@ -391,6 +391,11 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         (_('Hact'), {
             'fields': (
                 u'hact_values',
+                u'total_ct_cp',
+                u'total_ct_cy',
+                u'net_ct_cy',
+                u'reported_cy',
+                u'total_ct_ytd',
             )
         })
     )

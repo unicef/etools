@@ -13,7 +13,7 @@ import factory
 from factory import fuzzy
 from snapshot import models as snapshot_models
 
-from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
+from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
 from funds import models as funds_models
 from locations import models as location_models
 from notification import models as notification_models
@@ -45,23 +45,23 @@ class CountryFactory(factory.django.DjangoModelFactory):
         model = user_models.Country
         django_get_or_create = ('schema_name',)
 
-    name = "Test Country"
+    name = factory.Sequence(lambda n: "Test Country {}".format(n))
     schema_name = SCHEMA_NAME
     domain_url = TENANT_DOMAIN
 
 
-class GroupFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = Group
-
-    name = "Partnership Manager"
+def GroupFactory(name="Partnership Manager"):
+    group, _ = Group.objects.get_or_create(
+        name=name
+    )
+    return group
 
 
 class UnicefUserGroupFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Group
 
-    name = "UNICEF User"
+    name = factory.Sequence(lambda n: "UNICEF User {}".format(n))
 
 
 class ProfileFactory(factory.django.DjangoModelFactory):
@@ -152,6 +152,7 @@ class PartnerFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    vendor_number = fuzzy.FuzzyText(length=10)
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):
@@ -389,7 +390,7 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     fr_number = fuzzy.FuzzyText(length=20)
     document_date = date(date.today().year, 1, 1)
     fr_type = fuzzy.FuzzyText(length=20)
-    currency = fuzzy.FuzzyText(length=20)
+    currency = fuzzy.FuzzyText(length=4)
     document_text = fuzzy.FuzzyText(length=20)
 
     # this is the field required for validation

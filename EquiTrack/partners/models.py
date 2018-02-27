@@ -23,6 +23,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
+from EquiTrack.fields import CurrencyField
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
@@ -136,15 +137,6 @@ def get_agreement_amd_file_path(instance, filename):
     ])
 
 
-def _get_currency_name_or_default(budget):
-    if budget and budget.currency:
-        return budget.currency.code
-    return None
-
-
-# TODO: move this to a workspace app for common configuration options
-
-
 @python_2_unicode_compatible
 class WorkspaceFileType(models.Model):
     """
@@ -223,7 +215,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     """
     # When cash transferred to a country programme exceeds CT_CP_AUDIT_TRIGGER_LEVEL, an audit is triggered.
-    EXPIRING_ASSESSMENT_LIMIT_DAYS = 1460
+    EXPIRING_ASSESSMENT_LIMIT_YEAR = 4
     CT_CP_AUDIT_TRIGGER_LEVEL = decimal.Decimal('50000.00')
 
     CT_MR_AUDIT_TRIGGER_LEVEL = decimal.Decimal('25000.00')
@@ -306,7 +298,6 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         blank=True,
         null=True
     )
-
     # TODO remove this after migration to shared_with + add calculation to
     shared_partner = models.CharField(
         verbose_name=_("Shared Partner (old)"),
@@ -439,16 +430,22 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         help_text='Total Cash Transferred per Current Year'
     )
 
+    net_ct_cy = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True,
+        help_text='Net Cash Transferred per Current Year'
+    )
+
+    reported_cy = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True,
+        help_text='Liquidations 1 Oct - 30 Sep'
+    )
+
+    total_ct_ytd = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True,
+        help_text='Cash Transfers Jan - Dec'
+    )
+
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
-
-    # TODO these property will be replaced with correct field coming from vision
-    @cached_property
-    def cash_transfer(self):
-        return self.total_ct_cy
-
-    @cached_property
-    def liquidation(self):
-        return self.total_ct_cy
 
     tracker = FieldTracker()
 
@@ -500,15 +497,14 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     @cached_property
     def expiring_assessment_flag(self):
         if self.last_assessment_date:
-            last_assessment_age = (datetime.date.today() - self.last_assessment_date).days
-            return last_assessment_age > PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_DAYS
+            last_assessment_age = datetime.date.today().year - self.last_assessment_date.year
+            return last_assessment_age >= PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR
         return False
 
     @cached_property
     def approaching_threshold_flag(self):
-        # TODO 1.1.6b change total_ct_cy when the vision API is ready
         return self.rating == PartnerOrganization.RATING_NON_ASSESSED and \
-               self.cash_transfer > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
+               self.total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
 
     @cached_property
     def flags(self):
@@ -520,7 +516,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     @cached_property
     def min_req_programme_visits(self):
         programme_visits = 0
-        ct = self.total_ct_cy
+        ct = self.net_ct_cy
 
         if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
@@ -544,8 +540,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     @cached_property
     def min_req_spot_checks(self):
-        # TODO 1.1.9b add condition when is implemented 1.1.10a
-        return 1 if self.liquidation > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
+        return 1 if self.reported_cy > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL else 0
 
     @cached_property
     def hact_min_requirements(self):
@@ -1571,29 +1566,15 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution(self):
-        return self.planned_budget.partner_contribution if hasattr(self, 'planned_budget') else 0
-
-    @cached_property
-    def default_budget_currency(self):
-        # todo: this seems to always come from self.planned_budget so not splitting it out
-        # by different categories - e.g. partner vs unicef. is this valid?
-        return _get_currency_name_or_default(self.planned_budget)
-
-    @cached_property
-    def fr_currency(self):
-        # todo: implicit assumption here that there aren't conflicting currencies
-        # eventually, this should be checked/reconciled if there are conflicts
-        # also, this doesn't do filtering in the db so that it can be used efficiently with `prefetch_related`
-        if self.frs.exists():
-            return self.frs.all()[0].currency
+        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_unicef_cash(self):
-        return self.planned_budget.unicef_cash if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_in_kind_amount(self):
-        return self.planned_budget.in_kind_amount if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_budget(self):
@@ -1602,18 +1583,6 @@ class Intervention(TimeStampedModel):
     @cached_property
     def total_unicef_budget(self):
         return self.total_unicef_cash + self.total_in_kind_amount
-
-    @cached_property
-    def total_partner_contribution_local(self):
-        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
-
-    @cached_property
-    def total_unicef_cash_local(self):
-        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
-
-    @cached_property
-    def total_budget_local(self):
-        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def all_lower_results(self):
@@ -1946,6 +1915,7 @@ class InterventionBudget(TimeStampedModel):
     Represents a budget for the intervention
     """
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True)
+
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount = models.DecimalField(
@@ -1954,19 +1924,24 @@ class InterventionBudget(TimeStampedModel):
         default=0,
         verbose_name=_('UNICEF Supplies')
     )
+    total = models.DecimalField(max_digits=20, decimal_places=2)
+
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
     )
-    currency = models.ForeignKey('publics.Currency', on_delete=models.SET_NULL, null=True, blank=True)
-    total = models.DecimalField(max_digits=20, decimal_places=2)
+    currency = CurrencyField()
+    total_local = models.DecimalField(max_digits=20, decimal_places=2)
 
     tracker = FieldTracker()
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
+
+    def total_unicef_contribution_local(self):
+        return self.unicef_cash_local + self.in_kind_amount_local
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -1974,14 +1949,15 @@ class InterventionBudget(TimeStampedModel):
         Calculate total budget on save
         """
         self.total = self.total_unicef_contribution() + self.partner_contribution
+        self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
         super(InterventionBudget, self).save(**kwargs)
 
     def __str__(self):
         # self.total is None if object hasn't been saved yet
-        total = self.total if self.total else decimal.Decimal('0.00')
+        total_local = self.total_local if self.total_local else decimal.Decimal('0.00')
         return '{}: {:.2f}'.format(
             self.intervention,
-            total
+            total_local
         )
 
 

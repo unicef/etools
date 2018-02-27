@@ -6,16 +6,16 @@ from __future__ import unicode_literals
 from mock import Mock
 
 from EquiTrack.factories import CountryFactory, ProfileFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.templatetags import userprofile_tags as tags
 
 
-class TestShowCountrySelect(FastTenantTestCase):
-    def setUp(self):
-        super(TestShowCountrySelect, self).setUp()
-        self.country = CountryFactory()
-        self.profile = ProfileFactory(country=self.country)
-        self.profile.countries_available.add(self.country)
+class TestShowCountrySelect(EToolsTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.country = CountryFactory()
+        cls.profile = ProfileFactory(country=cls.country)
+        cls.profile.countries_available.add(cls.country)
 
     def test_no_profile(self):
         self.assertEqual(tags.show_country_select({}, None), "")

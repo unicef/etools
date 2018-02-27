@@ -94,13 +94,16 @@ class DisaggregationSerializer(serializers.ModelSerializer):
                 'You cannot update a Disaggregation that is already associated with an Indicator.'
             )
         try:
+            # get values data http://www.django-rest-framework.org/api-guide/serializers/#dynamically-modifying-fields
             values_data = validated_data.pop('disaggregation_values')
         except KeyError:
             pass
         else:
+            # If you're trying to change some of the values you initially entered or remove some selected values
             found_values = []
             for value_data in values_data:
                 value_id = value_data.get('id', None)
+                # if you're changing an existing value, update the value manually
                 if value_id:
                     found_values.append(value_id)
                     try:
@@ -115,9 +118,10 @@ class DisaggregationSerializer(serializers.ModelSerializer):
                             )
                         )
                 else:
+                    # if you're adding a new disaggregation value, add it here
                     value = DisaggregationValue.objects.create(disaggregation=instance, **value_data)
                     found_values.append(value.id)
-            # delete any values that weren't specified
+            # delete any values that weren't specified in the update request.
             instance.disaggregation_values.exclude(id__in=found_values).delete()
         return super(DisaggregationSerializer, self).update(instance, validated_data)
 
@@ -154,9 +158,9 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
         if self.partial:
             if not isinstance(blueprint_data, IndicatorBlueprint):
                 raise ValidationError(
-                    'Indicator blueprint cannot be updated after first use, '
-                    'please remove this indicator and add another or contact the eTools Focal Point in '
-                    'your office for assistance'
+                    _('Indicator blueprint cannot be updated after first use, '
+                      'please remove this indicator and add another or contact the eTools Focal Point in '
+                      'your office for assistance')
                 )
 
         elif not attrs.get('cluster_indicator_id'):
@@ -166,7 +170,7 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
             attrs["indicator"] = indicator_blueprint.instance
             if lower_result.applied_indicators.filter(indicator__id=attrs['indicator'].id).exists():
-                raise ValidationError('This indicator is already being monitored for this Result')
+                raise ValidationError(_('This indicator is already being monitored for this Result'))
 
         return super(AppliedIndicatorSerializer, self).validate(attrs)
 

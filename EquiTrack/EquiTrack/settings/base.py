@@ -150,6 +150,7 @@ SHARED_APPS = (
     'rest_framework',
     'rest_framework_swagger',
     'rest_framework.authtoken',
+    'drfpasswordless',
     'import_export',
     'smart_selects',
     'gunicorn',
@@ -177,11 +178,13 @@ SHARED_APPS = (
     'notification',
     'django_filters',
     'environment',
+    'audit.purchase_order',
     'utils.common',
     'utils.mail',
     'utils.writable_serializers',
     'utils.permissions',
     'waffle',
+    'email_auth',
 )
 TENANT_APPS = (
     'django_fsm',
@@ -558,6 +561,7 @@ EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
 
+<<<<<<< HEAD
 # Django Contrib Settings ################################
 KEY = "key here"
 SECRET = "secret here"
@@ -567,3 +571,15 @@ POLICY = "b2c_1A_signup_signinUNICEF"
 TENANT_ID = 'vnb2cpoc.onmicrosoft.com'
 SCOPE = ['openid']
 IGNORE_DEFAULT_SCOPE = True
+=======
+
+# drfpaswordless: https://github.com/aaronn/django-rest-framework-passwordless
+
+PASSWORDLESS_AUTH = {
+    # we can't use email here, because to_alias field length is 40, while email can be up to 254 symbols length.
+    # with custom user model we can avoid this a bit tricky with custom property like cropped_email,
+    # but for contrib user there is nothing better than use field having appropriate max length.
+    # username is better choice as it can be only 30 symbols max and unique.
+    'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
+}
+>>>>>>> develop
