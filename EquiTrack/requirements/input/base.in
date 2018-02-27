@@ -39,6 +39,7 @@ drf-nested-routers==0.11.1
 flower==0.9.1
 GDAL==1.10.0
 gunicorn==19.6.0
+drfpasswordless==1.1.2
 pyyaml==3.12
 psycopg2==2.6.2
 raven==6.2.1
