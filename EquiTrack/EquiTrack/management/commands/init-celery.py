@@ -1,12 +1,17 @@
+import logging
+
 from django.core.management import BaseCommand
 
 from django_celery_beat.models import CrontabSchedule, IntervalSchedule, PeriodicTask
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
     help = 'Init celery command'
 
     def handle(self, *args, **options):
+        logger.info(u'Init Celery command started')
         every_day, _ = IntervalSchedule.objects.get_or_create(every=1, period=IntervalSchedule.DAYS)
         every_two_weeks, _ = IntervalSchedule.objects.get_or_create(every=14, period=IntervalSchedule.DAYS)
         every_week, _ = IntervalSchedule.objects.get_or_create(every=7, period=IntervalSchedule.DAYS)
@@ -39,3 +44,4 @@ class Command(BaseCommand):
         PeriodicTask.objects.get_or_create(name='Vision Sync Task', defaults={
             'task': 'vision.tasks.vision_sync_task',
             'crontab': midnight})
+        logger.info(u'Init Celery command finished')
