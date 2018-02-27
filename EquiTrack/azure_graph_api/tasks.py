@@ -3,9 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from django.conf import settings
 from django.core.cache import cache
 
-from azure_graph_api.client import azure_sync_users
 from celery.utils.log import get_task_logger
 
+from azure_graph_api.client import azure_sync_users
 from EquiTrack.celery import app
 
 logger = get_task_logger(__name__)
@@ -15,14 +15,14 @@ AZURE_GRAPH_API_USER_CACHE_KEY = 'azure_graph_api_user_cache_key'
 
 @app.task
 def sync_user(username):
-    logger.info('Azure Sync User started for {}'.format(username))
+    logger.info('Azure Sync User started for %s', username)
     url = '{}/{}/users/{}'.format(
         settings.AZURE_GRAPH_API_BASE_URL,
         settings.AZURE_GRAPH_API_VERSION,
         username
     )
     azure_sync_users(url)
-    logger.info('User {} synchronized'.format(username))
+    logger.info('User %s synchronized', username)
 
 
 @app.task

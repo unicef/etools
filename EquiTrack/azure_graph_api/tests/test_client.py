@@ -5,8 +5,9 @@ from django.test import TestCase
 
 import responses
 from azure.common import AzureHttpError
-from azure_graph_api.client import azure_sync_users, get_token
 from mock import patch
+
+from azure_graph_api.client import azure_sync_users, get_token
 
 
 class TestClient(TestCase):
@@ -21,12 +22,12 @@ class TestClient(TestCase):
         assert token == 't0k3n'
 
     @responses.activate
-    def test_get_token_ko(self):
+    def test_get_token_bad_request(self):
         responses.add(
             responses.POST, settings.AZURE_TOKEN_URL,
-            json={'access_token': 't0k3n'}, status=300
+            json={'access_token': 't0k3n'}, status=400
         )
-        with self.assertRaises(AzureHttpError):
+        with self.assertRaisesRegexp(AzureHttpError, "Error during token retrieval 400"):
             get_token()
 
     @responses.activate
@@ -51,17 +52,17 @@ class TestClient(TestCase):
 
     @responses.activate
     @patch('azure_graph_api.client.get_token', return_value='t0k3n')
-    def test_azure_sync_users_ko(self, token):
+    def test_azure_sync_users_bad_request(self, token):
         url = '{}/{}/users?$top={}'.format(
             settings.AZURE_GRAPH_API_BASE_URL,
             settings.AZURE_GRAPH_API_VERSION,
             settings.AZURE_GRAPH_API_PAGE_SIZE
         )
         responses.add(
-            responses.GET, url, status=300,
+            responses.GET, url, status=400,
             json={},
         )
-        with self.assertRaises(AzureHttpError):
+        with self.assertRaisesRegexp(AzureHttpError, "Error processing the response 400"):
             azure_sync_users(url)
         self.assertEqual(token.call_count, 1)
         self.assertEqual(token.call_args[0], ())

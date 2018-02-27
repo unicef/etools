@@ -2,9 +2,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from django.contrib.auth import get_user_model
 
-from azure_graph_api.utils import handle_record, handle_records
 from mock import patch
 
+from azure_graph_api.utils import handle_record, handle_records
 from EquiTrack.factories import GroupFactory, UserFactory
 from EquiTrack.tests.cases import EToolsTenantTestCase
 
