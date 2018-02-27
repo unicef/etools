@@ -12,6 +12,7 @@ from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 from rest_framework_swagger.views import get_swagger_view
 
+from email_auth.urls import urlpatterns as email_auth_patterns
 from EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
 from locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
 from management.urls import urlpatterns as management_urls
@@ -55,6 +56,7 @@ urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
+    url(r'^email-auth/', include(email_auth_patterns, namespace='email_auth')),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 

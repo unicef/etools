@@ -1,6 +1,6 @@
 [
   {
-    "model": "audit.auditorfirm",
+    "model": "purchase_order.auditorfirm",
     "fields": {
       "vendor_number": "000",
       "name": "UNICEF Staff Org.",
@@ -13,7 +13,7 @@
    }
   },
   {
-    "model": "audit.purchaseorder",
+    "model": "purchase_order.purchaseorder",
     "fields": {
       "order_number": "0000000000",
       "auditor_firm": ["000"],
@@ -22,7 +22,7 @@
     }
   },
   {
-    "model": "audit.purchaseorderitem",
+    "model": "purchase_order.purchaseorderitem",
     "fields": {
       "purchase_order": ["0000000000" ],
       "number": 0
