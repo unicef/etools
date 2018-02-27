@@ -9,7 +9,7 @@ from partners.models import (
     Intervention,
     PartnerStaffMember,
     PartnerOrganization,
-    InterventionReportingPeriod)
+    InterventionReportingPeriod, InterventionAmendment)
 from reports.models import Result, AppliedIndicator, LowerResult, Disaggregation, DisaggregationValue
 from reports.serializers.v1 import SectorSerializer
 
@@ -49,6 +49,14 @@ class PartnerFocalPointSerializer(serializers.ModelSerializer):
         model = PartnerStaffMember
         depth = 1
         fields = ('name', 'email')
+
+
+class InterventionAmendmentSerializer(serializers.ModelSerializer):
+    amendment_number = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = InterventionAmendment
+        fields = ('types', 'other_description', 'signed_date', 'amendment_number')
 
 
 class IndicatorLocationSerializer(serializers.ModelSerializer):
@@ -151,6 +159,7 @@ class ReportingPeriodsSerializer(serializers.ModelSerializer):
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     # todo: do these need to be lowercased?
+    amendments = InterventionAmendmentSerializer(read_only=True, many=True)
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     business_area_code = serializers.SerializerMethodField()
     partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
@@ -198,5 +207,6 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'unicef_budget', 'unicef_budget_currency',
             'reporting_periods',
             'expected_results',
-            'update_date'
+            'update_date',
+            'amendments'
         )
