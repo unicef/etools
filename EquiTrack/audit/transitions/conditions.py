@@ -41,7 +41,7 @@ class ValidateRiskCategories(BaseTransitionCheck):
             questions_count = RiskBluePrint.objects.filter(category__code=code).count()
             answers_count = instance.risks.filter(blueprint__category__code=code).count()
             if questions_count != answers_count:
-                errors[self.VALIDATE_CATEGORIES_BEFORE_SUBMIT[code]] = _('You should give answers for all questions')
+                errors[self.VALIDATE_CATEGORIES_BEFORE_SUBMIT[code]] = _('Please answer all questions')
 
         return errors
 
@@ -125,8 +125,8 @@ class SPSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsChec
 
 class AuditSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsCheck):
     fields = EngagementSubmitReportRequiredFieldsCheck.fields + [
-        'audited_expenditure', 'financial_findings', 'percent_of_audited_expenditure',
-        'audit_opinion', 'recommendation', 'audit_observation', 'ip_response',
+        'audited_expenditure', 'financial_findings',
+        'audit_opinion',
     ]
 
 

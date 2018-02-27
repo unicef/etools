@@ -13,7 +13,7 @@ import mock
 import partners.tasks
 from EquiTrack.factories import (
     AgreementFactory, CountryFactory, FundsReservationHeaderFactory, InterventionFactory, UserFactory,)
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.models import Agreement, Intervention
 from users.models import User
 
@@ -41,7 +41,7 @@ def _make_past_datetime(n_days):
     return timezone.now() - datetime.timedelta(days=n_days)
 
 
-class TestGetInterventionContext(FastTenantTestCase):
+class TestGetInterventionContext(EToolsTenantTestCase):
     '''Exercise the tasks' helper function get_intervention_context()'''
     def setUp(self):
         self.intervention = InterventionFactory()
@@ -81,7 +81,7 @@ class TestGetInterventionContext(FastTenantTestCase):
         self.assertEqual(result['unicef_focal_points'], [focal_point_user.email])
 
 
-class PartnersTestBaseClass(FastTenantTestCase):
+class PartnersTestBaseClass(EToolsTenantTestCase):
     '''Common elements for most of the tests in this file.'''
     def _assertCalls(self, mocked_function, all_expected_call_args):
         '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was
@@ -162,13 +162,13 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             (('Starting agreement auto status transition for country {}'.format(self.country_name), ), {}),
             (('Total agreements 0', ), {}),
             (('Transitioned agreements 0 ', ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.info, expected_call_args)
 
         expected_call_args = [
             (('Bad agreements 0', ), {}),
             (('Bad agreements ids: ', ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.error, expected_call_args)
 
     @mock.patch('partners.tasks.AgreementValid')
@@ -212,13 +212,13 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             (('Starting agreement auto status transition for country {}'.format(self.country_name), ), {}),
             (('Total agreements 3', ), {}),
             (('Transitioned agreements 0 ', ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.info, expected_call_args)
 
         expected_call_args = [
             (('Bad agreements 0', ), {}),
             (('Bad agreements ids: ', ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.error, expected_call_args)
 
     @mock.patch('partners.tasks.AgreementValid')
@@ -281,13 +281,13 @@ class TestAgreementStatusAutomaticTransitionTask(PartnersTestBaseClass):
             (('Starting agreement auto status transition for country {}'.format(self.country_name), ), {}),
             (('Total agreements 3', ), {}),
             (('Transitioned agreements 1 ', ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.info, expected_call_args)
 
         expected_call_args = [
             (('Bad agreements 1', ), {}),
             (('Bad agreements ids: {}'.format(agreements[0].id), ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.error, expected_call_args)
 
 
@@ -326,13 +326,13 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             (('Starting intervention auto status transition for country {}'.format(self.country_name), ), {}),
             (('Total interventions 0', ), {}),
             (('Transitioned interventions 0 ', ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.info, expected_call_args)
 
         expected_call_args = [
             (('Bad interventions 0', ), {}),
             (('Bad interventions ids: ', ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.error, expected_call_args)
 
     @mock.patch('partners.tasks.InterventionValid')
@@ -398,7 +398,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         expected_call_args = [
             (('Bad interventions 0', ), {}),
             (('Bad interventions ids: ', ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.error, expected_call_args)
 
     @mock.patch('partners.tasks.InterventionValid')
@@ -484,7 +484,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         expected_call_args = [
             (('Bad interventions 1', ), {}),
             (('Bad interventions ids: {}'.format(interventions[0].id), ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.error, expected_call_args)
 
 
@@ -519,7 +519,7 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
         # Verify logged messages.
         expected_call_args = [
             (('Starting intervention signed but no FRs notifications for country {}'.format(self.country_name), ), {}),
-            ]
+        ]
         self._assertCalls(mock_logger.info, expected_call_args)
 
     @mock.patch('notification.utils.Notification')

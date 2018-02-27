@@ -128,9 +128,10 @@ class UserMapper(object):
                 logger.info("User doesn't have the required fields {}".format(ad_user))
                 return
 
-        # TODO: MODIFY THIS TO USE THE GUID ON THE PROFILE INSTEAD OF EMAIL on the User
-        user, created = User.objects.get_or_create(email=ad_user['internetaddress'],
-                                                   username=ad_user['internetaddress'][:30])
+        # TODO: MODIFY THIS TO USE THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
+        user, created = User.objects.get_or_create(
+            email=ad_user['internetaddress'],
+            username=ad_user['internetaddress'][:User._meta.get_field('username').max_length])
         if created:
             user.set_unusable_password()
 

@@ -10,14 +10,7 @@ def reverse(apps, schema_editor):
 
 
 def gov_int_copy_section_sectors(apps, schema_editor):
-    GovernmentInterventionResult = apps.get_model('partners', 'GovernmentInterventionResult')
-    for gir in GovernmentInterventionResult.objects.all():
-        if gir.section:
-            gir.sections.add(gir.section)
-        if gir.sector:
-            gir.sectors.add(gir.sector)
-        gir.save()
-        print 'saved gir {}'.format(gir.id)
+    pass
 
 class Migration(migrations.Migration):
 
