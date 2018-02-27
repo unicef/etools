@@ -42,6 +42,7 @@
     "unicef_focal_points": [],
     "end_date": "2017-12-13",
     "agreement_auth_officers": [],
+    "amendments": [],
     "business_area_code": "ZZZ",
     "title": "Active Intervention",
     "unicef_budget": "0.00",
@@ -49,6 +50,7 @@
     "number": "/PCA2017394/PD2017642",
     "start_date": "2017-09-13",
     "focal_points": [],
+    "locations": [],
     "offices": [],
     "partner_org": {
       "id": 1976,
@@ -70,6 +72,7 @@
     "sections": [],
     "agreement": "PCA20172036",
     "agreement_auth_officers": [],
+    "amendments": [],
     "business_area_code": "ZZZ",
     "title": "Intervention 2",
     "unicef_budget": "0.00",
@@ -77,6 +80,7 @@
     "number": "/PCA2017393/PD2017641",
     "start_date": null,
     "focal_points": [],
+    "locations": [],
     "offices": [],
     "partner_org": {
       "id": 1975,
@@ -98,6 +102,7 @@
     "sections": [],
     "agreement": "PCA20172036",
     "agreement_auth_officers": [],
+    "amendments": [],
     "business_area_code": "ZZZ",
     "title": "Intervention 1",
     "unicef_budget": "110.00",
@@ -105,6 +110,7 @@
     "number": "/PCA2017393/2017640",
     "start_date": null,
     "focal_points": [],
+    "locations": [],
     "offices": [],
     "partner_org": {
       "id": 1975,
