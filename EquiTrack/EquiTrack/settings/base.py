@@ -179,6 +179,7 @@ SHARED_APPS = (
     'django_filters',
     'environment',
     'audit.purchase_order',
+    'EquiTrack',
     'utils.common',
     'utils.mail',
     'utils.writable_serializers',
