@@ -96,7 +96,6 @@ def sync_handler(self, country_name, handler):
             raise VisionException
 
 
-
 # Not scheduled by any code in this repo, but by other means, so keep it around.
 # It catches all exceptions internally and keeps going on to the next partner, so
 # no need to have celery retry it on exceptions.
