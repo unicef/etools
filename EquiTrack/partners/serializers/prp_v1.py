@@ -59,7 +59,7 @@ class InterventionAmendmentSerializer(serializers.ModelSerializer):
         fields = ('types', 'other_description', 'signed_date', 'amendment_number')
 
 
-class IndicatorLocationSerializer(serializers.ModelSerializer):
+class PRPLocationSerializer(serializers.ModelSerializer):
     pcode = serializers.CharField(source='p_code', read_only=True)
     location_type = serializers.CharField(source='gateway.name', read_only=True)
     admin_level = serializers.IntegerField(source='gateway.admin_level')
@@ -99,7 +99,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
     # todo: need to validate these and fill in missing fields
     title = serializers.CharField(source='indicator.title', read_only=True)
     blueprint_id = serializers.IntegerField(source='indicator.id', read_only=True)
-    locations = IndicatorLocationSerializer(read_only=True, many=True)
+    locations = PRPLocationSerializer(read_only=True, many=True)
     disaggregation = DisaggregationSerializer(read_only=True, many=True)
 
     class Meta:
@@ -182,6 +182,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     update_date = serializers.DateTimeField(source='modified')
     reporting_periods = ReportingPeriodsSerializer(many=True, read_only=True)
     sections = SectorSerializer(source="combined_sections", many=True, read_only=True)
+    locations = PRPLocationSerializer(source="flat_locations", many=True, read_only=True)
 
     def get_business_area_code(self, obj):
         return connection.tenant.business_area_code
@@ -208,5 +209,6 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'reporting_periods',
             'expected_results',
             'update_date',
-            'amendments'
+            'amendments',
+            'locations'
         )
