@@ -41,7 +41,6 @@ class PRPInterventionListAPIView(ListAPIView):
             'result_links__ll_results__applied_indicators__disaggregation__disaggregation_values',
             'result_links__ll_results__applied_indicators__locations__gateway',
             'reporting_periods',
-            'planned_budget__currency',
             'frs',
             'partner_focal_points',
             'unicef_focal_points',
