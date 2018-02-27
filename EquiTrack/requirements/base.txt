@@ -1,16 +1,15 @@
 -e git+https://github.com/robertavram/django-storages.git@1.6.5.1#egg=django-storages
 -e git+https://github.com/unicef/djangosaml2.git@v0.16.11.2#egg=djangosaml2
-amqp==1.4.9               # via kombu
-anyjson==0.3.3            # via kombu
+amqp==2.2.2               # via kombu
 asn1crypto==0.24.0        # via cryptography
 azure-common==1.1.8       # via azure-storage
 azure-nspkg==2.0.0        # via azure-common, azure-storage
 azure-storage==0.20.2
 babel==2.5.3              # via flower
 backports.ssl-match-hostname==3.5.0.1  # via tornado
-billiard==3.3.0.23        # via celery
+billiard==3.5.0.3         # via celery
 carto==1.0.1
-celery==3.1.25
+celery==4.1.0
 certifi==2018.1.18        # via tornado
 cffi==1.11.4              # via cryptography
 contextlib2==0.5.5        # via raven
@@ -26,8 +25,7 @@ django-allauth==0.28.0
 django-analytical==2.2.2
 django-appconf==1.0.2     # via django-celery-email
 django-autocomplete-light==3.2.1
-django-celery-email==1.1.5
-django-celery==3.1.17
+django-celery-email==2.0
 django-cors-headers==1.3.1
 django-debug-toolbar==1.6
 django-easy-pdf==0.1.1
@@ -57,30 +55,8 @@ djangorestframework-xml==1.0.1
 djangorestframework==3.5.3
 djrill==2.1.0
 drf-nested-routers==0.11.1
-django-rest-swagger==2.1.0
-djangorestframework-recursive==0.1.1
-drfpasswordless==1.1.2
-
-# Other Python packages
-psycopg2==2.6.2
-celery==4.1.0
-amqp==2.2.2
-billiard==3.5.0.3
-kombu==4.1.0
-vine==1.1.4
-django-celery-beat==1.1.1
-django-celery-results==1.0.1
-GDAL==1.10.0           # DO NOT USE GDAL <= 2.1.0
-carto==1.0.1
-gunicorn==19.6.0
-tenant-schemas-celery==0.1.7
-sqlparse==0.2.2  # for django debug toolbar to not break admin
-azure-storage==0.20.2
-requests==2.11.1
-xlrd==1.0.0
-xhtml2pdf==0.1b3
-html5lib==1.0b8 #must be added after xhtml2pdf
-reportlab==3.3.0
+enum34==1.1.6             # via cryptography
+et-xmlfile==1.0.1         # via openpyxl
 flower==0.9.1
 future==0.15.2            # via pyrestcli, pysaml2
 futures==3.2.0            # via azure-storage, flower
@@ -94,7 +70,7 @@ itypes==1.1.0             # via coreapi
 jdcal==1.3                # via openpyxl
 jinja2==2.10              # via coreschema
 jsonfield==2.0.2          # via django-post-office
-kombu==3.0.37             # via celery
+kombu==4.1.0              # via celery
 markupsafe==1.0           # via jinja2
 oauthlib==2.0.6           # via requests-oauthlib
 odfpy==1.3.6              # via tablib
@@ -125,10 +101,11 @@ six==1.11.0               # via cryptography, django-geojson, djangorestframewor
 sqlparse==0.2.2           # via django-debug-toolbar
 static3==0.7.0            # via dj-static
 tablib==0.12.1            # via django-import-export
-tenant-schemas-celery==0.1.5
+tenant-schemas-celery==0.1.7
 tornado==4.2.0            # via flower
 unicodecsv==0.14.1        # via djangorestframework-csv, tablib
 uritemplate==3.0.0        # via coreapi
+vine==1.1.4               # via amqp
 webencodings==0.5.1       # via html5lib
 webob==1.7.4              # via repoze.who
 xhtml2pdf==0.2.1          # via django-easy-pdf
