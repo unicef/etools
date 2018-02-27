@@ -18,6 +18,8 @@ def migrate_shared_partner(apps, schema_editor):
     PartnerOrganization = apps.get_model('partners', 'PartnerOrganization')
 
     for p in PartnerOrganization.objects.filter(shared_partner='with UNDP').exclude(shared_with__contains=['UNDP',]):
+        if not p.shared_with:
+            p.shared_with = []
         p.shared_with.append('UNDP')
         p.save()
     for p in PartnerOrganization.objects.filter(shared_partner='with UNFPA').exclude(shared_with__contains=['UNFPA',]):
