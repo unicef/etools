@@ -21,12 +21,18 @@ def migrate_shared_partner(apps, schema_editor):
         p.shared_with.append('UNDP')
         p.save()
     for p in PartnerOrganization.objects.filter(shared_partner='with UNFPA').exclude(shared_with__contains=['UNFPA',]):
+        if not p.shared_with:
+            p.shared_with = []
         p.shared_with.append('UNFPA')
         p.save()
     for p in PartnerOrganization.objects.filter(shared_partner='with UNDP & UNFPA').exclude(shared_with__contains=['UNFPA',]):
+        if not p.shared_with:
+            p.shared_with = []
         p.shared_with.append('UNFPA')
         p.save()
     for p in PartnerOrganization.objects.filter(shared_partner='with UNDP & UNFPA').exclude(shared_with__contains=['UNDP',]):
+        if not p.shared_with:
+            p.shared_with = []
         p.shared_with.append('UNDP')
         p.save()
 
