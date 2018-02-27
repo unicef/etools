@@ -14,6 +14,7 @@ from EquiTrack.factories import (
     PartnerFactory,
     TravelActivityFactory,
     UserFactory,
+    InterventionBudgetFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import PartnerOrganization, PartnerType
@@ -31,6 +32,34 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partners/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
+
+
+class TestPartnerOrganizationDetailAPIView(APITenantTestCase):
+    def setUp(self):
+        super(TestPartnerOrganizationDetailAPIView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.interventionbudget = InterventionBudgetFactory()
+
+        self.intervention = self.interventionbudget.intervention
+        self.intervention.save()
+
+        self.agreement = self.interventionbudget.intervention.agreement
+        self.agreement.save()
+
+        self.partner = self.interventionbudget.intervention.agreement.partner
+        self.partner.save()
+
+        self.url = reverse("partners_api:partner-detail", kwargs={'pk': self.partner.id})
+
+    def test_get_partner_details(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff
+        )
+
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(self.intervention.id, response_json.get("interventions")[0].id)
 
 
 class TestPartnerOrganizationHactAPIView(APITenantTestCase):
