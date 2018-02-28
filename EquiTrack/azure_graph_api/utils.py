@@ -30,10 +30,10 @@ def handle_record(record):
     logger.debug('Department: %s', record.get('department', '-'))
 
     logger.debug('Country Code [Business Area Code]: %s',
-        record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1', '-'))
+                 record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1', '-'))
     logger.debug('Country: %s', record.get('country', '-'))
     logger.debug('Index Number: %s',
-        record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute2', '-'))
+                 record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute2', '-'))
     logger.debug('Nationality: %s', record.get(
         'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute3', '-'))
     logger.debug('Attribute 4: %s', record.get(
@@ -43,21 +43,21 @@ def handle_record(record):
     logger.debug('Division Code: %s', record.get(
         'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute6', '-'))
     logger.debug('Section Name [Unit]: %s',
-        record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute7', '-'))
+                 record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute7', '-'))
     logger.debug('Grade: %s%s',
-        record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute8', '-'),
-        record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute9', '-'))
+                 record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute8', '-'),
+                 record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute9', '-'))
     logger.debug('Attribute 10: %s',
-        record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute10', '-'))
+                 record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute10', '-'))
     logger.debug('Job Title: %s', record.get('jobTitle', '-'))
     logger.debug('EOD: %s', record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute11'))
     logger.debug('NTE: %s', record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute12'))
     logger.debug('Hierarchy [Office]: %s',
-        record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute13', '-'))
+                 record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute13', '-'))
     logger.debug('Division: %s', record.get(
         'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute14', '-'))
     logger.debug('Duty Station: %s',
-        record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute15', '-'))
+                 record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute15', '-'))
 
     logger.debug('office Location: %s', record.get('officeLocation', '-'))
     logger.debug('usage Location: %s', record.get('usageLocation', '-'))
