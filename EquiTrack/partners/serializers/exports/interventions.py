@@ -399,10 +399,8 @@ class InterventionExportFlatSerializer(InterventionExportSerializer):
         planned_visits = []
         for planned_visit in obj.planned_visits.all():
             planned_visits.append(
-                "Year: {} {}, Programmatic: {}".format(
+                "Year: {}".format(
                     planned_visit.year,
-                    planned_visit.quarter,
-                    planned_visit.programmatic,
                 )
             )
         return "\n".join(planned_visits)

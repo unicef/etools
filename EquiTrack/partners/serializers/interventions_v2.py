@@ -69,8 +69,10 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "year",
-            "programmatic",
-            "quarter"
+            "programmatic_q1",
+            "programmatic_q2",
+            "programmatic_q3",
+            "programmatic_q4",
         )
 
 

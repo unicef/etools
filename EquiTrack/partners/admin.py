@@ -103,8 +103,10 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     fields = (
         'intervention',
         'year',
-        'quarter',
-        'programmatic',
+        'programmatic_q1',
+        'programmatic_q2',
+        'programmatic_q3',
+        'programmatic_q4',
     )
     search_fields = (
         'intervention__number',
@@ -112,8 +114,10 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     list_display = (
         'intervention',
         'year',
-        'quarter',
-        'programmatic',
+        'programmatic_q1',
+        'programmatic_q2',
+        'programmatic_q3',
+        'programmatic_q4',
     )
 
 

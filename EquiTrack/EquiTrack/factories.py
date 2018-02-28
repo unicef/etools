@@ -12,7 +12,6 @@ from django.contrib.gis.geos import GEOSGeometry
 import factory
 from factory import fuzzy
 
-from EquiTrack.fields import QuarterField
 from snapshot import models as snapshot_models
 
 from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
@@ -296,8 +295,10 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     year = datetime.today().year
-    programmatic = 1
-    quarter = QuarterField.Q2
+    programmatic_q1 = fuzzy.FuzzyInteger(0, 4)
+    programmatic_q2 = fuzzy.FuzzyInteger(0, 4)
+    programmatic_q3 = fuzzy.FuzzyInteger(0, 4)
+    programmatic_q4 = fuzzy.FuzzyInteger(0, 4)
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):

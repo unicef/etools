@@ -1934,13 +1934,18 @@ class InterventionPlannedVisits(TimeStampedModel):
 
     intervention = models.ForeignKey(Intervention, related_name='planned_visits')
     year = models.IntegerField(default=get_current_year)
-    programmatic = models.IntegerField(default=0)
-    quarter = QuarterField()
+    programmatic_q1 = models.IntegerField(default=0)
+    programmatic_q2 = models.IntegerField(default=0)
+    programmatic_q3 = models.IntegerField(default=0)
+    programmatic_q4 = models.IntegerField(default=0)
 
     tracker = FieldTracker()
 
     class Meta:
-        unique_together = ('intervention', 'year', 'quarter')
+        unique_together = ('intervention', 'year')
+
+    def __str__(self):
+        return '{} {}'.format(self.intervention, self.year)
 
 
 @python_2_unicode_compatible
