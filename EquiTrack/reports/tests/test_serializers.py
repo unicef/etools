@@ -13,7 +13,7 @@ from EquiTrack.factories import (
     LowerResultFactory,
     SectorFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult
 from reports.serializers.v2 import (
     AppliedIndicatorSerializer,
@@ -23,7 +23,7 @@ from reports.serializers.v2 import (
 )
 
 
-class DisaggregationTest(FastTenantTestCase):
+class DisaggregationTest(EToolsTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -93,7 +93,7 @@ class DisaggregationTest(FastTenantTestCase):
         self.assertEqual(serializer.errors['disaggregation_values'], ['This field is required.'])
 
 
-class TestAppliedIndicatorSerializer(FastTenantTestCase):
+class TestAppliedIndicatorSerializer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.section = SectorFactory()
@@ -196,7 +196,7 @@ class TestAppliedIndicatorSerializer(FastTenantTestCase):
         self.assertEqual(applied_qs.count(), count + 1)
 
 
-class TestLowerResultSimpleCUSerializer(FastTenantTestCase):
+class TestLowerResultSimpleCUSerializer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.result_link = InterventionResultLinkFactory()
@@ -231,7 +231,7 @@ class TestLowerResultSimpleCUSerializer(FastTenantTestCase):
         self.assertIsInstance(lower_result, LowerResult)
 
 
-class TestLowerResultCUSerializer(FastTenantTestCase):
+class TestLowerResultCUSerializer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.result_link = InterventionResultLinkFactory()

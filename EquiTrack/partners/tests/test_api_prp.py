@@ -23,8 +23,6 @@ from reports.models import LowerResult, AppliedIndicator, IndicatorBlueprint
 
 
 class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
-    fixtures = ['initial_data.json']
-
     def setUp(self):
         super(TestInterventionsAPI, self).setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)
@@ -64,6 +62,9 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
             del actual_intervention['agreement']
             del expected_intervention['partner_org']['id']
             del expected_intervention['agreement']
+            del expected_intervention['partner_org']['unicef_vendor_number']
+            del actual_intervention['partner_org']['unicef_vendor_number']
+
             for j in range(len(expected_intervention['expected_results'])):
                 del expected_intervention['expected_results'][j]['id']
                 del expected_intervention['expected_results'][j]['cp_output']['id']
@@ -102,7 +103,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, APITenantTestCase):
             self.assertEqual(expected_results, len(response['results']))
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 22
+        EXPECTED_QUERIES = 23
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'

@@ -73,7 +73,6 @@ class URLsTestCase(URLAssertionMixin, TestCase):
 
 
 class TestInterventionsAPI(APITenantTestCase):
-    fixtures = ['initial_data.json']
     EDITABLE_FIELDS = {
         'draft': ["status", "attachments", "prc_review_document", 'travel_activities',
                   "partner_authorized_officer_signatory", "partner_focal_points", "id",
@@ -228,6 +227,10 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def test_fr_details_is_accurate_on_creation(self):
         self.assertFalse(Activity.objects.exists())
+        self.fr_1.vendor_code = self.agreement.partner.vendor_number
+        self.fr_2.vendor_code = self.agreement.partner.vendor_number
+        self.fr_1.save()
+        self.fr_2.save()
         frs_data = [self.fr_1.id, self.fr_2.id]
         data = {
             "document_type": Intervention.PD,
@@ -256,6 +259,10 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def test_add_two_valid_frs_on_update_pd(self):
         self.assertFalse(Activity.objects.exists())
+        self.fr_1.vendor_code = self.intervention_2.agreement.partner.vendor_number
+        self.fr_2.vendor_code = self.intervention_2.agreement.partner.vendor_number
+        self.fr_1.save()
+        self.fr_2.save()
         frs_data = [self.fr_1.id, self.fr_2.id]
         data = {
             "frs": frs_data

@@ -10,24 +10,24 @@ from mock import patch, Mock
 from tenant_schemas.utils import schema_context
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 
 from EquiTrack.factories import (
     CountryFactory,
+    GroupFactory,
     SectionFactory,
     ProfileFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import SCHEMA_NAME, FastTenantTestCase
+from EquiTrack.tests.cases import SCHEMA_NAME, EToolsTenantTestCase
 from users import tasks
 from users.models import Section, User, UserProfile
 from vision.vision_data_synchronizer import VisionException, VISION_NO_DATA_MESSAGE
 
 
-class TestUserMapper(FastTenantTestCase):
+class TestUserMapper(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.group, _ = Group.objects.get_or_create(name="UNICEF User")
+        cls.group = GroupFactory(name="UNICEF User")
 
     def setUp(self):
         super(TestUserMapper, self).setUp()
@@ -391,7 +391,7 @@ class TestUserMapper(FastTenantTestCase):
 
 
 @skip("Issues with using public schema")
-class TestSyncUsers(FastTenantTestCase):
+class TestSyncUsers(EToolsTenantTestCase):
     def setUp(self):
         super(TestSyncUsers, self).setUp()
         self.mock_log = Mock()
@@ -416,7 +416,7 @@ class TestSyncUsers(FastTenantTestCase):
 
 
 @skip("Issues with using public schema")
-class TestMapUsers(FastTenantTestCase):
+class TestMapUsers(EToolsTenantTestCase):
     def setUp(self):
         super(TestMapUsers, self).setUp()
         self.mock_log = Mock()
@@ -454,7 +454,7 @@ class TestMapUsers(FastTenantTestCase):
         self.assertTrue(self.mock_log.save.call_count(), 1)
 
 
-class TestUserSynchronizer(FastTenantTestCase):
+class TestUserSynchronizer(EToolsTenantTestCase):
     def setUp(self):
         super(TestUserSynchronizer, self).setUp()
         self.synchronizer = tasks.UserSynchronizer(

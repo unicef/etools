@@ -4,7 +4,7 @@ import datetime
 import sys
 from unittest import skipIf, TestCase
 
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from EquiTrack.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
@@ -110,13 +110,13 @@ class TestStrUnicode(TestCase):
         self.assertEqual(unicode(instance), u'\xccsland  ')
 
 
-class TestQuarter(FastTenantTestCase):
+class TestQuarter(EToolsTenantTestCase):
     def test_repr(self):
         quarter = QuarterFactory(name=Quarter.Q1, year=2001)
         self.assertEqual(repr(quarter), "Q1-2001")
 
 
-class TestCountryProgramme(FastTenantTestCase):
+class TestCountryProgramme(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         today = datetime.date.today()
@@ -212,7 +212,7 @@ class TestCountryProgramme(FastTenantTestCase):
         self.assertEqual(agreement_updated.end, new_to_date)
 
 
-class TestResult(FastTenantTestCase):
+class TestResult(EToolsTenantTestCase):
     def test_result_name(self):
         result_type = ResultTypeFactory(name="RType")
         result = ResultFactory(
@@ -247,7 +247,7 @@ class TestResult(FastTenantTestCase):
         self.assertFalse(result.valid_entry())
 
 
-class TestIndicatorBlueprint(FastTenantTestCase):
+class TestIndicatorBlueprint(EToolsTenantTestCase):
     def test_save_empty(self):
         """If code is empty ensure it is set to None"""
         indicator = IndicatorBlueprint(code="")
@@ -261,7 +261,7 @@ class TestIndicatorBlueprint(FastTenantTestCase):
         self.assertEqual(indicator.code, "C123")
 
 
-class TestIndicator(FastTenantTestCase):
+class TestIndicator(EToolsTenantTestCase):
     def test_save_empty(self):
         """If code is empty ensure it is set to None"""
         indicator = Indicator(name="Indicator", code="")
