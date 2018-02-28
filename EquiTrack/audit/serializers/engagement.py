@@ -260,6 +260,22 @@ class EngagementSerializer(EngagementDatesValidation,
         return validated_data
 
 
+class EngagementHactSerializer(EngagementLightSerializer):
+    expenditure = serializers.SerializerMethodField()
+
+    def get_expenditure(self, obj):
+        type_amount_mapping = {
+            'audit': obj.audit.audited_expenditure,
+            'sc': obj.spot_check.total_amount_tested
+        }
+        return type_amount_mapping.get(obj.engagement_type, 0)
+
+    class Meta(EngagementLightSerializer.Meta):
+        fields = EngagementLightSerializer.Meta.fields + [
+            "expenditure",
+        ]
+
+
 class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     class Meta(WritableNestedSerializerMixin.Meta):
         model = Finding

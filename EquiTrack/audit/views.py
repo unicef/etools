@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
-from rest_framework import generics, mixins, viewsets
+from rest_framework import generics, mixins, viewsets, status
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import IsAuthenticated
@@ -25,7 +25,7 @@ from audit.serializers.auditor import (
     PurchaseOrderSerializer,)
 from audit.serializers.engagement import (
     AuditSerializer, EngagementExportSerializer, EngagementLightSerializer, EngagementSerializer,
-    MicroAssessmentSerializer, SpecialAuditSerializer, SpotCheckSerializer,)
+    EngagementHactSerializer, MicroAssessmentSerializer, SpecialAuditSerializer, SpotCheckSerializer,)
 from audit.serializers.export import (
     AuditPDFSerializer, MicroAssessmentPDFSerializer, SpecialAuditPDFSerializer, SpotCheckPDFSerializer,)
 from partners.models import PartnerOrganization
@@ -208,6 +208,17 @@ class EngagementViewSet(
     def partners(self, request, *args, **kwargs):
         engagements = self.get_queryset()
         return EngagementPartnerView.as_view(engagements=engagements)(request, *args, **kwargs)
+
+    @list_route(methods=['get'], url_path='hact')
+    def hact(self, request, *args, **kwargs):
+        engagements = self.get_queryset()
+
+        serializer = EngagementHactSerializer(engagements, many=True, context={"request": request})
+        # if serializer.is_valid():
+        return Response(serializer.data)
+        # else:
+        #     return Response(serializer.errors,
+        #                     status=status.HTTP_400_BAD_REQUEST)
 
     @detail_route(methods=['get'], url_path='pdf')
     def export_pdf(self, request, *args, **kwargs):
