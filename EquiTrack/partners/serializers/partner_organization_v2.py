@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import json
 
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Q, Max, Count, CharField
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
@@ -193,11 +193,21 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def get_interventions(self, obj):
-        interventions = Intervention.objects \
-            .filter(agreement__partner=obj) \
-            .exclude(status='draft')
-        interventions = InterventionSummaryListSerializer(interventions, many=True)
+        interventions = InterventionSummaryListSerializer(self.get_related_interventions(obj), many=True)
         return interventions.data
+
+    def get_related_interventions(self, partner):
+        qs = Intervention.objects\
+            .filter(agreement__partner=partner)\
+            .exclude(status='draft')\
+            .prefetch_related('planned_budget')
+
+        qs = qs.annotate(
+            Count("frs__currency", distinct=True),
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
+        )
+
+        return qs
 
     class Meta:
         model = PartnerOrganization
