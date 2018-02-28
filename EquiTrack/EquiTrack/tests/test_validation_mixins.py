@@ -1,18 +1,12 @@
 # Python imports
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
 # Don't enable unicode_literals in this module until Python 3. Tests in this module rely on being able to create
 # both str and unicode literals.
 # from __future__ import unicode_literals
 from unittest import TestCase
 
-from EquiTrack.validation_mixins import (
-    _BaseStateError,
-    BasicValidationError,
-    StateValidError,
-    TransitionError,
-    )
+from EquiTrack.validation_mixins import _BaseStateError, BasicValidationError, StateValidError, TransitionError
 
 
 class TestExceptions(TestCase):

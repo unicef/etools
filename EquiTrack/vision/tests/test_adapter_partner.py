@@ -4,13 +4,13 @@ import datetime
 import json
 
 from EquiTrack.factories import PartnerFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.models import PartnerOrganization
 from users.models import Country
 from vision.adapters import partner as adapter
 
 
-class TestPartnerSynchronizer(FastTenantTestCase):
+class TestPartnerSynchronizer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
@@ -23,6 +23,9 @@ class TestPartnerSynchronizer(FastTenantTestCase):
             "COUNTRY": "USD",
             "TOTAL_CASH_TRANSFERRED_CP": "150.00",
             "TOTAL_CASH_TRANSFERRED_CY": "100.00",
+            "NET_CASH_TRANSFERRED_CY": "90.00",
+            "REPORTED_CY": "80.00",
+            "TOTAL_CASH_TRANSFERRED_YTD": "70.00",
         }
         self.records = {"ROWSET": {"ROW": [self.data]}}
         self.adapter = adapter.PartnerSynchronizer(self.country)

@@ -2,14 +2,18 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import json
 
-from audit.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
-from EquiTrack.tests.mixins import FastTenantTestCase
+from audit.purchase_order.models import (
+    AuditorFirm,
+    PurchaseOrder,
+    PurchaseOrderItem,
+)
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from funds.models import Donor, Grant
 from users.models import Country
 from vision.adapters import purchase_order as adapter
 
 
-class TestPSynchronizer(FastTenantTestCase):
+class TestPSynchronizer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()

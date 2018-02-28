@@ -11,7 +11,7 @@ import mock
 
 import vision.tasks
 from EquiTrack.factories import CountryFactory, PartnerFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from users.models import Country
 from vision.adapters.programme import ProgrammeSynchronizer
 from vision.exceptions import VisionException
@@ -286,7 +286,7 @@ class TestSyncHandlerTask(TestCase):
         self.assertEqual(mock_logger.call_args[1], {})
 
 
-class TestUpdateAllPartners(FastTenantTestCase):
+class TestUpdateAllPartners(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
@@ -311,7 +311,7 @@ class TestUpdateAllPartners(FastTenantTestCase):
         self.assertEqual(mock_logger_exception.call_count, 0)
 
 
-class TestUpdatePurchaseOrders(FastTenantTestCase):
+class TestUpdatePurchaseOrders(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()

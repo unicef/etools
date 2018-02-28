@@ -8,7 +8,7 @@ from EquiTrack.factories import (
     PublicsCountryFactory,
     PublicsGrantFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from publics.tests.factories import TravelAgentFactory
 from publics.models import (
     Country as PublicsCountry,
@@ -24,7 +24,7 @@ from users.models import Country
 from vision.adapters import publics_adapter as adapter
 
 
-class TestCostAssignmentSynch(FastTenantTestCase):
+class TestCostAssignmentSynch(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
@@ -148,7 +148,7 @@ class TestCostAssignmentSynch(FastTenantTestCase):
         self.assertEqual(response, 1)
 
 
-class TestCurrencySynchronizer(FastTenantTestCase):
+class TestCurrencySynchronizer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
@@ -180,7 +180,7 @@ class TestCurrencySynchronizer(FastTenantTestCase):
         self.assertTrue(exchange_qs.exists())
 
 
-class TestTravelAgenciesSynchronizer(FastTenantTestCase):
+class TestTravelAgenciesSynchronizer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()

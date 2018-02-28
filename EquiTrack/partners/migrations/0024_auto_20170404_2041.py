@@ -9,22 +9,7 @@ def reverse(apps, schema_editor):
     pass
 
 def gov_int_unique_reference_number(apps, schema_editor):
-    GovernmentIntervention = apps.get_model('partners', 'GovernmentIntervention')
-    gov_ints = GovernmentIntervention.objects.all()
-    for gov in gov_ints:
-        if not gov.number:
-            print(gov)
-            gov.number = 'blk:{}'.format(gov.id)
-            gov.save()
-    dupes = GovernmentIntervention.objects.values('number').annotate(
-        Count('number')).order_by().filter(number__count__gt=1).all()
-    for dup in dupes:
-        cdupes = GovernmentIntervention.objects.filter(number=dup['number'])
-        for cdup in cdupes:
-            if len(cdup.number) > 40:
-                cdup.number = cdup.number[len(cdup.number) - 40:]
-            cdup.number = '{}|{}'.format(cdup.number, cdup.id)
-            cdup.save()
+    pass
 
 
 class Migration(migrations.Migration):

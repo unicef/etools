@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime
 import json
 
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from EquiTrack.factories import (
     CountryProgrammeFactory,
     IndicatorFactory,
@@ -15,7 +15,7 @@ from users.models import Country
 from vision.adapters import programme as adapter
 
 
-class TestResultStructureSynchronizer(FastTenantTestCase):
+class TestResultStructureSynchronizer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.result_type_outcome = ResultTypeFactory(name=ResultType.OUTCOME)
@@ -347,7 +347,7 @@ class TestResultStructureSynchronizer(FastTenantTestCase):
         self.assertEqual(result["processed"], 0)
 
 
-class TestProgrammeSynchronizer(FastTenantTestCase):
+class TestProgrammeSynchronizer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
@@ -574,7 +574,7 @@ class TestProgrammeSynchronizer(FastTenantTestCase):
         })
 
 
-class TestRAMSynchronizer(FastTenantTestCase):
+class TestRAMSynchronizer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()

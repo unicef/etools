@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from django.db.models.functions import TruncYear
+
 from rest_framework.filters import BaseFilterBackend
 
 from audit.models import Engagement
@@ -59,5 +61,5 @@ class UniqueIDOrderingFilter(BaseFilterBackend):
 
         ordering_params = ['partner__name', 'engagement_type', 'created_year', 'id']
 
-        return queryset.extra(select={'created_year': 'EXTRACT(year FROM audit_engagement.created)'})\
+        return queryset.annotate(created_year=TruncYear('created'))\
             .order_by(*map(lambda param: ('' if ordering == 'unique_id' else '-') + param, ordering_params))

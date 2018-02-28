@@ -12,7 +12,7 @@ from rest_framework.generics import (
 from partners.models import (
     Intervention,
 )
-from partners.exports_v2 import PartnershipDashCsvRenderer
+from partners.exports_v2 import PartnershipDashCSVRenderer
 from partners.serializers.dashboards import InterventionDashSerializer
 from t2f.models import Travel, TravelType
 
@@ -23,7 +23,7 @@ class InterventionPartnershipDashView(ListCreateAPIView):
     """
     serializer_class = InterventionDashSerializer
     permission_classes = (IsAdminUser,)
-    renderer_classes = (r.JSONRenderer, PartnershipDashCsvRenderer)
+    renderer_classes = (r.JSONRenderer, PartnershipDashCSVRenderer)
 
     def get_queryset(self):
         today = datetime.now()

@@ -10,7 +10,7 @@ from EquiTrack.factories import (
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from funds.models import (
     FundsCommitmentHeader,
     FundsCommitmentItem,
@@ -21,7 +21,7 @@ from users.models import Country
 from vision.adapters import funding as adapter
 
 
-class TestFundReservationsSynchronizer(FastTenantTestCase):
+class TestFundReservationsSynchronizer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
@@ -48,6 +48,9 @@ class TestFundReservationsSynchronizer(FastTenantTestCase):
             "CURRENT_FR_AMOUNT": "17.00",
             "ACTUAL_CASH_TRANSFER": "18.00",
             "OUTSTANDING_DCT": "19.00",
+            "FR_OVERALL_AMOUNT_DC": "12.00",
+            "ACTUAL_CASH_TRANSFER_DC": "13.00",
+            "OUTSTANDING_DCT_DC": "14.00",
         }
         self.expected_headers = {
             "vendor_code": "Code123",
@@ -59,9 +62,12 @@ class TestFundReservationsSynchronizer(FastTenantTestCase):
             "start_date": datetime.date(2015, 1, 13),
             "end_date": datetime.date(2015, 12, 20),
             "total_amt": "15.00",
+            "total_amt_local": "12.00",
             "intervention_amt": "17.00",
             "actual_amt": "18.00",
+            "actual_amt_local": "13.00",
             "outstanding_amt": "19.00",
+            "outstanding_amt_local": "14.00",
         }
         self.expected_line_item = {
             "line_item": "987",
@@ -97,6 +103,7 @@ class TestFundReservationsSynchronizer(FastTenantTestCase):
             total_amt=self.data["FR_OVERALL_AMOUNT"],
             actual_amt=self.data["ACTUAL_CASH_TRANSFER"],
             outstanding_amt=self.data["OUTSTANDING_DCT"],
+            outstanding_amt_local=self.data["OUTSTANDING_DCT_DC"],
             start_date=datetime.date(2015, 1, 13),
             end_date=datetime.date(2015, 12, 20),
         )
@@ -276,10 +283,10 @@ class TestFundReservationsSynchronizer(FastTenantTestCase):
         response = self.adapter._save_records(
             {"ROWSET": {"ROW": [self.data]}}
         )
-        self.assertEqual(response, 1)
+        self.assertEqual(response, 2)
 
 
-class TestFundCommitmentSynchronizer(FastTenantTestCase):
+class TestFundCommitmentSynchronizer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
