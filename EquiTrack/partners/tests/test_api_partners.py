@@ -50,6 +50,9 @@ class TestPartnerOrganizationDetailAPIView(APITenantTestCase):
         self.fr2 = FundsReservationHeaderFactory(
             currency='EUR'
         )
+        self.fr3 = FundsReservationHeaderFactory(
+            currency='USD'
+        )
 
         self.url = reverse("partners_api:partner-detail", kwargs={'pk': self.partner.id})
 
@@ -100,6 +103,15 @@ class TestPartnerOrganizationDetailAPIView(APITenantTestCase):
 
         # test with existing interventionbudget and one FR with the same currency
         self.intervention.frs = [self.fr1]
+        self.intervention.save()
+        intervention = self.get_intervention_response()
+        self.assertEqual(self.fr1.currency, intervention[u"fr_currency"])
+        self.assertEqual(self.fr1.currency, intervention[u"budget_currency"])
+        self.assertTrue(intervention[u"fr_currencies_are_consistent"])
+        self.assertTrue(intervention[u"all_currencies_are_consistent"])
+
+        # test with existing interventionbudget and multiple FR with the same currency
+        self.intervention.frs = [self.fr1, self.fr3]
         self.intervention.save()
         intervention = self.get_intervention_response()
         self.assertEqual(self.fr1.currency, intervention[u"fr_currency"])
