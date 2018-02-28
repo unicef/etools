@@ -118,6 +118,13 @@ class FundsReservationHeader(TimeStampedModel):
         max_digits=12,
         decimal_places=2,
     )
+    # overall_amount
+    total_amt_local = models.DecimalField(
+        verbose_name=_('FR Overall Amount DC'),
+        default=0,
+        max_digits=12,
+        decimal_places=2,
+    )
     # actual is also referred to as "disbursment"
     actual_amt = models.DecimalField(
         verbose_name=_('Actual Cash Transfer'),
@@ -125,8 +132,21 @@ class FundsReservationHeader(TimeStampedModel):
         max_digits=12,
         decimal_places=2,
     )
+    # actual is also referred to as "disbursment"
+    actual_amt_local = models.DecimalField(
+        verbose_name=_('Actual Cash Transfer Local'),
+        default=0,
+        max_digits=12,
+        decimal_places=2,
+    )
     outstanding_amt = models.DecimalField(
         verbose_name=_('Outstanding DCT'),
+        default=0,
+        max_digits=12,
+        decimal_places=2,
+    )
+    outstanding_amt_local = models.DecimalField(
+        verbose_name=_('Outstanding DCT Local'),
         default=0,
         max_digits=12,
         decimal_places=2,
