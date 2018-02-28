@@ -30,10 +30,6 @@ from reports.serializers.v2 import (
 
 
 class InterventionBudgetCUSerializer(serializers.ModelSerializer):
-    total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
-    partner_contribution = serializers.DecimalField(max_digits=20, decimal_places=2)
-    unicef_cash = serializers.DecimalField(max_digits=20, decimal_places=2)
-    in_kind_amount = serializers.DecimalField(max_digits=20, decimal_places=2)
     partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
@@ -43,13 +39,9 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "intervention",
-            "partner_contribution",
-            "unicef_cash",
-            "in_kind_amount",
             "partner_contribution_local",
             "unicef_cash_local",
             "in_kind_amount_local",
-            "total",
             'currency'
         )
 
@@ -64,8 +56,6 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
 
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
-    spot_checks = serializers.IntegerField(read_only=True)
-    audit = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = InterventionPlannedVisits
@@ -79,20 +69,21 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "year",
-            "programmatic",
-            "spot_checks",
-            "audit",
+            "programmatic_q1",
+            "programmatic_q2",
+            "programmatic_q3",
+            "programmatic_q4",
         )
 
 
-class InterventionListSerializer(serializers.ModelSerializer):
-
+class BaseInterventionListSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
     cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
                                                 decimal_places=2)
     total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
+    budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
 
     section_names = serializers.SerializerMethodField()
     flagged_sections = serializers.SerializerMethodField()
@@ -181,8 +172,35 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'total_unicef_budget',
             'total_budget',
             'metadata',
-            'flagged_sections'
+            'flagged_sections',
+            'budget_currency'
         )
+
+
+class InterventionListSerializer(BaseInterventionListSerializer):
+    fr_currencies_are_consistent = serializers.SerializerMethodField()
+    all_currencies_are_consistent = serializers.SerializerMethodField()
+    fr_currency = serializers.SerializerMethodField()
+
+    def fr_currencies_ok(self, obj):
+        return obj.frs__currency__count == 1 if obj.frs__currency__count else None
+
+    def get_fr_currencies_are_consistent(self, obj):
+        return self.fr_currencies_ok(obj)
+
+    def get_all_currencies_are_consistent(self, obj):
+        if not hasattr(obj, 'planned_budget'):
+            return False
+        return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
+
+    def get_fr_currency(self, obj):
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+
+    class Meta(BaseInterventionListSerializer.Meta):
+        fields = BaseInterventionListSerializer.Meta.fields + \
+                 ('fr_currencies_are_consistent',
+                  'all_currencies_are_consistent',
+                  'fr_currency')
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
@@ -508,13 +526,13 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
-
     partner_name = serializers.CharField(source='agreement.partner.name')
     unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
     cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
                                                 decimal_places=2)
     total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
+    budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
 
     section_names = serializers.SerializerMethodField()
     flagged_sections = serializers.SerializerMethodField()
@@ -535,6 +553,24 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
                                                     max_digits=20,
                                                     decimal_places=2)
 
+    fr_currencies_are_consistent = serializers.SerializerMethodField()
+    all_currencies_are_consistent = serializers.SerializerMethodField()
+    fr_currency = serializers.SerializerMethodField()
+
+    def fr_currencies_ok(self, obj):
+        return obj.frs__currency__count == 1 if obj.frs__currency__count else None
+
+    def get_fr_currencies_are_consistent(self, obj):
+        return self.fr_currencies_ok(obj)
+
+    def get_all_currencies_are_consistent(self, obj):
+        if not hasattr(obj, 'planned_budget'):
+            return False
+        return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
+
+    def get_fr_currency(self, obj):
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+
     def get_offices_names(self, obj):
         return [o.name for o in obj.offices.all()]
 
@@ -554,7 +590,8 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
             'total_unicef_budget', 'total_budget', 'sections', 'section_names',
             'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
             'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount',
-            'flagged_sections'
+            'flagged_sections', 'budget_currency', 'fr_currencies_are_consistent', 'all_currencies_are_consistent',
+            'fr_currency'
         )
 
 

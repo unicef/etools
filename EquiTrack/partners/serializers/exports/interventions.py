@@ -222,35 +222,22 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     sectors = serializers.SerializerMethodField(label=_("Sectors"))
     locations = serializers.SerializerMethodField(label=_("Locations"))
     fr_numbers = serializers.SerializerMethodField(label=_("FR Number(s)"))
-    planned_budget_local = serializers.DecimalField(
-        label=_("Total UNICEF Budget (Local)"),
-        source='total_unicef_cash_local',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2,
-    )
+
     unicef_budget = serializers.DecimalField(
-        label=_("Total UNICEF Budget (USD)"),
+        label=_("Total UNICEF Budget"),
         source='total_unicef_budget',
         read_only=True,
         max_digits=20,
         decimal_places=2,
     )
+
     cso_contribution = serializers.DecimalField(
-        label=_("Total CSO Budget (USD)"),
+        label=_("Total CSO Budget"),
         source='total_partner_contribution',
         read_only=True,
         max_digits=20,
         decimal_places=2,
     )
-    partner_contribution_local = serializers.DecimalField(
-        label=_("Total CSO Budget (Local)"),
-        source='total_partner_contribution_local',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2,
-    )
-    # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
     unicef_signatory = serializers.SerializerMethodField(
         label=_("Signed by UNICEF"),
     )
@@ -270,10 +257,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     planned_visits = serializers.SerializerMethodField(
         label=_("Planned Programmatic Visits"),
     )
-    spot_checks = serializers.SerializerMethodField(
-        label=_("Planned Spot Checks"),
-    )
-    audit = serializers.SerializerMethodField(label=_("Planned Audits"))
     url = serializers.SerializerMethodField(label=_("URL"))
     days_from_submission_to_signed = serializers.SerializerMethodField(
         label=_("Days from Submission to Signed"),
@@ -301,7 +284,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "offices",
             "sectors",
             "locations",
-            "planned_budget_local",
             "unicef_focal_points",
             "partner_focal_points",
             "population_focus",
@@ -311,10 +293,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "unicef_budget",
             "cso_contribution",
             "partner_authorized_officer_signatory",
-            "partner_contribution_local",
             "planned_visits",
-            "spot_checks",
-            "audit",
             "submission_date",
             "submission_date_prc",
             "review_date_prc",
@@ -366,12 +345,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_planned_visits(self, obj):
         return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
 
-    def get_spot_checks(self, obj):
-        return ', '.join(['{} ({})'.format(pv.spot_checks, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_audit(self, obj):
-        return ', '.join(['{} ({})'.format(pv.audit, pv.year) for pv in obj.planned_visits.all()])
-
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
@@ -399,26 +372,14 @@ class InterventionExportFlatSerializer(InterventionExportSerializer):
     )
     partner_contribution = serializers.CharField(
         label=_("CSO Contribution"),
-        source='planned_budget.partner_contribution',
+        source='planned_budget.partner_contribution_local',
     )
     unicef_cash = serializers.CharField(
         label=_("UNICEF Cash"),
-        source='planned_budget.unicef_cash',
+        source='planned_budget.unicef_cash_local',
     )
     in_kind_amount = serializers.CharField(
         label=_("In Kind Amount"),
-        source='planned_budget.in_kind_amount',
-    )
-    partner_contribution_local = serializers.CharField(
-        label=_("CSO Contribution (Local)"),
-        source='planned_budget.partner_contribution_local',
-    )
-    unicef_cash_local = serializers.CharField(
-        label=_("UNICEF Cash (Local)"),
-        source='planned_budget.unicef_cash_local',
-    )
-    in_kind_amount_local = serializers.CharField(
-        label=_("In Kind Amount (Local)"),
         source='planned_budget.in_kind_amount_local',
     )
     currency = serializers.CharField(
@@ -438,11 +399,8 @@ class InterventionExportFlatSerializer(InterventionExportSerializer):
         planned_visits = []
         for planned_visit in obj.planned_visits.all():
             planned_visits.append(
-                "Year: {}, Programmatic: {}, Spot Checks: {}, Audit: {}".format(
+                "Year: {}".format(
                     planned_visit.year,
-                    planned_visit.programmatic,
-                    planned_visit.spot_checks,
-                    planned_visit.audit,
                 )
             )
         return "\n".join(planned_visits)

@@ -17,8 +17,8 @@ from audit.exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
 from audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
 from audit.metadata import AuditBaseMetadata, EngagementMetadata
 from audit.models import (
-    Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, PurchaseOrder,
-    AuditorStaffMember, Auditor, AuditPermission, SpecialAudit, UNICEFUser)
+    Engagement, MicroAssessment, Audit, SpotCheck, Auditor, AuditPermission, SpecialAudit, UNICEFUser)
+from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from audit.permissions import HasCreatePermission, CanCreateStaffMembers
 from audit.serializers.auditor import (
     AuditorFirmExportSerializer, AuditorFirmLightSerializer, AuditorFirmSerializer, AuditorStaffMemberSerializer,
@@ -236,9 +236,12 @@ class EngagementViewSet(
         if not serializer_class or not template:
             raise NotImplementedError
 
+        main_serializer = engagement_params.get('serializer_class', None)(obj, context=self.get_serializer_context())
+
         return render_to_pdf_response(
             request, template,
-            context={'engagement': serializer_class(obj).data},
+            context={'engagement': serializer_class(obj).data,
+                     'serializer': main_serializer},
             filename='engagement_{}.pdf'.format(obj.unique_id),
         )
 

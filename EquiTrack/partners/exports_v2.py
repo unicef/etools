@@ -36,8 +36,8 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
 
     header = [
         'name',
+        'vendor_number',
         'partner_type',
-        'shared_partner',
         'shared_with',
         'type_of_assessment',
         # 'total_ct_cp',
@@ -74,8 +74,8 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
 
     labels = {
         'name': 'Implementing Partner',
+        'vendor_number': 'Vendor Number',
         'partner_type': 'Partner Type',
-        'shared_partner': 'Shared',
         'shared_with': 'Shared IP',
         'type_of_assessment': 'Assessment Type',
         # 'total_ct_cp': 'TOTAL for current CP cycle',
@@ -151,8 +151,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "status", "partner_name", "partner_type", "agreement_number", "country_programme", "document_type", "number",
         "title", "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
         "partner_focal_points", "population_focus", "cp_outputs", "ram_indicators", "fr_numbers",
-        "planned_budget_local", "unicef_budget", "cso_contribution",
-        "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
+        "unicef_budget", "cso_contribution", "planned_visits", "submission_date",
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
         "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
         "url", "migration_error_msg"
@@ -178,13 +177,9 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "cp_outputs": "CP Outputs",
         "ram_indicators": "RAM Indicators",
         "fr_numbers": "FR Number(s)",
-        "planned_budget_local": "Total UNICEF Budget (Local)",
         "unicef_budget": "Total UNICEF Budget (USD)",
         "cso_contribution": "Total CSO Budget (USD)",
-        "partner_contribution_local": "Total CSO Budget (Local)",
         "planned_visits": "Planned Programmatic Visits",
-        "spot_checks": "Planned Spot Checks",
-        "audit": "Planned Audits",
         "submission_date": "Document Submission Date by CSO",
         "submission_date_prc": "Submission Date to PRC",
         "review_date_prc": "Review Date by PRC",

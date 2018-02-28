@@ -11,6 +11,7 @@ from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
+
 from snapshot import models as snapshot_models
 
 from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
@@ -152,6 +153,14 @@ class PartnerFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    vendor_number = fuzzy.FuzzyText(length=10)
+
+
+class PlannedEngagementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.PlannedEngagement
+
+    partner = factory.SubFactory('EquiTrack.factories.PartnerFactory')
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):
@@ -286,9 +295,10 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     year = datetime.today().year
-    programmatic = 1
-    spot_checks = 2
-    audit = 3
+    programmatic_q1 = fuzzy.FuzzyInteger(0, 4)
+    programmatic_q2 = fuzzy.FuzzyInteger(0, 4)
+    programmatic_q3 = fuzzy.FuzzyInteger(0, 4)
+    programmatic_q4 = fuzzy.FuzzyInteger(0, 4)
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
@@ -389,7 +399,7 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     fr_number = fuzzy.FuzzyText(length=20)
     document_date = date(date.today().year, 1, 1)
     fr_type = fuzzy.FuzzyText(length=20)
-    currency = fuzzy.FuzzyText(length=20)
+    currency = fuzzy.FuzzyText(length=4)
     document_text = fuzzy.FuzzyText(length=20)
 
     # this is the field required for validation
