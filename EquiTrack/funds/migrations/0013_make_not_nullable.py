@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('funds', '0011_fix_null_values'),
+        ('funds', '0012_fix_null_values'),
     ]
 
     operations = [

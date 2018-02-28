@@ -13,30 +13,12 @@ def fix_nulls(apps, schema):
             'audit_opinion',
         ]
     )
-    fix_null_values(
-        apps.get_model('audit.auditorfirm'),
-        [
-            'city',
-            'country',
-            'email',
-            'phone_number',
-            'postal_code',
-            'street_address',
-            'vendor_number',
-        ]
-    )
-    fix_null_values(
-        apps.get_model('audit.purchaseorder'),
-        [
-            'order_number',
-        ]
-    )
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        (u'audit', u'0018_auto_20171113_1009'),
+        (u'audit', u'0030_auto_20180219_1402'),
     ]
 
     operations = [

@@ -14,7 +14,7 @@ class Command(BaseCommand):
         try:
             name = options['country_name']
             slug = name.lower().replace(' ', '-').strip()
-            usd = Currency.objects.get(code='USD')
+            usd, _ = Currency.objects.get_or_create(code='USD', defaults=dict(name="US Dollar", decimal_places=2))
             Country.objects.create(
                 domain_url='{}.etools.unicef.org'.format(slug),
                 schema_name=name.lower().replace(' ', '_').strip(),

@@ -100,3 +100,6 @@ LOGGING['handlers']['console']['formatter'] = 'tenant_context'
 SHELL_PLUS_PRE_IMPORTS = (
     ('EquiTrack.util_scripts', '*'),
 )
+
+# Stop the warning about file storage not supporting Tenant
+DEFAULT_FILE_STORAGE = 'tenant_schemas.storage.TenantFileSystemStorage'
