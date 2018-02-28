@@ -9,7 +9,7 @@ from partners.models import (
     Intervention,
     PartnerStaffMember,
     PartnerOrganization,
-    InterventionReportingPeriod)
+    InterventionReportingPeriod, InterventionAmendment)
 from reports.models import Result, AppliedIndicator, LowerResult, Disaggregation, DisaggregationValue
 from reports.serializers.v1 import SectorSerializer
 
@@ -51,7 +51,15 @@ class PartnerFocalPointSerializer(serializers.ModelSerializer):
         fields = ('name', 'email')
 
 
-class IndicatorLocationSerializer(serializers.ModelSerializer):
+class InterventionAmendmentSerializer(serializers.ModelSerializer):
+    amendment_number = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = InterventionAmendment
+        fields = ('types', 'other_description', 'signed_date', 'amendment_number')
+
+
+class PRPLocationSerializer(serializers.ModelSerializer):
     pcode = serializers.CharField(source='p_code', read_only=True)
     location_type = serializers.CharField(source='gateway.name', read_only=True)
     admin_level = serializers.IntegerField(source='gateway.admin_level')
@@ -91,7 +99,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
     # todo: need to validate these and fill in missing fields
     title = serializers.CharField(source='indicator.title', read_only=True)
     blueprint_id = serializers.IntegerField(source='indicator.id', read_only=True)
-    locations = IndicatorLocationSerializer(read_only=True, many=True)
+    locations = PRPLocationSerializer(read_only=True, many=True)
     disaggregation = DisaggregationSerializer(read_only=True, many=True)
 
     class Meta:
@@ -151,6 +159,7 @@ class ReportingPeriodsSerializer(serializers.ModelSerializer):
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     # todo: do these need to be lowercased?
+    amendments = InterventionAmendmentSerializer(read_only=True, many=True)
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     business_area_code = serializers.SerializerMethodField()
     partner_org = PartnerSerializer(read_only=True, source='agreement.partner')
@@ -163,17 +172,17 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     end_date = serializers.DateField(source='end')
     cso_budget = serializers.DecimalField(source='total_partner_contribution', read_only=True,
                                           max_digits=20, decimal_places=2)
-    cso_budget_currency = serializers.CharField(source='default_budget_currency', read_only=True)
+    cso_budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
     unicef_budget = serializers.DecimalField(source='total_unicef_budget', read_only=True,
                                              max_digits=20, decimal_places=2)
-    unicef_budget_currency = serializers.CharField(source='default_budget_currency', read_only=True)
+    unicef_budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
     # TODO: update this after FR Validation changes, pending new Insight API changes.
-    funds_received = serializers.SerializerMethodField(read_only=True)
-    funds_received_currency = serializers.CharField(source='fr_currency', read_only=True)
+
     expected_results = PRPResultSerializer(many=True, read_only=True, source='all_lower_results')
     update_date = serializers.DateTimeField(source='modified')
     reporting_periods = ReportingPeriodsSerializer(many=True, read_only=True)
     sections = SectorSerializer(source="combined_sections", many=True, read_only=True)
+    locations = PRPLocationSerializer(source="flat_locations", many=True, read_only=True)
 
     def get_business_area_code(self, obj):
         return connection.tenant.business_area_code
@@ -197,8 +206,9 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'start_date', 'end_date',
             'cso_budget', 'cso_budget_currency',
             'unicef_budget', 'unicef_budget_currency',
-            'funds_received', 'funds_received_currency',
             'reporting_periods',
             'expected_results',
-            'update_date'
+            'update_date',
+            'amendments',
+            'locations'
         )
