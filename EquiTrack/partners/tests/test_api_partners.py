@@ -6,7 +6,7 @@ import json
 from django.core.urlresolvers import reverse
 from mock import patch, Mock
 from rest_framework import status
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from EquiTrack.factories import (
     AgreementFactory,
@@ -14,10 +14,12 @@ from EquiTrack.factories import (
     PartnerFactory,
     TravelActivityFactory,
     UserFactory,
+    InterventionFactory,
     InterventionBudgetFactory,
+    FundsReservationHeaderFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
-from partners.models import PartnerOrganization, PartnerType
+from partners.models import PartnerOrganization, PartnerType, Intervention
 from partners.views.partner_organization_v2 import PartnerOrganizationAddView
 
 INSIGHT_PATH = "partners.views.partner_organization_v2.get_data_from_insight"
@@ -38,20 +40,19 @@ class TestPartnerOrganizationDetailAPIView(APITenantTestCase):
     def setUp(self):
         super(TestPartnerOrganizationDetailAPIView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.interventionbudget = InterventionBudgetFactory()
+        self.partner = PartnerFactory()
+        self.agreement = AgreementFactory(partner=self.partner)
+        self.intervention = InterventionFactory(agreement=self.agreement, status=Intervention.SIGNED)
 
-        self.intervention = self.interventionbudget.intervention
-        self.intervention.save()
-
-        self.agreement = self.interventionbudget.intervention.agreement
-        self.agreement.save()
-
-        self.partner = self.interventionbudget.intervention.agreement.partner
-        self.partner.save()
+        self.fr1 = FundsReservationHeaderFactory(
+            currency='USD'
+        )
+        self.fr2 = FundsReservationHeaderFactory(
+            currency='EUR'
+        )
 
         self.url = reverse("partners_api:partner-detail", kwargs={'pk': self.partner.id})
 
-    @skip("This will be done in a separate PR")
     def test_get_partner_details(self):
         response = self.forced_auth_req(
             'get',
@@ -60,7 +61,79 @@ class TestPartnerOrganizationDetailAPIView(APITenantTestCase):
         )
 
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(self.intervention.id, response_json.get("interventions")[0].id)
+        self.assertEqual(self.partner.id, response_json[u"staff_members"][0][u"partner"])
+        self.assertEqual(self.intervention.id, response_json[u"interventions"][0][u"id"])
+
+    def test_get_partner_intervention_summary_currency_consistency(self):
+        intervention = self.get_intervention_response()
+        self.assertIsNone(intervention[u"fr_currency"])
+        self.assertIsNone(intervention[u"budget_currency"])
+        self.assertFalse(intervention[u"all_currencies_are_consistent"])
+        self.assertIsNone(intervention[u"fr_currencies_are_consistent"])
+
+        # test with a single FR
+        self.intervention.frs = [self.fr1]
+        self.intervention.save()
+        intervention = self.get_intervention_response()
+        self.assertEqual(self.fr1.currency, intervention[u"fr_currency"])
+        self.assertTrue(intervention[u"fr_currencies_are_consistent"])
+
+        # test with mixed FR
+        self.intervention.frs = [self.fr1, self.fr2]
+        self.intervention.save()
+        intervention = self.get_intervention_response()
+        self.assertIsNone(intervention[u"fr_currency"])
+        self.assertFalse(intervention[u"fr_currencies_are_consistent"])
+
+        # create new planned budget, test with it, without FR
+        self.intervention.frs = []
+        self.interventionbudget = InterventionBudgetFactory(
+            intervention=self.intervention,
+            currency=self.fr1.currency
+        )
+        self.intervention.save()
+        intervention = self.get_intervention_response()
+        self.assertIsNone(intervention[u"fr_currency"])
+        self.assertEqual(self.fr1.currency, intervention[u"budget_currency"])
+        self.assertIsNone(intervention[u"fr_currencies_are_consistent"])
+        self.assertIsNone(intervention[u"all_currencies_are_consistent"])
+
+        # test with existing interventionbudget and one FR with the same currency
+        self.intervention.frs = [self.fr1]
+        self.intervention.save()
+        intervention = self.get_intervention_response()
+        self.assertEqual(self.fr1.currency, intervention[u"fr_currency"])
+        self.assertEqual(self.fr1.currency, intervention[u"budget_currency"])
+        self.assertTrue(intervention[u"fr_currencies_are_consistent"])
+        self.assertTrue(intervention[u"all_currencies_are_consistent"])
+
+        # test with existing interventionbudget and one FR with the different currency
+        self.intervention.frs = [self.fr2]
+        self.intervention.save()
+        intervention = self.get_intervention_response()
+        self.assertEqual(self.fr2.currency, intervention[u"fr_currency"])
+        self.assertEqual(self.fr1.currency, intervention[u"budget_currency"])
+        self.assertTrue(intervention[u"fr_currencies_are_consistent"])
+        self.assertFalse(intervention[u"all_currencies_are_consistent"])
+
+        # test with existing interventionbudget and mixed FR
+        self.intervention.frs = [self.fr1, self.fr2]
+        self.intervention.save()
+        intervention = self.get_intervention_response()
+        self.assertIsNone(intervention[u"fr_currency"])
+        self.assertEqual(self.fr1.currency, intervention[u"budget_currency"])
+        self.assertFalse(intervention[u"fr_currencies_are_consistent"])
+        self.assertFalse(intervention[u"all_currencies_are_consistent"])
+
+    def get_intervention_response(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff
+        )
+
+        response_json = json.loads(response.rendered_content)
+        return response_json[u"interventions"][0]
 
 
 class TestPartnerOrganizationHactAPIView(APITenantTestCase):
