@@ -271,18 +271,27 @@ class ActivePDValidationMixin(object):
 
 
 class EngagementHactSerializer(EngagementLightSerializer):
-    expenditure = serializers.SerializerMethodField()
+    amount_tested = serializers.SerializerMethodField()
+    outstanding_findings = serializers.SerializerMethodField()
 
-    def get_expenditure(self, obj):
-        type_amount_mapping = {
-            'audit': obj.audit.audited_expenditure,
-            'sc': obj.spot_check.total_amount_tested
-        }
-        return type_amount_mapping.get(obj.engagement_type, 0)
+    def get_amount_tested(self, obj):
+        if obj.engagement_type == 'audit':
+            return obj.audited_expenditure or 0
+        elif obj.engagement_type == 'sc':
+            return obj.total_amount_tested or 0
+        else:
+            return 0
+
+    def get_outstanding_findings(self, obj):
+        if obj.engagement_type in ['audit', 'sc']:
+            return obj.pending_unsupported_amount or 0
+        else:
+            return 0
+
 
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
-            "expenditure",
+            "amount_tested", "outstanding_findings"
         ]
 
 

@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
-from rest_framework import generics, mixins, viewsets, status
+from rest_framework import generics, mixins, viewsets
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import IsAuthenticated
@@ -211,7 +211,7 @@ class EngagementViewSet(
 
     @list_route(methods=['get'], url_path='hact')
     def hact(self, request, *args, **kwargs):
-        engagements = self.get_queryset()
+        engagements = Engagement.objects.select_subclasses("audit", "spotcheck", "microassessment", "specialaudit")
 
         serializer = EngagementHactSerializer(engagements, many=True, context={"request": request})
         # if serializer.is_valid():
