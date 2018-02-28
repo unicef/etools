@@ -258,9 +258,9 @@ class TestSyncHandlerTask(TestCase):
         Country.objects.get = mock.Mock(return_value=self.country)
 
         vision.tasks.sync_handler.delay(self.country.name, ProgrammeSynchronizer)
-        # Check that it got retried 3 times
-        self.assertEqual(mock_logger_info.call_count, 4)
-        self.assertEqual(mock_logger_error.call_count, 4)
+        # Check that it got retried once
+        self.assertEqual(mock_logger_info.call_count, 2)
+        self.assertEqual(mock_logger_error.call_count, 2)
         expected_msg = 'Starting vision sync handler {} for country {}'.format(
             'ProgrammeSynchronizer', 'Country My'
         )

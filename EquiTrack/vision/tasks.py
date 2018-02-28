@@ -67,7 +67,7 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
     logger.info(text)
 
 
-@app.task(bind=True)
+@app.task(bind=True, autoretry_for=(VisionException,), retry_kwargs={'max_retries': 1})
 def sync_handler(self, country_name, handler):
     """
     Run .sync() on one handler for one country.
@@ -87,19 +87,19 @@ def sync_handler(self, country_name, handler):
             logger.info(u"{} sync successfully for {}".format(handler.__name__, country.name))
 
         except VisionException as e:
+            # Catch and log the exception so we're aware there's a problem.
             logger.error(u"{} sync failed, Reason: {}, Country: {}".format(
                 handler.__name__, e.message, country_name
             ))
-            # This might be worth retrying.
-            try:
-                raise self.retry(exc=e)
-            except VisionException:
-                # We must have exceeded retries and Celery raised the original exception again.
-                # We've already logged it.
-                pass
+            # The 'autoretry_for' in the task decorator tells Celery to
+            # retry this a few times on VisionExceptions, so just re-raise it
+            raise VisionException
 
 
 # Not scheduled by any code in this repo, but by other means, so keep it around.
+# It catches all exceptions internally and keeps going on to the next partner, so
+# no need to have celery retry it on exceptions.
+# TODO: Write some tests for it!
 @app.task
 def update_all_partners(country_name=None):
     logger.info(u'Starting update HACT values for partners')
@@ -121,6 +121,9 @@ def update_all_partners(country_name=None):
 
 
 # Not scheduled by any code in this repo, but by other means, so keep it around.
+# Continues on to the next country on any VisionException, so no need to have
+# celery retry it in that case.
+# TODO: Write some tests for it!
 @app.task
 def update_purchase_orders(country_name=None):
     logger.info(u'Starting update values for purchase order')
@@ -139,3 +142,4 @@ def update_purchase_orders(country_name=None):
                 logger.error(u"{} sync failed, Reason: {}".format(
                     POSynchronizer.__name__, e.message
                 ))
+                # Keep going to the next country
