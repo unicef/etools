@@ -27,8 +27,7 @@ from audit.transitions.conditions import (
     EngagementSubmitReportRequiredFieldsCheck, SpecialAuditSubmitRelatedModelsCheck, SPSubmitReportRequiredFieldsCheck,
     ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra, )
 from audit.transitions.serializers import EngagementCancelSerializer
-from firms.models import BaseFirm, BaseStaffMember
-from notification.utils import send_notification
+from notification.utils import send_notification_using_email_template
 from partners.models import PartnerStaffMember, PartnerOrganization
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
@@ -207,21 +206,35 @@ class Engagement(TimeStampedModel, models.Model):
             self.id
         )
 
+    def get_mail_context(self):
+        return {
+            'unique_id': self.unique_id,
+            'engagement_type': self.get_engagement_type_display(),
+            'object_url': self.get_object_url(),
+            'partner': force_text(self.partner),
+            'auditor_firm': force_text(self.agreement.auditor_firm),
+        }
+
     def _notify_focal_points(self, template_name, context=None):
         for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group()):
+            # Build the context in the same order the previous version of the code did,
+            # just in case something relies on it (intentionally or not).
             ctx = {
-                'engagement': self,
-                'url': self.get_object_url(),
-                'environment': get_environment(),
-                'focal_point': focal_point,
+                'focal_point': focal_point.get_full_name(),
             }
             if context:
                 ctx.update(context)
-            send_notification(
-                type='Email',
+            base_context = {
+                'engagement': self.get_mail_context(),
+                'environment': get_environment(),
+            }
+            base_context.update(ctx)
+            context = base_context
+
+            send_notification_using_email_template(
                 recipients=[focal_point.email],
-                template=template_name,
-                context=ctx,
+                email_template_name=template_name,
+                context=context,
             )
 
     @transition(status, source=STATUSES.partner_contacted, target=STATUSES.report_submitted,
@@ -729,11 +742,10 @@ class EngagementActionPoint(models.Model):
             'action_point': self.get_mail_context(),
         }
 
-        send_notification(
-            type='Email',
+        send_notification_using_email_template(
             recipients=[self.person_responsible.email],
             cc=[self.author.email],
-            template=template_name,
+            email_template_name=template_name,
             context=context,
         )
 

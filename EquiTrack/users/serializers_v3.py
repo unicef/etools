@@ -103,7 +103,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         """If user is within one of the allowed countries then
         show_ap is True, otherwise False
         """
-        if obj.country.name in AP_ALLOWED_COUNTRIES:
+        if obj.country and obj.country.name in AP_ALLOWED_COUNTRIES:
             return True
         return False
 

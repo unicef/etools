@@ -9,7 +9,7 @@ from django.db.models import F, Sum
 from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
-from notification.utils import send_notification
+from notification.utils import send_notification_using_email_template
 from partners.models import Agreement, Intervention
 from partners.validation.agreements import AgreementValid
 from partners.validation.interventions import InterventionValid
@@ -168,11 +168,10 @@ def _notify_of_signed_interventions_with_no_frs(country_name):
 
     for intervention in signed_interventions:
         email_context = get_intervention_context(intervention)
-        send_notification(
-            type='Email',
+        send_notification_using_email_template(
             sender=intervention,
             recipients=email_context['unicef_focal_points'],
-            template="partners/partnership/signed/frs",
+            email_template_name="partners/partnership/signed/frs",
             context=email_context
         )
 
@@ -199,11 +198,10 @@ def _notify_of_ended_interventions_with_mismatched_frs(country_name):
     for intervention in ended_interventions:
         if intervention.total_frs['total_actual_amt'] != intervention.total_frs['total_frs_amt']:
             email_context = get_intervention_context(intervention)
-            send_notification(
-                type='Email',
+            send_notification_using_email_template(
                 sender=intervention,
                 recipients=email_context['unicef_focal_points'],
-                template="partners/partnership/ended/frs/outstanding",
+                email_template_name="partners/partnership/ended/frs/outstanding",
                 context=email_context
             )
 
@@ -234,10 +232,9 @@ def _notify_interventions_ending_soon(country_name):
     for intervention in interventions:
         email_context = get_intervention_context(intervention)
         email_context["days"] = str((intervention.end - today).days)
-        send_notification(
-            type='Email',
+        send_notification_using_email_template(
             sender=intervention,
             recipients=email_context['unicef_focal_points'],
-            template="partners/partnership/ending",
+            email_template_name="partners/partnership/ending",
             context=email_context
         )

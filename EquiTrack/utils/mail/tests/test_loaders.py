@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from post_office.models import EmailTemplate
 
-from notification.utils import send_notification
+from notification.utils import send_notification_using_email_template
 
 
 class EmailTemplateLoaderTestCase(TestCase):
@@ -32,11 +32,10 @@ class EmailTemplateLoaderTestCase(TestCase):
         mail.outbox = []
 
     def test_extends(self):
-        send_notification(
-            type='Email',
+        send_notification_using_email_template(
             recipients=['test@test.com'],
             from_address='no-reply@test.com',
-            template='template1',
+            email_template_name='template1',
             context={},
         )
 

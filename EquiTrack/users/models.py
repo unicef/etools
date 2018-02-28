@@ -251,7 +251,7 @@ class UserProfile(models.Model):
         """
         Signal handler to create user profiles automatically
         """
-        if created:
+        if not cls.objects.filter(user=instance).exists():
             cls.objects.create(user=instance)
 
     @classmethod

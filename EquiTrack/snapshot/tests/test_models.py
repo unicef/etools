@@ -28,16 +28,16 @@ class TestActivity(EToolsTenantTestCase):
         )
 
     def test_by_user_display_empty(self):
-        user = UserFactory()
+        user = UserFactory(first_name='', last_name='')
         activity = ActivityFactory(by_user=user)
         self.assertEqual(str(user), "")
         self.assertEqual(activity.by_user_display(), user.email)
 
     def test_by_user_display(self):
-        user = UserFactory(first_name="First")
+        user = UserFactory(first_name="First", last_name="Second")
         activity = ActivityFactory(by_user=user)
-        self.assertEqual(str(user), "First")
-        self.assertEqual(activity.by_user_display(), "First")
+        self.assertEqual(str(user), "First Second")
+        self.assertEqual(activity.by_user_display(), "First Second")
 
     def test_delete_target(self):
         workspace = WorkspaceFileType.objects.create(name="Workspace")

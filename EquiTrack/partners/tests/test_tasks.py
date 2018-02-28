@@ -94,13 +94,14 @@ class PartnersTestBaseClass(EToolsTenantTestCase):
         i = 0
         for actual_call_args, expected_call_args in zip(mocked_function.call_args_list, all_expected_call_args):
             if actual_call_args != expected_call_args:
+                # Provide a more useful error message than Django would.
                 s = """In call #%d, call args not as expected.
 Expected:
 %s
 
 Actual:
 %s
-                """ % (i, pformat(expected_call_args, indent=4), pformat(actual_call_args, indent=4))
+                """ % (i, pformat(expected_call_args, indent=4), pformat(tuple(actual_call_args), indent=4))
                 self.fail(s)
             self.assertEqual(actual_call_args, expected_call_args)
             i += 1
@@ -564,9 +565,6 @@ class TestNotifyOfNoFrsSignedInterventionsTask(PartnersTestBaseClass):
             'from_address': '',
             'template_name': 'partners/partnership/signed/frs',
             'template_data': partners.tasks.get_intervention_context(intervention_),
-            'subject': '',
-            'text_message': '',
-            'html_message': '',
         })
                               for intervention_ in interventions]
         self._assertCalls(mock_notification_model, expected_call_args)
@@ -660,9 +658,6 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
             'from_address': '',
             'template_name': 'partners/partnership/ended/frs/outstanding',
             'template_data': partners.tasks.get_intervention_context(intervention_),
-            'subject': '',
-            'text_message': '',
-            'html_message': '',
         })
                               for intervention_ in interventions]
         self._assertCalls(mock_notification_model, expected_call_args)
@@ -759,9 +754,6 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
                 'from_address': '',
                 'template_name': 'partners/partnership/ending',
                 'template_data': template_data,
-                'subject': '',
-                'text_message': '',
-                'html_message': '',
             }))
         self._assertCalls(mock_notification_model, expected_call_args)
 

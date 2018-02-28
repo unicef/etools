@@ -11,10 +11,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.models.query_utils import Q
-from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDict
 
-from notification.utils import send_notification
+from notification.utils import send_notification_using_templates
 from t2f.models import Invoice
 from users.models import Country as Workspace
 
@@ -199,16 +198,14 @@ class InvoiceUpdater(object):
     def send_mail_for_error(self, workspace, invoice):
         url = reverse('t2f:invoices:details', kwargs={'invoice_pk': invoice.id})
 
-        html_content = render_to_string('emails/failed_invoice_sync.html', {'invoice': invoice, 'url': url})
-
         recipients = User.objects.filter(profile__country=workspace,
                                          groups__name='Finance Focal Point').values_list('email', flat=True)
 
         # TODO what should sender be?
-        send_notification(
-            type='Email',
+        send_notification_using_templates(
             recipients=[u.email for u in recipients],
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
-            subject='[Travel2Field VISION Error] {}'.format(invoice.reference_number),
-            html_message=html_content,
+            subject_template_content='[Travel2Field VISION Error] {}'.format(invoice.reference_number),
+            html_template_filename='emails/failed_invoice_sync.html',
+            context={'invoice': invoice, 'url': url}
         )

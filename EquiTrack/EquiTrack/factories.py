@@ -11,6 +11,8 @@ from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
+
+from firms.utils import generate_username
 from snapshot import models as snapshot_models
 
 from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
@@ -83,7 +85,8 @@ class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = get_user_model()
 
-    username = factory.Sequence(lambda n: "user_%d" % n)
+    username = factory.LazyFunction(generate_username)
+    # Give users random names, so tests that check names can tell one user from another
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
     email = factory.Sequence(lambda n: "user{}@example.com".format(n))

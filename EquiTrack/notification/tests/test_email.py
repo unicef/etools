@@ -31,8 +31,8 @@ class TestEmailNotification(EToolsTenantTestCase):
 class TestSendNotification(EToolsTenantTestCase):
     """
     Test General Notification sending. We currently only have email set up, so
-    this only tests that if a non-email type is created, we don't do anything
-    with it.
+    this only tests that if a non-email type is created, it's an error
+    to try to send it.
     """
     def test_send_not_email(self):
         """
@@ -40,7 +40,8 @@ class TestSendNotification(EToolsTenantTestCase):
         sent_recipients doesn't get updated.
         """
         notification = NotificationFactory(type='SMS')
-        notification.send_notification()
+        with self.assertRaises(ValueError):
+            notification.send_notification()
         self.assertEqual(notification.sent_recipients, [])
 
 

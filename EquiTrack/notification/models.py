@@ -17,7 +17,7 @@ from model_utils import Choices
 from post_office import mail
 from post_office.models import EmailTemplate
 
-from utils.utils import make_dictionary_serializable
+from EquiTrack.utils import make_dictionary_serializable
 
 logger = logging.getLogger(__name__)
 
@@ -65,11 +65,17 @@ class Notification(models.Model):
         default=list,
         blank=True,
     )
-    template_name = models.CharField(max_length=255, validators=[validate_template_name], blank=True)
+    # template_name has to be the name of an existing EmailTemplate object. validate_template_name checks that.
+    template_name = models.CharField(max_length=255, validators=[validate_template_name], blank=True, default='')
+    # template_data is the context for rendering any templates.
     template_data = JSONField(null=True, blank=True)
+    # Save a link to the actual post_office.Email object that was sent
     sent_email = models.ForeignKey('post_office.Email', null=True, on_delete=models.CASCADE, blank=True)
+    # Content of template used to render subject if template_name not specified.
     subject = models.TextField(default='', blank=True)
+    # Content of template used to render plain text message if template_name not specified.
     text_message = models.TextField(default='', blank=True)
+    # Content of template used to render HTML message if template_name not specified.
     html_message = models.TextField(default='', blank=True)
 
     def __str__(self):
@@ -87,18 +93,16 @@ class Notification(models.Model):
         super(Notification, self).__init__(*args, **kwargs)
 
     def clean(self):
-        if (self.text_message or self.html_message) and self.template_name:
-            raise ValidationError("Notification cannot have both a template name and a text_message or html_message")
-        if not (self.text_message or self.html_message or self.template_name):
-            raise ValidationError("Notification must have template name or text_message or html_message.")
+        if (self.text_message or self.html_message or self.subject) and self.template_name:
+            raise ValidationError("Notification cannot have both a template name, "
+                                  "and a text_message or html_message or subject")
+        if not (self.text_message or self.html_message or self.template_name or self.subject):
+            raise ValidationError("Notification must have template name or text_message or html_message or subject.")
         # We won't require there to be any recipients, since callers might find it easier to just call
         # this with whatever list of email addresses they have without having to first check whether they
         # have any addresses.
         # if not (len(self.cc) + len(self.recipients)):
         #     raise ValidationError("Notification must have at least one recipient or cc address.")
-
-    def save(self, *args, **kwargs):
-        super(Notification, self).save(*args, **kwargs)
 
     def send_notification(self):
         """
@@ -108,7 +112,7 @@ class Notification(models.Model):
             self.send_mail()
         else:
             # for future notification methods
-            pass
+            raise ValueError("Unknown notification type: %s" % self.type)
 
     def send_mail(self):
         User = get_user_model()
@@ -132,9 +136,9 @@ class Notification(models.Model):
                 sender=sender,
                 template=self.template_name,
                 context=template_data,
-                subject=self.subject,
-                message=self.text_message,
-                html_message=self.html_message,
+                subject=self.subject,  # actually template text
+                message=self.text_message,  # actually template text
+                html_message=self.html_message,  # actually template text
             )
         except Exception:
             # log an exception, with traceback

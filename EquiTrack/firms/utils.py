@@ -5,7 +5,7 @@ import uuid
 
 from EquiTrack.utils import get_environment
 from email_auth.utils import get_token_auth_link
-from notification.models import Notification
+from notification.utils import send_notification_using_email_template
 
 
 def generate_username():
@@ -29,9 +29,9 @@ def send_invite_email(staff):
         'login_link': get_token_auth_link(staff.user)
     }
 
-    notification = Notification.objects.create(
+    send_notification_using_email_template(
         sender=staff,
-        recipients=[staff.user.email], template_name='organisations/staff_member/invite',
-        template_data=context
+        recipients=[staff.user.email],
+        email_template_name='organisations/staff_member/invite',
+        context=context
     )
-    notification.send_notification()
