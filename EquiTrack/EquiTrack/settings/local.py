@@ -5,7 +5,7 @@ from EquiTrack.settings.base import *  # noqa: F403
 
 ALLOWED_HOSTS = ['*']
 DEBUG = True
-CELERY_ALWAYS_EAGER = True
+CELERY_TASK_ALWAYS_EAGER = True
 
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now',

@@ -16,11 +16,13 @@ EXCLUDED_PACKAGES = (
     'allauth',
     'corsheaders',
     'django',
-    'djcelery',
+    'django_celery_beat',
+    'django_celery_results',
     'easy_thumbnails',
     'rest_framework',
     'generic_links',
     'post_office',
+    'drfpasswordless',
 )
 
 
