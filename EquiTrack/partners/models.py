@@ -577,14 +577,10 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
                 intervention__agreement__partner=partner, year=year,
                 intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]
             )
-            pvq1 = pv.filter(quarter=QuarterField.Q1).aggregate(
-                models.Sum('programmatic'))['programmatic__sum'] or 0
-            pvq2 = pv.filter(quarter=QuarterField.Q2).aggregate(
-                models.Sum('programmatic'))['programmatic__sum'] or 0
-            pvq3 = pv.filter(quarter=QuarterField.Q3).aggregate(
-                models.Sum('programmatic'))['programmatic__sum'] or 0
-            pvq4 = pv.filter(quarter=QuarterField.Q4).aggregate(
-                models.Sum('programmatic'))['programmatic__sum'] or 0
+            pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
+            pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
+            pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
+            pvq4 = pv.aggregate(models.Sum('programmatic_q4'))['programmatic_q4__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         hact['programmatic_visits']['planned']['q1'] = pvq1
@@ -1927,6 +1923,7 @@ class InterventionAmendment(TimeStampedModel):
         )
 
 
+@python_2_unicode_compatible
 class InterventionPlannedVisits(TimeStampedModel):
     """
     Represents planned visits for the intervention

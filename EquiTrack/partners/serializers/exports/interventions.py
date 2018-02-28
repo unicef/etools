@@ -343,7 +343,9 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ' '.join([ram for ram in ram_indicators])
 
     def get_planned_visits(self, obj):
-        return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
+        return ', '.join(['{} {} {} {} ({})'.format(
+            pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4, pv.year
+        ) for pv in obj.planned_visits.all()])
 
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
@@ -399,8 +401,12 @@ class InterventionExportFlatSerializer(InterventionExportSerializer):
         planned_visits = []
         for planned_visit in obj.planned_visits.all():
             planned_visits.append(
-                "Year: {}".format(
+                "Year: {}: {} {} {} {}".format(
                     planned_visit.year,
+                    planned_visit.programmatic_q1,
+                    planned_visit.programmatic_q2,
+                    planned_visit.programmatic_q3,
+                    planned_visit.programmatic_q4,
                 )
             )
         return "\n".join(planned_visits)
