@@ -32,12 +32,12 @@ class Migration(migrations.Migration):
             name='programmatic_q3',
             field=models.IntegerField(default=0),
         ),
-        migrations.RemoveField(
-            model_name='interventionplannedvisits',
-            name='quarter',
-        ),
         migrations.AlterUniqueTogether(
             name='interventionplannedvisits',
             unique_together=set([('intervention', 'year')]),
+        ),
+        migrations.RemoveField(
+            model_name='interventionplannedvisits',
+            name='quarter',
         ),
     ]
