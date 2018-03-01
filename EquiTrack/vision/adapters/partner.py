@@ -114,8 +114,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 saving = False
                 partner_org, new = PartnerOrganization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
 
-                partner['CSO_TYPE'] = self.get_cso_type(partner)
-
                 if not self.get_partner_type(partner):
                     logger.info('Partner {} skipped, because PartnerType ={}'.format(
                         partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
@@ -132,7 +130,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                                            'last_assessment_date', 'core_values_assessment_date', 'city', 'country'],
                                           partner_org, partner):
                     partner_org.name = partner['VENDOR_NAME']
-                    partner_org.cso_type = partner['CSO_TYPE']
+                    partner_org.cso_type = self.get_cso_type(partner)
                     partner_org.rating = self.get_partner_rating(partner)
                     partner_org.type_of_assessment = partner.get('TYPE_OF_ASSESSMENT', None)
                     partner_org.address = partner.get('STREET', None)
@@ -176,8 +174,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     logger.debug('Updating Partner', partner_org)
                     partner_org.save()
 
-                if new:
-                    PlannedEngagement.objects.get_or_create(partner=partner)
+                    if new:
+                        PlannedEngagement.objects.get_or_create(partner=partner_org)
 
                 processed += 1
 
