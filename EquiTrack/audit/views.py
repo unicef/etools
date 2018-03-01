@@ -212,13 +212,8 @@ class EngagementViewSet(
     @list_route(methods=['get'], url_path='hact')
     def hact(self, request, *args, **kwargs):
         engagements = Engagement.objects.select_subclasses("audit", "spotcheck", "microassessment", "specialaudit")
-
         serializer = EngagementHactSerializer(engagements, many=True, context={"request": request})
-        # if serializer.is_valid():
         return Response(serializer.data)
-        # else:
-        #     return Response(serializer.errors,
-        #                     status=status.HTTP_400_BAD_REQUEST)
 
     @detail_route(methods=['get'], url_path='pdf')
     def export_pdf(self, request, *args, **kwargs):
