@@ -8,7 +8,6 @@ from tablib.core import Dataset
 from EquiTrack.factories import (UserFactory, PartnerFactory, AgreementFactory, InterventionFactory,
                                  CountryProgrammeFactory, ResultFactory, InterventionBudgetFactory, PartnerStaffFactory)
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import CurrencyFactory
 from partners.models import PartnerOrganization
 from reports.models import ResultType
 
@@ -69,7 +68,7 @@ class TestModelExport(APITenantTestCase):
             population_focus="Population focus",
             partner_authorized_officer_signatory=self.partnerstaff,
         )
-        self.ib = InterventionBudgetFactory(intervention=self.intervention, currency=CurrencyFactory())
+        self.ib = InterventionBudgetFactory(intervention=self.intervention, currency='USD')
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
         self.result = ResultFactory(result_type=output_res_type)
@@ -105,13 +104,9 @@ class TestModelExport(APITenantTestCase):
             'CP Outputs',
             'RAM Indicators',
             'FR Number(s)',
-            'Total UNICEF Budget (Local)',
-            'Total UNICEF Budget (USD)',
-            'Total CSO Budget (USD)',
-            'Total CSO Budget (Local)',
+            'Total UNICEF Budget',
+            'Total CSO Budget',
             'Planned Programmatic Visits',
-            'Planned Spot Checks',
-            'Planned Audits',
             'Document Submission Date by CSO',
             'Submission Date to PRC',
             'Review Date by PRC',
@@ -145,12 +140,8 @@ class TestModelExport(APITenantTestCase):
             u'',
             u'',
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
-            u'{:.2f}'.format(self.intervention.total_unicef_cash_local),
             u'{:.2f}'.format(self.intervention.total_unicef_budget),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
-            u'{:.2f}'.format(self.intervention.total_partner_contribution_local),
-            u'',
-            u'',
             u'',
             '{}'.format(self.intervention.submission_date),
             '{}'.format(self.intervention.submission_date_prc),

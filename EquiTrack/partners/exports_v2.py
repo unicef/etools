@@ -36,8 +36,8 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
 
     header = [
         'name',
+        'vendor_number',
         'partner_type',
-        'shared_partner',
         'shared_with',
         'type_of_assessment',
         # 'total_ct_cp',
@@ -74,8 +74,8 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
 
     labels = {
         'name': 'Implementing Partner',
+        'vendor_number': 'Vendor Number',
         'partner_type': 'Partner Type',
-        'shared_partner': 'Shared',
         'shared_with': 'Shared IP',
         'type_of_assessment': 'Assessment Type',
         # 'total_ct_cp': 'TOTAL for current CP cycle',
@@ -189,6 +189,8 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "fr_actual_amount": "FR Actual CT",
         "fr_outstanding_amt": "Outstanding DCT",
         "planned_visits": "Planned Programmatic Visits",
+        "spot_checks": "Planned Spot Checks",
+        "audit": "Planned Audits",
         "submission_date": "Document Submission Date by CSO",
         "submission_date_prc": "Submission Date to PRC",
         "review_date_prc": "Review Date by PRC",

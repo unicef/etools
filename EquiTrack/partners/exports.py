@@ -18,7 +18,7 @@ class PartnerExport(resources.ModelResource):
         #   Blocked Flag (new property)
         #   Bank Info (just the number of accounts synced from VISION)
         fields = ('vendor_number', 'vision_synced', 'deleted_flag', 'name', 'short_name', 'alternate_id',
-                  'alternate_name', 'partner_type', 'cso_type', 'shared_partner', 'address', 'email', 'phone_number',
+                  'alternate_name', 'partner_type', 'cso_type', 'address', 'email', 'phone_number',
                   'risk_rating', 'type_of_assessment', 'last_assessment_date', 'total_ct_cp', 'total_ct_cy',
                   'agreement_count', 'intervention_count', 'active_staff_members')
         export_order = fields
