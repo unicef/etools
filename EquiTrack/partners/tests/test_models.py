@@ -390,12 +390,12 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year,
-            programmatic=3
+            programmatic_q1=3
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year - 1,
-            programmatic=2
+            programmatic_q3=2
         )
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 0)
 
@@ -410,17 +410,18 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year,
-            programmatic=3
+            programmatic_q1=3,
+            programmatic_q4=4,
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year - 1,
-            programmatic=2
+            programmatic_q2=2
         )
         models.PartnerOrganization.planned_visits(
             self.partner_organization
         )
-        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 7)
 
     def test_planned_visits_non_gov_no_pv_intervention(self):
         self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
@@ -437,19 +438,20 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention1,
             year=year,
-            programmatic=3
+            programmatic_q1=1,
+            programmatic_q3=3,
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention2,
             year=year - 1,
-            programmatic=2
+            programmatic_q4=2
         )
         models.PartnerOrganization.planned_visits(
             self.partner_organization
         )
         self.assertEqual(
             self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            3
+            4
         )
 
     @freeze_time("2013-05-26")

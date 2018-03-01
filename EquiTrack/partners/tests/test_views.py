@@ -136,7 +136,7 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
         self.normal_field_names = sorted(
             (
                 'blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name', 'net_ct_cy',
-                'partner_type', 'phone_number', 'rating', 'shared_partner', 'shared_with',
+                'partner_type', 'phone_number', 'rating', 'reported_cy', 'shared_with',
                 'short_name', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'vendor_number', 'address',
                 'street_address', 'postal_code', 'last_assessment_date', 'city', 'country'
             )
