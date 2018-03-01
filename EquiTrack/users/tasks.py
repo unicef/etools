@@ -1,10 +1,14 @@
 import csv
 import json
 import logging
+from StringIO import StringIO
 
+from datetime import date
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail.message import EmailMessage
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 
@@ -343,3 +347,28 @@ class UserSynchronizer(object):
     @property
     def response(self):
         return self._filter_records(self._convert_records(self._load_records()))
+
+
+@app.task
+def user_report():
+
+    today = date.today()
+    start_date = today + relativedelta(months=-1)
+
+    qs = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
+    fieldnames = ['country', 'total_users', 'unicef_users', 'users_last_month', 'unicef_users_last_month']
+    csvfile = StringIO()
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+    for country in qs:
+        writer.writerow({
+            'country': country,
+            'total_users': User.objects.filter(profile__country=country).count(),
+            'unicef_users': User.objects.filter(profile__country=country, email__endswith='@unicef.org').count(),
+            'users_last_month': User.objects.filter(profile__country=country, last_login__gte=start_date).count(),
+            'unicef_users_last_month': User.objects.filter(profile__country=country, email__endswith='@unicef.org',
+                                                           last_login__gte=start_date).count(),
+        })
+    mail = EmailMessage('Report Latest Users', 'Report generated', 'etools-reports@unicef.org', ['ddinicola@unicef.org'])
+    mail.attach('users.csv', csvfile.getvalue(), 'text/csv')
+    mail.send()
