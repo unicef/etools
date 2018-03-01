@@ -175,7 +175,8 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "net_ct_cy",
             "reported_cy",
             "total_ct_ytd",
-            "hidden"
+            "hidden",
+            "basis_for_risk_rating",
         )
 
 
