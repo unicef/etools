@@ -288,7 +288,6 @@ class EngagementHactSerializer(EngagementLightSerializer):
         else:
             return 0
 
-
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
             "amount_tested", "outstanding_findings"
