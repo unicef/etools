@@ -462,7 +462,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         hact_is_string = isinstance(self.hact_values, str)
         try:
 
-            self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_valuesgit
+            self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
         except ValueError as e:
             e.message = 'hact_values needs to be a valid format (dict)'
             raise e
