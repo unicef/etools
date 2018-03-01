@@ -132,8 +132,6 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             'Total UNICEF Budget',
             'Total CSO Budget',
             'Planned Programmatic Visits',
-            'Planned Spot Checks',
-            'Planned Audits',
             'Document Submission Date by CSO',
             'Submission Date to PRC',
             'Review Date by PRC',
@@ -169,9 +167,9 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
             u'{:.2f}'.format(self.intervention.total_unicef_budget),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
-            u'{} ({})'.format(self.planned_visit.programmatic, self.planned_visit.year),
-            u'{} ({})'.format(self.planned_visit.spot_checks, self.planned_visit.year),
-            u'{} ({})'.format(self.planned_visit.audit, self.planned_visit.year),
+            u'{} {} {} {} ({})'.format(self.planned_visit.programmatic_q1, self.planned_visit.programmatic_q2,
+                                       self.planned_visit.programmatic_q3, self.planned_visit.programmatic_q4,
+                                       self.planned_visit.year),
             '{}'.format(self.intervention.submission_date),
             '{}'.format(self.intervention.submission_date_prc),
             '{}'.format(self.intervention.review_date_prc),
@@ -196,8 +194,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 49)
-        self.assertEqual(len(dataset[0]), 49)
+        self.assertEqual(len(dataset._get_headers()), 47)
+        self.assertEqual(len(dataset[0]), 47)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
