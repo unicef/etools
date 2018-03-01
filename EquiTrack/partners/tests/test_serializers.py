@@ -710,11 +710,11 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
 
         data = serializer.data
         self.assertItemsEqual(data.keys(), [
-            'address', 'alternate_id', 'alternate_name', 'assessments', 'blocked', 'city', 'core_values_assessment',
-            'core_values_assessment_date', 'core_values_assessment_file', 'country', 'created', 'cso_type',
-            'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values', 'hidden', u'id',
-            'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type', 'phone_number',
-            'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
+            'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
+            'core_values_assessment', 'core_values_assessment_date', 'core_values_assessment_file', 'country',
+            'created', 'cso_type', 'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values',
+            'hidden', u'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
+            'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
             'vendor_number', 'vision_synced'
         ])
