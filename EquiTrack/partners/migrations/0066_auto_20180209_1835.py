@@ -57,7 +57,7 @@ def copy_intervention_attachments(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0063_auto_20180209_1622'),
+        ('partners', '0065_auto_20180209_1622'),
     ]
 
     operations = [

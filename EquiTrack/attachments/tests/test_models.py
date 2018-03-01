@@ -15,11 +15,11 @@ from EquiTrack.factories import (
     InterventionFactory,
     PartnerFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners import models as partner_models
 
 
-class TestGenerateFilePath(FastTenantTestCase):
+class TestGenerateFilePath(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory()
@@ -179,7 +179,7 @@ class TestGenerateFilePath(FastTenantTestCase):
             models.generate_file_path(attachment, "test.pdf")
 
 
-class TestFileType(FastTenantTestCase):
+class TestFileType(EToolsTenantTestCase):
     def test_str(self):
         instance = FileTypeFactory(name=b'xyz')
         self.assertIn(b'xyz', str(instance))
@@ -190,7 +190,7 @@ class TestFileType(FastTenantTestCase):
         self.assertIn(u'R\xe4dda Barnen', unicode(instance))
 
 
-class TestAttachment(FastTenantTestCase):
+class TestAttachments(EToolsTenantTestCase):
     def setUp(self):
         self.simple_object = FileTypeFactory()
 

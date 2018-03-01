@@ -152,6 +152,12 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = (
+            "street_address",
+            "last_assessment_date",
+            "address",
+            "city",
+            "postal_code",
+            "country",
             "id",
             "vendor_number",
             "deleted_flag",

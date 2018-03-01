@@ -16,11 +16,13 @@ EXCLUDED_PACKAGES = (
     'allauth',
     'corsheaders',
     'django',
-    'djcelery',
+    'django_celery_beat',
+    'django_celery_results',
     'easy_thumbnails',
     'rest_framework',
     'generic_links',
     'post_office',
+    'drfpasswordless',
 
     # These are the eTools packages that aren't yet using @python_2_unicode_compatible and therefore aren't yet
     # Python 3-compatible. As they're fixed one by one, they'll be removed from this list

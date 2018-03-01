@@ -9,14 +9,14 @@ from django.utils import timezone
 
 import mock
 
-import partners.tasks
 from EquiTrack.factories import (
     AgreementFactory,
     CountryFactory,
     FundsReservationHeaderFactory,
     InterventionFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
+import partners.tasks
 from partners.models import Agreement, Intervention
 from users.models import User
 
@@ -44,7 +44,7 @@ def _make_past_datetime(n_days):
     return timezone.now() - datetime.timedelta(days=n_days)
 
 
-class TestGetInterventionContext(FastTenantTestCase):
+class TestGetInterventionContext(EToolsTenantTestCase):
     '''Exercise the tasks' helper function get_intervention_context()'''
     def setUp(self):
         self.intervention = InterventionFactory()
@@ -84,7 +84,7 @@ class TestGetInterventionContext(FastTenantTestCase):
         self.assertEqual(result['unicef_focal_points'], [focal_point_user.email])
 
 
-class PartnersTestBaseClass(FastTenantTestCase):
+class PartnersTestBaseClass(EToolsTenantTestCase):
     '''Common elements for most of the tests in this file.'''
     def _assertCalls(self, mocked_function, all_expected_call_args):
         '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was

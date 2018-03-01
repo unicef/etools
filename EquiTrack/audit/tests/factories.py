@@ -11,28 +11,27 @@ from factory import fuzzy
 from audit.models import (
     Audit,
     Auditor,
-    AuditorFirm,
     AuditPermission,
-    AuditorStaffMember,
     DetailedFindingInfo,
     Engagement,
     EngagementActionPoint,
     Finding,
     MicroAssessment,
-    PurchaseOrder,
-    PurchaseOrderItem,
     Risk,
     RiskBluePrint,
     RiskCategory,
     SpecialAudit,
     SpotCheck,
-)
+    SpecificProcedure,
+    KeyInternalControl)
+from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from EquiTrack.factories import (
     AgreementFactory,
     InterventionFactory,
     PartnerFactory,
 )
 from firms.factories import BaseFirmFactory, BaseStaffMemberFactory
+from partners.models import PartnerOrganization
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
@@ -88,6 +87,7 @@ class EngagementFactory(factory.DjangoModelFactory):
 
     agreement = factory.SubFactory(PurchaseOrderFactory)
     partner = factory.SubFactory(PartnerWithAgreementsFactory)
+    shared_ip_with = list(map(lambda c: c[0], PartnerOrganization.AGENCY_CHOICES))
 
     @factory.post_generation
     def active_pd(self, create, extracted, **kwargs):
@@ -156,6 +156,16 @@ class FindingFactory(factory.DjangoModelFactory):
     spot_check = factory.SubFactory(SpotCheckFactory)
 
 
+class KeyInternalControlFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = KeyInternalControl
+
+    audit = factory.SubFactory(SpotCheckFactory)
+    recommendation = fuzzy.FuzzyText(length=50).fuzz()
+    audit_observation = fuzzy.FuzzyText(length=50).fuzz()
+    ip_response = fuzzy.FuzzyText(length=50).fuzz()
+
+
 class DetailedFindingInfoFactory(factory.DjangoModelFactory):
     class Meta:
         model = DetailedFindingInfo
@@ -165,10 +175,20 @@ class DetailedFindingInfoFactory(factory.DjangoModelFactory):
     recommendation = fuzzy.FuzzyText(length=100)
 
 
+class SpecificProcedureFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = SpecificProcedure
+
+    audit = factory.SubFactory(SpecialAuditFactory)
+    description = fuzzy.FuzzyText(length=100)
+    finding = fuzzy.FuzzyText(length=100)
+
+
 class EngagementActionPointFactory(factory.DjangoModelFactory):
     class Meta:
         model = EngagementActionPoint
 
+    category = fuzzy.FuzzyChoice(EngagementActionPoint.CATEGORY_CHOICES)
     description = fuzzy.FuzzyText(length=100)
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
 

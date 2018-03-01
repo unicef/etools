@@ -12,7 +12,7 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 
-from publics.models import Currency
+from EquiTrack.fields import CURRENCIES
 
 from reports.models import (
     CountryProgramme,
@@ -94,7 +94,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
         location_types = GatewayType.objects.values('id', 'name', 'admin_level').order_by('id')
-        currencies = choices_to_json_ready(Currency.objects.values_list('id', 'code').order_by('code').distinct())
+        currencies = choices_to_json_ready(CURRENCIES)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 

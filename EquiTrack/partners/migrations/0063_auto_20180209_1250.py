@@ -39,7 +39,7 @@ def copy_core_values_assessment(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0060_auto_20180205_1844'),
+        ('partners', '0062_auto_20180205_1844'),
         ('attachments', '0006_auto_20180209_1406'),
     ]
 

@@ -9,13 +9,13 @@ from EquiTrack.factories import (
     PartnerStaffFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from EquiTrack.validation_mixins import BasicValidationError, TransitionError
 from partners.models import Agreement
 from partners.validation import agreements
 
 
-class TestAgreementTransitionToSignedValid(TenantTestCase):
+class TestAgreementTransitionToSignedValid(EToolsTenantTestCase):
     def test_invalid_pca(self):
         """The agreement transition validation fails if;
         - Agreement type is PCA
@@ -72,7 +72,7 @@ class TestAgreementTransitionToSignedValid(TenantTestCase):
         )
 
 
-class TestAgreementTransitionToEndedValid(TenantTestCase):
+class TestAgreementTransitionToEndedValid(EToolsTenantTestCase):
     def test_invalid(self):
         agreement = AgreementFactory(
             status=Agreement.DRAFT,
@@ -95,13 +95,13 @@ class TestAgreementTransitionToEndedValid(TenantTestCase):
         )
 
 
-class TestAgreementsIllegalTransition(TenantTestCase):
+class TestAgreementsIllegalTransition(EToolsTenantTestCase):
     def test_false(self):
         agreement = AgreementFactory()
         self.assertFalse(agreements.agreements_illegal_transition(agreement))
 
 
-class TestAgreementsIllegalTransitionPermissions(TenantTestCase):
+class TestAgreementsIllegalTransitionPermissions(EToolsTenantTestCase):
     def test_true(self):
         agreement = AgreementFactory()
         agreement.old_instance = None
@@ -122,7 +122,7 @@ class TestAgreementsIllegalTransitionPermissions(TenantTestCase):
             )
 
 
-class TestAmendmentsValid(TenantTestCase):
+class TestAmendmentsValid(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.amendment_code = "partners_agreement_amendment"
@@ -165,7 +165,7 @@ class TestAmendmentsValid(TenantTestCase):
         self.assertTrue(agreements.amendments_valid(agreement))
 
 
-class TestStartEndDatesValid(TenantTestCase):
+class TestStartEndDatesValid(EToolsTenantTestCase):
     def test_invalid(self):
         agreement = AgreementFactory(
             agreement_type=Agreement.MOU,
@@ -182,7 +182,7 @@ class TestStartEndDatesValid(TenantTestCase):
         self.assertTrue(agreements.start_end_dates_valid(agreement))
 
 
-class TestSignedByEveryoneValid(TenantTestCase):
+class TestSignedByEveryoneValid(EToolsTenantTestCase):
     def test_invalid(self):
         agreement = AgreementFactory(
             agreement_type=Agreement.MOU,
@@ -199,7 +199,7 @@ class TestSignedByEveryoneValid(TenantTestCase):
         self.assertTrue(agreements.signed_by_everyone_valid(agreement))
 
 
-class TestSignaturesValid(TenantTestCase):
+class TestSignaturesValid(EToolsTenantTestCase):
     def test_exception(self):
         agreement = AgreementFactory(
             agreement_type=Agreement.SSFA,
