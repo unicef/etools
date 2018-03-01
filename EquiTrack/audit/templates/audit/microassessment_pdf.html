@@ -3,12 +3,12 @@
 {% block extra_content %}
   <div class="content-section">
     <div class="content-section__header content-section__header--orange">
-      <div class="content-section__header__title">Overall Risk Assessment</div>
+      <div class="content-section__header__title">{{ serializer.fields.overall_risk_assessment.label }}</div>
     </div>
     <table class="content-section__wrapper">
       <tr>
         <td class="input-container">
-          <div class="input-container__label">Risk assessment</div>
+          <div class="input-container__label">{{ serializer.fields.overall_risk_assessment.fields.blueprints.child.fields.risk.label }}</div>
           <div class="input-container__value">
             {{ engagement.overall_risk_assessment.blueprints.0.risk.value_display|default:"-" }}</div>
         </td>
@@ -24,13 +24,13 @@
   </div>
   <div class="content-section">
     <div class="content-section__header">
-      <div class="content-section__header__title">Tested Subject Areas</div>
+      <div class="content-section__header__title">{{ serializer.fields.test_subject_areas.label }}</div>
     </div>
     <div class="content-section__wrapper">
       <table class="content-section__table">
         <tr class="content-section__table__header">
           <td>Subject area</td>
-          <td>Risk assessment</td>
+          <td>{{ serializer.fields.test_subject_areas.fields.blueprints.child.fields.risk.label }}</td>
           <td colspan="2">Brief Justification for Rating (main internal control gaps)</td>
         </tr>
         {% for children in engagement.test_subject_areas.children %}
@@ -46,13 +46,13 @@
 
   <div class="content-section">
     <div class="content-section__header">
-      <div class="content-section__header__title">Detailed Internal Control Findings and Recommendations</div>
+      <div class="content-section__header__title">{{ serializer.fields.findings.label }}</div>
     </div>
     <div class="content-section__wrapper">
       <table class="content-section__table">
         <tr class="content-section__table__header">
-          <td>Description of Finding</td>
-          <td>Recommendation and IP Management Response</td>
+          <td>{{ serializer.fields.findings.child.fields.finding.label }}</td>
+          <td>{{ serializer.fields.findings.child.fields.recommendation.label }}</td>
         </tr>
         {% for finding in engagement.findings %}
           <tr>
@@ -86,7 +86,7 @@
         <table class="content-section__table">
           <tr class="content-section__table__header">
             <td colspan="2">Question</td>
-            <td>Risk assessment</td>
+            <td>{{ serializer.fields.questionnaire.fields.blueprints.child.fields.risk.label }}</td>
             <td colspan="2">Comments</td>
           </tr>
           {% for blueprint in children.blueprints %}

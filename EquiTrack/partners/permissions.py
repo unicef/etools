@@ -115,6 +115,9 @@ class InterventionPermissions(PMPPermissions):
         def prp_mode_off():
             return tenant_switch_is_active("prp_mode_off")
 
+        def prp_server_on():
+            return tenant_switch_is_active("prp_server_on")
+
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
@@ -122,6 +125,7 @@ class InterventionPermissions(PMPPermissions):
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_off': prp_mode_off(),
+            'prp_server_on': prp_server_on(),
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off()
         }
 
