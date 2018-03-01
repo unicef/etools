@@ -34,6 +34,7 @@ def get_token():
         if response.status_code == 200:
             jresponse = response.json()
             token = jresponse['access_token']
+            # Cache token for 3600 seconds, which matches the default Azure token expiration
             cache.set(AZURE_GRAPH_API_TOKEN_CACHE_KEY, token, 3600)
             logger.info('Token retrieved')
         else:
