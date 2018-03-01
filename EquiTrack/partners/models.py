@@ -443,7 +443,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
-        verbose_name=_("Base for Risk Rating"), max_length=50, null=True, blank=True)
+        verbose_name=_("Basis for Risk Rating"), max_length=50, null=True, blank=True)
 
     tracker = FieldTracker()
 
@@ -462,7 +462,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         hact_is_string = isinstance(self.hact_values, str)
         try:
 
-            self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
+            self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_valuesgit
         except ValueError as e:
             e.message = 'hact_values needs to be a valid format (dict)'
             raise e
