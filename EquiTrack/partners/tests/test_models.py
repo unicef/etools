@@ -34,6 +34,7 @@ from partners.tests.factories import (
     InterventionSectorLocationLinkFactory,
     PartnerFactory,
     PartnerStaffFactory,
+    PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
 )
 from reports.tests.factories import (
@@ -386,12 +387,12 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year,
-            programmatic=3
+            programmatic_q1=3
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year - 1,
-            programmatic=2
+            programmatic_q3=2
         )
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 0)
 
@@ -406,17 +407,18 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year,
-            programmatic=3
+            programmatic_q1=3,
+            programmatic_q4=4,
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year - 1,
-            programmatic=2
+            programmatic_q2=2
         )
         models.PartnerOrganization.planned_visits(
             self.partner_organization
         )
-        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 7)
 
     def test_planned_visits_non_gov_no_pv_intervention(self):
         self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
@@ -433,19 +435,20 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention1,
             year=year,
-            programmatic=3
+            programmatic_q1=1,
+            programmatic_q3=3,
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention2,
             year=year - 1,
-            programmatic=2
+            programmatic_q4=2
         )
         models.PartnerOrganization.planned_visits(
             self.partner_organization
         )
         self.assertEqual(
             self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            3
+            4
         )
 
     @freeze_time("2013-05-26")
@@ -1593,3 +1596,24 @@ class TestStrUnicode(TestCase):
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
         self.assertTrue(str(instance).startswith(b'tv\xc3\xa5'))
         self.assertTrue(unicode(instance).startswith(u'tv\xe5'))
+
+
+class TestPlannedEngagement(EToolsTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+
+        cls.engagement = PlannedEngagementFactory(
+            spot_check_mr='q1',
+            spot_check_follow_up_q1=2,
+            spot_check_follow_up_q2=1,
+            spot_check_follow_up_q3=0,
+            spot_check_follow_up_q4=0,
+            scheduled_audit=True,
+            special_audit=False
+        )
+
+    def test_properties(self):
+        self.assertEquals(self.engagement.total_spot_check_follow_up_required, 3)
+        self.assertEquals(self.engagement.spot_check_required, 4)
+        self.assertEquals(self.engagement.required_audit, 1)

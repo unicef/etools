@@ -1,27 +1,22 @@
 # Python imports
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 
-# Django imports
-
-# 3rd party imports
-# The DRF source code says, "The recommended style for using `ValidationError` is to keep it namespaced
-# under `serializers`, in order to minimize potential confusion with Django's built in `ValidationError`."
 from rest_framework import serializers
 
 # Project imports
 from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
+from partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
 from partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
     InterventionFactory,
     PartnerFactory,
     PartnerStaffFactory,
+    PlannedEngagementFactory,
 )
 from reports.tests.factories import CountryProgrammeFactory
 from users.tests.factories import UserFactory
@@ -52,9 +47,9 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
         cls.fake_request.user = cls.user
 
     def assertSimpleExceptionFundamentals(self, context_manager, expected_message):
-        '''Given the context manager produced by self.assertRaises(), checks the exception it contains for
+        """Given the context manager produced by self.assertRaises(), checks the exception it contains for
         the expected message in the correct location.
-        '''
+        """
         exception = context_manager.exception
 
         self.assertTrue(hasattr(exception, 'detail'))
@@ -66,9 +61,9 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
         self.assertEqual(exception.detail['errors'], [expected_message])
 
     def assertAmendmentExceptionFundamentals(self, context_manager, expected_message):
-        '''Given the context manager produced by self.assertRaises() for an amendment-related exception,
+        """Given the context manager produced by self.assertRaises() for an amendment-related exception,
         checks the exception it contains for the expected message in the correct location.
-        '''
+        """
         exception = context_manager.exception
 
         # In this case, exception detail contains a dict that contains a list that contains a dict that contains a list.
@@ -95,7 +90,7 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
 
 
 class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
-    '''Exercise the AgreementCreateUpdateSerializer.'''
+    """Exercise the AgreementCreateUpdateSerializer."""
     def test_simple_create(self):
         data = {
             "agreement_type": Agreement.MOU,
@@ -107,7 +102,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertTrue(serializer.is_valid(raise_exception=True))
 
     def test_create_fail_country_programme_required_for_PCA(self):
-        '''Ensure correct error is raised for PCAs with no country programme'''
+        """Ensure correct error is raised for PCAs with no country programme"""
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner.id,
@@ -125,7 +120,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertEqual(exception.detail['country_programme'], 'Country Programme is required for PCAs!')
 
     def test_create_fail_one_PCA_per_country_programme_and_partner(self):
-        '''Ensure correct error is raised for PCAs with duplicate country programme & partner combo'''
+        """Ensure correct error is raised for PCAs with duplicate country programme & partner combo"""
         AgreementFactory(
             agreement_type=Agreement.PCA,
             partner=self.partner,
@@ -151,10 +146,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         )
 
     def test_create_ok_non_PCA_with_same_programme_and_partner(self):
-        '''Ensure it is OK to create non-PCA agreements that have the same country programme and partner.
+        """Ensure it is OK to create non-PCA agreements that have the same country programme and partner.
 
         This is a sibling test to test_create_fail_one_PCA_per_country_programme_and_partner().
-        '''
+        """
         agreement_types = [agreement_type for agreement_type in _ALL_AGREEMENT_TYPES if agreement_type != Agreement.PCA]
 
         for agreement_type in agreement_types:
@@ -176,7 +171,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             self.assertTrue(serializer.is_valid(raise_exception=True))
 
     def test_create_fail_start_date_after_end_date(self):
-        '''Ensure create fails if start date is after end date'''
+        """Ensure create fails if start date is after end date"""
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner,
@@ -196,7 +191,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         )
 
     def test_create_ok_with_start_date_equal_end_date(self):
-        '''Ensure it's OK to create an agreement where the start & end dates are the same.'''
+        """Ensure it's OK to create an agreement where the start & end dates are the same."""
         data = {
             "agreement_type": Agreement.PCA,
             "partner": self.partner.id,
@@ -210,7 +205,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertTrue(serializer.is_valid(raise_exception=True))
 
     def test_create_ok_when_start_or_end_not_present(self):
-        '''Ensure that date validation doesn't kick in when one date or another isn't present'''
+        """Ensure that date validation doesn't kick in when one date or another isn't present"""
         # Test w/start date present but not end date
         data = {
             "agreement_type": Agreement.SSFA,
@@ -233,7 +228,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertTrue(serializer.is_valid(raise_exception=True))
 
     def test_create_with_partner_type(self):
-        '''Exercise create success & failure related to the rules regarding agreement type and partner type'''
+        """Exercise create success & failure related to the rules regarding agreement type and partner type"""
         # Set partner to something other than civil society org.
         self.partner.partner_type = PartnerType.UN_AGENCY
         self.partner.save()
@@ -288,7 +283,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             self.assertTrue(serializer.is_valid(raise_exception=True))
 
     def test_create_fail_due_to_signatures_SSFA(self):
-        '''Ensure signature validation works correctly for SSFA'''
+        """Ensure signature validation works correctly for SSFA"""
         data = {
             "agreement_type": Agreement.SSFA,
             "partner": self.partner,
@@ -307,7 +302,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         )
 
     def test_create_ok_and_fail_due_to_signatures_non_SSFA(self):
-        '''Ensure signature validation works correctly for non-SSFA types'''
+        """Ensure signature validation works correctly for non-SSFA types"""
         signatory = UserFactory()
         partner_signatory = PartnerStaffFactory(partner=self.partner)
 
@@ -419,10 +414,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         )
 
     def test_update_intervention(self):
-        '''Ensure agreement update fails if intervention dates aren't appropriate.
+        """Ensure agreement update fails if intervention dates aren't appropriate.
 
         I don't think it's possible to supply interventions when creating via the serializer, so this only tests update.
-        '''
+        """
         agreement = AgreementFactory(agreement_type=Agreement.SSFA,
                                      partner=self.partner,
                                      status=Agreement.DRAFT,
@@ -483,7 +478,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         serializer.validate(data=data)
 
     def test_update_fail_due_to_uneditable_field(self):
-        '''Exercise changing a field that can't be changed while the agreement has this status.'''
+        """Exercise changing a field that can't be changed while the agreement has this status."""
         agreement = AgreementFactory(agreement_type=Agreement.MOU,
                                      status=Agreement.DRAFT,
                                      signed_by_unicef_date=None,
@@ -507,10 +502,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         )
 
     def test_update_fail_due_to_amendments_unsigned(self):
-        '''Ensure agreement update fails if amendments aren't signed.
+        """Ensure agreement update fails if amendments aren't signed.
 
         I don't think it's possible to supply amendments when creating via the serializer, so this only tests update.
-        '''
+        """
         agreement = AgreementFactory(agreement_type=Agreement.MOU,
                                      signed_by_unicef_date=None,
                                      signed_by_partner_date=None)
@@ -535,11 +530,11 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         )
 
     def test_update_with_due_to_amendments_signed_date(self):
-        '''Ensure agreement update fails if amendments don't have a signed_date or if it's in the future,
+        """Ensure agreement update fails if amendments don't have a signed_date or if it's in the future,
         and that update succeeds when the amendments signatures meet criteria.
 
         I don't think it's possible to supply amendments when creating via the serializer, so this only tests update.
-        '''
+        """
         agreement = AgreementFactory(agreement_type=Agreement.MOU,
                                      signed_by_unicef_date=None,
                                      signed_by_partner_date=None)
@@ -587,9 +582,9 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
 
 class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
-    '''Exercise the transition validations of AgreementCreateUpdateSerializer.'''
+    """Exercise the transition validations of AgreementCreateUpdateSerializer."""
     def test_fail_transition_to_signed_start_and_end_dates(self):
-        '''Exercise transition to signed, and validation related to start and end dates.'''
+        """Exercise transition to signed, and validation related to start and end dates."""
         agreement = AgreementFactory(agreement_type=Agreement.MOU,
                                      status=Agreement.DRAFT,
                                      signed_by_unicef_date=None,
@@ -655,7 +650,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         serializer.validate(data=data)
 
     def test_fail_transition_to_ended(self):
-        '''Exercise transition to ended.'''
+        """Exercise transition to ended."""
         # First test valid/positive case
         agreement = AgreementFactory(agreement_type=Agreement.MOU,
                                      status=Agreement.SIGNED,
@@ -699,7 +694,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         )
 
     def test_ensure_field_read_write_status(self):
-        '''Ensure that the fields I expect to be read-only are read-only; also confirm the converse'''
+        """Ensure that the fields I expect to be read-only are read-only; also confirm the converse"""
         expected_read_only_fields = ('id', 'created', 'modified', 'partner_name', 'amendments', 'unicef_signatory',
                                      'partner_signatory', 'agreement_number', 'attached_agreement_file')
 
@@ -708,3 +703,36 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
         for field_name, field in serializer.fields.items():
             expected_read_only = (field_name in expected_read_only_fields)
             self.assertEqual(field.read_only, expected_read_only)
+
+
+class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+
+        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.engagement = PlannedEngagementFactory(partner=cls.partner)
+
+    def test_retrieve(self):
+        serializer = PartnerOrganizationDetailSerializer(instance=self.partner)
+
+        data = serializer.data
+        self.assertItemsEqual(data.keys(), [
+            'address', 'alternate_id', 'alternate_name', 'assessments', 'blocked', 'city', 'core_values_assessment',
+            'core_values_assessment_date', 'core_values_assessment_file', 'country', 'created', 'cso_type',
+            'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values', 'hidden', u'id',
+            'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type', 'phone_number',
+            'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
+            'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
+            'vendor_number', 'vision_synced'
+        ])
+
+        self.assertItemsEqual(data['planned_engagement'].keys(), [
+            'id', 'partner', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
+            'spot_check_follow_up_q3', 'spot_check_follow_up_q4', 'spot_check_mr',
+            'total_spot_check_follow_up_required', 'spot_check_required', 'required_audit'
+        ])
+
+        self.assertEquals(len(data['staff_members']), 1)
+        self.assertItemsEqual(data['staff_members'][0].keys(), [
+            'active', 'created', 'email', 'first_name', u'id', 'last_name', 'modified', 'partner', 'phone', 'title'])

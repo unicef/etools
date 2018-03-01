@@ -11,8 +11,8 @@ from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
 from EquiTrack.fields import CURRENCY_LIST
-from locations.tests.factories import GatewayTypeFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from locations.tests.factories import GatewayTypeFactory
 from partners.models import (
     Agreement,
     AgreementAmendment,

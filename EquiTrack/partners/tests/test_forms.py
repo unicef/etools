@@ -16,8 +16,7 @@ class TestPartnersAdminForm(EToolsTenantTestCase):
         self.data = {
             "name": "Name",
             "partner_type": PartnerType.UN_AGENCY,
-            "rating": "Strong",
-            "shared_partner": "No",
+            "rating": "High",
             "type_of_assessment": "Normal",
         }
 

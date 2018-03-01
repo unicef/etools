@@ -172,9 +172,6 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     year = datetime.datetime.today().year
-    programmatic = 1
-    spot_checks = 2
-    audit = 3
 
 
 class AgreementAmendmentFactory(factory.django.DjangoModelFactory):
@@ -213,3 +210,10 @@ class FundingCommitmentFactory(factory.django.DjangoModelFactory):
     fr_number = fuzzy.FuzzyText(length=50)
     wbs = fuzzy.FuzzyText(length=50)
     fc_type = fuzzy.FuzzyText(length=50)
+
+
+class PlannedEngagementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.PlannedEngagement
+
+    partner = factory.SubFactory(PartnerFactory)

@@ -46,6 +46,7 @@ from partners.tests.factories import (
     InterventionResultLinkFactory,
     PartnerFactory,
     PartnerStaffFactory,
+    PlannedEngagementFactory,
 )
 from partners.views import v2
 import partners.views.partner_organization_v2
@@ -71,6 +72,7 @@ class URLsTestCase(URLAssertionMixin, TestCase):
         names_and_paths = (
             ('partner-list', '', {}),
             ('partner-hact', 'hact/', {}),
+            ('partner-engagements', 'engagements/', {}),
             ('partner-detail', '1/', {'pk': 1}),
             ('partner-delete', 'delete/1/', {'pk': 1}),
             ('partner-assessment-del', 'assessments/1/', {'pk': 1}),
@@ -141,10 +143,10 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
         # serializer.
         self.normal_field_names = sorted(
             (
-                'blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name',
-                'partner_type', 'phone_number', 'rating', 'shared_partner', 'shared_with',
-                'short_name', 'total_ct_cp', 'total_ct_cy', 'vendor_number', 'address', 'street_address',
-                'postal_code', 'last_assessment_date', 'city', 'country'
+                'blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name', 'net_ct_cy',
+                'partner_type', 'phone_number', 'rating', 'reported_cy', 'shared_with',
+                'short_name', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'vendor_number', 'address',
+                'street_address', 'postal_code', 'last_assessment_date', 'city', 'country'
             )
         )
 
@@ -1346,6 +1348,7 @@ class TestInterventionViews(APITenantTestCase):
         cls.agreement = AgreementFactory()
         cls.agreement2 = AgreementFactory(status="draft")
         cls.partnerstaff = PartnerStaffFactory(partner=cls.agreement.partner)
+        cls.planned_engagement = PlannedEngagementFactory(partner=cls.agreement.partner)
 
     def setUp(self):
         data = {
@@ -1421,7 +1424,8 @@ class TestInterventionViews(APITenantTestCase):
                     "year": 2016,
                     "programmatic": 2,
                     "spot_checks": 1,
-                    "audit": 1
+                    "audit": 1,
+                    "quarter": 'q1'
                 },
             ],
             "planned_budget": {
@@ -1713,7 +1717,8 @@ class TestInterventionViews(APITenantTestCase):
             "year": 2015,
             "programmatic": 2,
             "spot_checks": 1,
-            "audit": 1
+            "audit": 1,
+            "quarter": 'q3'
         })
         data = {
             "planned_visits": a,

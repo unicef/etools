@@ -302,7 +302,8 @@ POST_OFFICE = {
     }
 }
 
-# celery: http://docs.celeryproject.org/en/3.1/configuration.html
+# celery: http://docs.celeryproject.org/en/latest/userguide/configuration.html
+CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'application/text']
 CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
 CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(CELERY_BROKER_VISIBILITY_VAR)}
