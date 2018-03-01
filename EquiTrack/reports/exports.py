@@ -9,22 +9,22 @@ class AppliedIndicatorLocationCSVRenderer(r.CSVRenderer):
               'baseline', 'target', 'means_of_verification', ]
 
     labels = {
-        "partner": "Name of the Partner",
+        "partner": "Partner",
         "vendor": "Vendor Number",
         "status": "Status",
         "start": "Start Date",
         "end": "End Date",
         "country_programme": "Country Programme",
-        "pd_ref_number": "PD Reference Number",
-        "pd_title": "Title of the PD",
-        "cp_output": "CP Outputs - related to the PD Indicator",
-        "ram_indicators": "RAM Indicators related to the PD Indicator",
-        "lower_result": "PD/SSFA Output - related to the PD Indicator",
-        "indicator": "PD/SSFA Indicator - related to the PD Indicator Location",
-        "location": "Location",
-        "section": " Indicator Level Sections",
+        "pd_ref_number": "Reference Number",
+        "pd_title": "Title",
+        "cp_output": "CP Outputs",
+        "ram_indicators": "RAM Indicators",
+        "lower_result": "PD/SSFA Output",
+        "indicator": "PD/SSFA Indicator",
+        "location": "Locations",
+        "section": " Sections",
         "cluster_name": "Cluster",
-        "baseline": "Basseline - related to the indicator",
-        "target": "Target - related to the indicator",
-        "means_of_verification": "MoV - related to the indicator"
+        "baseline": "Basseline",
+        "target": "Target",
+        "means_of_verification": "MoV"
     }
