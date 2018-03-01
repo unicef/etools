@@ -56,8 +56,6 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
 
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
-    spot_checks = serializers.IntegerField(read_only=True)
-    audit = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = InterventionPlannedVisits
@@ -71,9 +69,10 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "year",
-            "programmatic",
-            "spot_checks",
-            "audit",
+            "programmatic_q1",
+            "programmatic_q2",
+            "programmatic_q3",
+            "programmatic_q4",
         )
 
 
