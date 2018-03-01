@@ -133,14 +133,12 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
 
         # self.normal_field_names is the list of field names present in responses that don't use an out-of-the-ordinary
         # serializer.
-        self.normal_field_names = sorted(
-            (
-                'blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name', 'net_ct_cy',
-                'partner_type', 'phone_number', 'rating', 'reported_cy', 'shared_with',
-                'short_name', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'vendor_number', 'address',
-                'street_address', 'postal_code', 'last_assessment_date', 'city', 'country'
-            )
-        )
+        self.normal_field_names = sorted((
+            'address', 'blocked', 'basis_for_risk_rating', 'city', 'country', 'cso_type', 'deleted_flag', 'email',
+            'hidden', 'id', 'last_assessment_date', 'name', 'net_ct_cy', 'partner_type', 'phone_number', 'postal_code',
+            'rating', 'reported_cy', 'shared_with', 'short_name', 'street_address', 'total_ct_cp', 'total_ct_cy',
+            'total_ct_ytd', 'vendor_number',
+        ))
 
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the

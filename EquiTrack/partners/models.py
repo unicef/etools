@@ -442,6 +442,8 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     )
 
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    basis_for_risk_rating = models.CharField(
+        verbose_name=_("Base for Risk Rating"), max_length=50, null=True, blank=True)
 
     tracker = FieldTracker()
 
