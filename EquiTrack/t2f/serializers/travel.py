@@ -527,22 +527,13 @@ class TravelListSerializer(TravelDetailsSerializer):
 class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
     locations = serializers.SlugRelatedField(slug_field='name', many=True, read_only=True)
     primary_traveler = serializers.CharField(source='primary_traveler.get_full_name')
-    reference_number = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
-    trip_id = serializers.SerializerMethodField()
+    reference_number = serializers.ReadOnlyField()
+    status = serializers.ReadOnlyField()
+    trip_id = serializers.ReadOnlyField()
 
     class Meta:
         model = TravelActivity
         fields = ('primary_traveler', 'travel_type', 'date', 'locations', 'reference_number', 'status', 'trip_id')
-
-    def get_status(self, obj):
-        return obj.status
-
-    def get_reference_number(self, obj):
-        return obj.reference_number
-
-    def get_trip_id(self, obj):
-        return obj.trip_id
 
 
 class CloneOutputSerializer(TravelDetailsSerializer):
