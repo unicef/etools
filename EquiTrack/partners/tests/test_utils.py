@@ -18,7 +18,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
     test_case.unicef_staff = UserFactory(is_staff=True)
     test_case.partnership_manager_user = UserFactory(is_staff=True)
     test_case.partnership_manager_user.groups.add(GroupFactory())
-    test_case.partner = PartnerFactory(name='Partner 1')
+    test_case.partner = PartnerFactory(name='Partner 1', vendor_number="VP1")
     test_case.partner1 = PartnerFactory(name='Partner 2')
     test_case.agreement = AgreementFactory(partner=test_case.partner, signed_by_unicef_date=datetime.date.today())
 
@@ -30,8 +30,11 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
     )
 
     test_case.intervention = InterventionFactory(agreement=test_case.agreement, title='Intervention 1')
-    test_case.intervention_2 = InterventionFactory(agreement=test_case.agreement, title='Intervention 2',
-                                                   document_type=Intervention.PD)
+    test_case.intervention_2 = InterventionFactory(
+        agreement=test_case.agreement,
+        title='Intervention 2',
+        document_type=Intervention.PD,
+    )
     test_case.active_intervention = InterventionFactory(
         agreement=test_case.active_agreement,
         title='Active Intervention',
@@ -50,16 +53,17 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
 
     test_case.partnership_budget = InterventionBudget.objects.create(
         intervention=test_case.intervention,
-        unicef_cash=100,
-        unicef_cash_local=10,
-        partner_contribution=200,
-        partner_contribution_local=20,
+        unicef_cash=10,
+        unicef_cash_local=100,
+        partner_contribution=20,
+        partner_contribution_local=200,
         in_kind_amount_local=10,
     )
 
     # set up two frs not connected to any interventions
-    test_case.fr_1 = FundsReservationHeaderFactory(intervention=None)
-    test_case.fr_2 = FundsReservationHeaderFactory(intervention=None)
+    test_case.fr_1 = FundsReservationHeaderFactory(intervention=None, currency='USD')
+    test_case.fr_2 = FundsReservationHeaderFactory(intervention=None, currency='USD')
+
     if include_results_and_indicators:
         # setup additional inicator/results
         test_case.result = ResultFactory(name='A Result')

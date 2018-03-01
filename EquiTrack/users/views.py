@@ -2,23 +2,27 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
+from django.utils import six
 from django.views.generic import FormView, RedirectView
 
-from rest_framework import mixins, permissions, status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from EquiTrack.permissions import IsSuperUserOrStaff
 from audit.models import Auditor
 from reports.models import Sector
 from reports.serializers.v1 import SectorSerializer
 from users.forms import ProfileForm
 from users.models import UserProfile, Country, Office
-from .serializers import (
+from users.serializers import (
     UserSerializer,
     GroupSerializer,
     OfficeSerializer,
@@ -27,8 +31,7 @@ from .serializers import (
     SimpleProfileSerializer,
     SimpleUserSerializer,
     ProfileRetrieveUpdateSerializer,
-    CountrySerializer
-)
+    CountrySerializer)
 
 logger = logging.getLogger(__name__)
 
@@ -47,40 +50,73 @@ class ChangeUserCountryView(APIView):
     """
     Allows a user to switch country context if they have access to more than one
     """
-    # TODO: We need allow any staff user that has access to more then one country
-    permission_classes = (permissions.IsAdminUser,)
 
     ERROR_MESSAGES = {
         'country_does_not_exist': 'The Country that you are attempting to switch to does not exist',
         'access_to_country_denied': 'You do not have access to the country you are trying to switch to'
     }
 
+    next_param = 'next'
+
+    permission_classes = (IsAuthenticated, )
+
+    def get_country_id(self):
+        return self.request.data.get('country', None) or self.request.query_params.get('country', None)
+
+    def get_country(self):
+        country_id = self.get_country_id()
+
+        try:
+            country = Country.objects.get(id=country_id)
+        except Country.DoesNotExist:
+            raise DjangoValidationError(self.ERROR_MESSAGES['country_does_not_exist'], code='country_does_not_exist')
+
+        return country
+
+    def change_country(self):
+        user = self.request.user
+        country = self.get_country()
+
+        if country not in user.profile.countries_available.all():
+            raise DjangoValidationError(self.ERROR_MESSAGES['access_to_country_denied'],
+                                        code='access_to_country_denied')
+
+        user.profile.country_override = country
+        user.profile.save()
+
+    def get_redirect_url(self):
+        return self.request.GET.get(self.next_param, '/')
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.change_country()
+        except DjangoValidationError as err:
+            return HttpResponseForbidden(six.text_type(err))
+
+        return HttpResponseRedirect(self.get_redirect_url())
+
     def post(self, request, format=None):
         try:
-            country = Country.objects.get(id=request.data.get('country'))
-        except Country.DoesNotExist:
-            return Response(self.ERROR_MESSAGES['country_does_not_exist'],
-                            status=status.HTTP_400_BAD_REQUEST)
+            self.change_country()
 
-        if country not in request.user.profile.countries_available.all():
-            return Response(self.ERROR_MESSAGES['access_to_country_denied'],
-                            status=status.HTTP_403_FORBIDDEN)
+        except DjangoValidationError as err:
+            if err.code == 'access_to_country_denied':
+                status_code = status.HTTP_403_FORBIDDEN
+            else:
+                status_code = status.HTTP_400_BAD_REQUEST
+            return Response(six.text_type(err), status=status_code)
 
-        else:
-            request.user.profile.country = country
-            request.user.profile.country_override = country
-            request.user.profile.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UsersView(ListAPIView):
+class StaffUsersView(ListAPIView):
     """
     Gets a list of Unicef Staff users in the current country.
     Country is determined by the currently logged in user.
     """
     model = UserProfile
     serializer_class = SimpleProfileSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsSuperUserOrStaff, )
 
     def get_queryset(self):
         user = self.request.user
@@ -100,35 +136,6 @@ class UsersView(ListAPIView):
             country=user.profile.country,
             user__is_staff=True
         ).order_by('user__first_name')
-
-
-class CountryView(ListAPIView):
-    """
-    Gets a list of Unicef Staff users in the current country.
-    Country is determined by the currently logged in user.
-    """
-    model = Country
-    serializer_class = CountrySerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user.profile.country:
-            logger.warning('{} has not an assigned country'.format(user))
-            return self.model.objects.none()
-        return self.model.objects.filter(
-            name=user.profile.country.name,
-        )
-
-
-class CountriesViewSet(ListAPIView):
-    """
-    Gets the list of countries
-    """
-    model = Country
-    serializer_class = CountrySerializer
-
-    def get_queryset(self):
-        return Country.objects.prefetch_related('local_currency').all()
 
 
 class MyProfileAPIView(RetrieveUpdateAPIView):
@@ -357,6 +364,17 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
             else:
                 queryset = queryset.filter(id__in=ids)
         return queryset
+
+
+class CountriesViewSet(ListAPIView):
+    """
+    Gets the list of countries
+    """
+    model = Country
+    serializer_class = CountrySerializer
+
+    def get_queryset(self):
+        return Country.objects.all()
 
 
 class SectionViewSet(mixins.RetrieveModelMixin,

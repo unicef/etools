@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 import factory
 
-from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
+from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
 from users import models
 
 

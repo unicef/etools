@@ -10,8 +10,9 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.fields import CURRENCY_LIST
 from locations.tests.factories import GatewayTypeFactory
+from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from partners.models import (
     Agreement,
     AgreementAmendment,
@@ -185,16 +186,10 @@ class TestPMPStaticDropdownsListApiView(APITenantTestCase):
 
     def test_currencies(self):
         '''Verify the currencies portion of the response'''
-        # Ensure having no currencies doesn't break anything.
-        response = self.forced_auth_req('get', self.url)
-        d = self._assertResponseFundamentals(response)
-        self.assertEqual(d['currencies'], [])
-
         # Add some currencies
         choices = []
-        for code in ('AAA', 'BBB', 'CCC'):
-            currency = PublicsCurrencyFactory(code=code)
-            choices.append((currency.id, code))
+        for code in CURRENCY_LIST:
+            choices.append((code, code))
 
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)

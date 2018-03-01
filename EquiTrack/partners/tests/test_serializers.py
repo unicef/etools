@@ -13,7 +13,7 @@ import datetime
 from rest_framework import serializers
 
 # Project imports
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from partners.tests.factories import (
@@ -29,7 +29,7 @@ from users.tests.factories import UserFactory
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
 
-class AgreementCreateUpdateSerializerBase(FastTenantTestCase):
+class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
     '''Base class for testing AgreementCreateUpdateSerializer'''
     @classmethod
     def setUpTestData(cls):

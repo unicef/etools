@@ -6,12 +6,12 @@ from __future__ import unicode_literals
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from publics.tests.factories import PublicsCurrencyFactory
 from users.models import Country
 
 
-class TestAddCountry(FastTenantTestCase):
+class TestAddCountry(EToolsTenantTestCase):
     def test_command(self):
         # Not able to actually create a tenant, so checking
         # the raises exception that this is where the command

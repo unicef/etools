@@ -3,14 +3,14 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from partners import forms
 from partners.models import PartnerType
 from partners.tests.factories import PartnerFactory, PartnerStaffFactory
 from users.tests.factories import ProfileFactory, UserFactory
 
 
-class TestPartnersAdminForm(FastTenantTestCase):
+class TestPartnersAdminForm(EToolsTenantTestCase):
     def setUp(self):
         super(TestPartnersAdminForm, self).setUp()
         self.data = {
@@ -44,7 +44,7 @@ class TestPartnersAdminForm(FastTenantTestCase):
         )
 
 
-class TestPartnerStaffMemberForm(FastTenantTestCase):
+class TestPartnerStaffMemberForm(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory()

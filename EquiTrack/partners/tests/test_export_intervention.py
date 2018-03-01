@@ -20,7 +20,6 @@ from partners.tests.factories import (
     PartnerFactory,
     PartnerStaffFactory,
 )
-from publics.tests.factories import PublicsCurrencyFactory
 from reports.tests.factories import (
     CountryProgrammeFactory,
     IndicatorFactory,
@@ -81,7 +80,7 @@ class BaseInterventionModelExportTestCase(APITenantTestCase):
         )
         cls.ib = InterventionBudgetFactory(
             intervention=cls.intervention,
-            currency=PublicsCurrencyFactory()
+            currency="USD"
         )
         cls.planned_visit = InterventionPlannedVisitsFactory(
             intervention=cls.intervention,
@@ -132,10 +131,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             'CP Outputs',
             'RAM Indicators',
             'FR Number(s)',
-            'Total UNICEF Budget (Local)',
-            'Total UNICEF Budget (USD)',
-            'Total CSO Budget (USD)',
-            'Total CSO Budget (Local)',
+            'Total UNICEF Budget',
+            'Total CSO Budget',
             'Planned Programmatic Visits',
             'Planned Spot Checks',
             'Planned Audits',
@@ -172,10 +169,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             u'',
             u'',
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
-            u'{:.2f}'.format(self.intervention.total_unicef_cash_local),
             u'{:.2f}'.format(self.intervention.total_unicef_budget),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
-            u'{:.2f}'.format(self.intervention.total_partner_contribution_local),
             u'{} ({})'.format(self.planned_visit.programmatic, self.planned_visit.year),
             u'{} ({})'.format(self.planned_visit.spot_checks, self.planned_visit.year),
             u'{} ({})'.format(self.planned_visit.audit, self.planned_visit.year),
@@ -203,8 +198,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 53)
-        self.assertEqual(len(dataset[0]), 53)
+        self.assertEqual(len(dataset._get_headers()), 49)
+        self.assertEqual(len(dataset[0]), 49)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):

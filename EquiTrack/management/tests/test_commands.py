@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from django.core.management import call_command
 
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from management.issues import checks
 from management.models import (
     FlaggedIssue,
@@ -17,7 +17,7 @@ from partners.tests.factories import InterventionAmendmentFactory
 from users.tests.factories import UserFactory
 
 
-class TestCheckIssuesCommand(FastTenantTestCase):
+class TestCheckIssuesCommand(EToolsTenantTestCase):
     def test_run_all_checks(self):
         UserFactory(username="etools_task_admin")
         qs_issue = FlaggedIssue.objects.filter(
@@ -30,7 +30,7 @@ class TestCheckIssuesCommand(FastTenantTestCase):
         self.assertTrue(qs_issue.exists())
 
 
-class TestRecheckIssuesCommand(FastTenantTestCase):
+class TestRecheckIssuesCommand(EToolsTenantTestCase):
     def test_recheck_all_open_issues_task(self):
         UserFactory(username="etools_task_admin")
         amendment = InterventionAmendmentFactory()

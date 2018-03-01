@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from django.forms import model_to_dict
 
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from funds.tests.factories import FundsReservationHeaderFactory
 from partners.tests.factories import (
     AgreementFactory,
@@ -17,14 +17,14 @@ from snapshot import utils
 from users.tests.factories import UserFactory
 
 
-class TestJsonify(TenantTestCase):
+class TestJsonify(EToolsTenantTestCase):
     def test_jsonify(self):
         intervention = InterventionFactory()
         j = utils.jsonify(model_to_dict(intervention))
         self.assertEqual(j["title"], intervention.title)
 
 
-class TestGetToManyFieldNames(TenantTestCase):
+class TestGetToManyFieldNames(EToolsTenantTestCase):
     def test_intervention(self):
         intervention = InterventionFactory()
         fields = utils.get_to_many_field_names(intervention.__class__)
@@ -55,7 +55,7 @@ class TestGetToManyFieldNames(TenantTestCase):
         self.assertIn("amendments", fields)
 
 
-class TestCreateDictWithRelations(TenantTestCase):
+class TestCreateDictWithRelations(EToolsTenantTestCase):
     def test_no_relation(self):
         intervention = InterventionFactory()
         obj_dict = utils.create_dict_with_relations(intervention)
@@ -72,7 +72,7 @@ class TestCreateDictWithRelations(TenantTestCase):
         self.assertEqual(obj_dict, {})
 
 
-class TestCreateChangeDict(TenantTestCase):
+class TestCreateChangeDict(EToolsTenantTestCase):
     def test_no_prev_dict(self):
         self.assertEqual(utils.create_change_dict(None, {"key": "value"}), {})
 
@@ -88,7 +88,7 @@ class TestCreateChangeDict(TenantTestCase):
         })
 
 
-class TestCreateSnapshot(TenantTestCase):
+class TestCreateSnapshot(EToolsTenantTestCase):
     def test_create(self):
         user = UserFactory()
         intervention = InterventionFactory()

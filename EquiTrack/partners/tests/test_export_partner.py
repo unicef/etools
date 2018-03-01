@@ -88,6 +88,13 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         blocked = "Yes" if self.partner.blocked else "No"
 
         test_option = filter(lambda e: e[0] == self.partner.vendor_number, dataset)[0]
+
+        # the order of staff members in the results is hard to determine
+        # so just ensuring that all relevant staff members are in the results
+        for sm in self.partner.staff_members.filter(active=True).all():
+            member = "{} ({})".format(sm.get_full_name(), sm.email)
+            self.assertIn(member, test_option[18])
+
         self.assertEqual(test_option, (
             self.partner.vendor_number,
             unicode(self.partner.name),
@@ -107,8 +114,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
             self.partner.type_of_assessment,
             u'{}'.format(self.partner.last_assessment_date),
             u'',
-            ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
-                       for sm in self.partner.staff_members.filter(active=True).all()]),
+            test_option[18],
             u'https://testserver/pmp/partners/{}/details/'.format(self.partner.id)
         ))
 

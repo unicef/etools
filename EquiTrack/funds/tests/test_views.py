@@ -9,7 +9,11 @@ from rest_framework import status
 
 from EquiTrack.tests.mixins import APITenantTestCase
 from funds.tests.factories import FundsReservationHeaderFactory
-from partners.tests.factories import InterventionFactory
+from partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+)
 from users.tests.factories import UserFactory
 
 
@@ -20,9 +24,14 @@ class TestFRHeaderView(APITenantTestCase):
         cls.intervention = InterventionFactory()
 
     def setUp(self):
-        super(TestFRHeaderView, self).setUp()
-        self.fr_1 = FundsReservationHeaderFactory(intervention=None)
-        self.fr_2 = FundsReservationHeaderFactory(intervention=None)
+        self.unicef_staff = UserFactory(is_staff=True)
+        partner = PartnerFactory(vendor_number="PVN")
+        agreement = AgreementFactory(partner=partner)
+        self.intervention = InterventionFactory(agreement=agreement)
+        vendor_code = self.intervention.agreement.partner.vendor_number
+        self.fr_1 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)
+        self.fr_2 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)
+        self.fr_3 = FundsReservationHeaderFactory(intervention=None, currency="RON")
 
     def run_request(self, data):
         response = self.forced_auth_req(
@@ -148,3 +157,49 @@ class TestFRHeaderView(APITenantTestCase):
                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
         self.assertEqual(result['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+
+    def test_frs_vendor_code_mismatch(self):
+        data = {'values': ','.join([self.fr_1.fr_number, self.fr_3.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('FRs selected relate to various partners', result['error'])
+
+    def test_frs_partner_vendor_code_mismatch(self):
+        data = {'values': ','.join([self.fr_3.fr_number]),
+                'intervention': self.intervention.pk}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('vendor number of the selected implementing partner in eTools does not '
+                      'match the vendor number entered in the FR in VISION', result['error'])
+
+    def test_frs_partner_vendor_code_ok(self):
+        data = {'values': ','.join([self.fr_1.fr_number]),
+                'intervention': self.intervention.pk}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+
+    def test_frs_currencies_match_ok(self):
+        data = {'values': ','.join([self.fr_1.fr_number, self.fr_2.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(result['currencies_match'], True)
+        self.assertNotEqual(result['total_intervention_amt'], 0)
+
+    def test_frs_currencies_mismatch_ok(self):
+        self.fr_2.currency = 'LBP'
+        self.fr_2.save()
+        data = {'values': ','.join([self.fr_1.fr_number, self.fr_2.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(result['currencies_match'], False)
+        self.assertEqual(result['total_intervention_amt'], 0)

@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from management import tasks
 from management.issues import checks
 from management.models import (
@@ -16,7 +16,7 @@ from partners.tests.factories import InterventionAmendmentFactory
 from users.tests.factories import UserFactory
 
 
-class TestRunAllChecksTask(FastTenantTestCase):
+class TestRunAllChecksTask(EToolsTenantTestCase):
     def test_run_all_checks(self):
         UserFactory(username="etools_task_admin")
         qs_issue = FlaggedIssue.objects.filter(
@@ -29,7 +29,7 @@ class TestRunAllChecksTask(FastTenantTestCase):
         self.assertTrue(qs_issue.exists())
 
 
-class TestRecheckAllOpenIssuesTask(FastTenantTestCase):
+class TestRecheckAllOpenIssuesTask(EToolsTenantTestCase):
     def test_recheck_all_open_issues_task(self):
         UserFactory(username="etools_task_admin")
         amendment = InterventionAmendmentFactory()

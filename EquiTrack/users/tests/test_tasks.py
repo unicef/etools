@@ -10,13 +10,13 @@ from mock import patch, Mock
 from tenant_schemas.utils import schema_context
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 
-from EquiTrack.tests.mixins import SCHEMA_NAME, FastTenantTestCase
+from EquiTrack.tests.cases import SCHEMA_NAME, EToolsTenantTestCase
 from users import tasks
-from users.models import Section, User, UserProfile
+from users.models import Group, Section, User, UserProfile
 from users.tests.factories import (
     CountryFactory,
+    GroupFactory,
     ProfileFactory,
     SectionFactory,
     UserFactory,
@@ -24,13 +24,13 @@ from users.tests.factories import (
 from vision.vision_data_synchronizer import VisionException, VISION_NO_DATA_MESSAGE
 
 
-class TestUserMapper(FastTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.group, _ = Group.objects.get_or_create(name="UNICEF User")
-
+class TestUserMapper(EToolsTenantTestCase):
     def setUp(self):
         super(TestUserMapper, self).setUp()
+        try:
+            self.group = Group.objects.get(name="UNICEF User")
+        except Group.DoesNotExist:
+            self.group = GroupFactory(name="UNICEF User")
         self.mapper = tasks.UserMapper()
 
     def test_init(self):
@@ -391,7 +391,7 @@ class TestUserMapper(FastTenantTestCase):
 
 
 @skip("Issues with using public schema")
-class TestSyncUsers(FastTenantTestCase):
+class TestSyncUsers(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.mock_log = Mock()
@@ -416,7 +416,7 @@ class TestSyncUsers(FastTenantTestCase):
 
 
 @skip("Issues with using public schema")
-class TestMapUsers(FastTenantTestCase):
+class TestMapUsers(EToolsTenantTestCase):
     @classmethod
     def setUpTestMethod(cls):
         cls.mock_log = Mock()
@@ -454,7 +454,7 @@ class TestMapUsers(FastTenantTestCase):
         self.assertTrue(self.mock_log.save.call_count(), 1)
 
 
-class TestUserSynchronizer(FastTenantTestCase):
+class TestUserSynchronizer(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.synchronizer = tasks.UserSynchronizer(

@@ -5,7 +5,8 @@ from django.db import connection
 from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase
 from locations.models import Location
 from locations.tests.factories import LocationFactory
 from users.tests.factories import UserFactory
@@ -115,7 +116,7 @@ class TestLocationViews(APITenantTestCase):
         self.assertIn("Loc", response.data[0]["name"])
 
 
-class TestLocationAutocompleteView(FastTenantTestCase):
+class TestLocationAutocompleteView(EToolsTenantTestCase):
     def setUp(self):
         super(TestLocationAutocompleteView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

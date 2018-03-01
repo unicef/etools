@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import sys
 from unittest import skipIf
 
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from funds.models import FundsReservationItem, FundsCommitmentItem
 from funds.tests.factories import (
     DonorFactory,
@@ -19,7 +19,7 @@ from funds.tests.factories import (
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicode(FastTenantTestCase):
+class TestStrUnicode(EToolsTenantTestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
     def test_donor(self):
         donor = DonorFactory.build(name=u'R\xe4dda Barnen')
@@ -63,7 +63,7 @@ class TestStrUnicode(FastTenantTestCase):
         self.assertEqual(unicode(funds_commitment_item), u'R\xe4dda Barnen')
 
 
-class TestFundsReservationItem(FastTenantTestCase):
+class TestFundsReservationItem(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.fr_header = FundsReservationHeaderFactory(fr_number='23')
@@ -89,7 +89,7 @@ class TestFundsReservationItem(FastTenantTestCase):
         self.assertEqual(fr_item.fr_ref_number, 'use-this-value')
 
 
-class TestFundsCommitmentItem(FastTenantTestCase):
+class TestFundsCommitmentItem(EToolsTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.fc_header = FundsCommitmentHeaderFactory(fc_number='23')
