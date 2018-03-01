@@ -633,7 +633,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement cannot transition to signed unless the end date is today or after'
+            'Agreement cannot transition to signed unless the end date is defined'
         )
 
         # Populate end date with a date in the past - should pass validation for MOU's
