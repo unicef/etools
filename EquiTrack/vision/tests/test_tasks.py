@@ -82,7 +82,7 @@ class TestVisionSyncTask(TestCase):
         if tenant_countries_used is None:
             tenant_countries_used = self.tenant_countries
         if not selected_synchronizers:
-            selected_synchronizers = vision.tasks.SYNC_HANDLERS
+            selected_synchronizers = vision.tasks.SYNC_HANDLERS.keys()
 
         self.assertEqual(mock_send_to_slack.call_count, 1)
         # Verify that each processed country was sent in the message. For some reason, the public
@@ -137,7 +137,7 @@ class TestVisionSyncTask(TestCase):
         if tenant_countries_used is None:
             tenant_countries_used = self.tenant_countries
         if not selected_synchronizers:
-            selected_synchronizers = vision.tasks.SYNC_HANDLERS
+            selected_synchronizers = vision.tasks.SYNC_HANDLERS.keys()
 
         self.assertEqual(mock_logger.call_count, 1)
         # Verify that each processed country was sent in the message. For some reason, the public

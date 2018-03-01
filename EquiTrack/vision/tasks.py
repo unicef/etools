@@ -14,23 +14,23 @@ from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.purchase_order import POSynchronizer
 from vision.exceptions import VisionException
 
-PUBLIC_SYNC_HANDLERS = []
+PUBLIC_SYNC_HANDLERS = {}
 
 
-SYNC_HANDLERS = [
-    ProgrammeSynchronizer,
-    RAMSynchronizer,
-    PartnerSynchronizer,
-    FundReservationsSynchronizer,
-    FundCommitmentSynchronizer,
-]
+SYNC_HANDLERS = {
+    'programme': ProgrammeSynchronizer,
+    'ram': RAMSynchronizer,
+    'partner': PartnerSynchronizer,
+    'fund_reservation': FundReservationsSynchronizer,
+    'fund_commitment': FundCommitmentSynchronizer,
+}
 
 
 logger = get_task_logger(__name__)
 
 
 @app.task
-def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
+def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS.keys()):
     """
     Do the vision sync for all countries that have vision_sync_enabled=True,
     or just the named country.  Defaults to SYNC_HANDLERS but a
@@ -73,23 +73,23 @@ def sync_handler(self, country_name, handler):
     Run .sync() on one handler for one country.
     """
     # Scheduled from vision_sync_task() (above).
-    logger.info(u'Starting vision sync handler {} for country {}'.format(handler.__name__, country_name))
+    logger.info(u'Starting vision sync handler {} for country {}'.format(handler, country_name))
     try:
         country = Country.objects.get(name=country_name)
     except Country.DoesNotExist:
         logger.error(u"{} sync failed, Could not find a Country with this name: {}".format(
-            handler.__name__, country_name
+            handler, country_name
         ))
         # No point in retrying if there's no such country
     else:
         try:
-            handler(country).sync()
-            logger.info(u"{} sync successfully for {}".format(handler.__name__, country.name))
+            SYNC_HANDLERS[handler](country).sync()
+            logger.info(u"{} sync successfully for {}".format(handler, country.name))
 
         except VisionException as e:
             # Catch and log the exception so we're aware there's a problem.
             logger.error(u"{} sync failed, Reason: {}, Country: {}".format(
-                handler.__name__, e.message, country_name
+                handler, e.message, country_name
             ))
             # The 'autoretry_for' in the task decorator tells Celery to
             # retry this a few times on VisionExceptions, so just re-raise it
