@@ -218,5 +218,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     @staticmethod
     def get_partner_rating(partner):
         allowed_risk_rating = [rr[0] for rr in PartnerOrganization.RISK_RATINGS]
-        if partner['RISK_RATING'] in allowed_risk_rating:
+        if 'RISK_RATING' in partner and partner['RISK_RATING'] in allowed_risk_rating:
             return partner['RISK_RATING']
+        return None
