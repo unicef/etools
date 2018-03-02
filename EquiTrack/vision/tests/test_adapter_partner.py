@@ -55,6 +55,27 @@ class TestPartnerSynchronizer(EToolsTenantTestCase):
         response = self.adapter._get_json(adapter.VISION_NO_DATA_MESSAGE)
         self.assertEqual(response, [])
 
+    def test_get_cso_type_none(self):
+        self.assertIsNone(self.adapter.get_cso_type(self.data))
+
+    def test_get_cso_type(self):
+        self.data["CSO_TYPE"] = "National NGO"
+        self.assertEqual(self.adapter.get_cso_type(self.data), "National")
+
+    def test_get_partner_type_none(self):
+        self.data["PARTNER_TYPE_DESC"] = "Wrong"
+        self.assertIsNone(self.adapter.get_partner_type(self.data))
+
+    def test_get_partner_type(self):
+        self.assertEqual(self.adapter.get_partner_type(self.data), "UN Agency")
+
+    def test_get_partner_rating_none(self):
+        self.assertIsNone(self.adapter.get_partner_rating(self.data))
+
+    def test_get_partner_rating(self):
+        self.data["RISK_RATING"] = "High"
+        self.assertEqual(self.adapter.get_partner_rating(self.data), "High")
+
     def test_save_records_no_type(self):
         """Check that partner organization record is created,
         no type mapping
