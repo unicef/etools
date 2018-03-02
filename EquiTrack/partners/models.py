@@ -27,7 +27,7 @@ from EquiTrack.fields import CurrencyField, QuarterField
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
-from funds.models import Grant, FundsReservationHeader
+from funds.models import Grant
 from reports.models import (
     Indicator,
     Sector,
