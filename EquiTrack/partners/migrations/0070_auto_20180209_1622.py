@@ -38,7 +38,7 @@ def copy_signed_amendment(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0068_auto_20180209_1512'),
+        ('partners', '0069_auto_20180209_1512'),
     ]
 
     operations = [

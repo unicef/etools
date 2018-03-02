@@ -457,7 +457,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         return request.user.is_superuser
 
 
-
 class PlannedEngagementAdmin(admin.ModelAdmin):
     model = PlannedEngagement
     search_fields = (

@@ -38,7 +38,7 @@ def copy_report(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0067_auto_20180209_1250'),
+        ('partners', '0068_auto_20180209_1250'),
     ]
 
     operations = [
