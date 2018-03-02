@@ -185,7 +185,7 @@ class TestModelExport(APITenantTestCase):
             '{}'.format(self.intervention.days_from_review_to_signed),
             unicode(self.intervention.amendments.count()),
             u'',
-            u'',
+            unicode(', '.join(['{}'.format(att.type.name) for att in self.intervention.attachments.all()])),
             unicode(self.intervention.attachments.count()),
             u'',
             u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),

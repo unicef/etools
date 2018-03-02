@@ -52,7 +52,7 @@ from partners.serializers.partner_organization_v2 import (
 from partners.views.helpers import set_tenant_or_fail
 from t2f.models import TravelActivity
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
-from partners.filters import PartnerScopeFilter
+from partners.filters import PartnerScopeFilter, StatusFilter
 from partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationHactCsvRenderer,
@@ -217,6 +217,7 @@ class PlannedEngagementAPIView(ListAPIView):
     permission_classes = (IsAdminUser,)
     queryset = PlannedEngagement.objects.all()
     serializer_class = PlannedEngagementSerializer
+    filter_backends = (StatusFilter,)
 
 
 class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):
