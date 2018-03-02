@@ -325,7 +325,7 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
 CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-CELERY_ROUTES = {
+CELERY_TASK_ROUTES = {
     'vision.tasks.sync_handler': {'queue': 'vision_queue'}
 }
 
