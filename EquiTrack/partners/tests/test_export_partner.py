@@ -129,8 +129,8 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 45)
-        self.assertEqual(len(dataset[0]), 45)
+        self.assertEqual(len(dataset._get_headers()), 46)
+        self.assertEqual(len(dataset[0]), 46)
 
     def test_csv_flat_export_api_hidden(self):
         response = self.forced_auth_req(
@@ -143,8 +143,8 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 45)
-        self.assertEqual(len(dataset[0]), 45)
+        self.assertEqual(len(dataset._get_headers()), 46)
+        self.assertEqual(len(dataset[0]), 46)
 
 
 class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
