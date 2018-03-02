@@ -39,8 +39,8 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS.keys()):
     # Not invoked as a task from code in this repo, but it is scheduled
     # by other means, so it's really a Celery task.
 
-    global_synchronizers = [handler for handler in synchronizers if handler.GLOBAL_CALL]
-    tenant_synchronizers = [handler for handler in synchronizers if not handler.GLOBAL_CALL]
+    global_synchronizers = [handler for handler in synchronizers if SYNC_HANDLERS[handler].GLOBAL_CALL]
+    tenant_synchronizers = [handler for handler in synchronizers if not SYNC_HANDLERS[handler].GLOBAL_CALL]
 
     country_filter_dict = {
         'vision_sync_enabled': True

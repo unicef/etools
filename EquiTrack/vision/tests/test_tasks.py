@@ -275,10 +275,10 @@ class TestSyncHandlerTask(TestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_country_does_not_exist(self, mock_logger):
         """Exercise vision.tasks.sync_handler() called with a country name that doesn't match a country."""
-        vision.tasks.sync_handler.delay('random', ProgrammeSynchronizer)
+        vision.tasks.sync_handler.delay('random', 'programme')
         self.assertEqual(mock_logger.call_count, 1)
         expected_msg = '{} sync failed, Could not find a Country with this name: {}'.format(
-            'ProgrammeSynchronizer', 'random'
+            'programme', 'random'
         )
         self.assertEqual(mock_logger.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger.call_args[1], {})
