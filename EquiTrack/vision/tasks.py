@@ -61,7 +61,7 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS.keys()):
 
     text = u'Created tasks for the following countries: {} and synchronizers: {}'.format(
         ',\n '.join([country.name for country in countries]),
-        ',\n '.join([synchronizer.__name__ for synchronizer in synchronizers])
+        ',\n '.join([synchronizer for synchronizer in synchronizers])
     )
     send_to_slack(text)
     logger.info(text)

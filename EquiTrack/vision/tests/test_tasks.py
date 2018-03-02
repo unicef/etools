@@ -11,7 +11,6 @@ import mock
 
 import vision.tasks
 from EquiTrack.factories import CountryFactory
-from vision.adapters.programme import ProgrammeSynchronizer
 from vision.exceptions import VisionException
 
 
@@ -89,7 +88,7 @@ class TestVisionSyncTask(TestCase):
         # tenant is not listed in this message even though it was synced.
         expected_msg = 'Created tasks for the following countries: {} and synchronizers: {}'.format(
             ',\n '.join([country.name for country in tenant_countries_used]),
-            ',\n '.join([synchronizer.__name__ for synchronizer in selected_synchronizers])
+            ',\n '.join([synchronizer for synchronizer in selected_synchronizers])
         )
         self.assertEqual(mock_send_to_slack.call_args[0], (expected_msg, ))
         self.assertEqual(mock_send_to_slack.call_args[1], {})
@@ -189,7 +188,7 @@ class TestVisionSyncTask(TestCase):
     def test_sync_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
                                            mock_send_to_slack, CountryMock):
         """Exercise vision.tasks.vision_sync_task() called with passing as argument a specific synchronizer"""
-        selected_synchronizers = [ProgrammeSynchronizer, ]
+        selected_synchronizers = ['programme', ]
         CountryMock.objects.filter = mock.Mock(return_value=self.tenant_countries)
         # Mock connection.set_tenant() so we can verify calls to it.
         mock_django_db_connection.set_tenant = mock.Mock()
@@ -207,7 +206,7 @@ class TestVisionSyncTask(TestCase):
     def test_sync_country_and_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
                                                        mock_send_to_slack, CountryMock):
         """Exercise vision.tasks.vision_sync_task() called with passing a specific country and a synchronizer"""
-        selected_synchronizers = [ProgrammeSynchronizer, ]
+        selected_synchronizers = ['programme', ]
         selected_countries = [self.tenant_countries[0], ]
 
         CountryMock.objects.filter = mock.Mock(return_value=selected_countries)
@@ -238,10 +237,10 @@ class TestSyncHandlerTask(TestCase):
         """Exercise vision.tasks.sync_handler() success scenario, one matching country."""
         Country.objects.get = mock.Mock(return_value=self.country)
 
-        vision.tasks.sync_handler.delay(self.country.name, ProgrammeSynchronizer)
+        vision.tasks.sync_handler.delay(self.country.name, 'programme')
         self.assertEqual(mock_logger_info.call_count, 2)
         expected_msg = '{} sync successfully for {}'.format(
-            'ProgrammeSynchronizer', 'Country My'
+            'programme', 'Country My'
         )
         self.assertEqual(mock_logger_info.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger_info.call_args[1], {})
@@ -255,18 +254,18 @@ class TestSyncHandlerTask(TestCase):
         """Exercise vision.tasks.sync_handler() which receive an exception from Vision."""
         Country.objects.get = mock.Mock(return_value=self.country)
 
-        vision.tasks.sync_handler.delay(self.country.name, ProgrammeSynchronizer)
+        vision.tasks.sync_handler.delay(self.country.name, 'programme')
         # Check that it got retried once
         self.assertEqual(mock_logger_info.call_count, 2)
         self.assertEqual(mock_logger_error.call_count, 2)
         expected_msg = 'Starting vision sync handler {} for country {}'.format(
-            'ProgrammeSynchronizer', 'Country My'
+            'programme', 'Country My'
         )
         self.assertEqual(mock_logger_info.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger_info.call_args[1], {})
 
         expected_msg = '{} sync failed, Reason: {}, Country: {}'.format(
-            'ProgrammeSynchronizer', 'banana', 'Country My'
+            'programme', 'banana', 'Country My'
         )
         self.assertEqual(mock_logger_error.call_args[0], (expected_msg,))
         self.assertEqual(mock_logger_error.call_args[1], {})
