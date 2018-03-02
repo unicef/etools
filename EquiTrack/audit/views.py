@@ -154,7 +154,7 @@ class EngagementViewSet(
     search_fields = ('partner__name', 'agreement__auditor_firm__name')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
-    filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'engagement_type', 'status')
+    filter_fields = ('agreement', 'agreement__auditor_firm', 'partner', 'engagement_type')
 
     ENGAGEMENT_MAPPING = {
         Engagement.TYPES.audit: {
