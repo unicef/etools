@@ -257,10 +257,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     planned_visits = serializers.SerializerMethodField(
         label=_("Planned Programmatic Visits"),
     )
-    spot_checks = serializers.SerializerMethodField(
-        label=_("Planned Spot Checks"),
-    )
-    audit = serializers.SerializerMethodField(label=_("Planned Audits"))
     url = serializers.SerializerMethodField(label=_("URL"))
     days_from_submission_to_signed = serializers.SerializerMethodField(
         label=_("Days from Submission to Signed"),
@@ -298,8 +294,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "cso_contribution",
             "partner_authorized_officer_signatory",
             "planned_visits",
-            "spot_checks",
-            "audit",
             "submission_date",
             "submission_date_prc",
             "review_date_prc",
@@ -349,13 +343,9 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ' '.join([ram for ram in ram_indicators])
 
     def get_planned_visits(self, obj):
-        return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_spot_checks(self, obj):
-        return ', '.join(['{} ({})'.format(pv.spot_checks, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_audit(self, obj):
-        return ', '.join(['{} ({})'.format(pv.audit, pv.year) for pv in obj.planned_visits.all()])
+        return ', '.join(['{} {} {} {} ({})'.format(
+            pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4, pv.year
+        ) for pv in obj.planned_visits.all()])
 
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
@@ -411,11 +401,12 @@ class InterventionExportFlatSerializer(InterventionExportSerializer):
         planned_visits = []
         for planned_visit in obj.planned_visits.all():
             planned_visits.append(
-                "Year: {}, Programmatic: {}, Spot Checks: {}, Audit: {}".format(
+                "Year: {}: {} {} {} {}".format(
                     planned_visit.year,
-                    planned_visit.programmatic,
-                    planned_visit.spot_checks,
-                    planned_visit.audit,
+                    planned_visit.programmatic_q1,
+                    planned_visit.programmatic_q2,
+                    planned_visit.programmatic_q3,
+                    planned_visit.programmatic_q4,
                 )
             )
         return "\n".join(planned_visits)
