@@ -143,7 +143,7 @@ class TestVisionSyncTask(TestCase):
         # tenant is not listed in this message even though it was synced.
         expected_msg = u'Created tasks for the following countries: {} and synchronizers: {}'.format(
             ',\n '.join([country.name for country in tenant_countries_used]),
-            ',\n '.join([synchronizer.__name__ for synchronizer in selected_synchronizers])
+            ',\n '.join([synchronizer for synchronizer in selected_synchronizers])
         )
         self.assertEqual(mock_logger.call_args[0], (expected_msg, ))
         self.assertEqual(mock_logger.call_args[1], {})
