@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import os
 
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -143,6 +144,13 @@ class Attachment(TimeStampedModel, models.Model):
     content_object = GenericForeignKey()
 
     code = models.CharField(max_length=64, blank=True, verbose_name=_('Code'))
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Uploaded By"),
+        related_name='attachments',
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         ordering = ['id', ]

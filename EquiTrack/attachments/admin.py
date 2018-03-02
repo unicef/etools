@@ -16,14 +16,20 @@ class FileTypeAdmin(OrderedModelAdmin):
 
 @admin.register(app_models.Attachment)
 class AttachmentAdmin(admin.ModelAdmin):
-    list_display = ['file_type', 'file', 'content_object', ]
-    list_filter = ['file_type', ]
+    list_display = [
+        'file_type',
+        'file',
+        'content_object',
+        'modified',
+        'uploaded_by',
+    ]
+    list_filter = ['file_type', 'uploaded_by', ]
 
 
 class AttachmentInline(ct_admin.GenericTabularInline):
     model = app_models.Attachment
     extra = 0
-    fields = ('file', 'hyperlink', )
+    fields = ('file', 'hyperlink', 'modified', 'uploaded_by', )
 
 
 class AttachmentSingleInline(AttachmentInline):

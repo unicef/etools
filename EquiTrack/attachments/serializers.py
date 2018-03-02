@@ -33,7 +33,15 @@ class BaseAttachmentsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attachment
-        fields = ['id', 'file_type', 'file', 'hyperlink', 'created', 'modified', ]
+        fields = [
+            'id',
+            'file_type',
+            'file',
+            'hyperlink',
+            'created',
+            'modified',
+            'uploaded_by',
+        ]
         extra_kwargs = {
             'created': {
                 'label': _('Date Uploaded'),
@@ -64,7 +72,7 @@ class AttachmentSerializer(BaseAttachmentsSerializer):
 
     class Meta(BaseAttachmentsSerializer.Meta):
         fields = [
-            'created', 'file_type', 'url', 'filename',
+            'created', 'file_type', 'url', 'filename', 'uploaded_by'
         ]
 
     def get_url(self, obj):
