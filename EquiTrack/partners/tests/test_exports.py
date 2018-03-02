@@ -5,8 +5,10 @@ import tempfile
 from rest_framework import status
 from tablib.core import Dataset
 
-from EquiTrack.factories import (UserFactory, PartnerFactory, AgreementFactory, InterventionFactory,
-                                 CountryProgrammeFactory, ResultFactory, InterventionBudgetFactory, PartnerStaffFactory)
+from EquiTrack.factories import (
+    UserFactory, PartnerFactory, AgreementFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory,
+    InterventionBudgetFactory, PartnerStaffFactory, InterventionPlannedVisitsFactory
+)
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import PartnerOrganization
 from reports.models import ResultType
@@ -73,6 +75,10 @@ class TestModelExport(APITenantTestCase):
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
         self.result = ResultFactory(result_type=output_res_type)
 
+        self.planned_visit = InterventionPlannedVisitsFactory(
+            intervention=self.intervention,
+        )
+
     def test_intervention_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -84,52 +90,53 @@ class TestModelExport(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content, 'csv')
         self.assertEqual(dataset.height, 1)
+
         self.assertEqual(dataset._get_headers(), [
-            "partner_name",
-            "vendor_number",
-            "status",
-            "partner_type",
-            "agreement_number",
-            "country_programme",
-            "document_type",
-            "number",
-            "title",
-            "start",
-            "end",
-            "offices",
-            "sectors",
-            "locations",
-            "contingency_pd",
-            "intervention_clusters",
-            "unicef_focal_points",
-            "partner_focal_points",
-            "budget_currency",
-            "cso_contribution",
-            "unicef_budget",
-            "unicef_supply",
-            "total_planned_budget",
-            "fr_numbers",
-            "fr_currency",
-            "fr_posting_date",
-            "fr_amount",
-            "fr_actual_amount",
-            "fr_outstanding_amt",
-            "planned_visits",
-            "submission_date",
-            "submission_date_prc",
-            "review_date_prc",
-            "partner_authorized_officer_signatory",
-            "signed_by_partner_date",
-            "unicef_signatory",
-            "signed_by_unicef_date",
-            "days_from_submission_to_signed",
-            "days_from_review_to_signed",
-            "amendment_sum",
-            "last_amendment_date",
-            "attachment_type",
-            "total_attachments",
-            "cp_outputs",
-            "url",
+            "Partner",
+            "Vendor #",
+            "Status",
+            "Partner Type",
+            "Agreement",
+            "Country Programme",
+            "Document Type",
+            "Reference Number",
+            "Document Title",
+            "Start Date",
+            "End Date",
+            "UNICEF Office",
+            "Sections",
+            "Locations",
+            "Contingency PD",
+            "Cluster",
+            "UNICEF Focal Points",
+            "CSO Authorized Officials",
+            "Budget Currency",
+            "Total CSO Contribution",
+            "UNICEF Cash",
+            "UNICEF Supply",
+            "Total PD/SSFA Budget",
+            "FR Number(s)",
+            "FR Currency",
+            "FR Posting Date",
+            "FR Amount",
+            "FR Actual CT",
+            "Outstanding DCT",
+            "Planned Programmatic Visits",
+            "Document Submission Date by CSO",
+            "Submission Date to PRC",
+            "Review Date by PRC",
+            "Signed by Partner",
+            "Signed by Partner Date",
+            "Signed by UNICEF",
+            "Signed by UNICEF Date",
+            "Days from Submission to Signed",
+            "Days from Review to Signed",
+            "Total no. of amendments",
+            "Last amendment date",
+            "Attachment type",
+            "# of attachments",
+            "CP Outputs",
+            "URL",
         ])
 
         self.assertEqual(dataset[0], (
@@ -147,21 +154,21 @@ class TestModelExport(APITenantTestCase):
             u'',
             u'',
             u'',
+            unicode("Yes" if self.intervention.contingency_pd else "No"),
             u'',
             u'',
             u'',
-            u'',
-            u'',
+            unicode(self.ib.currency),
             u'{:.2f}'.format(self.intervention.total_partner_contribution),
-            u'{:.2f}'.format(self.intervention.total_unicef_budget),
-            u'',
-            u''
+            u'{:.2f}'.format(self.intervention.total_unicef_cash),
+            u'{:.2f}'.format(self.intervention.total_in_kind_amount),
+            u'{:.2f}'.format(self.intervention.total_budget),
             u', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
             u'',
             u'',
-            u'{:.2f}'.format(self.total_frs["total_frs_amt"]),
-            u'{:.2f}'.format(self.total_frs["total_actual_amt"]),
-            u'{:.2f}'.format(self.total_frs["total_outstanding_amt"]),
+            unicode(self.intervention.total_frs["total_frs_amt"]),
+            unicode(self.intervention.total_frs["total_actual_amt"]),
+            unicode(self.intervention.total_frs["total_outstanding_amt"]),
             u'{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(self.planned_visit.year,
                                                      self.planned_visit.programmatic_q1,
                                                      self.planned_visit.programmatic_q2,
@@ -176,14 +183,13 @@ class TestModelExport(APITenantTestCase):
             '{}'.format(self.intervention.signed_by_unicef_date),
             '{}'.format(self.intervention.days_from_submission_to_signed),
             '{}'.format(self.intervention.days_from_review_to_signed),
+            unicode(self.intervention.amendments.count()),
             u'',
             u'',
-            u'',
-            u'',
+            unicode(self.intervention.amendments.count()),
             u'',
             u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
-        )
-        )
+        ))
 
     def test_agreement_export_api(self):
         response = self.forced_auth_req(
