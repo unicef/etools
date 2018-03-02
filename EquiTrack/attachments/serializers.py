@@ -80,9 +80,13 @@ class AttachmentSerializer(BaseAttachmentsSerializer):
 
 
 class AttachmentFileUploadSerializer(serializers.ModelSerializer):
+    uploaded_by = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
     class Meta:
         model = Attachment
-        fields = ["file", ]
+        fields = ["file", "uploaded_by"]
 
 
 class AttachmentSerializerMixin(object):

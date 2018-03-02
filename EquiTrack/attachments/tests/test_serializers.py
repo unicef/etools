@@ -4,6 +4,7 @@ import base64
 import os
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory
 from django.utils.translation import ugettext as _
 
 from attachments.models import Attachment
@@ -12,6 +13,7 @@ from attachments.serializers import (
     Base64AttachmentSerializer,
 )
 from attachments.tests.factories import AttachmentFactory, FileTypeFactory
+from EquiTrack.factories import UserFactory
 from EquiTrack.tests.cases import EToolsTenantTestCase
 
 
@@ -61,15 +63,20 @@ class TestAttachmentFileUploadSerializer(EToolsTenantTestCase):
             'hello_world.txt',
             u'hello world!'.encode('utf-8')
         )
+        self.request = RequestFactory()
+        self.user = UserFactory()
+        self.request.user = self.user
 
     def test_upload(self):
         self.assertFalse(self.attachment.file)
         serializer = AttachmentFileUploadSerializer(
             instance=self.attachment,
-            data={"file": self.file_data}
+            data={"file": self.file_data},
+            context={"request": self.request}
         )
         self.assertTrue(serializer.is_valid())
         instance = serializer.save()
         self.assertTrue(instance.file)
         attachment_update = Attachment.objects.get(pk=self.attachment.pk)
         self.assertTrue(attachment_update.file)
+        self.assertEqual(attachment_update.uploaded_by, self.user)
