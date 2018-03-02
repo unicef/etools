@@ -4,15 +4,17 @@ Model factories used for generating models dynamically for tests
 import json
 from datetime import date, datetime, timedelta
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.contrib.gis.geos import GEOSGeometry
 from django.db.models.signals import post_save
+from django.contrib.auth import get_user_model
+from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
 
-from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
+from snapshot import models as snapshot_models
+
+from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
 from funds import models as funds_models
 from locations import models as location_models
 from notification import models as notification_models
@@ -44,23 +46,23 @@ class CountryFactory(factory.django.DjangoModelFactory):
         model = user_models.Country
         django_get_or_create = ('schema_name',)
 
-    name = "Test Country"
+    name = factory.Sequence(lambda n: "Test Country {}".format(n))
     schema_name = SCHEMA_NAME
     domain_url = TENANT_DOMAIN
 
 
-class GroupFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = Group
-
-    name = "Partnership Manager"
+def GroupFactory(name="Partnership Manager"):
+    group, _ = Group.objects.get_or_create(
+        name=name
+    )
+    return group
 
 
 class UnicefUserGroupFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Group
 
-    name = "UNICEF User"
+    name = factory.Sequence(lambda n: "UNICEF User {}".format(n))
 
 
 class ProfileFactory(factory.django.DjangoModelFactory):
@@ -110,6 +112,7 @@ class GatewayTypeFactory(factory.django.DjangoModelFactory):
         model = location_models.GatewayType
 
     name = factory.Sequence(lambda n: 'GatewayType {}'.format(n))
+    admin_level = factory.Sequence(lambda n: n)
 
 
 class LocationFactory(factory.django.DjangoModelFactory):
@@ -137,10 +140,11 @@ class PartnerStaffFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PartnerStaffMember
 
+    partner = factory.SubFactory('EquiTrack.factories.PartnerFactory')
     title = 'Jedi Master'
     first_name = 'Mace'
     last_name = 'Windu'
-    email = factory.Sequence(lambda n: "mace{}@theforce.org".format(n))
+    email = factory.Sequence(lambda n: "mace{}@example.com".format(n))
 
 
 class PartnerFactory(factory.django.DjangoModelFactory):
@@ -149,6 +153,14 @@ class PartnerFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    vendor_number = fuzzy.FuzzyText(length=10)
+
+
+class PlannedEngagementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.PlannedEngagement
+
+    partner = factory.SubFactory('EquiTrack.factories.PartnerFactory')
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):
@@ -177,6 +189,46 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
+class AssessmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.Assessment
+
+    partner = factory.SubFactory(PartnerFactory)
+    type = fuzzy.FuzzyChoice([
+        u'Micro Assessment',
+        u'Simplified Checklist',
+        u'Scheduled Audit report',
+        u'Special Audit report',
+        u'Other',
+    ])
+    names_of_other_agencies = fuzzy.FuzzyText(length=50)
+    expected_budget = fuzzy.FuzzyInteger(1000)
+    notes = fuzzy.FuzzyText(length=50)
+    requested_date = date.today()
+    requesting_officer = factory.SubFactory(UserFactory)
+    approving_officer = factory.SubFactory(UserFactory)
+    planned_date = date.today()
+    completed_date = date.today()
+    rating = "high"
+    report = factory.django.FileField(filename='test_file.pdf')
+    current = True
+
+
+class FileTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.FileType
+
+    name = fuzzy.FuzzyChoice([
+        u'FACE',
+        u'Progress Report',
+        u'Partnership Review',
+        u'Final Partnership Review',
+        u'Correspondence',
+        u'Supply/Distribution Plan',
+        u'Other',
+    ])
+
+
 class InterventionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.Intervention
@@ -184,6 +236,32 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     agreement = factory.SubFactory(AgreementFactory)
     title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
     submission_date = datetime.today()
+
+
+class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAmendment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    types = fuzzy.FuzzyChoice([
+        [u'Change IP name'],
+        [u'Change authorized officer'],
+        [u'Change banking info'],
+        [u'Change in clause'],
+    ])
+    other_description = fuzzy.FuzzyText(length=50)
+    amendment_number = fuzzy.FuzzyInteger(1000)
+    signed_date = date.today()
+    signed_amendment = factory.django.FileField(filename='test_file.pdf')
+
+
+class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionAttachment
+
+    intervention = factory.SubFactory(InterventionFactory)
+    attachment = factory.django.FileField(filename='test_file.pdf')
+    type = factory.Iterator(partner_models.FileType.objects.all())
 
 
 class InterventionBudgetFactory(factory.django.DjangoModelFactory):
@@ -199,11 +277,24 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     in_kind_amount_local = 10.00
 
 
+class InterventionReportingPeriodFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionReportingPeriod
+
+    intervention = factory.SubFactory(InterventionFactory)
+    # make each period start_date 10 days after the last one
+    start_date = factory.Sequence(lambda n: date.today() + timedelta(days=10 * n))
+    # use LazyAttribute to make sure that start_date, end_date and due_date are in order
+    end_date = factory.LazyAttribute(lambda o: o.start_date + timedelta(days=3))
+    due_date = factory.LazyAttribute(lambda o: o.end_date + timedelta(days=3))
+
+
 class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.InterventionPlannedVisits
 
     intervention = factory.SubFactory(InterventionFactory)
+    year = datetime.today().year
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
@@ -230,6 +321,22 @@ class ResultFactory(factory.django.DjangoModelFactory):
     to_date = date(date.today().year, 12, 31)
 
 
+class DisaggregationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Disaggregation
+        django_get_or_create = ('name', )  # so Factory doesn't try to create nonunique instances
+
+    name = factory.Sequence(lambda n: 'Disaggregation {}'.format(n))
+
+
+class DisaggregationValueFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.DisaggregationValue
+
+    disaggregation = factory.SubFactory(DisaggregationFactory)
+    value = factory.Sequence(lambda n: 'Value {}'.format(n))
+
+
 class LowerResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.LowerResult
@@ -249,7 +356,7 @@ class IndicatorBlueprintFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.IndicatorBlueprint
 
-    name = factory.Sequence(lambda n: 'Indicator Blueprint {}'.format(n))
+    title = factory.Sequence(lambda n: 'Indicator Blueprint {}'.format(n))
 
 
 class IndicatorFactory(factory.django.DjangoModelFactory):
@@ -257,15 +364,6 @@ class IndicatorFactory(factory.django.DjangoModelFactory):
         model = report_models.Indicator
 
     name = factory.Sequence(lambda n: 'Indicator {}'.format(n))
-
-
-class GovernmentInterventionFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = partner_models.GovernmentIntervention
-
-    partner = factory.SubFactory(PartnerFactory)
-    country_programme = factory.SubFactory(CountryProgrammeFactory)
-    number = 'RefNumber'
 
 
 class DonorFactory(factory.DjangoModelFactory):
@@ -297,7 +395,7 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     fr_number = fuzzy.FuzzyText(length=20)
     document_date = date(date.today().year, 1, 1)
     fr_type = fuzzy.FuzzyText(length=20)
-    currency = fuzzy.FuzzyText(length=20)
+    currency = fuzzy.FuzzyText(length=4)
     document_text = fuzzy.FuzzyText(length=20)
 
     # this is the field required for validation
@@ -362,6 +460,15 @@ class AgreementAmendmentFactory(factory.django.DjangoModelFactory):
     number = factory.Sequence(lambda n: '{:05}'.format(n))
     agreement = factory.SubFactory(AgreementFactory)
     types = [partner_models.AgreementAmendment.CLAUSE]
+
+
+class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionResultLink
+
+    intervention = factory.SubFactory(InterventionFactory)
+    cp_output = factory.SubFactory(ResultFactory)
 
 
 class TravelExpenseTypeFactory(factory.django.DjangoModelFactory):
@@ -475,6 +582,15 @@ class DSARateFactory(factory.django.DjangoModelFactory):
     finalization_date = date.today()
 
 
+class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = partner_models.InterventionSectorLocationLink
+
+    intervention = factory.SubFactory(InterventionFactory)
+    sector = factory.SubFactory(SectorFactory)
+
+
 class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
     def fuzz(self):
         return factory.fuzzy._random.choice(
@@ -511,3 +627,42 @@ class TravelActivityFactory(factory.django.DjangoModelFactory):
         if extracted:
             for travel in extracted:
                 self.travels.add(travel)
+
+
+class FuzzyActivityAction(factory.fuzzy.BaseFuzzyAttribute):
+    def fuzz(self):
+        return factory.fuzzy._random.choice(
+            [a[0] for a in snapshot_models.Activity.ACTION_CHOICES]
+        )
+
+
+class ActivityFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = snapshot_models.Activity
+
+    target = factory.SubFactory(InterventionFactory)
+    action = FuzzyActivityAction()
+    by_user = factory.SubFactory(UserFactory)
+    data = {"random": "data"}
+    change = ""
+
+
+class FundingCommitmentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.FundingCommitment
+
+    grant = factory.SubFactory(GrantFactory)
+    fr_number = fuzzy.FuzzyText(length=50)
+    wbs = fuzzy.FuzzyText(length=50)
+    fc_type = fuzzy.FuzzyText(length=50)
+
+
+class AppliedIndicatorFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = report_models.AppliedIndicator
+
+    indicator = factory.SubFactory(IndicatorBlueprintFactory)
+    lower_result = factory.SubFactory(LowerResultFactory)
+    context_code = fuzzy.FuzzyText(length=5)
+    target = fuzzy.FuzzyInteger(0, 100)

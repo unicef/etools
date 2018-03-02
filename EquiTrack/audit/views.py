@@ -17,15 +17,15 @@ from audit.exports import AuditorFirmCSVRenderer, EngagementCSVRenderer
 from audit.filters import DisplayStatusFilter, UniqueIDOrderingFilter
 from audit.metadata import AuditBaseMetadata, EngagementMetadata
 from audit.models import (
-    Engagement, AuditorFirm, MicroAssessment, Audit, SpotCheck, PurchaseOrder,
-    AuditorStaffMember, Auditor, AuditPermission, SpecialAudit, UNICEFUser)
+    Engagement, MicroAssessment, Audit, SpotCheck, Auditor, AuditPermission, SpecialAudit, UNICEFUser)
+from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from audit.permissions import HasCreatePermission, CanCreateStaffMembers
 from audit.serializers.auditor import (
     AuditorFirmExportSerializer, AuditorFirmLightSerializer, AuditorFirmSerializer, AuditorStaffMemberSerializer,
     PurchaseOrderSerializer,)
 from audit.serializers.engagement import (
     AuditSerializer, EngagementExportSerializer, EngagementLightSerializer, EngagementSerializer,
-    MicroAssessmentSerializer, SpecialAuditSerializer, SpotCheckSerializer,)
+    EngagementHactSerializer, MicroAssessmentSerializer, SpecialAuditSerializer, SpotCheckSerializer,)
 from audit.serializers.export import (
     AuditPDFSerializer, MicroAssessmentPDFSerializer, SpecialAuditPDFSerializer, SpotCheckPDFSerializer,)
 from partners.models import PartnerOrganization
@@ -209,6 +209,14 @@ class EngagementViewSet(
         engagements = self.get_queryset()
         return EngagementPartnerView.as_view(engagements=engagements)(request, *args, **kwargs)
 
+    @list_route(methods=['get'], url_path='hact')
+    def hact(self, request, *args, **kwargs):
+        engagements = Engagement.objects.filter(status=Engagement.FINAL).select_subclasses(
+            "audit", "spotcheck", "microassessment", "specialaudit"
+        )
+        serializer = EngagementHactSerializer(engagements, many=True, context={"request": request})
+        return Response(serializer.data)
+
     @detail_route(methods=['get'], url_path='pdf')
     def export_pdf(self, request, *args, **kwargs):
         obj = self.get_object()
@@ -225,9 +233,12 @@ class EngagementViewSet(
         if not serializer_class or not template:
             raise NotImplementedError
 
+        main_serializer = engagement_params.get('serializer_class', None)(obj, context=self.get_serializer_context())
+
         return render_to_pdf_response(
             request, template,
-            context={'engagement': serializer_class(obj).data},
+            context={'engagement': serializer_class(obj).data,
+                     'serializer': main_serializer},
             filename='engagement_{}.pdf'.format(obj.unique_id),
         )
 

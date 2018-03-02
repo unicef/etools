@@ -14,23 +14,23 @@ from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.purchase_order import POSynchronizer
 from vision.exceptions import VisionException
 
-PUBLIC_SYNC_HANDLERS = []
+PUBLIC_SYNC_HANDLERS = {}
 
 
-SYNC_HANDLERS = [
-    ProgrammeSynchronizer,
-    RAMSynchronizer,
-    PartnerSynchronizer,
-    FundReservationsSynchronizer,
-    FundCommitmentSynchronizer,
-]
+SYNC_HANDLERS = {
+    'programme': ProgrammeSynchronizer,
+    'ram': RAMSynchronizer,
+    'partner': PartnerSynchronizer,
+    'fund_reservation': FundReservationsSynchronizer,
+    'fund_commitment': FundCommitmentSynchronizer,
+}
 
 
 logger = get_task_logger(__name__)
 
 
 @app.task
-def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
+def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS.keys()):
     """
     Do the vision sync for all countries that have vision_sync_enabled=True,
     or just the named country.  Defaults to SYNC_HANDLERS but a
@@ -39,8 +39,8 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
     # Not invoked as a task from code in this repo, but it is scheduled
     # by other means, so it's really a Celery task.
 
-    global_synchronizers = [handler for handler in synchronizers if handler.GLOBAL_CALL]
-    tenant_synchronizers = [handler for handler in synchronizers if not handler.GLOBAL_CALL]
+    global_synchronizers = [handler for handler in synchronizers if SYNC_HANDLERS[handler].GLOBAL_CALL]
+    tenant_synchronizers = [handler for handler in synchronizers if not SYNC_HANDLERS[handler].GLOBAL_CALL]
 
     country_filter_dict = {
         'vision_sync_enabled': True
@@ -61,45 +61,44 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS):
 
     text = u'Created tasks for the following countries: {} and synchronizers: {}'.format(
         ',\n '.join([country.name for country in countries]),
-        ',\n '.join([synchronizer.__name__ for synchronizer in synchronizers])
+        ',\n '.join([synchronizer for synchronizer in synchronizers])
     )
     send_to_slack(text)
     logger.info(text)
 
 
-@app.task(bind=True)
+@app.task(bind=True, autoretry_for=(VisionException,), retry_kwargs={'max_retries': 1})
 def sync_handler(self, country_name, handler):
     """
     Run .sync() on one handler for one country.
     """
     # Scheduled from vision_sync_task() (above).
-    logger.info(u'Starting vision sync handler {} for country {}'.format(handler.__name__, country_name))
+    logger.info(u'Starting vision sync handler {} for country {}'.format(handler, country_name))
     try:
         country = Country.objects.get(name=country_name)
     except Country.DoesNotExist:
         logger.error(u"{} sync failed, Could not find a Country with this name: {}".format(
-            handler.__name__, country_name
+            handler, country_name
         ))
         # No point in retrying if there's no such country
     else:
         try:
-            handler(country).sync()
-            logger.info(u"{} sync successfully for {}".format(handler.__name__, country.name))
+            SYNC_HANDLERS[handler](country).sync()
+            logger.info(u"{} sync successfully for {}".format(handler, country.name))
 
         except VisionException as e:
+            # Catch and log the exception so we're aware there's a problem.
             logger.error(u"{} sync failed, Reason: {}, Country: {}".format(
-                handler.__name__, e.message, country_name
+                handler, e.message, country_name
             ))
-            # This might be worth retrying.
-            try:
-                raise self.retry(exc=e)
-            except VisionException:
-                # We must have exceeded retries and Celery raised the original exception again.
-                # We've already logged it.
-                pass
+            # The 'autoretry_for' in the task decorator tells Celery to
+            # retry this a few times on VisionExceptions, so just re-raise it
+            raise VisionException
 
 
 # Not scheduled by any code in this repo, but by other means, so keep it around.
+# It catches all exceptions internally and keeps going on to the next partner, so
+# no need to have celery retry it on exceptions.
 # TODO: Write some tests for it!
 @app.task
 def update_all_partners(country_name=None):
@@ -122,6 +121,8 @@ def update_all_partners(country_name=None):
 
 
 # Not scheduled by any code in this repo, but by other means, so keep it around.
+# Continues on to the next country on any VisionException, so no need to have
+# celery retry it in that case.
 # TODO: Write some tests for it!
 @app.task
 def update_purchase_orders(country_name=None):
@@ -141,3 +142,4 @@ def update_purchase_orders(country_name=None):
                 logger.error(u"{} sync failed, Reason: {}".format(
                     POSynchronizer.__name__, e.message
                 ))
+                # Keep going to the next country

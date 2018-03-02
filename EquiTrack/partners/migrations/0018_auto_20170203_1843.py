@@ -7,6 +7,10 @@ from django.db import migrations
 import partners.models
 
 
+def activity_default():
+    return {}
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -21,6 +25,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='governmentinterventionresult',
             name='activity',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=partners.models.activity_default, null=True),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=activity_default, null=True),
         ),
     ]

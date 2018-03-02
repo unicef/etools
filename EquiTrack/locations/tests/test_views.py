@@ -6,7 +6,8 @@ from rest_framework import status
 from tenant_schemas.test.client import TenantClient
 
 from EquiTrack.factories import LocationFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, FastTenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from locations.models import Location
 
 
@@ -16,7 +17,8 @@ class TestLocationViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.locations = [LocationFactory() for x in range(5)]
         # heavy_detail_expected_keys are the keys that should be in response.data.keys()
-        self.heavy_detail_expected_keys = sorted(('id', 'name', 'p_code', 'location_type', 'parent', 'geo_point'))
+        self.heavy_detail_expected_keys = sorted(('id', 'name', 'p_code', 'location_type',
+                                                  'location_type_admin_level', 'parent', 'geo_point'))
 
     def test_api_locationtypes_list(self):
         response = self.forced_auth_req('get', reverse('locationtypes-list'), user=self.unicef_staff)
@@ -112,7 +114,7 @@ class TestLocationViews(APITenantTestCase):
         self.assertIn("Loc", response.data[0]["name"])
 
 
-class TestLocationAutocompleteView(FastTenantTestCase):
+class TestLocationAutocompleteView(EToolsTenantTestCase):
     def setUp(self):
         super(TestLocationAutocompleteView, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)

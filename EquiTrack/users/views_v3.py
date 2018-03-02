@@ -3,41 +3,31 @@ from __future__ import unicode_literals
 import logging
 
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
+from EquiTrack.permissions import IsSuperUserOrStaff
 
-from users.models import Country, UserProfile
+from users import views as v1
+from users import views_v2 as v2
 from users.serializers_v3 import (
-    CountrySerializer, MinimalUserDetailSerializer, MinimalUserSerializer, ProfileRetrieveUpdateSerializer,)
+    CountryDetailSerializer,
+    MinimalUserDetailSerializer,
+    MinimalUserSerializer,
+    ProfileRetrieveUpdateSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class MyProfileAPIView(RetrieveUpdateAPIView):
-    """
-    Updates a UserProfile object
-    """
-    queryset = UserProfile.objects.all()
+class ChangeUserCountryView(v1.ChangeUserCountryView):
+    """Stub for ChangeUserCountryView"""
+
+
+class MyProfileAPIView(v1.MyProfileAPIView):
     serializer_class = ProfileRetrieveUpdateSerializer
-    permission_classes = (permissions.IsAuthenticated, )
-
-    def get_object(self):
-        """
-        Always returns current user's profile
-        """
-        try:
-            self.request.user.profile
-        except AttributeError:
-            self.request.user.save()
-
-        obj = get_object_or_404(UserProfile, user__id=self.request.user.id)
-        # May raise a permission denied
-        self.check_object_permissions(self.request, obj)
-        return obj
 
 
 class UsersDetailAPIView(RetrieveAPIView):
@@ -65,21 +55,27 @@ class UsersDetailAPIView(RetrieveAPIView):
         )
 
 
-class UsersListApiView(ListAPIView):
+class UsersListAPIView(ListAPIView):
     """
     Gets a list of Unicef Staff users in the current country.
     Country is determined by the currently logged in user.
     """
     model = get_user_model()
     serializer_class = MinimalUserSerializer
+    permission_classes = (IsSuperUserOrStaff, )
 
     def get_queryset(self, pk=None):
         user = self.request.user
-        queryset = self.model.objects.filter(profile__country=user.profile.country,
-                                             is_staff=True).prefetch_related('profile',
-                                                                             'groups',
-                                                                             'user_permissions').order_by('first_name')
+        queryset = self.model.objects.filter(
+            profile__country=user.profile.country, is_staff=True
+        ).prefetch_related(
+            'profile',
+            'groups',
+            'user_permissions'
+        ).order_by('first_name')
+
         user_ids = self.request.query_params.get("values", None)
+
         if user_ids:
             try:
                 user_ids = [int(x) for x in user_ids.split(",")]
@@ -98,20 +94,5 @@ class UsersListApiView(ListAPIView):
         return queryset
 
 
-class CountryView(ListAPIView):
-    """
-    Gets a list of Unicef Staff users in the current country.
-    Country is determined by the currently logged in user.
-    """
-    model = Country
-    serializer_class = CountrySerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user.profile.country:
-            logger.warning('{} has not an assigned country'.format(user))
-            return self.model.objects.none()
-
-        return self.model.objects.filter(
-            name=user.profile.country.name,
-        )
+class CountryView(v2.CountryView):
+    serializer_class = CountryDetailSerializer
