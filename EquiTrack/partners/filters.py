@@ -1,13 +1,6 @@
 from rest_framework.filters import BaseFilterBackend
 
 
-class StatusFilter(BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        if request.parser_context['kwargs'] and 'status' in request.parser_context['kwargs']:
-            return queryset.filter(status=request.parser_context['kwargs']['status'])
-        return queryset
-
-
 class PartnerScopeFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         if request.parser_context['kwargs'] and 'partner_pk' in request.parser_context['kwargs']:
