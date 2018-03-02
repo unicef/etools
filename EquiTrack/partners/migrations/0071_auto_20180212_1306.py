@@ -39,7 +39,7 @@ def copy_intervention_amendment(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0066_auto_20180209_1835'),
+        ('partners', '0070_auto_20180209_1835'),
     ]
 
     operations = [

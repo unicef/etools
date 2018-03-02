@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import json
 
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Q, Max, Count, CharField
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
@@ -17,6 +17,7 @@ from partners.models import (
     Intervention,
     PartnerOrganization,
     PartnerStaffMember,
+    PlannedEngagement
 )
 
 
@@ -49,7 +50,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
 
 class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
     """
-    A serilizer to be used for nested staff member handling. The 'partner' field
+    A serializer to be used for nested staff member handling. The 'partner' field
     is removed in this case to avoid validation errors for e.g. when creating
     the partner and the member at the same time.
     """
@@ -65,7 +66,7 @@ class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
 
 class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
     """
-    A serilizer to be used for nested staff member handling. The 'partner' field
+    A serializer to be used for nested staff member handling. The 'partner' field
     is removed in this case to avoid validation errors for e.g. when creating
     the partner and the member at the same time.
     """
@@ -148,6 +149,7 @@ class AssessmentDetailSerializer(serializers.ModelSerializer):
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
+    rating = serializers.CharField(source='get_rating_display')
 
     class Meta:
         model = PartnerOrganization
@@ -167,12 +169,14 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "partner_type",
             "cso_type",
             "rating",
-            "shared_partner",
             "shared_with",
             "email",
             "phone_number",
             "total_ct_cp",
             "total_ct_cy",
+            "net_ct_cy",
+            "reported_cy",
+            "total_ct_ytd",
             "hidden"
         )
 
@@ -187,10 +191,81 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
         )
 
 
+class PlannedEngagementSerializer(serializers.ModelSerializer):
+
+    partner = serializers.CharField(source='partner.name', read_only=True)
+    spot_check_mr = serializers.SerializerMethodField(read_only=True)
+
+    @staticmethod
+    def get_spot_check_mr(obj):
+        spot_check_mr = {
+            'q1': 0,
+            'q2': 0,
+            'q3': 0,
+            'q4': 0,
+        }
+        if obj.spot_check_mr in spot_check_mr:
+            spot_check_mr[obj.spot_check_mr] += 1
+        return spot_check_mr
+
+    class Meta:
+        model = PlannedEngagement
+        fields = (
+            "id",
+            "partner",
+            "spot_check_mr",
+            "spot_check_follow_up_q1",
+            "spot_check_follow_up_q2",
+            "spot_check_follow_up_q3",
+            "spot_check_follow_up_q4",
+            "scheduled_audit",
+            "special_audit",
+            "total_spot_check_follow_up_required",
+            "spot_check_required",
+            "required_audit"
+        )
+
+
+class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
+    """
+    A serializer to be used for nested planned engagement handling. The 'partner' field
+    is removed in this case to avoid validation errors for e.g. when creating
+    the partner and the engagement at the same time.
+    """
+    spot_check_mr = serializers.JSONField()
+
+    def validate(self, data):
+        data = super(PlannedEngagementNestedSerializer, self).validate(data)
+        spot_check_mr = data.get('spot_check_mr', 0)
+        partner = data.get('partner', None)
+
+        spot_check_mr_number = 1 if spot_check_mr else 0
+        if spot_check_mr_number > partner.min_req_spot_checks:
+            raise ValidationError("Based on Liquidation, you cannot set this value")
+        return data
+
+    def validate_spot_check_mr(self, attrs):
+        quarters = []
+        for key, value in attrs.items():
+            if value:
+                quarters.append(key)
+        if len(quarters) > 1:
+            raise ValidationError("You can select only MR in one quarter")
+        elif len(quarters) == 1:
+            return quarters[0]
+        else:
+            return 0
+
+    class Meta:
+        model = PlannedEngagement
+        fields = '__all__'
+
+
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
+    planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
@@ -201,11 +276,21 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def get_interventions(self, obj):
-        interventions = Intervention.objects \
-            .filter(agreement__partner=obj) \
-            .exclude(status='draft')
-        interventions = InterventionSummaryListSerializer(interventions, many=True)
+        interventions = InterventionSummaryListSerializer(self.get_related_interventions(obj), many=True)
         return interventions.data
+
+    def get_related_interventions(self, partner):
+        qs = Intervention.objects\
+            .filter(agreement__partner=partner)\
+            .exclude(status='draft')\
+            .prefetch_related('planned_budget')
+
+        qs = qs.annotate(
+            Count("frs__currency", distinct=True),
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
+        )
+
+        return qs
 
     class Meta:
         model = PartnerOrganization
@@ -215,6 +300,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 class PartnerOrganizationCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_attachment = AttachmentSingleFileField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
@@ -236,8 +322,10 @@ class PartnerOrganizationCreateUpdateSerializer(AttachmentSerializerMixin, Snaps
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
 
+    planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField()
+    rating = serializers.CharField(source='get_rating_display')
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -253,7 +341,6 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "partner_type_slug",
             "cso_type",
             "rating",
-            "shared_partner",
             "shared_with",
             "total_ct_cp",
             "total_ct_cy",
@@ -263,5 +350,6 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_values",
             "hact_min_requirements",
             "flags",
-            "outstanding_findings"
+            "outstanding_findings",
+            "planned_engagement"
         )
