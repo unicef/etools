@@ -186,7 +186,7 @@ class TestModelExport(APITenantTestCase):
             unicode(self.intervention.amendments.count()),
             u'',
             u'',
-            unicode(self.intervention.amendments.count()),
+            unicode(self.intervention.attachments.count()),
             u'',
             u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
         ))
