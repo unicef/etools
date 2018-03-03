@@ -15,7 +15,7 @@ from EquiTrack.factories import (
     GatewayTypeFactory,
     PartnerFactory,
     UserFactory,
-    )
+  )
 from EquiTrack.fields import CURRENCY_LIST
 from partners.models import (
     Agreement,
@@ -25,7 +25,7 @@ from partners.models import (
     InterventionAmendment,
     PartnerOrganization,
     PartnerType,
-    )
+)
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 
 

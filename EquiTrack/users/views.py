@@ -32,7 +32,7 @@ from users.serializers import (
     SimpleProfileSerializer,
     SimpleUserSerializer,
     ProfileRetrieveUpdateSerializer,
-)
+    CountrySerializer)
 
 logger = logging.getLogger(__name__)
 
@@ -365,6 +365,17 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
             else:
                 queryset = queryset.filter(id__in=ids)
         return queryset
+
+
+class CountriesViewSet(ListAPIView):
+    """
+    Gets the list of countries
+    """
+    model = Country
+    serializer_class = CountrySerializer
+
+    def get_queryset(self):
+        return Country.objects.all()
 
 
 class SectionViewSet(mixins.RetrieveModelMixin,

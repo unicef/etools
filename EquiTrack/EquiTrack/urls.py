@@ -21,7 +21,7 @@ from publics import urls as publics_patterns
 from publics.views import StaticDataView
 from reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, SectorViewSet, UnitViewSet
 from t2f.urls import urlpatterns as t2f_patterns
-from users.views import GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet
+from users.views import GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet, CountriesViewSet
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
@@ -79,6 +79,7 @@ urlpatterns = [
     url(r'^api/prp/v1/', include('partners.prp_urls', namespace='prp_api_v1')),
     url(r'^api/v2/hact/', include('hact.urls', namespace='hact_api')),
     url(r'^api/v2/users/', include('users.urls_v2', namespace='users_v2')),
+    url(r'^api/v2/workspaces/', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
     url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
     url(
         r'^api/v2/activity/',
