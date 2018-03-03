@@ -62,20 +62,27 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
             result = None
 
             if field_json_code in self.DATE_FIELDS:
+                # parsing field as date
                 result = wcf_json_date_as_datetime(json_item[field_json_code])
             elif field_name in self.MODEL_MAPPING.keys():
+                # this is related model, so we need to fetch somehow related object.
                 related_model = self.MODEL_MAPPING[field_name]
 
                 if isinstance(related_model, types.FunctionType):
+                    # callable provided, object should be returned from it
                     result = related_model(data=json_item, key_field=field_json_code)
                 else:
+                    # model class provided, related object can be fetched with query by field
+                    # analogue of field_json_code
                     reversed_dict = dict(zip(self.MAPPING[field_name].values(), self.MAPPING[field_name].keys()))
                     result = related_model.objects.get(**{
                         reversed_dict[field_json_code]: json_item.get(field_json_code, None)
                     })
             else:
+                # field can be used as it is without custom mappings.
                 result = json_item.get(field_json_code, None)
 
+            # additional logic on field may be applied
             value_handler = self.FIELD_HANDLERS.get(
                 {y: x for x, y in self.MODEL_MAPPING.iteritems()}.get(model), {}
             ).get(field_name, None)
