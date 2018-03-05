@@ -9,9 +9,6 @@ from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
 from users.models import Country, Office, Section, UserProfile, WorkspaceCounter
-from vision.adapters.funding import FundCommitmentSynchronizer, FundReservationsSynchronizer
-from vision.adapters.partner import PartnerSynchronizer
-from vision.adapters.programme import RAMSynchronizer, ProgrammeSynchronizer
 from vision.tasks import sync_handler
 from azure_graph_api.tasks import sync_user
 
@@ -269,19 +266,19 @@ class CountryAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def sync_fund_commitment(self, request, pk):
-        return self.execute_sync(pk, FundCommitmentSynchronizer)
+        return self.execute_sync(pk, 'fund_commitment')
 
     def sync_fund_reservation(self, request, pk):
-        return self.execute_sync(pk, FundReservationsSynchronizer)
+        return self.execute_sync(pk, 'fund_reservation')
 
     def sync_partners(self, request, pk):
-        return self.execute_sync(pk, PartnerSynchronizer)
+        return self.execute_sync(pk, 'partner')
 
     def sync_programme(self, request, pk):
-        return self.execute_sync(pk, ProgrammeSynchronizer)
+        return self.execute_sync(pk, 'programme')
 
     def sync_ram(self, request, pk):
-        return self.execute_sync(pk, RAMSynchronizer)
+        return self.execute_sync(pk, 'ram')
 
     @staticmethod
     def execute_sync(country_pk, synchronizer):
