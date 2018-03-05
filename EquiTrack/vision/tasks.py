@@ -7,11 +7,13 @@ from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app, send_to_slack
 from partners.models import PartnerOrganization
+from tpm.tpmpartners.models import TPMPartner
 from users.models import Country
 from vision.adapters.funding import FundCommitmentSynchronizer, FundReservationsSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.purchase_order import POSynchronizer
+from vision.adapters.tpm_adapter import TPMPartnerSynchronizer
 from vision.exceptions import VisionException
 
 PUBLIC_SYNC_HANDLERS = {}
@@ -115,6 +117,7 @@ def update_all_partners(country_name=None):
                 PartnerOrganization.planned_visits(partner)
                 PartnerOrganization.programmatic_visits(partner)
                 PartnerOrganization.spot_checks(partner)
+                PartnerOrganization.audits_completed(partner)
 
             except Exception:
                 logger.exception(u'Exception {} {}'.format(partner.name, partner.hact_values))
@@ -128,6 +131,7 @@ def update_all_partners(country_name=None):
 def update_purchase_orders(country_name=None):
     logger.info(u'Starting update values for purchase order')
     countries = Country.objects.filter(vision_sync_enabled=True)
+    processed = []
     if country_name is not None:
         countries = countries.filter(name=country_name)
     for country in countries:
@@ -137,9 +141,38 @@ def update_purchase_orders(country_name=None):
                 country.name
             ))
             POSynchronizer(country).sync()
+            processed.append(country.name)
             logger.info(u"Update finished successfully for {}".format(country.name))
         except VisionException as e:
                 logger.error(u"{} sync failed, Reason: {}".format(
                     POSynchronizer.__name__, e.message
                 ))
                 # Keep going to the next country
+    logger.info(u'Purchase orders synced successfully for {}.'.format(u', '.join(processed)))
+
+
+@app.task
+def update_tpm_partners(country_name=None):
+    logger.info(u'Starting update values for TPM partners')
+    countries = Country.objects.filter(vision_sync_enabled=True)
+    processed = []
+    if country_name is not None:
+        countries = countries.filter(name=country_name)
+    for country in countries:
+        connection.set_tenant(country)
+        try:
+            logger.info(u'Starting TPM partners update for country {}'.format(
+                country.name
+            ))
+            for partner in TPMPartner.objects.all():
+                TPMPartnerSynchronizer(
+                    country=country,
+                    object_number=partner.vendor_number
+                ).sync()
+            processed.append(country.name)
+            logger.info(u"Update finished successfully for {}".format(country.name))
+        except VisionException as e:
+                logger.error(u"{} sync failed, Reason: {}".format(
+                    TPMPartnerSynchronizer.__name__, e.message
+                ))
+    logger.info(u'TPM Partners synced successfully for {}.'.format(u', '.join(processed)))
