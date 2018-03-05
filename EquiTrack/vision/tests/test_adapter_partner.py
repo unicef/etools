@@ -120,21 +120,6 @@ class TestPartnerSynchronizer(EToolsTenantTestCase):
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertEqual(partner_updated.name, self.data["VENDOR_NAME"])
 
-    def test_save_records_update_partner_type(self):
-        """Check that partner organization record is updated,
-        partner type changed
-        """
-        partner = PartnerFactory(
-            name=self.data["VENDOR_NAME"],
-            vendor_number=self.data["VENDOR_CODE"],
-            country=self.data["COUNTRY"],
-            partner_type="Government",
-        )
-        response = self.adapter._save_records([self.data])
-        self.assertEqual(response, 1)
-        partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
-        self.assertEqual(partner_updated.partner_type, "UN Agency")
-
     def test_save_records_update_deleted_flag(self):
         """Check that partner organization record is updated,
         deleted_flag changed
@@ -149,22 +134,6 @@ class TestPartnerSynchronizer(EToolsTenantTestCase):
         self.assertEqual(response, 1)
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertTrue(partner_updated.deleted_flag)
-
-    def test_save_records_update_blocked(self):
-        """Check that partner organization record is updated,
-        blocked changed
-        """
-        self.data["POSTING_BLOCK"] = True
-        partner = PartnerFactory(
-            name=self.data["VENDOR_NAME"],
-            vendor_number=self.data["VENDOR_CODE"],
-            country=self.data["COUNTRY"],
-            blocked=False
-        )
-        response = self.adapter._save_records([self.data])
-        self.assertEqual(response, 1)
-        partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
-        self.assertTrue(partner_updated.blocked)
 
     def test_save_records_update_date(self):
         """Check that partner organization record is updated,

@@ -85,7 +85,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
     def _changed_fields(self, local_obj, api_obj):
         fields = [
             'address',
-            'blocked',
             'city',
             'core_values_assessment_date',
             'country',
@@ -94,7 +93,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             'email',
             'last_assessment_date',
             'name',
-            'partner_type',
             'phone_number',
             'postal_code',
             'rating',
@@ -129,16 +127,11 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             saving = False
             partner_org, new = PartnerOrganization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
 
-            # TODO: quick and dirty fix for cso_type mapping... this entire synchronizer needs updating
-            partner['CSO_TYPE'] = self.get_cso_type(partner)
-
             if not self.get_partner_type(partner):
                 logger.info('Partner {} skipped, because PartnerType ={}'.format(
                     partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
                 ))
-                # if partner organization exists in etools db (these are nameless)
                 if partner_org.id:
-                    partner_org.name = ''  # leaving the name blank on purpose (invalid record)
                     partner_org.deleted_flag = True if 'MARKED_FOR_DELETION' in partner else False
                     partner_org.blocked = True if 'POSTING_BLOCK' in partner else False
                     partner_org.hidden = True
@@ -147,7 +140,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
             if new or self._changed_fields(partner_org, partner):
                 partner_org.name = partner['VENDOR_NAME']
-                partner_org.cso_type = partner['CSO_TYPE']
+                partner_org.cso_type = self.get_cso_type(partner)
                 partner_org.rating = self.get_partner_rating(partner)
                 partner_org.type_of_assessment = partner.get('TYPE_OF_ASSESSMENT', None)
                 partner_org.address = partner.get('STREET', None)
@@ -156,10 +149,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org.country = partner['COUNTRY']
                 partner_org.phone_number = partner.get('PHONE_NUMBER', None)
                 partner_org.email = partner.get('EMAIL', None)
-                partner_org.phone_number = partner.get('PHONE_NUMBER', None)
-                partner_org.net_ct_cy = partner.get('NET_CASH_TRANSFERRED_CY', None)
-                partner_org.reported_cy = partner.get('REPORTED_CY', None)
-                partner_org.total_ct_ytd = partner.get('TOTAL_CASH_TRANSFERRED_YTD', None)
                 partner_org.core_values_assessment_date = datetime.strptime(
                     partner['CORE_VALUE_ASSESSMENT_DT'],
                     '%d-%b-%y') if 'CORE_VALUE_ASSESSMENT_DT' in partner else None
@@ -173,12 +162,19 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org.vision_synced = True
                 saving = True
 
-            if partner_org.total_ct_cp is None or partner_org.total_ct_cy is None or \
+            if partner_org.total_ct_cp is None or partner_org.total_ct_cy is None or partner_org.net_ct_cy is None \
+                    or partner_org.total_ct_ytd is None or partner_org.reported_cy is None or \
                     not comp_decimals(partner_org.total_ct_cp, Decimal(partner['TOTAL_CASH_TRANSFERRED_CP'])) or \
-                    not comp_decimals(partner_org.total_ct_cy, Decimal(partner['TOTAL_CASH_TRANSFERRED_CY'])):
+                    not comp_decimals(partner_org.total_ct_cy, Decimal(partner['TOTAL_CASH_TRANSFERRED_CY'])) or \
+                    not comp_decimals(partner_org.net_ct_cy, Decimal(partner['NET_CASH_TRANSFERRED_CY'])) or \
+                    not comp_decimals(partner_org.total_ct_ytd, Decimal(partner['TOTAL_CASH_TRANSFERRED_YTD'])) or \
+                    not comp_decimals(partner_org.reported_cy, Decimal(partner['REPORTED_CY'])):
 
                 partner_org.total_ct_cy = partner['TOTAL_CASH_TRANSFERRED_CY']
                 partner_org.total_ct_cp = partner['TOTAL_CASH_TRANSFERRED_CP']
+                partner_org.net_ct_cy = partner['NET_CASH_TRANSFERRED_CY']
+                partner_org.total_ct_ytd = partner['TOTAL_CASH_TRANSFERRED_YTD']
+                partner_org.reported_cy = partner['REPORTED_CY']
 
                 saving = True
                 logger.debug('sums changed', partner_org)
@@ -231,3 +227,4 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         allowed_risk_rating = [rr[0] for rr in PartnerOrganization.RISK_RATINGS]
         if partner.get('RISK_RATING') in allowed_risk_rating:
             return partner['RISK_RATING']
+        return None
