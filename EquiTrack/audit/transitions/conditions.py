@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import collections
+
 from django.db import models
 from django.utils.decorators import classonlymethod
 from django.utils.translation import ugettext as _
@@ -85,6 +87,14 @@ class BaseRequiredFieldsCheck(BaseTransitionCheck):
                 assert not hasattr(instance, field)
             else:
                 value = getattr(instance, field)
+
+                if isinstance(value, models.Manager):
+                    value = value.all()
+
+                if isinstance(value, collections.Iterable) and len(value) == 0:
+                    errors[field] = _('This field is required.')
+                    continue
+
                 if not value and value != 0:
                     errors[field] = _('This field is required.')
 

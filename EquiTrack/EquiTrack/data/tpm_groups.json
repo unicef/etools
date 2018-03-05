@@ -1,0 +1,20 @@
+[
+    {
+        "model": "auth.group",
+        "fields": {
+            "name": "PME"
+        }
+    },
+    {
+        "model": "auth.group",
+        "fields": {
+            "name": "Third Party Monitor"
+        }
+    },
+    {
+        "model": "auth.group",
+        "fields": {
+            "name": "UNICEF User"
+        }
+    }
+]
