@@ -59,7 +59,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "actual_amt_local": "ACTUAL_CASH_TRANSFER_DC",
         "actual_amt": "ACTUAL_CASH_TRANSFER",
         "outstanding_amt": "OUTSTANDING_DCT",
-        "outstanding_amt_local": "'OUTSTANDING_DCT_DC'",
+        "outstanding_amt_local": "OUTSTANDING_DCT_DC",
     }
     HEADER_FIELDS = ['VENDOR_CODE', 'FR_NUMBER', 'FR_DOC_DATE', 'FR_TYPE', 'CURRENCY',
                      'FR_DOCUMENT_TEXT', 'FR_START_DATE', 'FR_END_DATE', "FR_OVERALL_AMOUNT",
@@ -162,9 +162,6 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         if to_create:
             created_objects = FundsReservationHeader.objects.bulk_create(to_create)
-            # TODO in Django 1.10 the following line is not needed because ids are returned
-            created_objects = FundsReservationHeader.objects.filter(
-                fr_number__in=[c.fr_number for c in created_objects])
             self.map_header_objects(created_objects)
 
         self.map_header_objects(to_update)
