@@ -24,7 +24,7 @@ class FileType(OrderedModel, models.Model):
     code = models.CharField(max_length=64, default="", verbose_name=_('Code'))
 
     def __str__(self):
-        return self.name
+        return self.label
 
     class Meta:
         unique_together = ("name", "code", )
@@ -66,7 +66,7 @@ class Attachment(TimeStampedModel, models.Model):
 
     @property
     def url(self):
-        return self.file.url if self.file else self.hyperlink
+        return six.text_type(self.file.url if self.file else self.hyperlink)
 
     @property
     def filename(self):

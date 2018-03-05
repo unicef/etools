@@ -1,0 +1,142 @@
+[
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 27,
+        "fields": {
+            "user_type": "unicef_user",
+            "permission": "edit",
+            "target": "tpmvisit.tpm_partner",
+            "instance_status": "new"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 28,
+        "fields": {
+            "user_type": "unicef_user",
+            "permission": "edit",
+            "target": "tpmvisit.visit_start",
+            "instance_status": "new"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 37,
+        "fields": {
+            "user_type": "unicef_user",
+            "permission": "edit",
+            "target": "tpmvisit.visit_end",
+            "instance_status": "new"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 35,
+        "fields": {
+            "user_type": "unicef_user",
+            "permission": "edit",
+            "target": "tpmvisit.partnership",
+            "instance_status": "new"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 39,
+        "fields": {
+            "user_type": "unicef_user",
+            "permission": "edit",
+            "target": "tpmvisit.results",
+            "instance_status": "new"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 42,
+        "fields": {
+            "user_type": "unicef_user",
+            "permission": "edit",
+            "target": "tpmvisit.unicef_focal_points",
+            "instance_status": "new"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 34,
+        "fields": {
+            "user_type": "unicef_user",
+            "permission": "view",
+            "target": "tpmvisit.status",
+            "instance_status": "new"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 6,
+        "fields": {
+            "user_type": "unicef_focal_point",
+            "permission": "edit",
+            "target": "tpmvisit.visit_start",
+            "instance_status": "draft"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 9,
+        "fields": {
+            "user_type": "unicef_focal_point",
+            "permission": "view",
+            "target": "tpmvisit.status",
+            "instance_status": "draft"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 46,
+        "fields": {
+            "user_type": "unicef_focal_point",
+            "permission": "view",
+            "target": "tpmvisit.visit_start",
+            "instance_status": "submitted"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 40,
+        "fields": {
+            "user_type": "unicef_focal_point",
+            "permission": "view",
+            "target": "tpmvisit.status",
+            "instance_status": "submitted"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 47,
+        "fields": {
+            "user_type": "third_party_monitor",
+            "permission": "view",
+            "target": "tpmvisit.visit_start",
+            "instance_status": "submitted"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 44,
+        "fields": {
+            "user_type": "third_party_monitor",
+            "permission": "view",
+            "target": "tpmvisit.status",
+            "instance_status": "submitted"
+        }
+    },
+    {
+        "model": "tpm.tpmpermission",
+        "pk": 45,
+        "fields": {
+            "user_type": "third_party_monitor",
+            "permission": "edit",
+            "target": "tpmvisit.reject_comment",
+            "instance_status": "submitted"
+        }
+    }
+]
