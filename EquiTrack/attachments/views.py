@@ -9,3 +9,9 @@ class FileUploadView(UpdateAPIView):
     queryset = Attachment.objects.all()
     permission_classes = (IsAdminUser,)
     serializer_class = AttachmentFileUploadSerializer
+
+    def perform_update(self, serializer):
+        # force the updating of the uploaded by field to current user
+        # this is not set when PATCH request made
+        serializer.instance.uploaded_by = serializer.context["request"].user
+        return super(FileUploadView, self).perform_update(serializer)

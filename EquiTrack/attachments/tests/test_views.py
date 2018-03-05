@@ -67,6 +67,7 @@ class TestFileUploadView(APITenantTestCase):
 
     def test_put(self):
         self.assertFalse(self.attachment.file)
+        self.assertIsNone(self.attachment.uploaded_by)
         response = self.forced_auth_req(
             "put",
             self.url,
@@ -78,9 +79,11 @@ class TestFileUploadView(APITenantTestCase):
         attachment_update = Attachment.objects.get(pk=self.attachment.pk)
         self.assertTrue(attachment_update.file)
         self.assertTrue(response.data["file"].endswith(attachment_update.url))
+        self.assertEqual(attachment_update.uploaded_by, self.unicef_staff)
 
     def test_patch(self):
         self.assertFalse(self.attachment.file)
+        self.assertIsNone(self.attachment.uploaded_by)
         response = self.forced_auth_req(
             "patch",
             self.url,
@@ -92,6 +95,7 @@ class TestFileUploadView(APITenantTestCase):
         attachment_update = Attachment.objects.get(pk=self.attachment.pk)
         self.assertTrue(attachment_update.file)
         self.assertTrue(response.data["file"].endswith(attachment_update.url))
+        self.assertEqual(attachment_update.uploaded_by, self.unicef_staff)
 
     def test_put_target(self):
         """Ensure update only affects specified attachment"""
@@ -102,6 +106,7 @@ class TestFileUploadView(APITenantTestCase):
         )
         self.assertFalse(self.attachment.file)
         self.assertFalse(attachment.file)
+        self.assertIsNone(self.attachment.uploaded_by)
         response = self.forced_auth_req(
             "put",
             self.url,
@@ -113,5 +118,6 @@ class TestFileUploadView(APITenantTestCase):
         attachment_update = Attachment.objects.get(pk=self.attachment.pk)
         self.assertTrue(attachment_update.file)
         self.assertTrue(response.data["file"].endswith(attachment_update.url))
-        attachment_update = Attachment.objects.get(pk=attachment.pk)
-        self.assertFalse(attachment_update.file)
+        self.assertEqual(attachment_update.uploaded_by, self.unicef_staff)
+        other_attachment_update = Attachment.objects.get(pk=attachment.pk)
+        self.assertFalse(other_attachment_update.file)
