@@ -181,11 +181,11 @@ class TestGenerateFilePath(EToolsTenantTestCase):
 
 class TestFileType(EToolsTenantTestCase):
     def test_str(self):
-        instance = FileTypeFactory(name=b'xyz')
+        instance = FileTypeFactory(label=b'xyz')
         self.assertIn(b'xyz', str(instance))
         self.assertIn(u'xyz', unicode(instance))
 
-        instance = FileTypeFactory(name=u'R\xe4dda Barnen')
+        instance = FileTypeFactory(label=u'R\xe4dda Barnen')
         self.assertIn(b'R\xc3\xa4dda Barnen', str(instance))
         self.assertIn(u'R\xe4dda Barnen', unicode(instance))
 

@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import factory
 from factory import fuzzy
 import factory.django
-from factory import fuzzy
 
 from attachments.models import Attachment, FileType
 
