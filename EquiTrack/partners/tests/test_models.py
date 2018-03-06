@@ -625,9 +625,6 @@ class TestInterventionModel(EToolsTenantTestCase):
                     {'status': 'draft', 'group': 'Partnership Manager', 'condition': ''},
                     {'status': 'signed', 'group': 'Partnership Manager', 'condition': ''},
                     {'status': 'active', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'draft', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'signed', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'active', 'group': 'Partnership Manager', 'condition': ''}
                 ]
             }
         })
