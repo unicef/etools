@@ -54,6 +54,12 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
         model = InterventionAmendment
         fields = "__all__"
 
+    def validate(self, data):
+        if 'intervention' in data and data['intervention'].in_amendment is True:
+            raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
+
+        return data
+
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
 
