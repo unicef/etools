@@ -70,7 +70,6 @@ elif 'runserver' in sys.argv:
     INSTALLED_APPS += (  # noqa
         'debug_toolbar',
         'django_extensions',
-        'social_django',
     )
     INTERNAL_IPS = ('127.0.0.1',)
     MIDDLEWARE_CLASSES += (  # noqa
