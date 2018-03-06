@@ -51,6 +51,11 @@ class POSynchronizer(ManualVisionSynchronizer):
         ('purchase_order', PurchaseOrder),
         ('order_item', PurchaseOrderItem),
     ))
+    DEFAULTS = {
+        AuditorFirm: {
+            'vision_synced': True
+        }
+    }
     DATE_FIELDS = ['EXPIRY_DATE', 'PO_DATE', ]
 
     def _filter_records(self, records):
