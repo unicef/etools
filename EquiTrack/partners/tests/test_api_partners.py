@@ -166,6 +166,13 @@ class TestPartnerOrganizationAddView(APITenantTestCase):
         qs = PartnerOrganization.objects.filter(name="New Partner")
         self.assertTrue(qs.exists())
         partner = qs.first()
+        self.assertEqual(
+            response.data["core_values_assessment_attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[partner.core_values_assessment_attachment.last().pk]
+            )
+        )
         self.assertEqual(partner.partner_type, PartnerType.UN_AGENCY)
         self.assertEqual(partner.cso_type, "National")
         self.assertEqual(partner.total_ct_cp, 2000.00)
