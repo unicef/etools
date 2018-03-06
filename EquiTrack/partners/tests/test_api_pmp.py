@@ -15,7 +15,7 @@ from EquiTrack.factories import (
     GatewayTypeFactory,
     PartnerFactory,
     UserFactory,
-  )
+)
 from EquiTrack.fields import CURRENCY_LIST
 from partners.models import (
     Agreement,

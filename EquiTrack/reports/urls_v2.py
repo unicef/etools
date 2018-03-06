@@ -9,6 +9,7 @@ from reports.views.v2 import (
     OutputListAPIView,
     OutputDetailAPIView,
     ResultIndicatorListAPIView,
+    ExportAppliedIndicatorLocationListView
 )
 from reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveView
 
@@ -18,6 +19,9 @@ urlpatterns = (
     url(r'^applied-indicators/$',
         view=AppliedIndicatorListAPIView.as_view(http_method_names=['get']),
         name='applied-indicator'),
+    url(r'^applied-indicators/intervention/$',
+        view=ExportAppliedIndicatorLocationListView.as_view(http_method_names=['get']),
+        name='intervention-applied-indicator'),
     url(r'^lower_results/$',
         view=LowerResultsListAPIView.as_view(http_method_names=['get']),
         name='lower-results'),

@@ -25,6 +25,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='auditorfirm',
             name='blocked',
-            field=models.BooleanField(default=False, verbose_name='Blocked'),
+            field=models.BooleanField(default=False, verbose_name='Blocked in VISION'),
         ),
     ]

@@ -72,6 +72,7 @@ urlpatterns = [
         LocationsViewSet.as_view({'get': 'retrieve'}),
         name='locations_detail_pcode'),
     url(r'^api/t2f/', include(t2f_patterns)),
+    url(r'^api/tpm/', include('tpm.urls', namespace='tpm')),
     url(r'^api/audit/', include('audit.urls', namespace='audit')),
     url(r'^api/v2/reports/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
