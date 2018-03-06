@@ -27,6 +27,7 @@ from partners.models import (
     PartnerStaffMember,
     PartnerOrganization,
     Assessment,
+    PlannedEngagement
 )
 from partners.permissions import ListCreateAPIMixedPermission
 from partners.serializers.exports.partner_organization import (
@@ -46,7 +47,8 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
     MinimalPartnerOrganizationListSerializer,
-)
+    PlannedEngagementNestedSerializer,
+    PlannedEngagementSerializer)
 from partners.views.helpers import set_tenant_or_fail
 from t2f.models import TravelActivity
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission
@@ -74,7 +76,7 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
 
     def get_serializer_class(self, format=None):
         """
-        Use restriceted field set for listing
+        Use restricted field set for listing
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -149,14 +151,15 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     """
     Retrieve and Update PartnerOrganization.
     """
-    queryset = PartnerOrganization.objects.all()
+    queryset = PartnerOrganization.objects.select_related('planned_engagement')
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (IsAdminUser,)
     # parser_classes = (FormParser, MultiPartParser)
 
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
-        'staff_members': PartnerStaffMemberCreateUpdateSerializer
+        'staff_members': PartnerStaffMemberCreateUpdateSerializer,
+        'planned_engagement': PlannedEngagementNestedSerializer
     }
 
     def get_serializer_class(self, format=None):
@@ -167,7 +170,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['assessments', 'staff_members']
+        related_fields = ['assessments', 'staff_members', 'planned_engagement']
 
         instance, old_instance, serializer = self.my_update(
             request,
@@ -189,7 +192,8 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     Returns a list of Partners.
     """
     permission_classes = (IsAdminUser,)
-    queryset = PartnerOrganization.objects.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0)).all()
+    queryset = PartnerOrganization.objects.select_related('planned_engagement').prefetch_related(
+        'staff_members', 'assessments').filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0))
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
 
@@ -204,6 +208,16 @@ class PartnerOrganizationHactAPIView(ListAPIView):
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = "attachment;filename=hact_dashboard.csv"
         return response
+
+
+class PlannedEngagementAPIView(ListAPIView):
+
+    """
+    Returns a list of Planned Engagements.
+    """
+    permission_classes = (IsAdminUser,)
+    queryset = PlannedEngagement.objects.all()
+    serializer_class = PlannedEngagementSerializer
 
 
 class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):

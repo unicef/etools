@@ -20,6 +20,7 @@ from EquiTrack.permissions import IsSuperUserOrStaff
 from audit.models import Auditor
 from reports.models import Sector
 from reports.serializers.v1 import SectorSerializer
+from tpm.models import ThirdPartyMonitor
 from users.forms import ProfileForm
 from users.models import UserProfile, Country, Office
 from users.serializers import (
@@ -31,7 +32,7 @@ from users.serializers import (
     SimpleProfileSerializer,
     SimpleUserSerializer,
     ProfileRetrieveUpdateSerializer,
-)
+    CountrySerializer)
 
 logger = logging.getLogger(__name__)
 
@@ -366,6 +367,17 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
         return queryset
 
 
+class CountriesViewSet(ListAPIView):
+    """
+    Gets the list of countries
+    """
+    model = Country
+    serializer_class = CountrySerializer
+
+    def get_queryset(self):
+        return Country.objects.all()
+
+
 class SectionViewSet(mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
                      viewsets.GenericViewSet):
@@ -392,7 +404,11 @@ class ModuleRedirectView(RedirectView):
     url = '/dash/'
     permanent = False
 
+    # TODO: Rewrite this ...
     def get_redirect_url(self, *args, **kwargs):
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+            return '/tpm/'
+
         if Auditor.as_group() in self.request.user.groups.all():
             return '/ap/'
 
