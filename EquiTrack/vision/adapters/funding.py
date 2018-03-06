@@ -162,9 +162,6 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         if to_create:
             created_objects = FundsReservationHeader.objects.bulk_create(to_create)
-            # TODO in Django 1.10 the following line is not needed because ids are returned
-            created_objects = FundsReservationHeader.objects.filter(
-                fr_number__in=[c.fr_number for c in created_objects])
             self.map_header_objects(created_objects)
 
         self.map_header_objects(to_update)
