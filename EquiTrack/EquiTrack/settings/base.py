@@ -96,6 +96,7 @@ USE_TZ = True
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -560,19 +561,6 @@ ISSUE_CHECKS = [
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
-
-<<<<<<< HEAD
-# Django Contrib Settings ################################
-KEY = "key here"
-SECRET = "secret here"
-SOCIAL_AUTH_URL_NAMESPACE = 'social'
-SOCIAL_AUTH_SANITIZE_REDIRECTS = False
-POLICY = "b2c_1A_signup_signinUNICEF"
-TENANT_ID = 'vnb2cpoc.onmicrosoft.com'
-SCOPE = ['openid']
-IGNORE_DEFAULT_SCOPE = True
-=======
-
 # drfpaswordless: https://github.com/aaronn/django-rest-framework-passwordless
 
 PASSWORDLESS_AUTH = {
@@ -582,4 +570,44 @@ PASSWORDLESS_AUTH = {
     # username is better choice as it can be only 30 symbols max and unique.
     'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
 }
->>>>>>> develop
+
+# Django Contrib Settings ################################
+
+
+KEY = os.getenv('AZURE_B2C_CLIENT_ID', None)
+SECRET = os.getenv('AZURE_B2C_CLIENT_SECRET', None)
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+SOCIAL_AUTH_SANITIZE_REDIRECTS = False
+POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
+
+TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners.onmicrosoft.com')
+SCOPE = ['openid', 'email']
+IGNORE_DEFAULT_SCOPE = True
+SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
+SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email']
+SOCIAL_AUTH_WHITELISTED_DOMAINS = ['unicef.org', 'google.com']
+LOGIN_ERROR_URL = "/workspace_inactive"
+JWT_LEEWAY = 1000
+
+SOCIAL_AUTH_PIPELINE = (
+    # 'social_core.pipeline.social_auth.social_details',
+    'EquiTrack.mixins.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+
+    # allows based on emails being listed in 'WHITELISTED_EMAILS' or 'WHITELISTED_DOMAINS'
+    'social_core.pipeline.social_auth.auth_allowed',
+
+    'social_core.pipeline.social_auth.social_user',
+    # 'social_core.pipeline.user.get_username',
+    'EquiTrack.mixins.get_username',
+
+    'social_core.pipeline.user.create_user',
+
+
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+    'social_core.pipeline.social_auth.associate_by_email',
+    'EquiTrack.mixins.user_details',
+)
