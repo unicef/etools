@@ -180,6 +180,7 @@ SHARED_APPS = (
     'environment',
     'audit.purchase_order',
     'EquiTrack',
+    'tpm.tpmpartners',
     'utils.common',
     'utils.mail',
     'utils.writable_serializers',
@@ -197,6 +198,7 @@ TENANT_APPS = (
     'hact',
     'trips',
     'supplies',
+    'activities',
     't2f',
     'workplan',
     'attachments',
@@ -325,7 +327,7 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
 CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-CELERY_ROUTES = {
+CELERY_TASK_ROUTES = {
     'vision.tasks.sync_handler': {'queue': 'vision_queue'}
 }
 

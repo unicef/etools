@@ -85,7 +85,7 @@ class TestInterventionsAPI(APITenantTestCase):
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_attachment", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
-                  "sections_present", "flat_locations", "reporting_periods", "prc_review_attachment", ],
+                  "sections_present", "flat_locations", "reporting_periods", "activity", "prc_review_attachment", ],
         'signed': [],
         'active': ['']
     }

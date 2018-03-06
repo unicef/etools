@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
+import types
 import logging
 from collections import OrderedDict
 
@@ -41,11 +42,16 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
     MODEL_MAPPING = {}
     MAPPING = OrderedDict()
     DATE_FIELDS = []
+    DEFAULTS = {}
+    FIELD_HANDLERS = {}
 
     def _convert_records(self, records):
         if isinstance(records, list):
             return records
-        return json.loads(records)
+        try:
+            return json.loads(records)
+        except ValueError:
+            return []
 
     def _save_records(self, records):
         processed = 0
@@ -53,16 +59,36 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
         filtered_records = self._filter_records(records)
 
         def _get_field_value(field_name, field_json_code, json_item, model):
+            result = None
+
             if field_json_code in self.DATE_FIELDS:
-                return wcf_json_date_as_datetime(json_item[field_json_code])
+                # parsing field as date
+                result = wcf_json_date_as_datetime(json_item[field_json_code])
             elif field_name in self.MODEL_MAPPING.keys():
+                # this is related model, so we need to fetch somehow related object.
                 related_model = self.MODEL_MAPPING[field_name]
 
-                reversed_dict = dict(zip(self.MAPPING[field_name].values(), self.MAPPING[field_name].keys()))
-                return related_model.objects.get(**{
-                    reversed_dict[field_json_code]: json_item.get(field_json_code, None)
-                })
-            return json_item[field_json_code]
+                if isinstance(related_model, types.FunctionType):
+                    # callable provided, object should be returned from it
+                    result = related_model(data=json_item, key_field=field_json_code)
+                else:
+                    # model class provided, related object can be fetched with query by field
+                    # analogue of field_json_code
+                    reversed_dict = dict(zip(self.MAPPING[field_name].values(), self.MAPPING[field_name].keys()))
+                    result = related_model.objects.get(**{
+                        reversed_dict[field_json_code]: json_item.get(field_json_code, None)
+                    })
+            else:
+                # field can be used as it is without custom mappings.
+                result = json_item.get(field_json_code, None)
+
+            # additional logic on field may be applied
+            value_handler = self.FIELD_HANDLERS.get(
+                {y: x for x, y in self.MODEL_MAPPING.iteritems()}.get(model), {}
+            ).get(field_name, None)
+            if value_handler:
+                result = value_handler(result)
+            return result
 
         def _process_record(json_item):
             try:
@@ -71,6 +97,7 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                         [(field_name, _get_field_value(field_name, field_json_code, json_item, model))
                          for field_name, field_json_code in self.MAPPING[model_name].items()]
                     )
+
                     kwargs = dict(
                         [(field_name, value) for field_name, value in mapped_item.items()
                          if model._meta.get_field(field_name).unique]
@@ -90,6 +117,7 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                         [(field_name, value) for field_name, value in mapped_item.items()
                          if field_name not in kwargs.keys()]
                     )
+                    defaults.update(self.DEFAULTS.get(model, {}))
                     model.objects.update_or_create(
                         defaults=defaults, **kwargs
                     )

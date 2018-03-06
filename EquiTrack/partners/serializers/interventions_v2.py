@@ -198,10 +198,8 @@ class InterventionListSerializer(BaseInterventionListSerializer):
         return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
 
     class Meta(BaseInterventionListSerializer.Meta):
-        fields = BaseInterventionListSerializer.Meta.fields + \
-                 ('fr_currencies_are_consistent',
-                  'all_currencies_are_consistent',
-                  'fr_currency')
+        fields = BaseInterventionListSerializer.Meta.fields + (
+            'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency')
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
