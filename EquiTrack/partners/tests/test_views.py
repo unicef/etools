@@ -681,7 +681,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Decimal(response.data["interventions"][0]["actual_amount"]),
-                         Decimal(fr_header_1.actual_amt + fr_header_2.actual_amt))
+                         Decimal(fr_header_1.actual_amt_local + fr_header_2.actual_amt_local))
 
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
