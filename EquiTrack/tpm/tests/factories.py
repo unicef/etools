@@ -10,7 +10,7 @@ import factory.fuzzy
 from factory import fuzzy
 
 from attachments.tests.factories import AttachmentFactory
-from firms.factories import BaseFirmFactory, BaseStaffMemberFactory, UserFactory as SimpleUserFactory
+from firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory, BaseUserFactory
 from locations.tests.factories import LocationFactory
 from partners.models import InterventionResultLink, InterventionSectorLocationLink
 from partners.tests.factories import InterventionFactory
@@ -132,7 +132,7 @@ class OfficeFactory(SimpleOfficeFactory):
         return obj
 
 
-class UserFactory(SimpleUserFactory):
+class UserFactory(BaseUserFactory):
     class Params:
         unicef_user = factory.Trait(
             groups=['UNICEF User'],
