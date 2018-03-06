@@ -8,7 +8,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from EquiTrack.serializers import SnapshotModelSerializer
-from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
+from partners.serializers.interventions_v2 import InterventionListSerializer
 
 from partners.models import (
     Assessment,
@@ -275,20 +275,13 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def get_interventions(self, obj):
-        interventions = InterventionSummaryListSerializer(self.get_related_interventions(obj), many=True)
+        interventions = InterventionListSerializer(self.get_related_interventions(obj), many=True)
         return interventions.data
 
     def get_related_interventions(self, partner):
-        qs = Intervention.objects\
+        qs = Intervention.objects.frs_qs()\
             .filter(agreement__partner=partner)\
-            .exclude(status='draft')\
-            .prefetch_related('planned_budget')
-
-        qs = qs.annotate(
-            Count("frs__currency", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
-        )
-
+            .exclude(status='draft')
         return qs
 
     class Meta:
