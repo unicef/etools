@@ -10,12 +10,14 @@ import factory.fuzzy
 from factory import fuzzy
 
 from attachments.tests.factories import AttachmentFactory
-from EquiTrack.factories import (
-    InterventionFactory, LocationFactory, OfficeFactory as SimpleOfficeFactory, ResultFactory, SectorFactory)
 from firms.factories import BaseFirmFactory, BaseStaffMemberFactory, UserFactory as SimpleUserFactory
+from locations.tests.factories import LocationFactory
 from partners.models import InterventionResultLink, InterventionSectorLocationLink
+from partners.tests.factories import InterventionFactory
+from reports.tests.factories import ResultFactory, SectorFactory
 from tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
+from users.tests.factories import OfficeFactory as SimpleOfficeFactory
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
 _FUZZY_END_DATE = timezone.now().date() + datetime.timedelta(days=5)
