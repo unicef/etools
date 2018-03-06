@@ -94,7 +94,6 @@ class AttachmentSerializerMixin(object):
         super(AttachmentSerializerMixin, self).save(**kwargs)
 
         # check if attachment field types exist
-        # if exists and field has value
         # ensure attachment record exists for instance
         # set upload link value
         for field_name, field in self.fields.items():

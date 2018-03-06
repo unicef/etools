@@ -86,11 +86,10 @@ class AttachmentSingleFileField(serializers.RelatedField):
 
 
 class AttachmentUploadLinkField(AttachmentSingleFileField):
-    def to_representation(self, instance):
-        attachment = self.get_attachment(instance)
-        if attachment is not None:
+    def to_representation(self, obj):
+        if obj is not None:
             return reverse(
                 "attachments:upload",
-                args=[attachment.last().pk]
+                args=[obj.instance.pk]
             )
         return None
