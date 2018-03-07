@@ -41,7 +41,7 @@ class TestFRHeaderView(APITenantTestCase):
         self.assertEqual(len(result['frs']), 1)
         self.assertEqual(result['total_actual_amt'], float(self.fr_1.actual_amt_local))
         self.assertEqual(result['total_outstanding_amt'], float(self.fr_1.outstanding_amt_local))
-        self.assertEqual(result['total_frs_amt'], float(self.fr_1.total_amt))
+        self.assertEqual(result['total_frs_amt'], float(self.fr_1.total_amt_local))
         self.assertEqual(result['total_intervention_amt'], float(self.fr_1.intervention_amt))
 
     def test_get_two_frs(self):
