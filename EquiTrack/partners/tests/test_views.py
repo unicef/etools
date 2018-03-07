@@ -665,7 +665,8 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
             ['completed', 'minimum_requirements'],
             response.data['hact_values']['audits'].keys()
         )
-        self.assertEqual(['audits', 'programmatic_visits', 'spot_checks'], response.data['hact_values'].keys())
+        self.assertEqual(['outstanding_findings', 'audits', 'programmatic_visits', 'spot_checks'],
+                         response.data['hact_values'].keys())
         self.assertEqual(response.data['interventions'], [])
 
     def test_api_partners_retreive_actual_fr_amounts(self):
