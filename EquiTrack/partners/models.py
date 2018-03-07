@@ -7,8 +7,7 @@ import json
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
-from django.db.models import F, Sum
-from django.db.models.functions import Coalesce
+from django.db.models import F
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
