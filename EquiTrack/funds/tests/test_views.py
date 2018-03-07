@@ -50,9 +50,9 @@ class TestFRHeaderView(APITenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(result['frs']), 1)
-        self.assertEqual(result['total_actual_amt'], float(self.fr_1.actual_amt))
-        self.assertEqual(result['total_outstanding_amt'], float(self.fr_1.outstanding_amt))
-        self.assertEqual(result['total_frs_amt'], float(self.fr_1.total_amt))
+        self.assertEqual(result['total_actual_amt'], float(self.fr_1.actual_amt_local))
+        self.assertEqual(result['total_outstanding_amt'], float(self.fr_1.outstanding_amt_local))
+        self.assertEqual(result['total_frs_amt'], float(self.fr_1.total_amt_local))
         self.assertEqual(result['total_intervention_amt'], float(self.fr_1.intervention_amt))
 
     def test_get_two_frs(self):
@@ -67,11 +67,11 @@ class TestFRHeaderView(APITenantTestCase):
         # Make sure result numbers match up
         # float the Decimal sum
         self.assertEqual(result['total_actual_amt'],
-                         float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
+                         float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(result['total_outstanding_amt'],
-                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+                         float(sum([self.fr_1.outstanding_amt_local, self.fr_2.outstanding_amt_local])))
         self.assertEqual(result['total_frs_amt'],
-                         float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
+                         float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(result['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
 
@@ -150,11 +150,12 @@ class TestFRHeaderView(APITenantTestCase):
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(result['frs']), 2)
-        self.assertEqual(result['total_actual_amt'], float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
+        self.assertEqual(result['total_actual_amt'], float(sum([self.fr_1.actual_amt_local,
+                                                                self.fr_2.actual_amt_local])))
         self.assertEqual(result['total_outstanding_amt'],
-                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+                         float(sum([self.fr_1.outstanding_amt_local, self.fr_2.outstanding_amt_local])))
         self.assertEqual(result['total_frs_amt'],
-                         float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
+                         float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(result['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
 

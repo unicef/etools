@@ -54,6 +54,10 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     actual_amt = fuzzy.FuzzyDecimal(1, 300)
     outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
 
+    total_amt_local = fuzzy.FuzzyDecimal(1, 300)
+    actual_amt_local = fuzzy.FuzzyDecimal(1, 300)
+    outstanding_amt_local = fuzzy.FuzzyDecimal(1, 300)
+
     start_date = fuzzy.FuzzyDate(
         datetime.date(datetime.date.today().year, 1, 1) - datetime.timedelta(days=10),
         datetime.date(datetime.date.today().year, 1, 1)

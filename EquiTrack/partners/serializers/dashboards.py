@@ -24,11 +24,11 @@ class InterventionDashSerializer(serializers.ModelSerializer):
 
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    disbursement = serializers.DecimalField(source='frs__actual_amt__sum', read_only=True,
+    disbursement = serializers.DecimalField(source='frs__actual_amt_local_sum', read_only=True,
                                             max_digits=20,
                                             decimal_places=2)
 
-    frs_total_frs_amt = serializers.DecimalField(source='frs__total_amt__sum', read_only=True,
+    frs_total_frs_amt = serializers.DecimalField(source='frs__total_amt_local_sum', read_only=True,
                                                  max_digits=20,
                                                  decimal_places=2)
 
