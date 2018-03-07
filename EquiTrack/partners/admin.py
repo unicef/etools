@@ -30,7 +30,7 @@ from partners.models import (
     InterventionResultLink,
     InterventionBudget,
     InterventionAttachment,
-
+    PlannedEngagement
 )
 from partners.mixins import HiddenPartnerMixin
 from partners.forms import (
@@ -103,9 +103,10 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     fields = (
         'intervention',
         'year',
-        'programmatic',
-        'spot_checks',
-        'audit'
+        'programmatic_q1',
+        'programmatic_q2',
+        'programmatic_q3',
+        'programmatic_q4',
     )
     search_fields = (
         'intervention__number',
@@ -113,9 +114,10 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     list_display = (
         'intervention',
         'year',
-        'programmatic',
-        'spot_checks',
-        'audit'
+        'programmatic_q1',
+        'programmatic_q2',
+        'programmatic_q3',
+        'programmatic_q4',
     )
 
 
@@ -396,6 +398,14 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'hide_partners',
         'show_partners'
     )
+    readonly_fields = (
+        u'hact_values',
+        u'total_ct_cp',
+        u'total_ct_cy',
+        u'net_ct_cy',
+        u'reported_cy',
+        u'total_ct_ytd',
+    )
 
     def hide_partners(self, request, queryset):
 
@@ -417,6 +427,36 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
 
     def has_module_permission(self, request):
         return request.user.is_superuser
+
+
+class PlannedEngagementAdmin(admin.ModelAdmin):
+    model = PlannedEngagement
+    search_fields = (
+        u'partner__name',
+    )
+    fields = (
+        u'partner',
+        u'spot_check_mr',
+        u'spot_check_follow_up_q1',
+        u'spot_check_follow_up_q2',
+        u'spot_check_follow_up_q3',
+        u'spot_check_follow_up_q4',
+        u'scheduled_audit',
+        u'special_audit',
+    )
+    list_display = (
+        u'partner',
+        u'spot_check_mr',
+        u'spot_check_follow_up_q1',
+        u'spot_check_follow_up_q2',
+        u'spot_check_follow_up_q3',
+        u'spot_check_follow_up_q4',
+        u'scheduled_audit',
+        u'special_audit',
+    )
+    readonly_fields = [
+        u'partner',
+    ]
 
 
 class AgreementAmendmentAdmin(admin.ModelAdmin):
@@ -541,7 +581,7 @@ class FileTypeAdmin(admin.ModelAdmin):
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
-
+admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(AgreementAmendment, AgreementAmendmentAdmin)
