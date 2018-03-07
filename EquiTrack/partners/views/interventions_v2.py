@@ -4,7 +4,7 @@ import logging
 import copy
 
 from django.db import transaction
-from django.db.models import Q, Max, Min, Sum, Count, CharField
+from django.db.models import Q
 
 from rest_framework import status
 from rest_framework.response import Response

@@ -14,7 +14,6 @@ from vision.vision_data_synchronizer import VisionDataSynchronizer
 
 class FundReservationsSynchronizer(VisionDataSynchronizer):
 
-
     ENDPOINT = 'GetFundsReservationInfo_JSON'
     REQUIRED_KEYS = (
         "VENDOR_CODE",
@@ -68,8 +67,8 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
     }
     HEADER_FIELDS = ['VENDOR_CODE', 'FR_NUMBER', 'FR_DOC_DATE', 'FR_TYPE', 'CURRENCY',
                      'FR_DOCUMENT_TEXT', 'FR_START_DATE', 'FR_END_DATE', "FR_OVERALL_AMOUNT",
-                     "CURRENT_FR_AMOUNT", "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT",]
-                     # 'FR_OVERALL_AMOUNT_DC', 'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC']
+                     "CURRENT_FR_AMOUNT", "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT"]
+    # 'FR_OVERALL_AMOUNT_DC', 'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC']
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
