@@ -134,8 +134,18 @@ class ValidatorViewMixin(object):
         dt = parse_multipart_data(dt_cp)
         return dt
 
-    def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name,
-                         partial=False, nested_related_names=None):
+    def up_related_field(
+            self,
+            mother_obj,
+            field,
+            fieldClass,
+            fieldSerializer,
+            rel_prop_name,
+            reverse_name,
+            request,
+            partial=False,
+            nested_related_names=None
+    ):
         if not field:
             return
 
@@ -145,6 +155,7 @@ class ValidatorViewMixin(object):
                 nested_related_data = {}
                 if nested_related_names:
                     nested_related_data = {k: v for k, v in item.items() if k in nested_related_names}
+                nested_related_data["request"] = request
                 if item.get('id', None):
                     try:
                         instance = fieldClass.objects.get(id=item['id'])
@@ -172,6 +183,7 @@ class ValidatorViewMixin(object):
             nested_related_data = {}
             if nested_related_names:
                 nested_related_data = {k: v for k, v in field.items() if k in nested_related_names}
+            nested_related_data["request"] = request
             if field.get('id', None):
                 try:
                     instance = fieldClass.objects.get(id=field['id'])
@@ -214,8 +226,17 @@ class ValidatorViewMixin(object):
         def _get_reverse_for_field(field):
             return main_object.__class__._meta.get_field(field).remote_field.name
         for k, v in my_relations.iteritems():
-            self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
-                                  k, _get_reverse_for_field(k), partial, nested_related_names)
+            self.up_related_field(
+                main_object,
+                v,
+                _get_model_for_field(k),
+                self.SERIALIZER_MAP[k],
+                k,
+                _get_reverse_for_field(k),
+                request,
+                partial,
+                nested_related_names
+            )
 
         return main_serializer
 
@@ -258,8 +279,17 @@ class ValidatorViewMixin(object):
             return main_object.__class__._meta.get_field(field).remote_field.name
 
         for k, v in my_relations.iteritems():
-            self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
-                                  k, _get_reverse_for_field(k), partial, nested_related_names)
+            self.up_related_field(
+                main_object,
+                v,
+                _get_model_for_field(k),
+                self.SERIALIZER_MAP[k],
+                k,
+                _get_reverse_for_field(k),
+                request,
+                partial,
+                nested_related_names
+            )
 
         return self.get_object(), old_instance, main_serializer
 
