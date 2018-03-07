@@ -551,7 +551,8 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     @cached_property
     def outstanding_findings(self):
-        return self.hact_values.get('outstanding_findings', 0)
+        hact = json.loads(self.hact_values) if isinstance(self.hact_values, str) else self.hact_values
+        return hact.get('outstanding_findings', 0)
 
     @classmethod
     def planned_visits(cls, partner):
