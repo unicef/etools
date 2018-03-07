@@ -1510,8 +1510,10 @@ class TestInterventionAmendmentCreateAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        errors = response.data['non_field_errors']
-        self.assertEquals(errors, [u'Cannot add a new amendment while another amendment is in progress.'])
+        self.assertEquals(
+            next(iter(response.data.values())),
+            [u'Cannot add a new amendment while another amendment is in progress.']
+        )
 
     def _make_request(self, user=None, data=None, request_format='json', **kwargs):
         return self.forced_auth_req('post', self.url, user=user, data=data, request_format=request_format, **kwargs)
