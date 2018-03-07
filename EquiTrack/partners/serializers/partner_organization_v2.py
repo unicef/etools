@@ -194,7 +194,6 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 class PlannedEngagementSerializer(serializers.ModelSerializer):
 
-    partner = serializers.CharField(source='partner.name', read_only=True)
     spot_check_mr = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
@@ -213,7 +212,6 @@ class PlannedEngagementSerializer(serializers.ModelSerializer):
         model = PlannedEngagement
         fields = (
             "id",
-            "partner",
             "spot_check_mr",
             "spot_check_follow_up_q1",
             "spot_check_follow_up_q2",
