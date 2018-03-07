@@ -80,3 +80,32 @@ class IndicatorExportFlatSerializer(IndicatorExportSerializer):
     sector = serializers.CharField(source="sector.name")
     result = serializers.CharField(source="result.name")
     unit = serializers.CharField(source="unit.type")
+
+
+class AppliedIndicatorLocationExportSerializer(serializers.Serializer):
+    partner = serializers.CharField(source="indicator.lower_result.result_link.intervention.agreement.partner")
+    vendor = serializers.CharField(
+        source="indicator.lower_result.result_link.intervention.agreement.partner.vendor_number")
+    status = serializers.CharField(source="indicator.lower_result.result_link.intervention.status")
+    start = serializers.CharField(source="indicator.lower_result.result_link.intervention.start")
+    end = serializers.CharField(source="indicator.lower_result.result_link.intervention.end")
+    country_programme = serializers.CharField(
+        source="indicator.lower_result.result_link.intervention.agreement.country_programme")
+    pd_ref_number = serializers.CharField(source="indicator.lower_result.result_link.intervention.number")
+    pd_title = serializers.CharField(source="indicator.lower_result.result_link.intervention.title")
+    cp_output = serializers.CharField(source="indicator.lower_result.result_link.cp_output")
+    ram_indicators = serializers.SerializerMethodField()
+    lower_result = serializers.CharField(source="indicator.lower_result.name")
+    indicator = serializers.CharField(source="indicator.indicator.title")
+    location = serializers.CharField(source="selected_location.name")
+    section = serializers.CharField(source="indicator.section")
+    cluster_name = serializers.CharField(source="indicator.cluster_name")
+    baseline = serializers.CharField(source="indicator.baseline")
+    target = serializers.CharField(source="indicator.target")
+    means_of_verification = serializers.CharField(source="indicator.means_of_verification")
+
+    # def get_cp_outputs(self, obj):
+    #     return ", ".join([rl.cp_output.name for rl in obj.indicator.lower_result.result_link.all()])
+
+    def get_ram_indicators(self, obj):
+        ', '.join([ri.name for ri in obj.indicator.lower_result.result_link.ram_indicators.all()]),

@@ -18,7 +18,7 @@ class Command(BaseCommand):
         midnight, _ = CrontabSchedule.objects.get_or_create(minute=0, hour=0)
 
         PeriodicTask.objects.get_or_create(name='Hact Chart', defaults={
-            'task': 'hact.tasks.update aggregate hact values',
+            'task': 'hact.tasks.update_aggregate_hact_values',
             'interval': every_day})
 
         PeriodicTask.objects.get_or_create(name='Intervention Notification Ending', defaults={
