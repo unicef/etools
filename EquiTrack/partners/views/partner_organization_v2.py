@@ -76,7 +76,7 @@ class PartnerOrganizationListAPIView(ExportModelMixin, ListCreateAPIView):
 
     def get_serializer_class(self, format=None):
         """
-        Use restriceted field set for listing
+        Use restricted field set for listing
         """
         query_params = self.request.query_params
         if "format" in query_params.keys():
@@ -151,7 +151,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     """
     Retrieve and Update PartnerOrganization.
     """
-    queryset = PartnerOrganization.objects.all()
+    queryset = PartnerOrganization.objects.select_related('planned_engagement')
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (IsAdminUser,)
     # parser_classes = (FormParser, MultiPartParser)
@@ -192,7 +192,8 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     Returns a list of Partners.
     """
     permission_classes = (IsAdminUser,)
-    queryset = PartnerOrganization.objects.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0))
+    queryset = PartnerOrganization.objects.select_related('planned_engagement').prefetch_related(
+        'staff_members', 'assessments').filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0))
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
 
