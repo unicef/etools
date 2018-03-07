@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
+from attachments.serializers import AttachmentSerializerMixin
 from attachments.serializers_fields import AttachmentSingleFileField
 from EquiTrack.serializers import SnapshotModelSerializer
 from partners.permissions import AgreementPermissions
@@ -54,7 +55,7 @@ class AgreementListSerializer(serializers.ModelSerializer):
         )
 
 
-class AgreementDetailSerializer(serializers.ModelSerializer):
+class AgreementDetailSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     authorized_officers = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
@@ -75,7 +76,7 @@ class AgreementDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AgreementCreateUpdateSerializer(SnapshotModelSerializer):
+class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     agreement_type = serializers.CharField(required=True)

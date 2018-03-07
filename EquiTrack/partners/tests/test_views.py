@@ -1138,6 +1138,13 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data["attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[self.agreement.attachment.last().pk]
+            )
+        )
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -1181,6 +1188,13 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             1
+        )
+        self.assertEqual(
+            response.data["attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[self.agreement.attachment.last().pk]
+            )
         )
 
     def test_agreements_delete(self):
@@ -1289,6 +1303,13 @@ class TestAgreementAPIView(APITenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], Agreement.SIGNED)
+        self.assertEqual(
+            response.data["attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[agreement.attachment.last().pk]
+            )
+        )
 
     def test_partner_agreements_update_suspend(self):
         '''Ensure that interventions related to an agreement are suspended when the agreement is suspended'''
@@ -1309,6 +1330,13 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], Agreement.SUSPENDED)
         self.assertEqual(Intervention.objects.get(agreement=self.agreement).status, Intervention.SUSPENDED)
+        self.assertEqual(
+            response.data["attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[self.agreement.attachment.last().pk]
+            )
+        )
 
     def test_agreement_amendment_delete_error(self):
         response = self.forced_auth_req(
@@ -1364,6 +1392,13 @@ class TestAgreementAPIView(APITenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["amendments"][1]["types"]), 2)
+        self.assertEqual(
+            response.data["attachment_upload_link"],
+            reverse(
+                "attachments:upload",
+                args=[self.agreement.attachment.last().pk]
+            )
+        )
 
 
 class TestPartnerStaffMemberAPIView(APITenantTestCase):

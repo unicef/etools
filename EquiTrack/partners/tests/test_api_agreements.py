@@ -101,6 +101,7 @@ class TestAgreementsAPI(APITenantTestCase):
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
         )
+        self.assertTrue(response["attachment_upload_link"])
 
     def test_fail_add_new_PCA_without_agreement_type(self):
         self.assertFalse(Activity.objects.exists())
@@ -140,6 +141,7 @@ class TestAgreementsAPI(APITenantTestCase):
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
         )
+        self.assertTrue(response["attachment_upload_link"])
 
     def test_add_new_SSFA_with_country_programme_null(self):
         self.assertFalse(Activity.objects.exists())
@@ -156,6 +158,7 @@ class TestAgreementsAPI(APITenantTestCase):
             Activity.objects.filter(action=Activity.CREATE).count(),
             1
         )
+        self.assertTrue(response["attachment_upload_link"])
 
     def test_fail_patch_PCA_without_country_programme(self):
         # create new agreement
