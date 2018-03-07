@@ -97,7 +97,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
     frs_earliest_start_date = serializers.DateField(source='frs__start_date__min', read_only=True)
     frs_latest_end_date = serializers.DateField(source='frs__end_date__max', read_only=True)
     frs_total_frs_amt = serializers.DecimalField(
-        source='frs__total_amt__sum',
+        source='frs__total_amt_local__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
@@ -109,13 +109,13 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         decimal_places=2
     )
     frs_total_outstanding_amt = serializers.DecimalField(
-        source='frs__outstanding_amt__sum',
+        source='frs__outstanding_amt_local__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
     )
     actual_amount = serializers.DecimalField(
-        source='frs__actual_amt__sum',
+        source='frs__actual_amt_local__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
@@ -522,76 +522,6 @@ class InterventionDetailSerializer(AttachmentSerializerMixin, serializers.ModelS
             "planned_visits", "attachments", 'permissions', 'partner_id', "sections",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
             "in_amendment"
-        )
-
-
-class InterventionSummaryListSerializer(serializers.ModelSerializer):
-    partner_name = serializers.CharField(source='agreement.partner.name')
-    unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
-    cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
-                                                decimal_places=2)
-    total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
-    total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
-    budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
-
-    section_names = serializers.SerializerMethodField()
-    flagged_sections = serializers.SerializerMethodField()
-    cp_outputs = serializers.SerializerMethodField()
-    offices_names = serializers.SerializerMethodField()
-    frs_earliest_start_date = serializers.DateField(source='total_frs.earliest_start_date', read_only=True)
-    frs_latest_end_date = serializers.DateField(source='total_frs.latest_end_date', read_only=True)
-    frs_total_frs_amt = serializers.DecimalField(source='total_frs.total_frs_amt', read_only=True,
-                                                 max_digits=20,
-                                                 decimal_places=2)
-    frs_total_intervention_amt = serializers.DecimalField(source='total_frs.total_intervention_amt', read_only=True,
-                                                          max_digits=20,
-                                                          decimal_places=2)
-    frs_total_outstanding_amt = serializers.DecimalField(source='total_frs.total_outstanding_amt', read_only=True,
-                                                         max_digits=20,
-                                                         decimal_places=2)
-    actual_amount = serializers.DecimalField(source='total_frs.total_actual_amt', read_only=True,
-                                                    max_digits=20,
-                                                    decimal_places=2)
-
-    fr_currencies_are_consistent = serializers.SerializerMethodField()
-    all_currencies_are_consistent = serializers.SerializerMethodField()
-    fr_currency = serializers.SerializerMethodField()
-
-    def fr_currencies_ok(self, obj):
-        return obj.frs__currency__count == 1 if obj.frs__currency__count else None
-
-    def get_fr_currencies_are_consistent(self, obj):
-        return self.fr_currencies_ok(obj)
-
-    def get_all_currencies_are_consistent(self, obj):
-        if not hasattr(obj, 'planned_budget'):
-            return False
-        return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
-
-    def get_fr_currency(self, obj):
-        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
-
-    def get_offices_names(self, obj):
-        return [o.name for o in obj.offices.all()]
-
-    def get_cp_outputs(self, obj):
-        return [rl.cp_output.id for rl in obj.result_links.all()]
-
-    def get_section_names(self, obj):
-        return [l.name for l in obj.flagged_sections]
-
-    def get_flagged_sections(self, obj):
-        return [l.id for l in obj.flagged_sections]
-
-    class Meta:
-        model = Intervention
-        fields = (
-            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'unicef_cash', 'cso_contribution',
-            'total_unicef_budget', 'total_budget', 'sections', 'section_names',
-            'cp_outputs', 'offices_names', 'frs_earliest_start_date', 'frs_latest_end_date',
-            'frs_total_frs_amt', 'frs_total_intervention_amt', 'frs_total_outstanding_amt', 'actual_amount',
-            'flagged_sections', 'budget_currency', 'fr_currencies_are_consistent', 'all_currencies_are_consistent',
-            'fr_currency'
         )
 
 
