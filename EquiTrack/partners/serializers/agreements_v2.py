@@ -16,7 +16,7 @@ from reports.models import CountryProgramme
 from users.serializers import SimpleUserSerializer
 
 
-class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
+class AgreementAmendmentCreateUpdateSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     number = serializers.CharField(read_only=True)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
