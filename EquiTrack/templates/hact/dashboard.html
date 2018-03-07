@@ -89,7 +89,6 @@
                                         <td>{{ forloop.counter }}</td>
                                         <td><a href="{{ partner.get_admin_url }}">{{ partner.name }}</a></td>
                                         <td>{{ partner.partner_type }}</td>
-                                        <td>{{ partner.shared_partner }}</td>
                                         <td>{{ partner.hact_values.planned_cash_transfer|floatformat:"0"|intcomma }}</td>
                                         <td>{{ partner.hact_values.micro_assessment_needed }}</td>
                                         <td>{% if partner.total_ct_cp %}

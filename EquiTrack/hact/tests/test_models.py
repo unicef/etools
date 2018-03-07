@@ -22,7 +22,6 @@ class TestAggregateHact(EToolsTenantTestCase):
         cls.partner = PartnerFactory(
             name="Partner Name",
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            shared_partner="with UNFPA",
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UN],
             rating=PartnerOrganization.RATING_HIGH,
             total_ct_cp=200.0,
