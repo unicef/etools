@@ -13,9 +13,13 @@ class FRAdmin(admin.ModelAdmin):
     search_fields = ('fr_number',)
 
 
+class FRAdminLi(admin.ModelAdmin):
+    search_fields = ('fr_ref_number',)
+
+
 admin.site.register(Grant, GrantAdmin)
 admin.site.register(Donor)
 admin.site.register(FundsReservationHeader, FRAdmin)
-admin.site.register(FundsReservationItem)
+admin.site.register(FundsReservationItem, FRAdminLi)
 admin.site.register(FundsCommitmentHeader)
 admin.site.register(FundsCommitmentItem)
