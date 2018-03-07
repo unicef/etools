@@ -33,7 +33,6 @@ def _build_country(name):
 @mock.patch('vision.tasks.Country')
 @mock.patch('vision.tasks.send_to_slack')
 @mock.patch('vision.tasks.sync_handler')
-@mock.patch('vision.tasks.connection', spec=['set_tenant'])
 @mock.patch('vision.tasks.logger.info')
 class TestVisionSyncTask(TestCase):
     """Exercises the vision_sync_task() task which requires a lot of mocking and some monkey patching."""
@@ -93,19 +92,6 @@ class TestVisionSyncTask(TestCase):
         self.assertEqual(mock_send_to_slack.call_args[0], (expected_msg, ))
         self.assertEqual(mock_send_to_slack.call_args[1], {})
 
-    def _assertConnectionTenantSet(self, mock_django_db_connection, tenant_countries_used=None):
-        """Ensure vision_sync_task() set the DB connection schema to the appropriate tenant countries.
-        tenant_countries_used should be a list of countries. If None, defaults to self.tenant_countries.
-        """
-        if tenant_countries_used is None:
-            tenant_countries_used = self.tenant_countries
-
-        # Verify that the connection tenant was set once for each tenant country.
-        self.assertEqual(mock_django_db_connection.set_tenant.call_count, len(tenant_countries_used))
-        for call_args, country in zip(mock_django_db_connection.set_tenant.call_args_list, tenant_countries_used):
-            self.assertEqual(call_args[0], (country, ))
-            self.assertEqual(call_args[1], {})
-
     def _assertGlobalHandlersSynced(self, mock_handler, all_sync_task=15, public_task=0):
         """Verify that public handler tasks were called
         all_sync_task is the number of tasks called.
@@ -149,61 +135,55 @@ class TestVisionSyncTask(TestCase):
         self.assertEqual(mock_logger.call_args[1], {})
 
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-    def test_sync_no_args_success_case(self, mock_logger, mock_django_db_connection, mock_handler, mock_send_to_slack,
+    def test_sync_no_args_success_case(self, mock_logger, mock_handler, mock_send_to_slack,
                                        CountryMock):
         """Exercise vision.tasks.vision_sync_task() called without passing any argument"""
 
         CountryMock.objects.filter = mock.Mock(return_value=self.tenant_countries)
         # Mock connection.set_tenant() so we can verify calls to it.
-        mock_django_db_connection.set_tenant = mock.Mock()
         vision.tasks.vision_sync_task()
 
         self._assertCountryMockCalls(CountryMock)
         self._assertGlobalHandlersSynced(mock_handler)
         self._assertTenantHandlersSynced(mock_handler)
-        self._assertConnectionTenantSet(mock_django_db_connection)
         self._assertVisionLastSynced()
         self._assertSlackNotified(mock_send_to_slack)
         self._assertLoggerMessages(mock_logger)
 
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-    def test_sync_country_filter_args(self, mock_logger, mock_django_db_connection, mock_handler, mock_send_to_slack,
+    def test_sync_country_filter_args(self, mock_logger, mock_handler, mock_send_to_slack,
                                       CountryMock):
         """Exercise vision.tasks.vision_sync_task() called with passing as argument a specific country"""
 
         selected_countries = [self.tenant_countries[0], ]
         CountryMock.objects.filter = mock.Mock(return_value=selected_countries)
-        mock_django_db_connection.set_tenant = mock.Mock()
         vision.tasks.vision_sync_task(country_name='Country Test0')
 
         self._assertCountryMockCalls(CountryMock)
         self._assertGlobalHandlersSynced(mock_handler, all_sync_task=5)
         self._assertTenantHandlersSynced(mock_handler, 5, 5, 0, 0)
-        self._assertConnectionTenantSet(mock_django_db_connection, selected_countries)
         self._assertVisionLastSynced(selected_countries)
         self._assertSlackNotified(mock_send_to_slack, selected_countries)
         self._assertLoggerMessages(mock_logger, selected_countries)
 
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-    def test_sync_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
+    def test_sync_synchronizer_filter_args(self, mock_logger, mock_handler,
                                            mock_send_to_slack, CountryMock):
         """Exercise vision.tasks.vision_sync_task() called with passing as argument a specific synchronizer"""
         selected_synchronizers = ['programme', ]
         CountryMock.objects.filter = mock.Mock(return_value=self.tenant_countries)
         # Mock connection.set_tenant() so we can verify calls to it.
-        mock_django_db_connection.set_tenant = mock.Mock()
         vision.tasks.vision_sync_task(synchronizers=selected_synchronizers)
 
         self._assertCountryMockCalls(CountryMock)
         self._assertGlobalHandlersSynced(mock_handler, all_sync_task=3, public_task=0)
         self._assertTenantHandlersSynced(mock_handler, all_sync_task=3, sync_t0=1, sync_t1=1, sync_t2=1)
-        self._assertConnectionTenantSet(mock_django_db_connection)
         self._assertVisionLastSynced()
         self._assertSlackNotified(mock_send_to_slack, None, selected_synchronizers)
         self._assertLoggerMessages(mock_logger, None, selected_synchronizers)
 
     @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-    def test_sync_country_and_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
+    def test_sync_country_and_synchronizer_filter_args(self, mock_logger, mock_handler,
                                                        mock_send_to_slack, CountryMock):
         """Exercise vision.tasks.vision_sync_task() called with passing a specific country and a synchronizer"""
         selected_synchronizers = ['programme', ]
@@ -211,13 +191,11 @@ class TestVisionSyncTask(TestCase):
 
         CountryMock.objects.filter = mock.Mock(return_value=selected_countries)
         # Mock connection.set_tenant() so we can verify calls to it.
-        mock_django_db_connection.set_tenant = mock.Mock()
         vision.tasks.vision_sync_task(country_name='Country Test0', synchronizers=selected_synchronizers)
 
         self._assertCountryMockCalls(CountryMock)
         self._assertGlobalHandlersSynced(mock_handler, all_sync_task=1, public_task=0)
         self._assertTenantHandlersSynced(mock_handler, all_sync_task=1, sync_t0=1, sync_t1=0, sync_t2=0)
-        self._assertConnectionTenantSet(mock_django_db_connection, selected_countries)
         self._assertVisionLastSynced(selected_countries)
         self._assertSlackNotified(mock_send_to_slack, selected_countries, selected_synchronizers)
         self._assertLoggerMessages(mock_logger, selected_countries, selected_synchronizers)

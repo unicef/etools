@@ -55,7 +55,6 @@ def vision_sync_task(country_name=None, synchronizers=SYNC_HANDLERS.keys()):
         for handler in global_synchronizers:
             sync_handler.delay('Global', handler)
     for country in countries:
-        connection.set_tenant(country)
         for handler in tenant_synchronizers:
             sync_handler.delay(country.name, handler)
         country.vision_last_synced = timezone.now()
