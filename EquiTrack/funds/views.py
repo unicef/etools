@@ -42,6 +42,7 @@ from funds.serializers import (
     GrantSerializer,
 )
 from partners.filters import PartnerScopeFilter
+from partners.models import Intervention
 from partners.permissions import PartnershipManagerPermission
 
 
@@ -71,6 +72,31 @@ class FRsView(APIView):
                                  'or could not be found in eTools.')},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        all_frs_vendor_numbers = [fr.vendor_code for fr in qs.all()]
+        if len(set(all_frs_vendor_numbers)) != 1:
+            return Response(
+                data={'error': _('The FRs selected relate to various partners, please make sure to select '
+                                 'FRs that relate to the PD/SSFA Partner')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if intervention_id is not None:
+            try:
+                intervention = Intervention.objects.get(pk=intervention_id)
+            except Intervention.DoesNotExist:
+                return Response(
+                    data={'error': _('Intervention could not be found')},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            else:
+                if intervention.agreement.partner.vendor_number != all_frs_vendor_numbers[0]:
+                    return Response(
+                        data={'error': _('The vendor number of the selected implementing partner in eTools '
+                                         'does not match the vendor number entered in the FR in VISION. '
+                                         'Please correct the vendor number to continue.')},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
         serializer = FRsSerializer(qs)
 

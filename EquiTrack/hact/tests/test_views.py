@@ -18,7 +18,6 @@ class TestHactHistoryAPIView(APITenantTestCase):
         cls.partner = PartnerFactory(
             name="Partner Name",
             partner_type=PartnerType.UN_AGENCY,
-            shared_partner="with UNFPA",
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UN],
             rating=PartnerOrganization.RATING_HIGH,
             total_ct_cp=200.0,
@@ -162,7 +161,6 @@ class TestHactHistoryAPIView(APITenantTestCase):
         partner = PartnerFactory(
             name="Partner Name",
             partner_type=PartnerType.UN_AGENCY,
-            shared_partner="with UNFPA",
             shared_with=None,
             rating="High",
             total_ct_cp=200.0,

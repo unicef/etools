@@ -84,7 +84,7 @@ class TestInterventionsAPI(APITenantTestCase):
                   "partner_authorized_officer_signatory_id", "created", "planned_visits",
                   "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
                   "offices", "population_focus", "country_programme_id", "engagement", "sections",
-                  "sections_present", "flat_locations"],
+                  "sections_present", "flat_locations", "reporting_periods", "activity", ],
         'signed': [],
         'active': ['']
     }
@@ -100,6 +100,7 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def tearDown(self):
         cache.delete("public-intervention-permissions")
+        cache.delete("public-agreement-permissions")
         if hasattr(self, "ts"):
             self.ts.delete()
 
@@ -228,6 +229,10 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def test_fr_details_is_accurate_on_creation(self):
         self.assertFalse(Activity.objects.exists())
+        self.fr_1.vendor_code = self.agreement.partner.vendor_number
+        self.fr_2.vendor_code = self.agreement.partner.vendor_number
+        self.fr_1.save()
+        self.fr_2.save()
         frs_data = [self.fr_1.id, self.fr_2.id]
         data = {
             "document_type": Intervention.PD,
@@ -256,6 +261,10 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def test_add_two_valid_frs_on_update_pd(self):
         self.assertFalse(Activity.objects.exists())
+        self.fr_1.vendor_code = self.intervention_2.agreement.partner.vendor_number
+        self.fr_2.vendor_code = self.intervention_2.agreement.partner.vendor_number
+        self.fr_1.save()
+        self.fr_2.save()
         frs_data = [self.fr_1.id, self.fr_2.id]
         data = {
             "frs": frs_data

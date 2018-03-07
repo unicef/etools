@@ -1,7 +1,7 @@
 import copy
 import datetime
 import sys
-from unittest import skipIf, TestCase
+from unittest import skipIf, TestCase, skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
@@ -15,7 +15,6 @@ from EquiTrack.factories import (
     AppliedIndicatorFactory,
     AssessmentFactory,
     CountryProgrammeFactory,
-    CurrencyFactory,
     DonorFactory,
     FileTypeFactory,
     FundsReservationHeaderFactory,
@@ -37,8 +36,9 @@ from EquiTrack.factories import (
     TravelFactory,
     TravelActivityFactory,
     UserFactory,
+    PlannedEngagementFactory
 )
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from audit.models import Engagement
 from audit.tests.factories import SpotCheckFactory, AuditFactory, SpecialAuditFactory
 from partners import models
@@ -53,25 +53,7 @@ def get_date_from_prior_year():
     return datetime.date.today() - datetime.timedelta(days=700)
 
 
-class TestGetCurrencyNameOrDefault(TenantTestCase):
-    def test_none(self):
-        self.assertIsNone(models._get_currency_name_or_default(False))
-
-    def test_no_currency(self):
-        budget = InterventionBudgetFactory(
-            currency=None
-        )
-        self.assertIsNone(models._get_currency_name_or_default(budget))
-
-    def test_currency(self):
-        currency = CurrencyFactory(code="USD")
-        budget = InterventionBudgetFactory(
-            currency=currency
-        )
-        self.assertEqual(models._get_currency_name_or_default(budget), "USD")
-
-
-class TestAgreementNumberGeneration(TenantTestCase):
+class TestAgreementNumberGeneration(EToolsTenantTestCase):
     '''Test that agreements have the expected base and reference numbers for all types of agreements'''
 
     fixtures = ['initial_data.json']
@@ -177,7 +159,7 @@ class TestAgreementNumberGeneration(TenantTestCase):
         self.assertEqual(agreement.reference_number, expected_reference_number)
 
 
-class TestHACTCalculations(TenantTestCase):
+class TestHACTCalculations(EToolsTenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -230,7 +212,7 @@ class TestHACTCalculations(TenantTestCase):
         )
 
 
-class TestPartnerOrganizationModel(TenantTestCase):
+class TestPartnerOrganizationModel(EToolsTenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -408,12 +390,12 @@ class TestPartnerOrganizationModel(TenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year,
-            programmatic=3
+            programmatic_q1=3
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year - 1,
-            programmatic=2
+            programmatic_q3=2
         )
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 0)
 
@@ -428,17 +410,18 @@ class TestPartnerOrganizationModel(TenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year,
-            programmatic=3
+            programmatic_q1=3,
+            programmatic_q4=4,
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year - 1,
-            programmatic=2
+            programmatic_q2=2
         )
         models.PartnerOrganization.planned_visits(
             self.partner_organization
         )
-        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 7)
 
     def test_planned_visits_non_gov_no_pv_intervention(self):
         self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
@@ -455,19 +438,20 @@ class TestPartnerOrganizationModel(TenantTestCase):
         InterventionPlannedVisitsFactory(
             intervention=intervention1,
             year=year,
-            programmatic=3
+            programmatic_q1=1,
+            programmatic_q3=3,
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention2,
             year=year - 1,
-            programmatic=2
+            programmatic_q4=2
         )
         models.PartnerOrganization.planned_visits(
             self.partner_organization
         )
         self.assertEqual(
             self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
-            3
+            4
         )
 
     @freeze_time("2013-05-26")
@@ -583,7 +567,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
 
 
-class TestAgreementModel(TenantTestCase):
+class TestAgreementModel(EToolsTenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -606,7 +590,7 @@ class TestAgreementModel(TenantTestCase):
         self.assertIn("PCA", self.agreement.reference_number)
 
 
-class TestInterventionModel(TenantTestCase):
+class TestInterventionModel(EToolsTenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -749,18 +733,11 @@ class TestInterventionModel(TenantTestCase):
     def test_sector_names_empty(self):
         self.assertEqual(self.intervention.sector_names, "")
 
-    def test_default_budget_currency(self):
-        currency = CurrencyFactory(code="USD")
-        intervention = InterventionFactory()
-        InterventionBudgetFactory(
-            currency=currency,
-            intervention=intervention
-        )
-        self.assertEqual(intervention.default_budget_currency, "USD")
-
+    @skip("fr_currency property on intervention is being deprecated")
     def test_fr_currency_empty(self):
         self.assertIsNone(self.intervention.fr_currency)
 
+    @skip("fr_currency property on intervention is being deprecated")
     def test_fr_currency(self):
         intervention = InterventionFactory()
         FundsReservationHeaderFactory(
@@ -779,9 +756,6 @@ class TestInterventionModel(TenantTestCase):
         self.assertEqual(int(self.intervention.total_partner_contribution), 0)
         self.assertEqual(int(self.intervention.total_budget), 0)
         self.assertEqual(int(self.intervention.total_unicef_budget), 0)
-        self.assertEqual(int(self.intervention.total_partner_contribution_local), 0)
-        self.assertEqual(int(self.intervention.total_unicef_cash_local), 0)
-        self.assertEqual(int(self.intervention.total_budget_local), 0)
 
     def test_total_unicef_cash(self):
         InterventionBudgetFactory(
@@ -792,7 +766,7 @@ class TestInterventionModel(TenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_unicef_cash), 100000)
+        self.assertEqual(int(self.intervention.total_unicef_cash), 10)
 
     def test_total_partner_contribution(self):
         InterventionBudgetFactory(
@@ -803,7 +777,7 @@ class TestInterventionModel(TenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_partner_contribution), 200)
+        self.assertEqual(int(self.intervention.total_partner_contribution), 20)
 
     def test_total_budget(self):
         InterventionBudgetFactory(
@@ -814,7 +788,7 @@ class TestInterventionModel(TenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_budget), 100210)
+        self.assertEqual(int(self.intervention.total_budget), 40)
 
     def test_total_in_kind_amount(self):
         InterventionBudgetFactory(
@@ -825,7 +799,7 @@ class TestInterventionModel(TenantTestCase):
             in_kind_amount=3300,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_in_kind_amount), 3300)
+        self.assertEqual(int(self.intervention.total_in_kind_amount), 10)
 
     def test_total_unicef_budget(self):
         InterventionBudgetFactory(
@@ -836,40 +810,7 @@ class TestInterventionModel(TenantTestCase):
             in_kind_amount=2000,
             in_kind_amount_local=10,
         )
-        self.assertEqual(int(self.intervention.total_unicef_budget), 102000)
-
-    def test_total_partner_contribution_local(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution_local=7000,
-            in_kind_amount=2000,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_partner_contribution_local), 7000)
-
-    def test_total_unicef_cash_local(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution_local=7000,
-            in_kind_amount=2000,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_unicef_cash_local), 10)
-
-    def test_total_budget_local(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution_local=7000,
-            in_kind_amount=2000,
-            in_kind_amount_local=3000,
-        )
-        self.assertEqual(int(self.intervention.total_budget_local), 3000)
+        self.assertEqual(int(self.intervention.total_unicef_budget), 20)
 
     def test_year(self):
         '''Exercise the year property'''
@@ -1152,7 +1093,7 @@ class TestInterventionModel(TenantTestCase):
         self.assertEqual(agreement.status, models.Agreement.ENDED)
 
 
-class TestGetFilePaths(TenantTestCase):
+class TestGetFilePaths(EToolsTenantTestCase):
     def test_get_agreement_path(self):
         partner = PartnerFactory()
         agreement = models.Agreement(
@@ -1251,13 +1192,13 @@ class TestGetFilePaths(TenantTestCase):
         )
 
 
-class TestWorkspaceFileType(TenantTestCase):
+class TestWorkspaceFileType(EToolsTenantTestCase):
     def test_str(self):
         w = models.WorkspaceFileType(name="Test")
         self.assertEqual(str(w), "Test")
 
 
-class TestPartnerOrganization(TenantTestCase):
+class TestPartnerOrganization(EToolsTenantTestCase):
     def test_str(self):
         p = models.PartnerOrganization(name="Test Partner Org")
         self.assertEqual(str(p), "Test Partner Org")
@@ -1287,7 +1228,7 @@ class TestPartnerOrganization(TenantTestCase):
         self.assertEqual(p.hact_values, '{"all": "good"}')
 
 
-class TestPartnerStaffMember(TenantTestCase):
+class TestPartnerStaffMember(EToolsTenantTestCase):
     def test_str(self):
         partner = models.PartnerOrganization(name="Partner")
         staff = models.PartnerStaffMember(
@@ -1323,7 +1264,7 @@ class TestPartnerStaffMember(TenantTestCase):
         self.assertEqual(mock_send.call_count, 2)
 
 
-class TestAssessment(TenantTestCase):
+class TestAssessment(EToolsTenantTestCase):
     def test_str_not_completed(self):
         partner = models.PartnerOrganization(name="Partner")
         a = models.Assessment(
@@ -1344,7 +1285,7 @@ class TestAssessment(TenantTestCase):
         self.assertEqual(str(a), "Type: Partner Rating 01-01-2001")
 
 
-class TestAgreement(TenantTestCase):
+class TestAgreement(EToolsTenantTestCase):
     def test_str(self):
         partner = models.PartnerOrganization(name="Partner")
         agreement = models.Agreement(
@@ -1415,7 +1356,7 @@ class TestAgreement(TenantTestCase):
         self.assertEqual(intervention_updated.status, agreement.status)
 
 
-class TestAgreementAmendment(TenantTestCase):
+class TestAgreementAmendment(EToolsTenantTestCase):
     def test_str(self):
         agreement = AgreementFactory()
         amendment = AgreementAmendmentFactory(
@@ -1427,7 +1368,7 @@ class TestAgreementAmendment(TenantTestCase):
         )
 
 
-class TestInterventionAmendment(TenantTestCase):
+class TestInterventionAmendment(EToolsTenantTestCase):
     def test_str(self):
         ia = models.InterventionAmendment(
             amendment_number="123",
@@ -1452,7 +1393,7 @@ class TestInterventionAmendment(TenantTestCase):
         self.assertEqual(ia.compute_reference_number(), 2)
 
 
-class TestInterventionResultLink(TenantTestCase):
+class TestInterventionResultLink(EToolsTenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         result = ResultFactory(
@@ -1471,32 +1412,32 @@ class TestInterventionResultLink(TenantTestCase):
         )
 
 
-class TestInterventionBudget(TenantTestCase):
+class TestInterventionBudget(EToolsTenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         intervention_str = str(intervention)
         budget = InterventionBudgetFactory(
             intervention=intervention,
-            unicef_cash=10.00,
-            in_kind_amount=5.00,
-            partner_contribution=20.00,
+            unicef_cash_local=10.00,
+            in_kind_amount_local=5.00,
+            partner_contribution_local=20.00,
         )
         self.assertEqual(str(budget), "{}: 35.00".format(intervention_str))
 
 
-class TestFileType(TenantTestCase):
+class TestFileType(EToolsTenantTestCase):
     def test_str(self):
         f = models.FileType(name="FileType")
         self.assertEqual(str(f), "FileType")
 
 
-class TestInterventionAttachment(TenantTestCase):
+class TestInterventionAttachment(EToolsTenantTestCase):
     def test_str(self):
         a = models.InterventionAttachment(attachment="test.pdf")
         self.assertEqual(str(a), "test.pdf")
 
 
-class TestInterventionReportingPeriod(TenantTestCase):
+class TestInterventionReportingPeriod(EToolsTenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         intervention_str = str(intervention)
@@ -1515,11 +1456,11 @@ class TestInterventionReportingPeriod(TenantTestCase):
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicodeSlow(TenantTestCase):
+class TestStrUnicodeSlow(EToolsTenantTestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.
 
     This is the same as TestStrUnicode below, except that it tests objects that need to be saved to the database
-    so it's based on FastTenantTestCase instead of TestCase.
+    so it's based on EToolsTenantTestCase instead of TestCase.
     '''
     def test_assessment(self):
         partner = PartnerFactory(name=b'xyz')
@@ -1651,3 +1592,24 @@ class TestStrUnicode(TestCase):
         instance = InterventionReportingPeriodFactory.build(intervention=intervention)
         self.assertTrue(str(instance).startswith(b'tv\xc3\xa5'))
         self.assertTrue(unicode(instance).startswith(u'tv\xe5'))
+
+
+class TestPlannedEngagement(EToolsTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+
+        cls.engagement = PlannedEngagementFactory(
+            spot_check_mr='q1',
+            spot_check_follow_up_q1=2,
+            spot_check_follow_up_q2=1,
+            spot_check_follow_up_q3=0,
+            spot_check_follow_up_q4=0,
+            scheduled_audit=True,
+            special_audit=False
+        )
+
+    def test_properties(self):
+        self.assertEquals(self.engagement.total_spot_check_follow_up_required, 3)
+        self.assertEquals(self.engagement.spot_check_required, 4)
+        self.assertEquals(self.engagement.required_audit, 1)

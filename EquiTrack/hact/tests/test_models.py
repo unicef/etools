@@ -6,12 +6,12 @@ from audit.models import Audit, Engagement
 from audit.tests.factories import (
     AuditFactory, MicroAssessmentFactory, RiskFactory, SpecialAuditFactory, SpotCheckFactory,)
 from EquiTrack.factories import PartnerFactory
-from EquiTrack.tests.mixins import FastTenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from hact.tests.factories import AggregateHactFactory
 from partners.models import PartnerOrganization, PartnerType
 
 
-class TestAggregateHact(FastTenantTestCase):
+class TestAggregateHact(EToolsTenantTestCase):
     """
     Test for model
     """
@@ -22,7 +22,6 @@ class TestAggregateHact(FastTenantTestCase):
         cls.partner = PartnerFactory(
             name="Partner Name",
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            shared_partner="with UNFPA",
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UN],
             rating=PartnerOrganization.RATING_HIGH,
             total_ct_cp=200.0,

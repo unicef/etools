@@ -121,7 +121,7 @@ class SimpleNestedProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = (
-            'country',
+            'country', 'office', 'section'
         )
 
 
@@ -215,8 +215,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
 
 
 class CountrySerializer(SimpleUserSerializer):
-    local_currency_id = serializers.IntegerField(source='local_currency.id', read_only=True)
-    local_currency_code = serializers.CharField(source='local_currency.code', read_only=True)
+    local_currency_code = serializers.CharField(source='local_currency', read_only=True)
 
     class Meta:
         model = Country
@@ -226,7 +225,6 @@ class CountrySerializer(SimpleUserSerializer):
             'latitude',
             'longitude',
             'initial_zoom',
-            'local_currency_id',
             'local_currency_code',
             'business_area_code',
             'country_short_code',

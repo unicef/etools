@@ -19,7 +19,6 @@ import os
 from os.path import abspath, basename, dirname, join, normpath
 
 import dj_database_url
-import djcelery
 import saml2
 from saml2 import saml
 
@@ -150,11 +149,13 @@ SHARED_APPS = (
     'rest_framework',
     'rest_framework_swagger',
     'rest_framework.authtoken',
+    'drfpasswordless',
     'import_export',
     'smart_selects',
     'gunicorn',
     'post_office',
-    'djcelery',
+    'django_celery_beat',
+    'django_celery_results',
     'djcelery_email',
     'leaflet',
     'corsheaders',
@@ -177,11 +178,15 @@ SHARED_APPS = (
     'notification',
     'django_filters',
     'environment',
+    'audit.purchase_order',
+    'EquiTrack',
+    'tpm.tpmpartners',
     'utils.common',
     'utils.mail',
     'utils.writable_serializers',
     'utils.permissions',
     'waffle',
+    'email_auth',
 )
 TENANT_APPS = (
     'django_fsm',
@@ -193,6 +198,7 @@ TENANT_APPS = (
     'hact',
     'trips',
     'supplies',
+    'activities',
     't2f',
     'workplan',
     'attachments',
@@ -298,31 +304,30 @@ POST_OFFICE = {
     }
 }
 
-# django-celery: https://github.com/celery/django-celery
-djcelery.setup_loader()
-
-# celery: http://docs.celeryproject.org/en/3.1/configuration.html
-BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
-BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(BROKER_VISIBILITY_VAR)}
-CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
-CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+# celery: http://docs.celeryproject.org/en/latest/userguide/configuration.html
+CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'application/text']
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
+CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(CELERY_BROKER_VISIBILITY_VAR)}
+CELERY_RESULT_BACKEND = 'django_celery_results.backends.database:DatabaseBackend'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 # Sensible settings for celery
-CELERY_ALWAYS_EAGER = False
-CELERY_ACKS_LATE = True
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_ACKS_LATE = True
 CELERY_TASK_PUBLISH_RETRY = True
-CELERY_DISABLE_RATE_LIMITS = False
+CELERY_WORKER_DISABLE_RATE_LIMITS = False
+
 # By default we will ignore result
 # If you want to see results and try out tasks interactively, change it to False
 # Or change this setting on tasks level
-CELERY_IGNORE_RESULT = True
+CELERY_TASK_IGNORE_RESULT = True
 CELERY_SEND_TASK_ERROR_EMAILS = False
-CELERY_TASK_RESULT_EXPIRES = 600
-CELERYD_PREFETCH_MULTIPLIER = 1
+CELERY_RESULT_EXPIRES = 600
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
 CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-CELERY_ROUTES = {
+CELERY_TASK_ROUTES = {
     'vision.tasks.sync_handler': {'queue': 'vision_queue'}
 }
 
@@ -554,3 +559,14 @@ ISSUE_CHECKS = [
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = os.getenv(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
+
+
+# drfpaswordless: https://github.com/aaronn/django-rest-framework-passwordless
+
+PASSWORDLESS_AUTH = {
+    # we can't use email here, because to_alias field length is 40, while email can be up to 254 symbols length.
+    # with custom user model we can avoid this a bit tricky with custom property like cropped_email,
+    # but for contrib user there is nothing better than use field having appropriate max length.
+    # username is better choice as it can be only 30 symbols max and unique.
+    'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
+}

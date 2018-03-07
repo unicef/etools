@@ -11,9 +11,10 @@ from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
+
 from snapshot import models as snapshot_models
 
-from EquiTrack.tests.mixins import SCHEMA_NAME, TENANT_DOMAIN
+from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
 from funds import models as funds_models
 from locations import models as location_models
 from notification import models as notification_models
@@ -152,6 +153,14 @@ class PartnerFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    vendor_number = fuzzy.FuzzyText(length=10)
+
+
+class PlannedEngagementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.PlannedEngagement
+
+    partner = factory.SubFactory('EquiTrack.factories.PartnerFactory')
 
 
 class CountryProgrammeFactory(factory.DjangoModelFactory):
@@ -286,9 +295,6 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     year = datetime.today().year
-    programmatic = 1
-    spot_checks = 2
-    audit = 3
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
@@ -389,7 +395,7 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     fr_number = fuzzy.FuzzyText(length=20)
     document_date = date(date.today().year, 1, 1)
     fr_type = fuzzy.FuzzyText(length=20)
-    currency = fuzzy.FuzzyText(length=20)
+    currency = fuzzy.FuzzyText(length=4)
     document_text = fuzzy.FuzzyText(length=20)
 
     # this is the field required for validation

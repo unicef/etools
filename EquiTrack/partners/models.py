@@ -23,6 +23,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
+from EquiTrack.fields import CurrencyField, QuarterField
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
@@ -136,15 +137,6 @@ def get_agreement_amd_file_path(instance, filename):
     ])
 
 
-def _get_currency_name_or_default(budget):
-    if budget and budget.currency:
-        return budget.currency.code
-    return None
-
-
-# TODO: move this to a workspace app for common configuration options
-
-
 @python_2_unicode_compatible
 class WorkspaceFileType(models.Model):
     """
@@ -230,12 +222,19 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     CT_MR_AUDIT_TRIGGER_LEVEL2 = decimal.Decimal('100000.00')
     CT_MR_AUDIT_TRIGGER_LEVEL3 = decimal.Decimal('500000.00')
 
-    # TODO 1.1.5 rating to be converted in choice after prp-refactoring
     RATING_HIGH = 'High'
     RATING_SIGNIFICANT = 'Significant'
     RATING_MODERATE = 'Moderate'
     RATING_LOW = 'Low'
     RATING_NON_ASSESSED = 'Non-Assessed'
+
+    RISK_RATINGS = (
+        (RATING_HIGH, 'High'),
+        (RATING_SIGNIFICANT, 'Significant'),
+        (RATING_MODERATE, 'Medium'),
+        (RATING_LOW, 'Low'),
+        (RATING_NON_ASSESSED, 'Non Required'),
+    )
 
     AGENCY_CHOICES = Choices(
         ('DPKO', 'DPKO'),
@@ -306,20 +305,6 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         blank=True,
         null=True
     )
-
-    # TODO remove this after migration to shared_with + add calculation to
-    shared_partner = models.CharField(
-        verbose_name=_("Shared Partner (old)"),
-        help_text='Partner shared with UNDP or UNFPA?',
-        choices=Choices(
-            'No',
-            'with UNDP',
-            'with UNFPA',
-            'with UNDP & UNFPA',
-        ),
-        default='No',
-        max_length=50
-    )
     street_address = models.CharField(
         verbose_name=_("Street Address"),
         max_length=500,
@@ -386,7 +371,9 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     rating = models.CharField(
         verbose_name=_('Risk Rating'),
         max_length=50,
+        choices=RISK_RATINGS,
         null=True,
+        blank=True
     )
     type_of_assessment = models.CharField(
         verbose_name=_("Assessment Type"),
@@ -455,6 +442,8 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     )
 
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    basis_for_risk_rating = models.CharField(
+        verbose_name=_("Basis for Risk Rating"), max_length=50, null=True, blank=True)
 
     tracker = FieldTracker()
 
@@ -583,18 +572,24 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         If partner type is Government, then default to 0 planned visits
         """
         year = datetime.date.today().year
-        # planned visits
         if partner.partner_type == 'Government':
-            pv = 0
+            pvq1 = pvq2 = pvq3 = pvq4 = 0
         else:
             pv = InterventionPlannedVisits.objects.filter(
                 intervention__agreement__partner=partner, year=year,
                 intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]
-            ).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
+            )
+            pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
+            pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
+            pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
+            pvq4 = pv.aggregate(models.Sum('programmatic_q4'))['programmatic_q4__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        hact['programmatic_visits']['planned']['q1'] = pv
-        hact['programmatic_visits']['planned']['total'] = pv
+        hact['programmatic_visits']['planned']['q1'] = pvq1
+        hact['programmatic_visits']['planned']['q2'] = pvq2
+        hact['programmatic_visits']['planned']['q3'] = pvq3
+        hact['programmatic_visits']['planned']['q4'] = pvq4
+        hact['programmatic_visits']['planned']['total'] = pvq1 + pvq2 + pvq3 + pvq4
         partner.hact_values = hact
         partner.save()
 
@@ -792,6 +787,48 @@ class PartnerStaffMember(TimeStampedModel):
                 self.reactivate_signal()
 
         return super(PartnerStaffMember, self).save(**kwargs)
+
+
+@python_2_unicode_compatible
+class PlannedEngagement(TimeStampedModel):
+    """ class to handle partner's engagement for current year """
+    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement')
+    spot_check_mr = QuarterField()
+    spot_check_follow_up_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
+    spot_check_follow_up_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
+    spot_check_follow_up_q3 = models.IntegerField(verbose_name=_("Spot Check Q3"), default=0)
+    spot_check_follow_up_q4 = models.IntegerField(verbose_name=_("Spot Check Q4"), default=0)
+    scheduled_audit = models.BooleanField(verbose_name=_("Scheduled Audit"), default=False)
+    special_audit = models.BooleanField(verbose_name=_("Special Audit"), default=False)
+
+    @cached_property
+    def total_spot_check_follow_up_required(self):
+        return sum([
+            self.spot_check_follow_up_q1, self.spot_check_follow_up_q2,
+            self.spot_check_follow_up_q3, self.spot_check_follow_up_q4
+        ])
+
+    @cached_property
+    def spot_check_required(self):
+        return self.total_spot_check_follow_up_required + (1 if self.spot_check_mr else 0)
+
+    @cached_property
+    def required_audit(self):
+        return sum([self.scheduled_audit, self.special_audit])
+
+    def reset(self):
+        """this is used to reset the values of the object at the end of the year"""
+        self.spot_check_mr = None
+        self.spot_check_follow_up_q1 = 0
+        self.spot_check_follow_up_q2 = 0
+        self.spot_check_follow_up_q3 = 0
+        self.spot_check_follow_up_q4 = 0
+        self.scheduled_audit = False
+        self.special_audit = False
+        self.save()
+
+    def __str__(self):
+        return 'Planned Engagement {}'.format(self.partner.name)
 
 
 @python_2_unicode_compatible
@@ -1575,29 +1612,15 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution(self):
-        return self.planned_budget.partner_contribution if hasattr(self, 'planned_budget') else 0
-
-    @cached_property
-    def default_budget_currency(self):
-        # todo: this seems to always come from self.planned_budget so not splitting it out
-        # by different categories - e.g. partner vs unicef. is this valid?
-        return _get_currency_name_or_default(self.planned_budget)
-
-    @cached_property
-    def fr_currency(self):
-        # todo: implicit assumption here that there aren't conflicting currencies
-        # eventually, this should be checked/reconciled if there are conflicts
-        # also, this doesn't do filtering in the db so that it can be used efficiently with `prefetch_related`
-        if self.frs.exists():
-            return self.frs.all()[0].currency
+        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_unicef_cash(self):
-        return self.planned_budget.unicef_cash if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_in_kind_amount(self):
-        return self.planned_budget.in_kind_amount if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def total_budget(self):
@@ -1606,18 +1629,6 @@ class Intervention(TimeStampedModel):
     @cached_property
     def total_unicef_budget(self):
         return self.total_unicef_cash + self.total_in_kind_amount
-
-    @cached_property
-    def total_partner_contribution_local(self):
-        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
-
-    @cached_property
-    def total_unicef_cash_local(self):
-        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
-
-    @cached_property
-    def total_budget_local(self):
-        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
 
     @cached_property
     def all_lower_results(self):
@@ -1914,20 +1925,26 @@ class InterventionAmendment(TimeStampedModel):
         )
 
 
+@python_2_unicode_compatible
 class InterventionPlannedVisits(TimeStampedModel):
     """
     Represents planned visits for the intervention
     """
+
     intervention = models.ForeignKey(Intervention, related_name='planned_visits')
     year = models.IntegerField(default=get_current_year)
-    programmatic = models.IntegerField(default=0)
-    spot_checks = models.IntegerField(default=0)
-    audit = models.IntegerField(default=0)
+    programmatic_q1 = models.IntegerField(default=0)
+    programmatic_q2 = models.IntegerField(default=0)
+    programmatic_q3 = models.IntegerField(default=0)
+    programmatic_q4 = models.IntegerField(default=0)
 
     tracker = FieldTracker()
 
     class Meta:
         unique_together = ('intervention', 'year')
+
+    def __str__(self):
+        return '{} {}'.format(self.intervention, self.year)
 
 
 @python_2_unicode_compatible
@@ -1950,6 +1967,7 @@ class InterventionBudget(TimeStampedModel):
     Represents a budget for the intervention
     """
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True)
+
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount = models.DecimalField(
@@ -1958,19 +1976,24 @@ class InterventionBudget(TimeStampedModel):
         default=0,
         verbose_name=_('UNICEF Supplies')
     )
+    total = models.DecimalField(max_digits=20, decimal_places=2)
+
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
     )
-    currency = models.ForeignKey('publics.Currency', on_delete=models.SET_NULL, null=True, blank=True)
-    total = models.DecimalField(max_digits=20, decimal_places=2)
+    currency = CurrencyField()
+    total_local = models.DecimalField(max_digits=20, decimal_places=2)
 
     tracker = FieldTracker()
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
+
+    def total_unicef_contribution_local(self):
+        return self.unicef_cash_local + self.in_kind_amount_local
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -1978,14 +2001,15 @@ class InterventionBudget(TimeStampedModel):
         Calculate total budget on save
         """
         self.total = self.total_unicef_contribution() + self.partner_contribution
+        self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
         super(InterventionBudget, self).save(**kwargs)
 
     def __str__(self):
         # self.total is None if object hasn't been saved yet
-        total = self.total if self.total else decimal.Decimal('0.00')
+        total_local = self.total_local if self.total_local else decimal.Decimal('0.00')
         return '{}: {:.2f}'.format(
             self.intervention,
-            total
+            total_local
         )
 
 

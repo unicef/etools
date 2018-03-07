@@ -206,10 +206,15 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         label=_("Partner"),
         source='agreement.partner.name',
     )
+    vendor_number = serializers.CharField(
+        label=_("Vendor #"),
+        source='agreement.partner.vendor_number',
+    )
     partner_type = serializers.CharField(
         label=_("Partner Type"),
         source='agreement.partner.partner_type',
     )
+    number = serializers.SerializerMethodField(label=_("Reference Number"))
     agreement_number = serializers.CharField(
         label=_("Agreement"),
         source='agreement.agreement_number',
@@ -219,38 +224,58 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         source='agreement.country_programme.name',
     )
     offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
-    sectors = serializers.SerializerMethodField(label=_("Sectors"))
+    sectors = serializers.SerializerMethodField(label=_("Sections"))
     locations = serializers.SerializerMethodField(label=_("Locations"))
-    fr_numbers = serializers.SerializerMethodField(label=_("FR Number(s)"))
-    planned_budget_local = serializers.DecimalField(
-        label=_("Total UNICEF Budget (Local)"),
-        source='total_unicef_cash_local',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2,
+    contingency_pd = serializers.SerializerMethodField(label=_("Contingency PD"))
+    intervention_clusters = serializers.SerializerMethodField(
+        label=_("Cluster"),
     )
-    unicef_budget = serializers.DecimalField(
-        label=_("Total UNICEF Budget (USD)"),
-        source='total_unicef_budget',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2,
+    fr_numbers = serializers.SerializerMethodField(label=_("FR Number(s)"))
+    fr_currency = serializers.ReadOnlyField(
+        label=_("FR Currency"),
+    )
+    fr_posting_date = serializers.SerializerMethodField(label=_("FR Posting Date"))
+    fr_amount = serializers.SerializerMethodField(
+        label=_("FR Amount"),
+    )
+    fr_actual_amount = serializers.SerializerMethodField(
+        label=_("FR Actual CT"),
+    )
+    fr_outstanding_amt = serializers.SerializerMethodField(
+        label=_("Outstanding DCT"),
+    )
+    budget_currency = serializers.CharField(
+        label=_("Budget Currency"),
+        source="planned_budget.currency"
     )
     cso_contribution = serializers.DecimalField(
-        label=_("Total CSO Budget (USD)"),
+        label=_("Total CSO Contribution"),
         source='total_partner_contribution',
         read_only=True,
         max_digits=20,
         decimal_places=2,
     )
-    partner_contribution_local = serializers.DecimalField(
-        label=_("Total CSO Budget (Local)"),
-        source='total_partner_contribution_local',
+    unicef_budget = serializers.DecimalField(
+        label=_("UNICEF Cash"),
+        source='total_unicef_cash',
         read_only=True,
         max_digits=20,
         decimal_places=2,
     )
-    # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
+    unicef_supply = serializers.DecimalField(
+        label=_("UNICEF Supply"),
+        source='total_in_kind_amount',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2,
+    )
+    total_planned_budget = serializers.DecimalField(
+        label=_("Total PD/SSFA Budget"),
+        source='total_budget',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2,
+    )
     unicef_signatory = serializers.SerializerMethodField(
         label=_("Signed by UNICEF"),
     )
@@ -264,16 +289,9 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         label=_("Signed by Partner"),
     )
     cp_outputs = serializers.SerializerMethodField(label=_("CP Outputs"))
-    ram_indicators = serializers.SerializerMethodField(
-        label=_("RAM Indicators"),
-    )
     planned_visits = serializers.SerializerMethodField(
         label=_("Planned Programmatic Visits"),
     )
-    spot_checks = serializers.SerializerMethodField(
-        label=_("Planned Spot Checks"),
-    )
-    audit = serializers.SerializerMethodField(label=_("Planned Audits"))
     url = serializers.SerializerMethodField(label=_("URL"))
     days_from_submission_to_signed = serializers.SerializerMethodField(
         label=_("Days from Submission to Signed"),
@@ -281,15 +299,25 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     days_from_review_to_signed = serializers.SerializerMethodField(
         label=_("Days from Review to Signed"),
     )
-    migration_error_msg = serializers.SerializerMethodField(
-        label=_("Migration messages"),
+    amendment_sum = serializers.SerializerMethodField(
+        label=_("Total no. of amendments"),
+    )
+    last_amendment_date = serializers.SerializerMethodField(
+        label=_("Last amendment date"),
+    )
+    attachment_type = serializers.SerializerMethodField(
+        label=_("Attachment type"),
+    )
+    total_attachments = serializers.SerializerMethodField(
+        label=_("# of attachments"),
     )
 
     class Meta:
         model = Intervention
         fields = (
-            "status",
             "partner_name",
+            "vendor_number",
+            "status",
             "partner_type",
             "agreement_number",
             "country_programme",
@@ -301,31 +329,41 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "offices",
             "sectors",
             "locations",
-            "planned_budget_local",
+            "contingency_pd",
+            "intervention_clusters",
             "unicef_focal_points",
             "partner_focal_points",
-            "population_focus",
-            "cp_outputs",
-            "ram_indicators",
-            "fr_numbers",
-            "unicef_budget",
+            "budget_currency",
             "cso_contribution",
-            "partner_authorized_officer_signatory",
-            "partner_contribution_local",
+            "unicef_budget",
+            "unicef_supply",
+            "total_planned_budget",
+            "fr_numbers",
+            "fr_currency",
+            "fr_posting_date",
+            "fr_amount",
+            "fr_actual_amount",
+            "fr_outstanding_amt",
             "planned_visits",
-            "spot_checks",
-            "audit",
             "submission_date",
             "submission_date_prc",
             "review_date_prc",
+            "partner_authorized_officer_signatory",
+            "signed_by_partner_date",
             "unicef_signatory",
             "signed_by_unicef_date",
-            "migration_error_msg",
-            "signed_by_partner_date",
-            "url",
             "days_from_submission_to_signed",
-            "days_from_review_to_signed"
+            "days_from_review_to_signed",
+            "amendment_sum",
+            "last_amendment_date",
+            "attachment_type",
+            "total_attachments",
+            "cp_outputs",
+            "url",
         )
+
+    def get_number(self, obj):
+        return obj.reference_number
 
     def get_unicef_signatory(self, obj):
         return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
@@ -334,11 +372,19 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join([o.name for o in obj.offices.all()])
 
     def get_sectors(self, obj):
-        return ', '.join([l.sector.name for l in obj.sector_locations.all()])
+        return ', '.join([s.name for s in obj.sections.all()])
+
+    def get_intervention_clusters(self, obj):
+        return ', '.join([c for c in obj.intervention_clusters])
+
+    def get_contingency_pd(self, obj):
+        return "Yes" if obj.contingency_pd else "No"
 
     def get_locations(self, obj):
-        ll = Location.objects.filter(intervention_sector_locations__intervention=obj.id).order_by('name')
-        return ', '.join([l.name for l in ll.all()])
+        return ', '.join([l.name for l in obj.flat_locations.all()])
+
+    def get_fr_posting_date(self, obj):
+        return ', '.join(['{}'.format(f.document_date) for f in obj.frs.all()])
 
     def get_partner_authorized_officer_signatory(self, obj):
         if obj.partner_authorized_officer_signatory:
@@ -355,22 +401,18 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_cp_outputs(self, obj):
         return ', '.join([rs.cp_output.name for rs in obj.result_links.all()])
 
-    def get_ram_indicators(self, obj):
-        ram_indicators = []
-        for rs in obj.result_links.all():
-            if rs.ram_indicators:
-                for ram in rs.ram_indicators.all():
-                    ram_indicators.append("[{}] {}, ".format(rs.cp_output.name, ram.name))
-        return ' '.join([ram for ram in ram_indicators])
+    def get_fr_amount(self, obj):
+        return obj.total_frs["total_frs_amt"]
+
+    def get_fr_actual_amount(self, obj):
+        return obj.total_frs["total_actual_amt"]
+
+    def get_fr_outstanding_amt(self, obj):
+        return obj.total_frs["total_outstanding_amt"]
 
     def get_planned_visits(self, obj):
-        return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_spot_checks(self, obj):
-        return ', '.join(['{} ({})'.format(pv.spot_checks, pv.year) for pv in obj.planned_visits.all()])
-
-    def get_audit(self, obj):
-        return ', '.join(['{} ({})'.format(pv.audit, pv.year) for pv in obj.planned_visits.all()])
+        return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(pv.year, pv.programmatic_q1, pv.programmatic_q2,
+                          pv.programmatic_q3, pv.programmatic_q4) for pv in obj.planned_visits.all()])
 
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
@@ -382,10 +424,20 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return obj.days_from_review_to_signed
 
     def get_fr_numbers(self, obj):
-        return ', '.join([x.fr_number for x in obj.frs.all()]) if obj.frs.all().count() > 0 else ""
+        return ', '.join([x.fr_number for x in obj.frs.all()]) if obj.frs.count() > 0 else ""
 
-    def get_migration_error_msg(self, obj):
-        return ', '.join([a for a in obj.metadata['error_msg']]) if 'error_msg' in obj.metadata.keys() else ''
+    def get_amendment_sum(self, obj):
+        return obj.amendments.count()
+
+    def get_last_amendment_date(self, obj):
+        return '{}'.format(obj.amendments.order_by('-signed_date').values_list('signed_date', flat=True)[0]) \
+            if obj.amendments.count() > 0 else ''
+
+    def get_attachment_type(self, obj):
+        return ', '.join(['{}'.format(att.type.name) for att in obj.attachments.all()])
+
+    def get_total_attachments(self, obj):
+        return obj.attachments.count()
 
 
 class InterventionExportFlatSerializer(InterventionExportSerializer):
@@ -438,11 +490,12 @@ class InterventionExportFlatSerializer(InterventionExportSerializer):
         planned_visits = []
         for planned_visit in obj.planned_visits.all():
             planned_visits.append(
-                "Year: {}, Programmatic: {}, Spot Checks: {}, Audit: {}".format(
+                "Year: {}: {} {} {} {}".format(
                     planned_visit.year,
-                    planned_visit.programmatic,
-                    planned_visit.spot_checks,
-                    planned_visit.audit,
+                    planned_visit.programmatic_q1,
+                    planned_visit.programmatic_q2,
+                    planned_visit.programmatic_q3,
+                    planned_visit.programmatic_q4,
                 )
             )
         return "\n".join(planned_visits)
