@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 
 
 class SettingsView(APITenantTestCase):

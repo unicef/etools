@@ -6,7 +6,7 @@ from django.core.cache import cache
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory, WBSFactory
 from publics.views import WBSGrantFundView
 

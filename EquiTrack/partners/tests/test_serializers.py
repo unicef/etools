@@ -8,7 +8,7 @@ from rest_framework import serializers
 from EquiTrack.factories import (
     AgreementAmendmentFactory, AgreementFactory, CountryProgrammeFactory, InterventionFactory, PartnerFactory,
     PartnerStaffFactory, PlannedEngagementFactory, UserFactory,)
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from partners.models import Agreement, PartnerType
 from partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
@@ -17,7 +17,7 @@ from partners.serializers.partner_organization_v2 import PartnerOrganizationDeta
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
 
 
-class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
+class AgreementCreateUpdateSerializerBase(APITenantTestCase):
     """Base class for testing AgreementCreateUpdateSerializer"""
     def setUp(self):
         self.user = UserFactory()
@@ -691,7 +691,7 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
             self.assertEqual(field.read_only, expected_read_only)
 
 
-class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
+class TestPartnerOrganizationDetailSerializer(APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()

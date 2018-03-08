@@ -12,7 +12,7 @@ from rest_framework import status
 
 from environment.tests.factories import TenantFlagFactory, TenantSwitchFactory
 from EquiTrack.factories import UserFactory, CountryFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 
 
 class TestActiveFlagAPIView(APITenantTestCase):

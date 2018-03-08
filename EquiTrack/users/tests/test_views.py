@@ -10,8 +10,7 @@ from tenant_schemas.test.client import TenantClient
 from unittest import skip
 
 from EquiTrack.factories import CountryFactory, GroupFactory, OfficeFactory, SectionFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory
 from users.models import Group, User, UserProfile
 
@@ -300,7 +299,7 @@ class TestUsersDetailAPIView(APITenantTestCase):
         self.assertEqual(response.data, {})
 
 
-class TestProfileEdit(EToolsTenantTestCase):
+class TestProfileEdit(APITenantTestCase):
     def setUp(self):
         super(TestProfileEdit, self).setUp()
         self.client = TenantClient(self.tenant)

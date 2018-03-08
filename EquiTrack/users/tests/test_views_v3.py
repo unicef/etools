@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from EquiTrack.factories import GroupFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from users.models import UserProfile
 from users.serializers_v3 import AP_ALLOWED_COUNTRIES
 

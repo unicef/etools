@@ -26,7 +26,8 @@ from partners.models import (
     PartnerOrganization,
     PartnerType,
 )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 
 
 class URLsTestCase(URLAssertionMixin, TestCase):

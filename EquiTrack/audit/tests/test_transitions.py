@@ -11,7 +11,7 @@ from audit.tests.factories import AuditFactory, MicroAssessmentFactory, SpecialA
     KeyInternalControlFactory
 from audit.transitions.conditions import (
     AuditSubmitReportRequiredFieldsCheck, EngagementSubmitReportRequiredFieldsCheck, SPSubmitReportRequiredFieldsCheck,)
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 
 
 class EngagementCheckTransitionsTestCaseMixin(object):

@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from partners.models import PartnerType
 from tpm.models import TPMActionPoint
 from tpm.tests.base import TPMTestCaseMixin

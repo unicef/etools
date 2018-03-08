@@ -5,10 +5,10 @@ from __future__ import unicode_literals
 
 from post_office.models import EmailTemplate
 
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 
 
-class TestEmail(EToolsTenantTestCase):
+class TestEmail(APITenantTestCase):
     fixtures = ('emails.json', )
 
     def test_expected_email_templates_exist(self):

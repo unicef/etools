@@ -5,7 +5,7 @@ import json
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 
 from .factories import TravelFactory
 

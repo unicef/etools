@@ -6,7 +6,7 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from EquiTrack.factories import PartnerFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from hact.tests.factories import HactHistoryFactory
 from partners.models import PartnerOrganization, PartnerType
 

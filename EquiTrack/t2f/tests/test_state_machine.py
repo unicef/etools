@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
 from t2f.models import Invoice, ModeOfTravel, Travel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory

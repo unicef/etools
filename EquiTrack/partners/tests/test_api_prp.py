@@ -15,7 +15,8 @@ from EquiTrack.factories import (
     ResultFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase, WorkspaceRequiredAPITestMixIn
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import WorkspaceRequiredAPITestMixIn
 from partners.models import InterventionResultLink
 from partners.permissions import READ_ONLY_API_GROUP_NAME
 from partners.tests.test_utils import setup_intervention_test_data

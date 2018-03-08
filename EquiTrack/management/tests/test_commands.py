@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from django.core.management import call_command
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from management.issues import checks
 from management.models import (
     FlaggedIssue,
@@ -19,7 +19,7 @@ from management.tests.factories import (
 )
 
 
-class TestCheckIssuesCommand(EToolsTenantTestCase):
+class TestCheckIssuesCommand(APITenantTestCase):
     def test_run_all_checks(self):
         UserFactory(username="etools_task_admin")
         qs_issue = FlaggedIssue.objects.filter(
@@ -32,7 +32,7 @@ class TestCheckIssuesCommand(EToolsTenantTestCase):
         self.assertTrue(qs_issue.exists())
 
 
-class TestRecheckIssuesCommand(EToolsTenantTestCase):
+class TestRecheckIssuesCommand(APITenantTestCase):
     def test_recheck_all_open_issues_task(self):
         UserFactory(username="etools_task_admin")
         amendment = InterventionAmendmentFactory()

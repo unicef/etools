@@ -34,7 +34,8 @@ from EquiTrack.factories import (
     SectorFactory,
     UserFactory,
     PlannedEngagementFactory)
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from reports.models import ResultType
 from funds.models import FundsCommitmentItem, FundsCommitmentHeader
 from partners.models import (

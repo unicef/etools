@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from EquiTrack.factories import InterventionFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from partners.models import Intervention
 
 

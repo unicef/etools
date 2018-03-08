@@ -12,7 +12,7 @@ import mock
 import partners.tasks
 from EquiTrack.factories import (
     AgreementFactory, CountryFactory, FundsReservationHeaderFactory, InterventionFactory, UserFactory,)
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from partners.models import Agreement, Intervention
 from users.models import User
 
@@ -40,7 +40,7 @@ def _make_past_datetime(n_days):
     return timezone.now() - datetime.timedelta(days=n_days)
 
 
-class TestGetInterventionContext(EToolsTenantTestCase):
+class TestGetInterventionContext(APITenantTestCase):
     '''Exercise the tasks' helper function get_intervention_context()'''
     def setUp(self):
         self.intervention = InterventionFactory()
@@ -80,7 +80,7 @@ class TestGetInterventionContext(EToolsTenantTestCase):
         self.assertEqual(result['unicef_focal_points'], [focal_point_user.email])
 
 
-class PartnersTestBaseClass(EToolsTenantTestCase):
+class PartnersTestBaseClass(APITenantTestCase):
     '''Common elements for most of the tests in this file.'''
     def _assertCalls(self, mocked_function, all_expected_call_args):
         '''Given a mocked function (like mock_logger.info or mock_connection.set_tentant), asserts that the mock was

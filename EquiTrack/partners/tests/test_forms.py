@@ -9,12 +9,12 @@ from EquiTrack.factories import (
     ProfileFactory,
     UserFactory,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from partners import forms
 from partners.models import PartnerType
 
 
-class TestPartnersAdminForm(EToolsTenantTestCase):
+class TestPartnersAdminForm(APITenantTestCase):
     def setUp(self):
         super(TestPartnersAdminForm, self).setUp()
         self.data = {
@@ -47,7 +47,7 @@ class TestPartnersAdminForm(EToolsTenantTestCase):
         )
 
 
-class TestPartnerStaffMemberForm(EToolsTenantTestCase):
+class TestPartnerStaffMemberForm(APITenantTestCase):
     def setUp(self):
         super(TestPartnerStaffMemberForm, self).setUp()
         partner = PartnerFactory()

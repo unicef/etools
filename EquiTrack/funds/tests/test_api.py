@@ -18,7 +18,8 @@ from EquiTrack.factories import (
     GrantFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 
 
 class UrlsTestCase(URLAssertionMixin, TestCase):

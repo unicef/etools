@@ -1,6 +1,8 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
+from django.core.urlresolvers import resolve
 from django.db import connection
+from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 from tenant_schemas.test.cases import TenantTestCase
 from tenant_schemas.utils import get_tenant_model
 
@@ -11,11 +13,13 @@ TENANT_DOMAIN = 'tenant.test.com'
 SCHEMA_NAME = 'test'
 
 
-class EToolsTenantTestCase(TenantTestCase):
+class APITenantTestCase(TenantTestCase):
     """
     Faster version of TenantTestCase.  (Based on FastTenantTestCase
     provided by django-tenant-schemas.)
     """
+    client_class = APIClient
+    maxDiff = None
 
     def _should_check_constraints(self, connection):
         # We have some tests that fail the constraint checking after each test
@@ -97,3 +101,38 @@ class EToolsTenantTestCase(TenantTestCase):
 
         if exact and len(key_set) != len(container_set):
             self.fail('{} != {}'.format(', '.join(key_set), ', '.join(container_set)))
+
+    def forced_auth_req(self, method, url, user=None, data=None, request_format='json', **kwargs):
+        """
+        Function that allows api methods to be called with forced authentication
+
+        :param method: the HTTP method 'get'/'post'
+        :type method: str
+        :param url: the relative url to the base domain
+        :type url: st
+        :param user: optional user if not authenticated as the current user
+        :type user: django.contrib.auth.models.User
+        :param data: any data that should be passed to the API view
+        :type data: dict
+        """
+        factory = APIRequestFactory()
+
+        data = data or {}
+        req_to_call = getattr(factory, method)
+        request = req_to_call(url, data, format=request_format, **kwargs)
+
+        user = user or self.user
+        force_authenticate(request, user=user)
+
+        if "view" in kwargs:
+            view = kwargs.pop("view")
+            response = view(request)
+        else:
+            view_info = resolve(url)
+            view = view_info.func
+            response = view(request, *view_info.args, **view_info.kwargs)
+
+        if hasattr(response, 'render'):
+            response.render()
+
+        return response

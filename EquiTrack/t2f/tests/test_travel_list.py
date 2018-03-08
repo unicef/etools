@@ -9,7 +9,8 @@ from freezegun import freeze_time
 from rest_framework import status
 
 from EquiTrack.factories import LocationFactory, ResultFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from publics.models import DSARegion
 from publics.tests.factories import WBSFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType

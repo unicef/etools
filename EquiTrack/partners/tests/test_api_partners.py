@@ -16,7 +16,8 @@ from EquiTrack.factories import (
     UserFactory,
     InterventionBudgetFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from partners.models import PartnerOrganization, PartnerType
 from partners.views.partner_organization_v2 import PartnerOrganizationAddView
 

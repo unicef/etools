@@ -11,7 +11,7 @@ from pytz import UTC
 
 from EquiTrack.factories import (
     InterventionFactory, LocationFactory, OfficeFactory, ResultFactory, SectorFactory, UserFactory,)
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from publics.tests.factories import (
     AirlineCompanyFactory, CurrencyFactory, DSARateFactory, DSARegionFactory, FundFactory, GrantFactory, WBSFactory,)
 from t2f.models import Invoice, ModeOfTravel, TravelActivity, TravelType

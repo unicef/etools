@@ -6,7 +6,8 @@ from django.core.urlresolvers import reverse
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from publics.models import TravelExpenseType
 from publics.tests.factories import DSARateFactory, DSARegionFactory
 from t2f.helpers.invoice_maker import InvoiceMaker

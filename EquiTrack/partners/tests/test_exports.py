@@ -9,7 +9,7 @@ from EquiTrack.factories import (
     UserFactory, PartnerFactory, AgreementFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory,
     InterventionBudgetFactory, PartnerStaffFactory, InterventionPlannedVisitsFactory
 )
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from partners.models import PartnerOrganization
 from reports.models import ResultType
 

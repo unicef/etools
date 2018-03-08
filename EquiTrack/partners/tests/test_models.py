@@ -38,7 +38,7 @@ from EquiTrack.factories import (
     UserFactory,
     PlannedEngagementFactory
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from audit.models import Engagement
 from audit.tests.factories import SpotCheckFactory, AuditFactory, SpecialAuditFactory
 from partners import models
@@ -53,7 +53,7 @@ def get_date_from_prior_year():
     return datetime.date.today() - datetime.timedelta(days=700)
 
 
-class TestAgreementNumberGeneration(EToolsTenantTestCase):
+class TestAgreementNumberGeneration(APITenantTestCase):
     '''Test that agreements have the expected base and reference numbers for all types of agreements'''
 
     fixtures = ['initial_data.json']
@@ -159,7 +159,7 @@ class TestAgreementNumberGeneration(EToolsTenantTestCase):
         self.assertEqual(agreement.reference_number, expected_reference_number)
 
 
-class TestHACTCalculations(EToolsTenantTestCase):
+class TestHACTCalculations(APITenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -212,7 +212,7 @@ class TestHACTCalculations(EToolsTenantTestCase):
         )
 
 
-class TestPartnerOrganizationModel(EToolsTenantTestCase):
+class TestPartnerOrganizationModel(APITenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -567,7 +567,7 @@ class TestPartnerOrganizationModel(EToolsTenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
 
 
-class TestAgreementModel(EToolsTenantTestCase):
+class TestAgreementModel(APITenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -590,7 +590,7 @@ class TestAgreementModel(EToolsTenantTestCase):
         self.assertIn("PCA", self.agreement.reference_number)
 
 
-class TestInterventionModel(EToolsTenantTestCase):
+class TestInterventionModel(APITenantTestCase):
     fixtures = ['initial_data.json']
 
     def setUp(self):
@@ -1090,7 +1090,7 @@ class TestInterventionModel(EToolsTenantTestCase):
         self.assertEqual(agreement.status, models.Agreement.ENDED)
 
 
-class TestGetFilePaths(EToolsTenantTestCase):
+class TestGetFilePaths(APITenantTestCase):
     def test_get_agreement_path(self):
         partner = PartnerFactory()
         agreement = models.Agreement(
@@ -1189,13 +1189,13 @@ class TestGetFilePaths(EToolsTenantTestCase):
         )
 
 
-class TestWorkspaceFileType(EToolsTenantTestCase):
+class TestWorkspaceFileType(APITenantTestCase):
     def test_str(self):
         w = models.WorkspaceFileType(name="Test")
         self.assertEqual(str(w), "Test")
 
 
-class TestPartnerOrganization(EToolsTenantTestCase):
+class TestPartnerOrganization(APITenantTestCase):
     def test_str(self):
         p = models.PartnerOrganization(name="Test Partner Org")
         self.assertEqual(str(p), "Test Partner Org")
@@ -1225,7 +1225,7 @@ class TestPartnerOrganization(EToolsTenantTestCase):
         self.assertEqual(p.hact_values, '{"all": "good"}')
 
 
-class TestPartnerStaffMember(EToolsTenantTestCase):
+class TestPartnerStaffMember(APITenantTestCase):
     def test_str(self):
         partner = models.PartnerOrganization(name="Partner")
         staff = models.PartnerStaffMember(
@@ -1261,7 +1261,7 @@ class TestPartnerStaffMember(EToolsTenantTestCase):
         self.assertEqual(mock_send.call_count, 2)
 
 
-class TestAssessment(EToolsTenantTestCase):
+class TestAssessment(APITenantTestCase):
     def test_str_not_completed(self):
         partner = models.PartnerOrganization(name="Partner")
         a = models.Assessment(
@@ -1282,7 +1282,7 @@ class TestAssessment(EToolsTenantTestCase):
         self.assertEqual(str(a), "Type: Partner Rating 01-01-2001")
 
 
-class TestAgreement(EToolsTenantTestCase):
+class TestAgreement(APITenantTestCase):
     def test_str(self):
         partner = models.PartnerOrganization(name="Partner")
         agreement = models.Agreement(
@@ -1353,7 +1353,7 @@ class TestAgreement(EToolsTenantTestCase):
         self.assertEqual(intervention_updated.status, agreement.status)
 
 
-class TestAgreementAmendment(EToolsTenantTestCase):
+class TestAgreementAmendment(APITenantTestCase):
     def test_str(self):
         agreement = AgreementFactory()
         amendment = AgreementAmendmentFactory(
@@ -1365,7 +1365,7 @@ class TestAgreementAmendment(EToolsTenantTestCase):
         )
 
 
-class TestInterventionAmendment(EToolsTenantTestCase):
+class TestInterventionAmendment(APITenantTestCase):
     def test_str(self):
         ia = models.InterventionAmendment(
             amendment_number="123",
@@ -1390,7 +1390,7 @@ class TestInterventionAmendment(EToolsTenantTestCase):
         self.assertEqual(ia.compute_reference_number(), 2)
 
 
-class TestInterventionResultLink(EToolsTenantTestCase):
+class TestInterventionResultLink(APITenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         result = ResultFactory(
@@ -1409,7 +1409,7 @@ class TestInterventionResultLink(EToolsTenantTestCase):
         )
 
 
-class TestInterventionBudget(EToolsTenantTestCase):
+class TestInterventionBudget(APITenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         intervention_str = str(intervention)
@@ -1422,19 +1422,19 @@ class TestInterventionBudget(EToolsTenantTestCase):
         self.assertEqual(str(budget), "{}: 35.00".format(intervention_str))
 
 
-class TestFileType(EToolsTenantTestCase):
+class TestFileType(APITenantTestCase):
     def test_str(self):
         f = models.FileType(name="FileType")
         self.assertEqual(str(f), "FileType")
 
 
-class TestInterventionAttachment(EToolsTenantTestCase):
+class TestInterventionAttachment(APITenantTestCase):
     def test_str(self):
         a = models.InterventionAttachment(attachment="test.pdf")
         self.assertEqual(str(a), "test.pdf")
 
 
-class TestInterventionReportingPeriod(EToolsTenantTestCase):
+class TestInterventionReportingPeriod(APITenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         intervention_str = str(intervention)
@@ -1453,11 +1453,11 @@ class TestInterventionReportingPeriod(EToolsTenantTestCase):
 
 
 @skipIf(sys.version_info.major == 3, "This test can be deleted under Python 3")
-class TestStrUnicodeSlow(EToolsTenantTestCase):
+class TestStrUnicodeSlow(APITenantTestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.
 
     This is the same as TestStrUnicode below, except that it tests objects that need to be saved to the database
-    so it's based on EToolsTenantTestCase instead of TestCase.
+    so it's based on APITenantTestCase instead of TestCase.
     '''
     def test_assessment(self):
         partner = PartnerFactory(name=b'xyz')
@@ -1591,7 +1591,7 @@ class TestStrUnicode(TestCase):
         self.assertTrue(unicode(instance).startswith(u'tv\xe5'))
 
 
-class TestPlannedEngagement(EToolsTenantTestCase):
+class TestPlannedEngagement(APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()

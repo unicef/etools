@@ -32,12 +32,12 @@ from audit.tests.factories import (
     SpecialAuditFactory,
     SpotCheckFactory,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from firms.factories import UserFactory
 from users.models import Country
 
 
-class AuditorStaffMemberTestCase(EToolsTenantTestCase):
+class AuditorStaffMemberTestCase(APITenantTestCase):
     def test_signal(self):
         self.firm = AuditPartnerFactory()
         user = UserFactory()
@@ -48,7 +48,7 @@ class AuditorStaffMemberTestCase(EToolsTenantTestCase):
         self.assertIn(Auditor.name, staff_member.user.groups.values_list('name', flat=True))
 
 
-class EngagementStaffMemberTestCase(EToolsTenantTestCase):
+class EngagementStaffMemberTestCase(APITenantTestCase):
     def test_signal(self):
         auditor_firm = AuditPartnerFactory()
         staff_member = auditor_firm.staff_members.first()
@@ -229,7 +229,7 @@ class TestStrUnicode(TestCase):
         self.assertIn('tv\xe5', unicode(instance))
 
 
-class TestPurchaseOrder(EToolsTenantTestCase):
+class TestPurchaseOrder(APITenantTestCase):
     def test_natural_key(self):
         po = PurchaseOrder(order_number="123")
         self.assertEqual(po.natural_key(), ("123", ))
@@ -239,7 +239,7 @@ class TestPurchaseOrder(EToolsTenantTestCase):
         self.assertEqual(PurchaseOrder.objects.get_by_natural_key("123"), po)
 
 
-class TestPurchaseOrderItem(EToolsTenantTestCase):
+class TestPurchaseOrderItem(APITenantTestCase):
     def test_natural_key(self):
         po = PurchaseOrderFactory(order_number="123")
         item = PurchaseOrderItem(number="321", purchase_order=po)
@@ -252,7 +252,7 @@ class TestPurchaseOrderItem(EToolsTenantTestCase):
         self.assertEqual(item_get, item)
 
 
-class TestEngagement(EToolsTenantTestCase):
+class TestEngagement(APITenantTestCase):
     def test_displayed_status_partner_not_contacted(self):
         e = Engagement(status=Engagement.STATUSES.final)
         self.assertEqual(e.displayed_status, e.status)
@@ -314,7 +314,7 @@ class TestEngagement(EToolsTenantTestCase):
         self.assertIn(str(engagement.pk), url)
 
 
-class TestRiskCategory(EToolsTenantTestCase):
+class TestRiskCategory(APITenantTestCase):
     def test_str_with_parent(self):
         parent = RiskCategoryFactory(header="Parent")
         r = RiskCategoryFactory(header="Header", parent=parent)

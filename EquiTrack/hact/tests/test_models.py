@@ -6,12 +6,12 @@ from audit.models import Audit, Engagement
 from audit.tests.factories import (
     AuditFactory, MicroAssessmentFactory, RiskFactory, SpecialAuditFactory, SpotCheckFactory,)
 from EquiTrack.factories import PartnerFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from hact.tests.factories import AggregateHactFactory
 from partners.models import PartnerOrganization, PartnerType
 
 
-class TestAggregateHact(EToolsTenantTestCase):
+class TestAggregateHact(APITenantTestCase):
     """
     Test for model
     """

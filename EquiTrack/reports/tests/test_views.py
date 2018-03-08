@@ -19,7 +19,8 @@ from EquiTrack.factories import (
     DisaggregationFactory,
     DisaggregationValueFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from reports.serializers.v2 import DisaggregationSerializer
 
 

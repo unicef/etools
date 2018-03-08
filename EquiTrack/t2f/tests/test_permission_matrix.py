@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import LocationFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from publics.tests.factories import CurrencyFactory, DSARegionFactory, WBSFactory
 from t2f import UserTypes
 from t2f.helpers.permission_matrix import get_user_role_list, PermissionMatrix

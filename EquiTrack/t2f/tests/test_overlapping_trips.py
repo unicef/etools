@@ -10,7 +10,7 @@ from freezegun import freeze_time
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from publics.tests.factories import BusinessAreaFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory
 from t2f.models import make_travel_reference_number, ModeOfTravel, Travel
 from t2f.tests.factories import CurrencyFactory, ItineraryItemFactory

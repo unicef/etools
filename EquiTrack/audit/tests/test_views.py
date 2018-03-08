@@ -21,7 +21,7 @@ from audit.tests.factories import (
     SpotCheckFactory,
     SpecialAuditFactory
 )
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from partners.models import PartnerType
 
 

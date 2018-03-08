@@ -18,13 +18,13 @@ from EquiTrack.factories import (
     ProfileFactory,
     UserFactory,
 )
-from EquiTrack.tests.cases import SCHEMA_NAME, EToolsTenantTestCase
+from EquiTrack.tests.cases import SCHEMA_NAME, APITenantTestCase
 from users import tasks
 from users.models import Section, User, UserProfile
 from vision.vision_data_synchronizer import VisionException, VISION_NO_DATA_MESSAGE
 
 
-class TestUserMapper(EToolsTenantTestCase):
+class TestUserMapper(APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.group = GroupFactory(name="UNICEF User")
@@ -391,7 +391,7 @@ class TestUserMapper(EToolsTenantTestCase):
 
 
 @skip("Issues with using public schema")
-class TestSyncUsers(EToolsTenantTestCase):
+class TestSyncUsers(APITenantTestCase):
     def setUp(self):
         super(TestSyncUsers, self).setUp()
         self.mock_log = Mock()
@@ -416,7 +416,7 @@ class TestSyncUsers(EToolsTenantTestCase):
 
 
 @skip("Issues with using public schema")
-class TestMapUsers(EToolsTenantTestCase):
+class TestMapUsers(APITenantTestCase):
     def setUp(self):
         super(TestMapUsers, self).setUp()
         self.mock_log = Mock()
@@ -454,7 +454,7 @@ class TestMapUsers(EToolsTenantTestCase):
         self.assertTrue(self.mock_log.save.call_count(), 1)
 
 
-class TestUserSynchronizer(EToolsTenantTestCase):
+class TestUserSynchronizer(APITenantTestCase):
     def setUp(self):
         super(TestUserSynchronizer, self).setUp()
         self.synchronizer = tasks.UserSynchronizer(

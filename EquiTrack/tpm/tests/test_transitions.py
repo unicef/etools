@@ -7,7 +7,7 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from tpm.models import TPMVisit
 from tpm.tests.base import TPMTestCaseMixin
 from tpm.tests.factories import TPMVisitFactory, UserFactory

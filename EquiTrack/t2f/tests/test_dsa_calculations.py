@@ -7,7 +7,7 @@ from unittest import skip
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from publics.tests.factories import CountryFactory, DSARateFactory, DSARegionFactory
 from t2f.helpers.cost_summary_calculator import DSACalculator, DSAdto
 from t2f.tests.factories import DeductionFactory, ItineraryItemFactory, TravelFactory

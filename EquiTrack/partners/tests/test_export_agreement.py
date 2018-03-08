@@ -14,7 +14,7 @@ from EquiTrack.factories import (
     PartnerStaffFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 
 
 class BaseAgreementModelExportTestCase(APITenantTestCase):

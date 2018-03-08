@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
 
 from EquiTrack.factories import DisaggregationFactory, DisaggregationValueFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from reports.serializers.v2 import DisaggregationSerializer
 
 
-class DisaggregationTest(EToolsTenantTestCase):
+class DisaggregationTest(APITenantTestCase):
 
     @classmethod
     def setUpTestData(cls):

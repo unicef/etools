@@ -11,7 +11,8 @@ from EquiTrack.factories import (
     AgreementFactory,
     InterventionFactory,
     CountryProgrammeFactory, GroupFactory)
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from partners.models import (
     PartnerType,
     Agreement,

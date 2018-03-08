@@ -13,7 +13,8 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from EquiTrack.factories import (
     AgreementFactory,
     AppliedIndicatorFactory,

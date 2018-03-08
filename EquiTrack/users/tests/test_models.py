@@ -11,11 +11,11 @@ from EquiTrack.factories import (
     SectionFactory,
     UserFactory,
 )
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from users import models
 
 
-class TestWorkspaceCounter(EToolsTenantTestCase):
+class TestWorkspaceCounter(APITenantTestCase):
     def setUp(self):
         super(TestWorkspaceCounter, self).setUp()
         self.counter = models.WorkspaceCounter.objects.first()
@@ -36,19 +36,19 @@ class TestWorkspaceCounter(EToolsTenantTestCase):
         self.assertEqual(counter_update.travel_reference_number_counter, 2)
 
 
-class TestOffice(EToolsTenantTestCase):
+class TestOffice(APITenantTestCase):
     def test_unicode(self):
         o = models.Office(name="office")
         self.assertEqual(unicode(o), "office")
 
 
-class TestSection(EToolsTenantTestCase):
+class TestSection(APITenantTestCase):
     def test_unicode(self):
         s = models.Section(name="section")
         self.assertEqual(unicode(s), "section")
 
 
-class TestUserProfileModel(EToolsTenantTestCase):
+class TestUserProfileModel(APITenantTestCase):
     def setUp(self):
         super(TestUserProfileModel, self).setUp()
         self.user = UserFactory(
@@ -99,7 +99,7 @@ class TestUserProfileModel(EToolsTenantTestCase):
         self.assertIsNone(profile.vendor_number)
 
 
-class TestUserModel(EToolsTenantTestCase):
+class TestUserModel(APITenantTestCase):
 
     def test_create_user(self):
         user = UserFactory(
@@ -116,7 +116,7 @@ class TestUserModel(EToolsTenantTestCase):
         self.assertEqual(unicode(user), 'Pel\xe9 Arantes do Nascimento')
 
 
-class TestCreatePartnerUser(EToolsTenantTestCase):
+class TestCreatePartnerUser(APITenantTestCase):
     def test_created_false(self):
         """If 'created' param passed in is False then do nothing"""
         user = models.User(email="new@example.com")
@@ -151,7 +151,7 @@ class TestCreatePartnerUser(EToolsTenantTestCase):
         ).exists())
 
 
-class TestDeletePartnerRelationship(EToolsTenantTestCase):
+class TestDeletePartnerRelationship(APITenantTestCase):
     def test_delete(self):
         profile = ProfileFactory()
         profile.partner_staff_member = profile.user.pk

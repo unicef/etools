@@ -6,7 +6,7 @@ from decimal import getcontext
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.models import Invoice
 from t2f.tests.factories import TravelFactory

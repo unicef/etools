@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from management import tasks
 from management.issues import checks
 from management.models import (
@@ -18,7 +18,7 @@ from management.tests.factories import (
 )
 
 
-class TestRunAllChecksTask(EToolsTenantTestCase):
+class TestRunAllChecksTask(APITenantTestCase):
     def test_run_all_checks(self):
         UserFactory(username="etools_task_admin")
         qs_issue = FlaggedIssue.objects.filter(
@@ -31,7 +31,7 @@ class TestRunAllChecksTask(EToolsTenantTestCase):
         self.assertTrue(qs_issue.exists())
 
 
-class TestRecheckAllOpenIssuesTask(EToolsTenantTestCase):
+class TestRecheckAllOpenIssuesTask(APITenantTestCase):
     def test_recheck_all_open_issues_task(self):
         UserFactory(username="etools_task_admin")
         amendment = InterventionAmendmentFactory()

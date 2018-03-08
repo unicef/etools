@@ -10,10 +10,10 @@ from django.test import Client
 from rest_framework import status
 
 from EquiTrack.factories import UserFactory
-from EquiTrack.tests.cases import EToolsTenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 
 
-class TestCheckView(EToolsTenantTestCase):
+class TestCheckView(APITenantTestCase):
     def setUp(self):
         super(TestCheckView, self).setUp()
         self.client = Client()

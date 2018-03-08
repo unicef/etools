@@ -13,11 +13,11 @@ from EquiTrack.factories import (
     ActivityFactory,
     UserFactory,
 )
-from EquiTrack.tests.mixins import APITenantTestCase as TenantTestCase
+from EquiTrack.tests.cases import APITenantTestCase
 from snapshot.models import Activity
 
 
-class TestActivityListView(TenantTestCase):
+class TestActivityListView(APITenantTestCase):
     def setUp(self):
         self.url = reverse("snapshot_api:activity-list")
         self.user = UserFactory(is_staff=True)

@@ -10,7 +10,8 @@ from freezegun import freeze_time
 from pytz import UTC
 
 from EquiTrack.factories import InterventionFactory, LocationFactory, PartnerFactory, UserFactory
-from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
+from EquiTrack.tests.cases import APITenantTestCase
+from EquiTrack.tests.mixins import URLAssertionMixin
 from partners.models import PartnerType
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, WBSFactory
