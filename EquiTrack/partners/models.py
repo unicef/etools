@@ -548,11 +548,6 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             'spot_checks': self.min_req_spot_checks,
         }
 
-    @cached_property
-    def outstanding_findings(self):
-        hact = json.loads(self.hact_values) if isinstance(self.hact_values, str) else self.hact_values
-        return hact.get('outstanding_findings', 0)
-
     @classmethod
     def planned_visits(cls, partner):
         """For current year sum all programmatic values of planned visits

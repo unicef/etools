@@ -340,6 +340,5 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_values",
             "hact_min_requirements",
             "flags",
-            "outstanding_findings",
             "planned_engagement"
         )
