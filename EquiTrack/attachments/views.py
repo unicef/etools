@@ -29,25 +29,18 @@ class AttachmentListView(ListAPIView):
     permission_classes = (IsAdminUser, )
     serializer_class = AttachmentSerializer
 
-    def get_value(self, val, format_list=True):
-        value = self.request.query_params.get(val, None)
-        if value is not None:
-            if format_list and not isinstance(value, (list, tuple)):
-                value = [value]
-        return value
-
     def get_queryset(self):
-        file_type = self.get_value("file_type")
-        if file_type is not None:
+        file_type = self.request.query_params.getlist("file_type")
+        if file_type:
             self.queryset = self.queryset.filter(file_type__pk__in=file_type)
-        before = self.get_value("before", False)
-        if before is not None:
+        before = self.request.query_params.get("before")
+        if before:
             self.queryset = self.queryset.filter(modified__lte=before)
-        after = self.get_value("after", False)
-        if after is not None:
+        after = self.request.query_params.get("after")
+        if after:
             self.queryset = self.queryset.filter(modified__gte=after)
-        uploaded_by = self.get_value("uploaded_by")
-        if uploaded_by is not None:
+        uploaded_by = self.request.query_params.getlist("uploaded_by")
+        if uploaded_by:
             self.queryset = self.queryset.filter(
                 uploaded_by__pk__in=uploaded_by
             )

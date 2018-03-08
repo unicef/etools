@@ -128,25 +128,33 @@ class TestFileUploadView(APITenantTestCase):
 class TestAttachmentListView(APITenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.code = "test_code"
-        cls.file_type = FileTypeFactory(code=cls.code)
+        cls.code_1 = "test_code_1"
+        cls.file_type_1 = FileTypeFactory(code=cls.code_1)
+        cls.code_2 = "test_code_2"
+        cls.file_type_2 = FileTypeFactory(code=cls.code_2)
         cls.unicef_staff = UserFactory(is_staff=True)
+        cls.user = UserFactory()
         cls.url = reverse("attachments:list")
-
-    def test_get_empty(self):
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.unicef_staff,
+        cls.attachment_1 = AttachmentFactory(
+            file_type=cls.file_type_1,
+            code=cls.code_1,
+            file="sample1.pdf",
+            content_object=cls.file_type_1,
+            uploaded_by=cls.unicef_staff
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [])
+        cls.attachment_2 = AttachmentFactory(
+            file_type=cls.file_type_2,
+            code=cls.code_2,
+            file="sample2.pdf",
+            content_object=cls.file_type_2,
+            uploaded_by=cls.user
+        )
 
     def test_get_no_file(self):
         attachment = AttachmentFactory(
-            file_type=self.file_type,
-            code=self.code,
-            content_object=self.file_type
+            file_type=self.file_type_1,
+            code=self.code_1,
+            content_object=self.file_type_1
         )
         self.assertFalse(attachment.file)
         response = self.forced_auth_req(
@@ -155,30 +163,23 @@ class TestAttachmentListView(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [])
+        self.assertEqual(len(response.data), 2)
 
     def test_get_file(self):
-        attachment = AttachmentFactory(
-            file_type=self.file_type,
-            code=self.code,
-            file="sample.pdf",
-            content_object=self.file_type
-        )
-        self.assertTrue(attachment.file)
         response = self.forced_auth_req(
             "get",
             self.url,
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data)
+        self.assertEqual(len(response.data), 2)
 
     def test_get_hyperlink(self):
         attachment = AttachmentFactory(
-            file_type=self.file_type,
-            code=self.code,
+            file_type=self.file_type_1,
+            code=self.code_1,
             hyperlink="https://example.com/sample.pdf",
-            content_object=self.file_type
+            content_object=self.file_type_1
         )
         self.assertTrue(attachment.hyperlink)
         response = self.forced_auth_req(
@@ -187,15 +188,9 @@ class TestAttachmentListView(APITenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data)
+        self.assertEqual(len(response.data), 3)
 
     def test_filter_not_found(self):
-        AttachmentFactory(
-            file_type=self.file_type,
-            code=self.code,
-            file="sample.pdf",
-            content_object=self.file_type
-        )
         response = self.forced_auth_req(
             "get",
             self.url,
@@ -206,45 +201,44 @@ class TestAttachmentListView(APITenantTestCase):
         self.assertFalse(response.data)
 
     def test_filter_invalid(self):
-        AttachmentFactory(
-            file_type=self.file_type,
-            code=self.code,
-            file="sample.pdf",
-            content_object=self.file_type
-        )
+        """If invalid filter param provided, then all attachments
+        are provided
+        """
         response = self.forced_auth_req(
             "get",
             self.url,
             user=self.unicef_staff,
-            data={"wrong": self.file_type.pk}
+            data={"wrong": self.file_type_1.pk}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data)
+        self.assertEqual(len(response.data), 2)
 
     def test_filter_file_type(self):
-        AttachmentFactory(
-            file_type=self.file_type,
-            code=self.code,
-            file="sample.pdf",
-            content_object=self.file_type
-        )
         response = self.forced_auth_req(
             "get",
             self.url,
             user=self.unicef_staff,
-            data={"file_type": self.file_type.pk}
+            data={"file_type": self.file_type_1.pk}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(
+            response.data[0]["filename"],
+            self.attachment_1.filename
+        )
+
+    def test_filter_file_type_list(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"file_type": [self.file_type_1.pk, self.file_type_2.pk]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
     def test_filter_before(self):
-        attachment = AttachmentFactory(
-            file_type=self.file_type,
-            code=self.code,
-            file="sample.pdf",
-            content_object=self.file_type
-        )
-        before = attachment.modified + datetime.timedelta(days=1)
+        before = self.attachment_1.modified + datetime.timedelta(days=1)
         response = self.forced_auth_req(
             "get",
             self.url,
@@ -252,16 +246,10 @@ class TestAttachmentListView(APITenantTestCase):
             data={"before": before.strftime("%Y-%m-%d")}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data)
+        self.assertEqual(len(response.data), 2)
 
     def test_filter_after(self):
-        attachment = AttachmentFactory(
-            file_type=self.file_type,
-            code=self.code,
-            file="sample.pdf",
-            content_object=self.file_type
-        )
-        after = attachment.modified - datetime.timedelta(days=1)
+        after = self.attachment_1.modified - datetime.timedelta(days=1)
         response = self.forced_auth_req(
             "get",
             self.url,
@@ -269,16 +257,9 @@ class TestAttachmentListView(APITenantTestCase):
             data={"after": after.strftime("%Y-%m-%d")}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data)
+        self.assertEqual(len(response.data), 2)
 
     def test_filter_uploaded_by(self):
-        AttachmentFactory(
-            file_type=self.file_type,
-            code=self.code,
-            file="sample.pdf",
-            content_object=self.file_type,
-            uploaded_by=self.unicef_staff,
-        )
         response = self.forced_auth_req(
             "get",
             self.url,
@@ -286,4 +267,18 @@ class TestAttachmentListView(APITenantTestCase):
             data={"uploaded_by": self.unicef_staff.pk}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(
+            response.data[0]["filename"],
+            self.attachment_1.filename
+        )
+
+    def test_filter_uploaded_by_list(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+            data={"uploaded_by": [self.unicef_staff.pk, self.user.pk]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
