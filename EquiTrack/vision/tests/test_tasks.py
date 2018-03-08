@@ -140,7 +140,6 @@ class TestVisionSyncTask(TestCase):
         """Exercise vision.tasks.vision_sync_task() called without passing any argument"""
 
         CountryMock.objects.filter = mock.Mock(return_value=self.tenant_countries)
-        # Mock connection.set_tenant() so we can verify calls to it.
         vision.tasks.vision_sync_task()
 
         self._assertCountryMockCalls(CountryMock)
@@ -172,7 +171,6 @@ class TestVisionSyncTask(TestCase):
         """Exercise vision.tasks.vision_sync_task() called with passing as argument a specific synchronizer"""
         selected_synchronizers = ['programme', ]
         CountryMock.objects.filter = mock.Mock(return_value=self.tenant_countries)
-        # Mock connection.set_tenant() so we can verify calls to it.
         vision.tasks.vision_sync_task(synchronizers=selected_synchronizers)
 
         self._assertCountryMockCalls(CountryMock)
@@ -190,7 +188,6 @@ class TestVisionSyncTask(TestCase):
         selected_countries = [self.tenant_countries[0], ]
 
         CountryMock.objects.filter = mock.Mock(return_value=selected_countries)
-        # Mock connection.set_tenant() so we can verify calls to it.
         vision.tasks.vision_sync_task(country_name='Country Test0', synchronizers=selected_synchronizers)
 
         self._assertCountryMockCalls(CountryMock)
