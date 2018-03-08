@@ -249,9 +249,10 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
             except ValueError:
                 raise ValidationError("You can select only MR in one quarter")
             else:
-                if value != 1:
-                    raise ValidationError("If selected, the value has to be 1")
-                quarters.append(key)
+                if value:
+                    if value != 1:
+                        raise ValidationError("If selected, the value has to be 1")
+                    quarters.append(key)
         if len(quarters) > 1:
             raise ValidationError("You can select only MR in one quarter")
         elif len(quarters) == 1:
