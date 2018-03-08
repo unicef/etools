@@ -158,7 +158,7 @@ class FundsReservationHeader(TimeStampedModel):
         blank=True,
     )
     end_date = models.DateField(
-        verbose_name=_("Start Date"),
+        verbose_name=_("End Date"),
         null=True,
         blank=True,
     )
