@@ -244,7 +244,7 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
     def validate_spot_check_mr(self, attrs):
         quarters = []
         for key, value in attrs.items():
-            if value:
+            if int(value):
                 quarters.append(key)
         if len(quarters) > 1:
             raise ValidationError("You can select only MR in one quarter")
