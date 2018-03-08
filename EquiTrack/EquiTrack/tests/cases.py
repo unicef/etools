@@ -106,14 +106,10 @@ class APITenantTestCase(TenantTestCase):
         """
         Function that allows api methods to be called with forced authentication
 
-        :param method: the HTTP method 'get'/'post'
-        :type method: str
-        :param url: the relative url to the base domain
-        :type url: st
-        :param user: optional user if not authenticated as the current user
-        :type user: django.contrib.auth.models.User
-        :param data: any data that should be passed to the API view
-        :type data: dict
+        If `user` parameter not provided, then `self.user` will be used
+
+        If `view` parameter is provided, then the `view` function
+        will be called directly, otherwise `url` will be resolved
         """
         factory = APIRequestFactory()
 
