@@ -2,13 +2,13 @@ from __future__ import unicode_literals
 import json
 
 from django.core.exceptions import ValidationError
-from django.db.models import Q, Max, Count, CharField
+from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
 
 from EquiTrack.serializers import SnapshotModelSerializer
-from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
+from partners.serializers.interventions_v2 import InterventionListSerializer
 
 from partners.models import (
     Assessment,
@@ -244,8 +244,15 @@ class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
     def validate_spot_check_mr(self, attrs):
         quarters = []
         for key, value in attrs.items():
-            if value:
-                quarters.append(key)
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValidationError("You can select only MR in one quarter")
+            else:
+                if value:
+                    if value != 1:
+                        raise ValidationError("If selected, the value has to be 1")
+                    quarters.append(key)
         if len(quarters) > 1:
             raise ValidationError("You can select only MR in one quarter")
         elif len(quarters) == 1:
@@ -273,20 +280,13 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def get_interventions(self, obj):
-        interventions = InterventionSummaryListSerializer(self.get_related_interventions(obj), many=True)
+        interventions = InterventionListSerializer(self.get_related_interventions(obj), many=True)
         return interventions.data
 
     def get_related_interventions(self, partner):
-        qs = Intervention.objects\
+        qs = Intervention.objects.frs_qs()\
             .filter(agreement__partner=partner)\
-            .exclude(status='draft')\
-            .prefetch_related('planned_budget')
-
-        qs = qs.annotate(
-            Count("frs__currency", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
-        )
-
+            .exclude(status='draft')
         return qs
 
     class Meta:
@@ -347,6 +347,5 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "hact_values",
             "hact_min_requirements",
             "flags",
-            "outstanding_findings",
             "planned_engagement"
         )

@@ -21,6 +21,10 @@ class Command(BaseCommand):
             'task': 'hact.tasks.update_aggregate_hact_values',
             'interval': every_day})
 
+        PeriodicTask.objects.get_or_create(name='Hact Values', defaults={
+            'task': 'hact.tasks.update_hact_values',
+            'interval': every_day})
+
         PeriodicTask.objects.get_or_create(name='Intervention Notification Ending', defaults={
             'task': 'partners.tasks.intervention_notification_ending',
             'interval': every_day})
