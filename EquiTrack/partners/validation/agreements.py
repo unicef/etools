@@ -119,6 +119,7 @@ def ssfa_static(agreement):
 
 def one_pca_per_cp_per_partner(agreement):
     if agreement.agreement_type == agreement.PCA:
+        #Allow the termination of duplicated agreements started before 2015 July
         if agreement.status == agreement.TERMINATED and agreement.start <= date(2015, 7, 1):
             return True
 
