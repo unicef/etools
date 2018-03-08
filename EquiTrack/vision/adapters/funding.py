@@ -214,7 +214,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         qs = qs.annotate(my_li_total_sum=Sum('fr_items__overall_amount_dc'))
         for fr in qs:
             # Divide by 10 temporarily since Vision API is returning values with an extra 0
-            total_li_sum = fr.my_li_total_sum/10
+            total_li_sum = fr.my_li_total_sum
             if not comp_decimals(total_li_sum, fr.total_amt_local):
                 fr.total_amt_local = total_li_sum
                 fr.save()
