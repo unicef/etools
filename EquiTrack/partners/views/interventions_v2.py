@@ -4,7 +4,7 @@ import logging
 import copy
 
 from django.db import transaction
-from django.db.models import Q, Max, Min, Sum, Count, CharField
+from django.db.models import Q
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -76,28 +76,7 @@ from reports.serializers.v2 import LowerResultSimpleCUSerializer, AppliedIndicat
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
     def get_queryset(self):
-        qs = Intervention.objects.prefetch_related(
-            'agreement__partner',
-            'planned_budget',
-            'offices',
-            'sections',
-            # TODO: Figure out a way in which to add locations that is more performant
-            # 'flat_locations',
-            'result_links__cp_output',
-            'unicef_focal_points',
-        )
-
-        qs = qs.annotate(
-            Max("frs__end_date"),
-            Min("frs__start_date"),
-            Sum("frs__total_amt"),
-            Sum("frs__intervention_amt"),
-            Sum("frs__outstanding_amt"),
-            Sum("frs__actual_amt"),
-            Count("frs__currency", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
-        )
-
+        qs = Intervention.objects.frs_qs()
         return qs
 
 
