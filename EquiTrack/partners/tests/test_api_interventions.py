@@ -100,6 +100,7 @@ class TestInterventionsAPI(APITenantTestCase):
 
     def tearDown(self):
         cache.delete("public-intervention-permissions")
+        cache.delete("public-agreement-permissions")
         if hasattr(self, "ts"):
             self.ts.delete()
 
@@ -246,11 +247,11 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         self.assertItemsEqual(response['frs'], frs_data)
         self.assertEqual(response['frs_details']['total_actual_amt'],
-                         float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
+                         float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(response['frs_details']['total_outstanding_amt'],
-                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+                         float(sum([self.fr_1.outstanding_amt_local, self.fr_2.outstanding_amt_local])))
         self.assertEqual(response['frs_details']['total_frs_amt'],
-                         float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
+                         float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(response['frs_details']['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
         self.assertEqual(
@@ -273,11 +274,11 @@ class TestInterventionsAPI(APITenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertItemsEqual(response['frs'], frs_data)
         self.assertEqual(response['frs_details']['total_actual_amt'],
-                         float(sum([self.fr_1.actual_amt, self.fr_2.actual_amt])))
+                         float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(response['frs_details']['total_outstanding_amt'],
-                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+                         float(sum([self.fr_1.outstanding_amt_local, self.fr_2.outstanding_amt_local])))
         self.assertEqual(response['frs_details']['total_frs_amt'],
-                         float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
+                         float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(response['frs_details']['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
         self.assertTrue(Activity.objects.exists())

@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.urlresolvers import reverse
 from django.db import models, connection, transaction
-from django.db.models import F, Sum
+from django.db.models import F, Sum, Max, Min, CharField, Count
 from django.db.models.functions import Coalesce
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
@@ -1328,6 +1328,29 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__locations',
             'flat_locations',
         )
+
+    def frs_qs(self):
+        qs = self.get_queryset().prefetch_related(
+            'agreement__partner',
+            'planned_budget',
+            'offices',
+            'sections',
+            # TODO: Figure out a way in which to add locations that is more performant
+            # 'flat_locations',
+            'result_links__cp_output',
+            'unicef_focal_points',
+        )
+        qs = qs.annotate(
+            Max("frs__end_date"),
+            Min("frs__start_date"),
+            Sum("frs__total_amt_local"),
+            Sum("frs__outstanding_amt_local"),
+            Sum("frs__actual_amt_local"),
+            Sum("frs__intervention_amt"),
+            Count("frs__currency", distinct=True),
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
+        )
+        return qs
 
 
 def side_effect_one(i, old_instance=None, user=None):
