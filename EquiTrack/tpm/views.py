@@ -10,10 +10,17 @@ from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBac
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from EquiTrack.views import FSMTransitionActionMixin
 from partners.models import PartnerOrganization
 from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from reports.models import Result, Sector
 from reports.serializers.v1 import ResultLightSerializer, SectorSerializer
+from rest_extra.pagination import DynamicPageNumberPagination
+from rest_extra.views import (
+    MultiSerializerViewSetMixin,
+    NestedViewSetMixin,
+    SafeTenantViewSetMixin,
+)
 from tpm.export.renderers import (
     TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer, TPMPartnerContactsCSVRenderer,
     TPMVisitCSVRenderer,)
@@ -27,9 +34,6 @@ from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from tpm.permissions import IsPMEorReadonlyPermission
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
 from tpm.serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer
-from utils.common.pagination import DynamicPageNumberPagination
-from utils.common.views import (
-    MultiSerializerViewSetMixin, FSMTransitionActionMixin, NestedViewSetMixin, SafeTenantViewSetMixin,)
 from vision.adapters.tpm_adapter import TPMPartnerManualSynchronizer
 
 

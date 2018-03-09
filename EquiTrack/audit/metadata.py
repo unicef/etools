@@ -3,9 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from rest_framework.metadata import SimpleMetadata
 
 from attachments.metadata import ModelChoiceFieldMixin
-from utils.common.metadata import (
-    CRUActionsMetadataMixin, FSMTransitionActionMetadataMixin, ReadOnlyFieldWithChoicesMixin,
-    SeparatedReadWriteFieldMetadata,)
+from EquiTrack.metadata import FSMTransitionActionMetadataMixin
+from rest_extra.metadata import (
+    CRUActionsMetadataMixin,
+    ReadOnlyFieldWithChoicesMixin,
+    SeparatedReadWriteFieldMetadata,
+)
 from utils.permissions.metadata import PermissionsBasedMetadataMixin
 
 
