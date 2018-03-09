@@ -5,8 +5,6 @@ from django.db import connection
 from rest_framework import serializers
 
 from reports.models import CountryProgramme, Indicator, Result, ResultType, Sector, Unit
-from workplan.models import ResultWorkplanProperty
-from workplan.serializers import ResultWorkplanPropertySerializer
 
 
 class SectorSerializer(serializers.ModelSerializer):
@@ -62,18 +60,10 @@ class IndicatorCreateSerializer(serializers.ModelSerializer):
 class ResultSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
-    workplan_properties = ResultWorkplanPropertySerializer(many=True)
 
     class Meta:
         model = Result
         fields = '__all__'
-
-    def create(self, validated_data):
-        workplan_properties = validated_data.pop("workplan_properties")
-        result = Result.objects.create(**validated_data)
-        for workplan_property in workplan_properties:
-            ResultWorkplanProperty.objects.create(result=result, **workplan_property)
-        return result
 
 
 class ResultLightSerializer(serializers.ModelSerializer):

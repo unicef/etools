@@ -1,0 +1,101 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize static %}
+
+{% block style_base %}
+  {% comment %}
+    See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+    for base style.
+  {% endcomment %}
+
+  {% block layout_style %}
+    <style type="text/css">
+      @page {
+        margin-left: 0.85in;
+        margin-right: 0.85in;
+        margin-top: 1.76in;
+        margin-bottom: 1in;
+
+        @frame header {
+          -pdf-frame-content: page-header;
+          margin-left: 0.85in;
+          margin-right: 0.85in;
+          margin-top: 0.5in;
+        }
+
+        @frame footer_frame {
+          /* Static frame */
+          -pdf-frame-content:footer_content;
+          left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+        }
+      }
+    </style>
+  {% endblock %}
+  {% block extra_style %}
+    <style type="text/css">
+      #content {
+        font-family: arial;
+        font-size: 10.5pt;
+        background-color: #ffffff;
+      }
+      #page-header {
+        font-family: arial;
+        font-size: 8pt;
+        color: #00aeef;
+      }
+      #page-header hr {
+        padding: 0;
+        margin: 0;
+      }
+
+      #page-header * {
+        margin: 0;
+      }
+
+    </style>
+  {% endblock %}
+{% endblock %}
+
+{% block page_header %}
+  <div id="page-header">
+    <img src="{% static 'img/qDWQF3.png' %}" style="display: block; width: 3.17in; height: 0.5in; margin-top: -0.19in; margin-left: -0.1in;">
+    <hr size="0.01in" color="#a6a6a6">
+    <p><b>United Nations Children’s Fund</b></p>
+  </div>
+{% endblock %}
+
+{% block content %}
+  {% if error %}
+    PDF could not be generated properly: <br> {{ error }}
+  {% else %}
+    <div id="content">
+      <div>
+        <p>{{ visit.start_date }} - {{ visit.end_date }}</p>
+
+        <p><b>VISIT LETTER</b></p>
+
+        <p><b>{{ visit.tpm_partner.name }}</b></p>
+
+        <p>To whom it may concern:</p>
+
+        <p>UNICEF has engaged {{ visit.tpm_partner.name }} to provide support in the implementation of our programme.
+          UNICEF would like to request your support in facilitating {{ visit.tpm_partner.name }}
+          to carry out visits requested by UNICEF.</p>
+
+        <p>UNICEF has requested {{ visit.tpm_partner.name }} to undertake the following visits:</p>
+
+        <ul>
+          {% for activity in visit.tpm_activities.all %}
+            <li>{{ activity.implementing_partner }} on {{ activity.date }} in {{ activity.locations.all | join:', ' }}
+              to monitor their partnership with UNICEF “{{ activity.partnership }}”.</li>
+          {% endfor %}
+        </ul>
+
+        <p>UNICEF kindly asks the reader of this letter to facilitate the work of the staff
+          of {{ visit.tpm_partner.name }} in order to carry out these visits.</p>
+
+        <img src="{% static 'img/BFidPn.png' %}" style="display: block; width: 2.15in; height: 2.14in; margin-left: 4.65in; margin-top: 0.01in;">
+
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -4,10 +4,28 @@ from django.utils.lru_cache import lru_cache
 
 from EquiTrack.utils import HashableDict
 from EquiTrack.validation_mixins import check_rigid_related
+from environment.helpers import tenant_switch_is_active
 from utils.common.utils import get_all_field_names
+
+# READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
+# Initially, this is only being used for PRP-related endpoints.
+READ_ONLY_API_GROUP_NAME = 'Read-Only API'
+
+
+def _is_user_in_groups(user, group_names):
+    '''Utility function; returns True if user is in ANY of the groups in the group_names list, False if the user
+    is in none of them. Note that group_names should be a tuple or list, not a single string.
+    '''
+    if isinstance(group_names, basestring):
+        # Anticipate common programming oversight.
+        raise ValueError('group_names parameter must be a tuple or list, not a string')
+    return user.groups.filter(name__in=group_names).exists()
 
 
 class PMPPermissions(object):
+    # this property specifies an array of model properties in order to check against the permission matrix. The fields
+    # declared under this property need to be both property on the model and delcared in the permission matrix
+    EXTRA_FIELDS = []
     actions_default_permissions = {
         'edit': True,
         'view': True,
@@ -23,6 +41,7 @@ class PMPPermissions(object):
         self.condition_group_valid = lru_cache(maxsize=16)(self.condition_group_valid)
         self.permission_structure = permission_structure
         self.all_model_fields = get_all_field_names(self.MODEL)
+        self.all_model_fields += self.EXTRA_FIELDS
 
     def condition_group_valid(self, condition_group):
         if condition_group['status'] and condition_group['status'] != '*':
@@ -74,6 +93,7 @@ class PMPPermissions(object):
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
+    EXTRA_FIELDS = ['sections_present']
 
     def __init__(self, **kwargs):
         '''
@@ -85,20 +105,29 @@ class InterventionPermissions(PMPPermissions):
         need access to the old amendments, new amendments in order to check this.
         '''
         super(InterventionPermissions, self).__init__(**kwargs)
-        inbound_check = kwargs.get('inbound_check', False)
+
+        # Inbound check flag is available here:
+        # inbound_check = kwargs.get('inbound_check', False)
 
         def user_added_amendment(instance):
-            assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
-            # check_rigid_related checks if there were any changes from the previous
-            # amendments if there were changes it returns False
-            return not check_rigid_related(instance, 'amendments')
+            return instance.in_amendment is True
+
+        def prp_mode_off():
+            return tenant_switch_is_active("prp_mode_off")
+
+        def prp_server_on():
+            return tenant_switch_is_active("prp_server_on")
 
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
-            # this condition can only be checked on data save
-            'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)
+            'not_in_amendment_mode': not user_added_amendment(self.instance),
+            'user_adds_amendment': user_added_amendment(self.instance),
+            'prp_mode_on': not prp_mode_off(),
+            'prp_mode_off': prp_mode_off(),
+            'prp_server_on': prp_server_on(),
+            'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off()
         }
 
 
@@ -126,20 +155,45 @@ class AgreementPermissions(PMPPermissions):
 
         self.condition_map = {
             'is type PCA or MOU': self.instance.agreement_type in [self.instance.PCA, self.instance.MOU],
+            'is type PCA or SSFA': self.instance.agreement_type in [self.instance.PCA, self.instance.SSFA],
             'is type MOU': self.instance.agreement_type == self.instance.MOU,
             # this condition can only be checked on data save
             'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)
         }
 
 
-class PartneshipManagerPermission(permissions.BasePermission):
+class PartnershipManagerPermission(permissions.BasePermission):
+    '''Applies general and object-based permissions.
+
+    - For list views --
+      - user must be staff or in 'Partnership Manager' group
+
+    - For create views --
+      - user must be in 'Partnership Manager' group
+
+    - For retrieve views --
+      - user must be (staff or in 'Partnership Manager' group) OR
+                     (staff or listed as a partner staff member on the object)
+
+    - For update/delete views --
+      - user must be (in 'Partnership Manager' group) OR
+                     (listed as a partner staff member on the object)
+    '''
     message = 'Accessing this item is not allowed.'
 
-    def _has_access_permissions(self, user, object):
-        if user.is_staff or \
-                user.profile.partner_staff_member in \
-                object.partner.staff_members.values_list('id', flat=True):
-            return True
+    def _has_access_permissions(self, user, obj):
+        '''True if --
+              - user is staff OR
+              - user is 'Partnership Manager' group member OR
+              - user is listed as a partner staff member on the object, assuming the object has a partner attribute
+        '''
+        has_access = user.is_staff or _is_user_in_groups(user, ['Partnership Manager'])
+
+        has_access = has_access or \
+            (hasattr(obj, 'partner') and
+             user.profile.partner_staff_member in obj.partner.staff_members.values_list('id', flat=True))
+
+        return has_access
 
     def has_permission(self, request, view):
         """
@@ -147,9 +201,9 @@ class PartneshipManagerPermission(permissions.BasePermission):
         """
         if request.method in permissions.SAFE_METHODS:
             # Check permissions for read-only request
-            return request.user.is_staff
+            return request.user.is_staff or _is_user_in_groups(request.user, ['Partnership Manager'])
         else:
-            return request.user.groups.filter(name='Partnership Manager').exists()
+            return _is_user_in_groups(request.user, ['Partnership Manager'])
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -158,10 +212,10 @@ class PartneshipManagerPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                request.user.groups.filter(name='Partnership Manager').exists()
+                _is_user_in_groups(request.user, ['Partnership Manager'])
 
 
-class PartneshipManagerRepPermission(permissions.BasePermission):
+class PartnershipManagerRepPermission(permissions.BasePermission):
     message = 'Accessing this item is not allowed.'
 
     def _has_access_permissions(self, user, object):
@@ -177,5 +231,27 @@ class PartneshipManagerRepPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                request.user.groups.filter(name__in=['Partnership Manager', 'Senior Management Team',
-                                                     'Representative Office']).exists()
+                _is_user_in_groups(request.user, ['Partnership Manager', 'Senior Management Team',
+                                                  'Representative Office'])
+
+
+class ListCreateAPIMixedPermission(permissions.BasePermission):
+    '''Permission class for ListCreate views that want to allow read-only access to some groups and read-write
+    to others.
+
+    GET users must be either (a) staff or (b) in the Limited API group.
+
+    POST users must be staff.
+    '''
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            if request.user.is_authenticated():
+                if request.user.is_staff or _is_user_in_groups(request.user, [READ_ONLY_API_GROUP_NAME]):
+                    return True
+            return False
+        elif request.method == 'POST':
+            # user must have have admin access
+            return request.user.is_authenticated() and request.user.is_staff
+        else:
+            # This class shouldn't see methods other than GET and POST, but regardless the answer is 'no you may not'.
+            return False

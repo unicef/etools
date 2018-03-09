@@ -6,7 +6,7 @@ from django.db import transaction
 
 from reports.models import CountryProgramme, Indicator, Result, ResultType
 from vision.utils import wcf_json_date_as_date
-from vision.vision_data_synchronizer import VisionDataSynchronizer
+from vision.vision_data_synchronizer import VisionDataSynchronizer, VISION_NO_DATA_MESSAGE
 
 logger = logging.getLogger(__name__)
 
@@ -258,7 +258,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
     )
 
     def _get_json(self, data):
-        return [] if data == self.NO_DATA_MESSAGE else data
+        return [] if data == VISION_NO_DATA_MESSAGE else data
 
     def _filter_by_time_range(self, records):
         records = super(ProgrammeSynchronizer, self)._filter_records(records)

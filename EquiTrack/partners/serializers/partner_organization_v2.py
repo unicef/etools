@@ -1,20 +1,21 @@
 from __future__ import unicode_literals
 import json
 
-from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import serializers
 
-from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
+from EquiTrack.serializers import SnapshotModelSerializer
+from partners.serializers.interventions_v2 import InterventionListSerializer
 
 from partners.models import (
     Assessment,
     Intervention,
     PartnerOrganization,
-    PartnerType,
     PartnerStaffMember,
+    PlannedEngagement
 )
 
 
@@ -47,7 +48,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
 
 class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
     """
-    A serilizer to be used for nested staff member handling. The 'partner' field
+    A serializer to be used for nested staff member handling. The 'partner' field
     is removed in this case to avoid validation errors for e.g. when creating
     the partner and the member at the same time.
     """
@@ -63,7 +64,7 @@ class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
 
 class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
     """
-    A serilizer to be used for nested staff member handling. The 'partner' field
+    A serializer to be used for nested staff member handling. The 'partner' field
     is removed in this case to avoid validation errors for e.g. when creating
     the partner and the member at the same time.
     """
@@ -130,60 +131,6 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
-
-    staff_members = serializers.SerializerMethodField()
-    assessments = serializers.SerializerMethodField()
-    staff_members = serializers.SerializerMethodField()
-    organization_full_name = serializers.CharField(source='name')
-    email_address = serializers.CharField(source='email')
-    risk_rating = serializers.CharField(source='rating')
-    date_last_assessment_against_core_values = serializers.CharField(source='core_values_assessment_date')
-    actual_cash_transfer_for_cp = serializers.CharField(source='total_ct_cp')
-    actual_cash_transfer_for_current_year = serializers.CharField(source='total_ct_cy')
-    marked_for_deletion = serializers.SerializerMethodField()
-    blocked = serializers.SerializerMethodField()
-    date_assessed = serializers.CharField(source='last_assessment_date')
-    url = serializers.SerializerMethodField()
-    shared_with = serializers.SerializerMethodField()
-    partner_type = serializers.SerializerMethodField()
-
-    class Meta:
-
-        model = PartnerOrganization
-        # TODO add missing fields:
-        #   Bank Info (just the number of accounts synced from VISION)
-        fields = ('vendor_number', 'marked_for_deletion', 'blocked', 'organization_full_name',
-                  'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
-                  'email_address', 'phone_number', 'risk_rating', 'type_of_assessment', 'date_assessed',
-                  'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'staff_members',
-                  'date_last_assessment_against_core_values', 'assessments', 'url',)
-
-    def get_staff_members(self, obj):
-        return ', '.join(['{} ({})'.format(sm.get_full_name(), sm.email)
-                          for sm in obj.staff_members.filter(active=True).all()])
-
-    def get_assessments(self, obj):
-        return ', '.join(["{} ({})".format(a.type, a.completed_date) for a in obj.assessments.all()])
-
-    def get_url(self, obj):
-        return 'https://{}/pmp/partners/{}/details/'.format(self.context['request'].get_host(), obj.id)
-
-    def get_shared_with(self, obj):
-        return ', '.join([x for x in obj.shared_with]) if obj.shared_with else ""
-
-    def get_marked_for_deletion(self, obj):
-        return "Yes" if obj.deleted_flag else "No"
-
-    def get_blocked(self, obj):
-        return "Yes" if obj.blocked else "No"
-
-    def get_partner_type(self, obj):
-        if obj.partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION and obj.cso_type:
-            return "{}/{}".format(obj.partner_type, obj.cso_type)
-        return "{}".format(obj.partner_type)
-
-
 class AssessmentDetailSerializer(serializers.ModelSerializer):
 
     report_file = serializers.FileField(source='report', read_only=True)
@@ -200,10 +147,17 @@ class AssessmentDetailSerializer(serializers.ModelSerializer):
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
+    rating = serializers.CharField(source='get_rating_display')
 
     class Meta:
         model = PartnerOrganization
         fields = (
+            "street_address",
+            "last_assessment_date",
+            "address",
+            "city",
+            "postal_code",
+            "country",
             "id",
             "vendor_number",
             "deleted_flag",
@@ -213,13 +167,16 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "partner_type",
             "cso_type",
             "rating",
-            "shared_partner",
             "shared_with",
             "email",
             "phone_number",
             "total_ct_cp",
             "total_ct_cy",
-            "hidden"
+            "net_ct_cy",
+            "reported_cy",
+            "total_ct_ytd",
+            "hidden",
+            "basis_for_risk_rating",
         )
 
 
@@ -233,10 +190,86 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
         )
 
 
+class PlannedEngagementSerializer(serializers.ModelSerializer):
+
+    spot_check_mr = serializers.SerializerMethodField(read_only=True)
+
+    @staticmethod
+    def get_spot_check_mr(obj):
+        spot_check_mr = {
+            'q1': 0,
+            'q2': 0,
+            'q3': 0,
+            'q4': 0,
+        }
+        if obj.spot_check_mr in spot_check_mr:
+            spot_check_mr[obj.spot_check_mr] += 1
+        return spot_check_mr
+
+    class Meta:
+        model = PlannedEngagement
+        fields = (
+            "id",
+            "spot_check_mr",
+            "spot_check_follow_up_q1",
+            "spot_check_follow_up_q2",
+            "spot_check_follow_up_q3",
+            "spot_check_follow_up_q4",
+            "scheduled_audit",
+            "special_audit",
+            "total_spot_check_follow_up_required",
+            "spot_check_required",
+            "required_audit"
+        )
+
+
+class PlannedEngagementNestedSerializer(serializers.ModelSerializer):
+    """
+    A serializer to be used for nested planned engagement handling. The 'partner' field
+    is removed in this case to avoid validation errors for e.g. when creating
+    the partner and the engagement at the same time.
+    """
+    spot_check_mr = serializers.JSONField()
+
+    def validate(self, data):
+        data = super(PlannedEngagementNestedSerializer, self).validate(data)
+        spot_check_mr = data.get('spot_check_mr', 0)
+        partner = data.get('partner', None)
+
+        spot_check_mr_number = 1 if spot_check_mr else 0
+        if spot_check_mr_number > partner.min_req_spot_checks:
+            raise ValidationError("Based on Liquidation, you cannot set this value")
+        return data
+
+    def validate_spot_check_mr(self, attrs):
+        quarters = []
+        for key, value in attrs.items():
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValidationError("You can select only MR in one quarter")
+            else:
+                if value:
+                    if value != 1:
+                        raise ValidationError("If selected, the value has to be 1")
+                    quarters.append(key)
+        if len(quarters) > 1:
+            raise ValidationError("You can select only MR in one quarter")
+        elif len(quarters) == 1:
+            return quarters[0]
+        else:
+            return 0
+
+    class Meta:
+        model = PlannedEngagement
+        fields = '__all__'
+
+
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
+    planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
@@ -247,20 +280,24 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def get_interventions(self, obj):
-        interventions = Intervention.objects \
-            .filter(agreement__partner=obj) \
-            .exclude(status='draft')
-        interventions = InterventionSummaryListSerializer(interventions, many=True)
+        interventions = InterventionListSerializer(self.get_related_interventions(obj), many=True)
         return interventions.data
+
+    def get_related_interventions(self, partner):
+        qs = Intervention.objects.frs_qs()\
+            .filter(agreement__partner=partner)\
+            .exclude(status='draft')
+        return qs
 
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
 
 
-class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
+class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     hidden = serializers.BooleanField(read_only=True)
@@ -282,8 +319,10 @@ class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
 
+    planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField()
+    rating = serializers.CharField(source='get_rating_display')
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -294,13 +333,19 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "short_name",
+            "type_of_assessment",
             "partner_type",
+            "partner_type_slug",
             "cso_type",
             "rating",
-            "shared_partner",
             "shared_with",
             "total_ct_cp",
             "total_ct_cy",
-            "hact_min_requirements",
+            "net_ct_cy",
+            "reported_cy",
+            "total_ct_ytd",
             "hact_values",
+            "hact_min_requirements",
+            "flags",
+            "planned_engagement"
         )

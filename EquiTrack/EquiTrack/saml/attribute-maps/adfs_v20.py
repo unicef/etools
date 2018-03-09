@@ -33,7 +33,7 @@ MAP = {
         'http://schemas.microsoft.com/ws/2008/06/identity/claims/primarygroupsid': 'primaryGroupSid',
         'http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid': 'primarySid',
         'http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname': 'windowsAccountName',
-        },
+    },
     "to": {
         'emailAddress': 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
         'givenName': 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname',
@@ -61,7 +61,7 @@ MAP = {
         'denyOnlyPrimaryGroupSid': 'http://schemas.microsoft.com/ws/2008/06/identity/claims/denyonlyprimarygroupsid',
         'groupSid': 'http://schemas.microsoft.com/ws/2008/06/identity/claims/groupsid',
         'primaryGroupSid': 'http://schemas.microsoft.com/ws/2008/06/identity/claims/primarygroupsid',
-        'primarySid':  'http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid',
+        'primarySid': 'http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid',
         'windowsAccountName': 'http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname',
     }
 }

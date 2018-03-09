@@ -30,3 +30,8 @@ def tenant_model_filter(context, app_name):
     if hasattr(context.request, 'tenant'):
         return not (context.request.tenant.schema_name == 'public' and app_name in settings.TENANT_APPS)
     return True
+
+
+@register.simple_tag()
+def tenant_app_filter(app_name):
+    return app_name in settings.TENANT_APPS

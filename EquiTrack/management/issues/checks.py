@@ -72,7 +72,6 @@ class BaseIssueCheck(object):
         """
         This method should raise an IssueFoundException if the check fails.
         """
-        raise ImproperlyConfigured('Issue checks must override the run_check function!')
 
 
 def get_available_issue_checks():
