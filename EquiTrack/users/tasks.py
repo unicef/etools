@@ -369,6 +369,7 @@ def user_report():
             'unicef_users_last_month': User.objects.filter(profile__country=country, email__endswith='@unicef.org',
                                                            last_login__gte=start_date).count(),
         })
-    mail = EmailMessage('Report Latest Users', 'Report generated', 'etools-reports@unicef.org', ['ddinicola@unicef.org'])
+    mail = EmailMessage('Report Latest Users', 'Report generated', 'etools-reports@unicef.org',
+                        ['ddinicola@unicef.org'])
     mail.attach('users.csv', csvfile.getvalue(), 'text/csv')
     mail.send()
