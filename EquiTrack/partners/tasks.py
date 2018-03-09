@@ -11,14 +11,15 @@ from django.db import connection, transaction
 from django.db.models import F, Sum
 
 from celery.utils.log import get_task_logger
+from django.db.models.functions import Coalesce
 
 from EquiTrack.celery import app
 from EquiTrack.util_scripts import set_country
+from notification.models import Notification
 from partners.models import Agreement, Intervention, PartnerOrganization
 from partners.validation.agreements import AgreementValid
 from partners.validation.interventions import InterventionValid
 from users.models import Country, User
-from notification.models import Notification
 
 logger = get_task_logger(__name__)
 
@@ -286,11 +287,14 @@ def pmp_indicator_report():
                     'PD / SSFA end date': intervention.end,
                     'UNICEF US$ Cash contribution': intervention.total_unicef_cash,
                     'UNICEF US$ Supply contribution': intervention.total_in_kind_amount,
-                    'FR numbers against PD / SSFA': u' - '.join([(fh.fr_number.encode('utf-8')) for fh in intervention.frs.all()]),
-                    'Sum of all FR planned amount': intervention.frs.aggregate(total=Coalesce(Sum('intervention_amt'), 0))['total'],
+                    'FR numbers against PD / SSFA': u' - '.join([
+                        (fh.fr_number.encode('utf-8')) for fh in intervention.frs.all()]),
+                    'Sum of all FR planned amount': intervention.frs.aggregate(
+                        total=Coalesce(Sum('intervention_amt'), 0))['total'],
                     'Core value attached': True if partner.core_values_assessment else False
                 })
 
-    mail = EmailMessage('PMP Indicator Report', 'Report generated', 'etools-reports@unicef.org', ['ddinicola@unicef.org'])
+    mail = EmailMessage('PMP Indicator Report', 'Report generated', 'etools-reports@unicef.org',
+                        ['ddinicola@unicef.org'])
     mail.attach('pmp_indicators.csv', csvfile.getvalue(), 'text/csv')
     mail.send()
