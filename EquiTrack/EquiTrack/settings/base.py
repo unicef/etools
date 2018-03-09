@@ -182,7 +182,6 @@ SHARED_APPS = (
     'EquiTrack',
     'tpm.tpmpartners',
     'utils.common',
-    'utils.mail',
     'utils.writable_serializers',
     'utils.permissions',
     'waffle',
@@ -232,7 +231,7 @@ TEMPLATES = [
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
-                'utils.mail.loaders.EmailTemplateLoader',
+                'EquiTrack.utils.mail.loaders.EmailTemplateLoader',
             ],
             'context_processors': [
                 # Already defined Django-related contexts here
