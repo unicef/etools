@@ -77,7 +77,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
                   'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
                   'email_address', 'phone_number', 'risk_rating', 'type_of_assessment', 'date_assessed',
                   'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'staff_members',
-                  'date_last_assessment_against_core_values', 'assessments', 'url',)
+                  'date_last_assessment_against_core_values', 'assessments', 'url', 'basis_for_risk_rating')
 
     def get_staff_members(self, obj):
         return ', '.join(['{} ({})'.format(sm.get_full_name(), sm.email)

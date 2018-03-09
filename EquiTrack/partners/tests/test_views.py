@@ -133,14 +133,12 @@ class TestAPIPartnerOrganizationListView(APITenantTestCase):
 
         # self.normal_field_names is the list of field names present in responses that don't use an out-of-the-ordinary
         # serializer.
-        self.normal_field_names = sorted(
-            (
-                'blocked', 'cso_type', 'deleted_flag', 'email', 'hidden', 'id', 'name', 'net_ct_cy',
-                'partner_type', 'phone_number', 'rating', 'reported_cy', 'shared_with',
-                'short_name', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'vendor_number', 'address',
-                'street_address', 'postal_code', 'last_assessment_date', 'city', 'country'
-            )
-        )
+        self.normal_field_names = sorted((
+            'address', 'blocked', 'basis_for_risk_rating', 'city', 'country', 'cso_type', 'deleted_flag', 'email',
+            'hidden', 'id', 'last_assessment_date', 'name', 'net_ct_cy', 'partner_type', 'phone_number', 'postal_code',
+            'rating', 'reported_cy', 'shared_with', 'short_name', 'street_address', 'total_ct_cp', 'total_ct_cy',
+            'total_ct_ytd', 'vendor_number',
+        ))
 
     def assertResponseFundamentals(self, response, expected_keys=None):
         '''Assert common fundamentals about the response. If expected_keys is None (the default), the keys in the
@@ -662,12 +660,14 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
         self.assertEqual(['programme_visits', 'spot_checks'], response.data['hact_min_requirements'].keys())
-        self.assertEqual(['audits', 'programmatic_visits', 'spot_checks'], response.data['hact_values'].keys())
+        self.assertEqual(['outstanding_findings', 'audits', 'programmatic_visits', 'spot_checks'],
+                         response.data['hact_values'].keys())
         self.assertItemsEqual(
             ['completed', 'minimum_requirements'],
             response.data['hact_values']['audits'].keys()
         )
-        self.assertEqual(['audits', 'programmatic_visits', 'spot_checks'], response.data['hact_values'].keys())
+        self.assertEqual(['outstanding_findings', 'audits', 'programmatic_visits', 'spot_checks'],
+                         response.data['hact_values'].keys())
         self.assertEqual(response.data['interventions'], [])
 
     def test_api_partners_retreive_actual_fr_amounts(self):
@@ -683,7 +683,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(APITenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Decimal(response.data["interventions"][0]["actual_amount"]),
-                         Decimal(fr_header_1.actual_amt + fr_header_2.actual_amt))
+                         Decimal(fr_header_1.actual_amt_local + fr_header_2.actual_amt_local))
 
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(

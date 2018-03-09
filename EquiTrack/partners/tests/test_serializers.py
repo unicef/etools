@@ -621,18 +621,12 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
 
         self.assertSimpleExceptionFundamentals(
             context_manager,
-            'Agreement cannot transition to signed unless the end date is today or after'
+            'Agreement cannot transition to signed unless the end date is defined'
         )
 
-        # Populate end date, but with an invalid date.
+        # Populate end date with a date in the past - should pass validation for MOU's
         agreement.end = self.today - datetime.timedelta(days=3)
-        with self.assertRaises(serializers.ValidationError) as context_manager:
-            serializer.validate(data=data)
-
-        self.assertSimpleExceptionFundamentals(
-            context_manager,
-            'Agreement cannot transition to signed unless the end date is today or after'
-        )
+        self.assertTrue(serializer.validate(data=data))
 
         # Fix end date
         agreement.end = self.today
@@ -710,17 +704,17 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
 
         data = serializer.data
         self.assertItemsEqual(data.keys(), [
-            'address', 'alternate_id', 'alternate_name', 'assessments', 'blocked', 'city', 'core_values_assessment',
-            'core_values_assessment_date', 'core_values_assessment_file', 'country', 'created', 'cso_type',
-            'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values', 'hidden', u'id',
-            'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type', 'phone_number',
-            'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
+            'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
+            'core_values_assessment', 'core_values_assessment_date', 'core_values_assessment_file', 'country',
+            'created', 'cso_type', 'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values',
+            'hidden', u'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
+            'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
             'vendor_number', 'vision_synced'
         ])
 
         self.assertItemsEqual(data['planned_engagement'].keys(), [
-            'id', 'partner', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
+            'id', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
             'spot_check_follow_up_q3', 'spot_check_follow_up_q4', 'spot_check_mr',
             'total_spot_check_follow_up_required', 'spot_check_required', 'required_audit'
         ])

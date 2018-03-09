@@ -7,8 +7,7 @@ import json
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
-from django.db.models import F, Sum
-from django.db.models.functions import Coalesce
+from django.db.models import F, Sum, Max, Min, CharField, Count
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
@@ -200,6 +199,7 @@ def hact_default():
                 'total': 0,
             },
         },
+        'outstanding_findings': 0
     }
 
 
@@ -442,6 +442,8 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     )
 
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    basis_for_risk_rating = models.CharField(
+        verbose_name=_("Basis for Risk Rating"), max_length=50, null=True, blank=True)
 
     tracker = FieldTracker()
 
@@ -545,22 +547,6 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             'programme_visits': self.min_req_programme_visits,
             'spot_checks': self.min_req_spot_checks,
         }
-
-    @cached_property
-    def outstanding_findings(self):
-        # pending_unsupported_amount property
-        from audit.models import Audit, Engagement
-        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL,
-                                      date_of_draft_report_to_unicef__year=datetime.datetime.now().year)
-        ff = audits.filter(financial_findings__isnull=False).aggregate(
-            total=Coalesce(Sum('financial_findings'), 0))['total']
-        ar = audits.filter(amount_refunded__isnull=False).aggregate(
-            total=Coalesce(Sum('amount_refunded'), 0))['total']
-        asdp = audits.filter(additional_supporting_documentation_provided__isnull=False).aggregate(
-            total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
-        wor = audits.filter(write_off_required__isnull=False).aggregate(
-            total=Coalesce(Sum('write_off_required'), 0))['total']
-        return ff - ar - asdp - wor
 
     @classmethod
     def planned_visits(cls, partner):
@@ -1322,6 +1308,29 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__locations',
             'flat_locations',
         )
+
+    def frs_qs(self):
+        qs = self.get_queryset().prefetch_related(
+            'agreement__partner',
+            'planned_budget',
+            'offices',
+            'sections',
+            # TODO: Figure out a way in which to add locations that is more performant
+            # 'flat_locations',
+            'result_links__cp_output',
+            'unicef_focal_points',
+        )
+        qs = qs.annotate(
+            Max("frs__end_date"),
+            Min("frs__start_date"),
+            Sum("frs__total_amt_local"),
+            Sum("frs__outstanding_amt_local"),
+            Sum("frs__actual_amt_local"),
+            Sum("frs__intervention_amt"),
+            Count("frs__currency", distinct=True),
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
+        )
+        return qs
 
 
 def side_effect_one(i, old_instance=None, user=None):
