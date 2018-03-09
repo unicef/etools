@@ -26,7 +26,7 @@ PyPIRCCommand.DEFAULT_REPOSITORY = 'http://pypi.wfp.org/pypi/'
 
 install_requires = read('base.txt', reqs),
 tests_requires = read('base.txt')
-dev_requires = tests_requires #+ read('local.txt')
+dev_requires = tests_requires
 
 
 setup(
@@ -58,7 +58,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Framework :: Django',
-        'Framework :: Django :: 1.9',
+        'Framework :: Django :: 1.10',
       ],
 
 )
