@@ -401,7 +401,7 @@ def import_fr_numbers():
 
 def local_country_keep():
     set_country('Global')
-    keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border']
+    keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border', "Pakistan"]
     Country.objects.exclude(name__in=keeping).all().delete()
 
 

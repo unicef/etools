@@ -180,6 +180,7 @@ SHARED_APPS = (
     'environment',
     'audit.purchase_order',
     'EquiTrack',
+    'tpm.tpmpartners',
     'utils.common',
     'utils.mail',
     'utils.writable_serializers',
@@ -197,6 +198,7 @@ TENANT_APPS = (
     'hact',
     'trips',
     'supplies',
+    'activities',
     't2f',
     'workplan',
     'attachments',
@@ -303,11 +305,11 @@ POST_OFFICE = {
 }
 
 # celery: http://docs.celeryproject.org/en/latest/userguide/configuration.html
-CELERY_ACCEPT_CONTENT = ['pickle']
+CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'application/text']
 CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_BROKER_VISIBILITY_VAR = os.environ.get('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
 CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(CELERY_BROKER_VISIBILITY_VAR)}
-CELERY_RESULT_BACKEND = 'django_celery_results.backends.database:DatabaseBackend'
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 # Sensible settings for celery
 CELERY_TASK_ALWAYS_EAGER = False
@@ -325,7 +327,7 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # django-celery-email: https://github.com/pmclanahan/django-celery-email
 CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-CELERY_ROUTES = {
+CELERY_TASK_ROUTES = {
     'vision.tasks.sync_handler': {'queue': 'vision_queue'}
 }
 

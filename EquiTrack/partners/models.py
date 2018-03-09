@@ -7,8 +7,7 @@ import json
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
-from django.db.models import F, Sum
-from django.db.models.functions import Coalesce
+from django.db.models import F, Sum, Max, Min, CharField, Count
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
@@ -23,7 +22,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
-from EquiTrack.fields import CurrencyField
+from EquiTrack.fields import CurrencyField, QuarterField
 from EquiTrack.utils import import_permissions, get_quarter, get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
@@ -200,6 +199,7 @@ def hact_default():
                 'total': 0,
             },
         },
+        'outstanding_findings': 0
     }
 
 
@@ -222,12 +222,19 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     CT_MR_AUDIT_TRIGGER_LEVEL2 = decimal.Decimal('100000.00')
     CT_MR_AUDIT_TRIGGER_LEVEL3 = decimal.Decimal('500000.00')
 
-    # TODO 1.1.5 rating to be converted in choice after prp-refactoring
     RATING_HIGH = 'High'
     RATING_SIGNIFICANT = 'Significant'
     RATING_MODERATE = 'Moderate'
     RATING_LOW = 'Low'
     RATING_NON_ASSESSED = 'Non-Assessed'
+
+    RISK_RATINGS = (
+        (RATING_HIGH, 'High'),
+        (RATING_SIGNIFICANT, 'Significant'),
+        (RATING_MODERATE, 'Medium'),
+        (RATING_LOW, 'Low'),
+        (RATING_NON_ASSESSED, 'Non Required'),
+    )
 
     AGENCY_CHOICES = Choices(
         ('DPKO', 'DPKO'),
@@ -298,19 +305,6 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         blank=True,
         null=True
     )
-    # TODO remove this after migration to shared_with + add calculation to
-    shared_partner = models.CharField(
-        verbose_name=_("Shared Partner (old)"),
-        help_text='Partner shared with UNDP or UNFPA?',
-        choices=Choices(
-            'No',
-            'with UNDP',
-            'with UNFPA',
-            'with UNDP & UNFPA',
-        ),
-        default='No',
-        max_length=50
-    )
     street_address = models.CharField(
         verbose_name=_("Street Address"),
         max_length=500,
@@ -377,7 +371,9 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     rating = models.CharField(
         verbose_name=_('Risk Rating'),
         max_length=50,
+        choices=RISK_RATINGS,
         null=True,
+        blank=True
     )
     type_of_assessment = models.CharField(
         verbose_name=_("Assessment Type"),
@@ -446,6 +442,8 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
     )
 
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    basis_for_risk_rating = models.CharField(
+        verbose_name=_("Basis for Risk Rating"), max_length=50, null=True, blank=True)
 
     tracker = FieldTracker()
 
@@ -550,22 +548,6 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             'spot_checks': self.min_req_spot_checks,
         }
 
-    @cached_property
-    def outstanding_findings(self):
-        # pending_unsupported_amount property
-        from audit.models import Audit, Engagement
-        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL,
-                                      date_of_draft_report_to_unicef__year=datetime.datetime.now().year)
-        ff = audits.filter(financial_findings__isnull=False).aggregate(
-            total=Coalesce(Sum('financial_findings'), 0))['total']
-        ar = audits.filter(amount_refunded__isnull=False).aggregate(
-            total=Coalesce(Sum('amount_refunded'), 0))['total']
-        asdp = audits.filter(additional_supporting_documentation_provided__isnull=False).aggregate(
-            total=Coalesce(Sum('additional_supporting_documentation_provided'), 0))['total']
-        wor = audits.filter(write_off_required__isnull=False).aggregate(
-            total=Coalesce(Sum('write_off_required'), 0))['total']
-        return ff - ar - asdp - wor
-
     @classmethod
     def planned_visits(cls, partner):
         """For current year sum all programmatic values of planned visits
@@ -574,18 +556,24 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
         If partner type is Government, then default to 0 planned visits
         """
         year = datetime.date.today().year
-        # planned visits
         if partner.partner_type == 'Government':
-            pv = 0
+            pvq1 = pvq2 = pvq3 = pvq4 = 0
         else:
             pv = InterventionPlannedVisits.objects.filter(
                 intervention__agreement__partner=partner, year=year,
                 intervention__status__in=[Intervention.ACTIVE, Intervention.CLOSED, Intervention.ENDED]
-            ).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
+            )
+            pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
+            pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
+            pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
+            pvq4 = pv.aggregate(models.Sum('programmatic_q4'))['programmatic_q4__sum'] or 0
 
         hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
-        hact['programmatic_visits']['planned']['q1'] = pv
-        hact['programmatic_visits']['planned']['total'] = pv
+        hact['programmatic_visits']['planned']['q1'] = pvq1
+        hact['programmatic_visits']['planned']['q2'] = pvq2
+        hact['programmatic_visits']['planned']['q3'] = pvq3
+        hact['programmatic_visits']['planned']['q4'] = pvq4
+        hact['programmatic_visits']['planned']['total'] = pvq1 + pvq2 + pvq3 + pvq4
         partner.hact_values = hact
         partner.save()
 
@@ -783,6 +771,48 @@ class PartnerStaffMember(TimeStampedModel):
                 self.reactivate_signal()
 
         return super(PartnerStaffMember, self).save(**kwargs)
+
+
+@python_2_unicode_compatible
+class PlannedEngagement(TimeStampedModel):
+    """ class to handle partner's engagement for current year """
+    partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement')
+    spot_check_mr = QuarterField()
+    spot_check_follow_up_q1 = models.IntegerField(verbose_name=_("Spot Check Q1"), default=0)
+    spot_check_follow_up_q2 = models.IntegerField(verbose_name=_("Spot Check Q2"), default=0)
+    spot_check_follow_up_q3 = models.IntegerField(verbose_name=_("Spot Check Q3"), default=0)
+    spot_check_follow_up_q4 = models.IntegerField(verbose_name=_("Spot Check Q4"), default=0)
+    scheduled_audit = models.BooleanField(verbose_name=_("Scheduled Audit"), default=False)
+    special_audit = models.BooleanField(verbose_name=_("Special Audit"), default=False)
+
+    @cached_property
+    def total_spot_check_follow_up_required(self):
+        return sum([
+            self.spot_check_follow_up_q1, self.spot_check_follow_up_q2,
+            self.spot_check_follow_up_q3, self.spot_check_follow_up_q4
+        ])
+
+    @cached_property
+    def spot_check_required(self):
+        return self.total_spot_check_follow_up_required + (1 if self.spot_check_mr else 0)
+
+    @cached_property
+    def required_audit(self):
+        return sum([self.scheduled_audit, self.special_audit])
+
+    def reset(self):
+        """this is used to reset the values of the object at the end of the year"""
+        self.spot_check_mr = None
+        self.spot_check_follow_up_q1 = 0
+        self.spot_check_follow_up_q2 = 0
+        self.spot_check_follow_up_q3 = 0
+        self.spot_check_follow_up_q4 = 0
+        self.scheduled_audit = False
+        self.special_audit = False
+        self.save()
+
+    def __str__(self):
+        return 'Planned Engagement {}'.format(self.partner.name)
 
 
 @python_2_unicode_compatible
@@ -1278,6 +1308,29 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__locations',
             'flat_locations',
         )
+
+    def frs_qs(self):
+        qs = self.get_queryset().prefetch_related(
+            'agreement__partner',
+            'planned_budget',
+            'offices',
+            'sections',
+            # TODO: Figure out a way in which to add locations that is more performant
+            # 'flat_locations',
+            'result_links__cp_output',
+            'unicef_focal_points',
+        )
+        qs = qs.annotate(
+            Max("frs__end_date"),
+            Min("frs__start_date"),
+            Sum("frs__total_amt_local"),
+            Sum("frs__outstanding_amt_local"),
+            Sum("frs__actual_amt_local"),
+            Sum("frs__intervention_amt"),
+            Count("frs__currency", distinct=True),
+            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True)
+        )
+        return qs
 
 
 def side_effect_one(i, old_instance=None, user=None):
@@ -1879,20 +1932,26 @@ class InterventionAmendment(TimeStampedModel):
         )
 
 
+@python_2_unicode_compatible
 class InterventionPlannedVisits(TimeStampedModel):
     """
     Represents planned visits for the intervention
     """
+
     intervention = models.ForeignKey(Intervention, related_name='planned_visits')
     year = models.IntegerField(default=get_current_year)
-    programmatic = models.IntegerField(default=0)
-    spot_checks = models.IntegerField(default=0)
-    audit = models.IntegerField(default=0)
+    programmatic_q1 = models.IntegerField(default=0)
+    programmatic_q2 = models.IntegerField(default=0)
+    programmatic_q3 = models.IntegerField(default=0)
+    programmatic_q4 = models.IntegerField(default=0)
 
     tracker = FieldTracker()
 
     class Meta:
         unique_together = ('intervention', 'year')
+
+    def __str__(self):
+        return '{} {}'.format(self.intervention, self.year)
 
 
 @python_2_unicode_compatible

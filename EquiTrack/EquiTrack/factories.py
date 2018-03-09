@@ -11,6 +11,7 @@ from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
+
 from snapshot import models as snapshot_models
 
 from EquiTrack.tests.cases import SCHEMA_NAME, TENANT_DOMAIN
@@ -155,6 +156,13 @@ class PartnerFactory(factory.django.DjangoModelFactory):
     vendor_number = fuzzy.FuzzyText(length=10)
 
 
+class PlannedEngagementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.PlannedEngagement
+
+    partner = factory.SubFactory('EquiTrack.factories.PartnerFactory')
+
+
 class CountryProgrammeFactory(factory.DjangoModelFactory):
     class Meta:
         model = report_models.CountryProgramme
@@ -287,9 +295,6 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     year = datetime.today().year
-    programmatic = 1
-    spot_checks = 2
-    audit = 3
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
@@ -399,6 +404,10 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     total_amt = fuzzy.FuzzyDecimal(1, 300)
     actual_amt = fuzzy.FuzzyDecimal(1, 300)
     outstanding_amt = fuzzy.FuzzyDecimal(1, 300)
+
+    total_amt_local = fuzzy.FuzzyDecimal(1, 300)
+    actual_amt_local = fuzzy.FuzzyDecimal(1, 300)
+    outstanding_amt_local = fuzzy.FuzzyDecimal(1, 300)
 
     start_date = fuzzy.FuzzyDate(date(date.today().year, 1, 1) - timedelta(days=10),
                                  date(date.today().year, 1, 1))
