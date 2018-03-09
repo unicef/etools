@@ -67,5 +67,5 @@ flake8==3.3.0
 mock==2.0.0
 
 djangosaml2==0.16.11.2
-django-storages-redux==1.6.5.1
+django-storages==1.6.5.1
 

@@ -41,9 +41,9 @@ setup(
     packages=find_packages(where='EquiTrack'),
     include_package_data=True,
     dependency_links=[
-        'https://github.com/unicef/djangosaml2.git/releases/tag/v0.16.11.2#egg=djangosaml2-1.16.11.2'
-        'https://github.com/robertavram/django-storages/releases/tag/1.6.5.1#egg=django-storages-redux-1.6.5.1',
         'http://pypi.wfp.org/simple/',
+        'git+https://github.com/unicef/djangosaml2.git@0.16.11.2#egg=djangosaml2-1.16.11.2',
+        'git+https://github.com/robertavram/django-storages.git@1.6.5.1#egg=django-storages-1.6.5.1',
     ],
     install_requires=install_requires,
     extras_require={
