@@ -10,7 +10,7 @@ from rest_framework import exceptions
 from rest_framework.fields import ChoiceField
 from rest_framework.request import clone_request
 
-from utils.common.serializers.fields import SeparatedReadWriteField
+from rest_extra.fields import SeparatedReadWriteField
 
 
 class SeparatedReadWriteFieldMetadata(object):

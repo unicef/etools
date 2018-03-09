@@ -7,8 +7,8 @@ from rest_framework import serializers
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from audit.serializers.mixins import AuditPermissionsBasedSerializerMixin
 from firms.serializers import BaseStaffMemberSerializer, UserSerializer as BaseUserSerializer
+from rest_extra.fields import SeparatedReadWriteField
 from rest_extra.serializers import WritableNestedSerializerMixin
-from utils.common.serializers.fields import SeparatedReadWriteField
 
 
 class UserSerializer(BaseUserSerializer):

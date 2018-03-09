@@ -21,10 +21,13 @@ from partners.models import PartnerType
 from partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationListSerializer, PartnerStaffMemberNestedSerializer,)
+from rest_extra.fields import SeparatedReadWriteField
+from rest_extra.serializers import (
+    UserContextSerializerMixin,
+    WritableNestedParentSerializerMixin,
+    WritableNestedSerializerMixin,
+)
 from users.serializers import MinimalUserSerializer
-from utils.common.serializers.fields import SeparatedReadWriteField
-from utils.common.serializers.mixins import UserContextSerializerMixin
-from rest_extra.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):

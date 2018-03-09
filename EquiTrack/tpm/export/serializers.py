@@ -10,7 +10,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty, SkipField
 
 from EquiTrack.urlresolvers import build_frontend_url, site_url
-from utils.common.utils import get_attribute_smart
+from rest_extra.utils import get_attribute_smart
 
 
 class UsersExportField(serializers.Field):

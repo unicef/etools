@@ -13,6 +13,7 @@ from rest_framework import serializers
 
 from rest_extra.serializers import (
     DeletableSerializerMixin,
+    PKSerializerMixin,
     WritableNestedChildSerializerMixin,
     WritableNestedParentSerializerMixin,
 )
@@ -791,3 +792,23 @@ class DeletableSerializerTestCase(BaseWritableSerializersTestCase):
         self.assertDictContainsSubset({
             'children2': [{'_delete': ['You can\'t delete not exist object.']}]
         }, errors)
+
+
+class PKFieldSerializerTestCase(TestCase):
+    def test_pk_field(self):
+        class Serializer(PKSerializerMixin, serializers.ModelSerializer):
+            class Meta:
+                model = Parent
+                fields = ['pk', 'field']
+
+        serializer = Serializer()
+        self.assertEqual(serializer.pk_field, serializer.fields['pk'])
+
+    def test_id_field(self):
+        class Serializer(PKSerializerMixin, serializers.ModelSerializer):
+            class Meta:
+                model = Parent
+                fields = ['id', 'field']
+
+        serializer = Serializer()
+        self.assertEqual(serializer.pk_field, serializer.fields['id'])

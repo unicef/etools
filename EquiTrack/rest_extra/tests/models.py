@@ -53,3 +53,8 @@ class Child3(models.Model):
 
     class Meta:
         unique_together = [['parent', 'field']]
+
+
+class Child4(models.Model):
+    field = models.IntegerField()
+    parent = models.ForeignKey(Parent)

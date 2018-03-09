@@ -14,11 +14,52 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.fields import get_attribute
 from rest_framework.serializers import SerializerMetaclass
+from rest_framework.utils import model_meta
 from rest_framework.validators import BaseUniqueForValidator, UniqueTogetherValidator, UniqueValidator
 
 from utils.common.models.fields import CodedGenericRelation
-from utils.common.serializers.mixins import PkSerializerMixin
-from utils.common.utils import pop_keys
+from rest_extra.utils import pop_keys
+
+
+class PKSerializerMixin(object):
+    _pk_field = None
+
+    @property
+    def pk_field(self):
+        if self._pk_field:
+            return self._pk_field
+
+        assert hasattr(self, 'Meta'), (
+            'Class {serializer_class} missing "Meta" attribute'.format(
+                serializer_class=self.__class__.__name__
+            )
+        )
+        assert hasattr(self.Meta, 'model'), (
+            'Class {serializer_class} missing "Meta.model" attribute'.format(
+                serializer_class=self.__class__.__name__
+            )
+        )
+        if model_meta.is_abstract_model(self.Meta.model):
+            raise ValueError(
+                'Cannot use ModelSerializer with Abstract Models.'
+            )
+
+        model = self.Meta.model
+        info = model_meta.get_field_info(model)
+
+        if 'pk' in self.fields:
+            self._pk_field = self.fields['pk']
+            return self._pk_field
+
+        if info.pk.name in self.fields:
+            self._pk_field = self.fields[info.pk.name]
+            return self._pk_field
+
+        assert False, 'Serializer {serializer_class} doesn\'t contain primary key field. ' \
+            'Add `pk` or `{pk_name}` to fields attribute.'.format(
+                serializer_class=self.__class__.__name__,
+                pk_name=info.pk.name
+            )
 
 
 @six.add_metaclass(SerializerMetaclass)
@@ -124,7 +165,7 @@ class WritableListSerializer(serializers.ListSerializer):
         return result
 
 
-class WritableNestedChildSerializerMixin(PkSerializerMixin):
+class WritableNestedChildSerializerMixin(PKSerializerMixin):
     """
     Mixin that allow serializer to create and modify related data as nested serializer.
     """
@@ -132,7 +173,7 @@ class WritableNestedChildSerializerMixin(PkSerializerMixin):
         list_serializer_class = WritableListSerializer
 
     def bind(self, field_name, parent):
-        super(PkSerializerMixin, self).bind(field_name, parent)
+        super(PKSerializerMixin, self).bind(field_name, parent)
 
         # For many nested objects we need to determine each object. For is we use pk.
         # So we need to allow client to send it.
@@ -398,3 +439,8 @@ class WritableNestedSerializerMixin(DeletableSerializerMixin, WritableNestedChil
                                     WritableNestedParentSerializerMixin):
     class Meta(DeletableSerializerMixin.Meta, WritableNestedChildSerializerMixin.Meta):
         pass
+
+
+class UserContextSerializerMixin(object):
+    def get_user(self):
+        return self.context.get('user') or self.context.get('request').user
