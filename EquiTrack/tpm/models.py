@@ -15,6 +15,7 @@ from model_utils.models import TimeStampedModel
 from activities.models import Activity
 from attachments.models import Attachment
 from EquiTrack.utils import get_environment
+from EquiTrack.utils.wrappers import GroupWrapper
 from notification.models import Notification
 from publics.models import SoftDeleteMixin
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
@@ -23,7 +24,6 @@ from tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck, TPMVisitReportValidations, ValidateTPMVisitActivities,)
 from utils.common.models.fields import CodedGenericRelation
 from utils.common.urlresolvers import build_frontend_url
-from utils.groups.wrappers import GroupWrapper
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from utils.permissions.utils import has_action_permission

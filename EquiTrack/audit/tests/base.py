@@ -13,7 +13,7 @@ from attachments.models import Attachment, FileType
 from audit.models import RiskBluePrint, UNICEFAuditFocalPoint, UNICEFUser
 from audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory, RiskFactory
 from EquiTrack.factories import UserFactory
-from utils.groups.wrappers import GroupWrapper
+from EquiTrack.utils.wrappers import GroupWrapper
 
 
 class AuditTestCaseMixin(object):
