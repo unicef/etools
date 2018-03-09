@@ -5,7 +5,7 @@ from drfpasswordless.utils import create_callback_token_for_user
 
 from future.backports.urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, urljoin
 
-from utils.common.urlresolvers import site_url
+from EquiTrack.urlresolvers import site_url
 
 
 def update_url_with_kwargs(url, **kwargs):

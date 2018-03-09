@@ -9,7 +9,7 @@ from django.utils import six
 from rest_framework import serializers
 from rest_framework.fields import empty, SkipField
 
-from utils.common.urlresolvers import build_frontend_url, site_url
+from EquiTrack.urlresolvers import build_frontend_url, site_url
 from utils.common.utils import get_attribute_smart
 
 

@@ -14,8 +14,8 @@ from audit.models import (
 from audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
 from audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
 from audit.serializers.risks import KeyInternalWeaknessSerializer, AggregatedRiskRootSerializer, RiskRootSerializer
+from EquiTrack.urlresolvers import site_url
 from partners.models import PartnerOrganization
-from utils.common.urlresolvers import site_url
 
 
 class AuditorPDFSerializer(serializers.ModelSerializer):
