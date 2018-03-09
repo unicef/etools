@@ -13,7 +13,7 @@ from django_fsm import can_proceed, get_all_FIELD_transitions, has_transition_pe
 from rest_framework.exceptions import ValidationError
 
 from EquiTrack.parsers import parse_multipart_data
-from utils.common.utils import get_all_field_names
+from EquiTrack.utils import get_all_field_names
 
 logger = logging.getLogger(__name__)
 

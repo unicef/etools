@@ -15,7 +15,7 @@ from partners.models import (
     FileType,
 )
 from partners.serializers.v1 import FileTypeSerializer
-from EquiTrack.utils import get_data_from_insight
+from partners.utils import get_data_from_insight
 
 
 class PCAPDFView(PDFTemplateView):

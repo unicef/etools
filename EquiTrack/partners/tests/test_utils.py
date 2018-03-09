@@ -1,6 +1,11 @@
 import datetime
+from unittest import TestCase
+
+from freezegun import freeze_time
+
 from EquiTrack.factories import UserFactory, GroupFactory, PartnerFactory, AgreementFactory, InterventionFactory, \
     ResultFactory, FundsReservationHeaderFactory, LocationFactory, GatewayTypeFactory
+from partners import utils
 from partners.models import Intervention, InterventionBudget, InterventionResultLink
 from reports.models import ResultType, LowerResult, IndicatorBlueprint, AppliedIndicator
 
@@ -73,3 +78,17 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
             p_code='a-p-code')
         )
         test_case.disaggregation = test_case.applied_indicator.disaggregation.create(name='A Disaggregation')
+
+
+class TestGetQuarterDefault(TestCase):
+    @freeze_time("2013-05-26")
+    def test_get_quarter_default(self):
+
+        """test current quarter function"""
+        quarter = utils.get_quarter()
+        self.assertEqual(quarter, 'q2')
+
+    def test_get_quarter(self):
+        """test current quarter function"""
+        quarter = utils.get_quarter(datetime.datetime(2016, 10, 1))
+        self.assertEqual(quarter, 'q4')

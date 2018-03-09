@@ -33,6 +33,7 @@ from EquiTrack.factories import (
     SectorFactory,
     UserFactory,
     GroupFactory)
+from EquiTrack.utils import get_all_field_names
 from environment.helpers import tenant_switch_is_active
 from environment.models import TenantSwitch
 from environment.tests.factories import TenantSwitchFactory
@@ -43,7 +44,6 @@ from partners.models import (
     InterventionResultLink,
 )
 from snapshot.models import Activity
-from utils.common.utils import get_all_field_names
 
 
 def _add_user_to_partnership_manager_group(user):

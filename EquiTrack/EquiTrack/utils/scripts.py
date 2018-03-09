@@ -17,7 +17,6 @@ from partners.models import (
 from reports.models import CountryProgramme, Indicator, Result, ResultType
 from t2f.models import TravelActivity
 from users.models import Country, UserProfile
-from utils.common.utils import every_country
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ def printtf(*args):
         f.write('\n')
 
 
-def set_country(name):
+def set_country_by_name(name):
     connection.set_tenant(Country.objects.get(name=name))
     logger.info(u'Set in {} workspace'.format(name))
 
@@ -39,7 +38,7 @@ def set_country(name):
 def fix_duplicate_indicators(country_name):
     if not country_name:
         printtf("country name required /n")
-    set_country(country_name)
+    set_country_by_name(country_name)
     printtf("Fixing duplicate indicators for {}".format(country_name))
     fattrs = ["ramindicator_set"]
 
@@ -106,7 +105,7 @@ def fix_duplicate_results(country_name):
 
     if not country_name:
         printtf("country name required /n")
-    set_country(country_name)
+    set_country_by_name(country_name)
     printtf("Fixing duplicate Results for {}".format(country_name))
     # foreign attributes
     fattrs = ["governmentinterventionresult_set",
@@ -193,7 +192,7 @@ def fix_duplicate_results(country_name):
 def cp_fix(country_name):
     if not country_name:
         printtf("country name required /n")
-    set_country(country_name)
+    set_country_by_name(country_name)
     printtf("Fixing Country Programme for {}".format(country_name))
 
     def get_cpwbs(wbs):
@@ -226,11 +225,11 @@ def cp_fix(country_name):
 def clean_result_types(country_name):
     if not country_name:
         printtf("country name required /n")
-        set_country(country_name)
+        set_country_by_name(country_name)
     if not country_name:
         printtf("country name required /n")
 
-    set_country(country_name)
+    set_country_by_name(country_name)
     printtf("Fixing duplicate Result Types for {}".format(country_name))
     fattrs = ["result_set"]
 
@@ -287,7 +286,7 @@ def clean_result_types(country_name):
 def delete_all_fcs(country_name):
     if not country_name:
         printtf("country name required /n")
-    set_country(country_name)
+    set_country_by_name(country_name)
     printtf("Deleting all FCs for {}".format(country_name))
     fcs = FundingCommitment.objects.all()
     fcs.delete()
@@ -296,7 +295,7 @@ def delete_all_fcs(country_name):
 def dissasociate_result_structures(country_name):
     if not country_name:
         printtf("country name required /n")
-    set_country(country_name)
+    set_country_by_name(country_name)
     printtf("Dissasociating result structures for {}".format(country_name))
     results = Result.objects.all()
     for result in results:
@@ -343,7 +342,7 @@ def after_code_merge():  # and after migrations
 # run this before migration partners_0005
 def agreement_unique_reference_number():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
+        set_country_by_name(cntry)
         logger.info(cntry.name)
         agreements = Agreement.objects.all()
         for agr in agreements:
@@ -363,7 +362,7 @@ def agreement_unique_reference_number():
 
 def clean_interventions():
     for country in Country.objects.exclude(name='Global'):
-        set_country(country)
+        set_country_by_name(country)
         Intervention.objects.all().delete()
 
 
@@ -372,7 +371,7 @@ def import_planned_visits():
         data = json.load(data_file)
         for country, array in data.items():
             if array:
-                set_country(country)
+                set_country_by_name(country)
                 for row in array:
                     try:
                         intervention = Intervention.objects.get(number=row['pca'])
@@ -389,7 +388,7 @@ def import_fr_numbers():
         data = json.load(data_file)
         for country, array in data.items():
             if array:
-                set_country(country)
+                set_country_by_name(country)
                 for row in array:
                     try:
                         intervention = Intervention.objects.get(number=row['pca'])
@@ -400,7 +399,7 @@ def import_fr_numbers():
 
 
 def local_country_keep():
-    set_country('Global')
+    set_country_by_name('Global')
     keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border', "Pakistan"]
     Country.objects.exclude(name__in=keeping).all().delete()
 
@@ -408,7 +407,7 @@ def local_country_keep():
 def change_partner_shared_women(country_name):
     if not country_name:
         logger.info(u"country name required")
-    set_country(country_name)
+    set_country_by_name(country_name)
     logger.info(u"Migrating UN Women for {}".format(country_name))
     partners = PartnerOrganization.objects.filter(shared_with__contains=['Women'])
     for partner in partners:
@@ -421,7 +420,7 @@ def change_partner_shared_women(country_name):
 def change_partner_cso_type(country_name):
     if not country_name:
         logger.info(u"country name required")
-    set_country(country_name)
+    set_country_by_name(country_name)
     logger.info(u"Migrating cso_type for {}".format(country_name))
     partners = PartnerOrganization.objects.filter(cso_type__isnull=False)
     for partner in partners:
@@ -443,7 +442,7 @@ def migrate_to_good_partner(country_name, partner_list):
     if not country_name:
         logger.info(u"country name required")
 
-    set_country(country_name)
+    set_country_by_name(country_name)
     if not partner_list:
         logger.info(u"partner list of tuples required")
 
@@ -595,7 +594,7 @@ def intervention_update_task():
 
 def interventions_associated_ssfa():
     for c in Country.objects.exclude(name='Global').all():
-        set_country(c.name)
+        set_country_by_name(c.name)
         logger.info(c.name)
         intervention_pds_ssfa = Intervention.objects.filter(
             agreement__agreement_type=Agreement.SSFA, document_type=Intervention.PD)

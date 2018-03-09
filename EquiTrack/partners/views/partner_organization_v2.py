@@ -20,7 +20,6 @@ from rest_framework.generics import (
 
 from EquiTrack.mixins import ExportModelMixin
 from EquiTrack.renderers import CSVFlatRenderer
-from EquiTrack.utils import get_data_from_insight
 from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import (
@@ -49,6 +48,7 @@ from partners.serializers.partner_organization_v2 import (
     MinimalPartnerOrganizationListSerializer,
     PlannedEngagementNestedSerializer,
     PlannedEngagementSerializer)
+from partners.utils import get_data_from_insight
 from partners.views.helpers import set_tenant_or_fail
 from t2f.models import TravelActivity
 from partners.permissions import PartnershipManagerRepPermission, PartnershipManagerPermission

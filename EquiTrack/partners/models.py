@@ -23,7 +23,7 @@ from model_utils import Choices, FieldTracker
 from dateutil.relativedelta import relativedelta
 
 from EquiTrack.fields import CurrencyField, QuarterField
-from EquiTrack.utils import import_permissions, get_quarter, get_current_year
+from EquiTrack.utils import get_current_year
 from EquiTrack.mixins import AdminURLMixin
 from environment.helpers import tenant_switch_is_active
 from funds.models import Grant
@@ -36,6 +36,7 @@ from reports.models import (
 from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
 from users.models import Office
+from partners.utils import get_quarter, import_permissions
 from partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreements_illegal_transition,

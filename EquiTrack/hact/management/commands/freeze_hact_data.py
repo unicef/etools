@@ -6,7 +6,7 @@ from datetime import datetime
 from django.core.management import BaseCommand
 from django.db import transaction
 
-from EquiTrack.util_scripts import set_country
+from EquiTrack.utils.scripts import set_country
 from hact.models import HactEncoder, HactHistory
 from partners.models import hact_default, PartnerOrganization
 from users.models import Country

@@ -2,10 +2,10 @@ from django.apps import apps
 from rest_framework import permissions
 from django.utils.lru_cache import lru_cache
 
-from EquiTrack.utils import HashableDict
+from EquiTrack.utils import get_all_field_names
 from EquiTrack.validation_mixins import check_rigid_related
 from environment.helpers import tenant_switch_is_active
-from utils.common.utils import get_all_field_names
+from partners.utils import HashableDict
 
 # READ_ONLY_API_GROUP_NAME is the name of the permissions group that provides read-only access to some list views.
 # Initially, this is only being used for PRP-related endpoints.
