@@ -9,7 +9,7 @@ from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
 from audit.models import Audit, Engagement
-from hact.models import AggregateHact
+from hact.models import AggregateHact, HactEncoder
 from partners.models import PartnerOrganization
 from users.models import Country
 
@@ -25,8 +25,9 @@ def update_hact_values():
             hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
             audits = Audit.objects.filter(partner=partner, status=Engagement.FINAL,
                                           date_of_draft_report_to_unicef__year=datetime.now().year)
-            hact['outstanding_findings'] = sum([audit.pending_unsupported_amount for audit in audits])
-            partner.hact_values = hact
+            hact['outstanding_findings'] = sum([
+                audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
+            partner.hact_values = json.dumps(hact, cls=HactEncoder)
             partner.save()
     logger.info('Hact Freeze Task process finished')
 
