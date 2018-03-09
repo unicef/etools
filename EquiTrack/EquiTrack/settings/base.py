@@ -182,7 +182,7 @@ SHARED_APPS = (
     'EquiTrack',
     'tpm.tpmpartners',
     'utils.common',
-    'utils.writable_serializers',
+    'rest_extra',
     'utils.permissions',
     'waffle',
     'email_auth',

@@ -8,7 +8,7 @@ from rest_framework import serializers
 
 from audit.models import Risk, RiskBluePrint, RiskCategory
 from utils.common.serializers.fields import RecursiveListSerializer, WriteListSerializeFriendlyRecursiveField
-from utils.writable_serializers.serializers import WritableListSerializer, WritableNestedSerializerMixin
+from rest_extra.serializers import WritableListSerializer, WritableNestedSerializerMixin
 
 
 class RiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):

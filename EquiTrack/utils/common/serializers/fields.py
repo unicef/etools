@@ -4,7 +4,7 @@ from rest_framework.fields import empty, Field, SkipField
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
 
-from utils.writable_serializers.serializers import WritableListSerializer
+from rest_extra.serializers import WritableListSerializer
 
 
 class builtin_field:

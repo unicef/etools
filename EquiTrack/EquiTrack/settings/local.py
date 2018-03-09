@@ -56,7 +56,7 @@ if 'test' in sys.argv:
         # These apps contains test models that haven't been created by migration.
         # So on the serialization stage these models do not exist.
         'utils.common',
-        'utils.writable_serializers',
+        'rest_extra',
     ]
 
     # Disable logging output during tests

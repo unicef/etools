@@ -5,7 +5,7 @@ from django.utils.translation import ugettext as _
 from attachments.serializers_fields import FileTypeModelChoiceField
 from attachments.models import FileType
 from attachments.serializers import Base64AttachmentSerializer
-from utils.writable_serializers.serializers import WritableNestedSerializerMixin
+from rest_extra.serializers import WritableNestedSerializerMixin
 
 
 class TPMPartnerAttachmentsSerializer(WritableNestedSerializerMixin, Base64AttachmentSerializer):

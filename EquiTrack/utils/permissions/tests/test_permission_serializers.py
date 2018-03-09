@@ -6,9 +6,9 @@ from django.test import TestCase
 
 from rest_framework import serializers
 
+from rest_extra.serializers import WritableNestedSerializerMixin
 from utils.permissions.serializers import PermissionsBasedSerializerMixin
 from utils.permissions.tests.models import Child2, Parent, Permission
-from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
 class PermissionsBasedSerializerTestCase(TestCase):

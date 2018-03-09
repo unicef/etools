@@ -11,9 +11,12 @@ from django.test import TestCase
 from mock import Mock
 from rest_framework import serializers
 
-from utils.writable_serializers.serializers import (
-    DeletableSerializerMixin, WritableNestedChildSerializerMixin, WritableNestedParentSerializerMixin,)
-from utils.writable_serializers.tests.models import Child1, Child2, Child3, CodedGenericChild, GenericChild, Parent
+from rest_extra.serializers import (
+    DeletableSerializerMixin,
+    WritableNestedChildSerializerMixin,
+    WritableNestedParentSerializerMixin,
+)
+from rest_extra.tests.models import Child1, Child2, Child3, CodedGenericChild, GenericChild, Parent
 
 
 class BaseWritableSerializersTestCase(TestCase):
@@ -24,7 +27,7 @@ class BaseWritableSerializersTestCase(TestCase):
             for model in [Child1, Parent, Child2, GenericChild, Child3, CodedGenericChild]:
                 editor.create_model(model)
 
-        update_contenttypes(apps.get_app_config('writable_serializers'))
+        update_contenttypes(apps.get_app_config('rest_extra'))
 
 
 class WritableSerializerSingleTestCase(BaseWritableSerializersTestCase):

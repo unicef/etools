@@ -7,8 +7,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from firms.utils import generate_username
+from rest_extra.serializers import WritableNestedSerializerMixin
 from users.models import UserProfile
-from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
 class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):

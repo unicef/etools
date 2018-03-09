@@ -11,6 +11,7 @@ from activities.serializers import ActivitySerializer
 from partners.models import InterventionResultLink, PartnerType
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from rest_extra.serializers import WritableNestedSerializerMixin
 from tpm.models import (
     TPMActionPoint, TPMActivity, TPMPermission, TPMVisit, TPMVisitReportRejectComment,)
 from tpm.tpmpartners.models import TPMPartnerStaffMember
@@ -19,7 +20,6 @@ from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMe
 from utils.permissions.serializers import (
     StatusPermissionsBasedRootSerializerMixin, StatusPermissionsBasedSerializerMixin,)
 from utils.common.serializers.fields import SeparatedReadWriteField
-from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 from users.serializers import MinimalUserSerializer, OfficeSerializer
 from locations.serializers import LocationLightSerializer
 from reports.serializers.v1 import ResultSerializer, SectorSerializer

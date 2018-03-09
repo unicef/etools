@@ -24,7 +24,7 @@ from partners.serializers.partner_organization_v2 import (
 from users.serializers import MinimalUserSerializer
 from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.common.serializers.mixins import UserContextSerializerMixin
-from utils.writable_serializers.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
+from rest_extra.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
