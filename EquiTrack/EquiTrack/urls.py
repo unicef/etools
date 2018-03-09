@@ -1,46 +1,27 @@
 from __future__ import absolute_import
 
-# Django imports
 from django.conf import settings
 from django.conf.urls import include, url
-from django.views.generic import TemplateView
 from django.contrib import admin
+from django.views.generic import TemplateView
 
-# 3rd party imports
-from rest_framework_swagger.views import get_swagger_view
-from rest_framework_swagger.renderers import OpenAPIRenderer
-from rest_framework.schemas import get_schema_view
-import rest_framework_jwt.views
-from rest_framework_nested import routers
 import djangosaml2.views
+import rest_framework_jwt.views
+from rest_framework.schemas import get_schema_view
+from rest_framework_nested import routers
+from rest_framework_swagger.renderers import OpenAPIRenderer
+from rest_framework_swagger.views import get_swagger_view
 
-# Project imports
-from EquiTrack.stream_feed.feeds import JSONActivityFeedWithCustomData
-from EquiTrack.views import (
-    MainView,
-    OutdatedBrowserView
-)
-from locations.views import (
-    LocationTypesViewSet,
-    LocationsViewSet,
-    LocationsLightViewSet,
-)
+from email_auth.urls import urlpatterns as email_auth_patterns
+from EquiTrack.views import IssueJWTRedirectView, MainView, OutdatedBrowserView
+from locations.views import LocationsLightViewSet, LocationsViewSet, LocationTypesViewSet
 from management.urls import urlpatterns as management_urls
-from partners.views.v1 import (
-    FileTypeViewSet,
-)
+from partners.views.v1 import FileTypeViewSet
 from publics import urls as publics_patterns
 from publics.views import StaticDataView
-from reports.views.v1 import (
-    ResultTypeViewSet,
-    SectorViewSet,
-    IndicatorViewSet,
-    ResultViewSet,
-    UnitViewSet
-)
+from reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, SectorViewSet, UnitViewSet
 from t2f.urls import urlpatterns as t2f_patterns
-from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet, ModuleRedirectView
-
+from users.views import GroupViewSet, ModuleRedirectView, OfficeViewSet, SectionViewSet, UserViewSet, CountriesViewSet
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
@@ -75,6 +56,7 @@ urlpatterns = [
     # Used for admin and dashboard pages in django
     url(r'^$', ModuleRedirectView.as_view(), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
+    url(r'^email-auth/', include(email_auth_patterns, namespace='email_auth')),
 
     url(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
@@ -90,12 +72,19 @@ urlpatterns = [
         LocationsViewSet.as_view({'get': 'retrieve'}),
         name='locations_detail_pcode'),
     url(r'^api/t2f/', include(t2f_patterns)),
+    url(r'^api/tpm/', include('tpm.urls', namespace='tpm')),
     url(r'^api/audit/', include('audit.urls', namespace='audit')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2', namespace='partners_api')),
+    url(r'^api/prp/v1/', include('partners.prp_urls', namespace='prp_api_v1')),
     url(r'^api/v2/hact/', include('hact.urls', namespace='hact_api')),
     url(r'^api/v2/users/', include('users.urls_v2', namespace='users_v2')),
+    url(r'^api/v2/workspaces/', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
     url(r'^api/v2/funds/', include('funds.urls', namespace='funds')),
+    url(
+        r'^api/v2/activity/',
+        include('snapshot.urls', namespace='snapshot_api')
+    ),
     url(r'^api/v2/environment/', include('environment.urls_v2', namespace='environment')),
 
 
@@ -119,14 +108,8 @@ urlpatterns = [
     url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
         name='workspace-inactive'),
 
-    # Activity stream
-    url(r'^activity/(?P<model_name>\w+)/json/$',
-        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_stream'),
-        name='custom_data_model_stream'),
-    url(r'^activity/(?P<model_name>\w+)/(?P<obj_id>\d+)/json/$',
-        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_detail_stream'),
-        name='custom_data_model_detail_stream'),
-    url('^activity/', include('actstream.urls')),
+    url(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
+
     url('^monitoring/', include('monitoring.urls')),
 ]
 

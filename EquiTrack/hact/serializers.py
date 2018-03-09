@@ -2,15 +2,35 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import json
 
-from hact.models import HactHistory
+from django.utils import six
+
 from rest_framework import serializers
+
+from hact.models import HactHistory
 
 
 class HactHistorySerializer(serializers.ModelSerializer):
     partner_values = serializers.SerializerMethodField()
 
     def get_partner_values(self, obj):
-        return json.loads(obj.partner_values) if isinstance(obj.partner_values, unicode) else obj.partner_values
+        return json.loads(obj.partner_values) if isinstance(obj.partner_values, six.text_type) else obj.partner_values
+
+    class Meta:
+        model = HactHistory
+        fields = (
+            "id",
+            "year",
+            "created",
+            "modified",
+            "partner_values",
+        )
+
+
+class AggregateHactSerializer(serializers.ModelSerializer):
+    partner_values = serializers.SerializerMethodField()
+
+    def get_partner_values(self, obj):
+        return json.loads(obj.partner_values) if isinstance(obj.partner_values, six.text_type) else obj.partner_values
 
     class Meta:
         model = HactHistory

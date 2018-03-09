@@ -12,8 +12,9 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     intervention_id = serializers.CharField(source='id', read_only=True)
     partner_name = serializers.CharField(source='agreement.partner.name', read_only=True)
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
-    sectors = serializers.SerializerMethodField()
+    sections = serializers.SerializerMethodField()
     offices_names = serializers.SerializerMethodField()
+    budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
 
     unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
     unicef_supplies = serializers.DecimalField(source='total_in_kind_amount', read_only=True, max_digits=20,
@@ -23,11 +24,11 @@ class InterventionDashSerializer(serializers.ModelSerializer):
 
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
 
-    disbursement = serializers.DecimalField(source='total_frs.total_actual_amt', read_only=True,
+    disbursement = serializers.DecimalField(source='frs__actual_amt_local_sum', read_only=True,
                                             max_digits=20,
                                             decimal_places=2)
 
-    frs_total_frs_amt = serializers.DecimalField(source='total_frs.total_frs_amt', read_only=True,
+    frs_total_frs_amt = serializers.DecimalField(source='frs__total_amt_local_sum', read_only=True,
                                                  max_digits=20,
                                                  decimal_places=2)
 
@@ -35,8 +36,28 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     days_last_pv = serializers.SerializerMethodField()
     last_pv_date = serializers.SerializerMethodField()
 
+    fr_currencies_are_consistent = serializers.SerializerMethodField()
+    all_currencies_are_consistent = serializers.SerializerMethodField()
+    fr_currency = serializers.SerializerMethodField()
+
+    def fr_currencies_ok(self, obj):
+        return obj.frs__currency__count == 1 if obj.frs__currency__count else None
+
+    def get_fr_currencies_are_consistent(self, obj):
+        return self.fr_currencies_ok(obj)
+
+    def get_all_currencies_are_consistent(self, obj):
+        if not hasattr(obj, 'planned_budget'):
+            return False
+        return self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency
+
+    def get_fr_currency(self, obj):
+        return obj.max_fr_currency if self.fr_currencies_ok(obj) else None
+
     def get_disbursement_percent(self, obj):
-        percent = obj.total_frs["total_actual_amt"] / obj.total_unicef_cash * 100 \
+        if obj.frs__actual_amt__sum is None:
+            return None
+        percent = obj.frs__actual_amt__sum / obj.total_unicef_cash * 100 \
             if obj.total_unicef_cash and obj.total_unicef_cash > 0 else 0
         return "%.1f" % percent
 
@@ -49,8 +70,8 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     def get_offices_names(self, obj):
         return ",".join(o.name for o in obj.offices.all())
 
-    def get_sectors(self, obj):
-        return "," .join(l.sector.name for l in obj.sector_locations.all())
+    def get_sections(self, obj):
+        return ",".join([l.name for l in obj.sections.all()])
 
     def get_partner_name(self, obj):
         return obj.partner_name
@@ -58,6 +79,7 @@ class InterventionDashSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = ('intervention_id', 'partner_id', 'partner_name', 'number', 'status', 'start', 'end',
-                  'sectors', 'offices_names',
+                  'sections', 'offices_names',
                   'total_budget', 'cso_contribution', 'unicef_cash', 'unicef_supplies',
-                  'frs_total_frs_amt', 'disbursement', 'disbursement_percent', 'last_pv_date', 'days_last_pv')
+                  'frs_total_frs_amt', 'disbursement', 'disbursement_percent', 'last_pv_date', 'days_last_pv',
+                  'fr_currencies_are_consistent', 'all_currencies_are_consistent', 'fr_currency', 'budget_currency')

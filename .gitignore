@@ -4,6 +4,9 @@
 # Packaging files:
 *.egg*
 
+# Private Keys and Certs
+*.pem
+
 # Editor temp files:
 *.swp
 *~

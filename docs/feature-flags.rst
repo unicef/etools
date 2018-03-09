@@ -28,14 +28,14 @@ conditions, while switches are either ON or OFF based on the tenant.
 Superuser workflow
 ------------------
 
-The eTools-specific changes to django-waffle are in the ``environment`` app, but the administration is
-done through the Django admin in the 'waffle' app.
+The eTools-specific changes to django-waffle are in the ``environment`` app, and all of the
+administration is in the Django admin.
 
-To create a flag, go to ``/admin/waffle/flag/add/``. There are multiple configuration options, but
-the two important ones are *Name* (which is at the top of the form) and *Countries* (which is at the
-bottom of the form). Every flag needs a *Name*, and that name will be returned by the API, described
-below. The *Countries* field allows you to attach one or more countries to this flag. If a country is
-attached to a flag, then the flag will be active for users with that country attribute.
+To create a flag, go to ``/admin/environment/tenantflag/add/``. There are multiple configuration
+options, but the two important ones are *Name* and *Countries*. Every flag needs a *Name*, and that
+name will be returned by the API, described below. The *Countries* field allows you to attach one or
+more countries to this flag. If a country is attached to a flag, then the flag will be active for
+users with that country attribute.
 
 All of the other fields in the form are directly from django-waffle and are explained in its
 documentation.
@@ -43,6 +43,15 @@ documentation.
 As it stands now, flags do not alter ANY functionality in the eTools backend. They are only Boolean
 values which are meant to be used by frontend applications to alter the behavior of the frontend
 application.
+
+DEVELOPER NOTE: It is expected that all changes to Flags and Switches are done through the Django
+admin. The Django admin forces the user to save each object, even when adding M2M objects (like
+Groups or Countries). The cache is invalidated on save, so this works perfectly. If you update a
+Flag or Switch's list of groups, users, or countries in *code*, then you must be sure to manually
+save the object otherwise the cache will not be invalidated. Here's an example of how to do this::
+
+    >>> flag.countries.add(my_new_country)
+    >>> flag.save()  # ... or flag.flush()
 
 
 API
