@@ -23,7 +23,7 @@ from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejec
 from tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck, TPMVisitReportValidations, ValidateTPMVisitActivities,)
 from utils.common.models.fields import CodedGenericRelation
-from utils.common.urlresolvers import build_frontend_url
+from EquiTrack.urlresolvers import build_frontend_url
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from utils.permissions.utils import has_action_permission

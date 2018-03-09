@@ -31,7 +31,7 @@ from audit.transitions.serializers import EngagementCancelSerializer
 from notification.models import Notification
 from partners.models import PartnerStaffMember, PartnerOrganization
 from utils.common.models.fields import CodedGenericRelation
-from utils.common.urlresolvers import build_frontend_url
+from EquiTrack.urlresolvers import build_frontend_url
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from utils.permissions.utils import has_action_permission
