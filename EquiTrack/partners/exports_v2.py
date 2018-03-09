@@ -69,7 +69,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'hact_values.spot_checks.completed.q4',
         'hact_values.audits.minimum_requirements',
         'hact_values.audits.completed',
-        'outstanding_findings',
+        'hact_values.outstanding_findings',
     ]
 
     labels = {
@@ -108,7 +108,7 @@ class PartnerOrganizationHactCsvRenderer(r.CSVRenderer):
         'hact_values.spot_checks.completed.q4': 'Q4',
         'hact_values.audits.minimum_requirements': 'Audits M.R',
         'hact_values.audits.completed': 'Audit Completed',
-        'outstanding_findings': 'Audits Outstanding Findings',
+        'hact_values.outstanding_findings': 'Audits Outstanding Findings',
     }
 
 
