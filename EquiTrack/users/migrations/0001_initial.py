@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=254)),
-                ('zonal_chief', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='offices', to=settings.AUTH_USER_MODEL, verbose_name=b'Chief')),
+                ('zonal_chief', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='offices', to=settings.AUTH_USER_MODEL, verbose_name='Chief')),
             ],
         ),
         migrations.CreateModel(
@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                 ('partner_staff_member', models.IntegerField(blank=True, null=True)),
                 ('job_title', models.CharField(blank=True, max_length=255, null=True)),
                 ('phone_number', models.CharField(blank=True, max_length=20, null=True)),
-                ('installation_id', models.CharField(blank=True, max_length=50, null=True, verbose_name=b'Device ID')),
+                ('installation_id', models.CharField(blank=True, max_length=50, null=True, verbose_name='Device ID')),
                 ('countries_available', models.ManyToManyField(blank=True, related_name='accessible_by', to='users.Country')),
                 ('country', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='users.Country')),
                 ('country_override', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='country_override', to='users.Country')),

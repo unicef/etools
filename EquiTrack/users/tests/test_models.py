@@ -175,8 +175,8 @@ class TestDeletePartnerRelationship(EToolsTenantTestCase):
 class TestStrUnicode(TestCase):
     '''Ensure calling str() on model instances returns UTF8-encoded text and unicode() returns unicode.'''
     def test_country(self):
-        instance = CountryFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
+        instance = CountryFactory.build(name='xyz')
+        self.assertEqual(str(instance), 'xyz')
         self.assertEqual(unicode(instance), u'xyz')
 
         instance = CountryFactory.build(name=u'Magyarorsz\xe1g')
@@ -185,8 +185,8 @@ class TestStrUnicode(TestCase):
 
     def test_workspace_counter(self):
         instance = models.WorkspaceCounter()
-        instance.workspace = CountryFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
+        instance.workspace = CountryFactory.build(name='xyz')
+        self.assertEqual(str(instance), 'xyz')
         self.assertEqual(unicode(instance), u'xyz')
 
         instance = models.WorkspaceCounter()
@@ -195,8 +195,8 @@ class TestStrUnicode(TestCase):
         self.assertEqual(unicode(instance), u'Magyarorsz\xe1g')
 
     def test_office(self):
-        instance = OfficeFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
+        instance = OfficeFactory.build(name='xyz')
+        self.assertEqual(str(instance), 'xyz')
         self.assertEqual(unicode(instance), u'xyz')
 
         instance = OfficeFactory.build(name=u'Magyarorsz\xe1g')
@@ -204,8 +204,8 @@ class TestStrUnicode(TestCase):
         self.assertEqual(unicode(instance), u'Magyarorsz\xe1g')
 
     def test_section(self):
-        instance = SectionFactory.build(name=b'xyz')
-        self.assertEqual(str(instance), b'xyz')
+        instance = SectionFactory.build(name='xyz')
+        self.assertEqual(str(instance), 'xyz')
         self.assertEqual(unicode(instance), u'xyz')
 
         instance = SectionFactory.build(name=u'Magyarorsz\xe1g')
@@ -214,10 +214,10 @@ class TestStrUnicode(TestCase):
 
     def test_user_profile(self):
         UserModel = get_user_model()
-        user = UserModel(first_name=b'Sviatoslav', last_name='')
+        user = UserModel(first_name='Sviatoslav', last_name='')
         instance = models.UserProfile()
         instance.user = user
-        self.assertEqual(str(instance), b'User profile for Sviatoslav')
+        self.assertEqual(str(instance), 'User profile for Sviatoslav')
         self.assertEqual(unicode(instance), u'User profile for Sviatoslav')
 
         user = UserModel(first_name=u'Sventoslav\u016d')

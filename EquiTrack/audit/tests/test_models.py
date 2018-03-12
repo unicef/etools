@@ -75,7 +75,7 @@ class TestStrUnicode(TestCase):
     def test_auditor_staff_member(self):
         user = UserFactory.build(first_name='Bugs', last_name='Bunny')
         instance = AuditorStaffMemberFactory.build(user=user)
-        self.assertEqual(str(instance), b'Bugs Bunny')
+        self.assertEqual(str(instance), 'Bugs Bunny')
         self.assertEqual(unicode(instance), 'Bugs Bunny')
 
         user = UserFactory.build(first_name='Harald', last_name='H\xe5rdr\xe5da')
@@ -84,8 +84,8 @@ class TestStrUnicode(TestCase):
         self.assertEqual(unicode(instance), 'Harald H\xe5rdr\xe5da')
 
     def test_purchase_order(self):
-        instance = PurchaseOrderFactory.build(order_number=b'two')
-        self.assertEqual(str(instance), b'two')
+        instance = PurchaseOrderFactory.build(order_number='two')
+        self.assertEqual(str(instance), 'two')
         self.assertEqual(unicode(instance), 'two')
 
         instance = PurchaseOrderFactory.build(order_number='tv\xe5')
@@ -95,7 +95,7 @@ class TestStrUnicode(TestCase):
     def test_engagement(self):
         purchase_order = PurchaseOrderFactory.build(order_number='two')
         instance = EngagementFactory.build(agreement=purchase_order)
-        self.assertIn(b' two,', str(instance))
+        self.assertIn(' two,', str(instance))
         self.assertIn(' two,', unicode(instance))
 
         purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
@@ -105,7 +105,7 @@ class TestStrUnicode(TestCase):
 
     def test_rick_category(self):
         instance = RiskCategoryFactory.build(header='two')
-        self.assertEqual(str(instance), b'RiskCategory two')
+        self.assertEqual(str(instance), 'RiskCategory two')
         self.assertEqual(unicode(instance), 'RiskCategory two')
 
         instance = RiskCategoryFactory.build(header='tv\xe5')
@@ -115,7 +115,7 @@ class TestStrUnicode(TestCase):
     def test_risk_blueprint(self):
         risk_category = RiskCategoryFactory.build(header='two')
         instance = RiskBluePrintFactory.build(category=risk_category)
-        self.assertEqual(str(instance), b'RiskBluePrint at two')
+        self.assertEqual(str(instance), 'RiskBluePrint at two')
         self.assertEqual(unicode(instance), 'RiskBluePrint at two')
 
         risk_category = RiskCategoryFactory.build(header='tv\xe5')
@@ -127,7 +127,7 @@ class TestStrUnicode(TestCase):
         purchase_order = PurchaseOrderFactory.build(order_number='two')
         engagement = EngagementFactory.build(agreement=purchase_order)
         instance = RiskFactory.build(engagement=engagement)
-        self.assertIn(b' two,', str(instance))
+        self.assertIn(' two,', str(instance))
         self.assertIn(' two,', unicode(instance))
 
         purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
@@ -139,7 +139,7 @@ class TestStrUnicode(TestCase):
     def test_spot_check(self):
         purchase_order = PurchaseOrderFactory.build(order_number='two')
         instance = SpotCheckFactory.build(agreement=purchase_order)
-        self.assertIn(b' two,', str(instance))
+        self.assertIn(' two,', str(instance))
         self.assertIn(' two,', unicode(instance))
 
         purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
@@ -151,7 +151,7 @@ class TestStrUnicode(TestCase):
         purchase_order = PurchaseOrderFactory.build(order_number='two')
         spot_check = SpotCheckFactory.build(agreement=purchase_order)
         instance = FindingFactory.build(spot_check=spot_check)
-        self.assertIn(b' two,', str(instance))
+        self.assertIn(' two,', str(instance))
         self.assertIn(' two,', unicode(instance))
 
         purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
@@ -163,7 +163,7 @@ class TestStrUnicode(TestCase):
     def test_micro_assessment(self):
         purchase_order = PurchaseOrderFactory.build(order_number='two')
         instance = MicroAssessmentFactory.build(agreement=purchase_order)
-        self.assertIn(b' two,', str(instance))
+        self.assertIn(' two,', str(instance))
         self.assertIn(' two,', unicode(instance))
 
         purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
@@ -175,7 +175,7 @@ class TestStrUnicode(TestCase):
         purchase_order = PurchaseOrderFactory.build(order_number='two')
         micro = MicroAssessmentFactory.build(agreement=purchase_order)
         instance = DetailedFindingInfoFactory.build(micro_assesment=micro)
-        self.assertIn(b' two,', str(instance))
+        self.assertIn(' two,', str(instance))
         self.assertIn(' two,', unicode(instance))
 
         purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
@@ -187,7 +187,7 @@ class TestStrUnicode(TestCase):
     def test_audit(self):
         purchase_order = PurchaseOrderFactory.build(order_number='two')
         instance = AuditFactory.build(agreement=purchase_order)
-        self.assertIn(b' two,', str(instance))
+        self.assertIn(' two,', str(instance))
         self.assertIn(' two,', unicode(instance))
 
         purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
@@ -198,7 +198,7 @@ class TestStrUnicode(TestCase):
     def test_special_audit(self):
         purchase_order = PurchaseOrderFactory.build(order_number='two')
         instance = SpecialAuditFactory.build(agreement=purchase_order)
-        self.assertIn(b' two,', str(instance))
+        self.assertIn(' two,', str(instance))
         self.assertIn(' two,', unicode(instance))
 
         purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
@@ -210,7 +210,7 @@ class TestStrUnicode(TestCase):
         purchase_order = PurchaseOrderFactory.build(order_number='two')
         engagement = EngagementFactory.build(agreement=purchase_order)
         instance = EngagementActionPointFactory.build(engagement=engagement)
-        self.assertIn(b' two,', str(instance))
+        self.assertIn(' two,', str(instance))
         self.assertIn(' two,', unicode(instance))
 
         purchase_order = PurchaseOrderFactory.build(order_number='tv\xe5')
@@ -221,7 +221,7 @@ class TestStrUnicode(TestCase):
 
     def test_audit_permission(self):
         instance = AuditPermissionFactory.build(user_type='two')
-        self.assertIn(b'two', str(instance))
+        self.assertIn('two', str(instance))
         self.assertIn('two', unicode(instance))
 
         instance = AuditPermissionFactory.build(user_type='tv\xe5')
