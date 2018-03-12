@@ -67,7 +67,9 @@ class TestReportViews(APITenantTestCase):
         url = reverse('results-list')
         response = self.forced_auth_req('get', url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        response_ids = [int(item['id']) for item in response.data]
+        result_ids = [self.result1.id, self.result2.id]
+        self.assertEqual(sorted(response_ids), sorted(result_ids))
 
     def test_api_results_patch(self):
         url = reverse('results-detail', args=[self.result1.id])
@@ -85,13 +87,15 @@ class TestReportViews(APITenantTestCase):
     def test_apiv2_results_list(self):
         response = self.forced_auth_req('get', self.v2_results_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        response_ids = [int(item['id']) for item in response.data]
+        result_ids = [self.result1.id, self.result2.id]
+        self.assertEqual(sorted(response_ids), sorted(result_ids))
 
     def test_apiv2_results_list_minimal(self):
         data = {"verbosity": "minimal"}
         response = self.forced_auth_req('get', self.v2_results_url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0].keys(), ["id", "name"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "name"])
 
     def test_apiv2_results_retrieve(self):
         detail_url = reverse('report-result-detail', args=[self.result1.id])
@@ -114,13 +118,17 @@ class TestReportViews(APITenantTestCase):
         data = {"country_programme": self.result1.country_programme.id}
         response = self.forced_auth_req('get', self.v2_results_url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        response_ids = [int(item['id']) for item in response.data]
+        result_ids = [self.result1.id, self.result2.id]
+        self.assertEqual(sorted(response_ids), sorted(result_ids))
 
     def test_apiv2_results_list_filter_result_type(self):
         data = {"result_type": self.result_type.name}
         response = self.forced_auth_req('get', self.v2_results_url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(int(response.data[0]["id"]), self.result1.id)
+        response_ids = [int(item['id']) for item in response.data]
+        result_ids = [self.result1.id, self.result2.id]
+        self.assertEqual(sorted(response_ids), sorted(result_ids))
 
     def test_apiv2_results_list_filter_values(self):
         data = {"values": '{},{}'.format(self.result1.id, self.result2.id)}
@@ -141,7 +149,9 @@ class TestReportViews(APITenantTestCase):
         }
         response = self.forced_auth_req('get', self.v2_results_url, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(self.result1.id, [int(i["id"]) for i in response.data])
+        response_ids = [int(item['id']) for item in response.data]
+        result_ids = [self.result1.id, self.result2.id]
+        self.assertEqual(sorted(response_ids), sorted(result_ids))
 
 
 class TestDisaggregationListCreateViews(APITenantTestCase):

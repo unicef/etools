@@ -47,7 +47,7 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
         self.assertTrue(hasattr(exception, 'detail'))
         self.assertIsInstance(exception.detail, dict)
         # exception.detail should have only one key.
-        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertEqual(list(exception.detail.keys()), ['errors'])
         # exception.detail['errors'] should map to a list that contains the expected message.
         self.assertIsInstance(exception.detail['errors'], list)
         self.assertEqual(exception.detail['errors'], [expected_message])
@@ -71,12 +71,12 @@ class AgreementCreateUpdateSerializerBase(EToolsTenantTestCase):
         #    }
         self.assertTrue(hasattr(exception, 'detail'))
         self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['errors'])
+        self.assertEqual(list(exception.detail.keys()), ['errors'])
         self.assertIsInstance(exception.detail['errors'], list)
         self.assertEqual(len(exception.detail['errors']), 1)
         the_error = exception.detail['errors'][0]
         self.assertIsInstance(the_error, dict)
-        self.assertEqual(the_error.keys(), ['signed_amendment'])
+        self.assertEqual(list(the_error.keys()), ['signed_amendment'])
         self.assertIsInstance(the_error['signed_amendment'], list)
         self.assertEqual(the_error['signed_amendment'], [expected_message])
 
@@ -108,7 +108,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         exception = context_manager.exception
 
         self.assertIsInstance(exception.detail, dict)
-        self.assertEqual(exception.detail.keys(), ['country_programme'])
+        self.assertEqual((exception.detail.keys()), ['country_programme'])
         self.assertEqual(exception.detail['country_programme'], 'Country Programme is required for PCAs!')
 
     def test_create_fail_one_PCA_per_country_programme_and_partner(self):
@@ -703,7 +703,7 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
         serializer = PartnerOrganizationDetailSerializer(instance=self.partner)
 
         data = serializer.data
-        self.assertItemsEqual(data.keys(), [
+        self.assertItemsEqual(sorted(data.keys()), [
             'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
             'core_values_assessment', 'core_values_assessment_date', 'core_values_assessment_file', 'country',
             'created', 'cso_type', 'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values',
@@ -713,12 +713,12 @@ class TestPartnerOrganizationDetailSerializer(EToolsTenantTestCase):
             'vendor_number', 'vision_synced'
         ])
 
-        self.assertItemsEqual(data['planned_engagement'].keys(), [
+        self.assertItemsEqual(sorted(data['planned_engagement'].keys()), [
             'id', 'scheduled_audit', 'special_audit', 'spot_check_follow_up_q1', 'spot_check_follow_up_q2',
             'spot_check_follow_up_q3', 'spot_check_follow_up_q4', 'spot_check_mr',
             'total_spot_check_follow_up_required', 'spot_check_required', 'required_audit'
         ])
 
         self.assertEquals(len(data['staff_members']), 1)
-        self.assertItemsEqual(data['staff_members'][0].keys(), [
+        self.assertItemsEqual(sorted(data['staff_members'][0].keys()), [
             'active', 'created', 'email', 'first_name', u'id', 'last_name', 'modified', 'partner', 'phone', 'title'])
