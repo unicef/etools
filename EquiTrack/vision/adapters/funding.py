@@ -1,7 +1,11 @@
+from __future__ import division
+
 import datetime
 import json
 import logging
 from decimal import Decimal
+
+from django.db.models import Sum
 
 from funds.models import FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 from vision.utils import comp_decimals
@@ -32,9 +36,9 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "CURRENT_FR_AMOUNT",
         "ACTUAL_CASH_TRANSFER",
         "OUTSTANDING_DCT",
-        'FR_OVERALL_AMOUNT_DC',
-        'ACTUAL_CASH_TRANSFER_DC',
-        'OUTSTANDING_DCT_DC'
+        # 'FR_OVERALL_AMOUNT_DC',
+        # 'ACTUAL_CASH_TRANSFER_DC',
+        # 'OUTSTANDING_DCT_DC'
     )
     MAPPING = {
         "vendor_code": "VENDOR_CODE",
@@ -55,16 +59,16 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         "due_date": "DUE_DATE",
         "intervention_amt": "CURRENT_FR_AMOUNT",
         "total_amt": "FR_OVERALL_AMOUNT",
-        "total_amt_local": "FR_OVERALL_AMOUNT_DC",
-        "actual_amt_local": "ACTUAL_CASH_TRANSFER_DC",
+        # "total_amt_local": "FR_OVERALL_AMOUNT_DC",
+        # "actual_amt_local": "ACTUAL_CASH_TRANSFER_DC",
         "actual_amt": "ACTUAL_CASH_TRANSFER",
         "outstanding_amt": "OUTSTANDING_DCT",
-        "outstanding_amt_local": "OUTSTANDING_DCT_DC",
+        # "outstanding_amt_local": "OUTSTANDING_DCT_DC",
     }
     HEADER_FIELDS = ['VENDOR_CODE', 'FR_NUMBER', 'FR_DOC_DATE', 'FR_TYPE', 'CURRENCY',
                      'FR_DOCUMENT_TEXT', 'FR_START_DATE', 'FR_END_DATE', "FR_OVERALL_AMOUNT",
-                     "CURRENT_FR_AMOUNT", "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT",
-                     'FR_OVERALL_AMOUNT_DC', 'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC']
+                     "CURRENT_FR_AMOUNT", "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT"]
+    # 'FR_OVERALL_AMOUNT_DC', 'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC']
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
@@ -91,7 +95,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         records = super(FundReservationsSynchronizer, self)._filter_records(records)
 
         def bad_record(record):
-            # We don't care about FCs without expenditure
+            # We don't care about FRs without expenditure
             if not record['OVERALL_AMOUNT']:
                 return False
             if not record['FR_NUMBER']:
@@ -204,18 +208,34 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         return updated, len(to_create)
 
+    def update_fr_totals(self):
+        totals_updated = 0
+        qs = FundsReservationHeader.objects
+        qs = qs.annotate(my_li_total_sum=Sum('fr_items__overall_amount_dc'))
+        for fr in qs:
+            # Divide by 10 temporarily since Vision API is returning values with an extra 0
+            total_li_sum = fr.my_li_total_sum
+            if not comp_decimals(total_li_sum, fr.total_amt_local):
+                fr.total_amt_local = total_li_sum
+                fr.save()
+                totals_updated += 1
+        return totals_updated
+
     def _save_records(self, records):
 
         filtered_records = self._filter_records(records)
         self.set_mapping(filtered_records)
         h_processed = self.header_sync()
         i_processed = self.li_sync()
+        h_totals_updated = self.update_fr_totals()
 
         logging.info('tocreate {}'.format(h_processed[1]))
         logging.info('toupdate {}'.format(h_processed[0]))
         logging.info('tocreate li {}'.format(i_processed[1]))
         logging.info('toupdate li {}'.format(i_processed[0]))
+        logging.info('totals_updated {}'.format(h_totals_updated))
         processed = h_processed[0] + i_processed[0] + h_processed[1] + i_processed[1]
+
         return processed
 
 
