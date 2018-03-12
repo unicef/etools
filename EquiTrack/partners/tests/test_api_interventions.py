@@ -9,6 +9,7 @@ from django.core.cache import cache
 from django.core.urlresolvers import reverse, resolve
 from django.db import connection
 from django.utils import timezone
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
@@ -30,7 +31,8 @@ from EquiTrack.factories import (
     PartnerFactory,
     ResultFactory,
     SectorFactory,
-    UserFactory)
+    UserFactory,
+    GroupFactory)
 from environment.helpers import tenant_switch_is_active
 from environment.models import TenantSwitch
 from environment.tests.factories import TenantSwitchFactory
@@ -1394,6 +1396,127 @@ class TestInterventionAmendmentListAPIView(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertFalse(response_json)
+
+
+class TestInterventionAmendmentCreateAPIView(APITenantTestCase):
+    def setUp(self):
+        super(TestInterventionAmendmentCreateAPIView, self).setUp()
+
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.partnership_manager_user.groups.add(GroupFactory())
+
+        self.intervention = InterventionFactory(status=Intervention.SIGNED)
+        self.url = reverse(
+            "partners_api:intervention-amendments-add",
+            kwargs={'intervention_pk': self.intervention.id}
+        )
+
+        self.uploaded_file = SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8'))
+        self.data = {
+            "types": InterventionAmendment.DATES,
+            "signed_date": datetime.date.today(),
+            "signed_amendment": self.uploaded_file,
+        }
+
+    def assertResponseFundamentals(self, response):
+        '''Assert common fundamentals about the response.'''
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, dict)
+        self.assertIn('id', response_json)
+        return response_json
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self._make_request(user=UserFactory())
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.post(self.url, data={})
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_group_permission_partnership_member(self):
+        '''Ensure group membership is sufficient for create;'''
+        user = UserFactory(is_staff=True)
+        response = self._make_request(user=user)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_amendment_invalid_type(self):
+        invalid_type = 'asdf'
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data={"types": [invalid_type], "signed_amendment": self.uploaded_file},
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data['types'], [u'"%s" is not a valid choice.' % invalid_type])
+
+    def test_create_amendment_invalid_file(self):
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data={},
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data['signed_amendment'], [u'No file was submitted.'])
+
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data={'signed_amendment': 'asdf'},
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(
+            response.data['signed_amendment'],
+            [u'The submitted data was not a file. Check the encoding type on the form.']
+        )
+
+    def test_create_amendment_invalid_date(self):
+        tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data={"signed_amendment": self.uploaded_file, 'signed_date': tomorrow},
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(next(iter(response.data.values())), [u'Date cannot be in the future!'])
+
+    def test_create_amendment_success(self):
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data=self.data,
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        data = self.assertResponseFundamentals(response)
+        self.assertEquals(data['intervention'], self.intervention.id)
+
+    def test_create_amendment_when_already_in_amendment(self):
+        self.intervention.in_amendment = True
+        self.intervention.save()
+
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data=self.data,
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(
+            next(iter(response.data.values())),
+            [u'Cannot add a new amendment while another amendment is in progress.']
+        )
+
+    def _make_request(self, user=None, data=None, request_format='json', **kwargs):
+        return self.forced_auth_req('post', self.url, user=user, data=data, request_format=request_format, **kwargs)
 
 
 class TestInterventionAmendmentDeleteView(APITenantTestCase):
