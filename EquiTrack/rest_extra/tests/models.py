@@ -4,7 +4,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from utils.common.models.fields import CodedGenericRelation
+from generics.fields import CodedGenericRelation
 
 
 class GenericChild(models.Model):

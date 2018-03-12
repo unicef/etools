@@ -25,7 +25,6 @@ class TestUtils(TestCase):
 
 
 class TestGetAllFieldNames(TestCase):
-    '''Tests for utils.common.utils'''
     def test_get_all_field_names(self):
         '''Exercise get_all_field_names() which is Django-provided code to replace Model._meta.get_all_field_names()'''
         class Useless:

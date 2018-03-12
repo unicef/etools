@@ -19,8 +19,6 @@ from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 
-from EquiTrack.utils import get_environment
-from EquiTrack.utils.wrappers import GroupWrapper
 from attachments.models import Attachment
 from audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
 from audit.transitions.conditions import (
@@ -28,10 +26,12 @@ from audit.transitions.conditions import (
     EngagementSubmitReportRequiredFieldsCheck, SpecialAuditSubmitRelatedModelsCheck, SPSubmitReportRequiredFieldsCheck,
     ValidateAuditRiskCategories, ValidateMARiskCategories, ValidateMARiskExtra, )
 from audit.transitions.serializers import EngagementCancelSerializer
+from EquiTrack.urlresolvers import build_frontend_url
+from EquiTrack.utils import get_environment
+from EquiTrack.utils.wrappers import GroupWrapper
+from generics.fields import CodedGenericRelation
 from notification.models import Notification
 from partners.models import PartnerStaffMember, PartnerOrganization
-from utils.common.models.fields import CodedGenericRelation
-from EquiTrack.urlresolvers import build_frontend_url
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from utils.permissions.utils import has_action_permission

@@ -181,7 +181,7 @@ SHARED_APPS = (
     'audit.purchase_order',
     'EquiTrack',
     'tpm.tpmpartners',
-    'utils.common',
+    'generics',
     'rest_extra',
     'utils.permissions',
     'waffle',

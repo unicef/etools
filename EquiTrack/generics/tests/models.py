@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from utils.common.models.fields import CodedGenericRelation
+from generics.fields import CodedGenericRelation
 
 
 class CodedGenericChild(models.Model):

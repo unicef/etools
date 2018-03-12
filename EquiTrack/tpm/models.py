@@ -14,16 +14,16 @@ from model_utils.models import TimeStampedModel
 
 from activities.models import Activity
 from attachments.models import Attachment
+from EquiTrack.urlresolvers import build_frontend_url
 from EquiTrack.utils import get_environment
 from EquiTrack.utils.wrappers import GroupWrapper
+from generics.fields import CodedGenericRelation
 from notification.models import Notification
 from publics.models import SoftDeleteMixin
 from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer
 from tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck, TPMVisitReportValidations, ValidateTPMVisitActivities,)
-from utils.common.models.fields import CodedGenericRelation
-from EquiTrack.urlresolvers import build_frontend_url
 from utils.permissions.models.models import StatusBasePermission
 from utils.permissions.models.query import StatusBasePermissionQueryset
 from utils.permissions.utils import has_action_permission
