@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
@@ -55,6 +56,17 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
+
+    def validate(self, data):
+        data = super(InterventionAmendmentCUSerializer, self).validate(data)
+
+        if 'signed_date' in data and data['signed_date'] > date.today():
+            raise ValidationError("Date cannot be in the future!")
+
+        if 'intervention' in data and data['intervention'].in_amendment is True:
+            raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
+
+        return data
 
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
