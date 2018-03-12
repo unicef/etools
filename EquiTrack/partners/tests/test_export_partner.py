@@ -1,8 +1,9 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
 
 from django.core.urlresolvers import reverse
+from django.utils import six
 from rest_framework import status
 from tablib.core import Dataset
 
@@ -97,7 +98,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
 
         self.assertEqual(test_option, (
             self.partner.vendor_number,
-            unicode(self.partner.name),
+            six.text_type(self.partner.name),
             self.partner.short_name,
             self.partner.alternate_name,
             "{}".format(self.partner.partner_type),

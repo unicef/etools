@@ -1,5 +1,5 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 import decimal
 import json
@@ -10,6 +10,7 @@ from django.db import models, connection, transaction
 from django.db.models import F, Sum, Max, Min, CharField, Count
 from django.db.models.signals import post_save, pre_delete
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils import six
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
@@ -48,7 +49,7 @@ def _get_partner_base_path(partner):
         connection.schema_name,
         'file_attachments',
         'partner_organization',
-        str(partner.id),
+        six.text_type(partner.id),
     ])
 
 
@@ -56,7 +57,7 @@ def get_agreement_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.partner),
         'agreements',
-        str(instance.agreement_number),
+        six.text_type(instance.agreement_number),
         filename
     ])
 
@@ -67,7 +68,7 @@ def get_assesment_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.partner),
         'assesments',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -76,9 +77,9 @@ def get_intervention_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.agreement.partner),
         'agreements',
-        str(instance.agreement.id),
+        six.text_type(instance.agreement.id),
         'interventions',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -87,9 +88,9 @@ def get_prc_intervention_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.agreement.partner),
         'agreements',
-        str(instance.agreement.id),
+        six.text_type(instance.agreement.id),
         'interventions',
-        str(instance.id),
+        six.text_type(instance.id),
         'prc',
         filename
     ])
@@ -98,13 +99,13 @@ def get_prc_intervention_file_path(instance, filename):
 def get_intervention_amendment_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.intervention.agreement.partner),
-        str(instance.intervention.agreement.partner.id),
+        six.text_type(instance.intervention.agreement.partner.id),
         'agreements',
-        str(instance.intervention.agreement.id),
+        six.text_type(instance.intervention.agreement.id),
         'interventions',
-        str(instance.intervention.id),
+        six.text_type(instance.intervention.id),
         'amendments',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -113,11 +114,11 @@ def get_intervention_attachments_file_path(instance, filename):
     return '/'.join([
         _get_partner_base_path(instance.intervention.agreement.partner),
         'agreements',
-        str(instance.intervention.agreement.id),
+        six.text_type(instance.intervention.agreement.id),
         'interventions',
-        str(instance.intervention.id),
+        six.text_type(instance.intervention.id),
         'attachments',
-        str(instance.id),
+        six.text_type(instance.id),
         filename
     ])
 
@@ -127,11 +128,11 @@ def get_agreement_amd_file_path(instance, filename):
         connection.schema_name,
         'file_attachments',
         'partner_org',
-        str(instance.agreement.partner.id),
+        six.text_type(instance.agreement.partner.id),
         'agreements',
         instance.agreement.base_number,
         'amendments',
-        str(instance.number),
+        six.text_type(instance.number),
         filename
     ])
 
@@ -459,9 +460,8 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
     def save(self, *args, **kwargs):
         # JSONFIELD has an issue where it keeps escaping characters
-        hact_is_string = isinstance(self.hact_values, str)
+        hact_is_string = isinstance(self.hact_values, six.text_type)
         try:
-
             self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
         except ValueError as e:
             e.message = 'hact_values needs to be a valid format (dict)'
@@ -570,7 +570,9 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
             pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
             pvq4 = pv.aggregate(models.Sum('programmatic_q4'))['programmatic_q4__sum'] or 0
 
-        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+        hact = json.loads(partner.hact_values) \
+            if isinstance(partner.hact_values, six.text_type) \
+            else partner.hact_values
         hact['programmatic_visits']['planned']['q1'] = pvq1
         hact['programmatic_visits']['planned']['q2'] = pvq2
         hact['programmatic_visits']['planned']['q3'] = pvq3
@@ -2174,10 +2176,10 @@ def get_file_path(instance, filename):
         [connection.schema_name,
          'file_attachments',
          'partner_org',
-         str(instance.pca.agreement.partner.id),
+         six.text_type(instance.pca.agreement.partner.id),
          'agreements',
-         str(instance.pca.agreement.id),
+         six.text_type(instance.pca.agreement.id),
          'interventions',
-         str(instance.pca.id),
+         six.text_type(instance.pca.id),
          filename]
     )
