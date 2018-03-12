@@ -7,7 +7,7 @@ from rest_framework_nested import routers
 from audit.views import (
     AuditorFirmViewSet, AuditorStaffMembersViewSet, AuditViewSet, EngagementViewSet,
     MicroAssessmentViewSet, PurchaseOrderViewSet, SpecialAuditViewSet, SpotCheckViewSet,)
-from utils.common.routers import NestedComplexRouter
+from rest_extra.routers import NestedComplexRouter
 
 auditor_firms_api = routers.SimpleRouter()
 auditor_firms_api.register(r'audit-firms', AuditorFirmViewSet, base_name='audit-firms')

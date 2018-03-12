@@ -4,7 +4,7 @@ from django.conf.urls import url, include
 
 from rest_framework_nested import routers
 
-from utils.common.routers import NestedComplexRouter
+from rest_extra.routers import NestedComplexRouter
 from tpm.views import TPMPartnerViewSet, TPMVisitViewSet, TPMStaffMembersViewSet
 
 tpm_partners_api = routers.SimpleRouter()
