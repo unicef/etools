@@ -55,7 +55,7 @@ def migrate_amendment_types(apps, schema_editor):
             i.other_description = TYPE_MAP[i.type]
         i.save()
 
-    print 'Updated Intervention Amendments: {}'.format(no)
+    print('Updated Intervention Amendments: {}'.format(no))
 
 
 class Migration(migrations.Migration):
