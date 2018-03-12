@@ -71,11 +71,14 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         super(TestTransitionToClosed, self).setUp()
         self.expected = {
             'total_frs_amt': 0,
+            'total_frs_amt_usd': 0,
             'total_outstanding_amt': 0,
+            'total_outstanding_amt_usd': 0,
             'total_intervention_amt': 0,
             'total_actual_amt': 0,
+            'total_actual_amt_usd': 0,
             'earliest_start_date': None,
-            'latest_end_date': None
+            'latest_end_date': None,
         }
 
     def assertFundamentals(self, data):
@@ -100,9 +103,12 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
+            total_amt_local=0.00,
             intervention_amt=10.00,
-            actual_amt=10.00,
-            outstanding_amt=5.00
+            actual_amt=0.00,
+            actual_amt_local=10.00,
+            outstanding_amt_local=5.00,
+            outstanding_amt=0.00
         )
         with self.assertRaisesRegexp(
                 TransitionError,
@@ -122,8 +128,11 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
+            total_amt_local=0.00,
             intervention_amt=10.00,
-            actual_amt=20.00,
+            actual_amt_local=20.00,
+            actual_amt=0.00,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00
         )
         with self.assertRaisesRegexp(
@@ -143,12 +152,15 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
-            intervention_amt=10.00,
-            actual_amt=10.00,
-            outstanding_amt=0.00
+            total_amt_local=10.00,
+            intervention_amt=0.00,
+            actual_amt=0.00,
+            actual_amt_local=10.00,
+            outstanding_amt=0.00,
+            outstanding_amt_local=0.00
         )
         self.assertTrue(transition_to_closed(self.intervention))
-        self.expected["total_intervention_amt"] = 10.00
+        self.expected["total_frs_amt"] = 10.00
         self.expected["total_actual_amt"] = 10.00
         self.expected["earliest_start_date"] = frs.start_date
         self.expected["latest_end_date"] = frs.end_date
@@ -161,10 +173,14 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
+            total_amt_local=120000.00,
+            actual_amt_local=120000.00,
             actual_amt=120000.00,
-            intervention_amt=120000.00,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00,
+            intervention_amt=0.00,
         )
+
         with self.assertRaisesRegexp(
                 TransitionError,
                 'Total amount transferred greater than 100,000 and no '
@@ -172,7 +188,8 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         ):
             transition_to_closed(self.intervention)
         self.expected["total_actual_amt"] = 120000.00
-        self.expected["total_intervention_amt"] = 120000.00
+        self.expected["total_actual_amt_usd"] = 120000.00
+        self.expected["total_frs_amt"] = 120000.00
         self.expected["earliest_start_date"] = frs.start_date
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
@@ -191,13 +208,16 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
-            actual_amt=120000.00,
-            intervention_amt=120000.00,
+            total_amt_local=120000.00,
+            actual_amt_local=120000.00,
+            actual_amt=0,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00,
+            intervention_amt=0.00,
         )
         self.assertTrue(transition_to_closed(self.intervention))
         self.expected["total_actual_amt"] = 120000.00
-        self.expected["total_intervention_amt"] = 120000.00
+        self.expected["total_frs_amt"] = 120000.00
         self.expected["earliest_start_date"] = frs.start_date
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
@@ -206,15 +226,17 @@ class TestTransitionToClosed(EToolsTenantTestCase):
         """Ensure total_frs_amt set correctly"""
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
-            total_amt=200.00,
-            actual_amt=100.00,
-            intervention_amt=100.00,
+            total_amt=0.00,
+            total_amt_local=100.00,
+            actual_amt=0.00,
+            actual_amt_local=100.00,
+            intervention_amt=0.00,
             outstanding_amt=0.00,
+            outstanding_amt_local=0.00,
         )
         self.assertTrue(transition_to_closed(self.intervention))
-        self.expected["total_frs_amt"] = 200.00
+        self.expected["total_frs_amt"] = 100.00
         self.expected["total_actual_amt"] = 100.00
-        self.expected["total_intervention_amt"] = 100.00
         self.expected["earliest_start_date"] = frs.start_date
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
@@ -225,37 +247,46 @@ class TestTransitionToClosed(EToolsTenantTestCase):
             intervention=self.intervention,
             fr_number=1,
             total_amt=0.00,
+            total_amt_local=100.00,
             start_date=datetime.date(2001, 1, 1),
             end_date=datetime.date(2001, 2, 1),
-            actual_amt=100.00,
-            intervention_amt=100.00,
+            actual_amt=0.00,
+            actual_amt_local=100.00,
+            intervention_amt=0.00,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00,
         )
         FundsReservationHeaderFactory(
             intervention=self.intervention,
             fr_number=2,
             total_amt=0.00,
+            total_amt_local=100.00,
             start_date=datetime.date(2000, 1, 1),
             end_date=datetime.date(2000, 2, 1),
-            actual_amt=100.00,
-            intervention_amt=100.00,
+            actual_amt=0.00,
+            actual_amt_local=100.00,
+            intervention_amt=0.00,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00,
         )
         FundsReservationHeaderFactory(
             intervention=self.intervention,
             fr_number=3,
             total_amt=0.00,
+            total_amt_local=100.00,
             start_date=datetime.date(2002, 1, 1),
             end_date=datetime.date(2002, 2, 1),
-            actual_amt=100.00,
-            intervention_amt=100.00,
+            actual_amt_local=100.00,
+            actual_amt=0.00,
+            intervention_amt=0.00,
+            outstanding_amt_local=0.00,
             outstanding_amt=0.00,
         )
         self.assertTrue(transition_to_closed(self.intervention))
-        self.expected["earliest_start_date"] = datetime.date(2002, 1, 1)
-        self.expected["latest_end_date"] = datetime.date(2000, 2, 1)
+        self.expected["earliest_start_date"] = datetime.date(2000, 1, 1)
+        self.expected["latest_end_date"] = datetime.date(2002, 2, 1)
         self.expected["total_actual_amt"] = 300.00
-        self.expected["total_intervention_amt"] = 300.00
+        self.expected["total_frs_amt"] = 300.00
         self.assertFundamentals(self.intervention.total_frs)
 
 
