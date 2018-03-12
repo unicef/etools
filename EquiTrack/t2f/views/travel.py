@@ -1,28 +1,26 @@
 from __future__ import unicode_literals
 
-from django.db.models import F, Case, When, CharField
+from django.db.models import Case, CharField, F, When
 from django.db.transaction import atomic
-
-from rest_framework import viewsets, mixins, status
+from rest_framework import mixins, status, viewsets
 from rest_framework.generics import get_object_or_404
-from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser
-from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-
 from rest_framework_csv import renderers
 
-from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter, TravelActivityInterventionFilter
-from t2f.filters import travel_list, action_points
+from t2f.filters import (
+    action_points, travel_list, TravelActivityInterventionFilter, TravelActivityPartnerFilter, TravelRelatedModelFilter)
+from t2f.helpers.clone_travel import CloneTravelHelper
+from t2f.helpers.permission_matrix import FakePermissionMatrix, PermissionMatrix
+from t2f.models import ActionPoint, Travel, TravelActivity, TravelAttachment, TravelType
 from t2f.renderers import ActionPointCSVRenderer
 from t2f.serializers.export import ActionPointExportSerializer
-
-from t2f.models import Travel, TravelAttachment, ActionPoint, TravelActivity, TravelType
-from t2f.serializers.travel import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
-    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, TravelActivityByPartnerSerializer
-from t2f.helpers.permission_matrix import PermissionMatrix, FakePermissionMatrix
-from t2f.helpers.clone_travel import CloneTravelHelper
-from t2f.views import T2FPagePagination, run_transition
+from t2f.serializers.travel import (
+    ActionPointSerializer, CloneOutputSerializer, CloneParameterSerializer, TravelActivityByPartnerSerializer,
+    TravelAttachmentSerializer, TravelDetailsSerializer, TravelListSerializer,)
+from t2f.views import run_transition, T2FPagePagination
 
 
 class TravelListViewSet(mixins.ListModelMixin,

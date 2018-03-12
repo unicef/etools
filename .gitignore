@@ -4,6 +4,9 @@
 # Packaging files:
 *.egg*
 
+# Private Keys and Certs
+*.pem
+
 # Editor temp files:
 *.swp
 *~
@@ -21,7 +24,7 @@ build
 *idea*
 
 EquiTrack/static/*
-
+EquiTrack/migration_errors.txt
 static/*
 media
 

@@ -1,35 +1,29 @@
 import datetime
 import operator
 
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import models
 from django.db.models.functions import Concat
-from django.db.models import F, Value
+from django.db.models import Value
 from model_utils import Choices
 
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.generics import (
-    ListAPIView,
-    RetrieveAPIView,
-    RetrieveUpdateDestroyAPIView,
-)
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 
-from publics.models import Currency
+from EquiTrack.fields import CURRENCIES
 
 from reports.models import (
     CountryProgramme,
     Result,
     ResultType,
 )
-from supplies.models import SupplyItem
 from funds.models import Donor
+from locations.models import GatewayType
 
 from partners.models import (
     PartnerOrganization,
-    PCA,
     Agreement,
     PartnerStaffMember,
     PartnerType,
@@ -41,55 +35,16 @@ from partners.models import (
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
-    PartnerStaffMemberPropertiesSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
 )
-from partners.permissions import PartneshipManagerPermission, PartnerPermission
-from partners.serializers.v1 import InterventionSerializer
+from partners.permissions import PartnershipManagerPermission
 from partners.filters import PartnerScopeFilter
-
-
-class PartnerInterventionListAPIView(ListAPIView):
-    queryset = Intervention.objects.detail_qs().all()
-    serializer_class = InterventionSerializer
-    permission_classes = (PartnerPermission,)
-
-    def list(self, request, pk=None, format=None):
-        """
-        Return All Interventions for Partner
-        """
-        interventions = Intervention.objects.detail_qs().filter(partner_id=pk)
-        serializer = InterventionSerializer(interventions, many=True)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
-
-
-class AgreementInterventionsListAPIView(ListAPIView):
-    serializer_class = InterventionSerializer
-    filter_backends = (PartnerScopeFilter,)
-    permission_classes = (PartneshipManagerPermission,)
-
-    def list(self, request, partner_pk=None, pk=None, format=None):
-        """
-        Return All Interventions for Partner and Agreement
-        """
-        if partner_pk:
-            interventions = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk)
-        else:
-            interventions = PCA.objects.filter(agreement_id=pk)
-        serializer = InterventionSerializer(interventions, many=True)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
 
 
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self, format=None):
@@ -98,40 +53,10 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
         return super(PartnerStaffMemberDetailAPIView, self).get_serializer_class()
 
 
-class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
-    """
-    Gets the details of Staff Member that belongs to a partner
-    """
-    serializer_class = PartnerStaffMemberPropertiesSerializer
-    queryset = PartnerStaffMember.objects.all()
-    permission_classes = (PartneshipManagerPermission,)
-
-    def get_object(self):
-        queryset = self.get_queryset()
-
-        # Get the current partnerstaffmember
-        try:
-            current_member = PartnerStaffMember.objects.get(id=self.request.user.profile.partner_staff_member)
-        except PartnerStaffMember.DoesNotExist:
-            raise Exception('there is no PartnerStaffMember record associated with this user')
-
-        # Perform the lookup filtering.
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        # If current member is actually looking for themselves return right away.
-        if self.kwargs[lookup_url_kwarg] == str(current_member.id):
-            return current_member
-
-        filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-        # allow lookup only for PSMs inside the same partnership
-        filter['partner'] = current_member.partner
-
-        obj = get_object_or_404(queryset, **filter)
-        self.check_object_permissions(self.request, obj)
-        return obj
-
-
 def choices_to_json_ready(choices):
-    if isinstance(choices, dict) or isinstance(choices, Choices):
+    if isinstance(choices, dict):
+        choice_list = [(k, v) for k, v in choices.items()]
+    elif isinstance(choices, Choices):
         choice_list = [(k, v) for k, v in choices]
     elif isinstance(choices, list):
         choice_list = []
@@ -146,7 +71,7 @@ def choices_to_json_ready(choices):
     return [{'label': choice[1], 'value': choice[0]} for choice in choice_list]
 
 
-class PmpStaticDropdownsListApiView(APIView):
+class PMPStaticDropdownsListAPIView(APIView):
     permission_classes = (IsAdminUser,)
 
     def get(self, request):
@@ -155,24 +80,21 @@ class PmpStaticDropdownsListApiView(APIView):
         """
 
         local_workspace = self.request.user.profile.country
-        cso_types = choices_to_json_ready(
-            list(
-                PartnerOrganization.objects.values_list(
-                    'cso_type',
-                    flat=True).order_by('cso_type').distinct('cso_type')))
+        cso_types = PartnerOrganization.objects.values_list('cso_type', flat=True)
+        cso_types = cso_types.exclude(cso_type__isnull=True).exclude(cso_type__exact='')
+        cso_types = cso_types.order_by('cso_type').distinct('cso_type')
+        cso_types = choices_to_json_ready(list(cso_types))
         partner_types = choices_to_json_ready(PartnerType.CHOICES)
         agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
-        assessment_types = choices_to_json_ready(Assessment.ASSESMENT_TYPES)
-        agreement_types = choices_to_json_ready(
-            [typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
+        assessment_types = choices_to_json_ready(Assessment.ASSESSMENT_TYPES)
+        agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(AgreementAmendment.AMENDMENT_TYPES)
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
-
-        currencies = map(lambda x: {"label": x[0], "value": x[1]},
-                         Currency.objects.values_list('code', 'id').order_by('code').distinct())
+        location_types = GatewayType.objects.values('id', 'name', 'admin_level').order_by('id')
+        currencies = choices_to_json_ready(CURRENCIES)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
@@ -189,15 +111,14 @@ class PmpStaticDropdownsListApiView(APIView):
                 'intervention_status': intervention_status,
                 'intervention_amendment_types': intervention_amendment_types,
                 'currencies': currencies,
-                'local_currency': local_currency
+                'local_currency': local_currency,
+                'location_types': location_types
             },
             status=status.HTTP_200_OK
         )
 
 
 class PMPDropdownsListApiView(APIView):
-    # serializer_class = InterventionSerializer
-    # filter_backends = (PartnerScopeFilter,)
     permission_classes = (IsAdminUser,)
 
     def get(self, request):
@@ -206,15 +127,15 @@ class PMPDropdownsListApiView(APIView):
         """
         signed_by_unicef = list(models.User.objects.filter(
             groups__name__in=['Senior Management Team'],
-            profile__country=request.tenant).annotate(
-                full_name=Concat('first_name', Value(' '), 'last_name'), user_id=F('id')
-        ).values('user_id', 'full_name', 'username', 'email'))
+            profile__country=request.tenant
+        ).annotate(
+            name=Concat('first_name', Value(' '), 'last_name')
+        ).values('id', 'name', 'username', 'email'))
 
         country_programmes = list(CountryProgramme.objects.all_active_and_future.values('id', 'wbs', 'name',
                                                                                         'from_date', 'to_date'))
         cp_outputs = [{"id": r.id, "name": r.output_name, "wbs": r.wbs, "country_programme": r.country_programme.id}
                       for r in Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False)]
-        supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
                           .all().values())
         donors = list(Donor.objects.all().values())
@@ -224,7 +145,6 @@ class PMPDropdownsListApiView(APIView):
                 'signed_by_unicef_users': signed_by_unicef,
                 'country_programmes': country_programmes,
                 'cp_outputs': cp_outputs,
-                'supply_items': supply_items,
                 'file_types': file_types,
                 'donors': donors,
 

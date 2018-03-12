@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from . import models
+from funds.models import (
+    Donor, FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem, Grant,)
 
 
 class GrantAdmin(admin.ModelAdmin):
@@ -12,9 +13,9 @@ class FRAdmin(admin.ModelAdmin):
     search_fields = ('fr_number',)
 
 
-admin.site.register(models.Grant, GrantAdmin)
-admin.site.register(models.Donor)
-admin.site.register(models.FundsReservationHeader, FRAdmin)
-admin.site.register(models.FundsReservationItem)
-admin.site.register(models.FundsCommitmentHeader)
-admin.site.register(models.FundsCommitmentItem)
+admin.site.register(Grant, GrantAdmin)
+admin.site.register(Donor)
+admin.site.register(FundsReservationHeader, FRAdmin)
+admin.site.register(FundsReservationItem)
+admin.site.register(FundsCommitmentHeader)
+admin.site.register(FundsCommitmentItem)

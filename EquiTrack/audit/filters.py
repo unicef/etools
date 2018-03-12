@@ -1,8 +1,10 @@
-from django.db.models.lookups import YearTransform
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+from django.db.models.functions import TruncYear
 
 from rest_framework.filters import BaseFilterBackend
 
-from .models import Engagement
+from audit.models import Engagement
 
 
 class DisplayStatusFilter(BaseFilterBackend):
@@ -35,6 +37,10 @@ class DisplayStatusFilter(BaseFilterBackend):
             return partner_contacted.filter(
                 date_of_draft_report_to_ip__isnull=False, date_of_comments_by_ip__isnull=True
             )
+        elif status == Engagement.DISPLAY_STATUSES.comments_received_by_partner:
+            return partner_contacted.filter(
+                date_of_comments_by_ip__isnull=False, date_of_draft_report_to_unicef__isnull=True
+            )
         elif status == Engagement.DISPLAY_STATUSES.draft_issued_to_unicef:
             return partner_contacted.filter(
                 date_of_draft_report_to_unicef__isnull=False, date_of_comments_by_unicef__isnull=True
@@ -55,5 +61,5 @@ class UniqueIDOrderingFilter(BaseFilterBackend):
 
         ordering_params = ['partner__name', 'engagement_type', 'created_year', 'id']
 
-        return queryset.annotate(created_year=YearTransform('created'))\
+        return queryset.annotate(created_year=TruncYear('created'))\
             .order_by(*map(lambda param: ('' if ordering == 'unique_id' else '-') + param, ordering_params))

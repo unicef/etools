@@ -1,7 +1,10 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.contrib import admin
 
+import tpm.tpmpartners.models
 from publics.admin import AdminListMixin
-from . import models
+from tpm import models
 
 
 @admin.register(models.TPMActivity)
@@ -21,25 +24,24 @@ class TPMVisitAdmin(AdminListMixin, admin.ModelAdmin):
 
 
 class TPMPartnerStaffMemberInlineAdmin(admin.StackedInline):
-    model = models.TPMPartnerStaffMember
+    model = tpm.tpmpartners.models.TPMPartnerStaffMember
     extra = 1
 
 
-@admin.register(models.TPMPartner)
+@admin.register(tpm.tpmpartners.models.TPMPartner)
 class TPMPartnerAdmin(admin.ModelAdmin):
     list_display = [
         'vendor_number', 'name', 'email', 'phone_number', 'blocked', 'hidden',
         'country',
     ]
-    list_filter = ['blocked', 'hidden', 'country', 'status', ]
+    list_filter = ['blocked', 'hidden', 'country']
     search_fields = ['vendor_number', 'name', ]
     inlines = [
         TPMPartnerStaffMemberInlineAdmin,
     ]
-    readonly_fields = ['status', ]
 
 
-@admin.register(models.TPMPartnerStaffMember)
+@admin.register(tpm.tpmpartners.models.TPMPartnerStaffMember)
 class TPMPartnerStaffMemberAdmin(admin.ModelAdmin):
     list_display = [
         'email', 'first_name', 'last_name', 'phone', 'active', 'tpm_partner',

@@ -36,19 +36,6 @@
     {% block extra_style %}
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <style type="text/css">
-            #page-header {
-            {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
-            }
-
-            {#        #page-footer{#}
-            {#            -pdf-frame-content: page-footer;#}
-            {#            bottom: 0cm;#}
-            {#            margin-left: 1cm;#}
-            {#            margin-right: 1cm;#}
-            {#            color: #0099ff;#}
-            {#            line-height: 1.0cm;#}
-            {#            background-color: #0099ff;#}
-            {#        }#}
             .details div {
             {#            background-color: #f1f1f1;#} border-radius: 25px;
                 border: 2px solid #f1f1f1;
@@ -57,20 +44,6 @@
                 height: 150px;
             }
             /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
-            /*dejavu*/
-            @font-face {
-                font-family: "DejaVuSans";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSans.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSansMono";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSansMono.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSerif";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSerif.ttf");
-            }
-
             /*times new roman*/
             @font-face {
                 font-family: "Times_New_Roman";
@@ -91,28 +64,6 @@
             ul {
                 list-style-type: none;
             }
-
-            #officers_table {
-                width: 512pt;
-                margin-top: 24px;
-                margin-bottom: 12px;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-            #officers_table tr {width: 512pt;}
-            #officers_table th {
-                text-align: center;
-                vertical-align: middle;
-                font-weight: normal;
-                border: 1px solid black;
-            }
-            #officers_table td {
-                text-align: center;
-                vertical-align: middle;
-                border: 1px solid black;
-                font-size:10pt;
-            }
-
             /*fonts*/
             #header_content {
                 font-family: "Times_New_Roman";
@@ -153,6 +104,34 @@
             .list-style-type-roman {
                 list-style-type: lower-roman;
             }
+            table {
+                line-height: 140%;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            table.bordered {
+                border: 0.1pt solid #999999;
+            }
+            tr, td, th { border: none; }
+            th {
+                font-size: 12pt;
+                padding: 5px 0 0 0;
+                line-height: 1;
+                font-weight: bold;
+            }
+            th.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td {
+                font-size: 12pt;
+                vertical-align: middle;
+                padding: 5px 0 0 0;
+            }
+            td.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td:first-child { padding-right: 0px; }
+            td:last-child { padding-bottom: 0; }
         </style>
     {% endblock %}
 {% endblock %}
@@ -169,13 +148,13 @@
             <div style="font-size: 16pt;padding-top: 18px;">
                 <b>ACUERDO DE COOPERACIÓN PARA PROGRAMA</b>
             </div>
-            <div><b>entre</b></div>
+            <div><b>ENTRE</b></div>
             <div><b>{{ agreement.partner|upper }}</b></div>
-            <div><b>y el</b></div>
-            <div><b>Fondo de las Naciones Unidas para la Infancia</b></div>
-            <div><b>para la</b></div>
-            <div><b>implementación del programa financiado por UNICEF relacionado con</b></div>
-            <div><b>el Programa de País de {{ country|upper }} de UNICEF</b></div>
+            <div><b>Y EL</b></div>
+            <div><b>FONDO DE LAS NACIONES UNIDAS PARA LA INFANCIA</b></div>
+            <div><b>PARA LA</b></div>
+            <div><b>IMPLEMENTACIÓN DEL PROGRAMA FINANCIADO POR UNICEF RELACIONADO CON EL PROGRAMA DE PAÍS DE
+                {{ country|upper }} DE UNICEF</b></div>
             <div style="padding-top: 12px;">
                 {{ agreement.partner }} y el Fondo de las Naciones Unidas para la Infancia (en adelante, en conjunto,
                 las “Partes”, e individualmente, una “Parte”), por el presente acuerdan lo siguiente:
@@ -189,7 +168,7 @@
             <div class="keep-with-next" style="padding-top: 0px;padding-bottom: 12px;text-align: center">
                 <b>Definiciones</b>
             </div>
-            <div class="keep-with-next" style="padding-bottom: 10px; padding-left: 5px">
+            <div class="" style="padding-bottom: 10px; padding-left: 5px">
                 En el presente Acuerdo, la expresión:
             </div>
             <ol class="indented" style="padding-bottom: 10px;">
@@ -201,9 +180,9 @@
                     {{ agreement.partner }}, {{ agreement.partner.address }}, {{ agreement.partner.city }}
                     {{ agreement.partner.country }}
                 </li>
-                <li>“<u>Programa de País</u>” se refiere al [programa de país para {{ country }}],
+                <li>“<u>Programa de País</u>” se refiere al programa de país para {{ country }},
                     de UNICEF, aprobado por la Junta Ejecutiva del Fondo de las Naciones Unidas para la Infancia,
-                    correspondiente al período [{{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}], incluyendo
+                    correspondiente al período {{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}, incluyendo
                     cualquier extensión posterior del Programa en curso aprobada por el Director Ejecutivo o la Junta
                     Ejecutiva.
                 </li>
@@ -237,55 +216,33 @@
                 </li>
                 <li>
                     “<u>Funcionario Autorizado</u>” se refiere a uno de los siguientes funcionarios del SI:
-
-                    <!--
-                    <table id="officers_table" repeat="1">
-                    <tr>
-                        <th><br>Nombre completo</th>
-                        <th><br>Cargo</th>
-                        <th><br>Correo electrónico</th>
-                        <th><br>Muestra de la firma</th>
-                    </tr>
+                </li>
+                <table class="bordered"><tbody>
                     {% for officer in auth_officers %}
                     <tr>
-                        <td><br>{{ officer.first_name }}</td>
-                        <td><br>{{ officer.title }}</td>
-                        <td><br>{{ officer.email }}</td>
-                        <td><br></td>
+                        <td class="bordered" style="width:35%">Nombre completo</td>
+                        <td class="bordered">{{ officer.first_name }} {{ officer.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Cargo</td>
+                        <td class="bordered">{{ officer.title }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Correo electrónico</td>
+                        <td class="bordered">{{ officer.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Muestra de la firma</td>
+                        <td class="bordered"></td>
                     </tr>
                     {% endfor %}
-                    </table>
-                    -->
-
-                    <table id="officers_table">
-                        {% for officer in auth_officers %}
-                        <tr>
-                            <td style="width: 33%;"><br>Nombre completo</td>
-                            <td><br> {{ officer.first_name }} {{ officer.last_name }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Cargo</td>
-                            <td><br>{{ officer.title }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Correo electrónico</td>
-                            <td><br>{{ officer.email }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Muestra de la firma</td>
-                            <td><br></td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-
-                    <div style="padding-top: 15px">
-                        Se deja establecido, a fin de evitar dudas, que toda eliminación o modificación del
-                        (de la lista de) Funcionario(s) Autorizado(s) identificado(s) anteriormente requerirá una
-                        modificación por escrito al presente Acuerdo en virtud de la cláusula 20.0 de los Términos
-                        y Condiciones Generales para Acuerdos de Cooperación para Programas que se adjunta al presente.
-                    </div>
-                </li>
-
+                </tbody></table>
+                <div style="padding-top: 15px">
+                    Se deja establecido, a fin de evitar dudas, que toda eliminación o modificación del
+                    (de la lista de) Funcionario(s) Autorizado(s) identificado(s) anteriormente requerirá una
+                    modificación por escrito al presente Acuerdo en virtud de la cláusula 20.0 de los Términos
+                    y Condiciones Generales para Acuerdos de Cooperación para Programas que se adjunta al presente.
+                </div>
                 <li>“<u>Equipos no fungibles</u>” se refiere a todo elemento que cueste dos mil quinientos dólares
                     (USD 2.500) o más, incluidos los costos iniciales de envío y manipuleo, y que tenga una vida útil
                     de al menos tres (3) años.
@@ -296,7 +253,7 @@
         </div>
         <div id="article-II" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-bottom: 0px"><b>Cláusula II</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Documentos del Acuerdo</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Documentos del Acuerdo</b></div>
             <ol>
                 <li>
                     El presente Acuerdo consta de los siguientes documentos:
@@ -313,7 +270,7 @@
 
         <div id="article-III" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Cláusula III</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Objeto y alcance</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Objeto y alcance</b></div>
             <ol class="indented">
                 <li>
                     El presente Acuerdo regulará la implementación por el SI de las partes pertinentes del Programa
@@ -325,7 +282,7 @@
 
         <div id="article-IV" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Cláusula IV</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Responsabilidades generales de las Partes</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Responsabilidades generales de las Partes</b></div>
             <ol class="indented">
                 <li>Las Partes trabajarán en conjunto con un espíritu de cooperación y asociación, con las
                     responsabilidades y obligaciones establecidas en el presente Acuerdo, a fin de implementar
@@ -348,7 +305,7 @@
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px">
                 <b>Cláusula V</b>
             </div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+            <div class="" style="padding-top: 0px; text-align: center">
                 <b>Responsabilidad del SI</b>
             </div>
             <ol>
@@ -399,7 +356,7 @@
         </div>
         <div id="article-VI" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Cláusula VI</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Responsabilidades de UNICEF</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Responsabilidades de UNICEF</b></div>
             <ol class="indented">
                 <li>UNICEF contribuirá a la implementación de cada Documento de Programa cubierto por este Acuerdo
                     asumiendo las responsabilidades que le sean asignadas en virtud del presente, incluidas las siguientes:
@@ -441,7 +398,7 @@
         </div>
         <div id="article-VII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Cláusula VII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Documentos de Programa</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Documentos de Programa</b></div>
             <ol class="indented">
                 <li>Las Partes celebrarán uno o varios Documentos de Programa, según corresponda. Los Documentos de
                     Programa serán firmados por representantes de las Partes debidamente autorizados.
@@ -454,15 +411,13 @@
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px">
                 <b>Cláusula VIII</b>
             </div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
-                <b>Aportes de UNICEF para la</b>
-            </div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+            <div class="" style="padding-top: 0px; text-align: center">
+                <b>Aportes de UNICEF para la</b><br/>
                 <b>implementación de los Documentos de Programa</b>
             </div>
 
             <div class="keep-with-next" ><b>(A) Transferencia de efectivo por UNICEF para el SI o en su representación</b></div>
-            <div class="keep-with-next" ><p><u>Disposiciones generales:</u></p></div>
+            <div class="" ><p><u>Disposiciones generales:</u></p></div>
             <ol class="indented">
                 <li>UNICEF brindará al SI asistencia en dinero en efectivo para las actividades según lo establecido en
                     los Documentos de Programa (la “<u>Transferencia de Efectivo</u>”), sujeto a la disponibilidad de los
@@ -494,7 +449,7 @@
                     ejemplar firmado de este Acuerdo y del Documento de Programa. La solicitud será firmada por
                     un Funcionario Autorizado.
                 </li>
-                <div class="keep-with-next"><p><u>Procedimientos para la Transferencia de Efectivo:</u></p></div>
+                <div class=""><p><u>Procedimientos para la Transferencia de Efectivo:</u></p></div>
                 <li>Las Cuotas de la Transferencia de Efectivo serán transferidas al SI o, en los casos en los que se
                     adopte la modalidad de Pago Directo, en representación del SI, con el solo fin de contribuir a la
                     implementación de los Documentos de Programa. El SI acepta que los fondos transferidos con dicha
@@ -504,7 +459,7 @@
                     la modalidad de Pago Directo, en representación del SI, en respuesta a una solicitud escrita del SI,
                     de acuerdo con los siguientes procedimientos:
                 </li>
-                <div class="keep-with-next"><p><u>
+                <div class=""><p><u>
                     Procedimientos para las solicitudes de Cuotas de Transferencia de Efectivo según las tres
                     Modalidades de Transferencia de Efectivo:
                 </u></p></div>
@@ -529,7 +484,7 @@
                     dicho monto al SI o, en los casos en los que se haya adoptado la modalidad de Pago Directo, en
                     representación del SI, dentro de un plazo razonable.
                 </div>
-                <div class="keep-with-next"><p><u>Procedimientos adicionales aplicables solo a la modalidad de Pago Directo:</u></p></div>
+                <div class=""><p><u>Procedimientos adicionales aplicables solo a la modalidad de Pago Directo:</u></p></div>
                 <div class="small-indent">d) &nbsp;&nbsp;&nbsp;La solicitud de Pago Directo se presentará utilizando el
                     formulario FACE e incluirá en todos los casos los datos completos y los datos bancarios del
                     proveedor en el formato especificado por UNICEF al momento de la finalización del Documento
@@ -539,7 +494,7 @@
                     de Reembolso, los gastos solicitados deberán estar autorizados previamente por UNICEF a través del
                     formulario FACE.
                 </div>
-                <div class="keep-with-next"><p><u>Términos y condiciones especiales para Cuotas de Transferencia de Efectivo:</u></p></div>
+                <div class=""><p><u>Términos y condiciones especiales para Cuotas de Transferencia de Efectivo:</u></p></div>
                 <li>Toda solicitud de Cuota de Transferencia de Efectivo por el SI cumplirá los siguientes criterios
                     a satisfacción de UNICEF, en ausencia de lo cual, UNICEF podrá decidir no cumplir la solicitud
                     en todo o en parte:
@@ -574,71 +529,71 @@
                     no cumpla con el presente Acuerdo.
                 </li>
                 <li>
-                    <div class="small-indent">a) &nbsp;&nbsp;&nbsp;La administración por el SI de la Transferencia
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a) &nbsp;&nbsp;&nbsp;
+                        La administración por el SI de la Transferencia
                         de Efectivo se realizará según sus propias regulaciones, reglas y procedimientos financieros,
                         revisados, evaluados y aprobados por UNICEF.
                     </div>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b) &nbsp;&nbsp;&nbsp;
+                        En los casos en los que, en virtud del EATE, UNICEF
+                        realice una Transferencia de Efectivo con anterioridad a la revisión y evaluación de las regulaciones,
+                        reglas y procedimientos financieros del SI, si UNICEF posteriormente determina que las regulaciones,
+                        reglas o procedimientos financieros del SI no son adecuados, UNICEF notificará por escrito al SI y
+                        en dicho caso UNICEF podrá requerir la devolución de las Transferencias de Efectivo no utilizadas y
+                        ya entregadas al SI y podrá decidir implementar el Documento de Programa o cualquier parte de él
+                        (incluida toda actividad de compra) directamente.
+                    </div>
                 </li>
-                <div class="small-indent">b) &nbsp;&nbsp;&nbsp;En los casos en los que, en virtud del EATE, UNICEF
-                    realice una Transferencia de Efectivo con anterioridad a la revisión y evaluación de las regulaciones,
-                    reglas y procedimientos financieros del SI, si UNICEF posteriormente determina que las regulaciones,
-                    reglas o procedimientos financieros del SI no son adecuados, UNICEF notificará por escrito al SI y
-                    en dicho caso UNICEF podrá requerir la devolución de las Transferencias de Efectivo no utilizadas y
-                    ya entregadas al SI y podrá decidir implementar el Documento de Programa o cualquier parte de él
-                    (incluida toda actividad de compra) directamente.
-                </div>
                 <li>En los casos en los que el SI compre bienes o servicios con la Transferencia de Efectivo, el SI
                     lo hará tomando en cuenta los siguientes principios:
                 </li>
                 <div class="small-indent">a) &nbsp;&nbsp;&nbsp;mejor relación calidad-precio;</div>
                 <div class="small-indent">b) &nbsp;&nbsp;&nbsp;imparcialidad, integridad y transparencia; y</div>
                 <div class="small-indent">c) &nbsp;&nbsp;&nbsp;competencia.</div>
-                <li class="keep-with-next">
+                <li class="">
                     UNICEF realizará toda Transferencia de Efectivo, fuera de los Pagos Directos, a la siguiente cuenta bancaria del SI:
                 </li>
-
-                <table style="border: 1px solid black;">
+                <table class="bordered">
                     <tr>
-                        <td colspan="2" style="text-align: center;vertical-align: middle"><br>Cuenta</td>
+                        <td colspan="2" class="bordered" style="text-align: center;">Cuenta</td>
                     </tr>
                     {% for bank_detail in bank_details %}
                     <tr>
-                        <td style="width: 33%;"><br>Nombre del banco:</td>
-                        <td><br> {{ bank_detail.bank_name }}</td>
+                        <td class="bordered" style="width: 45%;">Nombre del banco:</td>
+                        <td class="bordered">{{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Domicilio del banco:</td>
-                        <td><br>{{ bank_detail.bank_address }}</td>
+                        <td class="bordered" style="width: 45%;">Domicilio del banco:</td>
+                        <td class="bordered">{{ bank_detail.bank_address }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Titular de la cuenta:</td>
-                        <td><br>{{ bank_detail.account_title }}</td>
+                        <td class="bordered" style="width: 45%;">Titular de la cuenta:</td>
+                        <td class="bordered">{{ bank_detail.account_title }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Número de cuenta:</td>
-                        <td><br>{{ bank_detail.account_number }}</td>
+                        <td class="bordered" style="width: 45%;">Número de cuenta:</td>
+                        <td class="bordered">{{ bank_detail.account_number }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Moneda de la cuenta</td>
-                        <td></td>
+                        <td class="bordered" style="width: 45%;">Moneda de la cuenta</td>
+                        <td class="bordered"></td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>
-                            Datos para <br>
-                            transferencias, <br>
-                            incluidos los códigos <br>
-                            SWIFT/IBAN:
+                        <td class="bordered" style="width: 45%;">
+                            Datos para  transferencias, incluidos los códigos SWIFT/IBAN:
                         </td>
-                        <td><br>{{ bank_detail.routing_details }}</td>
+                        <td class="bordered">{{ bank_detail.routing_details }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Persona de contacto <br> en el banco:</td>
-                        <td><br>{{ bank_detail.bank_contact_person }}</td>
+                        <td class="bordered" style="width: 45%;">Bank Contact Person</td>
+                        <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
                     {% endfor %}
                 </table>
 
-                <div class="keep-with-next" style="padding-top: 24px;">
+                <div class="" style="padding-top: 24px;">
                     <p><b>(B) Transferencia de suministros o equipos de UNICEF al SI</b></p>
                 </div>
                 <li>Los suministros y equipos transferidos al SI por UNICEF se utilizarán exclusivamente para la
@@ -671,10 +626,10 @@
 
         <div id="article-IX" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Cláusula IX</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Registros</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Registros</b></div>
             <ol class="indented">
                 <li>El SI acepta llevar libros y registros precisos, completos y actualizados. </li>
-                <div class="keep-with-next"><p><u>Transferencias de Efectivo:</u></p></div>
+                <div class=""><p><u>Transferencias de Efectivo:</u></p></div>
                 <li>Los libros y registros del SI identificarán claramente todas las Cuotas de Transferencia de Efectivo
                     recibidas por el SI, así como los desembolsos realizados por el SI en virtud de este Acuerdo, incluido
                     el monto de todo fondo no utilizado. Sin perjuicio de lo dicho, el SI deberá llevar:
@@ -697,7 +652,7 @@
                     el SI respecto de que se ha gastado el dinero no es suficiente y no reemplaza a la documentación
                     original para respaldar los gastos.
                 </div>
-                <div class="keep-with-next"><p><u>Suministros o equipos:</u></p></div>
+                <div class=""><p><u>Suministros o equipos:</u></p></div>
                 <li>El SI llevará registros de los suministros y equipos adquiridos a partir de la Transferencia
                     de Efectivo o transferidos al SI de acuerdo con la cláusula VIII, inciso B, de este Acuerdo.
                     El SI llevará inventarios detallados y los conservará por un período de cinco (5) años luego de
@@ -708,24 +663,30 @@
 
         <div id="article-X" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Cláusula X</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Requisitos de presentación de informes</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Requisitos de presentación de informes</b></div>
             <ol>
                 <li>El SI entregará a UNICEF los informes que se detallan a continuación. Los informes redactados se
                     entregarán, de ser posible, en inglés, francés o español.
                 </li>
                 <div class="keep-with-next"><p><b>(A) Informes financieros</b></p></div>
-                <div class="keep-with-next"><p><u>Informes financieros mediante el uso del formulario FACE:</u></p></div>
-                <li><div class="small-indent">a) &nbsp;&nbsp;&nbsp;A menos que las Partes acuerden lo contrario por escrito,
-                    el SI entregará los formularios FACE al final de cada Trimestre, utilizando el formulario FACE.
-                    Si no se presentara el formulario FACE dentro de los seis (6) meses siguientes al último Trimestre,
-                    UNICEF suspenderá, a menos que se acuerde lo contrario, toda otra transferencia de efectivo al SI o
-                    en representación de este.
-                </div></li>
-                <div class="small-indent">b) &nbsp;&nbsp;&nbsp;El formulario FACE final será presentado dentro del plazo
-                    de treinta (30) días calendario contados a partir de la finalización del Documento de Programa.
-                </div>
-
-                <div class="small-indent keep-with-next">c) &nbsp;&nbsp;&nbsp;Formulario FACE:</div>
+                <div class=""><p><u>Informes financieros mediante el uso del formulario FACE:</u></p></div>
+                <li>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a) &nbsp;&nbsp;&nbsp;
+                        A menos que las Partes acuerden lo contrario por escrito,
+                        el SI entregará los formularios FACE al final de cada Trimestre, utilizando el formulario FACE.
+                        Si no se presentara el formulario FACE dentro de los seis (6) meses siguientes al último Trimestre,
+                        UNICEF suspenderá, a menos que se acuerde lo contrario, toda otra transferencia de efectivo al SI o
+                        en representación de este.
+                    </div>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b) &nbsp;&nbsp;&nbsp;
+                        El formulario FACE final será presentado dentro del plazo
+                        de treinta (30) días calendario contados a partir de la finalización del Documento de Programa.
+                    </div>
+                </li>
+                
+                <div class="small-indent ">c) &nbsp;&nbsp;&nbsp;Formulario FACE:</div>
                 <div class="small-indent">
                     <div style="padding-left: 25px">i) &nbsp;&nbsp;&nbsp;solo incluirá los gastos identificables y verificables.
                         (El término “<u>identificable</u>” se refiere a los gastos sean registrados en el sistema contable
@@ -753,7 +714,7 @@
                         registros que respalden o que se considere que podrían respaldar la información incluida en el
                         formulario FACE.
                     </div>
-                    <div class="keep-with-next"><p><u>Gastos No Admisibles:</u></p></div>
+                    <div class=""><p><u>Gastos No Admisibles:</u></p></div>
                     <div>e) &nbsp;&nbsp;&nbsp;Los siguientes son Gastos No Admisibles (según lo establecido por
                         UNICEF a su entera discreción) y, por lo tanto, no serán incluidos en el formulario FACE:
                     </div>
@@ -824,19 +785,19 @@
                     realizado la Transferencia de Efectivo. No es necesario que el SI convierta las transacciones
                     a dólares de los Estados Unidos ni a ninguna otra moneda.
                 </li>
-                <div class="keep-with-next"><p><u>Uso de la herramienta electrónica de FACE:</u></p></div>
+                <div class=""><p><u>Uso de la herramienta electrónica de FACE:</u></p></div>
                 <li>Además de utilizar el formulario FACE, el SI podrá ingresar la información incluida en el
                     formulario FACE en la herramienta electrónica de FACE, una vez disponible, si se lo solicitara UNICEF.
                 </li>
-                <div class="keep-with-next"><p><b>(B) Informes de avance</b></p></div>
+                <div class=""><p><b>(B) Informes de avance</b></p></div>
                 <li>El SI presentará a UNICEF informes de avance redactados en relación con las actividades planificadas
                     incluidas en el Documento de Programa, utilizando el IADP. A menos que se acuerde otra cosa con las
                     Partes por escrito, estos informes se presentarán al final de cada Trimestre. El informe final será
                     presentado a más tardar treinta (30) días calendario luego del fin del Programa y será entregado
                     junto con el formulario FACE.
                 </li>
-                <div class="keep-with-next"><p><b>(C) Informes adicionales</b></p></div>
-                <li>5. Los informes adicionales requeridos se especificarán en el Documento de Programa. El SI
+                <div class=""><p><b>(C) Informes adicionales</b></p></div>
+                <li>Los informes adicionales requeridos se especificarán en el Documento de Programa. El SI
                     entregará informes ad hoc según sea requerido por UNICEF oportunamente. UNICEF hará todo intento
                     razonable por minimizar las solicitudes de informes ad hoc.
                 </li>
@@ -845,22 +806,34 @@
 
         <div id="article-XI" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Cláusula XI</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Acciones posteriores a la finalización</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>de las actividades del Documento de Programa</b></div>
+            <div class="" style="padding-top: 0px; text-align: center">
+                <b>Acciones posteriores a la finalización</b><br>
+                <b>de las actividades del Documento de Programa</b>
+            </div>
             <ol class="indented">
-                <li><div>a) &nbsp;&nbsp;&nbsp;Luego de la finalización de las actividades del SI de acuerdo con
-                    el Documento de Programa, el SI reembolsará a UNICEF los saldos no utilizados de toda Transferencia
-                    de Efectivo en virtud de ese Documento de Programa (que será informado en el formulario FACE final
-                    presentado por el SI) y todo otro monto de dinero al que no tenga derecho.
-                </div>
-                <div>b) &nbsp;&nbsp;&nbsp;Con la finalización de las actividades del SI de acuerdo con el
-                    Documento de Programa, el SI reintegrará a UNICEF todos los suministros y equipos no
-                    utilizados provistos por UNICEF como aportes para la implementación del programa, pero no utilizados.
-                </div>
-                <div>c) &nbsp;&nbsp;&nbsp;Dichos reembolsos y devoluciones se realizarán dentro de un plazo de
-                    no más de noventa (90) días corridos desde la fecha de finalización del Documento de Programa o
-                    desde la fecha real de finalización de las actividades, lo que ocurra primero.
-                </div>
+                <li>
+                    <span>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a) &nbsp;&nbsp;&nbsp;
+                        Luego de la finalización de las actividades del SI de acuerdo con
+                        el Documento de Programa, el SI reembolsará a UNICEF los saldos no utilizados de toda Transferencia
+                        de Efectivo en virtud de ese Documento de Programa (que será informado en el formulario FACE final
+                        presentado por el SI) y todo otro monto de dinero al que no tenga derecho.
+                    </span>
+                    <br>
+                    <span>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b) &nbsp;&nbsp;&nbsp;
+                        Con la finalización de las actividades del SI de acuerdo con el
+                        Documento de Programa, el SI reintegrará a UNICEF todos los suministros y equipos no
+                        utilizados provistos por UNICEF como aportes para la implementación del programa, pero no utilizados.
+                    </span>
+                    <br>
+                    <span>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;c) &nbsp;&nbsp;&nbsp;
+                        Dichos reembolsos y devoluciones se realizarán dentro de un plazo de
+                        no más de noventa (90) días corridos desde la fecha de finalización del Documento de Programa o
+                        desde la fecha real de finalización de las actividades, lo que ocurra primero.
+                    </span>
+                </li>
                 <li>Tras la liquidación de las actividades del SI de acuerdo con el
                     Documento de Programa, las Partes consultarán respecto de la enajenación de todos los bienes no
                     fungibles provistos por UNICEF o adquiridos a partir de la Transferencia de Efectivo al SI o, en el
@@ -875,7 +848,7 @@
 
         <div id="article-XII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Cláusula XII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Privilegios e inmunidades; resolución de disputas</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Privilegios e inmunidades; resolución de disputas</b></div>
             <ol class="indented">
                 <li>De acuerdo con la cláusula 17 de los Términos y Condiciones Generales para Acuerdos de Socio Implementador,
                     nada de lo incluido en el presente Acuerdo o relacionado con él se considerará una renuncia, expresa o
@@ -912,13 +885,13 @@
         </div>
         <div id="article-XIII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>Cláusula XIII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Disposiciones finales</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Disposiciones finales</b></div>
             <ol class="indented">
                 <li>El presente Acuerdo tendrá vigencia a partir de la fecha de su firma por ambas Partes. Vencerá el
                     último día del Programa de País a menos que sea rescindido con anterioridad de acuerdo con la
                     cláusula 11 de los Términos y Condiciones Generales adjuntos e incorporados a este Acuerdo.
                 </li>
-                <div class="keep-with-next"><p>EN PRUEBA DE CONFORMIDAD, los que suscriben, debidamente autorizados
+                <div class=""><p>EN PRUEBA DE CONFORMIDAD, los que suscriben, debidamente autorizados
                     por las Partes respectivas, han firmado el presente Acuerdo.
                 </p></div>
                 <div style="padding-top: 3px">
@@ -954,7 +927,7 @@
         <div class="page-break"></div>
         <div id="general-terms" style="font: 10pt; padding-bottom: 10px">
             <div class="keep-with-next" style="padding-bottom: 0px; text-align: center"><b>TÉRMINOS Y CONDICIONES GENERALES</b></div>
-            <div class="keep-with-next" style="text-align: center; padding-top: 0px"><b>PARA ACUERDOS DE COOPERACIÓN PARA PROGRAMAS</b></div>
+            <div class="" style="text-align: center; padding-top: 0px"><b>PARA ACUERDOS DE COOPERACIÓN PARA PROGRAMAS</b></div>
             <ol>
                 <li><b>NATURALEZA JURÍDICA:</b>  Se considerará la naturaleza jurídica del SI es la de contratista
                     independiente de UNICEF. Los empleados, el personal y los subcontratistas del SI no se considerarán
@@ -981,7 +954,7 @@
                     en virtud del Acuerdo. Los términos de todo subcontrato, sub-subcontrato y así sucesivamente estarán
                     sujetos a las disposiciones de este Acuerdo, se adaptarán y darán cumplimiento a ellas.
                 </li>
-                <li class="keep-with-next"><b>PROHIBICIÓN DE QUE SE BENEFICIEN LOS FUNCIONARIOS; RESTRICCIÓN DE CONTRATACIÓN DE PERSONAL DE UNICEF:</b></li>
+                <li class=""><b>PROHIBICIÓN DE QUE SE BENEFICIEN LOS FUNCIONARIOS; RESTRICCIÓN DE CONTRATACIÓN DE PERSONAL DE UNICEF:</b></li>
                 <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
                     <li>El SI garantiza que ningún funcionario de UNICEF ha recibido del SI ni este le ofrecerá ningún
                         beneficio directo o indirecto relacionado con este Acuerdo o con su adjudicación. El SI acepta
@@ -1017,7 +990,7 @@
                     suministros o equipos entregados en virtud de este Acuerdo, o en razón de cualquier otro reclamo
                     o demanda contra el SI.
                 </li>
-                <li class="keep-with-next"><b>DERECHOS DE AUTOR, PATENTES Y OTROS DERECHOS DE PROPIEDAD; CONFIDENCIALIDAD:</b></li>
+                <li class=""><b>DERECHOS DE AUTOR, PATENTES Y OTROS DERECHOS DE PROPIEDAD; CONFIDENCIALIDAD:</b></li>
                 <div style="padding-top: 2px">8.1 &nbsp;&nbsp;&nbsp;Salvo disposición en contrario establecida por escrito en el Acuerdo,
                     UNICEF tendrá derecho a todo derecho de propiedad intelectual y otros derechos de propiedad incluidos,
                     entre otros, las patentes, los derechos de autor y las marcas registradas, con respecto a productos,
@@ -1069,7 +1042,7 @@
                     en los que dicha visibilidad pudiera poner en riesgo la seguridad del personal del SI, el SI
                     propondrá arreglos alternativos adecuados.
                 </li>
-                <li class="keep-with-next"><b>FUERZA MAYOR; OTROS CAMBIOS EN LAS CONDICIONES:</b></li>
+                <li class=""><b>FUERZA MAYOR; OTROS CAMBIOS EN LAS CONDICIONES:</b></li>
                 <div style="padding-top: 2px">10.1 &nbsp;&nbsp;&nbsp;Si se produjera cualquier causa de fuerza mayor,
                     y tan pronto como sea posible luego de dicho acaecimiento, el SI notificará del acaecimiento o
                     cambio y brindará todos los datos por escrito a UNICEF, si como consecuencia de ello el SI no
@@ -1100,7 +1073,7 @@
                     descontento social que se produzca en dichas áreas no constituirá en sí mismo fuerza mayor.
                 </div>
                 <li class="keep-with-next"><b>RESCISIÓN:</b></li>
-                <div class="keep-with-next" style="padding-top: 2px">11.1 &nbsp;&nbsp;&nbsp;Ambas Partes podrán rescindir este
+                <div class="" style="padding-top: 2px">11.1 &nbsp;&nbsp;&nbsp;Ambas Partes podrán rescindir este
                     Acuerdo mediante notificación escrita cursada con treinta (30) días corridos de antelación a la otra
                     Parte en cualquiera de los siguientes casos:
                 </div>
@@ -1116,7 +1089,7 @@
                     </ol>
                 </div>
 
-                <div class="keep-with-next">11.2 &nbsp;&nbsp;&nbsp;UNICEF también podrá suspender o rescindir el Acuerdo de
+                <div class="">11.2 &nbsp;&nbsp;&nbsp;UNICEF también podrá suspender o rescindir el Acuerdo de
                     manera inmediata en cualquiera de los siguientes casos:
                 </div>
                 <div style="padding-left: 25px;">
@@ -1171,7 +1144,7 @@
                     o en el URL que UNICEF decida oportunamente.
                 </li>
                 <li><b>ACTIVIDADES DE CONTROL:</b></li>
-                <div class="keep-with-next">14.1 &nbsp;&nbsp;&nbsp;Auditoría:</div>
+                <div class="">14.1 &nbsp;&nbsp;&nbsp;Auditoría:</div>
                 <div style="padding-left: 25px;">
                     <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
                         <li>A solicitud de UNICEF y cuando lo determine UNICEF exclusivamente, se auditarán las actividades
@@ -1196,7 +1169,7 @@
                         </li>
                     </ol>
                 </div>
-                <div class="keep-with-next">14.2 &nbsp;&nbsp;&nbsp;Controles de lugares y visitas programadas:</div>
+                <div class="">14.2 &nbsp;&nbsp;&nbsp;Controles de lugares y visitas programadas:</div>
                 <div>El SI acuerda que, cada tanto, UNICEF podrá realizar revisiones in situ (“<u>controles de lugares</u>”
                     y visitas programadas), con sujeción a los estándares, el alcance, la frecuencia y los horarios que
                     decida UNICEF. El SI brindará cooperación absoluta y oportuna para dichos controles de lugares o

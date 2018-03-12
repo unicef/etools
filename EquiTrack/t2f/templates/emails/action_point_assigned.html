@@ -141,8 +141,12 @@
                             <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ action_point.action_point_number }}</td>
                           </tr>
                           <tr>
+                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Status:</td>
+                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ action_point.status }}</td>
+                          </tr>
+                          <tr>
                             <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Trip number:</td>
-                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ action_point.travel_reference_number }}</td>
+                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ action_point.travel_reference_number }}<br><a href="{{ trip_url }}" target="_blank" style="color:#0099FF;text-decoration:underline;word-break:break-all !important;">{{ trip_url }}</a></td>
                           </tr>
                           <tr>
                             <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Description:</td>
@@ -151,6 +155,10 @@
                           <tr>
                             <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Due Date:</td>
                             <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ action_point.due_date }}</td>
+                          </tr>
+                          <tr>
+                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Completion Date:</td>
+                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ action_point.completed_at }}</td>
                           </tr>
                           <tr>
                             <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Link:</td>

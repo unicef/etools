@@ -7,9 +7,10 @@ from django.db import connection
 from django.db.models.signals import post_delete, post_save
 from django.dispatch.dispatcher import receiver
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext as _
 
+from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from mptt.models import MPTTModel, TreeForeignKey
-from paintstore.fields import ColorPickerField
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class GatewayType(models.Model):
     """
 
     name = models.CharField(max_length=64, unique=True)
+    admin_level = models.PositiveSmallIntegerField(null=True, unique=True)
 
     class Meta:
         ordering = ['name']
@@ -53,15 +55,41 @@ class Location(MPTTModel):
     Relates to :model:`locations.GatewayType`
     """
 
-    name = models.CharField(max_length=254)
-    gateway = models.ForeignKey(GatewayType, verbose_name='Location Type')
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
-    p_code = models.CharField(max_length=32, blank=True, null=True)
+    name = models.CharField(verbose_name=_("Name"), max_length=254)
+    gateway = models.ForeignKey(GatewayType, verbose_name=_('Location Type'))
+    latitude = models.FloatField(
+        verbose_name=_("Latitude"),
+        null=True,
+        blank=True,
+    )
+    longitude = models.FloatField(
+        verbose_name=_("Longitude"),
+        null=True,
+        blank=True,
+    )
+    p_code = models.CharField(
+        verbose_name=_("P Code"),
+        max_length=32,
+        blank=True,
+        null=True,
+    )
 
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
-    geom = models.MultiPolygonField(null=True, blank=True)
-    point = models.PointField(null=True, blank=True)
+    parent = TreeForeignKey(
+        'self',
+        verbose_name=_("Parent"),
+        null=True,
+        blank=True,
+        related_name='children',
+        db_index=True,
+    )
+    geom = models.MultiPolygonField(
+        verbose_name=_("Geo Point"),
+        null=True,
+        blank=True,
+    )
+    point = models.PointField(verbose_name=_("Point"), null=True, blank=True)
+    created = AutoCreatedField(_('created'))
+    modified = AutoLastModifiedField(_('modified'))
 
     objects = LocationManager()
 
@@ -117,7 +145,7 @@ class CartoDBTable(MPTTModel):
     pcode_col = models.CharField(max_length=254, default='pcode')
     parent_code_col = models.CharField(max_length=254, null=True, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
-    color = ColorPickerField(null=True, blank=True, default=get_random_color)
+    color = models.CharField(null=True, blank=True, default=get_random_color, max_length=7)
 
     def __str__(self):
         return self.table_name

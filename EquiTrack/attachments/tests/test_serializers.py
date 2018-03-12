@@ -1,14 +1,16 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import base64
 import os
 
 from django.utils.translation import ugettext as _
 
-from EquiTrack.tests.mixins import FastTenantTestCase
-from ..serializers import Base64AttachmentSerializer
-from .factories import FileTypeFactory
+from attachments.serializers import Base64AttachmentSerializer
+from attachments.tests.factories import FileTypeFactory
+from EquiTrack.tests.cases import EToolsTenantTestCase
 
 
-class TestAttachmentsModels(FastTenantTestCase):
+class TestAttachmentsModels(EToolsTenantTestCase):
     def setUp(self):
         self.file_type = FileTypeFactory()
         self.file_name = 'simple_file.txt'

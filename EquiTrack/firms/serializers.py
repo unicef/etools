@@ -1,14 +1,14 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .utils import generate_username
-from utils.writable_serializers.serializers import WritableNestedSerializerMixin
+from firms.utils import generate_username
 from users.models import UserProfile
+from utils.writable_serializers.serializers import WritableNestedSerializerMixin
 
 
 class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
@@ -28,15 +28,15 @@ class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSeri
 class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     profile = UserProfileSerializer(required=False)
     email = serializers.EmailField(
-        label=_('E-mail Address'), validators=[UniqueValidator(queryset=User.objects.all())]
+        label=_('E-mail Address'), validators=[UniqueValidator(queryset=get_user_model().objects.all())]
     )
 
     class Meta(WritableNestedSerializerMixin.Meta):
-        model = User
+        model = get_user_model()
         fields = ['first_name', 'last_name', 'email', 'is_active', 'profile']
         extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True},
+            'first_name': {'required': True, 'allow_blank': False, 'label': _('First Name')},
+            'last_name': {'required': True, 'allow_blank': False, 'label': _('Last Name')},
         }
 
     def create(self, validated_data):

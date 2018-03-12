@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
 import json
-from factory.fuzzy import FuzzyText
 
 from django.core.urlresolvers import reverse
+from factory.fuzzy import FuzzyText
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase

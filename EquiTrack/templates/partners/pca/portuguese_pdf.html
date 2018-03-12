@@ -36,19 +36,6 @@
     {% block extra_style %}
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <style type="text/css">
-            #page-header {
-            {#            background-color: #0099ff;#}{#            color: #ffffff;#}{#            line-height: 0.5cm;#}
-            }
-
-            {#        #page-footer{#}
-            {#            -pdf-frame-content: page-footer;#}
-            {#            bottom: 0cm;#}
-            {#            margin-left: 1cm;#}
-            {#            margin-right: 1cm;#}
-            {#            color: #0099ff;#}
-            {#            line-height: 1.0cm;#}
-            {#            background-color: #0099ff;#}
-            {#        }#}
             .details div {
             {#            background-color: #f1f1f1;#} border-radius: 25px;
                 border: 2px solid #f1f1f1;
@@ -57,20 +44,6 @@
                 height: 150px;
             }
             /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
-            /*dejavu*/
-            @font-face {
-                font-family: "DejaVuSans";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSans.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSansMono";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSansMono.ttf");
-            }
-            @font-face {
-                font-family: "DejaVuSerif";
-                src: url("{{font_path}}truetype/dejavu/DejaVuSerif.ttf");
-            }
-
             /*times new roman*/
             @font-face {
                 font-family: "Times_New_Roman";
@@ -91,27 +64,6 @@
             ul {
                 list-style-type: none;
             }
-            #officers_table {
-                width: 512pt;
-                margin-top: 24px;
-                margin-bottom: 12px;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-            #officers_table tr {width: 512pt;}
-            #officers_table th {
-                text-align: center;
-                vertical-align: middle;
-                font-weight: normal;
-                border: 1px solid black;
-            }
-            #officers_table td {
-                text-align: center;
-                vertical-align: middle;
-                border: 1px solid black;
-                font-size:10pt;
-            }
-
             /*fonts*/
             #header_content {
                 font-family: "Times_New_Roman";
@@ -152,6 +104,34 @@
             .list-style-type-roman {
                 list-style-type: lower-roman;
             }
+            table {
+                line-height: 140%;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            table.bordered {
+                border: 0.1pt solid #999999;
+            }
+            tr, td, th { border: none; }
+            th {
+                font-size: 12pt;
+                padding: 5px 0 0 0;
+                line-height: 1;
+                font-weight: bold;
+            }
+            th.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td {
+                font-size: 12pt;
+                vertical-align: middle;
+                padding: 5px 0 0 0;
+            }
+            td.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td:first-child { padding-right: 0px; }
+            td:last-child { padding-bottom: 0; }
         </style>
     {% endblock %}
 {% endblock %}
@@ -166,12 +146,12 @@
     <div id="content">
         <div id="title" style="text-align: center; padding-top: 0px">
             <div style="font-size: 16pt;padding-top: 18px;"><b>ACORDO DO PROGRAMA DE COOPERAÇÃO</b></div>
-            <div><b>Entre</b></div>
+            <div><b>ENTRE</b></div>
             <div><b>{{ agreement.partner|upper }}</b></div>
             <div><b>E O</b></div>
-            <div><b>O Fundo das Nações Unidas para a Infância</b></div>
+            <div><b>O FUNDO DAS NAÇÕES UNIDAS PARA A INFÂNCIA</b></div>
             <div><b>PARA</b></div>
-            <div><b>A Implementação do UNICEF - PROGRAMA FINANCIADO PELO UNICEF RELACCIONADO COM O PROGRAMA DO PAÍS
+            <div><b>A IMPLEMENTAÇÃO DO UNICEF - PROGRAMA FINANCIADO PELO UNICEF RELACCIONADO COM O PROGRAMA DO PAÍS
                 {{ country|upper }}</b></div>
             <div style="padding-top: 12px;">
                 {{ agreement.partner }} e o Fundo das Nações Unidas para a Infância  (referidos em conjunto como as
@@ -198,9 +178,9 @@
                     {{ agreement.partner }}, {{ agreement.partner.address }},
                     {{ agreement.partner.city }} {{ agreement.partner.country }}
                 </li>
-                <li>“<u>Programa do País</u>”, significa [programa do país do UNICEF para {{ country }}],
+                <li>“<u>Programa do País</u>”, significa programa do país do UNICEF para {{ country }},
                     aprovado pela Comissão Executiva do Fundo das Nações Unidas para a Infância para o período de
-                    [{{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}], incluindo qualquer prorrogação do
+                    {{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}, incluindo qualquer prorrogação do
                     actual programa aprovado pelo Diretor Executivo ou do Conselho Executivo.
                 </li>
                 <li>“<u>Documento do Programa</u>” significa um documento formal (de formato padrão)
@@ -233,73 +213,45 @@
                 </li>
                 <li>
                     “<u>Oficial autorizado</u>” significa um dos seguintes oficiais do PI:
-
-                    <!--
-                    <table id="officers_table" repeat="1">
-                    <tr>
-                        <th><br>Nome Completo</th>
-                        <th><br>Título</th>
-                        <th><br>Email</th>
-                        <th><br>Amostra da assinatura</th>
-                    </tr>
+                </li>
+                <table class="bordered"><tbody>
                     {% for officer in auth_officers %}
                     <tr>
-                        <td><br>{{ officer.first_name }}</td>
-                        <td><br>{{ officer.title }}</td>
-                        <td><br>{{ officer.email }}</td>
-                        <td><br></td>
+                        <td class="bordered" style="width:35%">Nome Completo</td>
+                        <td class="bordered">{{ officer.first_name }} {{ officer.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Título</td>
+                        <td class="bordered">{{ officer.title }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Email</td>
+                        <td class="bordered">{{ officer.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bordered" style="width:35%">Amostra da assinatura</td>
+                        <td class="bordered"></td>
                     </tr>
                     {% endfor %}
-                    </table>
-                    -->
-
-                    <table id="officers_table">
-                        {% for officer in auth_officers %}
-                        <tr>
-                            <td style="width: 33%;"><br>Nome Completo</td>
-                            <td><br> {{ officer.first_name }} {{ officer.last_name }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Título</td>
-                            <td><br>{{ officer.title }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Email</td>
-                            <td><br>{{ officer.email }}</td>
-                        </tr>
-                        <tr>
-                            <td style="width: 33%;"><br>Amostra da assinatura</td>
-                            <td><br></td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-
-                    <div style="padding-top: 15px">
-                        Entende-se que, para evitar dúvidas sobre qualquer das remoções provenientes das emendas da
-                        lista de oficiais autorizados acima identificados, deve-se requerer por escrito a emenda do
-                        presente Acordo em conformidade com a secção 20.0 dos Termos e Condições Gerais para Acordos
-                        do Programa de Cooperação em anexo.
-                    </div>
-                </li>
+                </tbody></table>
+                <div style="padding-top: 15px">
+                    Entende-se que, para evitar dúvidas sobre qualquer das remoções provenientes das emendas da
+                    lista de oficiais autorizados acima identificados, deve-se requerer por escrito a emenda do
+                    presente Acordo em conformidade com a secção 20.0 dos Termos e Condições Gerais para Acordos
+                    do Programa de Cooperação em anexo.
+                </div>
 
                 <li>“<u>Equipamentos não-prescindíveis</u>” significam quaisquer itens que custam dois mil e quinhentos 
                     dólares americanos (2.500 USD) ou mais, incluindo os custos iniciais de entrega e manuseamento e que,
                     tem uma vida útil de pelo menos 3 (três) anos.
                 </li>
                 <li class="keep-with-next">“<u>Governo</u>” significa o Governo de {{ country }}.</li>
-                <!--
-                <div style="padding:8px; padding-top:16px; margin-top: 0px;margin-bottom: 16px;border: 1px solid black;background-color: #eaeaea">
-                    <u>Nota para utilizador do UNICEF:</u> Adicionar detalhes de governos adicionales nos casos em que um
-                    parceiro opera em mais de um país de um programa multi-país.  Para Plano estratégico PCA apague
-                    o parágrafo 12.
-                </div>
-                -->
                 <li>“<u>País</u>” significa {{ country }}.</li>
             </ol>
         </div>
         <div id="article-II" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-bottom: 0px"><b>Artigo II</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>Documentos do Contrato</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>Documentos do Contrato</b></div>
             <ol>
                 <li>
                     Este Contrato é composto dos seguintes documentos:
@@ -320,7 +272,7 @@
 
         <div id="article-III" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO III</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>OBJECTIVO E ÂMBITO</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>OBJECTIVO E ÂMBITO</b></div>
             <ol class="indented">
                 <li>
                     Através de um ou vários Documentos do Programa, este Acordo deve reger a implementação pelo PI de
@@ -332,7 +284,7 @@
 
         <div id="article-IV" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO IV</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>RESPONSABILIDADES GERAIS DAS PARTES</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>RESPONSABILIDADES GERAIS DAS PARTES</b></div>
             <ol class="indented">
                 <li>As partes irão trabalhar em conjunto e num espírito de cooperação e parceria, com as responsabilidades
                     estabelecidas no presente Acordo, para implementar de forma plena, atempada e eficiente o Documento
@@ -355,7 +307,7 @@
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px">
                 <b>ARTIGO V</b>
             </div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+            <div class="" style="padding-top: 0px; text-align: center">
                 <b>AS RESPONSABILIDADES DO PI</b>
             </div>
             <ol>
@@ -385,7 +337,7 @@
                     que, o seu pessoal se conduza pelos padrões mais altos de integridade e cuidado na administração dos
                     bens públicos incluindo valores monetários.
                 </div>
-                <li>2. Para além das obrigações previstas no supra citado n. º 1.</li>
+                <li>Para além das obrigações previstas no supra citado n. º 1.</li>
                 <div class="small-indent"> (a)&nbsp;&nbsp;&nbsp; O PI irá maximizar a utilização de quaisquer isenções
                     fiscais e aduaneiros, impostos ou taxas de importação à disposição no País ou, em qualquer outro
                     local no que diz respeito à aquisição, importação, registo, ou a utilização de suprimentos e
@@ -404,7 +356,7 @@
         </div>
         <div id="article-VI" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO VI</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>RESPONSABILIDADES DO UNICEF</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>RESPONSABILIDADES DO UNICEF</b></div>
             <ol class="indented">
                 <li>O UNICEF vai contribuir para a implementação de cada  Documento do Programa coberto pelo presente
                     Acordo ao encarregar-se das responsabilidades que lhe são atribuídas no presente Acordo, incluindo:
@@ -445,7 +397,7 @@
         </div>
         <div id="article-VII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO VII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>DOCUMENTO DO PROGRAMA</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>DOCUMENTO DO PROGRAMA</b></div>
             <ol class="indented">
                 <li>As Partes poderão firmar acordo de um ou vários Documentos do Programa conforme for o caso. Os
                     Documentos do Programa devem ser assinados pelos representantes autorizados das Partes.
@@ -456,17 +408,15 @@
         </div>
         <div id="article-VIII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px">
-                <b>ARTIGO VIII</b>
-            </div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+                <b>ARTIGO VIII</b><br>
                 <b>INSUMOS DO UNICEF PARA A IMPLEMENTAÇÃO</b>
             </div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center">
+            <div class="" style="padding-top: 0px; text-align: center">
                 <b>DOS DOCUMENTOS DO PROGRAMA</b>
             </div>
 
             <div class="keep-with-next" ><b>(A) Transferência de dinheiro pelo UNICEF para e, em nome do PI.</b></div>
-            <div class="keep-with-next" ><p><u>Provisões Gerais:</u></p></div>
+            <div class="" ><p><u>Provisões Gerais:</u></p></div>
             <ol class="indented">
                 <li>O UNICEF irá providenciar ao PI assistência em dinheiro ( “Transferência de Dinheiro”) para as
                     realização das actividades previstas no Documentos do Programa. Esta transferência está sujeita
@@ -495,7 +445,7 @@
                     providenciar uma cópia assinada do presente Acordo e do Documento do Programa. O pedido será
                     assinado por um oficial autorizado.
                 </li>
-                <div class="keep-with-next"><p><u>Procedimentos da Transferência de Dinheiro:</u></p></div>
+                <div class=""><p><u>Procedimentos da Transferência de Dinheiro:</u></p></div>
                 <li>As Parcelas da Transferência de Dinheiro serão transferidas em nome do PI para, ou, onde for
                     utilizada a modalidade de Pagamento Directo, para contribuir para a implementação do Documento do
                     Programa. O PI concorda que, os fundos transferidos serão exclusivamente utilizados para a
@@ -505,7 +455,7 @@
                     a modalidade de Pagamento Directo, em resposta a uma solicitação do PI por escrito e de acordo com
                     os procedimentos a seguir:
                 </li>
-                <div class="keep-with-next">
+                <div class="">
                     <p><u>
                         Procedimentos para a requisição das Parcelas de Transferência de Dinheiro sob as três Modalidades
                         de Transferência de Dinheiro:
@@ -531,7 +481,7 @@
                     montante para, ou , onde é utilizada a modalidade de Pagamento Directo em nome do PI e, dentro de
                     um período de tempo razoável.
                 </div>
-                <div class="keep-with-next"><p><u>Procedimentos adicionais aplicáveis apenas à modalidade de pagamento
+                <div class=""><p><u>Procedimentos adicionais aplicáveis apenas à modalidade de pagamento
                     directo:</u></p></div>
                 <div class="small-indent">(d) &nbsp;&nbsp;&nbsp;O pedido de um Pagamento Directo é apresentado usando o
                     formulário do  FACE  e em todos os casos deve incluir detalhes completos e informações bancárias
@@ -541,7 +491,7 @@
                     quer os reembolsos a solicitação das despesas devem ter sido previamente autorizadas pelo UNICEF
                     através do formulário do FACE.
                 </div>
-                <div class="keep-with-next"><p><u>
+                <div class=""><p><u>
                     Termos e condições especiais para  a transferência de dinheiro em parcelas:
                 </u></p></div>
                 <li>Qualquer pedido feito pelo PI para a Transferência de Dinheiro em Parcelas deve, para a satisfação
@@ -578,69 +528,73 @@
                     presente Acordo.
                 </li>
                 <li>
-                    <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;A administração da Transferência de Dinheiro feita pelo PI deve
+                    <div style="display: inline">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                        A administração da Transferência de Dinheiro feita pelo PI deve
                         ser realizada sob a sua própria regulamentação financeira, regras e procedimentos, que o
                         UNICEF procedeu à revisão e avaliou como sendo apropriado.
                     </div>
+                    <br>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;
+                        Nos casos em que, em conformidade com o HACT, o UNICEF preveja a
+                        Transferência de Dinheiro antes do processo de revisão e avaliação dos regulamentos, regras
+                        financeiras e procedimentos do PI e, subsequentemente o UNICEF determina que, os regulamentos
+                        financeiros, as regras e os procedimentos do PIs não são adequados, o UNICEF deve notificar por
+                        escrito e, em tal caso, pode solicitar ao PI a devolução dos montantes das Transferências de
+                        Dinheiro e, pode ainda, decidir implementar directamente o Documento do Programa ou partes do
+                        mesmo (incluindo actividades de <i>procurement</i>).
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Nos casos em que, em conformidade com o HACT, o UNICEF preveja a
-                    Transferência de Dinheiro antes do processo de revisão e avaliação dos regulamentos, regras
-                    financeiras e procedimentos do PI e, subsequentemente o UNICEF determina que, os regulamentos
-                    financeiros, as regras e os procedimentos do PIs não são adequados, o UNICEF deve notificar por
-                    escrito e, em tal caso, pode solicitar ao PI a devolução dos montantes das Transferências de
-                    Dinheiro e, pode ainda, decidir implementar directamente o Documento do Programa ou partes do
-                    mesmo (incluindo actividades de <i>procurement</i>).
-                </div>
                 <li>Nos casos em que, o PI adquire bens ou serviços a partir da Transferência de Dinheiro, este
                     deve fazê-lo dando a devida atenção aos seguintes princípios:
                 </li>
                 <div class="small-indent">(a) &nbsp;&nbsp;&nbsp;Melhor valor para o dinheiro e qualidade.</div>
                 <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;Honestidade, integridade e transparência.</div>
                 <div class="small-indent">(c) &nbsp;&nbsp;&nbsp;Concorrência.</div>
-                <li class="keep-with-next">
+                <li class="">
                     A Transferência de Dinheiro para além dos Pagamentos Directos devem ser feitas pelo UNICEF
                     para a seguinte conta bancária do PI:
                 </li>
-
-                <table style="border: 1px solid black;">
+                <table class="bordered">
                     <tr>
-                        <td colspan="2" style="text-align: center;vertical-align: middle"><br>Conta</td>
+                        <td colspan="2" class="bordered" style="text-align: center;">Conta</td>
                     </tr>
                     {% for bank_detail in bank_details %}
                     <tr>
-                        <td style="width: 33%;"><br>Nome do banco:</td>
-                        <td><br> {{ bank_detail.bank_name }}</td>
+                        <td class="bordered" style="width: 45%;">Nome do banco:</td>
+                        <td class="bordered">{{ bank_detail.bank_name }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Endereço do banco:</td>
-                        <td><br>{{ bank_detail.bank_address }}</td>
+                        <td class="bordered" style="width: 45%;">Endereço do banco:</td>
+                        <td class="bordered">{{ bank_detail.bank_address }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Conta título:</td>
-                        <td><br>{{ bank_detail.account_title }}</td>
+                        <td class="bordered" style="width: 45%;">Conta título:</td>
+                        <td class="bordered">{{ bank_detail.account_title }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Nº da Conta:</td>
-                        <td><br>{{ bank_detail.account_number }}</td>
+                        <td class="bordered" style="width: 45%;">Nº da Conta:</td>
+                        <td class="bordered">{{ bank_detail.account_number }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Moeda da Conta:</td>
-                        <td></td>
+                        <td class="bordered" style="width: 45%;">Moeda da Conta:</td>
+                        <td class="bordered"></td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br />
+                        <td class="bordered" style="width: 45%;">
                             Outros detalhes <br />bancários incluindo o <br />SWIFT/IBAN:
                         </td>
-                        <td><br>{{ bank_detail.routing_details }}</td>
+                        <td class="bordered">{{ bank_detail.routing_details }}</td>
                     </tr>
                     <tr>
-                        <td style="width: 33%;"><br>Pessoa de Contacto no Banco:</td>
-                        <td><br>{{ bank_detail.bank_contact_person }}</td>
+                        <td class="bordered" style="width: 45%;">Pessoa de Contacto no Banco:</td>
+                        <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
                     {% endfor %}
                 </table>
 
-                <div class="keep-with-next" style="padding-top: 24px;">
+                <div class="" style="padding-top: 24px;">
                     <p><b>(B) Transferência de suprimentos /equipamentos pelo UNICEF para o PI</b></p>
                 </div>
                 <li>As suprimentos e os equipamentos transferidos pelo UNICEF para o PI serão utilizados exclusivamente
@@ -673,7 +627,7 @@
 
         <div id="article-IX" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO IX</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>MANTER OS REGISTOS</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>MANTER OS REGISTOS</b></div>
             <ol class="indented">
                 <li>O PI concorda em manter os livros e registos de forma precisa, completa e actualizada. </li>
                 <div class="keep-with-next"><p><u>Transferência de Dinheiro:</u></p></div>
@@ -700,7 +654,7 @@
                     do PI a referir que, o dinheiro gasto é insuficiente e que não pode substituir a documentação original
                     para justificar as despesas.
                 </div>
-                <div class="keep-with-next"><p><u>Suprimentos e equipamentos:</u></p></div>
+                <div class=""><p><u>Suprimentos e equipamentos:</u></p></div>
                 <li>O PI vai manter registos dos suprimentos e equipamentos comprados a partir da Transferência de
                     Dinheiro ou então transferidos para o PI, em conformidade com o artigo VIII (B) do presente Acordo.
                     Devem ser feitos pelo IP inventários detalhados e, estes deverão ser mantidos por um período de 5
@@ -712,24 +666,26 @@
 
         <div id="article-X" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO X</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>REQUISITOS PARA OS RELATÓRIOS</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>REQUISITOS PARA OS RELATÓRIOS</b></div>
             <ol>
                 <li>O PI irá entregar ao UNICEF os relatórios tal como estabelecido abaixo.  Os relatórios descritivos
                     devem ser providenciados se possível, em inglês, francês ou espanhol.
                 </li>
                 <div class="keep-with-next"><p><b>(A) Relatórios Financeiros</b></p></div>
-                <div class="keep-with-next"><p><u>Relatórios financeiros usando o formulário do FACE:</u></p></div>
-                <li><div class="small-indent">
-                    (a) &nbsp;&nbsp;&nbsp;Salvo acordo em contrário E por escrito entre as Partes, o PI vai apresentar no final de
-                    cada trimestre, os formulários do FACE. Se o formulário do FACE não for apresentado no prazo de
-                    seis (6) meses, a contar a partir do último trimestre, o UNICEF irá, salvo convenção em contrário,
-                    suspender quaisquer outras transferências de dinheiro para o PI, ou em nome do PI.
-                </div>
+                <div class=""><p><u>Relatórios financeiros usando o formulário do FACE:</u></p></div>
+                <li>
+                    <div style="display: inline">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                        seis (6) meses, a contar a partir do último trimestre, o UNICEF irá, salvo convenção em contrário,
+                        suspender quaisquer outras transferências de dinheiro para o PI, ou em nome do PI.
+                    </div>
+                    <br/>
+                    <div style="display:inline;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;
+                        O último formulário do FACE irá ser apresentado o mais tardar até
+                        30 (trinta) dias após o término do programa.
+                    </div>
                 </li>
-                <div class="small-indent">(b) &nbsp;&nbsp;&nbsp;O último formulário do FACE irá ser apresentado o mais tardar até
-                    30 (trinta) dias após o término do programa.
-                </div>
-
                 <div class="small-indent keep-with-next">(c) &nbsp;&nbsp;&nbsp;O Formulário do FACE:</div>
                 <div class="small-indent">
                     <div style="padding-left: 25px">(i) &nbsp;&nbsp;&nbsp; Irá incluir apenas os gastos que são identificáveis e
@@ -757,7 +713,7 @@
                     <div>(d) &nbsp;&nbsp;&nbsp;O UNICEF terá acesso , mediante pedido, a todos os documentos e registos que apoiam
                         ou que, podem ser considerados como de apoio à informação contida no FACE.
                     </div>
-                    <div class="keep-with-next"><p><u>Despesas não elegíveis:</u></p></div>
+                    <div class=""><p><u>Despesas não elegíveis:</u></p></div>
                     <div>(e) &nbsp;&nbsp;&nbsp; Os itens a seguir são despesas não elegíveis (conforme determinado pelo UNICEF e em
                         seu critério exclusivo) e sendo por isso, não incluídas no  formulário do FACE:
                     </div>
@@ -825,18 +781,18 @@
                     de dinheiro foi efectuada. Não é necessário que, o PI converta as transacções em dólares americanos
                     ou para qualquer outra moeda.
                 </li>
-                <div class="keep-with-next"><p><u>Uso da ferramenta e-FACE:</u></p></div>
+                <div class=""><p><u>Uso da ferramenta e-FACE:</u></p></div>
                 <li>Para além de usar o formulário do FACE, o PI pode inserir as informações contidas no FACE numa
                     ferramenta de e-FACE assim que, esta estiver disponível e se for solicitado pelo UNICEF.
                 </li>
-                <div class="keep-with-next"><p><b>(B) Relatórios de Progresso</b></p></div>
+                <div class=""><p><b>(B) Relatórios de Progresso</b></p></div>
                 <li>O PI submeterá ao UNICEF os relatórios narrativos de progresso das actividades planeadas e
                     constantes no Documento do Programa, usando para tal o PDPR. Salvo acordo em contrário por
                     escrito das Partes, estes relatórios serão apresentados no final de cada trimestre. O relatório
                     final será apresentado no prazo de 30 (trinta) dias após o término do programa e será submetido
                     em conjunto com o formulário do FACE.
                 </li>
-                <div class="keep-with-next"><p><b>(C) Relatórios adicionais</b></p></div>
+                <div class=""><p><b>(C) Relatórios adicionais</b></p></div>
                 <li>Os requisitos para os relatórios adicionais serão especificados no Documento do Programa. O PI irá
                     fornecer relatórios <i>ad hoc</i> se solicitados periodicamente pelo UNICEF. O UNICEF irá envidar
                     todos os esforços razoáveis para minimizar a solicitação de relatórios <i>ad-hoc</i>.
@@ -846,18 +802,27 @@
 
         <div id="article-XI" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO XI</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>ACÇÕES APÓS A CONCLUSÃO DAS ACTIVIDADES NO ÂMBITO DO</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>DOCUMENTO DO PROGRAMA</b></div>
+            <div class="" style="padding-top: 0px; text-align: center">
+                <b>ACÇÕES APÓS A CONCLUSÃO DAS ACTIVIDADES NO ÂMBITO DO</b>
+                <br>
+                <b>DOCUMENTO DO PROGRAMA</b>
+            </div>
             <ol class="indented">
-                <li>(a) &nbsp;&nbsp;&nbsp;Após a conclusão das actividades do PI no âmbito de Documento do Programa, o PI
+                <li>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a) &nbsp;&nbsp;&nbsp;
+                    Após a conclusão das actividades do PI no âmbito de Documento do Programa, o PI
                     deve reembolsar ao UNICEF os valores não utilizados de todas as Transferências de Dinheiro
                     feitas no âmbito do Documento do Programa (que deve ser reportado no último formulário do FACE
                     a ser apresentado pelo PI) e todos os outros montantes a que não tem direito.
-                <div>(b) &nbsp;&nbsp;&nbsp;Após a conclusão das actividades no âmbito do Documento do Programa, o PI deve
+                <div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b) &nbsp;&nbsp;&nbsp;
+                    Após a conclusão das actividades no âmbito do Documento do Programa, o PI deve
                     retornar ao UNICEF todos os suprimentos e equipamentos não utilizados e que foram providenciados
                     pelo UNICEF como insumos para a implementação do Programa.
                 </div>
-                <div>(c) &nbsp;&nbsp;&nbsp;(c) Tais reembolsos e devoluções devem ser efectuados o mais tardar até
+                <div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(c) &nbsp;&nbsp;&nbsp;
+                    Tais reembolsos e devoluções devem ser efectuados o mais tardar até
                     90 (noventa)  dias após a data de término do Documento do Programa ou na data efectiva da
                     cessação da actividades ou consoante o que ocorreu mais cedo.
                 </div>
@@ -874,7 +839,7 @@
 
         <div id="article-XII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO XII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>PRIVILÉGIOS E IMUNIDADES; RESOLUCÃO DE CONFLITOS</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>PRIVILÉGIOS E IMUNIDADES; RESOLUCÃO DE CONFLITOS</b></div>
             <ol class="indented">
                 <li>Em conformidade com o disposto no artigo 17 dos Termos e Condições Gerais para a Implementação
                     dos Acordos de Parceria, nada em ou, relacionado a este Acordo será considerado como uma renúncia,
@@ -911,7 +876,7 @@
         </div>
         <div id="article-XIII" style="padding-bottom: 10px">
             <div class="keep-with-next" style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTIGO  XIII</b></div>
-            <div class="keep-with-next" style="padding-top: 0px; text-align: center"><b>DISPOSIÇÕES FINAIS</b></div>
+            <div class="" style="padding-top: 0px; text-align: center"><b>DISPOSIÇÕES FINAIS</b></div>
             <ol class="indented">
                 <li>O presente Acordo entra em vigor na data da assinatura por ambas as Partes. Deve terminar no
                     último dia do Programa do País a menos que seja encerrado antes, de acordo com o disposto no
@@ -953,7 +918,7 @@
         <div class="page-break"></div>
         <div id="general-terms" style="font: 10pt; padding-bottom: 10px">
             <div class="keep-with-next" style="padding-bottom: 0px; text-align: center"><b>TERMOS E CONDIÇÕES GERAIS</b></div>
-            <div class="keep-with-next" style="text-align: center; padding-top: 0px"><b>ACORDOS DO PROGRAMA DE COOPERAÇÃO</b></div>
+            <div class="" style="text-align: center; padding-top: 0px"><b>ACORDOS DO PROGRAMA DE COOPERAÇÃO</b></div>
             <ol>
                 <li><b>SITUAÇÃO JURÍDICA:</b> O PI deve ser considerado como tendo o estatuto jurídico de um contratante
                     independente, vis-à-vis com o UNICEF. Os funcionários, pessoal e subcontratados do PI, não devem
@@ -980,7 +945,7 @@
                     obrigações ao abrigo do presente Acordo. Os termos de qualquer subcontrato e assim por diante,
                     devem estar sujeitos e em conformidade com o efeito pleno das disposições do presente Acordo.
                 </li>
-                <li class="keep-with-next"><b>5.0 OS OFICIAIS NÃO SE BENEFICIAM; RESTRIÇÃO DA CONTRATAÇÃO DO PESSOAL DO UNICEF:</b></li>
+                <li class=""><b>5.0 OS OFICIAIS NÃO SE BENEFICIAM; RESTRIÇÃO DA CONTRATAÇÃO DO PESSOAL DO UNICEF:</b></li>
                 <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
                     <li>O PI garante que, nenhum oficial do UNICEF recebe ou é provido de qualquer benefício ou prémio
                         directo ou indirecto resultante do presente Acordo. O PI concorda que, a violação desta
@@ -1013,7 +978,7 @@
                     serviços prestados, materiais, suprimentos ou equipamentos providenciados, no âmbito do presente
                     Acordo , ou por qualquer razão, reclamação ou demanda contra o PI.
                 </li>
-                <li class="keep-with-next"><b>DIREITOS DE AUTOR, PATENTES E OUTROS DIREITOS DE PROPRIEDADE; CONFIDENCIALIDADE:</b></li>
+                <li class=""><b>DIREITOS DE AUTOR, PATENTES E OUTROS DIREITOS DE PROPRIEDADE; CONFIDENCIALIDADE:</b></li>
                 <div style="padding-top: 2px">8.1 &nbsp;&nbsp;&nbsp;Excepto como expressamente provido no contrato e por escrito,
                     o UNICEF terá o direito a todos os direitos de propriedade intelectual e outros direitos incluindo,
                     mas não limitado às patentes, direitos autorais e marcas comerciais, no que diz respeito ao produtos,
@@ -1062,7 +1027,7 @@
                     pelo UNICEF e seus doadores que contribuem com fundos para o Documento do Programa. Onde tal visibilidade
                     ponha em causa a segurança da equipa do PI, o PI deve propor mecanismos alternativos adequados.
                 </li>
-                <li class="keep-with-next"><b>FORÇA MAIOR; OUTRAS MUDANÇAS DE CONDIÇÕES:</b></li>
+                <li class=""><b>FORÇA MAIOR; OUTRAS MUDANÇAS DE CONDIÇÕES:</b></li>
                 <div style="padding-top: 2px">10.1 &nbsp;&nbsp;&nbsp;Em caso de ocorrência de qualquer causa de força maior
                     e logo após a ocorrência de tal incidente, o PI deve dar aviso prévio e todas as informações
                     detalhadas e por escrito para o UNICEF, de tal ocorrência ou mudança e se, o PI está incapacitado
@@ -1095,7 +1060,7 @@
                     um motivo de <i>força maior</i>.
                 </div>
                 <li class="keep-with-next"><b>RESCISÃO:</b></li>
-                <div class="keep-with-next" style="padding-top: 2px">11.1 &nbsp;&nbsp;&nbsp;Qualquer uma das partes poderá renunciar
+                <div class="" style="padding-top: 2px">11.1 &nbsp;&nbsp;&nbsp;Qualquer uma das partes poderá renunciar
                     o presente Acordo, mediante a notificação escrita à outra parte no prazo de 30 (trinta) dias uteis
                     à outra parte em cada uma das seguintes situações
                 </div>
@@ -1111,7 +1076,7 @@
                     </ol>
                 </div>
 
-                <div class="keep-with-next">11.2 &nbsp;&nbsp;&nbsp;O UNICEF também pode suspender ou rescindir este Contrato imediatamente,
+                <div class="">11.2 &nbsp;&nbsp;&nbsp;O UNICEF também pode suspender ou rescindir este Contrato imediatamente,
                     em cada uma das situações a seguir:
                 </div>
                 <div style="padding-left: 25px;">
@@ -1169,7 +1134,7 @@
                     ou em qualquer outro site decidido periodicamente pelo UNICEF.
                 </li>
                 <li><b>AS ACTIVIDADES DE GARANTIA:</b></li>
-                <div class="keep-with-next">14.1 &nbsp;&nbsp;&nbsp;Auditoria:</div>
+                <div class="">14.1 &nbsp;&nbsp;&nbsp;Auditoria:</div>
                 <div style="padding-left: 25px;">
                     <ol class="list-style-type-letter" style="list-style-type: lower-alpha">
                         <li>A pedido de, e em períodos determinados apenas  pelo UNICEF, o PI terá suas actividades
@@ -1194,7 +1159,7 @@
                         </li>
                     </ol>
                 </div>
-                <div class="keep-with-next">14.2 &nbsp;&nbsp;&nbsp;Verificações no Local e Visitas Programáticas:</div>
+                <div class="">14.2 &nbsp;&nbsp;&nbsp;Verificações no Local e Visitas Programáticas:</div>
                 <div>O PI concorda que, sejam feitas periodicamente revisões no local (Verificações no Local e Visitas
                     Programáticas) que são sujeitos às normas âmbito frequência e cronograma decidido pelo UNICEF. O PI
                     deve prestar a sua cooperação plena e oportuna em todas a Verificações no Local e Visitas Programáticas,

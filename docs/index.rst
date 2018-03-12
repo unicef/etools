@@ -11,6 +11,7 @@ Welcome to eTools's documentation!
    :caption: Contents:
 
    guidelines
+   feature-flags
 
 
 Indices and tables

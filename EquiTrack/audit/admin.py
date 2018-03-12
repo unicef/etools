@@ -1,47 +1,22 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.contrib import admin
 from ordered_model.admin import OrderedModelAdmin
 
-from . import models
+from audit.models import (
+    Audit, AuditPermission, Engagement, FinancialFinding, Finding, MicroAssessment,
+    Risk, RiskBluePrint, RiskCategory, SpecialAuditRecommendation, SpecificProcedure,
+    SpotCheck, )
 
 
-@admin.register(models.AuditPermission)
+@admin.register(AuditPermission)
 class AuditPermissionAdmin(admin.ModelAdmin):
     list_display = ['target', 'user_type', 'permission_type', 'permission', 'instance_status']
     list_filter = ['user_type', 'permission_type', 'permission', 'instance_status']
     search_fields = ['target']
 
 
-class AuditorStaffMemberInlineAdmin(admin.StackedInline):
-    model = models.AuditorStaffMember
-    extra = 1
-
-
-@admin.register(models.AuditorFirm)
-class AuditorFirmAdmin(admin.ModelAdmin):
-    list_display = [
-        'vendor_number', 'name', 'email', 'phone_number', 'blocked', 'hidden',
-        'country',
-    ]
-    list_filter = ['blocked', 'hidden', 'country', ]
-    search_fields = ['vendor_number', 'name', ]
-    inlines = [
-        AuditorStaffMemberInlineAdmin,
-    ]
-
-
-@admin.register(models.PurchaseOrder)
-class PurchaseOrderAdmin(admin.ModelAdmin):
-    list_display = [
-        'order_number', 'auditor_firm', 'contract_start_date',
-        'contract_end_date',
-    ]
-    list_filter = [
-        'auditor_firm', 'contract_start_date', 'contract_end_date',
-    ]
-    search_fields = ['order_number', 'auditor_firm__name', ]
-
-
-@admin.register(models.Engagement)
+@admin.register(Engagement)
 class EngagementAdmin(admin.ModelAdmin):
     list_display = [
         '__str__', 'status', 'partner', 'date_of_field_visit',
@@ -54,7 +29,7 @@ class EngagementAdmin(admin.ModelAdmin):
     search_fields = ['partner__name', 'auditor_firm__name', ]
 
 
-@admin.register(models.RiskCategory)
+@admin.register(RiskCategory)
 class RiskCategoryAdmin(OrderedModelAdmin):
     list_display = [
         '__str__', 'category_type', 'code', 'header', 'parent', 'move_up_down_links',
@@ -64,7 +39,7 @@ class RiskCategoryAdmin(OrderedModelAdmin):
     readonly_fields = ['code', ]
 
 
-@admin.register(models.RiskBluePrint)
+@admin.register(RiskBluePrint)
 class RiskBluePrintAdmin(OrderedModelAdmin):
     list_display = [
         '__str__', 'weight', 'is_key', 'description', 'category', 'move_up_down_links',
@@ -72,7 +47,7 @@ class RiskBluePrintAdmin(OrderedModelAdmin):
     list_filter = ['is_key', ]
 
 
-@admin.register(models.Risk)
+@admin.register(Risk)
 class RiskAdmin(admin.ModelAdmin):
     list_display = [
         '__str__', 'value', 'blueprint', 'extra',
@@ -80,22 +55,22 @@ class RiskAdmin(admin.ModelAdmin):
     list_filter = ['value', ]
 
 
-@admin.register(models.SpotCheck)
+@admin.register(SpotCheck)
 class SpotCheckAdmin(EngagementAdmin):
     pass
 
 
-@admin.register(models.MicroAssessment)
+@admin.register(MicroAssessment)
 class MicroAssessmentAdmin(EngagementAdmin):
     pass
 
 
-@admin.register(models.Audit)
+@admin.register(Audit)
 class AuditAdmin(EngagementAdmin):
     pass
 
 
-@admin.register(models.Finding)
+@admin.register(Finding)
 class FindingAdmin(admin.ModelAdmin):
     list_display = [
         '__str__', 'priority', 'deadline_of_action',
@@ -106,9 +81,19 @@ class FindingAdmin(admin.ModelAdmin):
     ]
 
 
-@admin.register(models.FinancialFinding)
+@admin.register(FinancialFinding)
 class FinancialFindingAdmin(admin.ModelAdmin):
     list_display = [
         'title', 'audit', 'description', 'amount', 'local_amount',
     ]
     search_fields = ['title', ]
+
+
+@admin.register(SpecificProcedure)
+class SpecificProcedureAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(SpecialAuditRecommendation)
+class SpecialAuditRecommendationAdmin(admin.ModelAdmin):
+    pass

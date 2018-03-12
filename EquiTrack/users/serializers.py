@@ -1,7 +1,8 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from t2f.serializers.user_data import T2FUserDataSerializer
-from users.models import User, UserProfile, Group, Office, Section, Country
+from users.models import Country, Group, Office, UserProfile
 
 
 class SimpleCountrySerializer(serializers.ModelSerializer):
@@ -70,20 +71,8 @@ class UserSerializer(serializers.ModelSerializer):
     groups = GroupSerializer(many=True)
 
     class Meta:
-        model = User
+        model = get_user_model()
         exclude = ('password', 'groups', 'user_permissions')
-
-
-class SectionSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Section
-        fields = (
-            'id',
-            'name'
-        )
 
 
 class UserProfileCreationSerializer(serializers.ModelSerializer):
@@ -140,7 +129,7 @@ class SimpleUserSerializer(serializers.ModelSerializer):
     profile = SimpleNestedProfileSerializer()
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             'id',
             'username',
@@ -158,7 +147,7 @@ class MinimalUserSerializer(SimpleUserSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = ('id', 'name', 'first_name', 'last_name')
 
 
@@ -188,7 +177,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
             countries = []
 
         try:
-            user = User.objects.create(**validated_data)
+            user = get_user_model().objects.create(**validated_data)
             user.profile.country = user_profile['country']
             user.profile.office = user_profile['office']
             user.profile.section = user_profile['section']
@@ -196,7 +185,6 @@ class UserCreationSerializer(serializers.ModelSerializer):
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']
             user.profile.country_override = user_profile['country_override']
-            user.profile.installation_id = user_profile['installation_id']
             for country in countries:
                 user.profile.countries_available.add(country)
 
@@ -209,7 +197,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
         return user
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             'id',
             'username',
@@ -227,14 +215,17 @@ class UserCreationSerializer(serializers.ModelSerializer):
 
 
 class CountrySerializer(SimpleUserSerializer):
-    local_currency_id = serializers.IntegerField(source='local_currency.id', read_only=True)
+    local_currency_code = serializers.CharField(source='local_currency', read_only=True)
 
     class Meta:
         model = Country
         fields = (
-                'name',
-                'latitude',
-                'longitude',
-                'initial_zoom',
-                'local_currency_id'
+            'id',
+            'name',
+            'latitude',
+            'longitude',
+            'initial_zoom',
+            'local_currency_code',
+            'business_area_code',
+            'country_short_code',
         )

@@ -17,8 +17,10 @@ class TestFRHeaderView(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.intervention = InterventionFactory()
-        self.fr_1 = FundsReservationHeaderFactory(intervention=None)
-        self.fr_2 = FundsReservationHeaderFactory(intervention=None)
+        vendor_code = self.intervention.agreement.partner.vendor_number
+        self.fr_1 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)
+        self.fr_2 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)
+        self.fr_3 = FundsReservationHeaderFactory(intervention=None, currency="RON")
 
     def run_request(self, data):
         response = self.forced_auth_req(
@@ -101,26 +103,23 @@ class TestFRHeaderView(APITenantTestCase):
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result['error'],
-                         'One or more of the FRs selected is either expired, has been used by another '
-                         'intervention or could not be found in eTools')
+                         'One or more of the FRs are used by another PD/SSFA '
+                         'or could not be found in eTools.')
 
     def test_get_fail_with_one_bad_value(self):
         data = {'values': ','.join(['im a bad value', self.fr_1.fr_number])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result['error'],
-                         'One or more of the FRs selected is either expired, has been used by another '
-                         'intervention or could not be found in eTools')
+                         'One or more of the FRs are used by another PD/SSFA '
+                         'or could not be found in eTools.')
 
-    def test_get_fail_with_expired_fr(self):
+    def test_get_success_with_expired_fr(self):
         self.fr_1.end_date = timezone.now().date() - timedelta(days=1)
         self.fr_1.save()
         data = {'values': ','.join([self.fr_2.fr_number, self.fr_1.fr_number])}
         status_code, result = self.run_request(data)
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'],
-                         'One or more of the FRs selected is either expired, has been used by another '
-                         'intervention or could not be found in eTools')
+        self.assertEqual(status_code, status.HTTP_200_OK)
 
     def test_get_fail_with_intervention_fr(self):
         self.fr_1.intervention = self.intervention
@@ -129,8 +128,8 @@ class TestFRHeaderView(APITenantTestCase):
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result['error'],
-                         'One or more of the FRs selected is either expired, has been used by another '
-                         'intervention or could not be found in eTools')
+                         'One or more of the FRs are used by another PD/SSFA '
+                         'or could not be found in eTools.')
 
     def test_get_with_intervention_fr(self):
         self.fr_1.intervention = self.intervention
@@ -147,3 +146,49 @@ class TestFRHeaderView(APITenantTestCase):
                          float(sum([self.fr_1.total_amt, self.fr_2.total_amt])))
         self.assertEqual(result['total_intervention_amt'],
                          float(sum([self.fr_1.intervention_amt, self.fr_2.intervention_amt])))
+
+    def test_frs_vendor_code_mismatch(self):
+        data = {'values': ','.join([self.fr_1.fr_number, self.fr_3.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('FRs selected relate to various partners', result['error'])
+
+    def test_frs_partner_vendor_code_mismatch(self):
+        data = {'values': ','.join([self.fr_3.fr_number]),
+                'intervention': self.intervention.pk}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('vendor number of the selected implementing partner in eTools does not '
+                      'match the vendor number entered in the FR in VISION', result['error'])
+
+    def test_frs_partner_vendor_code_ok(self):
+        data = {'values': ','.join([self.fr_1.fr_number]),
+                'intervention': self.intervention.pk}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+
+    def test_frs_currencies_match_ok(self):
+        data = {'values': ','.join([self.fr_1.fr_number, self.fr_2.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(result['currencies_match'], True)
+        self.assertNotEqual(result['total_intervention_amt'], 0)
+
+    def test_frs_currencies_mismatch_ok(self):
+        self.fr_2.currency = 'LBP'
+        self.fr_2.save()
+        data = {'values': ','.join([self.fr_1.fr_number, self.fr_2.fr_number])}
+
+        status_code, result = self.run_request(data)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(result['currencies_match'], False)
+        self.assertEqual(result['total_intervention_amt'], 0)

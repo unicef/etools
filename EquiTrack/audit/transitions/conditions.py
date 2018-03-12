@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 
@@ -43,7 +43,35 @@ class ValidateRiskCategories(BaseTransitionCheck):
             questions_count = RiskBluePrint.objects.filter(category__code=code).count()
             answers_count = instance.risks.filter(blueprint__category__code=code).count()
             if questions_count != answers_count:
-                errors[self.VALIDATE_CATEGORIES_BEFORE_SUBMIT[code]] = _('You should give answers for all questions')
+                errors[self.VALIDATE_CATEGORIES_BEFORE_SUBMIT[code]] = _('Please answer all questions')
+
+        return errors
+
+
+class ValidateRiskExtra(BaseTransitionCheck):
+    VALIDATE_CATEGORIES = {}
+    REQUIRED_EXTRA_FIELDS = []
+
+    def get_errors(self, instance, *args, **kwargs):
+        errors = super(ValidateRiskExtra, self).get_errors(*args, **kwargs)
+
+        for code, category in self.VALIDATE_CATEGORIES.items():
+            answers = instance.risks.filter(blueprint__category__code=code)
+            for answer in answers:
+                extra_errors = {}
+
+                extra = answer.extra or {}
+                for extra_field in self.REQUIRED_EXTRA_FIELDS:
+                    if extra.get(extra_field) is None:
+                        extra_errors[extra_field] = _('This field is required.')
+
+                if extra_errors:
+                    if category not in errors:
+                        errors[category] = {}
+                    if answer.blueprint_id not in errors[category]:
+                        errors[category][answer.blueprint_id] = {}
+
+                    errors[category][answer.blueprint_id]['extra'] = extra_errors
 
         return errors
 
@@ -77,8 +105,18 @@ class EngagementHasReportAttachmentsCheck(BaseTransitionCheck):
     def get_errors(self, instance, *args, **kwargs):
         errors = super(EngagementHasReportAttachmentsCheck, self).get_errors(*args, **kwargs)
 
-        if instance.report_attachments.count() <= 0:
-            errors['report_attachments'] = _('You should attach at least one file.')
+        if not instance.report_attachments.filter(file_type__name='report').exists():
+            errors['report_attachments'] = _('You should attach report.')
+        return errors
+
+
+class SpecialAuditSubmitRelatedModelsCheck(BaseTransitionCheck):
+    def get_errors(self, instance, *args, **kwargs):
+        errors = super(SpecialAuditSubmitRelatedModelsCheck, self).get_errors(instance, *args, **kwargs)
+
+        if instance.specific_procedures.filter(models.Q(finding__isnull=True) | models.Q(finding='')).exists():
+            errors['specific_procedures'] = _('You should provide results of performing specific procedures.')
+
         return errors
 
 
@@ -97,16 +135,25 @@ class SPSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsChec
 
 class AuditSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsCheck):
     fields = EngagementSubmitReportRequiredFieldsCheck.fields + [
-        'audited_expenditure', 'financial_findings', 'percent_of_audited_expenditure',
-        'audit_opinion', 'recommendation', 'audit_observation', 'ip_response',
+        'audited_expenditure', 'financial_findings',
+        'audit_opinion',
     ]
 
 
 class ValidateMARiskCategories(ValidateRiskCategories):
     VALIDATE_CATEGORIES_BEFORE_SUBMIT = {
         'ma_questionnaire': 'questionnaire',
-        'ma_subject_areas': 'test_subject_areas'
+        'ma_subject_areas': 'test_subject_areas',
+        'ma_global_assessment': 'overall_risk_assessment',
     }
+
+
+class ValidateMARiskExtra(ValidateRiskExtra):
+    VALIDATE_CATEGORIES = {
+        'ma_subject_areas': 'test_subject_areas',
+        'ma_global_assessment': 'overall_risk_assessment',
+    }
+    REQUIRED_EXTRA_FIELDS = ['comments']
 
 
 class ValidateAuditRiskCategories(ValidateRiskCategories):

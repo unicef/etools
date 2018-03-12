@@ -1,7 +1,7 @@
 from django import forms
 from django.db import connection
 
-from .models import UserProfile, Section, Office
+from users.models import Office, Section, UserProfile
 
 
 class ProfileForm(forms.ModelForm):

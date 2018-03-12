@@ -1,13 +1,13 @@
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import, unicode_literals
 
-from datetime import datetime
 import json
 import logging
+from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from publics.models import BusinessArea, WBS, Grant, Fund, Currency, ExchangeRate, TravelExpenseType, Country, \
-    TravelAgent
+from publics.models import (
+    BusinessArea, Country, Currency, ExchangeRate, Fund, Grant, TravelAgent, TravelExpenseType, WBS,)
 from publics.views import WBSGrantFundView
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 
@@ -101,7 +101,7 @@ class CostAssignmentSynch(VisionDataSynchronizer):
         return len(records)
 
 
-class CurrencySyncronizer(VisionDataSynchronizer):
+class CurrencySynchronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetCurrencyXrate_JSON'
     GLOBAL_CALL = True
 
@@ -157,7 +157,7 @@ class CurrencySyncronizer(VisionDataSynchronizer):
         return processed
 
 
-class TravelAgenciesSyncronizer(VisionDataSynchronizer):
+class TravelAgenciesSynchronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetTravelAgenciesInfo_JSON'
     GLOBAL_CALL = True
 

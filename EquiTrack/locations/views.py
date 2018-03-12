@@ -2,17 +2,13 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
 from dal import autocomplete
-from rest_framework import viewsets, mixins, permissions
+from rest_framework import mixins, permissions, viewsets
 from rest_framework.generics import ListAPIView
 
 from EquiTrack.utils import etag_cached
-from .models import CartoDBTable, GatewayType, Location
-from .serializers import (
-    CartoDBTableSerializer,
-    GatewayTypeSerializer,
-    LocationSerializer,
-    LocationLightSerializer,
-)
+from locations.models import CartoDBTable, GatewayType, Location
+from locations.serializers import (
+    CartoDBTableSerializer, GatewayTypeSerializer, LocationLightSerializer, LocationSerializer,)
 
 
 class CartoDBTablesView(ListAPIView):

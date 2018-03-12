@@ -7,8 +7,9 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
-from publics.tests.factories import AirlineCompanyFactory, DSARegionFactory, CountryFactory, BusinessAreaFactory, \
-    WBSFactory, GrantFactory, FundFactory, ExpenseTypeFactory, TravelAgentFactory, DSARateFactory
+from publics.tests.factories import (
+    AirlineCompanyFactory, BusinessAreaFactory, CountryFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory,
+    FundFactory, GrantFactory, TravelAgentFactory, WBSFactory,)
 from t2f.tests.factories import CurrencyFactory
 
 

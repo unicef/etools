@@ -4,7 +4,6 @@ from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
 from django_fsm import TransitionNotAllowed
-
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response

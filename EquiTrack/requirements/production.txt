@@ -2,5 +2,5 @@
 #	production that isn't in development.
 -r base.txt
 
-newrelic==2.24.0.21
+newrelic==2.94.0.79
 #honcho==0.5.0

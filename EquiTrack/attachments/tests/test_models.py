@@ -1,17 +1,19 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from EquiTrack.tests.mixins import FastTenantTestCase
-from .factories import AttachmentFactory, FileTypeFactory
+from attachments.tests.factories import AttachmentFactory, FileTypeFactory
+from EquiTrack.tests.cases import EToolsTenantTestCase
 
 
-class TestAttachmentsModels(FastTenantTestCase):
+class TestAttachmentsModels(EToolsTenantTestCase):
     def setUp(self):
         self.simple_object = FileTypeFactory()
 
     def test_valid_file(self):
         valid_file_attachment = AttachmentFactory(
-            file=SimpleUploadedFile('simple_file.txt', 'these are the file contents!'),
+            file=SimpleUploadedFile('simple_file.txt', b'these are the file contents!'),
             content_object=self.simple_object
         )
         valid_file_attachment.clean()

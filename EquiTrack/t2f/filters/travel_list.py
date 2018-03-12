@@ -6,10 +6,10 @@ from datetime import date
 from django.db.models.query_utils import Q
 from rest_framework.filters import BaseFilterBackend
 
-from t2f.filters import BaseSearchFilter, BaseSortFilter, BaseFilterBoxFilter
+from t2f.filters import BaseFilterBoxFilter, BaseSearchFilter, BaseSortFilter
 from t2f.models import Travel
-from t2f.serializers.filters.travel_list import ShowHiddenFilterSerializer, TravelFilterBoxSerializer,\
-    TravelSortFilterSerializer
+from t2f.serializers.filters.travel_list import (
+    ShowHiddenFilterSerializer, TravelFilterBoxSerializer, TravelSortFilterSerializer,)
 
 
 class TravelSearchFilter(BaseSearchFilter):

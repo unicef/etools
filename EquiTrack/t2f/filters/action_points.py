@@ -1,8 +1,7 @@
 from __future__ import unicode_literals
 
-from t2f.filters import BaseSearchFilter, BaseSortFilter, BaseFilterBoxFilter
-
-from t2f.serializers.filters.action_points import ActionPointSortFilterSerializer, ActionPointFilterBoxSerializer
+from t2f.filters import BaseFilterBoxFilter, BaseSearchFilter, BaseSortFilter
+from t2f.serializers.filters.action_points import ActionPointFilterBoxSerializer, ActionPointSortFilterSerializer
 
 
 class ActionPointSearchFilter(BaseSearchFilter):

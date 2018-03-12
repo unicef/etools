@@ -1,22 +1,21 @@
 from django.conf.urls import url
 from django.views.generic import TemplateView
 
-from .views import (
-    UserAuthAPIView,
-    ProfileEdit,
-    UsersView,
+from users.views import (
     ChangeUserCountryView,
-    UsersDetailAPIView,
     MyProfileAPIView,
+    ProfileEdit,
+    StaffUsersView,
+    UserAuthAPIView,
+    UsersDetailAPIView,
 )
-
 
 urlpatterns = (
     # api
-    url(r'^api/profile/$', UserAuthAPIView.as_view()),
-    url(r'^api/changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post'])),
-    url(r'^api/', UsersView.as_view()),  # TODO: staff required , partners should not be able to hit this
-    url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view(http_method_names=['get'])),
+    url(r'^api/profile/$', UserAuthAPIView.as_view(), name="user-api-profile"),
+    url(r'^api/changecountry/$', ChangeUserCountryView.as_view(), name="country-change"),
+    url(r'^api/$', StaffUsersView.as_view()),
+    url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
     url(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
 
     # user profile

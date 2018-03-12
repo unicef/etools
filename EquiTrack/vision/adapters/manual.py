@@ -1,12 +1,16 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import json
 import types
 import logging
 from collections import OrderedDict
 
+from django.conf import settings
 from django.db import connection
 
+from vision.exceptions import VisionException
 from vision.utils import wcf_json_date_as_datetime
-from vision.vision_data_synchronizer import VisionDataLoader, VisionException, VisionDataSynchronizer
+from vision.vision_data_synchronizer import VisionDataLoader, VisionDataSynchronizer
 
 logger = logging.getLogger(__name__)
 
@@ -20,12 +24,13 @@ class ManualDataLoader(VisionDataLoader):
     /endpoint/object_number else
     """
     def __init__(self, country=None, endpoint=None, object_number=None):
+        if not self.URL:
+            self.URL = settings.VISION_URL
         if not object_number:
             super(ManualDataLoader, self).__init__(country=country, endpoint=endpoint)
         else:
             if endpoint is None:
                 raise VisionException(message='You must set the ENDPOINT name')
-
             self.url = '{}/{}/{}'.format(
                 self.URL,
                 endpoint,
@@ -57,20 +62,27 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
             result = None
 
             if field_json_code in self.DATE_FIELDS:
+                # parsing field as date
                 result = wcf_json_date_as_datetime(json_item[field_json_code])
             elif field_name in self.MODEL_MAPPING.keys():
+                # this is related model, so we need to fetch somehow related object.
                 related_model = self.MODEL_MAPPING[field_name]
 
                 if isinstance(related_model, types.FunctionType):
+                    # callable provided, object should be returned from it
                     result = related_model(data=json_item, key_field=field_json_code)
                 else:
+                    # model class provided, related object can be fetched with query by field
+                    # analogue of field_json_code
                     reversed_dict = dict(zip(self.MAPPING[field_name].values(), self.MAPPING[field_name].keys()))
                     result = related_model.objects.get(**{
                         reversed_dict[field_json_code]: json_item.get(field_json_code, None)
                     })
             else:
+                # field can be used as it is without custom mappings.
                 result = json_item.get(field_json_code, None)
 
+            # additional logic on field may be applied
             value_handler = self.FIELD_HANDLERS.get(
                 {y: x for x, y in self.MODEL_MAPPING.iteritems()}.get(model), {}
             ).get(field_name, None)
@@ -90,20 +102,28 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                         [(field_name, value) for field_name, value in mapped_item.items()
                          if model._meta.get_field(field_name).unique]
                     )
+
+                    if not kwargs:
+                        for fields in model._meta.unique_together:
+                            if all(field in mapped_item.keys() for field in fields):
+                                unique_fields = fields
+                                break
+
+                        kwargs = {
+                            field: mapped_item[field] for field in unique_fields
+                        }
+
                     defaults = dict(
                         [(field_name, value) for field_name, value in mapped_item.items()
                          if field_name not in kwargs.keys()]
                     )
                     defaults.update(self.DEFAULTS.get(model, {}))
-                    obj, created = model.objects.update_or_create(
+                    model.objects.update_or_create(
                         defaults=defaults, **kwargs
                     )
             except Exception as exp:
-                    print ("Exception message: {} ")
-                    print ("Exception type: {} ")
-                    print ("Exception args: {} ".format(
-                            exp.message, type(exp).__name__, exp.args
-                        ))
+                logger.warning("Exception message: {}".format(exp.message))
+                logger.warning("Exception type: {}".format(type(exp)))
 
         for record in filtered_records:
             _process_record(record)
@@ -125,11 +145,6 @@ class ManualVisionSynchronizer(MultiModelDataSynchronizer):
                 raise VisionException(message='You must set the ENDPOINT name')
 
             self.country = country
-            self.url = '{}/{}/{}'.format(
-                self.URL,
-                self.ENDPOINT,
-                object_number
-            )
 
-            logger.info("Vision sync url:%s" % self.url)
             connection.set_tenant(country)
+            logger.info('Country is {}'.format(country.name))

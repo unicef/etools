@@ -1,19 +1,19 @@
 from __future__ import unicode_literals
+
 import csv
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
 from StringIO import StringIO
 
 from django.core import mail
 from django.core.urlresolvers import reverse
-
 from freezegun import freeze_time
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from t2f.models import ActionPoint
-from t2f.tests.factories import TravelFactory, ActionPointFactory
+from t2f.tests.factories import ActionPointFactory, TravelFactory
 
 
 class ActionPoints(URLAssertionMixin, APITenantTestCase):
@@ -36,7 +36,7 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
             ('details', '1/', {'action_point_pk': 1}),
             ('dashboard', 'dashboard/', {}),
             ('export', 'export/', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 't2f:action_points:', '/api/t2f/action_points/')
         self.assertIntParamRegexes(names_and_paths, 't2f:action_points:')
 
@@ -117,22 +117,34 @@ class ActionPoints(URLAssertionMixin, APITenantTestCase):
     def test_filtering(self):
         ActionPointFactory(travel=self.travel, person_responsible=self.traveler, assigned_by=self.traveler)
         ActionPointFactory(travel=self.travel, person_responsible=self.unicef_staff, assigned_by=self.unicef_staff)
+        ActionPointFactory(travel=self.travel, person_responsible=self.traveler,
+                           assigned_by=self.traveler, status='completed')
+        ActionPointFactory(travel=self.travel, person_responsible=self.traveler,
+                           assigned_by=self.traveler, status='ongoing')
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'), user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json['data']), 3)
+        self.assertEqual(len(response_json['data']), 5)
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
                                         data={'f_assigned_by': self.unicef_staff.id},
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
+
         self.assertEqual(len(response_json['data']), 1)
 
         response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
                                         data={'f_person_responsible': self.traveler.id},
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json['data']), 1)
+        self.assertEqual(len(response_json['data']), 3)
+
+        response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
+                                        data={'f_person_responsible': self.traveler.id,
+                                              'mf_status': 'open,completed'},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 2)
 
     def test_saving(self):
         data = {'action_points': [{'description': 'Something',

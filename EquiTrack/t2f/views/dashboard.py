@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 
-from rest_framework import viewsets, mixins
+from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
-from t2f.models import Travel, ActionPoint
+from t2f.models import ActionPoint, Travel
 
 
 class TravelDashboardViewSet(mixins.ListModelMixin,
@@ -29,7 +29,6 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
                 start_date__year=year,
             )
 
-        office_id = request.query_params.get("office_id", None)
         if office_id:
             travels_all = travels_all.filter(office_id=office_id)
 
@@ -37,15 +36,15 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
         data["approved"] = travels_all.filter(status=Travel.APPROVED).count()
         data["completed"] = travels_all.filter(status=Travel.COMPLETED).count()
 
-        section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
+        section_ids = Travel.objects.all().values_list('sector', flat=True).distinct()
         travels_by_section = []
         for section_id in section_ids:
-            travels = travels_all.filter(section=section_id)
+            travels = travels_all.filter(sector=section_id)
             if travels.exists():
                 planned = travels.filter(status=Travel.PLANNED).count()
                 approved = travels.filter(status=Travel.APPROVED).count()
                 completed = travels.filter(status=Travel.COMPLETED).count()
-                section = travels.first().section
+                section = travels.first().sector
                 section_trips = {
                     "section_id": section.id if section else None,
                     "section_name": section.name if section else "No Section selected",
@@ -70,17 +69,17 @@ class ActionPointDashboardViewSet(mixins.ListModelMixin,
         office_id = request.query_params.get("office_id", None)
         if office_id:
             office_id = office_id.split(',')
-        section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
+        section_ids = Travel.objects.all().values_list('sector', flat=True).distinct()
         action_points_by_section = []
         for section_id in section_ids:
-            travels = Travel.objects.filter(section=section_id)
+            travels = Travel.objects.filter(sector=section_id)
             if office_id:
                 travels = travels.filter(office_id__in=office_id)
             if travels.exists():
                 action_points = ActionPoint.objects.filter(travel__in=travels)
                 total = action_points.count()
                 completed = action_points.filter(status=Travel.COMPLETED).count()
-                section = travels.first().section
+                section = travels.first().sector
                 section_action_points = {
                     "section_id": section.id if section else None,
                     "section_name": section.name if section else "No Section selected",

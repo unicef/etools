@@ -1,14 +1,15 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.db import models
+
 from rest_framework import serializers
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
 
 from utils.common.serializers.fields import SeparatedReadWriteField
 from utils.common.serializers.mixins import UserContextSerializerMixin
-from .utils import collect_parent_models
-from .models.models import BasePermission
+from utils.permissions.models.models import BasePermission
+from utils.permissions.utils import collect_parent_models
 
 
 class PermissionsBasedSerializerMixin(UserContextSerializerMixin):

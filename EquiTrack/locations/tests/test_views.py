@@ -1,11 +1,13 @@
-from django.db import connection
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
+from django.db import connection
 
 from rest_framework import status
+from tenant_schemas.test.client import TenantClient
 
-from EquiTrack.factories import UserFactory, LocationFactory
+from EquiTrack.factories import LocationFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from EquiTrack.tests.cases import EToolsTenantTestCase
 from locations.models import Location
 
 
@@ -15,7 +17,8 @@ class TestLocationViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.locations = [LocationFactory() for x in range(5)]
         # heavy_detail_expected_keys are the keys that should be in response.data.keys()
-        self.heavy_detail_expected_keys = sorted(('id', 'name', 'p_code', 'location_type', 'parent', 'geo_point'))
+        self.heavy_detail_expected_keys = sorted(('id', 'name', 'p_code', 'location_type',
+                                                  'location_type_admin_level', 'parent', 'geo_point'))
 
     def test_api_locationtypes_list(self):
         response = self.forced_auth_req('get', reverse('locationtypes-list'), user=self.unicef_staff)
@@ -109,3 +112,34 @@ class TestLocationViews(APITenantTestCase):
         self.assertEqual(len(response.data), 5)
         self.assertEqual(response.data[0].keys(), ["id", "name", "p_code"])
         self.assertIn("Loc", response.data[0]["name"])
+
+
+class TestLocationAutocompleteView(EToolsTenantTestCase):
+    def setUp(self):
+        super(TestLocationAutocompleteView, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.client = TenantClient(self.tenant)
+
+    def test_non_auth(self):
+        LocationFactory()
+        response = self.client.get(reverse("locations-autocomplete-light"))
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+    def test_get(self):
+        LocationFactory()
+        self.client.force_login(self.unicef_staff)
+        response = self.client.get(reverse("locations-autocomplete-light"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data["results"]), 1)
+
+    def test_get_filter(self):
+        LocationFactory(name="Test")
+        LocationFactory(name="Other")
+        self.client.force_login(self.unicef_staff)
+        response = self.client.get("{}?q=te".format(
+            reverse("locations-autocomplete-light")
+        ))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data["results"]), 1)

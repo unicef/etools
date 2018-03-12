@@ -1,30 +1,41 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.http import Http404
 from django.utils import timezone
-from easy_pdf.rendering import render_to_pdf_response
 
-from rest_framework import viewsets, mixins
+from easy_pdf.rendering import render_to_pdf_response
+from rest_framework import generics, viewsets, mixins
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.filters import SearchFilter, OrderingFilter, DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from partners.models import PartnerOrganization
+from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from permissions2.conditions import ObjectStatusCondition, NewObjectCondition, GroupCondition
 from permissions2.drf_permissions import NestedPermission
 from permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
-from utils.common.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
+from reports.models import Result, Sector
+from reports.serializers.v1 import ResultLightSerializer, SectorSerializer
+from tpm.export.renderers import (
+    TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer, TPMPartnerContactsCSVRenderer,
+    TPMVisitCSVRenderer,)
+from tpm.export.serializers import (
+    TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer, TPMPartnerContactsSerializer,
+    TPMVisitExportSerializer,)
+from tpm.filters import ReferenceNumberOrderingFilter
+from tpm.metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
+from tpm.models import TPMVisit, ThirdPartyMonitor, TPMActivity, TPMActionPoint
+from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
+from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
+from tpm.serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer, \
+    TPMActionPointSerializer
 from utils.common.pagination import DynamicPageNumberPagination
+from utils.common.views import (
+    MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin,)
 from vision.adapters.tpm_adapter import TPMPartnerManualSynchronizer
 from .conditions import TPMModuleCondition, TPMStaffMemberCondition, TPMVisitUNICEFFocalPointCondition, \
     TPMVisitTPMFocalPointCondition
-from .filters import ReferenceNumberOrderingFilter
-from .metadata import TPMBaseMetadata, TPMPermissionBasedMetadata
-from .models import TPMPartner, TPMVisit, ThirdPartyMonitor, TPMPartnerStaffMember, TPMActivity, \
-    TPMActionPoint
-from .serializers.partner import TPMPartnerLightSerializer, TPMPartnerSerializer, TPMPartnerStaffMemberSerializer
-from .serializers.visit import TPMVisitLightSerializer, TPMVisitSerializer, TPMVisitDraftSerializer, \
-    TPMActionPointSerializer
-from .export.renderers import TPMActivityCSVRenderer, TPMLocationCSVRenderer, TPMPartnerCSVRenderer
-from .export.serializers import TPMActivityExportSerializer, TPMLocationExportSerializer, TPMPartnerExportSerializer
 
 
 class BaseTPMViewSet(
@@ -67,10 +78,10 @@ class TPMPartnerViewSet(
         'list': TPMPartnerLightSerializer
     }
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
-    search_fields = ('vendor_number', 'name', 'phone_number', 'email')
+    search_fields = ('vendor_number', 'name')
     ordering_fields = ('vendor_number', 'name', 'phone_number', 'email')
     filter_fields = (
-        'status', 'blocked', 'hidden', 'deleted_flag',
+        'blocked', 'hidden', 'deleted_flag',
     )
 
     def get_queryset(self):
@@ -156,6 +167,74 @@ class TPMStaffMembersViewSet(
         instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.save()
 
+    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))
+    def export(self, request, *args, **kwargs):
+        partner = self.get_parent_object()
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = TPMPartnerContactsSerializer(queryset, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_#{}_contacts_{}.csv'.format(
+                partner.vendor_number, timezone.now().date()
+            ),
+        })
+
+
+class ImplementingPartnerView(generics.ListAPIView):
+    queryset = PartnerOrganization.objects.filter(hidden=False)
+    serializer_class = MinimalPartnerOrganizationListSerializer
+    permission_classes = (IsAuthenticated,)
+
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+
+    visits = None
+
+    def get_queryset(self):
+        queryset = super(ImplementingPartnerView, self).get_queryset()
+
+        if self.visits is not None:
+            queryset = queryset.filter(activity__in=self.visits.values_list('tpm_activities__id', flat=True)).distinct()
+
+        return queryset
+
+
+class VisitsSectionView(generics.ListAPIView):
+    queryset = Sector.objects.all()
+    serializer_class = SectorSerializer
+    permission_classes = (IsAuthenticated,)
+
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+
+    visits = None
+
+    def get_queryset(self):
+        queryset = super(VisitsSectionView, self).get_queryset()
+
+        if self.visits is not None:
+            queryset = queryset.filter(tpm_activities__tpm_visit__in=self.visits).distinct()
+
+        return queryset
+
+
+class VisitsCPOutputView(generics.ListAPIView):
+    queryset = Result.objects.filter(hidden=False)
+    serializer_class = ResultLightSerializer
+    permission_classes = (IsAuthenticated,)
+
+    filter_backends = (SearchFilter,)
+    search_fields = ('name', 'code', 'result_type__name')
+
+    visits = None
+
+    def get_queryset(self):
+        queryset = super(VisitsCPOutputView, self).get_queryset()
+
+        if self.visits is not None:
+            queryset = queryset.filter(activity__in=self.visits.values_list('tpm_activities__id', flat=True)).distinct()
+
+        return queryset
+
 
 class TPMVisitViewSet(
     BaseTPMViewSet,
@@ -179,14 +258,16 @@ class TPMVisitViewSet(
     }
     filter_backends = (ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter, DjangoFilterBackend, )
     search_fields = (
-        'tpm_partner__name', 'tpm_activities__implementing_partner__name'
+        'tpm_partner__name', 'tpm_activities__partner__name',
+        'tpm_activities__locations__name', 'tpm_activities__locations__p_code',
     )
     ordering_fields = (
         'tpm_partner__name', 'status'
     )
     filter_fields = (
-        'tpm_partner', 'tpm_activities__section', 'tpm_activities__implementing_partner', 'tpm_activities__locations',
-        'tpm_activities__cp_output', 'tpm_activities__partnership', 'tpm_activities__date', 'status'
+        'tpm_partner', 'tpm_activities__section', 'tpm_activities__partner', 'tpm_activities__locations',
+        'tpm_activities__cp_output', 'tpm_activities__intervention', 'tpm_activities__date', 'status',
+        'unicef_focal_points', 'tpm_partner_focal_points',
     )
 
     def get_queryset(self):
@@ -194,7 +275,7 @@ class TPMVisitViewSet(
 
         if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
             queryset = queryset.filter(
-                tpm_partner=self.request.user.tpm_tpmpartnerstaffmember.tpm_partner,
+                tpm_partner=self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
             ).exclude(status=TPMVisit.STATUSES.draft)
 
         return queryset
@@ -205,6 +286,33 @@ class TPMVisitViewSet(
                 self.get_object().status == TPMVisit.STATUSES.draft:
             return TPMVisitDraftSerializer
         return super(TPMVisitViewSet, self).get_serializer_class()
+
+    @list_route(methods=['get'], url_path='activities/implementing-partners')
+    def implementing_partners(self, request, *args, **kwargs):
+        visits = self.get_queryset()
+        return ImplementingPartnerView.as_view(visits=visits)(request, *args, **kwargs)
+
+    @list_route(methods=['get'], url_path='activities/sections')
+    def sections(self, request, *args, **kwargs):
+        visits = self.get_queryset()
+        return VisitsSectionView.as_view(visits=visits)(request, *args, **kwargs)
+
+    @list_route(methods=['get'], url_path='activities/cp-outputs')
+    def cp_outputs(self, request, *args, **kwargs):
+        visits = self.get_queryset()
+        return VisitsCPOutputView.as_view(visits=visits)(request, *args, **kwargs)
+
+    @list_route(methods=['get'], url_path='export', renderer_classes=(TPMVisitCSVRenderer,))
+    def visits_export(self, request, *args, **kwargs):
+        tpm_visits = TPMVisit.objects.all().prefetch_related(
+            'tpm_activities', 'tpm_activities__section', 'tpm_activities__partner',
+            'tpm_activities__intervention', 'tpm_activities__locations', 'unicef_focal_points',
+            'tpm_partner_focal_points'
+        ).order_by('id')
+        serializer = TPMVisitExportSerializer(tpm_visits, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=tpm_visits_{}.csv'.format(timezone.now().date())
+        })
 
     def get_permission_context(self):
         context = super(TPMVisitViewSet, self).get_permission_context()
@@ -233,16 +341,17 @@ class TPMVisitViewSet(
         ).order_by('tpm_visit', 'id')
         serializer = TPMActivityExportSerializer(tpm_activities, many=True)
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename=tpm_attachments_{}.csv'.format(timezone.now().date())
+            'Content-Disposition': 'attachment;filename=tpm_activities_{}.csv'.format(timezone.now().date())
         })
 
     @list_route(methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
     def locations_export(self, request, *args, **kwargs):
         tpm_locations = TPMActivity.locations.through.objects.filter(
-            tpmactivity__tpm_visit__in=self.get_queryset(),
+            activity__in=self.get_queryset().values_list('tpm_activities__id', flat=True),
         ).prefetch_related(
-            'tpmactivity', 'location', 'tpmactivity__tpm_visit', 'tpmactivity__section', 'tpmactivity__cp_output'
-        ).order_by('tpmactivity__tpm_visit', 'tpmactivity', 'id')
+            'activity', 'location', 'activity__tpmactivity__tpm_visit', 'activity__tpmactivity__section',
+            'activity__cp_output'
+        ).order_by('activity__tpmactivity__tpm_visit', 'activity', 'id')
         serializer = TPMLocationExportSerializer(tpm_locations, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_locations_{}.csv'.format(timezone.now().date())
@@ -256,9 +365,13 @@ class TPMVisitViewSet(
 
     @detail_route(methods=['get'], url_path='visit-letter')
     def tpm_visit_letter(self, request, *args, **kwargs):
-        return render_to_pdf_response(request, "tpm/visit_letter_pdf.html", context={
-            "visit": self.get_object(),
-        })
+        visit = self.get_object()
+        return render_to_pdf_response(
+            request, "tpm/visit_letter_pdf.html", context={
+                "visit": visit
+            },
+            filename="visit_letter_{}.pdf".format(visit.reference_number)
+        )
 
 
 class ActionPointViewSet(BaseTPMViewSet,

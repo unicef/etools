@@ -1,3 +1,6 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+
 def collect_parent_models(model):
     result = [model._meta.model_name, ]
     parent_models = model._meta.get_parent_list()

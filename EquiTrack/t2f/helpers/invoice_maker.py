@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.functional import cached_property
 
-from publics.models import WBS, Grant, Fund, TravelExpenseType
+from publics.models import Fund, Grant, TravelExpenseType, WBS
 
 
 class InvoiceMaker(object):

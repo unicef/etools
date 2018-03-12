@@ -1,13 +1,15 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
 from firms.serializers import BaseStaffMemberSerializer
 from permissions2.serializers import PermissionsBasedSerializerMixin
+from tpm.models import TPMPartnerStaffMember
+from tpm.tpmpartners.models import TPMPartner
+from tpm.serializers.attachments import TPMPartnerAttachmentsSerializer
 from utils.writable_serializers.serializers import WritableNestedSerializerMixin
-
-from ..models import TPMPartner, TPMPartnerStaffMember
-from .attachments import TPMPartnerAttachmentsSerializer
 
 
 class TPMPartnerStaffMemberSerializer(PermissionsBasedSerializerMixin, BaseStaffMemberSerializer):
@@ -19,20 +21,18 @@ class TPMPartnerStaffMemberSerializer(PermissionsBasedSerializerMixin, BaseStaff
 
 
 class TPMPartnerLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
-    status_date = serializers.ReadOnlyField()
-
     class Meta:
         model = TPMPartner
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number', 'status', 'status_date',
+            'email', 'phone_number',
             'hidden', 'blocked', 'vision_synced', 'deleted_flag',
         ]
         extra_kwargs = {
             field: {'read_only': True}
             for field in [
-                'vendor_number', 'name', 'status',
+                'vendor_number', 'name',
                 'street_address', 'city', 'postal_code', 'country',
                 'blocked', 'vision_synced', 'deleted_flag',
             ]

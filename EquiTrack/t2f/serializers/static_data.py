@@ -4,9 +4,9 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from locations.models import Location
-from partners.models import PartnerOrganization, Intervention, InterventionResultLink
-from reports.models import Result
-from users.models import Office, Section
+from partners.models import Intervention, InterventionResultLink, PartnerOrganization
+from reports.models import Result, Sector
+from users.models import Office
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -23,10 +23,10 @@ class OfficeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class SectionSerializer(serializers.ModelSerializer):
+class SectorSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Section
-        fields = ('id', 'name')
+        model = Sector
+        fields = ('id', 'name', 'description')
 
 
 class PartnerOrganizationSerializer(serializers.ModelSerializer):

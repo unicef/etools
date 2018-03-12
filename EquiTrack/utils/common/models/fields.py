@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.contrib.contenttypes.fields import GenericRelation, ReverseGenericManyToOneDescriptor
 from django.utils.functional import cached_property
 
@@ -34,3 +36,11 @@ class CodedGenericRelation(GenericRelation):
         self.code_field = kwargs.pop('code_field', 'code')
 
         super(CodedGenericRelation, self).__init__(*args, **kwargs)
+
+    def get_extra_restriction(self, where_class, alias, remote_alias):
+        cond = super(CodedGenericRelation, self).get_extra_restriction(where_class, alias, remote_alias)
+
+        field = self.remote_field.model._meta.get_field(self.code_field)
+        lookup = field.get_lookup('exact')(field.get_col(remote_alias), self.code)
+        cond.add(lookup, 'AND')
+        return cond

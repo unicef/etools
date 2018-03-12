@@ -1,19 +1,18 @@
 from __future__ import unicode_literals
 
-import logging
-
 import json
+import logging
 from datetime import datetime
-import pytz
-from pytz import UTC
-from freezegun import freeze_time
 
+import pytz
 from django.core.urlresolvers import reverse
+from freezegun import freeze_time
+from pytz import UTC
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import BusinessAreaFactory, DSARegionFactory, DSARateFactory, ExpenseTypeFactory
-from t2f.models import ModeOfTravel, make_travel_reference_number, Travel
+from publics.tests.factories import BusinessAreaFactory, DSARateFactory, DSARegionFactory, ExpenseTypeFactory
+from t2f.models import make_travel_reference_number, ModeOfTravel, Travel
 from t2f.tests.factories import CurrencyFactory, ItineraryItemFactory
 
 from .factories import TravelFactory
@@ -224,22 +223,26 @@ class OverlappingTravelsTest(APITenantTestCase):
         data = response_json
         # Adjust it to overlap
         data['itinerary'] = [
-          {'origin': 'Berlin',
-           'destination': 'Budapest',
-           'departure_date': '2017-04-10T16:05:00+00:00',
-           'arrival_date': '2017-04-15T17:06:55.821490',
-           'dsa_region': dsa_region.id,
-           'overnight_travel': False,
-           'mode_of_travel': ModeOfTravel.RAIL,
-           'airlines': []},
-          {'origin': 'Budapest',
-           'destination': 'Berlin',
-           'departure_date': '2017-05-20T12:06:55.821490',
-           'arrival_date': '2017-05-21T12:06:55.821490',
-           'dsa_region': dsa_region.id,
-           'overnight_travel': False,
-           'mode_of_travel': ModeOfTravel.RAIL,
-           'airlines': []}
+            {
+                'origin': 'Berlin',
+                'destination': 'Budapest',
+                'departure_date': '2017-04-10T16:05:00+00:00',
+                'arrival_date': '2017-04-15T17:06:55.821490',
+                'dsa_region': dsa_region.id,
+                'overnight_travel': False,
+                'mode_of_travel': ModeOfTravel.RAIL,
+                'airlines': []
+            },
+            {
+                'origin': 'Budapest',
+                'destination': 'Berlin',
+                'departure_date': '2017-05-20T12:06:55.821490',
+                'arrival_date': '2017-05-21T12:06:55.821490',
+                'dsa_region': dsa_region.id,
+                'overnight_travel': False,
+                'mode_of_travel': ModeOfTravel.RAIL,
+                'airlines': []
+            }
         ]
 
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:state_change',

@@ -8,7 +8,6 @@ import django.db.models.deletion
 import django.db.models.manager
 import locations.models
 import mptt.fields
-import paintstore.fields
 import smart_selects.db_fields
 
 
@@ -32,7 +31,7 @@ class Migration(migrations.Migration):
                 ('name_col', models.CharField(default=b'name', max_length=254)),
                 ('pcode_col', models.CharField(default=b'pcode', max_length=254)),
                 ('parent_code_col', models.CharField(blank=True, max_length=254, null=True)),
-                ('color', paintstore.fields.ColorPickerField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
+                ('color', models.CharField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
                 ('lft', models.PositiveIntegerField(db_index=True, editable=False)),
                 ('rght', models.PositiveIntegerField(db_index=True, editable=False)),
                 ('tree_id', models.PositiveIntegerField(db_index=True, editable=False)),
@@ -62,7 +61,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=45L)),
                 ('p_code', models.CharField(blank=True, max_length=32L, null=True)),
-                ('color', paintstore.fields.ColorPickerField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
+                ('color', models.CharField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
                 ('geom', django.contrib.gis.db.models.fields.MultiPolygonField(blank=True, null=True, srid=4326)),
                 ('gateway', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name=b'Admin type')),
             ],
@@ -89,7 +88,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=128L)),
                 ('cas_village_name', models.CharField(max_length=128L)),
                 ('p_code', models.CharField(blank=True, max_length=32L, null=True)),
-                ('color', paintstore.fields.ColorPickerField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
+                ('color', models.CharField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
                 ('geom', django.contrib.gis.db.models.fields.MultiPolygonField(blank=True, null=True, srid=4326)),
                 ('gateway', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name=b'Admin type')),
             ],
@@ -126,7 +125,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=45L)),
                 ('p_code', models.CharField(blank=True, max_length=32L, null=True)),
-                ('color', paintstore.fields.ColorPickerField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
+                ('color', models.CharField(blank=True, default=locations.models.get_random_color, max_length=7, null=True)),
                 ('geom', django.contrib.gis.db.models.fields.MultiPolygonField(blank=True, null=True, srid=4326)),
                 ('gateway', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.GatewayType', verbose_name=b'Admin type')),
                 ('governorate', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='locations.Governorate')),

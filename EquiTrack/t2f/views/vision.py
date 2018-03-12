@@ -3,10 +3,9 @@ from __future__ import unicode_literals
 from django.db.transaction import atomic
 from django.http.response import HttpResponse
 from django.views.generic.base import View
-
 from rest_framework import status
 
-from t2f.vision import InvoiceExport, InvoiceUpdater, InvoiceUpdateError
+from t2f.vision import InvoiceExport, InvoiceUpdateError, InvoiceUpdater
 
 
 class VisionInvoiceExport(View):

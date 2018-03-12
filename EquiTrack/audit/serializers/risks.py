@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.db import models
 from django.utils import six
@@ -6,22 +6,29 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from audit.models import RiskCategory, RiskBluePrint, Risk
-from utils.common.serializers.fields import WriteListSerializeFriendlyRecursiveField, RecursiveListSerializer
+from audit.models import Risk, RiskBluePrint, RiskCategory
+from utils.common.serializers.fields import RecursiveListSerializer, WriteListSerializeFriendlyRecursiveField
 from utils.writable_serializers.serializers import WritableListSerializer, WritableNestedSerializerMixin
 
 
 class RiskSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    value_display = serializers.ReadOnlyField(source='get_value_display')
+
     class Meta(WritableNestedSerializerMixin.Meta):
         model = Risk
         fields = [
-            'value', 'extra',
+            'value', 'value_display', 'extra',
         ]
         extra_kwargs = {
             'value': {
                 'required': True,
             }
         }
+
+    def validate_extra(self, value):
+        if isinstance(value, six.string_types):
+            raise serializers.ValidationError('Invalid data type.')
+        return value
 
     def get_attribute(self, instance):
         if instance.risks.exists():

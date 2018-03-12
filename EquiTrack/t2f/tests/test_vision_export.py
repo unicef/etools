@@ -1,23 +1,24 @@
 from __future__ import unicode_literals
+
 from datetime import datetime
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
 
 from django.core.urlresolvers import reverse
-
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from publics.models import TravelExpenseType
-from publics.tests.factories import DSARegionFactory, DSARateFactory
+from publics.tests.factories import DSARateFactory, DSARegionFactory
 from t2f.helpers.invoice_maker import InvoiceMaker
-from t2f.models import Travel, Expense, CostAssignment, Invoice
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory, \
-    ItineraryItemFactory
+from t2f.models import CostAssignment, Expense, Invoice, Travel
+from t2f.tests.factories import (
+    CurrencyFactory, ExpenseTypeFactory, FundFactory, GrantFactory, ItineraryItemFactory, WBSFactory,)
 from t2f.vision import InvoiceUpdater
+
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
 
 
 class VisionXML(URLAssertionMixin, APITenantTestCase):
@@ -40,7 +41,7 @@ class VisionXML(URLAssertionMixin, APITenantTestCase):
         names_and_paths = (
             ('vision_invoice_export', 'vision_invoice_export/', {}),
             ('vision_invoice_update', 'vision_invoice_update/', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 't2f:', '/api/t2f/')
 
     def make_invoice_updater(self, status=Invoice.SUCCESS):

@@ -1,13 +1,13 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
 
-import factory
-
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 
-from .utils import generate_username
+import factory
+
+from firms.utils import generate_username
 from users.models import UserProfile
 
 
@@ -22,7 +22,7 @@ class UserProfileFactory(factory.DjangoModelFactory):
 @factory.django.mute_signals(post_save)
 class UserFactory(factory.DjangoModelFactory):
     class Meta:
-        model = User
+        model = get_user_model()
 
     username = factory.LazyFunction(generate_username)
     first_name = factory.Faker('first_name')
@@ -42,7 +42,7 @@ class BaseFirmFactory(factory.DjangoModelFactory):
     class Meta:
         abstract = True
 
-    vendor_number = factory.Sequence(lambda n: '{}/{}'.format(datetime.datetime.now().year, n+1))
+    vendor_number = factory.Sequence(lambda n: '{}/{}'.format(datetime.datetime.now().year, n + 1))
     name = factory.Faker('company')
     street_address = factory.Faker('street_address')
     city = factory.Faker('city')

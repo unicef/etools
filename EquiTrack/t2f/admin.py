@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 from django.contrib import admin
 
-from t2f import models
 from publics.admin import AdminListMixin
+from t2f import models
 
 
 class TravelAdmin(admin.ModelAdmin):
@@ -11,6 +11,7 @@ class TravelAdmin(admin.ModelAdmin):
     list_filter = (
         'status',
         'traveler',
+        'sector'
     )
     search_fields = (
         'reference_number',
@@ -21,6 +22,8 @@ class TravelAdmin(admin.ModelAdmin):
         'status',
         'start_date',
         'end_date',
+        'section',
+        'sector'
     )
     readonly_fields = (
         'status',
@@ -36,7 +39,8 @@ class TravelActivityAdmin(admin.ModelAdmin):
         'travels'
     )
     search_fields = (
-        'primary_traveler',
+        'primary_traveler__first_name',
+        'primary_traveler__last_name',
     )
     list_display = (
         'primary_traveler',

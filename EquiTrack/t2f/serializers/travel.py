@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 
 import operator
-from itertools import chain
 from datetime import datetime
+from itertools import chain
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,12 +14,14 @@ from django.utils.translation import ugettext
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from locations.models import Location
 from partners.models import PartnerType
 from publics.models import AirlineCompany, Currency
+from reports.models import Sector
 from t2f.helpers.permission_matrix import PermissionMatrix
-from t2f.models import TravelActivity, Travel, ItineraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelAttachment, ActionPoint, TravelType
-from locations.models import Location
+from t2f.models import (
+    ActionPoint, Clearances, CostAssignment, Deduction, Expense, ItineraryItem, Travel, TravelActivity,
+    TravelAttachment, TravelType,)
 from t2f.serializers import CostSummarySerializer
 
 User = get_user_model()
@@ -208,7 +210,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
 
 
 class TravelAttachmentSerializer(serializers.ModelSerializer):
-    url = serializers.CharField(source='file.url', read_only=True)
+    url = serializers.SerializerMethodField()
 
     class Meta:
         model = TravelAttachment
@@ -217,6 +219,9 @@ class TravelAttachmentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['travel'] = self.context['travel']
         return super(TravelAttachmentSerializer, self).create(validated_data)
+
+    def get_url(self, obj):
+        return obj.file.url.decode("utf8")
 
 
 class TravelDetailsSerializer(PermissionBasedModelSerializer):
@@ -231,13 +236,15 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
     report = serializers.CharField(source='report_note', required=False, default='', allow_blank=True)
     mode_of_travel = serializers.ListField(child=LowerTitleField(), allow_null=True, required=False)
     action_points = ActionPointSerializer(many=True, required=False)
+    section = serializers.PrimaryKeyRelatedField(source='sector', queryset=Sector.objects.all(),
+                                                 allow_null=True, required=False)
 
     # Fix because of a frontend validation failure (fix it on the frontend first)
     estimated_travel_cost = serializers.DecimalField(max_digits=18, decimal_places=2, required=False)
 
     class Meta:
         model = Travel
-        fields = ('reference_number', 'supervisor', 'office', 'end_date', 'section', 'international_travel',
+        fields = ('reference_number', 'supervisor', 'office', 'end_date', 'international_travel', 'section',
                   'traveler', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
                   'cost_assignments', 'clearances', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
                   'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
@@ -507,6 +514,8 @@ class TravelListSerializer(TravelDetailsSerializer):
     # TODO: reserve field names to pks for related fields and add _name for the names
     traveler = serializers.CharField(source='traveler.get_full_name')
     supervisor_name = serializers.CharField(source='supervisor.get_full_name')
+    section = serializers.PrimaryKeyRelatedField(source='sector', queryset=Sector.objects.all(),
+                                                 allow_null=True, required=False)
 
     class Meta:
         model = Travel

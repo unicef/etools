@@ -136,15 +136,15 @@ class PermissionMatrixSetter(object):
 
     def revoke_edit(self, qs):
         num_revoked = qs.filter(permission_type=TravelPermission.EDIT).update(value=False)
-        self.log('{} edit permissions revoked'.format(num_revoked))
+        self.log(u'{} edit permissions revoked'.format(num_revoked))
 
     def grant_edit(self, qs):
         num_revoked = qs.filter(permission_type=TravelPermission.EDIT).update(value=True)
-        self.log('{} edit permissions granted'.format(num_revoked))
+        self.log(u'{} edit permissions granted'.format(num_revoked))
 
     def revoke_view(self, qs):
         num_revoked = qs.filter(permission_type=TravelPermission.VIEW).update(value=False)
-        self.log('{} view permissions revoked'.format(num_revoked))
+        self.log(u'{} view permissions revoked'.format(num_revoked))
 
     def get_related_q(self, fields):
         q = Q(model__in=fields)
@@ -152,11 +152,11 @@ class PermissionMatrixSetter(object):
         return q
 
     def set_up_god(self):
-        self.log('Set up permissions for god')
+        self.log(u'Set up permissions for god')
         TravelPermission.objects.filter(user_type=UserTypes.GOD).update(value=True)
 
     def set_up_anyone(self):
-        self.log('Set up permissions for anyone')
+        self.log(u'Set up permissions for anyone')
         qs = TravelPermission.objects.filter(user_type=UserTypes.ANYONE)
         self.revoke_edit(qs)
 
@@ -170,7 +170,7 @@ class PermissionMatrixSetter(object):
         self.revoke_edit(sub_qs)
 
     def set_up_traveler(self):
-        self.log('Set up permissions for travel traveler')
+        self.log(u'Set up permissions for travel traveler')
         qs = TravelPermission.objects.filter(user_type=UserTypes.TRAVELER)
 
         self.revoke_edit(qs.filter(model='travel', field='traveler'))
@@ -200,7 +200,7 @@ class PermissionMatrixSetter(object):
         self.grant_edit(qs.filter(self.get_related_q(['action_points', 'report'])))
 
     def set_up_travel_administrator(self):
-        self.log('Set up permissions for travel administrator')
+        self.log(u'Set up permissions for travel administrator')
         qs = TravelPermission.objects.filter(user_type=UserTypes.TRAVEL_ADMINISTRATOR)
 
         sub_qs = qs.filter(status=Travel.APPROVED).exclude(self.get_related_q(['activities']))
@@ -216,13 +216,13 @@ class PermissionMatrixSetter(object):
         self.grant_edit(qs.filter(self.get_related_q(['action_points'])))
 
     def set_up_supervisor(self):
-        self.log('Set up permissions for supervisor')
+        self.log(u'Set up permissions for supervisor')
         qs = TravelPermission.objects.filter(user_type=UserTypes.SUPERVISOR)
         self.revoke_edit(qs)
         self.grant_edit(qs.filter(self.get_related_q(['action_points'])))
 
     def set_up_travel_focal_point(self):
-        self.log('Set up permissions for travel focal point')
+        self.log(u'Set up permissions for travel focal point')
         fields_to_edit = ['itinerary']
         status_where_edit = [Travel.PLANNED,
                              Travel.SUBMITTED,
@@ -234,7 +234,7 @@ class PermissionMatrixSetter(object):
 
         q = Q(status__in=status_where_edit) & self.get_related_q(fields_to_edit)
         num_granted = qs.filter(q).update(value=True)
-        self.log('{} permissions granted'.format(num_granted))
+        self.log(u'{} permissions granted'.format(num_granted))
 
         sub_qs = qs.filter(model='travel', field__in=['estimated_travel_cost', 'currency'])
         sub_qs = sub_qs.exclude(status__in=[Travel.COMPLETED,
@@ -245,7 +245,7 @@ class PermissionMatrixSetter(object):
         self.grant_edit(qs.filter(self.get_related_q(['action_points'])))
 
     def set_up_finance_focal_point(self):
-        self.log('Set up permissions for finance focal point')
+        self.log(u'Set up permissions for finance focal point')
         fields_to_edit = ['itinerary', 'deductions', 'expenses', 'cost_assignments']
         status_where_edit = [Travel.PLANNED,
                              Travel.SUBMITTED,

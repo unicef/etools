@@ -45,5 +45,5 @@ class T2FUserDataSerializer(serializers.ModelSerializer):
         try:
             return BusinessArea.objects.get(code=workspace.business_area_code).id
         except ObjectDoesNotExist:
-            log.error('No model exists with business area code %s. Please investigate.', workspace.business_area_code)
+            log.error(u'No model exists with business area code %s. Please investigate.', workspace.business_area_code)
             return None

@@ -1,82 +1,30 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils import timezone, six
-from django.utils.encoding import python_2_unicode_compatible
-from django_fsm import FSMField, transition
+from django.utils.encoding import python_2_unicode_compatible, force_text
 from django.utils.translation import ugettext_lazy as _
-from model_utils import Choices
-from model_utils.models import TimeStampedModel
-from post_office import mail
 
-from EquiTrack.utils import get_environment
+from django_fsm import FSMField, transition
+from model_utils import Choices, FieldTracker
+from model_utils.models import TimeStampedModel
+
 from activities.models import Activity
 from attachments.models import Attachment
-from firms.models import BaseFirm, BaseStaffMember
-from permissions2.fsm import has_action_permission
+from EquiTrack.utils import get_environment
+from notification.models import Notification
 from publics.models import SoftDeleteMixin
+from permissions2.fsm import has_action_permission
+from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
+from tpm.transitions.serializers import TPMVisitApproveSerializer, TPMVisitRejectSerializer
+from tpm.transitions.conditions import (
+    TPMVisitAssignRequiredFieldsCheck, TPMVisitReportValidations, ValidateTPMVisitActivities,)
 from utils.common.models.fields import CodedGenericRelation
-from utils.common.urlresolvers import site_url, build_frontend_url
+from utils.common.urlresolvers import build_frontend_url
 from utils.groups.wrappers import GroupWrapper
-from .transitions.serializers import TPMVisitRejectSerializer, TPMVisitApproveSerializer
-from .transitions.conditions import ValidateTPMVisitActivities, \
-                                    TPMVisitReportValidations, TPMVisitAssignRequiredFieldsCheck
-
-
-@python_2_unicode_compatible
-class TPMPartner(BaseFirm):
-    STATUSES = Choices(
-        ('draft', _('Draft')),
-        ('active', _('Active')),
-        ('cancelled', _('Cancelled')),
-    )
-
-    STATUSES_DATES = {
-        STATUSES.draft: 'date_created',
-        STATUSES.active: 'date_of_active',
-        STATUSES.cancelled: 'date_of_cancel',
-    }
-
-    status = FSMField(_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
-    attachments = GenericRelation(Attachment, verbose_name=_('attachments'), blank=True)
-
-    date_of_active = models.DateField(blank=True, null=True)
-    date_of_cancel = models.DateField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def date_created(self):
-        return self.created.date()
-
-    @property
-    def status_date(self):
-        return getattr(self, self.STATUSES_DATES[self.status])
-
-    # TODO: Remove hardcode for PME permissions?
-    @transition(status, source=[STATUSES.draft, STATUSES.cancelled], target=STATUSES.active,
-                permission=has_action_permission('activate'))
-    def activate(self):
-        self.date_of_active = timezone.now()
-
-    @transition(status, source=[STATUSES.draft, STATUSES.active], target=STATUSES.cancelled,
-                permission=has_action_permission('cancel'))
-    def cancel(self):
-        self.date_of_cancel = timezone.now()
-
-
-@python_2_unicode_compatible
-class TPMPartnerStaffMember(BaseStaffMember):
-    tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), related_name='staff_members')
-
-    receive_tpm_notifications = models.BooleanField(verbose_name=_('Receive Notifications on TPM Tasks'), default=False)
-
-    def __str__(self):
-        return self.get_full_name()
 
 
 @python_2_unicode_compatible
@@ -105,23 +53,22 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     tpm_partner = models.ForeignKey(TPMPartner, verbose_name=_('TPM Vendor'), null=True)
 
-    status = FSMField(verbose_name=_('status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
+    status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft, protected=True)
 
-    reject_comment = models.TextField(verbose_name=_('Request for more information'), blank=True)
-    approval_comment = models.TextField(verbose_name=_('Approval comments'), blank=True)
+    reject_comment = models.TextField(verbose_name=_('Request For More Information'), blank=True)
+    approval_comment = models.TextField(verbose_name=_('Approval Comments'), blank=True)
 
-    report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Visit Report'),
-                                              code='visit_report', blank=True)
+    report_attachments = GenericRelation(Attachment, verbose_name=_('Visit Report'), blank=True)
 
     visit_information = models.TextField(verbose_name=_('Visit Information'), blank=True)
 
-    date_of_assigned = models.DateField(blank=True, null=True)
-    date_of_cancelled = models.DateField(blank=True, null=True)
-    date_of_tpm_accepted = models.DateField(blank=True, null=True)
-    date_of_tpm_rejected = models.DateField(blank=True, null=True)
-    date_of_tpm_reported = models.DateField(blank=True, null=True)
-    date_of_tpm_report_rejected = models.DateField(blank=True, null=True)
-    date_of_unicef_approved = models.DateField(blank=True, null=True)
+    date_of_assigned = models.DateField(blank=True, null=True, verbose_name=_('Date of Assigned'))
+    date_of_cancelled = models.DateField(blank=True, null=True, verbose_name=_('Date of Cancelled'))
+    date_of_tpm_accepted = models.DateField(blank=True, null=True, verbose_name=_('Date of TPM Accepted'))
+    date_of_tpm_rejected = models.DateField(blank=True, null=True, verbose_name=_('Date of TPM Rejected'))
+    date_of_tpm_reported = models.DateField(blank=True, null=True, verbose_name=_('Date of TPM Reported'))
+    date_of_tpm_report_rejected = models.DateField(blank=True, null=True, verbose_name=_('Date of Sent Back to TPM'))
+    date_of_unicef_approved = models.DateField(blank=True, null=True, verbose_name=_('Date of UNICEF Approved'))
 
     offices = models.ManyToManyField('users.Office', related_name='tpm_visits', blank=True,
                                      verbose_name=_('Office(s) of UNICEF Focal Point(s)'))
@@ -133,6 +80,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         TPMPartnerStaffMember, verbose_name=_('TPM Focal Points'), related_name='tpm_visits', blank=True
     )
 
+    tpm_partner_tracker = FieldTracker(fields=['tpm_partner', ])
+
     @property
     def date_created(self):
         return self.created.date()
@@ -143,10 +92,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     @property
     def reference_number(self):
-        return '{0}/{1}/{2}'.format(
+        return '{0}/{1}/TPM'.format(
             self.created.year,
-            self.tpm_partner.vendor_number if self.tpm_partner else '--',
-            self.id
+            self.id,
         )
 
     @property
@@ -162,19 +110,34 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             models.Max('date'))['date__max']
 
     def __str__(self):
-        return 'Visit ({}, {})'.format(
-            self.tpm_partner, ', '.join(self.tpm_activities.values_list('partnership__title', flat=True))
+        return 'Visit ({} to {} at {} - {})'.format(
+            self.tpm_partner, ', '.join(filter(
+                lambda x: x,
+                self.tpm_activities.values_list('partner__name', flat=True)
+            )),
+            self.start_date, self.end_date
         )
+
+    def get_mail_context(self):
+        return {
+            'reference_number': self.reference_number,
+            'tpm_partner': self.tpm_partner.name,
+            'tpm_activities': [map(lambda a: a.get_mail_context(), self.tpm_activities.all())],
+            'multiple_tpm_activities': self.tpm_activities.count() > 1,
+            'object_url': self.get_object_url(),
+            'partners': ', '.join(set(map(lambda a: a.partner.name, self.tpm_activities.all()))),
+            'interventions': ', '.join(set(map(
+                lambda a: a.intervention.title,
+                self.tpm_activities.filter(intervention__isnull=False)
+            ))),
+        }
 
     def _send_email(self, recipients, template_name, context=None, **kwargs):
         context = context or {}
 
         base_context = {
-            'visit': self,
-            'url': site_url(),
+            'visit': self.get_mail_context(),
             'environment': get_environment(),
-            'implementing_partners': set(map(lambda a: a.implementing_partner.name, self.tpm_activities.all())),
-            'partnerships': set(map(lambda a: a.partnership.title, self.tpm_activities.all())),
         }
         base_context.update(context)
         context = base_context
@@ -186,13 +149,12 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
         # assert recipients
         if recipients:
-            mail.send(
-                recipients,
-                settings.DEFAULT_FROM_EMAIL,
-                template=template_name,
-                context=context,
-                **kwargs
+            notification = Notification.objects.create(
+                sender=self,
+                recipients=recipients, template_name=template_name,
+                template_data=context
             )
+            notification.send_notification()
 
     def _get_unicef_focal_points_as_email_recipients(self):
         return list(
@@ -211,8 +173,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def _get_ip_focal_points_as_email_recipients(self):
         return list(
             self.tpm_activities.filter(
-                partnership__partner_focal_points__email__isnull=False
-            ).values_list('partnership__partner_focal_points__email', flat=True)
+                intervention__partner_focal_points__email__isnull=False
+            ).values_list('intervention__partner_focal_points__email', flat=True)
         )
 
     @transition(
@@ -258,7 +220,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self._send_email(
                 recipient.email, 'tpm/visit/reject',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
-                context={'recipient': recipient}
+                context={'recipient': recipient.get_full_name()}
             )
 
     @transition(status, source=[STATUSES.assigned], target=STATUSES.tpm_accepted,
@@ -270,7 +232,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self._send_email(
                 recipient.email, 'tpm/visit/accept',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
-                context={'recipient': recipient}
+                context={'recipient': recipient.get_full_name()}
             )
 
     @transition(
@@ -290,7 +252,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             self._send_email(
                 recipient.email, 'tpm/visit/report',
                 cc=self._get_tpm_focal_points_as_email_recipients(),
-                context={'recipient': recipient}
+                context={'recipient': recipient.get_full_name()}
             )
 
     @transition(
@@ -308,7 +270,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False):
             self._send_email(
                 [staff_user.user.email], 'tpm/visit/report_rejected',
-                context={'recipient': staff_user.user}
+                context={'recipient': staff_user.user.get_full_name()}
             )
 
     @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
@@ -325,7 +287,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             for recipient in self.unicef_focal_points.filter(email__isnull=False):
                 self._send_email(
                     recipient.email, 'tpm/visit/approve_report',
-                    context={'recipient': recipient}
+                    context={'recipient': recipient.get_full_name()}
                 )
 
         if notify_tpm_partner:
@@ -333,7 +295,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
             for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False):
                 self._send_email(
                     [staff_user.user.email, ], 'tpm/visit/approve_report_tpm',
-                    context={'recipient': staff_user.user}
+                    context={'recipient': staff_user.user.get_full_name()}
                 )
 
         if approval_comment:
@@ -345,11 +307,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
 @python_2_unicode_compatible
 class TPMVisitReportRejectComment(models.Model):
-    rejected_at = models.DateTimeField(auto_now_add=True)
+    rejected_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Rejected At'))
 
-    reject_reason = models.TextField()
+    reject_reason = models.TextField(verbose_name=_('Reason of Rejection'))
 
-    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='report_reject_comments')
+    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('Visit'), related_name='report_reject_comments')
 
     def __str__(self):
         return 'Reject Comment #{0} for {1}'.format(self.id, self.tpm_visit)
@@ -361,9 +323,9 @@ class TPMVisitReportRejectComment(models.Model):
 
 @python_2_unicode_compatible
 class TPMActivity(Activity):
-    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('visit'), related_name='tpm_activities')
+    tpm_visit = models.ForeignKey(TPMVisit, verbose_name=_('Visit'), related_name='tpm_activities')
 
-    section = models.ForeignKey('users.Section', related_name='tpm_activities')
+    section = models.ForeignKey('reports.Sector', related_name='tpm_activities', verbose_name=_('Section'))
 
     additional_information = models.TextField(verbose_name=_('Additional Information'), blank=True)
 
@@ -372,7 +334,7 @@ class TPMActivity(Activity):
     report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Activity Report'),
                                               code='activity_report', blank=True)
 
-    is_pv = models.BooleanField(default=False, verbose_name=_('Programmatic Visit'))
+    is_pv = models.BooleanField(default=False, verbose_name=_('HACT Programmatic Visit'))
 
     def __str__(self):
         return 'Activity #{0} for {1}'.format(self.id, self.tpm_visit)
@@ -381,53 +343,78 @@ class TPMActivity(Activity):
         verbose_name_plural = _('TPM Activities')
         ordering = ['tpm_visit', 'id', ]
 
+    @property
+    def related_reports(self):
+        return Attachment.objects.filter(
+            models.Q(
+                object_id=self.tpm_visit_id,
+                content_type__app_label=TPMVisit._meta.app_label,
+                content_type__model=TPMVisit._meta.model_name,
+                file_type__name='overall_report'
+            ) | models.Q(
+                object_id=self.id,
+                content_type__app_label=TPMActivity._meta.app_label,
+                content_type__model=TPMActivity._meta.model_name,
+                file_type__name='report'
+            )
+        )
+
+    @property
+    def pv_applicable(self):
+        return self.related_reports.exists()
+
+    def get_mail_context(self):
+        return {
+            'locations': ', '.join(map(force_text, self.locations.all())),
+            'intervention': self.intervention.title,
+            'cp_output': force_text(self.cp_output),
+            'section': force_text(self.section),
+        }
+
 
 @python_2_unicode_compatible
 class TPMActionPoint(TimeStampedModel, models.Model):
     STATUSES = Choices(
-        ('open', 'Open'),
-        ('progress', 'In-Progress'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
+        ('open', _('Open')),
+        ('progress', _('In-Progress')),
+        ('completed', _('Completed')),
+        ('cancelled', _('Cancelled')),
     )
 
-    tpm_visit = models.ForeignKey(TPMVisit, related_name='action_points')
+    tpm_visit = models.ForeignKey(TPMVisit, related_name='action_points', verbose_name=_('Visit'))
 
-    author = models.ForeignKey(User, related_name='created_tpm_action_points')
-    person_responsible = models.ForeignKey(User, related_name='tpm_action_points')
+    author = models.ForeignKey(User, related_name='created_tpm_action_points', verbose_name=_('Assigned By'))
+    person_responsible = models.ForeignKey(User, related_name='tpm_action_points', verbose_name=_('Person Responsible'))
 
-    due_date = models.DateField()
-    description = models.TextField()
-    comments = models.TextField(blank=True)
+    due_date = models.DateField(verbose_name=_('Due Date'))
+    description = models.TextField(verbose_name=_('Description'))
+    comments = models.TextField(blank=True, verbose_name=_('Comments'))
 
     status = models.CharField(choices=STATUSES, max_length=9, verbose_name='Status', default=STATUSES.open)
 
     def __str__(self):
         return 'Action Point #{} on {}'.format(self.id, self.tpm_activity)
 
-    def notify_person_responsible(self, template_name):
-        context = {
-            'url': site_url(),
-            'environment': get_environment(),
-            'visit': self.tpm_visit,
-            'action_point': self,
-            'implementing_partners': set(map(
-                lambda a: a.implementing_partner.name,
-                self.tpm_visit.tpm_activities.all()
-            )),
-            'partnerships': set(map(
-                lambda a: a.partnership.title,
-                self.tpm_visit.tpm_activities.all()
-            )),
+    def get_mail_context(self):
+        return {
+            'person_responsible': self.person_responsible.get_full_name(),
+            'author': self.author.get_full_name(),
+
         }
 
-        mail.send(
-            self.person_responsible.email,
-            settings.DEFAULT_FROM_EMAIL,
-            cc=[self.author.email],
-            template=template_name,
-            context=context,
+    def notify_person_responsible(self, template_name):
+        context = {
+            'environment': get_environment(),
+            'visit': self.tpm_visit.get_mail_context(),
+            'action_point': self.get_mail_context(),
+        }
+
+        notification = Notification.objects.create(
+            sender=self,
+            recipients=[self.person_responsible.email], template_name=template_name,
+            template_data=context
         )
+        notification.send_notification()
 
 
 PME = GroupWrapper(code='pme',

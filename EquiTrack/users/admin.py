@@ -1,8 +1,14 @@
-from django.contrib import admin
-from django.contrib.auth.models import User
-from django.contrib.auth.admin import UserAdmin
+from functools import update_wrapper
 
-from users.models import UserProfile, Country, Office, Section, WorkspaceCounter
+from django.conf.urls import url
+from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin
+from django.core.urlresolvers import reverse
+from django.http.response import HttpResponseRedirect
+
+from users.models import Country, Office, Section, UserProfile, WorkspaceCounter
+from vision.tasks import sync_handler
 
 
 class ProfileInline(admin.StackedInline):
@@ -141,10 +147,10 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if form.data.get('supervisor'):
-            supervisor = User.objects.get(id=int(form.data['supervisor']))
+            supervisor = get_user_model().objects.get(id=int(form.data['supervisor']))
             obj.supervisor = supervisor
         if form.data.get('oic'):
-            oic = User.objects.get(id=int(form.data['oic']))
+            oic = get_user_model().objects.get(id=int(form.data['oic']))
             obj.oic = oic
         obj.save()
 
@@ -199,6 +205,7 @@ class UserAdminPlus(UserAdmin):
 
 
 class CountryAdmin(admin.ModelAdmin):
+    change_form_template = 'admin/users/country/change_form.html'
 
     def has_add_permission(self, request):
         return False
@@ -218,12 +225,58 @@ class CountryAdmin(admin.ModelAdmin):
         'sections',
     )
 
+    def get_urls(self):
+        urls = super(CountryAdmin, self).get_urls()
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        custom_urls = [
+            url(r'^(?P<pk>\d+)/sync_fc/$', wrap(self.sync_fund_commitment), name='users_country_fund_commitment'),
+            url(r'^(?P<pk>\d+)/sync_fr/$', wrap(self.sync_fund_reservation), name='users_country_fund_reservation'),
+            url(r'^(?P<pk>\d+)/sync_partners/$', wrap(self.sync_partners), name='users_country_partners'),
+            url(r'^(?P<pk>\d+)/sync_programme/$', wrap(self.sync_programme), name='users_country_programme'),
+            url(r'^(?P<pk>\d+)/sync_ram/$', wrap(self.sync_ram), name='users_country_ram'),
+        ]
+        return custom_urls + urls
+
+    def sync_fund_commitment(self, request, pk):
+        return self.execute_sync(pk, 'fund_commitment')
+
+    def sync_fund_reservation(self, request, pk):
+        return self.execute_sync(pk, 'fund_reservation')
+
+    def sync_partners(self, request, pk):
+        return self.execute_sync(pk, 'partner')
+
+    def sync_programme(self, request, pk):
+        return self.execute_sync(pk, 'programme')
+
+    def sync_ram(self, request, pk):
+        return self.execute_sync(pk, 'ram')
+
+    @staticmethod
+    def execute_sync(country_pk, synchronizer):
+        country = Country.objects.get(pk=country_pk)
+        sync_handler.delay(country.name, synchronizer)
+        return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
+
+
+class SectionAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'name',
+        'code',
+    )
+
 
 # Re-register UserAdmin
-admin.site.unregister(User)
-admin.site.register(User, UserAdminPlus)
+admin.site.unregister(get_user_model())
+admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Office)
-admin.site.register(Section)
+admin.site.register(Section, SectionAdmin)
 admin.site.register(WorkspaceCounter)

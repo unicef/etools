@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
-from t2f.serializers.travel import TravelListSerializer
 from t2f.serializers.filters import SortFilterSerializer
+from t2f.serializers.travel import TravelListSerializer
 
 
 class ShowHiddenFilterSerializer(serializers.Serializer):
@@ -20,7 +20,7 @@ class TravelFilterBoxSerializer(serializers.Serializer):
     f_year = serializers.IntegerField(source='year', required=False)
     f_month = serializers.IntegerField(source='month', required=False)
     f_office = serializers.IntegerField(source='office__pk', required=False)
-    f_section = serializers.IntegerField(source='section__pk', required=False)
+    f_section = serializers.IntegerField(source='sector__pk', required=False)
     f_travel_type = serializers.CharField(source='activities__travel_type', required=False)
     f_status = serializers.CharField(source='status', required=False)
     f_partner = serializers.IntegerField(source='activities__partner__pk', required=False)

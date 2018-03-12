@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.utils.translation import ugettext
+
 from rest_framework import serializers
 
 
@@ -23,7 +24,7 @@ class YesOrNoField(serializers.BooleanField):
 class TravelActivityExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number')
     traveler = serializers.CharField(source='travel.traveler.get_full_name')
-    section = serializers.CharField(source='travel.section.name')
+    section = serializers.CharField(source='travel.sector.name')
     office = serializers.CharField(source='travel.office.name')
     status = serializers.CharField(source='travel.status')
     trip_type = serializers.CharField(source='activity.travel_type')
@@ -31,13 +32,14 @@ class TravelActivityExportSerializer(serializers.Serializer):
     partnership = serializers.CharField(source='activity.partnership.title')
     results = serializers.CharField(source='activity.result.name')
     locations = serializers.SerializerMethodField()
-    when = serializers.DateTimeField(source='activity.date', format='%d-%b-%Y')
+    start_date = serializers.DateTimeField(source='travel.start_date', format='%d-%b-%Y')
+    end_date = serializers.DateTimeField(source='travel.end_date', format='%d-%b-%Y')
     is_secondary_traveler = serializers.SerializerMethodField()
     primary_traveler_name = serializers.SerializerMethodField()
 
     class Meta:
         fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'trip_type', 'partner', 'partnership',
-                  'results', 'locations', 'when', 'is_secondary_traveler',	'primary_traveler_name')
+                  'results', 'locations', 'start_date', 'end_date', 'is_secondary_traveler', 'primary_traveler_name')
 
     def get_locations(self, obj):
         return ', '.join([l.name for l in obj.activity.locations.all()])
@@ -60,7 +62,7 @@ class FinanceExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField()
     traveler = serializers.CharField(source='traveler.get_full_name')
     office = serializers.CharField(source='office.name')
-    section = serializers.CharField(source='section.name')
+    section = serializers.CharField(source='sector.name')
     status = serializers.CharField()
     supervisor = serializers.CharField(source='supervisor.get_full_name')
     start_date = serializers.DateTimeField(format='%d-%b-%Y')
@@ -98,7 +100,7 @@ class TravelAdminExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number')
     traveler = serializers.CharField(source='travel.traveler.get_full_name')
     office = serializers.CharField(source='travel.office.name')
-    section = serializers.CharField(source='travel.section.name')
+    section = serializers.CharField(source='travel.sector.name')
     status = serializers.CharField(source='travel.status')
     origin = serializers.CharField()
     destination = serializers.CharField()

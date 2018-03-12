@@ -1,17 +1,17 @@
 from __future__ import unicode_literals
 
 import json
-import mock
 
+import mock
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory, LocationFactory
+from EquiTrack.factories import LocationFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import CurrencyFactory, WBSFactory, DSARegionFactory
+from publics.tests.factories import CurrencyFactory, DSARegionFactory, WBSFactory
 from t2f import UserTypes
-from t2f.helpers.permission_matrix import PermissionMatrix, get_user_role_list
-from t2f.models import Travel, ModeOfTravel, TravelType
+from t2f.helpers.permission_matrix import get_user_role_list, PermissionMatrix
+from t2f.models import ModeOfTravel, Travel, TravelType
 from t2f.tests.factories import TravelFactory
 
 

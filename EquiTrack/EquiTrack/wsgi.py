@@ -18,6 +18,7 @@ from os.path import abspath, dirname
 from sys import path
 
 from django.core.wsgi import get_wsgi_application
+
 from dj_static import Cling
 
 SITE_ROOT = dirname(dirname(abspath(__file__)))

@@ -1,11 +1,11 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.conf.urls import url, include
 
 from rest_framework_nested import routers
 
 from utils.common.routers import NestedComplexRouter
-from .views import TPMPartnerViewSet, TPMVisitViewSet, TPMStaffMembersViewSet, ActionPointViewSet
+from tpm.views import TPMPartnerViewSet, TPMVisitViewSet, TPMStaffMembersViewSet, ActionPointViewSet
 
 tpm_partners_api = routers.SimpleRouter()
 tpm_partners_api.register(r'partners', TPMPartnerViewSet, base_name='partners')

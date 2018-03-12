@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
@@ -9,7 +9,7 @@ from rest_framework import exceptions
 from rest_framework.fields import ChoiceField
 from rest_framework.request import clone_request
 
-from .serializers.fields import SeparatedReadWriteField
+from utils.common.serializers.fields import SeparatedReadWriteField
 
 
 class SeparatedReadWriteFieldMetadata(object):
@@ -53,7 +53,7 @@ class FSMTransitionActionMetadataMixin(object):
         if not instance:
             return actions
 
-        actions["allowed_FSM_transitions"] = []
+        allowed_FSM_transitions = []
         current_state = instance.status
         for action in self._collect_actions(instance):
             meta = action._django_fsm
@@ -65,10 +65,15 @@ class FSMTransitionActionMetadataMixin(object):
                 if callable(name):
                     name = name(instance)
 
-                actions["allowed_FSM_transitions"].append({
+                allowed_FSM_transitions.append({
                     'code': action.__name__,
                     'display_name': name
                 })
+
+        # Move cancel to the end.
+        actions["allowed_FSM_transitions"] = sorted(
+            allowed_FSM_transitions, key=lambda a: a['code'] == 'cancel'
+        )
 
         return actions
 

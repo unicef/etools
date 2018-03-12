@@ -13,6 +13,7 @@ import django_fsm
 import model_utils.fields
 import partners.models
 import smart_selects.db_fields
+import EquiTrack.utils
 
 def reverse(apps, schema_editor):
     pass
@@ -164,7 +165,7 @@ class Migration(migrations.Migration):
             name='InterventionPlannedVisits',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('year', models.IntegerField(default=2016)),
+                ('year', models.IntegerField(default=EquiTrack.utils.get_current_year)),
                 ('programmatic', models.IntegerField(default=0)),
                 ('spot_checks', models.IntegerField(default=0)),
                 ('audit', models.IntegerField(default=0)),

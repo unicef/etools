@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from django.core.management import BaseCommand
 from django.utils import six
 
@@ -136,6 +138,7 @@ class Command(BaseCommand):
                 'Generating new permissions...'
             )
 
+        # todo: re-check permissions
         self.add_permission([self.unicef_user, self.third_party_monitor], 'view', self.tpm_partner)
         self.add_permission(self.pme, 'edit', self.tpm_partner)
 
@@ -194,18 +197,18 @@ class Command(BaseCommand):
         old_permissions_count = old_permissions.count()
 
         if self.verbosity >= 2:
-            print(
+            self.stdout.write(
                 'Deleting old permissions...'
             )
         old_permissions.delete()
 
         if self.verbosity >= 2:
-            print(
+            self.stdout.write(
                 'Creating new permissions...'
             )
         Permission.objects.bulk_create(self.permissions)
 
         if self.verbosity >= 1:
-            print(
+            self.stdout.write(
                 'TPM permissions updated ({}) -> ({}).'.format(old_permissions_count, len(self.permissions))
             )

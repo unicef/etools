@@ -1,20 +1,3 @@
-from __future__ import absolute_import
-
-from django.db import models
-
-
-class SupplyItem(models.Model):
-    """
-    Represents a supply item
-    """
-
-    name = models.CharField(
-        max_length=255,
-        unique=True
-    )
-    description = models.TextField(
-        blank=True
-    )
-
-    def __unicode__(self):
-        return self.name
+# Models removed so that migration can run to drop the associated tables. Once
+# that migration has been run on production, this entire app can be deleted and
+# removed from INSTALLED_APPS.

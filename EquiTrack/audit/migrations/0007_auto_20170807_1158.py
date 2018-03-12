@@ -10,10 +10,6 @@ def create_email_templates(apps, schema_editor):
     EmailTemplate.objects.get_or_create(name='audit/engagement/action_point_assigned')
 
 
-def do_nothing(apps, schema_editor):
-    pass
-
-
 def migrate_cancelled_status(apps, schema_editor):
     Engagement = apps.get_model('audit', 'Engagement')
     Engagement.objects.filter(status='canceled').update(status='cancelled')
@@ -31,6 +27,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(create_email_templates, do_nothing),
+        migrations.RunPython(create_email_templates, migrations.RunPython.noop),
         migrations.RunPython(migrate_cancelled_status, revert_migrate_cancelled_status),
     ]

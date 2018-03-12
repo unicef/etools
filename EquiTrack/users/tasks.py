@@ -5,14 +5,19 @@ import logging
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Q
+
 import requests
+from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
-from users.models import User, UserProfile, Country, Section
-from vision.vision_data_synchronizer import VisionException
+from users.models import Country, Section, User, UserProfile
+from vision.exceptions import VisionException
 from vision.models import VisionSyncLog
+from vision.vision_data_synchronizer import VISION_NO_DATA_MESSAGE
+
+logger = get_task_logger(__name__)
 
 
 class UserMapper(object):
@@ -64,8 +69,8 @@ class UserMapper(object):
         return self.countries[business_area_code] or self.countries['UAT']
 
     def _get_section(self, section_name, section_code):
-        if not self.sections[section_name]:
-            self.sections[section_name] = Section.objects.get_or_create(name=section_name, code=section_code)
+        if not self.sections.get(section_name):
+            self.sections[section_name], _ = Section.objects.get_or_create(name=section_name, code=section_code)
         return self.sections[section_name]
 
     def _set_simple_attr(self, obj, attr, cleaned_value):
@@ -86,7 +91,7 @@ class UserMapper(object):
                 if not obj.country == new_country:
                     obj.country = self._get_country(cleaned_value)
                     obj.countries_available.add(obj.country)
-                    print "Country Updated for {}".format(obj)
+                    logger.info("Country Updated for {}".format(obj))
                     return True
 
         return False
@@ -117,22 +122,23 @@ class UserMapper(object):
 
     @transaction.atomic
     def create_or_update_user(self, ad_user):
-        print(ad_user['sn'], ad_user['givenName'])
+        logger.debug(ad_user.get('sn'), ad_user.get('givenName'))
         for field in self.REQUIRED_USER_FIELDS:
-            if not ad_user[field]:
-                print "User doesn't have the required fields {}".format(ad_user)
+            if not ad_user.get(field, False):
+                logger.info("User doesn't have the required fields {}".format(ad_user))
                 return
 
         # TODO: MODIFY THIS TO USER THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
-        user, created = User.objects.get_or_create(email=ad_user['internetaddress'],
-                                                   username=ad_user['internetaddress'][:30])
+        user, created = User.objects.get_or_create(
+            email=ad_user['internetaddress'],
+            username=ad_user['internetaddress'][:User._meta.get_field('username').max_length])
         if created:
             user.set_unusable_password()
 
         try:
             profile = user.profile
         except ObjectDoesNotExist:
-            print 'No profile for user {}'.format(user)
+            logger.warning('No profile for user {}'.format(user))
             return
 
         profile_modified = False
@@ -144,7 +150,7 @@ class UserMapper(object):
 
         if created:
             user.groups.add(self.groups['UNICEF User'])
-            print 'Group added to user {}'.format(user)
+            logger.info('Group added to user {}'.format(user))
 
         # most attributes are direct maps.
         for attr, attr_val in ad_user.iteritems():
@@ -163,10 +169,10 @@ class UserMapper(object):
                 profile_modified = profile_modified or modified
         try:
             if user_modified:
-                print 'saving modified user'
+                logger.debug('saving modified user')
                 user.save()
             if profile_modified:
-                print 'saving profile for: {}'.format(user)
+                logger.debug('saving profile for: {}'.format(user))
                 profile.save()
         except IntegrityError as e:
             logging.error('Integrity error on user: {} - exception {}'.format(user.email, e))
@@ -181,7 +187,7 @@ class UserMapper(object):
             supervisor = self.section_users.get(manager_id, User.objects.get(profile__staff_id=manager_id))
             self.section_users[manager_id] = supervisor
         except User.DoesNotExist:
-            print "this user does not exist in the db to set as supervisor: {}".format(manager_id)
+            logger.warning("this user does not exist in the db to set as supervisor: {}".format(manager_id))
             return False
 
         profile.supervisor = supervisor
@@ -197,7 +203,7 @@ class UserMapper(object):
         for code in section_codes:
             self.section_users = {}
             synchronizer = UserSynchronizer('GetOrgChartUnitsInfo_JSON', code)
-            print "Mapping for section {}".format(code)
+            logger.info("Mapping for section {}".format(code))
             for in_user in synchronizer.response:
                 # if the user has no staff id don't bother for supervisor
                 if not in_user.get('STAFF_ID'):
@@ -210,7 +216,7 @@ class UserMapper(object):
                     )
                     self.section_users[in_user['STAFF_ID']] = user
                 except User.DoesNotExist:
-                    print "this user does not exist in the db: {}".format(in_user['STAFF_EMAIL'])
+                    logger.warning("this user does not exist in the db: {}".format(in_user['STAFF_EMAIL']))
                     continue
 
                 profile_updated = self._set_attribute(user.profile, "post_number", in_user["STAFF_POST_NO"])
@@ -220,8 +226,8 @@ class UserMapper(object):
                 supervisor_updated = self._set_supervisor(user.profile, in_user["MANAGER_ID"])
 
                 if profile_updated or supervisor_updated:
-                    print "saving profile for {}, supervisor updated: {}, profile updated: {}".\
-                        format(user, supervisor_updated, profile_updated)
+                    logger.info("saving profile for {}, supervisor updated: {}, profile updated: {}".format(
+                        user, supervisor_updated, profile_updated))
                     user.profile.save()
 
 
@@ -275,7 +281,6 @@ def sync_users_local(n=20):
         i = 0
         for row in reader:
             i += 1
-            # print(row['sn'], row['givenName'])
             if i == n:
                 break
             uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
@@ -284,7 +289,6 @@ def sync_users_local(n=20):
 
 class UserSynchronizer(object):
 
-    NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS_MAP = {
         'GetOrgChartUnitsInfo_JSON': (
             "ORG_UNIT_NAME",  # VARCHAR2	Vendor Name
@@ -305,7 +309,7 @@ class UserSynchronizer(object):
         self.required_keys = self.REQUIRED_KEYS_MAP[endpoint_name]
 
     def _get_json(self, data):
-        return '{}' if data == self.NO_DATA_MESSAGE else data
+        return '{}' if data == VISION_NO_DATA_MESSAGE else data
 
     def _filter_records(self, records):
         def is_valid_record(record):
@@ -319,7 +323,7 @@ class UserSynchronizer(object):
         return filter(is_valid_record, records)
 
     def _load_records(self):
-        print self.url
+        logger.debug(self.url)
         response = requests.get(
             self.url,
             headers={'Content-Type': 'application/json'},

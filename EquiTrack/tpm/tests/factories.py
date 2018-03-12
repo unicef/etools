@@ -1,20 +1,21 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import datetime
 
-import factory
-import factory.fuzzy
 from django.contrib.auth.models import Group
-from factory import fuzzy
 from django.db import connection
 from django.utils import timezone, six
 
-from EquiTrack.factories import InterventionFactory, ResultFactory, LocationFactory, \
-    SectionFactory as SimpleSectionFactory, OfficeFactory as SimpleOfficeFactory
-from attachments.tests.factories import AttachmentFactory
-from partners.models import InterventionResultLink, InterventionSectorLocationLink
-from reports.models import Sector
-from tpm.models import TPMPartner, TPMPartnerStaffMember, TPMVisit, TPMActivity, TPMVisitReportRejectComment
-from firms.factories import BaseStaffMemberFactory, BaseFirmFactory, UserFactory as SimpleUserFactory
+import factory.fuzzy
+from factory import fuzzy
 
+from attachments.tests.factories import AttachmentFactory
+from EquiTrack.factories import (
+    InterventionFactory, LocationFactory, OfficeFactory as SimpleOfficeFactory, ResultFactory, SectorFactory)
+from firms.factories import BaseFirmFactory, BaseStaffMemberFactory, UserFactory as SimpleUserFactory
+from partners.models import InterventionResultLink, InterventionSectorLocationLink
+from tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
+from tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
 _FUZZY_END_DATE = timezone.now().date() + datetime.timedelta(days=5)
@@ -41,13 +42,6 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
     cp_output = factory.SubFactory(ResultFactory)
 
 
-class SectorFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = Sector
-
-    name = factory.Sequence(lambda n: 'Sector {}'.format(n))
-
-
 class InterventionSectorLocationLinkFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = InterventionSectorLocationLink
@@ -68,25 +62,14 @@ class FullInterventionFactory(InterventionFactory):
     sector_locations = factory.RelatedFactory(InterventionSectorLocationLinkFactory, 'intervention')
 
 
-class SectionFactory(SimpleSectionFactory):
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        obj = super(SectionFactory, cls)._create(model_class, *args, **kwargs)
-
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            connection.tenant.sections.add(obj)
-
-        return obj
-
-
 class TPMActivityFactory(factory.DjangoModelFactory):
     class Meta:
         model = TPMActivity
 
-    partnership = factory.SubFactory(FullInterventionFactory)
-    implementing_partner = factory.SelfAttribute('partnership.agreement.partner')
+    intervention = factory.SubFactory(FullInterventionFactory)
+    partner = factory.SelfAttribute('intervention.agreement.partner')
     date = fuzzy.FuzzyDate(_FUZZY_START_DATE, _FUZZY_END_DATE)
-    section = factory.SubFactory(SectionFactory)
+    section = factory.SubFactory(SectorFactory)
 
     attachments__count = 0
     report_attachments__count = 0
@@ -94,7 +77,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     @factory.post_generation
     def cp_output(self, create, extracted, **kwargs):
         if create:
-            self.cp_output = self.partnership.result_links.first().cp_output
+            self.cp_output = self.intervention.result_links.first().cp_output
 
         if extracted:
             self.cp_output = extracted
@@ -102,7 +85,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
     @factory.post_generation
     def locations(self, create, extracted, **kwargs):
         if create:
-            self.locations.add(*self.partnership.sector_locations.first().locations.all())
+            self.locations.add(*self.intervention.sector_locations.first().locations.all())
 
         if extracted:
             self.locations.add(*extracted)
@@ -121,7 +104,7 @@ class TPMActivityFactory(factory.DjangoModelFactory):
             return
 
         for i in range(count):
-            AttachmentFactory(code='activity_report', content_object=self)
+            AttachmentFactory(code='activity_report', content_object=self, **kwargs)
 
 
 class InheritedTrait(factory.Trait):
@@ -205,6 +188,8 @@ class TPMVisitFactory(factory.DjangoModelFactory):
 
     report_reject_comments__count = 0
 
+    report_attachments__count = 0
+
     class Params:
         draft = factory.Trait()
 
@@ -249,7 +234,8 @@ class TPMVisitFactory(factory.DjangoModelFactory):
             status=TPMVisit.STATUSES.tpm_reported,
             date_of_tpm_reported=factory.LazyFunction(timezone.now),
 
-            tpm_activities__report_attachments__count=3,
+            tpm_activities__report_attachments__count=1,
+            tpm_activities__report_attachments__file_type__name='report',
         )
 
         tpm_report_rejected = InheritedTrait(
@@ -324,3 +310,11 @@ class TPMVisitFactory(factory.DjangoModelFactory):
                 tpm_visit=self,
                 reject_reason='Just because.',
             )
+
+    @factory.post_generation
+    def report_attachments(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        for i in range(count):
+            AttachmentFactory(code='visit_report', content_object=self, **kwargs)

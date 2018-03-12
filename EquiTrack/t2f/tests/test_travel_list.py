@@ -1,20 +1,18 @@
 from __future__ import unicode_literals
 
+import json
 import logging
 
-import json
-
+from django.core.urlresolvers import NoReverseMatch, reverse
 from django.db import connection
-from django.core.urlresolvers import reverse, NoReverseMatch
-
-from rest_framework import status
 from freezegun import freeze_time
+from rest_framework import status
 
-from EquiTrack.factories import UserFactory, LocationFactory, ResultFactory
+from EquiTrack.factories import LocationFactory, ResultFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase, URLAssertionMixin
 from publics.models import DSARegion
 from publics.tests.factories import WBSFactory
-from t2f.models import ModeOfTravel, make_travel_reference_number, Travel, TravelType
+from t2f.models import make_travel_reference_number, ModeOfTravel, Travel, TravelType
 from t2f.tests.factories import CurrencyFactory, TravelActivityFactory
 
 from .factories import TravelFactory
@@ -29,7 +27,8 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.travel = TravelFactory(reference_number=make_travel_reference_number(),
                                     traveler=self.traveler,
-                                    supervisor=self.unicef_staff)
+                                    supervisor=self.unicef_staff,
+                                    section=None)
 
     def test_urls(self):
         '''Verify URL pattern names generate the URLs we expect them to.'''
@@ -44,7 +43,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
             ('activities', 'activities/1/', {'partner_organization_pk': 1}),
             ('activities-intervention', 'activities/partnership/1/', {'partnership_pk': 1}),
             ('dashboard', 'dashboard', {}),
-            )
+        )
         self.assertReversal(names_and_paths, 't2f:travels:list:', '/api/t2f/travels/')
         self.assertIntParamRegexes(names_and_paths, 't2f:travels:list:')
 
@@ -111,6 +110,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
         travel = TravelFactory(reference_number=make_travel_reference_number(),
                                traveler=self.traveler,
                                supervisor=self.unicef_staff,
+                               sector=None,
                                section=None)
 
         with self.assertNumQueries(10):
@@ -221,7 +221,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
         # to see if all works (non-500)
         possible_sort_options = response_json['data'][0].keys()
         for sort_option in possible_sort_options:
-            log.debug('Trying to sort by %s', sort_option)
+            log.debug(u'Trying to sort by %s', sort_option)
             self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'sort_by': sort_option,
                                                                                  'reverse': False},
                                  user=self.unicef_staff)
@@ -258,7 +258,7 @@ class TravelList(URLAssertionMixin, APITenantTestCase):
 
         data = {
             'f_travel_type': TravelType.PROGRAMME_MONITORING,
-            'f_month': t2.start_date.month-1,  # Frontend sends 0-11
+            'f_month': t2.start_date.month - 1,  # Frontend sends 0-11
             'f_cp_output': result.id,
         }
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),

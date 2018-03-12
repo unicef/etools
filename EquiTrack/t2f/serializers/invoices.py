@@ -9,7 +9,7 @@ from t2f.models import Invoice, InvoiceItem
 
 def round_to_currency_precision(currency, amount):
     if currency.decimal_places:
-        q = Decimal('1.' + '0'*currency.decimal_places)
+        q = Decimal('1.' + '0' * currency.decimal_places)
     else:
         q = Decimal('1')
 
@@ -20,7 +20,7 @@ def round_to_currency_precision(currency, amount):
         max_precision = getcontext().prec
         amount_tuple = amount.as_tuple()
         max_decimal_places = max_precision - len(amount_tuple[1]) - amount_tuple[2]
-        return amount.quantize(Decimal('1.' + '0'*max_decimal_places))
+        return amount.quantize(Decimal('1.' + '0' * max_decimal_places))
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
