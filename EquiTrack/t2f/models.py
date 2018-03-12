@@ -432,7 +432,7 @@ class Travel(models.Model):
         try:
             msg.send(fail_silently=False)
         except ValidationError as exc:
-            log.error(u'Was not able to send the email. Exception: %s', exc.message)
+            log.error(u'Was not able to send the email. Exception: %s', exc.args[0])
 
     def generate_invoices(self):
         maker = InvoiceMaker(self)
@@ -657,7 +657,7 @@ class ActionPoint(models.Model):
         try:
             msg.send(fail_silently=False)
         except ValidationError as exc:
-            log.error(u'Was not able to send the email. Exception: %s', exc.message)
+            log.error(u'Was not able to send the email. Exception: %s', exc.args[0])
 
 
 @python_2_unicode_compatible

@@ -251,8 +251,8 @@ def sync_users():
     try:
         sync_users_remote()
     except Exception as e:
-        log.exception_message = e.message
-        raise VisionException(message=e.message)
+        log.exception_message = e.args[0]
+        raise VisionException(message=e.args[0])
     finally:
         log.save()
 
@@ -267,8 +267,8 @@ def map_users():
         user_sync = UserMapper()
         user_sync.map_users()
     except Exception as e:
-        log.exception_message = e.message
-        raise VisionException(message=e.message)
+        log.exception_message = e.args[0]
+        raise VisionException(message=e.args[0])
     finally:
         log.save()
 

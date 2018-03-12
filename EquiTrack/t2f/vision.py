@@ -213,4 +213,4 @@ class InvoiceUpdater(object):
         try:
             msg.send(fail_silently=False)
         except ValidationError as exc:
-            log.error('Was not able to send the email. Exception: %s', exc.message)
+            log.error('Was not able to send the email. Exception: %s', exc.args[0])

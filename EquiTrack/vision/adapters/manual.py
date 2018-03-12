@@ -122,7 +122,7 @@ class MultiModelDataSynchronizer(VisionDataSynchronizer):
                         defaults=defaults, **kwargs
                     )
             except Exception as exp:
-                logger.warning("Exception message: {}".format(exp.message))
+                logger.warning("Exception message: {}".format(exp.args[0]))
                 logger.warning("Exception type: {}".format(type(exp)))
 
         for record in filtered_records:

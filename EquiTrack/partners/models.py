@@ -464,7 +464,7 @@ class PartnerOrganization(AdminURLMixin, TimeStampedModel):
 
             self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
         except ValueError as e:
-            e.message = 'hact_values needs to be a valid format (dict)'
+            e.args = ['hact_values needs to be a valid format (dict)']
             raise e
 
         super(PartnerOrganization, self).save(*args, **kwargs)

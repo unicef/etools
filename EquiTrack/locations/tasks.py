@@ -147,7 +147,7 @@ def update_sites_from_cartodb(carto_table_pk):
                         parent_code
                     )
                 except Exception as exp:
-                    msg = exp.message
+                    msg = exp.args[0]
 
                 if msg is not None:
                     logger.warning(msg)

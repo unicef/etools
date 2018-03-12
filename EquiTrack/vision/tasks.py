@@ -91,7 +91,7 @@ def sync_handler(self, country_name, handler):
         except VisionException as e:
             # Catch and log the exception so we're aware there's a problem.
             logger.error(u"{} sync failed, Reason: {}, Country: {}".format(
-                handler, e.message, country_name
+                handler, e.args[0], country_name
             ))
             # The 'autoretry_for' in the task decorator tells Celery to
             # retry this a few times on VisionExceptions, so just re-raise it
@@ -145,7 +145,7 @@ def update_purchase_orders(country_name=None):
             logger.info(u"Update finished successfully for {}".format(country.name))
         except VisionException as e:
                 logger.error(u"{} sync failed, Reason: {}".format(
-                    POSynchronizer.__name__, e.message
+                    POSynchronizer.__name__, e.args[0]
                 ))
                 # Keep going to the next country
     logger.info(u'Purchase orders synced successfully for {}.'.format(u', '.join(processed)))
@@ -173,6 +173,6 @@ def update_tpm_partners(country_name=None):
             logger.info(u"Update finished successfully for {}".format(country.name))
         except VisionException as e:
                 logger.error(u"{} sync failed, Reason: {}".format(
-                    TPMPartnerSynchronizer.__name__, e.message
+                    TPMPartnerSynchronizer.__name__, e.args[0]
                 ))
     logger.info(u'TPM Partners synced successfully for {}.'.format(u', '.join(processed)))

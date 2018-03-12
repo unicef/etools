@@ -229,7 +229,7 @@ def insert_dsa_codes(apps, schema_editor):
         try:
             Country.objects.filter(iso_3=iso_code).update(dsa_code=dsa_code)
         except ObjectDoesNotExist as e:
-            log.error(e.message)
+            log.error(e.args[0])
 
 
 class Migration(migrations.Migration):
