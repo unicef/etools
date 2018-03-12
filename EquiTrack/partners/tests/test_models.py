@@ -613,11 +613,8 @@ class TestInterventionModel(EToolsTenantTestCase):
             'edit': {
                 'true': [
                     {'status': 'draft', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'signed', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'active', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'draft', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'signed', 'group': 'Partnership Manager', 'condition': ''},
-                    {'status': 'active', 'group': 'Partnership Manager', 'condition': ''}
+                    {'status': 'signed', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
+                    {'status': 'active', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
                 ]
             }
         })
