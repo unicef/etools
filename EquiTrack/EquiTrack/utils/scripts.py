@@ -11,6 +11,7 @@ from django.db import connection
 from django.db.models import Count
 from django.contrib.auth import get_user_model
 
+from EquiTrack.utils import every_country
 from partners.models import (
     Agreement, Assessment, FundingCommitment, Intervention, InterventionPlannedVisits, PartnerOrganization,
     PartnerStaffMember,)
