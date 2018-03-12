@@ -608,21 +608,21 @@ class TestNotifyOfMismatchedEndedInterventionsTask(PartnersTestBaseClass):
         for intervention in interventions:
             for i in range(3):
                 FundsReservationHeaderFactory(intervention=intervention,
-                                              actual_amt=_make_decimal(i + 1),
-                                              total_amt=_make_decimal(i))
+                                              actual_amt_local=_make_decimal(i + 1),
+                                              total_amt_local=_make_decimal(i))
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
         # Should be ignored because of status even though FRS values are mismatched
         intervention = InterventionFactory(status=Intervention.DRAFT)
         for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, actual_amt=_make_decimal(i + 1),
-                                          total_amt=_make_decimal(i))
+            FundsReservationHeaderFactory(intervention=intervention, actual_amt_local=_make_decimal(i + 1),
+                                          total_amt_local=_make_decimal(i))
 
         # Should be ignored because FRS values are not mismatched
         intervention = InterventionFactory(status=Intervention.ENDED)
         for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, actual_amt=_make_decimal(i),
-                                          total_amt=_make_decimal(i))
+            FundsReservationHeaderFactory(intervention=intervention, actual_amt_local=_make_decimal(i),
+                                          total_amt_local=_make_decimal(i))
 
         # Mock Notifications.objects.create() to return a Mock. In order to *truly* mimic create(), my
         # mock_notification_objects.create() should return a new (mock) object every time, but the lazy way or
