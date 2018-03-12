@@ -22,6 +22,8 @@ from vision.adapters import funding as adapter
 
 
 class TestFundReservationsSynchronizer(EToolsTenantTestCase):
+    maxDiff = None
+
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
@@ -62,12 +64,12 @@ class TestFundReservationsSynchronizer(EToolsTenantTestCase):
             "start_date": datetime.date(2015, 1, 13),
             "end_date": datetime.date(2015, 12, 20),
             "total_amt": "15.00",
-            "total_amt_local": "12.00",
+            # "total_amt_local": "12.00",
             "intervention_amt": "17.00",
             "actual_amt": "18.00",
-            "actual_amt_local": "13.00",
+            # "actual_amt_local": "13.00",
             "outstanding_amt": "19.00",
-            "outstanding_amt_local": "14.00",
+            # "outstanding_amt_local": "14.00",
         }
         self.expected_line_item = {
             "line_item": "987",
@@ -283,7 +285,7 @@ class TestFundReservationsSynchronizer(EToolsTenantTestCase):
         response = self.adapter._save_records(
             {"ROWSET": {"ROW": [self.data]}}
         )
-        self.assertEqual(response, 2)
+        self.assertEqual(response, 1)
 
 
 class TestFundCommitmentSynchronizer(EToolsTenantTestCase):
