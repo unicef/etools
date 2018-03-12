@@ -143,7 +143,7 @@ class AssessmentDetailSerializer(serializers.ModelSerializer):
     def validate_completed_date(self, completed_date):
         today = timezone.now().date()
         if completed_date > today:
-            raise serializers.ValidationError({'completed_date': ['The Date of Report cannot be in the future']})
+            raise serializers.ValidationError('The Date of Report cannot be in the future')
         return completed_date
 
 
