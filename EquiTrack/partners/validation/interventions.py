@@ -30,17 +30,23 @@ def transition_to_closed(i):
     # TODO: find a sol for invalidating the cache on related .all() -has to do with prefetch_related in the validator
     r = {
         'total_frs_amt': 0,
+        'total_frs_amt_local': 0,
         'total_outstanding_amt': 0,
+        'total_outstanding_amt_local': 0,
         'total_intervention_amt': 0,
         'total_actual_amt': 0,
+        'total_actual_amt_local': 0,
         'earliest_start_date': None,
         'latest_end_date': None
     }
     for fr in i.frs.filter():
         r['total_frs_amt'] += fr.total_amt
+        r['total_frs_amt_local'] += fr.total_amt_local
         r['total_outstanding_amt'] += fr.outstanding_amt
+        r['total_outstanding_amt_local'] += fr.outstanding_amt_local
         r['total_intervention_amt'] += fr.intervention_amt
         r['total_actual_amt'] += fr.actual_amt
+        r['total_actual_amt_local'] += fr.actual_amt_local
         if r['earliest_start_date'] is None:
             r['earliest_start_date'] = fr.start_date
         elif r['earliest_start_date'] < fr.start_date:
@@ -57,8 +63,8 @@ def transition_to_closed(i):
     if i.end > today:
         raise TransitionError([_('End date is in the future')])
 
-    if i.total_frs['total_intervention_amt'] != i.total_frs['total_actual_amt'] or \
-            i.total_frs['total_outstanding_amt'] != 0:
+    if i.total_frs['total_frs_amt_local'] != i.total_frs['total_actual_amt_local'] or \
+            i.total_frs['total_outstanding_amt_local'] != 0:
         raise TransitionError([_('Total FR amount needs to equal total actual amount, and '
                                  'Total Outstanding DCTs need to equal to 0')])
 
