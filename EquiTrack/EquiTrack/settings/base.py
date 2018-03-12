@@ -183,7 +183,7 @@ SHARED_APPS = (
     'tpm.tpmpartners',
     'generics',
     'rest_extra',
-    'utils.permissions',
+    'permissions',
     'waffle',
     'email_auth',
 )

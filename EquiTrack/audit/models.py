@@ -32,9 +32,9 @@ from EquiTrack.utils.wrappers import GroupWrapper
 from generics.fields import CodedGenericRelation
 from notification.models import Notification
 from partners.models import PartnerStaffMember, PartnerOrganization
-from utils.permissions.models.models import StatusBasePermission
-from utils.permissions.models.query import StatusBasePermissionQueryset
-from utils.permissions.utils import has_action_permission
+from permissions.models.models import StatusBasePermission
+from permissions.models.query import StatusBasePermissionQueryset
+from permissions.utils import has_action_permission
 
 
 def _has_action_permission(action):

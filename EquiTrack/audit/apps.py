@@ -9,5 +9,5 @@ class AppConfig(BaseAppConfig):
 
     def ready(self):
         from audit import signals  # NOQA
-        from utils.permissions import signals as permissions_signals
+        from permissions import signals as permissions_signals
         permissions_signals.prepare_permission_choices(self.get_models())

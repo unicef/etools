@@ -8,9 +8,13 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from activities.serializers import ActivitySerializer
+from locations.serializers import LocationLightSerializer
 from partners.models import InterventionResultLink, PartnerType
 from partners.serializers.interventions_v2 import InterventionCreateUpdateSerializer
 from partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from permissions.serializers import (
+    StatusPermissionsBasedRootSerializerMixin, StatusPermissionsBasedSerializerMixin,)
+from reports.serializers.v1 import ResultSerializer, SectorSerializer
 from rest_extra.fields import SeparatedReadWriteField
 from rest_extra.serializers import WritableNestedSerializerMixin
 from tpm.models import (
@@ -18,11 +22,7 @@ from tpm.models import (
 from tpm.tpmpartners.models import TPMPartnerStaffMember
 from tpm.serializers.attachments import TPMAttachmentsSerializer, TPMReportAttachmentsSerializer, TPMReportSerializer
 from tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
-from utils.permissions.serializers import (
-    StatusPermissionsBasedRootSerializerMixin, StatusPermissionsBasedSerializerMixin,)
 from users.serializers import MinimalUserSerializer, OfficeSerializer
-from locations.serializers import LocationLightSerializer
-from reports.serializers.v1 import ResultSerializer, SectorSerializer
 
 
 class TPMPermissionsBasedSerializerMixin(StatusPermissionsBasedSerializerMixin):

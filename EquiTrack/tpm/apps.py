@@ -9,6 +9,6 @@ class AppConfig(BaseAppConfig):
 
     def ready(self):
         from tpm import signals # NOQA
-        from utils.permissions import signals as utils_signals
+        from permissions import signals as permissions_signals
 
-        utils_signals.prepare_permission_choices(self.get_models())
+        permissions_signals.prepare_permission_choices(self.get_models())

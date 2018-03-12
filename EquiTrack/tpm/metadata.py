@@ -4,12 +4,12 @@ from rest_framework.metadata import SimpleMetadata
 
 from attachments.metadata import ModelChoiceFieldMixin
 from EquiTrack.metadata import FSMTransitionActionMetadataMixin
+from permissions.metadata import PermissionsBasedMetadataMixin
 from rest_extra.metadata import (
     CRUActionsMetadataMixin,
     ReadOnlyFieldWithChoicesMixin,
     SeparatedReadWriteFieldMetadata,
 )
-from utils.permissions.metadata import PermissionsBasedMetadataMixin
 
 
 class TPMBaseMetadata(

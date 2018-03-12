@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from utils.permissions.serializers import (
+from permissions.serializers import (
     StatusPermissionsBasedRootSerializerMixin, StatusPermissionsBasedSerializerMixin,)
 
 from audit.models import AuditPermission

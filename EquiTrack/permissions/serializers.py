@@ -6,10 +6,10 @@ from rest_framework import serializers
 from rest_framework.utils import model_meta
 from rest_framework_recursive.fields import RecursiveField
 
+from permissions.models.models import BasePermission
+from permissions.utils import collect_parent_models
 from rest_extra.fields import SeparatedReadWriteField
 from rest_extra.serializers import UserContextSerializerMixin
-from utils.permissions.models.models import BasePermission
-from utils.permissions.utils import collect_parent_models
 
 
 class PermissionsBasedSerializerMixin(UserContextSerializerMixin):

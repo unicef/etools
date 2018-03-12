@@ -9,7 +9,7 @@ from rest_extra.metadata import (
     ReadOnlyFieldWithChoicesMixin,
     SeparatedReadWriteFieldMetadata,
 )
-from utils.permissions.metadata import PermissionsBasedMetadataMixin
+from permissions.metadata import PermissionsBasedMetadataMixin
 
 
 class AuditBaseMetadata(

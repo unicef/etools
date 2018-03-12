@@ -5,7 +5,7 @@ from django.utils.encoding import python_2_unicode_compatible
 
 from model_utils import Choices
 
-from utils.permissions.models.query import BasePermissionQueryset, StatusBasePermissionQueryset
+from permissions.models.query import BasePermissionQueryset, StatusBasePermissionQueryset
 
 
 @python_2_unicode_compatible

@@ -4,7 +4,7 @@ from django.db import models
 
 from model_utils import Choices
 
-from utils.permissions.models.models import BasePermission
+from permissions.models.models import BasePermission
 
 
 class Parent(models.Model):

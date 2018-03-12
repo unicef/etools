@@ -4,15 +4,15 @@ from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.test import override_settings, TestCase
 
-from utils.permissions.models.models import BasePermission
+from permissions.models.models import BasePermission
 
 
 @override_settings(SHARED_APPS=[
     'django.contrib.auth',
-    'utils.permissions.tests'
+    'permissions.tests'
 ], INSTALLED_APPS=[
     'django.contrib.auth',
-    'utils.permissions.tests',
+    'permissions.tests',
 ])
 class BasePermissionTestCase(TestCase):
     @classmethod
