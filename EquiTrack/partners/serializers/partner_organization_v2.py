@@ -134,7 +134,7 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
 class AssessmentDetailSerializer(serializers.ModelSerializer):
 
     report_file = serializers.FileField(source='report', required=True)
-    completed_date = serializers.DateField()
+    completed_date = serializers.DateField(required=True)
 
     class Meta:
         model = Assessment
