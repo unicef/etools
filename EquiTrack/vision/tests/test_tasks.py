@@ -9,8 +9,8 @@ from django.utils import timezone
 
 import mock
 
+from users.tests.factories import CountryFactory
 import vision.tasks
-from EquiTrack.factories import CountryFactory
 from vision.exceptions import VisionException
 
 
@@ -38,6 +38,7 @@ def _build_country(name):
 class TestVisionSyncTask(TestCase):
     """Exercises the vision_sync_task() task which requires a lot of mocking and some monkey patching."""
     def setUp(self):
+        super(TestVisionSyncTask, self).setUp()
         self.public_country = _build_country('Global')
         # Vision_sync_enabled is not set on the public country.
         self.public_country.vision_sync_enabled = False
@@ -225,7 +226,6 @@ class TestVisionSyncTask(TestCase):
 
 class TestSyncHandlerTask(TestCase):
     """Exercises the sync_handler()"""
-
     def setUp(self):
         self.country = _build_country('My')
 
